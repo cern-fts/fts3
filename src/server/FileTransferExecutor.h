@@ -64,7 +64,7 @@ public:
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, std::string infosys, std::string ftsHostName, std::string proxy, std::string logDir);
+    FileTransferExecutor(TransferFile& tf, TransferFileHandler& tfh, bool monitoringMsg, std::string infosys, std::string ftsHostName, std::string proxy, std::string logDir);
 
     /**
      * Destructor.
@@ -84,7 +84,7 @@ private:
     std::set< std::pair<std::string, std::string> > notScheduled;
 
     /// variables from process_service_handler
-    TransferFiles tf;
+    TransferFile tf;
     TransferFileHandler const & tfh;
     bool monitoringMsg;
     std::string infosys;

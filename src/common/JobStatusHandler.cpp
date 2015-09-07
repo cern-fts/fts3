@@ -69,7 +69,6 @@ JobStatusHandler::JobStatusHandler():
 
 bool JobStatusHandler::isTransferFinished(std::string status)
 {
-
     to_upper(status);
     std::map<std::string, JobStatusEnum>::const_iterator it = statusNameToId.find(status);
 

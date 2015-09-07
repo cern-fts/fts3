@@ -57,7 +57,7 @@ public:
      * @param file - the file for which the scheduling decision has to be taken
      */
     FileTransferScheduler(
-        TransferFiles const & file,
+        TransferFile const & file,
         std::vector< std::shared_ptr<ShareConfig> > cfgs,
         std::set<std::string> inses = std::set<std::string>(),
         std::set<std::string> outses = std::set<std::string>(),
@@ -82,7 +82,7 @@ public:
 private:
 
     /// pointer to the file that has to be scheduled
-    TransferFiles const & file;
+    TransferFile const & file;
     /// name of the source SE
     std::string srcSeName;
     /// name of the destination SE

@@ -47,16 +47,14 @@ public:
     /**
      * protocol data:
      * - number of streams
-     * - no activity timeout
      * - TCP buffer size
      * - url-copy timeout
      */
     struct protocol
     {
-        protocol():nostreams(4),no_tx_activity_to(0),tcp_buffer_size(0),urlcopy_tx_to(3600), strict_copy(false) {}
+        protocol():nostreams(4),tcp_buffer_size(0),urlcopy_tx_to(3600), strict_copy(false) {}
 
         int nostreams;
-        int no_tx_activity_to;
         int tcp_buffer_size;
         int urlcopy_tx_to;
         bool strict_copy;
@@ -104,7 +102,7 @@ public:
      *
      * @param job_id - transfer job ID
      */
-    ProtocolResolver(TransferFiles const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs);
+    ProtocolResolver(TransferFile const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs);
     ProtocolResolver(const fts3::server::ProtocolResolver&);
 
     /**
@@ -134,13 +132,6 @@ public:
     int getNoStreams();
 
     /**
-     * gets no activity timeout
-     *
-     * @return no activity timeout
-     */
-    int getNoTxActiveTo();
-
-    /**
      * gets TCP buffer size
      *
      * @return TCP buffer size
@@ -159,7 +150,7 @@ public:
      *
      * @return an object containing protocol parameters
      */
-    static boost::optional<protocol> getUserDefinedProtocol(TransferFiles const & file);
+    static boost::optional<protocol> getUserDefinedProtocol(TransferFile const & file);
 
 private:
 
@@ -228,7 +219,7 @@ private:
     boost::optional<protocol> prot;
 
     // the transfer file
-    TransferFiles const & file;
+    TransferFile const & file;
 
     std::vector< std::shared_ptr<ShareConfig> >& cfgs;
 

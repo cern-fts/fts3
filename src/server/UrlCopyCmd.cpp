@@ -173,40 +173,40 @@ void UrlCopyCmd::setGlobalTimeout(long timeout)
 }
 
 
-void UrlCopyCmd::setFromTransfer(const TransferFiles& transfer, bool is_multiple)
+void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple)
 {
-    setOption("file-metadata", prepareMetadataString(transfer.FILE_METADATA));
-    setOption("job-metadata", prepareMetadataString(transfer.JOB_METADATA));
-    if (transfer.BRINGONLINE > 0)
-        setOption("bringonline", transfer.BRINGONLINE);
-    setFlag("reuse", transfer.REUSE_JOB == "Y");
-    setFlag("multi-hop", transfer.REUSE_JOB == "H");
+    setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
+    setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
+    if (transfer.bringOnline > 0)
+        setOption("bringonline", transfer.bringOnline);
+    setFlag("reuse", transfer.reuseJob == "Y");
+    setFlag("multi-hop", transfer.reuseJob == "H");
     // setOption("source-site", std::string());
     // setOption("dest-site", std::string());
-    setOption("vo", transfer.VO_NAME);
-    if (!transfer.CHECKSUM_METHOD.empty())
-        setOption("compare-checksum", transfer.CHECKSUM_METHOD);
-    if (transfer.PIN_LIFETIME > 0)
-        setOption("pin-lifetime", transfer.PIN_LIFETIME);
-    setOption("job-id", transfer.JOB_ID);
-    setFlag("overwrite", !transfer.OVERWRITE.empty());
-    setOption("dest-token-desc", transfer.DEST_SPACE_TOKEN);
-    setOption("source-token-desc", transfer.SOURCE_SPACE_TOKEN);
-    setOption("user-dn", prepareMetadataString(transfer.DN));
-    if (transfer.REUSE_JOB == "R")
+    setOption("vo", transfer.voName);
+    if (!transfer.checksumMethod.empty())
+        setOption("compare-checksum", transfer.checksumMethod);
+    if (transfer.pinLifetime > 0)
+        setOption("pin-lifetime", transfer.pinLifetime);
+    setOption("job-id", transfer.jobId);
+    setFlag("overwrite", !transfer.overwriteFlag.empty());
+    setOption("dest-token-desc", transfer.destinationSpaceToken);
+    setOption("source-token-desc", transfer.sourceSpaceToken);
+    setOption("user-dn", prepareMetadataString(transfer.userDn));
+    if (transfer.reuseJob == "R")
         setOption("job_m_replica", "true");
-    setOption("last_replica", transfer.LAST_REPLICA == 1? "true": "false");
+    setOption("last_replica", transfer.lastReplica == 1? "true": "false");
 
     // On multiple jobs, this data is per transfer and is passed via a file
     // under /var/lib/fts3/<job-id>, so skip it
     if (!is_multiple) {
-        setOption("file-id", transfer.FILE_ID);
-        setOption("source", transfer.SOURCE_SURL);
-        setOption("destination", transfer.DEST_SURL);
-        setOption("checksum", transfer.CHECKSUM);
-        if (transfer.USER_FILESIZE > 0)
-            setOption("user-filesize", transfer.USER_FILESIZE);
-        setOption("token-bringonline", transfer.BRINGONLINE_TOKEN);
+        setOption("file-id", transfer.fileId);
+        setOption("source", transfer.sourceSurl);
+        setOption("destination", transfer.destSurl);
+        setOption("checksum", transfer.checksum);
+        if (transfer.userFilesize > 0)
+            setOption("user-filesize", transfer.userFilesize);
+        setOption("token-bringonline", transfer.bringOnlineToken);
     }
 }
 

@@ -19,29 +19,24 @@
  */
 
 #pragma once
+#ifndef CRED_H_
+#define CRED_H_
 
-#include <iostream>
+#include <string>
 
 class Cred
 {
 public:
 
-    Cred(): termination_time(0)
-    {
-    }
-
-    ~Cred()
+    Cred(): terminationTime(0)
     {
     }
 
     std::string delegationID;
-
     std::string DN;
-
     std::string vomsAttributes;
-
     std::string proxy;
-
-    time_t termination_time;
-
+    time_t terminationTime;
 };
+
+#endif // CRED_H_

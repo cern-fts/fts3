@@ -35,7 +35,7 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(TransferFiles const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs) :
+ProtocolResolver::ProtocolResolver(TransferFile const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
     cfgs(cfgs),
@@ -130,29 +130,26 @@ boost::optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(boo
     protocol ret;
 
     // set number of streams
-    ret.nostreams = cfg->NOSTREAMS;
-
-    // not used for now but set anyway
-    ret.no_tx_activity_to = cfg->NO_TX_ACTIVITY_TO;
+    ret.nostreams = cfg->numberOfStreams;
 
     // set TCP buffer size
-    ret.tcp_buffer_size = cfg->TCP_BUFFER_SIZE;
+    ret.tcp_buffer_size = cfg->tcpBufferSize;
 
     // set the timeout
-    ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
+    ret.urlcopy_tx_to = cfg->transferTimeout;
 
-    if(cfg->auto_tuning == "on")
+    if(cfg->autoTuning == "on")
         auto_tuned = true;
 
     return ret;
 }
 
-boost::optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles const & file)
+boost::optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFile const & file)
 {
-    if (file.INTERNAL_FILE_PARAMS.empty()) return boost::optional<protocol>();
+    if (file.internalFileParams.empty()) return boost::optional<protocol>();
 
     std::vector<std::string> params;
-    boost::split(params, file.INTERNAL_FILE_PARAMS, boost::is_any_of(","));
+    boost::split(params, file.internalFileParams, boost::is_any_of(","));
 
     protocol ret;
 
@@ -292,8 +289,8 @@ ProtocolResolver::protocol ProtocolResolver::autotune()
 {
     protocol ret;
 
-    std::string source = file.SOURCE_SE;
-    std::string destination = file.DEST_SE;
+    std::string source = file.sourceSe;
+    std::string destination = file.destSe;
 
     OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
@@ -312,11 +309,6 @@ bool ProtocolResolver::isAuto()
 int ProtocolResolver::getNoStreams()
 {
     return (*prot).nostreams;
-}
-
-int ProtocolResolver::getNoTxActiveTo()
-{
-    return (*prot).no_tx_activity_to;
 }
 
 int ProtocolResolver::getTcpBufferSize()

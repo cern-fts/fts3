@@ -46,7 +46,7 @@ PairCfg::PairCfg(std::string dn, std::string source, std::string destination) :
     if (!cfg.get())
         throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
 
-    symbolic_name = cfg->symbolic_name;
+    symbolic_name = cfg->symbolicName;
     active = cfg->state == on;
 
     share = getShareMap(source, destination);

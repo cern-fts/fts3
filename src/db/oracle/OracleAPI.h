@@ -87,15 +87,15 @@ public:
 
     virtual std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive);
 
-    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
+    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
-    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files);
 
-    virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
+    virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
-    virtual unsigned int updateFileStatus(TransferFiles& file, const std::string status);
+    virtual unsigned int updateFileStatus(TransferFile& file, const std::string status);
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                        std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
@@ -325,7 +325,7 @@ public:
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
-    unsigned int updateFileStatusReuse(TransferFiles const & file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFile const & file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 

@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef JOBSTATUS_H_
-#define JOBSTATUS_H_
+#ifndef CLI_JOBSTATUS_H_
+#define CLI_JOBSTATUS_H_
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
@@ -53,7 +53,7 @@ public:
     FileInfo(tns3__FileTransferStatus const * f) :
         src(*f->sourceSURL), dst (*f->destSURL), state(*f->transferFileState),
         reason(*f->reason), duration (f->duration), nbFailures(f->numFailures),
-        staging_duration(-1)
+        stagingDuration(-1)
     {
         std::transform(
             f->retries.begin(),
@@ -63,13 +63,13 @@ public:
         );
 
         if (f->staging)
-            staging_duration = *f->staging;
+            stagingDuration = *f->staging;
     }
 
     FileInfo(pt::ptree const & t) :
         src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), state(t.get<std::string>("file_state")),
         reason(t.get<std::string>("reason")), duration(0), nbFailures(t.get<int>("retry")),
-        staging_duration(0)
+        stagingDuration(0)
     {
         pt::ptree const & r = t.get_child("retries");
 
@@ -102,7 +102,7 @@ public:
                 if (strptime(staging_finished.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
                     staging_finished_time = mktime(&time);
 
-                staging_duration = staging_finished_time - staging_start_time;
+                stagingDuration = staging_finished_time - staging_start_time;
             }
     }
 
@@ -129,7 +129,7 @@ private:
     long duration;
     int nbFailures;
     std::vector<std::string> retries;
-    long staging_duration;
+    long stagingDuration;
 };
 
 class DetailedFileStatus
@@ -210,4 +210,4 @@ private:
 } /* namespace cli */
 } /* namespace fts3 */
 
-#endif /* JOBSTATUS_H_ */
+#endif /* CLI_JOBSTATUS_H_ */

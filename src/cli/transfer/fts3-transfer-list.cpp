@@ -24,8 +24,6 @@
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
-#include "common/JobStatusHandler.h"
-
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
@@ -34,7 +32,6 @@
 #include <memory>
 
 using namespace fts3::cli;
-using namespace fts3::common;
 
 
 /**

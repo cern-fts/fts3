@@ -19,10 +19,9 @@
  */
 
 #include "ListTransferCli.h"
-#include "common/JobStatusHandler.h"
 
 using namespace fts3::cli;
-using namespace fts3::common;
+
 
 ListTransferCli::ListTransferCli(): VoNameCli(false)
 {
@@ -66,11 +65,11 @@ std::vector<std::string> ListTransferCli::getStatusArray()
     if (array.empty())
         {
             if (deletion())
-                array.push_back(JobStatusHandler::FTS3_STATUS_DELETE);
+                array.push_back("DELETE");
             else
-                array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
-            array.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
-            array.push_back(JobStatusHandler::FTS3_STATUS_READY);
+                array.push_back("SUBMITTED");
+            array.push_back("ACTIVE");
+            array.push_back("READY");
         }
 
     return array;

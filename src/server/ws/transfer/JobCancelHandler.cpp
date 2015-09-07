@@ -144,7 +144,7 @@ std::string JobCancelHandler::get_state(std::string const & job, std::string con
     // Authorise the operation
     AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job_ptr.get());
     // get the status
-    std::string const & status = job_ptr->JOB_STATE;
+    std::string const & status = job_ptr->jobState;
     // make sure the transfer-job is not in terminal state
     if (JobStatusHandler::getInstance().isTransferFinished(status))
         {

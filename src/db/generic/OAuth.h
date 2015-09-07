@@ -25,11 +25,11 @@
 
 struct OAuth
 {
-    std::string cloud_name;
-    std::string app_key;
-    std::string app_secret;
-    std::string access_token;
-    std::string access_token_secret;
+    std::string cloudName;
+    std::string appKey;
+    std::string appSecret;
+    std::string accessToken;
+    std::string accessTokenSecret;
 };
 
-#endif
+#endif // OAUTH_H_

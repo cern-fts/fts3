@@ -18,28 +18,26 @@
  * limitations under the License.
  */
 
-
 #pragma once
+#ifndef SE_H_
+#define SE_H_
 
-#include <iostream>
-#include <ctime>
+#include <string>
 
 class Se
 {
-
 public:
-    Se() {}
-    ~Se() {}
-
-    std::string ENDPOINT;
-    std::string SE_TYPE;
-    std::string SITE;
-    std::string NAME;
-    std::string STATE;
-    std::string VERSION;
-    std::string HOST;
-    std::string SE_TRANSFER_TYPE;
-    std::string SE_TRANSFER_PROTOCOL;
-    std::string SE_CONTROL_PROTOCOL;
-    std::string GOCDB_ID;
+    std::string endpoint;
+    std::string seType;
+    std::string site;
+    std::string name;
+    std::string state;
+    std::string version;
+    std::string host;
+    std::string seTransferType;
+    std::string seTransferProtocol;
+    std::string seControlProtocol;
+    std::string gocdb_id;
 };
+
+#endif // SE_H_

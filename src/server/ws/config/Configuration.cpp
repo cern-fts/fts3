@@ -260,7 +260,7 @@ std::pair< LinkConfig, bool > Configuration::getLinkConfig(std::string source, s
     cfg->source = source;
     cfg->destination = destination;
     cfg->state = active ? on : off;
-    cfg->symbolic_name = symbolic_name;
+    cfg->symbolicName = symbolic_name;
 
     return std::make_pair(*cfg, update);
 }
@@ -270,28 +270,25 @@ void Configuration::addLinkCfg(std::string source, std::string destination, bool
 
     std::pair< LinkConfig, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
-    // not used for now therefore set to 0
-    cfg.first.NO_TX_ACTIVITY_TO = 0;
-
     if (protocol.is_initialized())
         {
             int value = protocol.get()[Protocol::NOSTREAMS];
-            cfg.first.NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
+            cfg.first.numberOfStreams = value ? value : DEFAULT_NOSTREAMS;
 
             value = protocol.get()[Protocol::TCP_BUFFER_SIZE];
-            cfg.first.TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
+            cfg.first.tcpBufferSize = value ? value : DEFAULT_BUFFSIZE;
 
             value = protocol.get()[Protocol::URLCOPY_TX_TO];
-            cfg.first.URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+            cfg.first.transferTimeout = value ? value : DEFAULT_TIMEOUT;
 
-            cfg.first.auto_tuning = off;
+            cfg.first.autoTuning = off;
         }
     else
         {
-            cfg.first.NOSTREAMS = -1;
-            cfg.first.TCP_BUFFER_SIZE = -1;
-            cfg.first.URLCOPY_TX_TO = -1;
-            cfg.first.auto_tuning = on;
+            cfg.first.numberOfStreams = -1;
+            cfg.first.tcpBufferSize = -1;
+            cfg.first.transferTimeout = -1;
+            cfg.first.autoTuning = on;
         }
 
     if (cfg.second)
@@ -311,15 +308,13 @@ void Configuration::addLinkCfg(std::string source, std::string destination, bool
 
     std::pair< LinkConfig, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
-    // not used therefore set to 0
-    cfg.first.NO_TX_ACTIVITY_TO = 0;
     // not used in case of share-only configuration therefore set to -1
-    cfg.first.NOSTREAMS = -1;
-    cfg.first.TCP_BUFFER_SIZE = -1;
-    cfg.first.URLCOPY_TX_TO = -1;
+    cfg.first.numberOfStreams = -1;
+    cfg.first.tcpBufferSize = -1;
+    cfg.first.transferTimeout = -1;
 
     // mark it as share only
-    cfg.first.auto_tuning = share_only;
+    cfg.first.autoTuning = share_only;
 
     if (cfg.second)
         {
@@ -371,7 +366,7 @@ void Configuration::addShareCfg(std::string source, std::string destination, std
             cfg->source = source;
             cfg->destination = destination;
             cfg->vo = vo;
-            cfg->active_transfers = it->second;
+            cfg->activeTransfers = it->second;
             // check if the configuration should use insert or update
             if (update.count(it->first))
                 {
@@ -484,7 +479,7 @@ boost::optional< std::map<std::string, int> > Configuration::getProtocolMap(std:
         db->getLinkConfig(source, destination)
     );
 
-    if (cfg->auto_tuning == on)
+    if (cfg->autoTuning == on)
         return boost::optional< std::map<std::string, int> >();
 
     return getProtocolMap(cfg.get());
@@ -494,10 +489,9 @@ boost::optional< std::map<std::string, int> > Configuration::getProtocolMap(Link
 {
 
     std::map<std::string, int> ret;
-    ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
-    ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
-    ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
-    ret[Protocol::NO_TX_ACTIVITY_TO] = cfg->NO_TX_ACTIVITY_TO;
+    ret[Protocol::NOSTREAMS] = cfg->numberOfStreams;
+    ret[Protocol::TCP_BUFFER_SIZE] = cfg->tcpBufferSize;
+    ret[Protocol::URLCOPY_TX_TO] = cfg->transferTimeout;
 
     return ret;
 }
@@ -518,7 +512,7 @@ std::map<std::string, int> Configuration::getShareMap(std::string source, std::s
 
     for (auto it = vec.begin(); it != vec.end(); it++)
         {
-            ret[it->vo] = it->active_transfers;
+            ret[it->vo] = it->activeTransfers;
         }
 
     return ret;

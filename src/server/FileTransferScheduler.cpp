@@ -38,7 +38,7 @@ using namespace fts3::ws;
 
 
 FileTransferScheduler::FileTransferScheduler(
-    TransferFiles const & file,
+    TransferFile const & file,
     std::vector< std::shared_ptr<ShareConfig> > cfgs,
     std::set<std::string> inses,
     std::set<std::string> outses,
@@ -49,8 +49,8 @@ FileTransferScheduler::FileTransferScheduler(
     db (DBSingleton::instance().getDBObjectInstance())
 {
 
-    srcSeName = file.SOURCE_SE;
-    destSeName = file.DEST_SE;
+    srcSeName = file.sourceSe;
+    destSeName = file.destSe;
 
     std::vector< std::shared_ptr<ShareConfig> > no_auto_share;
 
@@ -59,7 +59,7 @@ FileTransferScheduler::FileTransferScheduler(
 
             std::shared_ptr<ShareConfig>& cfg = *it;
 
-            if (cfg->share_only)
+            if (cfg->shareOnly)
                 {
                     double tmp = 0;
                     int sum = 0;
@@ -89,14 +89,14 @@ FileTransferScheduler::FileTransferScheduler(
                         {
                             // if tmp == 1 it means that there are no active transfer and auto-tuner allocated the first credit
                             // calculate the share
-                            tmp = (tmp * cfg->active_transfers) / sum;
+                            tmp = (tmp * cfg->activeTransfers) / sum;
                         }
                     // round up the result
-                    cfg->active_transfers = static_cast<int>(tmp + 0.5);
-                    cfg->share_only = false; // now the value has been set
+                    cfg->activeTransfers = static_cast<int>(tmp + 0.5);
+                    cfg->shareOnly = false; // now the value has been set
                 }
 
-            if (cfg->active_transfers != Configuration::automatic) no_auto_share.push_back(cfg);
+            if (cfg->activeTransfers != Configuration::automatic) no_auto_share.push_back(cfg);
         }
 
     this->cfgs = no_auto_share;
@@ -133,15 +133,15 @@ bool FileTransferScheduler::schedule(int &currentActive)
                     if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
 
                     // check if the configuration allows this type of transfer-job
-                    if (!cfg->active_transfers)
+                    if (!cfg->activeTransfers)
                         {
                             // failed to allocate active transfers credits to transfer-job
                             std::string msg = getNoCreditsErrMsg(cfg.get());
                             // set file status to failed
                             db->updateFileTransferStatus(
                                 0.0,
-                                file.JOB_ID,
-                                file.FILE_ID,
+                                file.jobId,
+                                file.fileId,
                                 JobStatusHandler::FTS3_STATUS_FAILED,
                                 msg,
                                 0,
@@ -151,7 +151,7 @@ bool FileTransferScheduler::schedule(int &currentActive)
                             );
                             // set job states if necessary
                             db->updateJobTransferStatus(
-                                file.JOB_ID,
+                                file.jobId,
                                 JobStatusHandler::FTS3_STATUS_FAILED,0
                             );
                             // log it
@@ -165,19 +165,19 @@ bool FileTransferScheduler::schedule(int &currentActive)
                     if (source == Configuration::wildcard)
                         {
                             active_transfers = db->countActiveOutboundTransfersUsingDefaultCfg(srcSeName, vo);
-                            if (cfg->active_transfers - active_transfers > 0) continue;
+                            if (cfg->activeTransfers - active_transfers > 0) continue;
                             return false;
                         }
 
                     if (destination == Configuration::wildcard)
                         {
                             active_transfers = db->countActiveInboundTransfersUsingDefaultCfg(destSeName, vo);
-                            if (cfg->active_transfers - active_transfers > 0) continue;
+                            if (cfg->activeTransfers - active_transfers > 0) continue;
                             return false;
                         }
 
                     active_transfers = db->countActiveTransfers(source, destination, vo);
-                    if (cfg->active_transfers - active_transfers > 0) continue;
+                    if (cfg->activeTransfers - active_transfers > 0) continue;
                     return false;
                 }
         }
@@ -235,7 +235,7 @@ std::string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
 
     for (auto it = cfgs.begin(); it != cfgs.end(); ++it)
         {
-            if (it->active_transfers)
+            if (it->activeTransfers)
                 {
                     if (it != cfgs.begin())
                         ss << ", ";

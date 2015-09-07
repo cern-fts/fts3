@@ -61,9 +61,9 @@ protected:
 
     void executeUrlcopy()
     {
-        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > > voQueues;
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > > voQueues;
         DBSingleton::instance().getDBObjectInstance()->getMultihopJobs(voQueues);
-        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >::iterator vo_it;
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >::iterator vo_it;
 
         bool empty = false;
 
@@ -72,11 +72,11 @@ protected:
                 empty = true;
                 for (vo_it = voQueues.begin(); vo_it != voQueues.end(); ++vo_it)
                     {
-                        std::queue< std::pair<std::string, std::list<TransferFiles> > > & vo_jobs = vo_it->second;
+                        std::queue< std::pair<std::string, std::list<TransferFile> > > & vo_jobs = vo_it->second;
                         if (!vo_jobs.empty())
                             {
                                 empty = false; //< if we are here there are still some data
-                                std::pair< std::string, std::list<TransferFiles> > const job = vo_jobs.front();
+                                std::pair< std::string, std::list<TransferFile> > const job = vo_jobs.front();
                                 vo_jobs.pop();
                                 ProcessServiceReuseHandler<TRAITS>::startUrlCopy(job.first, job.second);
                             }

@@ -53,10 +53,10 @@ class TransferFileHandler
 
 public:
 
-    TransferFileHandler(std::map< std::string, std::list<TransferFiles> >& files);
+    TransferFileHandler(std::map< std::string, std::list<TransferFile> >& files);
     virtual ~TransferFileHandler();
 
-    boost::optional<TransferFiles> get(std::string vo);
+    boost::optional<TransferFile> get(std::string vo);
 
     std::set<std::string>::iterator begin();
     std::set<std::string>::iterator end();
@@ -73,16 +73,16 @@ public:
 
 private:
 
-    boost::optional<TransferFiles> getFile(FileIndex index);
+    boost::optional<TransferFile> getFile(FileIndex index);
 
     boost::optional<FileIndex> getIndex(std::string vo);
 
     boost::optional< std::pair<std::string, std::string> > getNextPair(std::string vo);
 
-    std::map< std::string, std::set<std::string> >& getMapFromCache(std::map< std::string, std::list<TransferFiles> >& files, GET_MAP_OPTS opt);
+    std::map< std::string, std::set<std::string> >& getMapFromCache(std::map< std::string, std::list<TransferFile> >& files, GET_MAP_OPTS opt);
 
     // maps file indexes to file replicas
-    std::map< FileIndex, std::list<TransferFiles> > fileIndexToFiles;
+    std::map< FileIndex, std::list<TransferFile> > fileIndexToFiles;
 
     // maps VOs to file indexes
     // file indexes are organized in map: source-destination pair is mapped to file indexes
@@ -90,7 +90,7 @@ private:
 
     std::set<std::string> vos;
 
-    void freeList(std::list<TransferFiles>& l);
+    void freeList(std::list<TransferFile>& l);
 
     /// mutex that ensures thread safety
     boost::mutex m;

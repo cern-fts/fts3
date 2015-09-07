@@ -25,8 +25,6 @@
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
-#include "common/JobStatusHandler.h"
-
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
@@ -40,7 +38,6 @@
 #include <boost/lambda/lambda.hpp>
 
 using namespace fts3::cli;
-using namespace fts3::common;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.

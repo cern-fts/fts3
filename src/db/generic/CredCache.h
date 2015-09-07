@@ -19,29 +19,20 @@
  */
 
 #pragma once
+#ifndef CREDCACHE_H
+#define CREDCACHE_H
 
-#include <iostream>
+#include <string>
 
 class CredCache
 {
 public:
 
-    CredCache():delegationID(""), DN(""),vomsAttributes(""),certificateRequest(""),privateKey("")
-    {
-    }
-
-    ~CredCache()
-    {
-    }
-
     std::string delegationID;
-
     std::string DN;
-
     std::string vomsAttributes;
-
     std::string certificateRequest;
-
     std::string privateKey;
-
 };
+
+#endif // CREDCACHE_H

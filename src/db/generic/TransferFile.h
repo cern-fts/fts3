@@ -19,61 +19,62 @@
  */
 
 #pragma once
-#ifndef TRANSFERJOB_H_
-#define TRANSFERJOB_H
+#ifndef TRANSFERFILES_H_
+#define TRANSFERFILES_H_
 
 #include <string>
-#include "OwnedResource.h"
 
 /**
  * Describes the status of one file in a transfer job.
  */
-class TransferJob: public OwnedResource
+class TransferFile
 {
 public:
 
-    TransferJob() :
-            submitTime(0), finishTime(0), priority(3), maxTimeInQueue(0),
-            jobFinished(0), copyPinLifetime(0), bringOnline(0)
+
+    TransferFile() :
+            fileId(0), fileIndex(0), filesize(0.0), pinLifetime(0),
+            bringOnline(0), userFilesize(0.0), lastReplica(0)
     {
     }
 
+    ~TransferFile()
+    {
+    }
+
+    int fileId;
+    int fileIndex;
     std::string jobId;
-    std::string jobState;
-    std::string jobParams;
-    std::string source;
-    std::string destination;
-    std::string userDn;
+    std::string fileState;
+    std::string sourceSurl;
+    std::string sourceSe;
+    std::string destSe;
+    std::string destSurl;
     std::string agentDn;
-    std::string userCred;
-    std::string credId;
-    std::string voName;
     std::string reason;
-    time_t submitTime;
+    unsigned numFailures;
+    double filesize;
     time_t finishTime;
-    int priority;
-    std::string submitHost;
-    int maxTimeInQueue;
-    std::string spaceToken;
-    std::string storageClass;
-    std::string internalJobParams;
-    std::string overwriteFlag;
+    std::string internalFileParams;
     time_t jobFinished;
-    std::string sourceSpaceToken;
-    std::string sourceSpaceTokenDescription;
-    int copyPinLifetime;
+    std::string voName;
+    std::string overwriteFlag;
+    std::string userDn;
+    std::string credId;
     std::string checksumMethod;
+    std::string checksum;
+    std::string sourceSpaceToken;
+    std::string destinationSpaceToken;
+    std::string selectionStrategy;
+    int pinLifetime;
     int bringOnline;
-    std::string reuse;
-
-    std::string getUserDn() const
-    {
-        return userDn;
-    }
-    std::string getVo() const
-    {
-        return voName;
-    }
+    double userFilesize;
+    std::string fileMetadata;
+    std::string jobMetadata;
+    std::string bringOnlineToken;
+    std::string userCredentials;
+    std::string reuseJob;
+    int lastReplica;
 };
 
-#endif // TRANSFERJOB_H_
+#endif // TRANSFERFILES_H_

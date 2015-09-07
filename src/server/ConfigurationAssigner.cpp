@@ -38,7 +38,7 @@ using namespace fts3::common;
 
 using namespace boost::assign;
 
-ConfigurationAssigner::ConfigurationAssigner(TransferFiles const & file) :
+ConfigurationAssigner::ConfigurationAssigner(TransferFile const & file) :
     file(file),
     db (DBSingleton::instance().getDBObjectInstance()),
     assign_count(0)
@@ -53,9 +53,9 @@ ConfigurationAssigner::~ConfigurationAssigner()
 
 void ConfigurationAssigner::assign(std::vector< std::shared_ptr<ShareConfig> >& out)
 {
-    std::string source = file.SOURCE_SE;
-    std::string destination = file.DEST_SE;
-    std::string vo = file.VO_NAME;
+    std::string source = file.sourceSe;
+    std::string destination = file.destSe;
+    std::string vo = file.voName;
 
     // possible configurations for SE
     std::list<cfg_type> se_cfgs = list_of
@@ -115,11 +115,11 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
             if (ptr.get())
                 {
                     // set the share only status
-                    ptr->share_only = link->auto_tuning == Configuration::share_only;
+                    ptr->shareOnly = link->autoTuning == Configuration::share_only;
                     // add to out
                     out.push_back(ptr);
                     // add to DB
-                    db->addFileShareConfig(file.FILE_ID, ptr->source, ptr->destination, ptr->vo);
+                    db->addFileShareConfig(file.fileId, ptr->source, ptr->destination, ptr->vo);
                     // a configuration has been assigned
                     assign_count++;
                     // set the respective flags
@@ -145,17 +145,17 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
                     ptr->source = source;
                     ptr->destination = destination;
                     ptr->vo = Configuration::pub;
-                    ptr->active_transfers = 0;
+                    ptr->activeTransfers = 0;
                     // insert into DB
                     db->addShareConfig(ptr.get());
                 }
 
             // set the share only status
-            ptr->share_only = link->auto_tuning == Configuration::share_only;
+            ptr->shareOnly = link->autoTuning == Configuration::share_only;
             // add to out
             out.push_back(ptr);
             // add to DB
-            db->addFileShareConfig(file.FILE_ID, ptr->source, ptr->destination, ptr->vo);
+            db->addFileShareConfig(file.fileId, ptr->source, ptr->destination, ptr->vo);
             // a configuration has been assigned
             assign_count++;
             // set the respective flags

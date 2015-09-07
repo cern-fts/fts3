@@ -19,12 +19,13 @@
  */
 
 #pragma once
+#ifndef SECONFIG_H_
+#define SECONFIG_H
 
 #include <iostream>
 
 class SeConfig
 {
-
 public:
     SeConfig(): active(0) {}
     ~SeConfig() {}
@@ -35,3 +36,5 @@ public:
     std::string symbolicName;
     std::string state;
 };
+
+#endif // SECONFIG_H_

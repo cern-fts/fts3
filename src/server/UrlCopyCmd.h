@@ -25,7 +25,7 @@
 #include <map>
 #include <string>
 
-#include "db/generic/TransferFiles.h"
+#include "../db/generic/TransferFile.h"
 #include "ProtocolResolver.h"
 
 namespace fts3 {
@@ -71,7 +71,7 @@ public:
 
     void setGlobalTimeout(long);
 
-    void setFromTransfer(const TransferFiles&, bool is_multiple=false);
+    void setFromTransfer(const TransferFile&, bool is_multiple=false);
 
     void setFromProtocol(const ProtocolResolver::protocol& protocol);
     void setSecondsPerMB(long);

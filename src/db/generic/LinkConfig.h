@@ -27,20 +27,19 @@
 class LinkConfig
 {
 public:
-    LinkConfig(): NOSTREAMS(2),TCP_BUFFER_SIZE(0), URLCOPY_TX_TO(3600),NO_TX_ACTIVITY_TO(300)  {};
+    LinkConfig() : numberOfStreams(2), tcpBufferSize(0), transferTimeout(3600) {};
     ~LinkConfig() {};
 
     std::string source;
     std::string destination;
     std::string state;
-    std::string symbolic_name;
+    std::string symbolicName;
 
-    int NOSTREAMS;
-    int TCP_BUFFER_SIZE;
-    int URLCOPY_TX_TO;
-    int NO_TX_ACTIVITY_TO;
+    int numberOfStreams;
+    int tcpBufferSize;
+    int transferTimeout;
 
-    std::string auto_tuning;
+    std::string autoTuning;
 };
 
-#endif /* LINKCONFIG_H_ */
+#endif // LINKCONFIG_H_

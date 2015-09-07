@@ -19,6 +19,8 @@
  */
 
 #pragma once
+#ifndef SEPROTOCOLCONFIG_H_
+#define SEPROTOCOLCONFIG_H_
 
 #include <iostream>
 #include <string>
@@ -27,18 +29,14 @@ class SeProtocolConfig
 {
 public:
 
-    SeProtocolConfig(): symbolicName(""), NOSTREAMS(0),  TCP_BUFFER_SIZE(0), URLCOPY_TX_TO(0), NO_TX_ACTIVITY_TO(0)
-    {
-    }
-
-    ~SeProtocolConfig()
+    SeProtocolConfig(): numberOfStreams(0),  tcpBufferSize(0), transferTimeout(0)
     {
     }
 
     std::string symbolicName;
-    int NOSTREAMS;
-    int TCP_BUFFER_SIZE;
-    int URLCOPY_TX_TO;
-    int NO_TX_ACTIVITY_TO;
-
+    int numberOfStreams;
+    int tcpBufferSize;
+    int transferTimeout;
 };
+
+#endif // SEPROTOCOLCONFIG_H_

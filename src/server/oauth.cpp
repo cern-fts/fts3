@@ -65,12 +65,12 @@ std::string getCloudStorageDefaultName(const Uri& storage)
 }
 
 static
-std::string generateCloudStorageNames(const TransferFiles& tf)
+std::string generateCloudStorageNames(const TransferFile& tf)
 {
     std::string cs_name;
 
-    Uri source_se = Uri::Parse(tf.SOURCE_SE);
-    Uri dest_se   = Uri::Parse(tf.DEST_SE);
+    Uri source_se = Uri::Parse(tf.sourceSe);
+    Uri dest_se   = Uri::Parse(tf.destSe);
 
     if (isCloudStorage(source_se))
         cs_name = getCloudStorageDefaultName(source_se);
@@ -83,12 +83,12 @@ std::string generateCloudStorageNames(const TransferFiles& tf)
     return cs_name;
 }
 
-std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFiles& tf)
+std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
     std::string cs_name;
 
-    if (!tf.USER_CREDENTIALS.empty())
-        cs_name = tf.USER_CREDENTIALS;
+    if (!tf.userCredentials.empty())
+        cs_name = tf.userCredentials;
     else
         cs_name = generateCloudStorageNames(tf);
 
@@ -115,13 +115,13 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFiles
             boost::to_upper(upper_cs_name);
 
             OAuth oauth;
-            if(db->getOauthCredentials(tf.DN, tf.VO_NAME, upper_cs_name, oauth))
+            if(db->getOauthCredentials(tf.userDn, tf.voName, upper_cs_name, oauth))
                 {
                     fprintf(f, "[%s]\n", upper_cs_name.c_str());
-                    fprintf(f, "APP_KEY=%s\n", oauth.app_key.c_str());
-                    fprintf(f, "APP_SECRET=%s\n", oauth.app_secret.c_str());
-                    fprintf(f, "ACCESS_TOKEN=%s\n", oauth.access_token.c_str());
-                    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.access_token_secret.c_str());
+                    fprintf(f, "APP_KEY=%s\n", oauth.appKey.c_str());
+                    fprintf(f, "APP_SECRET=%s\n", oauth.appSecret.c_str());
+                    fprintf(f, "ACCESS_TOKEN=%s\n", oauth.accessToken.c_str());
+                    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.accessTokenSecret.c_str());
                 }
         }
 

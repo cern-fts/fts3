@@ -21,6 +21,6 @@
 namespace fts3
 {
 
-std::string generateOauthConfigFile(GenericDbIfce* db, const TransferFiles& tf);
+std::string generateOauthConfigFile(GenericDbIfce* db, const TransferFile& tf);
 
 }

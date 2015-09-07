@@ -19,8 +19,10 @@
  */
 
 #pragma once
+#ifndef FILETRANSFERSTATUS_H_
+#define FILETRANSFERSTATUS_H_
 
-#include <iostream>
+#include <string>
 
 /**
  * Describes the status of one file in a transfer job.
@@ -30,29 +32,25 @@ class FileTransferStatus
 public:
 
     FileTransferStatus() :
-        numFailures(0), finish_time(time(NULL)), start_time(time(NULL)),
-        staging_start(0), staging_finished(0),
-        fileId(0), duration(0)
-    {
-    }
-
-    ~FileTransferStatus()
+             finishTime(time(NULL)), startTime(time(NULL)),
+            stagingStart(0), stagingFinished(0),
+            numFailures(0), fileId(0), duration(0)
     {
     }
 
     std::string logicalName;
-    std::string sourceSURL;
-    std::string destSURL;
+    std::string sourceSurl;
+    std::string destSurl;
     std::string transferFileState;
+    time_t finishTime;
+    time_t startTime;
+    time_t stagingStart;
+    time_t stagingFinished;
     int numFailures;
     std::string reason;
-    std::string reason_class;
-    time_t finish_time;
-    time_t start_time;
-    time_t staging_start;
-    time_t staging_finished;
-    std::string error_scope;
-    std::string error_phase;
+    std::string reasonClass;
+    std::string errorScope;
+    std::string errorPhase;
     int fileId;
     double duration;
 };
@@ -69,3 +67,5 @@ public:
     time_t      datetime;
     std::string reason;
 };
+
+#endif // FILETRANSFERSTATUS_H_

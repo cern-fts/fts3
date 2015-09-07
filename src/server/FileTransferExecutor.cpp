@@ -49,7 +49,7 @@ namespace server
 {
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles& tf,
+FileTransferExecutor::FileTransferExecutor(TransferFile& tf,
         TransferFileHandler& tfh, bool monitoringMsg, std::string infosys,
         std::string ftsHostName, std::string proxy, std::string logDir) :
     tf(tf),
@@ -76,12 +76,12 @@ void FileTransferExecutor::run(boost::any & ctx)
     int & scheduled = boost::any_cast<int &>(ctx);
 
     //stop forking when a signal is received to avoid deadlocks
-    if (tf.FILE_ID == 0 || stopThreads) return;
+    if (tf.fileId == 0 || stopThreads) return;
 
     try
         {
-            std::string source_hostname = tf.SOURCE_SE;
-            std::string destin_hostname = tf.DEST_SE;
+            std::string source_hostname = tf.sourceSe;
+            std::string destin_hostname = tf.destSe;
             std::string params;
 
             // if the pair was already checked and not scheduled skip it
@@ -162,7 +162,6 @@ void FileTransferExecutor::run(boost::any & ctx)
                                     ProtocolResolver::protocol protocol;
                                     cmd_builder.setManualConfig(true);
                                     protocol.nostreams = resolver.getNoStreams();
-                                    protocol.no_tx_activity_to = resolver.getNoTxActiveTo();
                                     protocol.tcp_buffer_size = resolver.getTcpBufferSize();
                                     protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
                                     cmd_builder.setFromProtocol(protocol);
@@ -211,10 +210,10 @@ void FileTransferExecutor::run(boost::any & ctx)
                     cmd_builder.setNumberOfActive(currentActive);
 
                     // Number of retries and maximum number allowed
-                    int retry_times = db->getRetryTimes(tf.JOB_ID, tf.FILE_ID);
+                    int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);
                     cmd_builder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
 
-                    int retry_max = db->getRetry(tf.JOB_ID);
+                    int retry_max = db->getRetry(tf.jobId);
                     cmd_builder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
 
                     // Log directory
@@ -234,7 +233,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                         return;
 
                     //send current state message
-                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
+                    SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
 
                     scheduled += 1;
 
@@ -244,47 +243,47 @@ void FileTransferExecutor::run(boost::any & ctx)
                             if(forkMessage.empty())
                                 {
                                     failed = true;
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf.jobId << "  " << tf.fileId << commit;
                                     fileUpdated = db->updateFileTransferStatus(
-                                            0.0, tf.JOB_ID, tf.FILE_ID, "FAILED",
+                                            0.0, tf.jobId, tf.fileId, "FAILED",
                                             "Transfer failed to fork, check fts3server.log for more details",
                                             (int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
+                                    db->updateJobTransferStatus(tf.jobId, "FAILED",0);
                                 }
                             else
                                 {
                                     failed = true;
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf.jobId << "  " << tf.fileId << commit;
                                     fileUpdated = db->updateFileTransferStatus(
-                                            0.0, tf.JOB_ID, tf.FILE_ID, "FAILED",
+                                            0.0, tf.jobId, tf.fileId, "FAILED",
                                             "Transfer failed to fork, check fts3server.log for more details",
                                             (int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
+                                    db->updateJobTransferStatus(tf.jobId, "FAILED",0);
                                 }
                         }
                     else
                         {
                             fileUpdated = db->updateFileTransferStatus(
-                                    0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",
+                                    0.0, tf.jobId, tf.fileId, "ACTIVE", "",
                                     (int) pr.getPid(), 0, 0, false);
-                            db->updateJobTransferStatus(tf.JOB_ID, "ACTIVE",0);
+                            db->updateJobTransferStatus(tf.jobId, "ACTIVE",0);
                         }
 
                     // If fileUpdated == false, the transfer was *not* updated, which means we got
                     // probably a collision with some other node
                     if (!fileUpdated) {
                         FTS3_COMMON_LOGGER_NEWLOG(WARNING)
-                                << "Transfer " <<  tf.JOB_ID << " " << tf.FILE_ID
+                                << "Transfer " <<  tf.jobId << " " << tf.fileId
                                 << " not updated. Probably picked by another node" << commit;
                         return;
                     }
 
                     //send ACTIVE
-                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
+                    SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
                     struct message_updater msg;
-                    strncpy(msg.job_id, std::string(tf.JOB_ID).c_str(), sizeof(msg.job_id));
+                    strncpy(msg.job_id, std::string(tf.jobId).c_str(), sizeof(msg.job_id));
                     msg.job_id[sizeof(msg.job_id) - 1] = '\0';
-                    msg.file_id = tf.FILE_ID;
+                    msg.file_id = tf.fileId;
                     msg.process_id = (int) pr.getPid();
                     msg.timestamp = milliseconds_since_epoch();
 

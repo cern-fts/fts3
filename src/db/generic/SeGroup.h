@@ -19,12 +19,13 @@
  */
 
 #pragma once
+#ifndef SEGROUP_H_
+#define SEGROUP_H_
 
-#include <iostream>
+#include <string>
 
 class SeGroup
 {
-
 public:
     SeGroup(): active(0) {}
     ~SeGroup() {}
@@ -34,3 +35,5 @@ public:
     int active;
     std::string vo;
 };
+
+#endif // SEGROUP_H_

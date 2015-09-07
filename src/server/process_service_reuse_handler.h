@@ -91,7 +91,7 @@ protected:
             }
     }
 
-    std::map<int, std::string> generateJobFile(const std::string& job_id, const std::list<TransferFiles> files)
+    std::map<int, std::string> generateJobFile(const std::string& job_id, const std::list<TransferFile> files)
     {
         std::vector<std::string> urls;
         std::map<int, std::string> fileIds;
@@ -101,23 +101,23 @@ protected:
             {
                 PROFILE_SCOPE("executeUrlcopy::for[reuse]");
 
-                fileIds.insert(std::make_pair(it->FILE_ID, it->JOB_ID));
+                fileIds.insert(std::make_pair(it->fileId, it->jobId));
 
-                std::string fileMetadata = UrlCopyCmd::prepareMetadataString(it->FILE_METADATA);
+                std::string fileMetadata = UrlCopyCmd::prepareMetadataString(it->fileMetadata);
                 if (fileMetadata.empty())
                     fileMetadata = "x";
 
-                std::string bringOnlineToken = it->BRINGONLINE_TOKEN;
+                std::string bringOnlineToken = it->bringOnlineToken;
                 if (bringOnlineToken.empty())
                     bringOnlineToken = "x";
 
-                std::string checksum = it->CHECKSUM;
+                std::string checksum = it->checksum;
                 if (checksum.empty())
                     checksum = "x";
 
-                line << std::fixed << it->FILE_ID << " " << it->SOURCE_SURL << " " << it->DEST_SURL
+                line << std::fixed << it->fileId << " " << it->sourceSurl << " " << it->destSurl
                                    << " " << checksum
-                                   << " " << boost::lexical_cast<long long>(it->USER_FILESIZE)
+                                   << " " << boost::lexical_cast<long long>(it->userFilesize)
                                    << " " << fileMetadata
                                    << " " << bringOnlineToken;
                 urls.push_back(line.str());
@@ -132,10 +132,10 @@ protected:
     void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
     {
         //now get files to be scheduled
-        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > > voQueues;
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > > voQueues;
         DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(distinct, voQueues);
 
-        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >::iterator vo_it;
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >::iterator vo_it;
 
         bool empty = false;
 
@@ -144,11 +144,11 @@ protected:
                 empty = true;
                 for (vo_it = voQueues.begin(); vo_it != voQueues.end(); ++vo_it)
                     {
-                        std::queue< std::pair<std::string, std::list<TransferFiles> > > & vo_jobs = vo_it->second;
+                        std::queue< std::pair<std::string, std::list<TransferFile> > > & vo_jobs = vo_it->second;
                         if (!vo_jobs.empty())
                             {
                                 empty = false; //< if we are here there are still some data
-                                std::pair< std::string, std::list<TransferFiles> > const job = vo_jobs.front();
+                                std::pair< std::string, std::list<TransferFile> > const job = vo_jobs.front();
                                 vo_jobs.pop();
                                 startUrlCopy(job.first, job.second);
                             }
@@ -156,18 +156,18 @@ protected:
             }
     }
 
-    void startUrlCopy(std::string const & job_id, std::list<TransferFiles> const & files)
+    void startUrlCopy(std::string const & job_id, std::list<TransferFile> const & files)
     {
         GenericDbIfce *db = DBSingleton::instance().getDBObjectInstance();
         UrlCopyCmd cmd_builder;
 
         // Set parameters from the "representative", without using the source and destination url, and other data
         // that is per transfer
-        TransferFiles const & representative = files.front();
+        TransferFile const & representative = files.front();
         cmd_builder.setFromTransfer(representative, true);
 
         // Generate the file containing the list of transfers
-        std::map<int, std::string> fileIds = generateJobFile(representative.JOB_ID, files);
+        std::map<int, std::string> fileIds = generateJobFile(representative.jobId, files);
 
 
         /*check if manual config exist for this pair and vo*/
@@ -194,7 +194,7 @@ protected:
                 cmd_builder.setOptimizerLevel(level);
                 if(level == 2)
                     {
-                        protocol.nostreams = db->getStreamsOptimization(representative.SOURCE_SE, representative.DEST_SE);
+                        protocol.nostreams = db->getStreamsOptimization(representative.sourceSe, representative.destSe);
                         if(protocol.nostreams == 0)
                             protocol.nostreams = DEFAULT_NOSTREAMS;
                     }
@@ -223,7 +223,7 @@ protected:
 
         if (!cfgs.empty())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << representative.SOURCE_SE << " -> " << representative.DEST_SE << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << representative.sourceSe << " -> " << representative.destSe << commit;
                 ProtocolResolver resolver(representative, cfgs);
                 bool protocolExists = resolver.resolve();
                 if (protocolExists)
@@ -232,7 +232,6 @@ protected:
                         ProtocolResolver::protocol protocol;
 
                         protocol.nostreams = resolver.getNoStreams();
-                        protocol.no_tx_activity_to = resolver.getNoTxActiveTo();
                         protocol.tcp_buffer_size = resolver.getTcpBufferSize();
                         protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
 
@@ -245,7 +244,7 @@ protected:
                     }
             }
 
-        std::string proxy_file = DelegCred::getProxyFile(representative.DN, representative.CRED_ID);
+        std::string proxy_file = DelegCred::getProxyFile(representative.userDn, representative.credId);
         if (!proxy_file.empty())
             cmd_builder.setProxy(proxy_file);
 
@@ -260,13 +259,13 @@ protected:
         int updatedFiles = db->updateFileStatusReuse(representative, "READY");
         if (updatedFiles <= 0) {
             FTS3_COMMON_LOGGER_NEWLOG(WARNING)
-                    << "Transfer " << representative.JOB_ID << " with session reuse enabled"
+                    << "Transfer " << representative.jobId << " with session reuse enabled"
                     << " not updated. Probably picked by another node" << commit;
             return;
         }
 
         // Debug level
-        unsigned debugLevel = db->getDebugLevel(representative.SOURCE_SE, representative.DEST_SE);
+        unsigned debugLevel = db->getDebugLevel(representative.sourceSe, representative.destSe);
         if (debugLevel > 0)
             {
                 cmd_builder.setDebugLevel(debugLevel);

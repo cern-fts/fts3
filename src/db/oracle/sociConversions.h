@@ -26,7 +26,6 @@
 #include "db/generic/JobStatus.h"
 #include "db/generic/LinkConfig.h"
 #include "db/generic/Se.h"
-#include "db/generic/SeAndConfig.h"
 #include "db/generic/SeGroup.h"
 #include "db/generic/SeProtocolConfig.h"
 #include "db/generic/ShareConfig.h"
@@ -108,7 +107,7 @@ struct type_conversion<Cred>
         cred.DN               = v.get<std::string>("DN");
         cred.delegationID     = v.get<std::string>("DLG_ID");
         cred.proxy            = v.get<std::string>("PROXY");
-        cred.termination_time = getTimeT(v, "TERMINATION_TIME");
+        cred.terminationTime = getTimeT(v, "TERMINATION_TIME");
         cred.vomsAttributes   = v.get<std::string>("VOMS_ATTRS", std::string());
     }
 };
@@ -135,78 +134,78 @@ struct type_conversion<TransferJob>
 
     static void from_base(values const& v, indicator, TransferJob& job)
     {
-        job.JOB_ID         = v.get<std::string>("JOB_ID");
-        job.JOB_STATE      = v.get<std::string>("JOB_STATE");
-        job.VO_NAME        = v.get<std::string>("VO_NAME");
-        job.PRIORITY       = static_cast<int>(v.get<long long>("PRIORITY"));
-        job.SUBMIT_HOST    = v.get<std::string>("SUBMIT_HOST", "");
-        job.SOURCE         = v.get<std::string>("SOURCE_SE", "");
-        job.DEST           = v.get<std::string>("DEST_SE", "");
-        job.AGENT_DN       = v.get<std::string>("AGENT_DN", "");
-        job.SUBMIT_HOST    = v.get<std::string>("SUBMIT_HOST");
-        job.USER_DN        = v.get<std::string>("USER_DN");
-        job.USER_CRED      = v.get<std::string>("USER_CRED", "");
-        job.CRED_ID        = v.get<std::string>("CRED_ID", "");
-        job.SPACE_TOKEN    = v.get<std::string>("SPACE_TOKEN", "");
-        job.STORAGE_CLASS  = v.get<std::string>("STORAGE_CLASS", "");
-        job.INTERNAL_JOB_PARAMS = v.get<std::string>("JOB_PARAMS", "");
-        job.OVERWRITE_FLAG = v.get<std::string>("OVERWRITE_FLAG", "");
-        job.SOURCE_SPACE_TOKEN = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
-        job.SOURCE_TOKEN_DESCRIPTION = v.get<std::string>("SOURCE_TOKEN_DESCRIPTION", "");
-        job.COPY_PIN_LIFETIME  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"));
-        job.BRINGONLINE 	= static_cast<int>(v.get<double>("BRING_ONLINE"));
-        job.CHECKSUM_METHOD = v.get<std::string>("CHECKSUM_METHOD", "");
-        job.SUBMIT_TIME     = getTimeT(v, "SUBMIT_TIME");
+        job.jobId         = v.get<std::string>("JOB_ID");
+        job.jobState      = v.get<std::string>("JOB_STATE");
+        job.voName        = v.get<std::string>("VO_NAME");
+        job.priority       = static_cast<int>(v.get<long long>("PRIORITY"));
+        job.submitHost    = v.get<std::string>("SUBMIT_HOST", "");
+        job.source         = v.get<std::string>("SOURCE_SE", "");
+        job.destination           = v.get<std::string>("DEST_SE", "");
+        job.agentDn       = v.get<std::string>("AGENT_DN", "");
+        job.submitHost    = v.get<std::string>("SUBMIT_HOST");
+        job.userDn        = v.get<std::string>("USER_DN");
+        job.userCred      = v.get<std::string>("USER_CRED", "");
+        job.credId        = v.get<std::string>("CRED_ID", "");
+        job.spaceToken    = v.get<std::string>("SPACE_TOKEN", "");
+        job.storageClass  = v.get<std::string>("STORAGE_CLASS", "");
+        job.internalJobParams = v.get<std::string>("JOB_PARAMS", "");
+        job.overwriteFlag = v.get<std::string>("OVERWRITE_FLAG", "");
+        job.sourceSpaceToken = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
+        job.sourceSpaceTokenDescription = v.get<std::string>("SOURCE_TOKEN_DESCRIPTION", "");
+        job.copyPinLifetime  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"));
+        job.bringOnline 	= static_cast<int>(v.get<double>("BRING_ONLINE"));
+        job.checksumMethod = v.get<std::string>("CHECKSUM_METHOD", "");
+        job.submitTime     = getTimeT(v, "SUBMIT_TIME");
 
         try
             {
-                job.REUSE = v.get<std::string>("REUSE_JOB", "");
+                job.reuse = v.get<std::string>("REUSE_JOB", "");
             }
         catch (...)
             {
             }
 
         // No method that uses this type asks for finish_time
-        job.FINISH_TIME = 0;
+        job.finishTime = 0;
     }
 };
 
 template <>
-struct type_conversion<TransferFiles>
+struct type_conversion<TransferFile>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, TransferFiles& file)
+    static void from_base(values const& v, indicator, TransferFile& file)
     {
-        file.FILE_STATE  = v.get<std::string>("FILE_STATE");
-        file.SOURCE_SURL = v.get<std::string>("SOURCE_SURL");
-        file.DEST_SURL   = v.get<std::string>("DEST_SURL");
-        file.JOB_ID      = v.get<std::string>("JOB_ID");
-        file.VO_NAME     = v.get<std::string>("VO_NAME");
-        file.FILE_ID     = static_cast<int>(v.get<long long>("FILE_ID"));
-        file.OVERWRITE   = v.get<std::string>("OVERWRITE_FLAG", "");
-        file.DN          = v.get<std::string>("USER_DN");
-        file.CRED_ID     = v.get<std::string>("CRED_ID", "");
-        file.CHECKSUM    = v.get<std::string>("CHECKSUM", "");
-        file.CHECKSUM_METHOD    = v.get<std::string>("CHECKSUM_METHOD", "");
-        file.SOURCE_SPACE_TOKEN = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
-        file.DEST_SPACE_TOKEN   = v.get<std::string>("SPACE_TOKEN", "");
-        file.BRINGONLINE   = static_cast<int>(v.get<double>("BRING_ONLINE"),0);
-        file.PIN_LIFETIME  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"),0);
-        file.FILE_METADATA = v.get<std::string>("FILE_METADATA", "");
-        file.JOB_METADATA  = v.get<std::string>("JOB_METADATA", "");
-        file.USER_FILESIZE = static_cast<double>(v.get<long long>("USER_FILESIZE", 0));
-        file.FILE_INDEX    = static_cast<int>(v.get<long long>("FILE_INDEX", 0));
-        file.BRINGONLINE_TOKEN = v.get<std::string>("BRINGONLINE_TOKEN", "");
-        file.SOURCE_SE = v.get<std::string>("SOURCE_SE", "");
-        file.DEST_SE = v.get<std::string>("DEST_SE", "");
-        file.SELECTION_STRATEGY = v.get<std::string>("SELECTION_STRATEGY", "");
-        file.INTERNAL_FILE_PARAMS = v.get<std::string>("INTERNAL_JOB_PARAMS", "");
-        file.USER_CREDENTIALS = v.get<std::string>("USER_CRED", "");
+        file.fileState  = v.get<std::string>("FILE_STATE");
+        file.sourceSurl = v.get<std::string>("SOURCE_SURL");
+        file.destSurl   = v.get<std::string>("DEST_SURL");
+        file.jobId      = v.get<std::string>("JOB_ID");
+        file.voName     = v.get<std::string>("VO_NAME");
+        file.fileId     = static_cast<int>(v.get<long long>("FILE_ID"));
+        file.overwriteFlag   = v.get<std::string>("OVERWRITE_FLAG", "");
+        file.userDn          = v.get<std::string>("USER_DN");
+        file.credId     = v.get<std::string>("CRED_ID", "");
+        file.checksum    = v.get<std::string>("CHECKSUM", "");
+        file.checksumMethod    = v.get<std::string>("CHECKSUM_METHOD", "");
+        file.sourceSpaceToken = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
+        file.destinationSpaceToken   = v.get<std::string>("SPACE_TOKEN", "");
+        file.bringOnline   = static_cast<int>(v.get<double>("BRING_ONLINE"),0);
+        file.pinLifetime  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"),0);
+        file.fileMetadata = v.get<std::string>("FILE_METADATA", "");
+        file.jobMetadata  = v.get<std::string>("JOB_METADATA", "");
+        file.userFilesize = static_cast<double>(v.get<long long>("USER_FILESIZE", 0));
+        file.fileIndex    = static_cast<int>(v.get<long long>("FILE_INDEX", 0));
+        file.bringOnlineToken = v.get<std::string>("BRINGONLINE_TOKEN", "");
+        file.sourceSe = v.get<std::string>("SOURCE_SE", "");
+        file.destSe = v.get<std::string>("DEST_SE", "");
+        file.selectionStrategy = v.get<std::string>("SELECTION_STRATEGY", "");
+        file.internalFileParams = v.get<std::string>("INTERNAL_JOB_PARAMS", "");
+        file.userCredentials = v.get<std::string>("USER_CRED", "");
 
         try
             {
-                file.REUSE_JOB = v.get<std::string>("REUSE_JOB", "");
+                file.reuseJob = v.get<std::string>("REUSE_JOB", "");
             }
         catch(...)
             {
@@ -215,21 +214,7 @@ struct type_conversion<TransferFiles>
 
         // filesize and reason are NOT queried by any method that uses this
         // type
-        file.FILESIZE = "";
-    }
-};
-
-template <>
-struct type_conversion<SeAndConfig>
-{
-    typedef values base_type;
-
-    static void from_base(values const& v, indicator, SeAndConfig& sc)
-    {
-        sc.SE_NAME     = v.get<std::string>("SE_NAME", "");
-        sc.SHARE_ID    = v.get<std::string>("SHARE_ID", "");
-        sc.SHARE_TYPE  = v.get<std::string>("SHARE_TYPE", "");
-        sc.SHARE_VALUE = v.get<std::string>("SHARE_VALUE", "");
+        file.filesize = 0;
     }
 };
 
@@ -240,10 +225,10 @@ struct type_conversion<SeProtocolConfig>
 
     static void from_base(values const& v, indicator, SeProtocolConfig& protoConfig)
     {
-        protoConfig.TCP_BUFFER_SIZE = static_cast<int>(v.get<long long>("TCP_BUFFER_SIZE", 0));
-        protoConfig.NOSTREAMS = static_cast<int>(v.get<double>("NOSTREAMS", 0));
-        protoConfig.NO_TX_ACTIVITY_TO = static_cast<int>(v.get<long long>("NO_TX_ACTIVITY_TO", 0));
-        protoConfig.URLCOPY_TX_TO = static_cast<int>(v.get<long long>("URLCOPY_TX_TO", 0));
+        protoConfig.tcpBufferSize = static_cast<int>(v.get<long long>("TCP_BUFFER_SIZE", 0));
+        protoConfig.numberOfStreams = static_cast<int>(v.get<double>("NOSTREAMS", 0));
+        //protoConfig.unused = static_cast<int>(v.get<long long>("NO_TX_ACTIVITY_TO", 0));
+        protoConfig.transferTimeout = static_cast<int>(v.get<long long>("URLCOPY_TX_TO", 0));
     }
 };
 
@@ -300,18 +285,18 @@ struct type_conversion<FileTransferStatus>
     static void from_base(values const& v, indicator, FileTransferStatus& transfer)
     {
         transfer.fileId            = static_cast<int>(v.get<long long>("FILE_ID"));
-        transfer.sourceSURL        = v.get<std::string>("SOURCE_SURL");
-        transfer.destSURL          = v.get<std::string>("DEST_SURL", "");
+        transfer.sourceSurl        = v.get<std::string>("SOURCE_SURL");
+        transfer.destSurl          = v.get<std::string>("DEST_SURL", "");
 
         transfer.transferFileState = v.get<std::string>("FILE_STATE");
         transfer.reason            = v.get<std::string>("REASON", "");
         transfer.numFailures	   = static_cast<int>(v.get<double>("RETRY", 0));
         transfer.duration	   = v.get<double>("TX_DURATION",0);
 
-        transfer.start_time        = getTimeT(v, "START_TIME");
-        transfer.finish_time       = getTimeT(v, "FINISH_TIME");
-        transfer.staging_start     = getTimeT(v, "STAGING_START");
-        transfer.staging_finished    = getTimeT(v, "STAGING_FINISHED");
+        transfer.startTime        = getTimeT(v, "START_TIME");
+        transfer.finishTime       = getTimeT(v, "FINISH_TIME");
+        transfer.stagingStart     = getTimeT(v, "STAGING_START");
+        transfer.stagingFinished    = getTimeT(v, "STAGING_FINISHED");
     }
 };
 
@@ -322,17 +307,17 @@ struct type_conversion<Se>
 
     static void from_base(values const& v, indicator, Se& se)
     {
-        se.ENDPOINT = v.get<std::string>("ENDPOINT", "");
-        se.SE_TYPE  = v.get<std::string>("SE_TYPE", "");
-        se.SITE     = v.get<std::string>("SITE", "");
-        se.NAME     = v.get<std::string>("NAME", "");
-        se.STATE    = v.get<std::string>("STATE", "");
-        se.VERSION  = v.get<std::string>("VERSION", "");
-        se.HOST     = v.get<std::string>("HOST", "");
-        se.SE_TRANSFER_TYPE     = v.get<std::string>("SE_TRANSFER_TYPE", "");
-        se.SE_TRANSFER_PROTOCOL = v.get<std::string>("SE_TRANSFER_PROTOCOL", "");
-        se.SE_CONTROL_PROTOCOL  = v.get<std::string>("SE_CONTROL_PROTOCOL", "");
-        se.GOCDB_ID = v.get<std::string>("GOCDB_ID", "");
+        se.endpoint = v.get<std::string>("ENDPOINT", "");
+        se.seType  = v.get<std::string>("SE_TYPE", "");
+        se.site     = v.get<std::string>("SITE", "");
+        se.name     = v.get<std::string>("NAME", "");
+        se.state    = v.get<std::string>("STATE", "");
+        se.version  = v.get<std::string>("VERSION", "");
+        se.host     = v.get<std::string>("HOST", "");
+        se.seTransferType     = v.get<std::string>("SE_TRANSFER_TYPE", "");
+        se.seTransferProtocol = v.get<std::string>("SE_TRANSFER_PROTOCOL", "");
+        se.seControlProtocol  = v.get<std::string>("SE_CONTROL_PROTOCOL", "");
+        se.gocdb_id = v.get<std::string>("GOCDB_ID", "");
     }
 };
 
@@ -362,7 +347,7 @@ struct type_conversion<ShareConfig>
         config.source           = v.get<std::string>("SOURCE", "");
         config.destination      = v.get<std::string>("DESTINATION", "");
         config.vo               = v.get<std::string>("VO", "");
-        config.active_transfers = static_cast<int>(v.get<long long>("ACTIVE", -1));
+        config.activeTransfers = static_cast<int>(v.get<long long>("ACTIVE", -1));
     }
 };
 
@@ -390,12 +375,12 @@ struct type_conversion<LinkConfig>
         lnk.source            = v.get<std::string>("SOURCE", "");
         lnk.destination       = v.get<std::string>("DESTINATION", "");
         lnk.state             = v.get<std::string>("STATE", "");
-        lnk.symbolic_name     = v.get<std::string>("SYMBOLICNAME", "");
-        lnk.NOSTREAMS         = static_cast<int>(v.get<long long>("NOSTREAMS", 0));
-        lnk.TCP_BUFFER_SIZE   = static_cast<int>(v.get<long long>("TCP_BUFFER_SIZE", 0));
-        lnk.URLCOPY_TX_TO     = static_cast<int>(v.get<long long>("URLCOPY_TX_TO", 0));
-        lnk.NO_TX_ACTIVITY_TO = static_cast<int>(v.get<long long>("NO_TX_ACTIVITY_TO", 0));
-        lnk.auto_tuning     = v.get<std::string>("AUTO_TUNING", "");
+        lnk.symbolicName     = v.get<std::string>("SYMBOLICNAME", "");
+        lnk.numberOfStreams         = static_cast<int>(v.get<long long>("NOSTREAMS", 0));
+        lnk.tcpBufferSize   = static_cast<int>(v.get<long long>("TCP_BUFFER_SIZE", 0));
+        lnk.transferTimeout     = static_cast<int>(v.get<long long>("URLCOPY_TX_TO", 0));
+        //lnk.NO_TX_ACTIVITY_TO = static_cast<int>(v.get<long long>("NO_TX_ACTIVITY_TO", 0));
+        lnk.autoTuning     = v.get<std::string>("AUTO_TUNING", "");
     }
 };
 
@@ -421,10 +406,10 @@ struct type_conversion<OAuth>
 
     static void from_base(values const& v, indicator, OAuth& oauth)
     {
-        oauth.app_key      = v.get<std::string>("APP_KEY", "");
-        oauth.app_secret   = v.get<std::string>("APP_SECRET", "");
-        oauth.access_token = v.get<std::string>("ACCESS_TOKEN", "");
-        oauth.access_token_secret = v.get<std::string>("ACCESS_TOKEN_SECRET", "");
+        oauth.appKey      = v.get<std::string>("APP_KEY", "");
+        oauth.appSecret   = v.get<std::string>("APP_SECRET", "");
+        oauth.accessToken = v.get<std::string>("ACCESS_TOKEN", "");
+        oauth.accessTokenSecret = v.get<std::string>("ACCESS_TOKEN_SECRET", "");
     }
 };
 

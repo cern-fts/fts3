@@ -357,9 +357,9 @@ std::unique_ptr<TransferJob> OracleAPI::getTransferJob(const std::string & jobId
 
             sql << query,
                 soci::use(jobId),
-                soci::into(job->VO_NAME),
-                soci::into(job->USER_DN),
-                soci::into(job->JOB_STATE);
+                soci::into(job->voName),
+                soci::into(job->userDn),
+                soci::into(job->jobState);
 
             if (sql.got_data())
                 {
@@ -850,7 +850,7 @@ void OracleAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::
         }
 }
 
-void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
+void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -939,7 +939,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
                     if (activityFilesNum.empty())
                         {
-                            soci::rowset<TransferFiles> rs = (
+                            soci::rowset<TransferFile> rs = (
                                                                  sql.prepare <<
                                                                  " SELECT * FROM (SELECT "
                                                                  "       rownum as rn, f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
@@ -968,11 +968,11 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                  soci::use(filesNum)
                                                              );
 
-                            for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                            for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
-                                    TransferFiles& tfile = *ti;
+                                    TransferFile& tfile = *ti;
 
-                                    if(tfile.REUSE_JOB == "R")
+                                    if(tfile.reuseJob == "R")
                                         {
                                             int total = 0;
                                             int remain = 0;
@@ -981,15 +981,15 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                 "   (SELECT COUNT(*) FROM t_file WHERE job_id=:job_id) AS c1,"
                                                 "   (SELECT COUNT(*) FROM t_file WHERE file_state<>'NOT_USED' AND job_id=:job_id) AS c2 "
                                                 " FROM dual",
-                                                soci::use(tfile.JOB_ID),
-                                                soci::use(tfile.JOB_ID),
+                                                soci::use(tfile.jobId),
+                                                soci::use(tfile.jobId),
                                                 soci::into(total),
                                                 soci::into(remain);
 
-                                            tfile.LAST_REPLICA = (total == remain)? 1: 0;
+                                            tfile.lastReplica = (total == remain)? 1: 0;
                                         }
 
-                                    files[tfile.VO_NAME].push_back(tfile);
+                                    files[tfile.voName].push_back(tfile);
                                 }
                         }
                     else
@@ -1040,7 +1040,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                         ;
 
 
-                                    soci::rowset<TransferFiles> rs = (
+                                    soci::rowset<TransferFile> rs = (
                                                                          sql.prepare <<
                                                                          select,
                                                                          soci::use(boost::get<0>(triplet)),
@@ -1053,27 +1053,27 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                          soci::use(it_act->second)
                                                                      );
 
-                                    for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                                    for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
-                                            TransferFiles& tfile = *ti;
+                                            TransferFile& tfile = *ti;
 
-                                            if(tfile.REUSE_JOB == "R")
+                                            if(tfile.reuseJob == "R")
                                                 {
                                                     int total = 0;
                                                     int remain = 0;
                                                     sql << " select count(*) as c1, "
                                                         " (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
                                                         " as c2 from t_file where job_id=:job_id",
-                                                        soci::use(tfile.JOB_ID),
-                                                        soci::use(tfile.JOB_ID),
+                                                        soci::use(tfile.jobId),
+                                                        soci::use(tfile.jobId),
                                                         soci::into(total),
                                                         soci::into(remain);
 
-                                                    tfile.LAST_REPLICA = (total == remain)? 1: 0;
+                                                    tfile.lastReplica = (total == remain)? 1: 0;
                                                 }
 
 
-                                            files[tfile.VO_NAME].push_back(tfile);
+                                            files[tfile.voName].push_back(tfile);
                                         }
                                 }
                         }
@@ -1136,7 +1136,7 @@ int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::st
 }
 
 
-void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -1167,7 +1167,7 @@ void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std
                     std::string vo_name = i->get<std::string>("VO_NAME", "");
                     std::string job_id = i->get<std::string>("JOB_ID", "");
 
-                    soci::rowset<TransferFiles> rs =
+                    soci::rowset<TransferFile> rs =
                         (
                             sql.prepare <<
                             " SELECT "
@@ -1184,17 +1184,17 @@ void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std
                             soci::use(job_id)
                         );
 
-                    std::list<TransferFiles> tf;
-                    for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                    std::list<TransferFile> tf;
+                    for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             tf.push_back(*ti);
                         }
 
                     // Check link config only for the first pair, and, if there are slots, proceed
-                    if (!tf.empty() && freeSlotForPair(sql, visited, tf.front().SOURCE_SE, tf.front().DEST_SE) > 0)
+                    if (!tf.empty() && freeSlotForPair(sql, visited, tf.front().sourceSe, tf.front().destSe) > 0)
                         {
                             files[vo_name].push(std::make_pair(job_id, tf));
-                            visited.push_back(std::make_pair(tf.front().SOURCE_SE, tf.front().DEST_SE));
+                            visited.push_back(std::make_pair(tf.front().sourceSe, tf.front().destSe));
                         }
                 }
         }
@@ -1384,7 +1384,7 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
 }
 
 
-unsigned int OracleAPI::updateFileStatusReuse(TransferFiles const & file, const std::string status)
+unsigned int OracleAPI::updateFileStatusReuse(TransferFile const & file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1398,7 +1398,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles const & file, const 
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
-            stmt.exchange(soci::use(file.JOB_ID, "jobId"));
+            stmt.exchange(soci::use(file.jobId, "jobId"));
             stmt.exchange(soci::use(hostname, "hostname"));
             stmt.alloc();
             stmt.prepare("UPDATE t_file SET "
@@ -1413,7 +1413,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles const & file, const 
                 {
                     soci::statement jobStmt(sql);
                     jobStmt.exchange(soci::use(status, "state"));
-                    jobStmt.exchange(soci::use(file.JOB_ID, "jobId"));
+                    jobStmt.exchange(soci::use(file.jobId, "jobId"));
                     jobStmt.alloc();
                     jobStmt.prepare("UPDATE t_job SET "
                                     "    job_state = :state "
@@ -1439,7 +1439,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles const & file, const 
 
 
 
-unsigned int OracleAPI::updateFileStatus(TransferFiles& file, const std::string status)
+unsigned int OracleAPI::updateFileStatus(TransferFile& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1452,7 +1452,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles& file, const std::string 
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
-            stmt.exchange(soci::use(file.FILE_ID, "fileId"));
+            stmt.exchange(soci::use(file.fileId, "fileId"));
             stmt.exchange(soci::use(hostname, "hostname"));
             stmt.alloc();
             stmt.prepare("UPDATE t_file SET "
@@ -1466,7 +1466,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles& file, const std::string 
                 {
                     soci::statement jobStmt(sql);
                     jobStmt.exchange(soci::use(status, "state"));
-                    jobStmt.exchange(soci::use(file.JOB_ID, "jobId"));
+                    jobStmt.exchange(soci::use(file.jobId, "jobId"));
                     jobStmt.alloc();
                     jobStmt.prepare("UPDATE t_job SET "
                                     "    job_state = :state "
@@ -1491,7 +1491,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles& file, const std::string 
 }
 
 
-void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
 {
     if(distinct.empty()) return;
 
@@ -1535,7 +1535,7 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
 
                     if (isNull != soci::i_null)
                         {
-                            soci::rowset<TransferFiles> rs =
+                            soci::rowset<TransferFile> rs =
                                 (
                                     sql.prepare <<
                                     " SELECT  "
@@ -1551,8 +1551,8 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
                                     soci::use(job)
                                 );
 
-                            std::list<TransferFiles> tf;
-                            for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                            std::list<TransferFile> tf;
+                            for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
                                     tf.push_back(*ti);
 
@@ -5577,10 +5577,10 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg)
                 "                          nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_tuning)"
                 "                  VALUES (:src, :dest, :state, :sname, :nstreams, :tcp, :txto, :txactivity, :auto_tuning)",
                 soci::use(cfg->source), soci::use(cfg->destination),
-                soci::use(cfg->state), soci::use(cfg->symbolic_name),
-                soci::use(cfg->NOSTREAMS), soci::use(cfg->TCP_BUFFER_SIZE),
-                soci::use(cfg->URLCOPY_TX_TO), soci::use(cfg->URLCOPY_TX_TO),
-                soci::use(cfg->auto_tuning);
+                soci::use(cfg->state), soci::use(cfg->symbolicName),
+                soci::use(cfg->numberOfStreams), soci::use(cfg->tcpBufferSize),
+                soci::use(cfg->transferTimeout), soci::use(cfg->transferTimeout),
+                soci::use(cfg->autoTuning);
 
 
             sql.commit();
@@ -5610,12 +5610,12 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg)
             sql << "UPDATE t_link_config SET "
                 "  state = :state, symbolicName = :sname, "
                 "  nostreams = :nostreams, tcp_buffer_size = :tcp, "
-                "  urlcopy_tx_to = :txto, no_tx_activity_to = :txactivity, auto_tuning = :auto_tuning "
+                "  urlcopy_tx_to = :txto, no_tx_activity_to = 0, auto_tuning = :auto_tuning "
                 "WHERE source = :source AND destination = :dest",
-                soci::use(cfg->state), soci::use(cfg->symbolic_name),
-                soci::use(cfg->NOSTREAMS), soci::use(cfg->TCP_BUFFER_SIZE),
-                soci::use(cfg->URLCOPY_TX_TO), soci::use(cfg->NO_TX_ACTIVITY_TO),
-                soci::use(cfg->auto_tuning),
+                soci::use(cfg->state), soci::use(cfg->symbolicName),
+                soci::use(cfg->numberOfStreams), soci::use(cfg->tcpBufferSize),
+                soci::use(cfg->transferTimeout),
+                soci::use(cfg->autoTuning),
                 soci::use(cfg->source), soci::use(cfg->destination);
 
             sql.commit();
@@ -5756,7 +5756,7 @@ void OracleAPI::addShareConfig(ShareConfig* cfg)
             sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_link_config, T_LINK_CONFIG_PK) */ INTO t_share_config (source, destination, vo, active) "
                 "                    VALUES (:source, :destination, :vo, :active)",
                 soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo),
-                soci::use(cfg->active_transfers);
+                soci::use(cfg->activeTransfers);
 
             sql.commit();
         }
@@ -5785,7 +5785,7 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg)
             sql << "UPDATE t_share_config SET "
                 "  active = :active "
                 "WHERE source = :source AND destination = :dest AND vo = :vo",
-                soci::use(cfg->active_transfers),
+                soci::use(cfg->activeTransfers),
                 soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo);
 
             sql.commit();

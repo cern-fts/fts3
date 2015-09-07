@@ -75,7 +75,7 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
             STATUS* status = make_status<STATUS>();
 
             status->destSURL = soap_new_std__string(ctx, -1);
-            *status->destSURL = tmp->destSURL;
+            *status->destSURL = tmp->destSurl;
 
             status->logicalName = soap_new_std__string(ctx, -1);
             *status->logicalName = tmp->logicalName;
@@ -84,10 +84,10 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
             *status->reason = tmp->reason;
 
             status->reason_USCOREclass = soap_new_std__string(ctx, -1);
-            *status->reason_USCOREclass = tmp->reason_class;
+            *status->reason_USCOREclass = tmp->reasonClass;
 
             status->sourceSURL = soap_new_std__string(ctx, -1);
-            *status->sourceSURL = tmp->sourceSURL;
+            *status->sourceSURL = tmp->sourceSurl;
 
             status->transferFileState = soap_new_std__string(ctx, -1);
             *status->transferFileState = tmp->transferFileState;
@@ -99,20 +99,20 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
                 }
             else
                 {
-                    if (tmp->finish_time > 0 && tmp->start_time > 0)
-                        status->duration = tmp->finish_time - tmp->start_time;
-                    else if(tmp->finish_time <= 0 && tmp->start_time > 0)
-                        status->duration = time(NULL) - tmp->start_time;
+                    if (tmp->finishTime > 0 && tmp->startTime > 0)
+                        status->duration = tmp->finishTime - tmp->startTime;
+                    else if(tmp->finishTime <= 0 && tmp->startTime > 0)
+                        status->duration = time(NULL) - tmp->startTime;
                     else
                         status->duration = 0;
                     status->numFailures = tmp->numFailures;
                 }
 
             status->staging = (int64_t*)soap_malloc(ctx, sizeof(int64_t));
-            if (tmp->staging_finished > 0 && tmp->staging_start > 0)
-                *status->staging = tmp->staging_finished - tmp->staging_start;
-            else if (tmp->staging_finished <= 0 && tmp->staging_start > 0)
-                *status->staging = time(NULL) - tmp->staging_start;
+            if (tmp->stagingFinished > 0 && tmp->stagingStart > 0)
+                *status->staging = tmp->stagingFinished - tmp->stagingStart;
+            else if (tmp->stagingFinished <= 0 && tmp->stagingStart > 0)
+                *status->staging = time(NULL) - tmp->stagingStart;
             else
                 *status->staging = 0;
 

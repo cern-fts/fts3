@@ -20,10 +20,6 @@
 
 #include "MsgPrinter.h"
 
-#include "common/JobStatusHandler.h"
-
-
-
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 #include <boost/assign.hpp>
@@ -38,8 +34,6 @@ namespace fts3
 {
 namespace cli
 {
-
-using namespace fts3::common;
 
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag)
 {
@@ -223,8 +217,8 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
             (*ostr) << "  Reason:      " << it->reason << std::endl;
             (*ostr) << "  Duration:    " << it->duration << std::endl;
 
-            if (it->staging_duration >= 0)
-                (*ostr) << "  Staging:     " << it->staging_duration << std::endl;
+            if (it->stagingDuration >= 0)
+                (*ostr) << "  Staging:     " << it->stagingDuration << std::endl;
 
             if (it->retries.size() > 0)
                 {
@@ -282,8 +276,8 @@ void MsgPrinter::print_json(JobStatus const & status)
                     file.put("reason", it->reason);
                     file.put("duration", it->duration);
 
-                    if (it->staging_duration >= 0)
-                        file.put("staging", it->staging_duration);
+                    if (it->stagingDuration >= 0)
+                        file.put("staging", it->stagingDuration);
 
                     if (it->retries.empty())
                         {

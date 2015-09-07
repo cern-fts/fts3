@@ -19,6 +19,10 @@
  */
 
 #pragma once
+#ifndef OWNEDRESOURCE_H_
+#define OWNEDRESOURCE_H_
+
+#include <string>
 
 /**
  * Classes that inherit from this interfaces represent
@@ -32,3 +36,5 @@ public:
     virtual std::string getUserDn() const = 0;
     virtual std::string getVo() const = 0;
 };
+
+#endif // OWNED_RESOURCE_H

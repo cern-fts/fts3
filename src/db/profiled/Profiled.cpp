@@ -102,17 +102,17 @@ std::unique_ptr<TransferJob> ProfiledDB::getTransferJob(const std::string & jobI
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+void ProfiledDB::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
 {
     PROFILE_PREFIXED("DB::", db->getByJobIdReuse(distinct, files));
 }
 
-void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
+void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
 }
 
-void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
 {
     PROFILE_PREFIXED("DB::", db->getMultihopJobs(files));
 }
@@ -123,7 +123,7 @@ void ProfiledDB::getSe(Se* &se, std::string seName)
 }
 
 
-unsigned int ProfiledDB::updateFileStatus(TransferFiles& file, const std::string status)
+unsigned int ProfiledDB::updateFileStatus(TransferFile& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatus(file, status));
 }
@@ -774,7 +774,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles const & file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFile const & file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }

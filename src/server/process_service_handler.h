@@ -181,7 +181,7 @@ protected:
                     return;
 
                 //now get files to be scheduled
-                std::map< std::string, std::list<TransferFiles> > voQueues;
+                std::map< std::string, std::list<TransferFile> > voQueues;
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
 
                 if(voQueues.empty())
@@ -213,20 +213,20 @@ protected:
                                         return;
                                     }
 
-                                boost::optional<TransferFiles> opt_tf = tfh.get(*it_vo);
+                                boost::optional<TransferFile> opt_tf = tfh.get(*it_vo);
                                 // if this VO has no more files to process just continue
                                 if (!opt_tf) continue;
 
-                                TransferFiles & tf = *opt_tf;
+                                TransferFile & tf = *opt_tf;
 
                                 // just to be sure
-                                if(tf.FILE_ID == 0 || tf.DN.empty() || tf.CRED_ID.empty()) continue;
+                                if(tf.fileId == 0 || tf.userDn.empty() || tf.credId.empty()) continue;
 
-                                std::pair<std::string, std::string> proxy_key(tf.CRED_ID, tf.DN);
+                                std::pair<std::string, std::string> proxy_key(tf.credId, tf.userDn);
 
                                 if (proxies.find(proxy_key) == proxies.end())
                                     {
-                                        proxies[proxy_key] = DelegCred::getProxyFile(tf.DN, tf.CRED_ID);
+                                        proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
                                     }
 
                                 FileTransferExecutor* exec = new FileTransferExecutor(

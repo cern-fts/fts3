@@ -18,21 +18,23 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef SHARECONFIG_H_
 #define SHARECONFIG_H_
 
+#include <string>
 
 class ShareConfig
 {
 public:
-    ShareConfig(): active_transfers(0), share_only(false) {};
+    ShareConfig(): activeTransfers(0), shareOnly(false) {};
     ~ShareConfig() {};
 
     std::string source;
     std::string destination;
     std::string vo;
-    int active_transfers;
-    bool share_only;
+    int activeTransfers;
+    bool shareOnly;
 };
 
-#endif /* SHARECONFIG_H_ */
+#endif // SHARECONFIG_H_

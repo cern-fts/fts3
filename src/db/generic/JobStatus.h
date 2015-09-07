@@ -18,8 +18,9 @@
  * limitations under the License.
  */
 
-
 #pragma once
+#ifndef JOBSTATUS_H_
+#define JOBSTATUS_H_
 
 #include <iostream>
 #include <ctime>
@@ -81,3 +82,5 @@ public:
      */
     int priority;
 };
+
+#endif // JOBSTATUS_H_

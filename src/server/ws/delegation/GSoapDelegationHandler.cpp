@@ -432,12 +432,12 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
                     if (cred.get())
                         {
                             // check if the termination time is better than for the current proxy (if not we don't bother)
-                            if (incomingExpirationTime < cred->termination_time)
+                            if (incomingExpirationTime < cred->terminationTime)
                                 {
                                     // log the termination time of the current and the new proxy
                                     FTS3_COMMON_LOGGER_NEWLOG (INFO)
                                             << "Current proxy termination time: "
-                                            << cred->termination_time
+                                            << cred->terminationTime
                                             << ", new proxy proxy termination time: "
                                             << incomingExpirationTime
                                             << " (the new proxy won't be used)"
@@ -575,7 +575,7 @@ time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
 
             if (cred.get())
                 {
-                    return cred->termination_time;
+                    return cred->terminationTime;
                 }
             else
                 {
