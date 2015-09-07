@@ -637,7 +637,9 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
 
 //check if called by multiple threads
 
-std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities)
+std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
+        std::string src, std::string dst, std::string vo, int filesNum,
+        std::set<std::string> & default_activities)
 {
     std::map<std::string, int> activityFilesNum;
 
@@ -852,7 +854,9 @@ void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::s
     }
 }
 
-void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
+void MySqlAPI::getByJobId(
+        std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
+        std::map<std::string, std::list<TransferFiles> >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -871,33 +875,9 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
     try
     {
-
         // Iterate through pairs, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
         boost::tuple<std::string, std::string, std::string> triplet;
-
-        soci::statement stmt1 = (sql.prepare <<
-                                 "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-                                 soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count)
-                                );
-        soci::statement stmt2 = (sql.prepare <<
-                                 "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                                 soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count)
-                                );
-        soci::statement stmt3 = (sql.prepare <<
-                                 " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state  = 'ACTIVE' and job_finished is NULL ",
-                                 soci::use(boost::get<0>(triplet)),
-                                 soci::use(boost::get<1>(triplet)),
-                                 soci::into(limit)
-                                );
-
-        soci::statement stmt4 = (sql.prepare <<
-                                 "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
-                                 soci::use(boost::get<0>(triplet)),
-                                 soci::use(boost::get<1>(triplet)),
-                                 soci::into(maxActive, isNull)
-                                );
-
 
         std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
         for (it = distinct.begin(); it != distinct.end(); ++it)
@@ -908,14 +888,16 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
             filesNum = defaultFilesNum;
 
             //1st check if manual config exists
-            stmt1.execute(true);
+            sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
+                   soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
             if(count > 0)
                 manualConfigExists = true;
 
             //if 1st check is false, check 2nd time for manual config
             if(!manualConfigExists)
             {
-                stmt2.execute(true);
+                sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+                       soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
                 if(count > 0)
                     manualConfigExists = true;
             }
@@ -927,9 +909,16 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 maxActive = 0;
                 isNull = soci::i_ok;
 
-                stmt3.execute(true);
+                sql << "SELECT COUNT(*) FROM t_file "
+                       " WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE' AND job_finished is NULL ",
+                       soci::use(boost::get<0>(triplet)),
+                       soci::use(boost::get<1>(triplet)),
+                       soci::into(limit);
 
-                stmt4.execute(true);
+                sql << "SELECT active FROM t_optimize_active WHERE source_se=:source_se AND dest_se=:dest_se",
+                       soci::use(boost::get<0>(triplet)),
+                       soci::use(boost::get<1>(triplet)),
+                       soci::into(maxActive, isNull);
 
                 if (isNull != soci::i_null && maxActive > 0)
                 {
