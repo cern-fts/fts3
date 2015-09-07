@@ -3738,7 +3738,7 @@ std::unique_ptr<CredCache> MySqlAPI::findCredentialCache(std::string delegationI
             "FROM t_credential_cache "
             "WHERE dlg_id = :dlgId and dn = :dn",
             soci::use(delegationID), soci::use(dn), soci::into(*cred);
-        if (!sql.got_data())
+        if (sql.got_data())
         {
             return cred;
         }
