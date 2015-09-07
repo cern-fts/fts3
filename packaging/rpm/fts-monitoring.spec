@@ -1,23 +1,23 @@
 Summary:    FTS3 Web Application for monitoring
 Name:       fts-monitoring
-Version:    3.3.1
+Version:    3.4.0
 Release:    1%{?dist}
-URL:        https://svnweb.cern.ch/trac/fts3
+URL:        http://fts3-service.web.cern.ch
 License:    ASL 2.0
 Group:      Applications/Internet
 BuildArch:  noarch
+# wget https://gitlab.cern.ch/fts/fts-monitoring/repository/archive.tar.gz?ref=v3.4.0 -O fts-monitoring-3.4.0.tar.gz
+Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  python2-devel
 
-#Requires: cx_Oracle
+#Requires:  cx_Oracle
 Requires:   MySQL-python
 Requires:   Django >= 1.3.7
 Requires:   httpd
 Requires:   mod_wsgi
 Requires:   python
 Requires:   python-decorator
-
-Source0:    %{name}-%{version}.tar.gz
 
 %description
 FTS v3 web application for monitoring,
@@ -61,17 +61,14 @@ fi
 %prep
 %setup -q
 
-%build
-mkdir build
-
 %install
 shopt -s extglob
 mkdir -p %{buildroot}%{_datadir}/fts3web/
 mkdir -p %{buildroot}%{_sysconfdir}/fts3web/
-mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/ 
+mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
 cp -r -p src/* %{buildroot}%{_datadir}/fts3web/
 cp -r -p conf/fts3web %{buildroot}%{_sysconfdir}
-install -m 644 conf/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/ 
+install -m 644 conf/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/
 
 %files
 %{_datadir}/fts3web
@@ -83,7 +80,15 @@ install -m 644 conf/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/co
 %files selinux
 
 %changelog
-* Thu Aug 14 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
+* Mon Sep 07 2015 Alejandro Alarez Ayllon <aalvarez@cern.ch> - 3.3.0-1
+- Update for new upstream release
+* Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.32-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+* Fri Mar 06 2015 Alejandro Alarez Ayllon <aalvarez@cern.ch> - 3.2.32-1
+  - Update for new upstream release
+* Wed Nov 26 2014 Alejandro Alarez Ayllon <aalvarez@cern.ch> - 3.2.30-1
+  - Update for new upstream release
+* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
   - Update for new upstream release
 * Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - Update for new upstream release
@@ -99,3 +104,4 @@ install -m 644 conf/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/co
   - more detailed description
 * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
+
