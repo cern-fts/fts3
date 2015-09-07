@@ -930,6 +930,19 @@ void MySqlAPI::getByJobId(
                 }
             }
 
+            // Get highest priority waiting for this queue
+            // We then filter by this, and order by file_id
+            // Doing this, we avoid a order by priority, which would trigger a filesort, which
+            // can be pretty slow...
+            int maxPriority = 3;
+            sql << "SELECT MAX(priority) "
+                   "FROM t_job, t_file "
+                   "WHERE "
+                   "    t_file.job_id = t_job.job_id AND t_file.job_finished IS NULL AND "
+                   "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest",
+                   soci::use(boost::get<2>(triplet)), soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)),
+                   soci::into(maxPriority);
+
             std::set<std::string> default_activities;
             std::map<std::string, int> activityFilesNum =
                 getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum, default_activities);
@@ -946,19 +959,22 @@ void MySqlAPI::getByJobId(
                                                   "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                   "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
                                                   " FROM t_file f, t_job j "
-                                                  " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
+                                                  " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
                                                   "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
                                                   "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
                                                   "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                   "     (j.reuse_job = 'N' OR j.reuse_job = 'R') AND "
-                                                  "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and "
-                                                  " f.job_finished is null and exists (select * from t_job y where y.job_id=j.job_id  "
-                                                  " ORDER BY y.priority DESC, y.submit_time) LIMIT :filesNum",
+                                                  "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+                                                  "     f.job_finished IS NULL AND "
+                                                  "     j.priority = :maxPriority "
+                                                  " ORDER BY file_id ASC "
+                                                  " LIMIT :filesNum",
                                                   soci::use(boost::get<0>(triplet)),
                                                   soci::use(boost::get<1>(triplet)),
                                                   soci::use(boost::get<2>(triplet)),
                                                   soci::use(tTime),
                                                   soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                  soci::use(maxPriority),
                                                   soci::use(filesNum));
 
 
@@ -1005,24 +1021,29 @@ void MySqlAPI::getByJobId(
                 {
                     if (it_act->second == 0) continue;
 
-                    std::string select = " select f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                    std::string select = " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                          "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
                                          "       f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
-                                         " from t_file f, t_job j where f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
-                                         " f.source_se = :source_se AND f.dest_se = :dest_se AND (j.reuse_job = 'N' OR j.reuse_job = 'R') AND  "
-                                         " f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND     (f.retry_timestamp is NULL OR "
-                                         " f.retry_timestamp < :tTime) AND ";
+                                         " FROM t_file f, t_job j "
+                                         " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
+                                         "      f.source_se = :source_se AND f.dest_se = :dest_se AND "
+                                         "      (j.reuse_job = 'N' OR j.reuse_job = 'R') AND  "
+                                         "      f.vo_name = :vo_name AND f.wait_timestamp IS NULL AND"
+                                         "      (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND ";
                     select +=
                         it_act->first == "default" ?
                         "	  (f.activity = :activity OR f.activity IS NULL OR f.activity IN " + def_act + ") AND "
                         :
                         "	  f.activity = :activity AND ";
                     select +=
-                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and f.job_finished is null and exists (select * from t_job y where y.job_id=j.job_id  "
-                        " ORDER BY y.priority DESC, y.submit_time)  LIMIT :filesNum";
+                        "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+                        "   f.job_finished IS NULL AND "
+                        "   j.priority = :maxPriority "
+                        "   ORDER BY file_id ASC "
+                        "   LIMIT :filesNum";
 
 
                     soci::rowset<TransferFiles> rs = (
@@ -1034,6 +1055,7 @@ void MySqlAPI::getByJobId(
                                                          soci::use(tTime),
                                                          soci::use(it_act->first),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                         soci::use(maxPriority),
                                                          soci::use(it_act->second)
                                                      );
 
