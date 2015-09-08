@@ -15,6 +15,8 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+option(WITHOUT_GOOGLE_COREDUMPER "Include Google Coredumper" OFF)
+
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (fts_include_dir
 	"${PROJECT_SOURCE_DIR}/src/"
@@ -38,31 +40,35 @@ find_package (Boost COMPONENTS regex iostreams system thread)
 
 # Build Google coredumper
 # Depend on .touch to avoid re-running configure every time
-add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
-    COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper
-    COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
-)
-add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
-    WORKING_DIRECTORY google-coredumper
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/configure CFLAGS='-fPIC -D_GNU_SOURCE'
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
-)
-add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
-    WORKING_DIRECTORY google-coredumper
-    COMMAND make
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
-)
-add_custom_target (libcoredumper
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
-)
-
-add_library (coredumper STATIC IMPORTED)
-add_dependencies (coredumper libcoredumper)
-set_target_properties (coredumper PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
-)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/src)
+if(NOT WITHOUT_GOOGLE_COREDUMPER)
+    add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
+        COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper
+        COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
+    )
+    add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
+        WORKING_DIRECTORY google-coredumper
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/configure CFLAGS='-fPIC -D_GNU_SOURCE'
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
+    )
+    add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
+        WORKING_DIRECTORY google-coredumper
+        COMMAND make
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
+    )
+    add_custom_target (libcoredumper
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
+    )
+    
+    add_library (coredumper STATIC IMPORTED)
+    add_dependencies (coredumper libcoredumper)
+    set_target_properties (coredumper PROPERTIES
+        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
+    )
+    
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/src)
+else()
+    add_definitions(-DWITHOUT_GOOGLE_COREDUMPER)
+endif()
 
 # Sources
 file(GLOB fts_common_sources "*.cpp")
@@ -73,7 +79,9 @@ endif ()
 
 add_library (fts_common SHARED ${fts_common_sources})
 target_link_libraries (fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES} -lpthread)
-target_link_libraries (fts_common coredumper)
+if(NOT WITHOUT_GOOGLE_COREDUMPER)
+    target_link_libraries (fts_common coredumper)
+endif()
 
 if (ORACLEBUILD STREQUAL "OFF")
     target_link_libraries (fts_common ${OPENSSL_LIBRARIES})
@@ -85,8 +93,8 @@ set_target_properties(fts_common PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/common
     VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
     SOVERSION ${VERSION_MAJOR}
-    CLEAN_DIRECT_OUTPUT 1)
-
+    CLEAN_DIRECT_OUTPUT 1
+)
 
 
 if(FTS3_COMPILE_WITH_UNITTEST)

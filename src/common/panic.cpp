@@ -21,7 +21,9 @@ limitations under the License. */
 #include <stdio.h>
 #include <string>
 #include <boost/thread.hpp>
+#ifndef WITHOUT_GOOGLE_COREDUMPER
 #include <google/coredumper.h>
+#endif
 
 /*
  * This file contains the logic to handle signals, logging them and
@@ -59,11 +61,13 @@ static void get_backtrace(int signum)
 
 static void generate_coredump(int signum)
 {
+#ifndef WITHOUT_GOOGLE_COREDUMPER
     extern char *program_invocation_short_name;
 
     char fname[1024];
     snprintf(fname, sizeof(fname), "/tmp/%s-%d.core", program_invocation_short_name, getpid());
     WriteCoreDump(fname);
+#endif
 }
 
 // Minimalistic logic inside a signal!
