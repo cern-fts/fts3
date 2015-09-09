@@ -4428,14 +4428,17 @@ bool MySqlAPI::updateOptimizer()
                                      soci::use(source_hostname),soci::use(destin_hostname), soci::into(submitted));
 
         //check if retry is set at global level
-        sql <<
-            " select r.retry  from t_server_config r where r.retry > 0 and exists (select file_id from t_file where source_se = :source_se AND dest_se = :dest_se and vo_name=r.vo_name and file_state in ('ACTIVE','SUBMITTED') limit 1)",soci::use(source_hostname), soci::use(destin_hostname),soci::into(retrySet, isRetry)
-            ;
+        sql << " SELECT r.retry FROM t_server_config r "
+               " WHERE r.retry > 0 AND "
+               "    EXISTS (SELECT file_id FROM t_file"
+               "            WHERE source_se = :source_se AND dest_se = :dest_se AND vo_name=r.vo_name AND file_state IN ('ACTIVE','SUBMITTED')"
+               "            LIMIT 1)",
+               soci::use(source_hostname), soci::use(destin_hostname),
+               soci::into(retrySet, isRetry);
 
         //if not set, flag as 0
         if (isRetry == soci::i_null || retrySet == 0)
             retrySet = 0;
-
 
         /* Start of TCP streams optimization "zone" */
         soci::statement stmt20 = (
@@ -4718,29 +4721,16 @@ bool MySqlAPI::updateOptimizer()
                 highDefault = LAN_ACTIVE;
             }
 
-            //check if the number of actives have been fixed for this pair
-            stmt_fixed.execute(true);
-            if (isNullFixed == soci::i_ok && active_fixed == "on")
-                continue;
-
-            // check current active transfers for a linkmaxActive
-            stmt7.execute(true);
-
-            //get submitted for this link
-            stmt19.execute(true);
-
-
             //get the average transfer duration for this link
             stmt_avg_duration.execute(true);
 
-            int calcutateTimeFrame = 0;
+            int calculateTimeFrame = 0;
             if(avgDuration > 0 && avgDuration < 30)
-                calcutateTimeFrame  = 5;
+                calculateTimeFrame  = 5;
             else if(avgDuration > 30 && avgDuration < 900)
-                calcutateTimeFrame  = 15;
+                calculateTimeFrame  = 15;
             else
-                calcutateTimeFrame  = 30;
-
+                calculateTimeFrame  = 30;
 
             // Ratio of success
             soci::rowset<soci::row> rs = (retrySet > 0)
@@ -4750,24 +4740,23 @@ bool MySqlAPI::updateOptimizer()
                                              "WHERE "
                                              "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                              "      ( "
-                                             " (t_file.job_finished is NULL and current_failures > 0) OR "
-                                             " (t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute)) "
+                                             "          (t_file.job_finished is NULL and current_failures > 0) OR "
+                                             "          (t_file.job_finished > (UTC_TIMESTAMP() - interval :calculateTimeFrame minute)) "
                                              "      ) AND "
                                              "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame)
+                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(calculateTimeFrame)
                                          )
                                          :
                                          (
                                              sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
                                              " WHERE "
                                              "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                             "      t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute) and file_state <> 'NOT_USED' ",
-                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame)
+                                             "      t_file.job_finished > (UTC_TIMESTAMP() - interval :calculateTimeFrame minute) and file_state <> 'NOT_USED' ",
+                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(calculateTimeFrame)
                                          );
 
             //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin();
-                    i != rs.end(); ++i)
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
             {
                 std::string state = i->get<std::string>("file_state", "");
                 int retryNum = i->get<int>("retry", 0);
@@ -4805,6 +4794,23 @@ bool MySqlAPI::updateOptimizer()
             {
                 ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
             }
+
+            // check current active transfers for a linkmaxActive
+            stmt7.execute(true);
+
+            // if the number of actives has been fixed, store the values in the evolution table
+            // for reference, but do not run the optimizer
+            stmt_fixed.execute(true);
+            if (isNullFixed == soci::i_ok && active_fixed == "on") {
+                updateOptimizerEvolution(sql,
+                        source_hostname, destin_hostname,
+                        active, throughput,
+                        ratioSuccessFailure, -1, 0);
+                continue;
+            }
+
+            //get submitted for this link
+            stmt19.execute(true);
 
             // Max active transfers
             stmt8.execute(true);
@@ -9913,7 +9919,10 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
     }
 }
 
-void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth)
+void MySqlAPI::updateOptimizerEvolution(soci::session& sql,
+        const std::string & source_hostname,
+        const std::string & destination_hostname, int active, double throughput,
+        double successRate, int pathFollowed, int bandwidth)
 {
     try
     {
@@ -9929,7 +9938,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
                 soci::use(active),
                 soci::use(throughput),
                 soci::use(successRate),
-                soci::use(buffer),
+                soci::use(pathFollowed),
                 soci::use(bandwidth),
                 soci::use(agrthroughput);
             sql.commit();
@@ -9956,7 +9965,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
                     soci::use(active),
                     soci::use(throughput),
                     soci::use(successRate),
-                    soci::use(buffer),
+                    soci::use(pathFollowed),
                     soci::use(bandwidth),
                     soci::use(agrthroughput);
                 sql.commit();
@@ -9991,7 +10000,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
                     soci::use(active),
                     soci::use(throughput),
                     soci::use(successRate),
-                    soci::use(buffer),
+                    soci::use(pathFollowed),
                     soci::use(bandwidth),
                     soci::use(agrthroughput);
                 sql.commit();

@@ -446,7 +446,10 @@ private:
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
                                          const struct message_bringonline& msg);
 
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
+    void updateOptimizerEvolution(soci::session& sql,
+            const std::string & source_hostname,
+            const std::string & destination_hostname, int active,
+            double throughput, double successRate, int pathFollowed, int bandwidth);
 
     void getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname);
 
