@@ -100,23 +100,27 @@ public:
                                 const std::string & sourceSe, const std::string & destinationSe,
                                 const JobParameterHandler & params) = 0;
 
-    virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
+    virtual void getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs) = 0;
 
-    virtual void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
-
-    // If limit == 0, then all results
-    virtual void getTransferFileStatus(std::string requestID, bool archive,
-                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+    virtual void getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs) = 0;
 
     // If limit == 0, then all results
-    virtual void getDmFileStatus(std::string requestID, bool archive,
-                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+    virtual void getTransferFileStatus(const std::string& requestID, bool archive,
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files) = 0;
 
-    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
+    // If limit == 0, then all results
+    virtual void getDmFileStatus(const std::string& requestID, bool archive,
+                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files) = 0;
 
-    virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                                std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
+    virtual void listRequests(const std::vector<std::string>& inGivenStates,
+                              const std::string& restrictToClientDN, const std::string& forDN,
+                              const std::string& voName, const std::string& src, const std::string& dst,
+                              std::vector<JobStatus>& jobs) = 0;
+
+    virtual void listRequestsDm(const std::vector<std::string>& inGivenStates,
+                                const std::string& restrictToClientDN, const std::string& forDN,
+                                const std::string& voName, const std::string& src, const std::string& dst,
+                                std::vector<JobStatus>& jobs) = 0;
 
     virtual std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive) = 0;
 

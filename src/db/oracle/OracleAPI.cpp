@@ -1871,7 +1871,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTu
 
 
 
-void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+void OracleAPI::getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -1910,34 +1910,20 @@ void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::v
                 {
                     JobStatus& job = *i;
                     job.numFiles = numFiles;
-                    jobs.push_back(new JobStatus(job));
+                    jobs.emplace_back(job);
                 }
         }
     catch (std::exception& e)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
 
-void OracleAPI::getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+void OracleAPI::getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -1979,41 +1965,24 @@ void OracleAPI::getDmJobStatus(std::string requestID, bool archive, std::vector<
                     job.numFiles = numFiles;
                     // make sure each deletion has different file index
                     job.fileIndex = index++;
-                    jobs.push_back(new JobStatus(job));
+                    jobs.emplace_back(job);
                 }
         }
     catch (std::exception& e)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
 
 
-
-/*
- * Return a list of jobs based on the status requested
- * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
- * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
- */
-void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+void OracleAPI::listRequests(const std::vector<std::string>& inGivenStates,
+        const std::string& restrictToClientDN, const std::string& forDN,
+        const std::string& voName, const std::string& src, const std::string& dst,
+        std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -2035,13 +2004,11 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                 }
 
             //gain the benefit from the statement pooling
-            std::sort(inGivenStates.begin(), inGivenStates.end());
+            //std::sort(inGivenStates.begin(), inGivenStates.end());
 
             if (inGivenStates.size() > 0)
                 {
-                    std::vector<std::string>::const_iterator i;
-                    i = std::find_if(inGivenStates.begin(), inGivenStates.end(),
-                                     std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
+                    auto i = std::find(inGivenStates.begin(), inGivenStates.end(), std::string("CANCELED"));
                     searchForCanceling = (i != inGivenStates.end());
 
                     std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
@@ -2062,10 +2029,10 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                     stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
                 }
 
-            if (!VOname.empty())
+            if (!voName.empty())
                 {
                     query << " AND vo_name = :vo ";
-                    stmt.exchange(soci::use(VOname, "vo"));
+                    stmt.exchange(soci::use(voName, "vo"));
                 }
 
             if (!forDN.empty())
@@ -2104,7 +2071,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                     do
                         {
                             if (job.numFiles > 0)
-                                jobs.push_back(new JobStatus(job));
+                                jobs.emplace_back(job);
                         }
                     while (stmt.fetch());
                 }
@@ -2112,30 +2079,18 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         }
     catch (std::exception& e)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
 
-void OracleAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                               std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+void OracleAPI::listRequestsDm(const std::vector<std::string>& inGivenStates,
+        const std::string& restrictToClientDN, const std::string& forDN,
+        const std::string& voName, const std::string& src, const std::string& dst,
+        std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -2158,13 +2113,11 @@ void OracleAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::s
                 }
 
             //gain the benefit from the statement pooling
-            std::sort(inGivenStates.begin(), inGivenStates.end());
+            //std::sort(inGivenStates.begin(), inGivenStates.end());
 
             if (inGivenStates.size() > 0)
                 {
-                    std::vector<std::string>::const_iterator i;
-                    i = std::find_if(inGivenStates.begin(), inGivenStates.end(),
-                                     std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
+                    auto i = std::find(inGivenStates.begin(), inGivenStates.end(), std::string("CANCELED"));
                     searchForCanceling = (i != inGivenStates.end());
 
                     std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
@@ -2185,10 +2138,10 @@ void OracleAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::s
                     stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
                 }
 
-            if (!VOname.empty())
+            if (!voName.empty())
                 {
                     query << " AND vo_name = :vo ";
-                    stmt.exchange(soci::use(VOname, "vo"));
+                    stmt.exchange(soci::use(voName, "vo"));
                 }
 
             if (!forDN.empty())
@@ -2226,7 +2179,7 @@ void OracleAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::s
                     do
                         {
                             if (job.numFiles > 0)
-                                jobs.push_back(new JobStatus(job));
+                                jobs.emplace_back(job);
                         }
                     while (stmt.fetch());
                 }
@@ -2234,30 +2187,17 @@ void OracleAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::s
         }
     catch (std::exception& e)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            std::vector< JobStatus* >::iterator it;
-            for (it = jobs.begin(); it != jobs.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
 
-void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
-                                      unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+void OracleAPI::getTransferFileStatus(const std::string& requestID,
+        bool archive, unsigned offset, unsigned limit,
+        std::vector<FileTransferStatus>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -2303,36 +2243,23 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                 {
                     do
                         {
-                            files.push_back(new FileTransferStatus(transfer));
+                            files.emplace_back(transfer);
                         }
                     while (stmt.fetch());
                 }
         }
     catch (std::exception& e)
         {
-            std::vector< FileTransferStatus* >::iterator it;
-            for (it = files.begin(); it != files.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            std::vector< FileTransferStatus* >::iterator it;
-            for (it = files.begin(); it != files.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
 
-void OracleAPI::getDmFileStatus(std::string requestID, bool archive, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+void OracleAPI::getDmFileStatus(const std::string& requestID, bool archive,
+        unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -2376,31 +2303,17 @@ void OracleAPI::getDmFileStatus(std::string requestID, bool archive, unsigned of
                 {
                     do
                         {
-                            files.push_back(new FileTransferStatus(transfer));
+                            files.emplace_back(transfer);
                         }
                     while (stmt.fetch());
                 }
         }
     catch (std::exception& e)
         {
-            std::vector< FileTransferStatus* >::iterator it;
-            for (it = files.begin(); it != files.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            std::vector< FileTransferStatus* >::iterator it;
-            for (it = files.begin(); it != files.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }

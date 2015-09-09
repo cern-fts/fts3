@@ -94,9 +94,9 @@ private:
     bool retry;
 
     // keep vectors of pointers as fields so the can be released RAII style
-    std::vector<FileTransferStatus*> file_statuses;
+    std::vector<FileTransferStatus> file_statuses;
     std::vector<FileRetry*> retries;
-    std::vector<JobStatus*> job_statuses;
+    std::vector<JobStatus> job_statuses;
 };
 
 

@@ -100,7 +100,9 @@ public:
 private:
 
     // pointer to GenericDbIfce member that queries jobs
-    typedef void (GenericDbIfce::* query_t)(std::vector<JobStatus*>&, std::vector<std::string>&, std::string, std::string, std::string, std::string, std::string);
+    typedef void (GenericDbIfce::* query_t)(const std::vector<std::string>&,
+        const std::string&, const std::string&, const std::string&,
+        const std::string&, const std::string&, std::vector<JobStatus>&);
 
     /**
      * implements jobs listing
@@ -128,7 +130,7 @@ private:
     void checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
 
     /// the job statuses retrived from the DB
-    std::vector<JobStatus*> jobs;
+    std::vector<JobStatus> jobs;
 
     /// the soap object that is serving the given request
     ::soap* soap;

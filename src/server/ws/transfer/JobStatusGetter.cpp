@@ -58,8 +58,6 @@ template void JobStatusGetter::file_status<tns3__FileTransferStatus2>(std::vecto
 template <typename STATUS>
 void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
 {
-    std::vector<FileTransferStatus*>::iterator it;
-
     bool dm_job = db.isDmJob(job);
 
     if (dm_job)
@@ -67,62 +65,61 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
     else
         db.getTransferFileStatus(job, archive, offset, limit, file_statuses);
 
-    for (it = file_statuses.begin(); it != file_statuses.end(); ++it)
+    for (auto it = file_statuses.begin(); it != file_statuses.end(); ++it)
         {
-            FileTransferStatus* tmp = *it;
-            tmp->transferFileState = to_glite_state(tmp->transferFileState, glite);
+            FileTransferStatus& tmp = *it;
+            tmp.transferFileState = to_glite_state(tmp.transferFileState, glite);
 
             STATUS* status = make_status<STATUS>();
 
             status->destSURL = soap_new_std__string(ctx, -1);
-            *status->destSURL = tmp->destSurl;
+            *status->destSURL = tmp.destSurl;
 
             status->logicalName = soap_new_std__string(ctx, -1);
-            *status->logicalName = tmp->logicalName;
+            *status->logicalName = tmp.logicalName;
 
             status->reason = soap_new_std__string(ctx, -1);
-            *status->reason = tmp->reason;
+            *status->reason = tmp.reason;
 
             status->reason_USCOREclass = soap_new_std__string(ctx, -1);
-            *status->reason_USCOREclass = tmp->reasonClass;
+            *status->reason_USCOREclass = tmp.reasonClass;
 
             status->sourceSURL = soap_new_std__string(ctx, -1);
-            *status->sourceSURL = tmp->sourceSurl;
+            *status->sourceSURL = tmp.sourceSurl;
 
             status->transferFileState = soap_new_std__string(ctx, -1);
-            *status->transferFileState = tmp->transferFileState;
+            *status->transferFileState = tmp.transferFileState;
 
-            if(tmp->transferFileState == "NOT_USED")
+            if(tmp.transferFileState == "NOT_USED")
                 {
                     status->duration = 0;
                     status->numFailures = 0;
                 }
             else
                 {
-                    if (tmp->finishTime > 0 && tmp->startTime > 0)
-                        status->duration = tmp->finishTime - tmp->startTime;
-                    else if(tmp->finishTime <= 0 && tmp->startTime > 0)
-                        status->duration = time(NULL) - tmp->startTime;
+                    if (tmp.finishTime > 0 && tmp.startTime > 0)
+                        status->duration = tmp.finishTime - tmp.startTime;
+                    else if(tmp.finishTime <= 0 && tmp.startTime > 0)
+                        status->duration = time(NULL) - tmp.startTime;
                     else
                         status->duration = 0;
-                    status->numFailures = tmp->numFailures;
+                    status->numFailures = tmp.numFailures;
                 }
 
             status->staging = (int64_t*)soap_malloc(ctx, sizeof(int64_t));
-            if (tmp->stagingFinished > 0 && tmp->stagingStart > 0)
-                *status->staging = tmp->stagingFinished - tmp->stagingStart;
-            else if (tmp->stagingFinished <= 0 && tmp->stagingStart > 0)
-                *status->staging = time(NULL) - tmp->stagingStart;
+            if (tmp.stagingFinished > 0 && tmp.stagingStart > 0)
+                *status->staging = tmp.stagingFinished - tmp.stagingStart;
+            else if (tmp.stagingFinished <= 0 && tmp.stagingStart > 0)
+                *status->staging = time(NULL) - tmp.stagingStart;
             else
-                *status->staging = 0;
+                status->staging = 0;
 
             // Retries only on request! This type of information exists only for transfer jobs
             if (retry && !dm_job)
                 {
-                    db.getTransferRetries(tmp->fileId, retries);
+                    db.getTransferRetries(tmp.fileId, retries);
 
-                    std::vector<FileRetry*>::iterator ri;
-                    for (ri = retries.begin(); ri != retries.end(); ++ri)
+                    for (auto ri = retries.begin(); ri != retries.end(); ++ri)
                         {
                             tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(ctx, -1);
                             retry->attempt  = (*ri)->attempt;
@@ -149,7 +146,7 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
     if(!job_statuses.empty())
         {
             ret = make_summary<SUMMARY>();
-            ret->jobStatus = to_gsoap_status(**job_statuses.begin(), glite);
+            ret->jobStatus = to_gsoap_status(*job_statuses.begin(), glite);
 
             JobStatusHandler& handler = JobStatusHandler::getInstance();
             ret->numActive = handler.countInState(JobStatusHandler::FTS3_STATUS_ACTIVE, job_statuses);
@@ -227,7 +224,7 @@ void JobStatusGetter::job_status(tns3__JobStatus * & status, bool glite)
 
     if(!job_statuses.empty())
         {
-            status = to_gsoap_status(**job_statuses.begin(), glite);
+            status = to_gsoap_status(*job_statuses.begin(), glite);
         }
     else
         {
@@ -278,9 +275,7 @@ tns3__JobStatus* JobStatusGetter::handleStatusExceptionForGLite()
 
 JobStatusGetter::~JobStatusGetter()
 {
-    release_vector(file_statuses);
     release_vector(retries);
-    release_vector(job_statuses);
 }
 
 

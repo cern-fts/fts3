@@ -885,8 +885,7 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__prioritySetResponse &resp)
 {
 
-    vector<JobStatus*> fileStatuses;
-    vector<JobStatus*>::iterator it;
+    vector<JobStatus> fileStatuses;
 
     try
         {
@@ -901,21 +900,13 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
             // check job status
-
             DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(job_id, false, fileStatuses);
 
             std::string status;
             if(!fileStatuses.empty())
                 {
                     // get the job status
-                    status = (*fileStatuses.begin())->jobStatus;
-                    // release the memory
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-                            if(*it)
-                                delete *it;
-                        }
-                    fileStatuses.clear();
+                    status = fileStatuses.begin()->jobStatus;
                 }
             else
                 {
@@ -939,26 +930,12 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
         }
     catch(Err& ex)
         {
-            // release the memory
-            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                {
-                    if(*it)
-                        delete *it;
-                }
-            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch (...)
         {
-            // release the memory
-            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                {
-                    if(*it)
-                        delete *it;
-                }
-            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the priority cannot be set"  << commit;
             return SOAP_FAULT;
         }

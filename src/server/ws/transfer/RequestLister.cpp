@@ -82,7 +82,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list_impl(Authorizat
 
     try
         {
-            (db.*list)(jobs, inGivenStates, "", dn, vo, src, dst);
+            (db.*list)(inGivenStates, "", dn, vo, src, dst, jobs);
             FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
         }
     catch(Err& ex)
@@ -101,12 +101,11 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list_impl(Authorizat
     result = soap_new_impltns__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
 
     // fill it with job statuses
-    std::vector<JobStatus*>::iterator it;
+    std::vector<JobStatus>::iterator it;
     for (it = jobs.begin(); it < jobs.end(); ++it)
         {
-            GSoapJobStatus job_ptr (soap, **it);
+            GSoapJobStatus job_ptr (soap, *it);
             result->item.push_back(job_ptr);
-            delete *it;
         }
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 

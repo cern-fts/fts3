@@ -117,7 +117,7 @@ public:
      *
      * @return
      */
-    size_t countInState(const std::string status, const std::vector<JobStatus*>& statuses);
+    size_t countInState(const std::string& status, const std::vector<JobStatus>& statuses);
 
 protected:
 

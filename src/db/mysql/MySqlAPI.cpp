@@ -1940,7 +1940,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<JobElementTup
 
 
 
-void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+void MySqlAPI::getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -1979,34 +1979,20 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
         {
             JobStatus& job = *i;
             job.numFiles = numFiles;
-            jobs.push_back(new JobStatus(job));
+            jobs.emplace_back(job);
         }
     }
     catch (std::exception& e)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
 
-void MySqlAPI::getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+void MySqlAPI::getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -2048,40 +2034,24 @@ void MySqlAPI::getDmJobStatus(std::string requestID, bool archive, std::vector<J
             job.numFiles = numFiles;
             // make sure each deletion has different file index
             job.fileIndex = index++;
-            jobs.push_back(new JobStatus(job));
+            jobs.emplace_back(job);
         }
     }
     catch (std::exception& e)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
 
 
-/*
- * Return a list of jobs based on the status requested
- * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
- * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
- */
-void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+void MySqlAPI::listRequests(const std::vector<std::string>& inGivenStates,
+        const std::string& restrictToClientDN, const std::string& forDN,
+        const std::string& voName, const std::string& src, const std::string& dst,
+        std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -2105,13 +2075,11 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
         }
 
         //gain the benefit from the statement pooling
-        std::sort(inGivenStates.begin(), inGivenStates.end());
+        //std::sort(inGivenStates.begin(), inGivenStates.end());
 
         if (inGivenStates.size() > 0)
         {
-            std::vector<std::string>::const_iterator i;
-            i = std::find_if(inGivenStates.begin(), inGivenStates.end(),
-                             std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
+            auto i = std::find(inGivenStates.begin(), inGivenStates.end(), std::string("CANCELED"));
             searchForCanceling = (i != inGivenStates.end());
 
             int countTerminal = 0, countInitial = 0;
@@ -2141,10 +2109,10 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
             stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
         }
 
-        if (!VOname.empty())
+        if (!voName.empty())
         {
             query << " AND vo_name = :vo ";
-            stmt.exchange(soci::use(VOname, "vo"));
+            stmt.exchange(soci::use(voName, "vo"));
         }
 
         if (!forDN.empty())
@@ -2182,7 +2150,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
             do
             {
                 if (job.numFiles > 0)
-                    jobs.push_back(new JobStatus(job));
+                    jobs.emplace_back(job);
             }
             while (stmt.fetch());
         }
@@ -2190,30 +2158,18 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
     }
     catch (std::exception& e)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
 
-void MySqlAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+void MySqlAPI::listRequestsDm(const std::vector<std::string>& inGivenStates,
+        const std::string& restrictToClientDN, const std::string& forDN,
+        const std::string& voName, const std::string& src, const std::string& dst,
+        std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
 
@@ -2236,13 +2192,11 @@ void MySqlAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::st
         }
 
         //gain the benefit from the statement pooling
-        std::sort(inGivenStates.begin(), inGivenStates.end());
+        //std::sort(inGivenStates.begin(), inGivenStates.end());
 
         if (inGivenStates.size() > 0)
         {
-            std::vector<std::string>::const_iterator i;
-            i = std::find_if(inGivenStates.begin(), inGivenStates.end(),
-                             std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
+            auto i = std::find(inGivenStates.begin(), inGivenStates.end(), std::string("CANCELED"));
             searchForCanceling = (i != inGivenStates.end());
 
             std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
@@ -2263,10 +2217,10 @@ void MySqlAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::st
             stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
         }
 
-        if (!VOname.empty())
+        if (!voName.empty())
         {
             query << " AND vo_name = :vo ";
-            stmt.exchange(soci::use(VOname, "vo"));
+            stmt.exchange(soci::use(voName, "vo"));
         }
 
         if (!forDN.empty())
@@ -2304,7 +2258,7 @@ void MySqlAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::st
             do
             {
                 if (job.numFiles > 0)
-                    jobs.push_back(new JobStatus(job));
+                    jobs.emplace_back(job);
             }
             while (stmt.fetch());
         }
@@ -2312,30 +2266,16 @@ void MySqlAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::st
     }
     catch (std::exception& e)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
     {
-        std::vector< JobStatus* >::iterator it;
-        for (it = jobs.begin(); it != jobs.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        jobs.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
 
-void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
-                                     unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+void MySqlAPI::getTransferFileStatus(const std::string& requestID, bool archive,
+                                     unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -2381,36 +2321,24 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
         {
             do
             {
-                files.push_back(new FileTransferStatus(transfer));
+                files.emplace_back(transfer);
             }
             while (stmt.fetch());
         }
     }
     catch (std::exception& e)
     {
-        std::vector< FileTransferStatus* >::iterator it;
-        for (it = files.begin(); it != files.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        files.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
-    {
-        std::vector< FileTransferStatus* >::iterator it;
-        for (it = files.begin(); it != files.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        files.clear();
+    {;
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
 
-void MySqlAPI::getDmFileStatus(std::string requestID, bool archive, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+void MySqlAPI::getDmFileStatus(const std::string& requestID, bool archive,
+        unsigned offset, unsigned limit,
+        std::vector<FileTransferStatus>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -2454,31 +2382,17 @@ void MySqlAPI::getDmFileStatus(std::string requestID, bool archive, unsigned off
         {
             do
             {
-                files.push_back(new FileTransferStatus(transfer));
+                files.emplace_back(transfer);
             }
             while (stmt.fetch());
         }
     }
     catch (std::exception& e)
     {
-        std::vector< FileTransferStatus* >::iterator it;
-        for (it = files.begin(); it != files.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        files.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
     {
-        std::vector< FileTransferStatus* >::iterator it;
-        for (it = files.begin(); it != files.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        files.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
