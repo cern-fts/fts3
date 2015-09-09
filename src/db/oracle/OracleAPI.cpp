@@ -3811,676 +3811,671 @@ bool OracleAPI::updateOptimizer()
 
 
     try
+    {
+        //check optimizer level, minimum active per link
+        int highDefault = MIN_ACTIVE;
+
+
+        //based on the level, how many transfers will be spawned
+        int spawnActive = getOptimizerDefaultMode(sql);
+
+        //fetch the records from db for distinct links
+        soci::rowset<soci::row> rs = ( sql.prepare <<
+                                       " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+                                       " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
+                                       " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
+
+        soci::statement stmtActiveSource = (
+                                               sql.prepare << "SELECT count(*) FROM t_file "
+                                               "WHERE source_se = :source and file_state = 'ACTIVE' and job_finished is null ",
+                                               soci::use(source_hostname), soci::into(activeSource));
+
+        soci::statement stmtActiveDest = (
+                                             sql.prepare << "SELECT count(*) FROM t_file "
+                                             "WHERE dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
+                                             soci::use(destin_hostname), soci::into(activeDestination));
+
+
+        //is the number of actives fixed?
+        soci::statement stmt_fixed = (
+                                         sql.prepare << "SELECT fixed from t_optimize_active "
+                                         "WHERE source_se = :source AND dest_se = :dest",
+                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
+
+        soci::statement stmt_avg_duration = (
+                                                sql.prepare << "SELECT avg(tx_duration)  from t_file "
+                                                " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
+                                                " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) ",
+                                                soci::use(source_hostname), soci::use(destin_hostname), soci::into(avgDuration, isNullAvg));
+
+        //snapshot of active transfers
+        soci::statement stmt7 = (
+                                    sql.prepare << "SELECT count(*) FROM t_file "
+                                    "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
+                                    soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
+
+        //max number of active allowed per link
+        soci::statement stmt8 = (
+                                    sql.prepare << "SELECT active, ema FROM t_optimize_active "
+                                    "WHERE source_se = :source AND dest_se = :dest_se ",
+                                    soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive), soci::into(ema));
+
+        //sum of retried transfers per link
+        soci::statement stmt9 = (
+                                    sql.prepare << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+                                    "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
+                                    soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
+
+        soci::statement stmt10 = (
+                                     sql.prepare << "update t_optimize_active set active=:active, ema=:ema, datetime=sys_extract_utc(systimestamp) where "
+                                     " source_se=:source and dest_se=:dest ",
+                                     soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
+
+
+        soci::statement stmt18 = (
+                                     sql.prepare << " select count(distinct source_se) from t_file where "
+                                     " file_state in ('ACTIVE','SUBMITTED') and "
+                                     " dest_se=:dest and "
+                                     " job_finished is null",
+                                     soci::use(destin_hostname), soci::into(singleDest));
+
+        //snapshot of submitted transfers
+        soci::statement stmt19 = (
+                                     sql.prepare << "SELECT count(*) FROM t_file "
+                                     "WHERE source_se = :source AND dest_se = :dest_se and file_state ='SUBMITTED' and job_finished is null ",
+                                     soci::use(source_hostname),soci::use(destin_hostname), soci::into(submitted));
+
+
+
+        //check if retry is set at global level
+        sql <<
+            " SELECT retry "
+            " FROM t_server_config ",soci::into(retrySet, isRetry)
+            ;
+
+        //if not set, flag as 0
+        if (isRetry == soci::i_null || retrySet == 0)
+            retrySet = 0;
+
+
+        /* Start of TCP streams optimization "zone" */
+        soci::statement stmt20 = (
+                                     sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                     soci::use(source_hostname),
+                                     soci::use(destin_hostname),
+                                     soci::into(nostreams, isNullStreamsOptimization));
+
+        soci::statement stmt23 = (
+                                     sql.prepare << "SELECT throughput FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and "
+                                     " tested=1 and nostreams = :nostreams and throughput is not NULL   and throughput > 0",
+                                     soci::use(source_hostname),
+                                     soci::use(destin_hostname),
+                                     soci::use(nostreams),
+                                     soci::into(maxThroughput));
+        soci::statement stmt24 = (
+                                     sql.prepare << "SELECT nostreams FROM (SELECT nostreams FROM t_optimize_streams   "
+                                     " WHERE source_se=:source_se and dest_se=:dest_se and tested=1 ORDER BY throughput DESC) WHERE  rownum <= 1 ",
+                                     soci::use(source_hostname),
+                                     soci::use(destin_hostname),
+                                     soci::into(updateStream));
+
+        soci::statement stmt26 = (
+                                     sql.prepare << "SELECT tested FROM t_optimize_streams  WHERE source_se=:source_se AND dest_se=:dest_se "
+                                     " AND throughput IS NOT NULL and throughput > 0 and tested = 1  ",
+                                     soci::use(source_hostname),
+                                     soci::use(destin_hostname),
+                                     soci::into(testedThroughput));
+
+        soci::statement stmt28 = (
+                                     sql.prepare << " UPDATE t_optimize_streams set throughput = :throughput, datetime = sys_extract_utc(systimestamp) "
+                                     " WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams   and tested = 1   ",
+                                     soci::use(throughput),
+                                     soci::use(source_hostname),
+                                     soci::use(destin_hostname),
+                                     soci::use(nostreams));
+
+        soci::statement stmt29 = (
+                                     sql.prepare << " select count(*) from  t_optimize_streams where "
+                                     " source_se=:source_se AND dest_se=:dest_se AND tested = 1 and throughput IS NOT NULL  and throughput > 0",
+                                     soci::use(source_hostname),
+                                     soci::use(destin_hostname),
+                                     soci::into(allTested));
+
+        sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+
+        if(max_per_link > 0)
+            MAX_ACTIVE_PER_LINK = max_per_link;
+        if(max_per_se > 0)
+            MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+
+
+        for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
         {
-            //check optimizer level, minimum active per link
-            int highDefault = MIN_ACTIVE;
+
+            recordsFound = true;
+
+            source_hostname = i->get<std::string>("SOURCE_SE");
+            destin_hostname = i->get<std::string>("DEST_SE");
+
+            sql.begin();
+            sql << " UPDATE t_optimize_active set datetime = sys_extract_utc(systimestamp) WHERE source_se=:source_se and dest_se=:dest_se",
+                soci::use(source_hostname),soci::use(destin_hostname);
+            sql.commit();
+
+            double nFailedLastHour=0.0, nFinishedLastHour=0.0;
+            throughput=0.0;
+            double filesize = 0.0;
+            double totalSize = 0.0;
+            retry = 0.0;   //latest from db
+            double retryStored = 0.0; //stored in mem
+            double thrStored = 0.0; //stored in mem
+            double rateStored = 0.0; //stored in mem
+            int activeStored = 0; //stored in mem
+            double ratioSuccessFailure = 0.0;
+            int thrSamplesStored = 0; //stored in mem
+            int throughputSamples = 0;
+            active = 0;
+            maxActive = 0;
+            isNullRetry = soci::i_ok;
+            isNullMaxActive = soci::i_ok;
+            lastSuccessRate = 0.0;
+            isNullRate = soci::i_ok;
+            isNullStreamsFound = soci::i_ok;
+            streamsFound = 0;
+            recordFound = 0;
+            insertStreams = -1;
+            isNullStartTime = soci::i_ok;
+            isNullRecordsFound = soci::i_ok;
+            streamsCurrent = 0;
+            isNullStreamsCurrent = soci::i_ok;
+            singleDest = 0;
+            lanTransferBool = false;
+            submitted = 0.0;
+            ema = 0.0;
+            nostreams = 1;
+            isNullStreamsOptimization = soci::i_ok;
+            isNullDatetime = soci::i_ok;
+            maxThroughput = 0.0;
+            testedThroughput = 0;
+            updateStream = 0;
+            struct tm datetimeStreams;
+            soci::indicator isNullStreamsdatetimeStreams = soci::i_ok;
+            allTested = 0;
+            activeSource = 0;
+            activeDestination = 0;
+            avgDuration = 0.0;
+            isNullAvg = soci::i_ok;
+            active_fixed = "off";
+            highDefault = MIN_ACTIVE;
+
+            // Weighted average
+            soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
+                    "   SELECT filesize, throughput "
+                    "   FROM t_file "
+                    "   WHERE source_se = :source AND dest_se = :dest AND "
+                    "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                    "       filesize > 0  AND (job_finished is NULL OR"
+                    "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) ",
+                    soci::use(source_hostname),soci::use(destin_hostname));
+
+            for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin(); j != rsSizeAndThroughput.end(); ++j)
+            {
+                filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0.0));
+                throughput += (j->get<double>("THROUGHPUT", 0.0) * filesize);
+                totalSize  += filesize;
+            }
+            if (totalSize > 0)
+                throughput /= totalSize;
+
+            if(spawnActive == 2) //only executhe streams optimization when level/plan is 2
+            {
+
+                /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
+
+                //get max streams
+                stmt20.execute(true);
+
+                //make sure that the current stream has been tested, throughput is not null and tested = 1
+                stmt26.execute(true);
+
+                stmt23.execute(true);
+
+                stmt29.execute(true);
 
 
-            //based on the level, how many transfers will be spawned
-            int spawnActive = getOptimizerDefaultMode(sql);
-
-            //fetch the records from db for distinct links
-            soci::rowset<soci::row> rs = ( sql.prepare <<
-                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
-                                           " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
-
-            soci::statement stmtActiveSource = (
-                                                   sql.prepare << "SELECT count(*) FROM t_file "
-                                                   "WHERE source_se = :source and file_state = 'ACTIVE' and job_finished is null ",
-                                                   soci::use(source_hostname), soci::into(activeSource));
-
-            soci::statement stmtActiveDest = (
-                                                 sql.prepare << "SELECT count(*) FROM t_file "
-                                                 "WHERE dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
-                                                 soci::use(destin_hostname), soci::into(activeDestination));
-
-
-            //is the number of actives fixed?
-            soci::statement stmt_fixed = (
-                                             sql.prepare << "SELECT fixed from t_optimize_active "
-                                             "WHERE source_se = :source AND dest_se = :dest",
-                                             soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
-
-            soci::statement stmt_avg_duration = (
-                                                    sql.prepare << "SELECT avg(tx_duration)  from t_file "
-                                                    " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
-                                                    " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) ",
-                                                    soci::use(source_hostname), soci::use(destin_hostname), soci::into(avgDuration, isNullAvg));
-
-            //snapshot of active transfers
-            soci::statement stmt7 = (
-                                        sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
-
-            //max number of active allowed per link
-            soci::statement stmt8 = (
-                                        sql.prepare << "SELECT active, ema FROM t_optimize_active "
-                                        "WHERE source_se = :source AND dest_se = :dest_se ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive), soci::into(ema));
-
-            //sum of retried transfers per link
-            soci::statement stmt9 = (
-                                        sql.prepare << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                                        "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
-
-            soci::statement stmt10 = (
-                                         sql.prepare << "update t_optimize_active set active=:active, ema=:ema, datetime=sys_extract_utc(systimestamp) where "
-                                         " source_se=:source and dest_se=:dest ",
-                                         soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
-
-
-            soci::statement stmt18 = (
-                                         sql.prepare << " select count(distinct source_se) from t_file where "
-                                         " file_state in ('ACTIVE','SUBMITTED') and "
-                                         " dest_se=:dest and "
-                                         " job_finished is null",
-                                         soci::use(destin_hostname), soci::into(singleDest));
-
-            //snapshot of submitted transfers
-            soci::statement stmt19 = (
-                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state ='SUBMITTED' and job_finished is null ",
-                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(submitted));
-
-
-
-            //check if retry is set at global level
-            sql <<
-                " SELECT retry "
-                " FROM t_server_config ",soci::into(retrySet, isRetry)
-                ;
-
-            //if not set, flag as 0
-            if (isRetry == soci::i_null || retrySet == 0)
-                retrySet = 0;
-
-
-            /* Start of TCP streams optimization "zone" */
-            soci::statement stmt20 = (
-                                         sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::into(nostreams, isNullStreamsOptimization));
-
-            soci::statement stmt23 = (
-                                         sql.prepare << "SELECT throughput FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and "
-                                         " tested=1 and nostreams = :nostreams and throughput is not NULL   and throughput > 0",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(nostreams),
-                                         soci::into(maxThroughput));
-            soci::statement stmt24 = (
-                                         sql.prepare << "SELECT nostreams FROM (SELECT nostreams FROM t_optimize_streams   "
-                                         " WHERE source_se=:source_se and dest_se=:dest_se and tested=1 ORDER BY throughput DESC) WHERE  rownum <= 1 ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::into(updateStream));
-
-            soci::statement stmt26 = (
-                                         sql.prepare << "SELECT tested FROM t_optimize_streams  WHERE source_se=:source_se AND dest_se=:dest_se "
-                                         " AND throughput IS NOT NULL and throughput > 0 and tested = 1  ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::into(testedThroughput));
-
-            soci::statement stmt28 = (
-                                         sql.prepare << " UPDATE t_optimize_streams set throughput = :throughput, datetime = sys_extract_utc(systimestamp) "
-                                         " WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams   and tested = 1   ",
-                                         soci::use(throughput),
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(nostreams));
-
-            soci::statement stmt29 = (
-                                         sql.prepare << " select count(*) from  t_optimize_streams where "
-                                         " source_se=:source_se AND dest_se=:dest_se AND tested = 1 and throughput IS NOT NULL  and throughput > 0",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::into(allTested));
-
-            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-
-            if(max_per_link > 0)
-                MAX_ACTIVE_PER_LINK = max_per_link;
-            if(max_per_se > 0)
-                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-
-
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
                 {
+                    if(nostreams < maxNoStreams && allTested < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
+                    {
+                        sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and "
+                            " dest_se=:dest_se and nostreams = :nostreams and tested = 1 and throughput is NOT NULL and throughput > 0   ",
+                            soci::use(source_hostname),
+                            soci::use(destin_hostname),
+                            soci::use(nostreams),
+                            soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
 
-                    recordsFound = true;
+                        bool timeIsOk = false;
+                        if (isNullStreamsdatetimeStreams == soci::i_ok)
+                            timeIsOk = true;
 
-                    source_hostname = i->get<std::string>("SOURCE_SE");
-                    destin_hostname = i->get<std::string>("DEST_SE");
+                        time_t lastTime = timegm(&datetimeStreams); //from db
+                        time_t now = getUTC(0);
+                        double diff = difftime(now, lastTime);
 
+                        if(timeIsOk && diff >= STREAMS_UPDATE_SAMPLE && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
+                        {
+                            nostreams += 1;
+                            throughput = 0.0;
+                            sql.begin();
+                            sql << " MERGE INTO t_optimize_streams USING "
+                                " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
+                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
+                                " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
+                                soci::use(source_hostname),
+                                soci::use(destin_hostname),
+                                soci::use(nostreams),
+                                soci::use(throughput),
+                                soci::use(throughput);
+                            sql.commit();
+                        }
+                        else
+                        {
+                            if(throughput > 0.0)
+                            {
+                                sql.begin();
+                                sql << " MERGE INTO t_optimize_streams USING "
+                                    " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                    " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                    " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
+                                    " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
+                                    " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
+                                    soci::use(source_hostname),
+                                    soci::use(destin_hostname),
+                                    soci::use(nostreams),
+                                    soci::use(throughput),
+                                    soci::use(throughput);
+                                sql.commit();
+                            }
+                        }
+                    }
+                    else //all samples taken, max is 16 streams
+                    {
+                        stmt24.execute(true);	//get current stream used with max throughput
+                        nostreams = updateStream;
+
+                        sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
+                            " and nostreams = :nostreams and tested = 1 and throughput is NOT NULL and throughput > 0  ",
+                            soci::use(source_hostname),
+                            soci::use(destin_hostname),
+                            soci::use(nostreams),
+                            soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
+
+                        bool timeIsOk = false;
+                        if (isNullStreamsdatetimeStreams == soci::i_ok)
+                            timeIsOk = true;
+
+                        time_t lastTime = timegm(&datetimeStreams); //from db
+                        time_t now = getUTC(0);
+                        double diff = difftime(now, lastTime);
+
+                        if (timeIsOk && diff >= STREAMS_UPDATE_MAX && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                        {
+                            sql.begin();
+                            stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
+                            sql.commit();
+                        }
+                    }
+                }
+                else //it's NULL, no sample yet, insert the first record for this pair
+                {
+                    throughput = 0.0;
                     sql.begin();
-                    sql << " UPDATE t_optimize_active set datetime = sys_extract_utc(systimestamp) WHERE source_se=:source_se and dest_se=:dest_se",
-                        soci::use(source_hostname),soci::use(destin_hostname);
+                    sql << " MERGE INTO t_optimize_streams USING "
+                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
+                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
+                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
+                        soci::use(source_hostname),
+                        soci::use(destin_hostname),
+                        soci::use(nostreams),
+                        soci::use(throughput),
+                        soci::use(throughput);
                     sql.commit();
+                }
+            }
 
-                    double nFailedLastHour=0.0, nFinishedLastHour=0.0;
-                    throughput=0.0;
-                    double filesize = 0.0;
-                    double totalSize = 0.0;
-                    retry = 0.0;   //latest from db
-                    double retryStored = 0.0; //stored in mem
-                    double thrStored = 0.0; //stored in mem
-                    double rateStored = 0.0; //stored in mem
-                    int activeStored = 0; //stored in mem
-                    double ratioSuccessFailure = 0.0;
-                    int thrSamplesStored = 0; //stored in mem
-                    int throughputSamples = 0;
-                    active = 0;
-                    maxActive = 0;
-                    isNullRetry = soci::i_ok;
-                    isNullMaxActive = soci::i_ok;
-                    lastSuccessRate = 0.0;
-                    isNullRate = soci::i_ok;
-                    isNullStreamsFound = soci::i_ok;
-                    streamsFound = 0;
-                    recordFound = 0;
-                    insertStreams = -1;
-                    isNullStartTime = soci::i_ok;
-                    isNullRecordsFound = soci::i_ok;
-                    streamsCurrent = 0;
-                    isNullStreamsCurrent = soci::i_ok;
-                    singleDest = 0;
-                    lanTransferBool = false;
-                    submitted = 0.0;
-                    ema = 0.0;
-                    nostreams = 1;
-                    isNullStreamsOptimization = soci::i_ok;
-                    isNullDatetime = soci::i_ok;
-                    maxThroughput = 0.0;
-                    testedThroughput = 0;
-                    updateStream = 0;
-                    struct tm datetimeStreams;
-                    soci::indicator isNullStreamsdatetimeStreams = soci::i_ok;
-                    allTested = 0;
-                    activeSource = 0;
-                    activeDestination = 0;
-                    avgDuration = 0.0;
-                    isNullAvg = soci::i_ok;
-                    active_fixed = "off";
-                    highDefault = MIN_ACTIVE;
+            lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+            if(lanTransferBool)
+                highDefault = LAN_ACTIVE;
 
-                    // Weighted average
-                    soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
-                            "   SELECT filesize, throughput "
-                            "   FROM t_file "
-                            "   WHERE source_se = :source AND dest_se = :dest AND "
-                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                            "       filesize > 0  AND (job_finished is NULL OR"
-                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) ",
-                            soci::use(source_hostname),soci::use(destin_hostname));
+            // first thing, check if the number of actives have been fixed for this pair
+            stmt_fixed.execute(true);
+            if (isNullFixed == soci::i_ok && active_fixed == "on")
+                continue;
 
-                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
-                            j != rsSizeAndThroughput.end(); ++j)
-                        {
-                            filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0.0));
-                            throughput += (j->get<double>("THROUGHPUT", 0.0) * filesize);
-                            totalSize  += filesize;
-                        }
-                    if (totalSize > 0)
-                        throughput /= totalSize;
+            //get the average transfer duration for this link
+            stmt_avg_duration.execute(true);
 
-                    if(spawnActive == 2) //only executhe streams optimization when level/plan is 2
-                        {
-
-                            /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
-
-                            //get max streams
-                            stmt20.execute(true);
-
-                            //make sure that the current stream has been tested, throughput is not null and tested = 1
-                            stmt26.execute(true);
-
-                            stmt23.execute(true);
-
-                            stmt29.execute(true);
+            int calcutateTimeFrame = 0;
+            if(avgDuration > 0 && avgDuration < 30)
+                calcutateTimeFrame  = 5;
+            else if(avgDuration > 30 && avgDuration < 900)
+                calcutateTimeFrame  = 15;
+            else
+                calcutateTimeFrame  = 30;
 
 
-                            if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
-                                {
-                                    if(nostreams < maxNoStreams && allTested < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
-                                        {
-                                            sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and "
-                                                " dest_se=:dest_se and nostreams = :nostreams and tested = 1 and throughput is NOT NULL and throughput > 0   ",
-                                                soci::use(source_hostname),
-                                                soci::use(destin_hostname),
-                                                soci::use(nostreams),
-                                                soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
+            // Ratio of success
+            soci::rowset<soci::row> rs = (sql.prepare <<
+                                          " SELECT file_state, retry, current_failures, reason "
+                                          " FROM t_file "
+                                          " WHERE "
+                                          "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                          "      ( "
+                                          "		    (t_file.job_finished is NULL AND current_failures > 0)  OR "
+                                          "		    (t_file.job_finished > (sys_extract_utc(systimestamp) - numtodsinterval(:calcutateTimeFrame, 'minute'))) "
+                                          "	     ) "
+                                          "	    AND file_state IN ('FAILED','FINISHED','SUBMITTED') ",
+                                          soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
 
-                                            bool timeIsOk = false;
-                                            if (isNullStreamsdatetimeStreams == soci::i_ok)
-                                                timeIsOk = true;
 
-                                            time_t lastTime = timegm(&datetimeStreams); //from db
-                                            time_t now = getUTC(0);
-                                            double diff = difftime(now, lastTime);
+            //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            {
+                std::string state = i->get<std::string>("FILE_STATE", "");
+                int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
+                int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));
+                std::string reason = i->get<std::string>("REASON", "");
 
-                                            if(timeIsOk && diff >= STREAMS_UPDATE_SAMPLE && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
-                                                {
-                                                    nostreams += 1;
-                                                    throughput = 0.0;
-                                                    sql.begin();
-                                                    sql << " MERGE INTO t_optimize_streams USING "
-                                                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-                                                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-                                                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
-                                                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
-                                                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
-                                                        soci::use(source_hostname),
-                                                        soci::use(destin_hostname),
-                                                        soci::use(nostreams),
-                                                        soci::use(throughput),
-                                                        soci::use(throughput);
-                                                    sql.commit();
-                                                }
-                                            else
-                                                {
-                                                    if(throughput > 0.0)
-                                                        {
-                                                            sql.begin();
-                                                            sql << " MERGE INTO t_optimize_streams USING "
-                                                                " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-                                                                " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-                                                                " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
-                                                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
-                                                                " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
-                                                                soci::use(source_hostname),
-                                                                soci::use(destin_hostname),
-                                                                soci::use(nostreams),
-                                                                soci::use(throughput),
-                                                                soci::use(throughput);
-                                                            sql.commit();
-                                                        }
-                                                }
-                                        }
-                                    else //all samples taken, max is 16 streams
-                                        {
-                                            stmt24.execute(true);	//get current stream used with max throughput
-                                            nostreams = updateStream;
+                //we do not want BringOnline errors to affect transfer success rate, exclude them
+                bool exists1 = (reason.find("BringOnline") != std::string::npos);
+                bool exists2 = (reason.find("bring-online") != std::string::npos);
 
-                                            sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
-                                                " and nostreams = :nostreams and tested = 1 and throughput is NOT NULL and throughput > 0  ",
-                                                soci::use(source_hostname),
-                                                soci::use(destin_hostname),
-                                                soci::use(nostreams),
-                                                soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
+                if(state.compare("FAILED") == 0 && (exists1 || exists2) )
+                {
+                    //do nothing, it's a non recoverable error so do not consider it
+                }
+                else if(state.compare("FAILED") == 0 && current_failures == 0)
+                {
+                    //do nothing, it's a non recoverable error so do not consider it
+                }
+                else if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retryNum > 0)
+                {
+                    nFailedLastHour+=1.0;
+                }
+                else if(state.compare("FAILED") == 0 && current_failures == 1)
+                {
+                    nFailedLastHour+=1.0;
+                }
+                else if (state.compare("FINISHED") == 0)
+                {
+                    nFinishedLastHour+=1.0;
+                }
+            }
 
-                                            bool timeIsOk = false;
-                                            if (isNullStreamsdatetimeStreams == soci::i_ok)
-                                                timeIsOk = true;
+            //round up efficiency
+            if(nFinishedLastHour > 0.0)
+            {
+                ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
+            }
 
-                                            time_t lastTime = timegm(&datetimeStreams); //from db
-                                            time_t now = getUTC(0);
-                                            double diff = difftime(now, lastTime);
+            // Active transfers
+            stmt7.execute(true);
 
-                                            if (timeIsOk && diff >= STREAMS_UPDATE_MAX && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
-                                                {
-                                                    sql.begin();
-                                                    stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
-                                                    sql.commit();
-                                                }
-                                        }
-                                }
-                            else //it's NULL, no sample yet, insert the first record for this pair
-                                {
-                                    throughput = 0.0;
-                                    sql.begin();
-                                    sql << " MERGE INTO t_optimize_streams USING "
-                                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-                                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-                                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
-                                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
-                                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
-                                        soci::use(source_hostname),
-                                        soci::use(destin_hostname),
-                                        soci::use(nostreams),
-                                        soci::use(throughput),
-                                        soci::use(throughput);
-                                    sql.commit();
-                                }
-                        }
+            //get submitted for this link
+            stmt19.execute(true);
 
-                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
-                    if(lanTransferBool)
-                        {
-                            highDefault = LAN_ACTIVE;
-                        }
+            //check if there is any other source for a given dest
+            stmt18.execute(true);
 
-                    // first thing, check if the number of actives have been fixed for this pair
-                    stmt_fixed.execute(true);
-                    if (isNullFixed == soci::i_ok && active_fixed == "on")
-                        continue;
+            // Max active transfers
+            stmt8.execute(true);
 
-                    //get the average transfer duration for this link
-                    stmt_avg_duration.execute(true);
+            //check if have been retried
+            if (retrySet > 0)
+            {
+                stmt9.execute(true);
+                if (isNullRetry == soci::i_null)
+                    retry = 0;
+            }
 
-                    int calcutateTimeFrame = 0;
-                    if(avgDuration > 0 && avgDuration < 30)
-                        calcutateTimeFrame  = 5;
-                    else if(avgDuration > 30 && avgDuration < 900)
-                        calcutateTimeFrame  = 15;
+            if (isNullMaxActive == soci::i_null)
+                maxActive = highDefault;
+
+            //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
+            double throughputEMA = ceil(exponentialMovingAverage( throughput, EMA, ema));
+
+            //only apply the logic below if any of these values changes
+            bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
+            if(!changed && retry > 0)
+                changed = true;
+            else if(ratioSuccessFailure == 0)
+                changed = true;
+
+            //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
+            int bandwidthIn = 0;
+            bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
+
+            int pathFollowed = 0;
+
+            //make sure bandwidth is respected as also active should be no less than the minimum for each link
+            if(!bandwidth)
+            {
+                sql.begin();
+
+                active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                ema = throughputEMA;
+                stmt10.execute(true);
+
+                sql.commit();
+
+                updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 0, bandwidthIn);
+
+                continue;
+            }
+
+            //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
+            if(changed)
+            {
+                //get current active for this source
+                stmtActiveSource.execute(true);
+
+                //get current active for this destination
+                stmtActiveDest.execute(true);
+
+                //make sure it doesn't grow beyond the limits
+                int maxSource = 0;
+                int maxDestination = 0;
+                getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
+
+                //FTS3 admin requested to stop processing for this source or destination endpoints
+                if(maxSource == 0 || maxDestination == 0)
+                {
+                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                    continue;
+                }
+                else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
+                {
+                    //do nothing, use default for both
+                }
+                else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
+                {
+                    if(maxSource > maxDestination)
+                    {
+                        maxSource = 	maxDestination; //take the min
+                    }
+                    else if( maxDestination > maxSource)
+                    {
+                        maxDestination = maxSource;
+                    }
                     else
-                        calcutateTimeFrame  = 30;
+                    {
+                        //do nothing
+                    }
+                }
+                else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
+                {
+                    maxDestination = maxSource;
+                }
+                else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
+                {
+                    maxSource = maxDestination;
+                }
+                else
+                {
+                    //do nothing, use default
+                }
 
 
-                    // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare <<
-                                                  " SELECT file_state, retry, current_failures, reason "
-                                                  " FROM t_file "
-                                                  " WHERE "
-                                                  "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      ( "
-                                                  "		    (t_file.job_finished is NULL AND current_failures > 0)  OR "
-                                                  "		    (t_file.job_finished > (sys_extract_utc(systimestamp) - numtodsinterval(:calcutateTimeFrame, 'minute'))) "
-                                                  "	     ) "
-                                                  "	    AND file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-                                                  soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
+                if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
+                {
+                    if(ratioSuccessFailure >= MED_SUCCESS_RATE )
+                    {
+                        sql.begin();
+                        active = maxActive;
+                        pathFollowed = 13;
+                        ema = throughputEMA;
+                        stmt10.execute(true);
+                        sql.commit();
 
+                        updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                        continue;
+                    }
+                    else
+                    {
+                        sql.begin();
+                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                        pathFollowed = 13;
+                        ema = throughputEMA;
+                        stmt10.execute(true);
+                        sql.commit();
 
-                    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
-                    for (soci::rowset<soci::row>::const_iterator i = rs.begin();
-                            i != rs.end(); ++i)
+                        updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                        continue;
+                    }
+                }
+
+                //ensure minumin per link and do not overflow before taking sample
+                if(active == maxActive)
+                {
+                    //do nothing for now
+                }
+                else
+                {
+                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 15, bandwidthIn);
+                    continue;
+                }
+
+                sql.begin();
+
+                if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE )) && throughputEMA > 0 &&  retry <= retryStored)
+                {
+                    if(throughputEMA > thrStored)
+                    {
+                        active = maxActive + 1;
+                        pathFollowed = 2;
+                    }
+                    else if((throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION))
+                    {
+                        active = maxActive + 1;
+                        pathFollowed = 3;
+                    }
+                    else if(throughputSamples == 10 && throughputEMA >= thrStored)
+                    {
+                        active = maxActive + 1;
+                        pathFollowed = 4;
+                    }
+                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && (throughputEMA >= thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
+                    {
+                        active = maxActive + 1;
+                        pathFollowed = 5;
+                    }
+                    else
+                    {
+                        active = maxActive;
+                        pathFollowed = 6;
+                    }
+
+                    ema = throughputEMA;
+                    stmt10.execute(true);
+
+                }
+                else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored  && ratioSuccessFailure >= MED_SUCCESS_RATE)) && throughputEMA > 0 && throughputEMA < thrStored)
+                {
+                    if(retry > retryStored)
+                    {
+                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                        pathFollowed = 7;
+                    }
+                    else if(thrSamplesStored == 3)
+                    {
+                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                        pathFollowed = 8;
+                    }
+                    else if (avgDuration > MAX_TRANSFER_DURATION)
+                    {
+                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                        pathFollowed = 9;
+                    }
+                    else
+                    {
+                        if(maxActive >= activeStored)
                         {
-                            std::string state = i->get<std::string>("FILE_STATE", "");
-                            int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
-                            int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));
-                            std::string reason = i->get<std::string>("REASON", "");
-
-                            //we do not want BringOnline errors to affect transfer success rate, exclude them
-                            bool exists1 = (reason.find("BringOnline") != std::string::npos);
-                            bool exists2 = (reason.find("bring-online") != std::string::npos);
-
-                            if(state.compare("FAILED") == 0 && (exists1 || exists2) )
-                                {
-                                    //do nothing, it's a non recoverable error so do not consider it
-                                }
-                            else if(state.compare("FAILED") == 0 && current_failures == 0)
-                                {
-                                    //do nothing, it's a non recoverable error so do not consider it
-                                }
-                            else if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retryNum > 0)
-                                {
-                                    nFailedLastHour+=1.0;
-                                }
-                            else if(state.compare("FAILED") == 0 && current_failures == 1)
-                                {
-                                    nFailedLastHour+=1.0;
-                                }
-                            else if (state.compare("FINISHED") == 0)
-                                {
-                                    nFinishedLastHour+=1.0;
-                                }
-                        }
-
-                    //round up efficiency
-                    if(nFinishedLastHour > 0.0)
-                        {
-                            ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
-                        }
-
-                    // Active transfers
-                    stmt7.execute(true);
-
-                    //get submitted for this link
-                    stmt19.execute(true);
-
-                    //check if there is any other source for a given dest
-                    stmt18.execute(true);
-
-                    // Max active transfers
-                    stmt8.execute(true);
-
-                    //check if have been retried
-                    if (retrySet > 0)
-                        {
-                            stmt9.execute(true);
-                            if (isNullRetry == soci::i_null)
-                                retry = 0;
-                        }
-
-                    if (isNullMaxActive == soci::i_null)
-                        maxActive = highDefault;
-
-                    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
-                    double throughputEMA = ceil(exponentialMovingAverage( throughput, EMA, ema));
-
-                    //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
-                    if(!changed && retry > 0)
-                        changed = true;
-                    else if(ratioSuccessFailure == 0)
-                        changed = true;
-
-                    //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
-                    int bandwidthIn = 0;
-                    bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
-
-                    int pathFollowed = 0;
-
-                    //make sure bandwidth is respected as also active should be no less than the minimum for each link
-                    if(!bandwidth)
-                        {
-                            sql.begin();
-
                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                            ema = throughputEMA;
-                            stmt10.execute(true);
-
-                            sql.commit();
-
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 0, bandwidthIn);
-
-                            continue;
+                            pathFollowed = 10;
                         }
-
-                    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
-                    if(changed)
+                        else
                         {
-                            //get current active for this source
-                            stmtActiveSource.execute(true);
-
-                            //get current active for this destination
-                            stmtActiveDest.execute(true);
-
-                            //make sure it doesn't grow beyond the limits
-                            int maxSource = 0;
-                            int maxDestination = 0;
-                            getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
-
-                            //FTS3 admin requested to stop processing for this source or destination endpoints
-                            if(maxSource == 0 || maxDestination == 0)
-                                {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                                    continue;
-                                }
-                            else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-                                {
-                                    //do nothing, use default for both
-                                }
-                            else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
-                                {
-                                    if(maxSource > maxDestination)
-                                        {
-                                            maxSource = 	maxDestination; //take the min
-                                        }
-                                    else if( maxDestination > maxSource)
-                                        {
-                                            maxDestination = maxSource;
-                                        }
-                                    else
-                                        {
-                                            //do nothing
-                                        }
-                                }
-                            else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-                                {
-                                    maxDestination = maxSource;
-                                }
-                            else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
-                                {
-                                    maxSource = maxDestination;
-                                }
-                            else
-                                {
-                                    //do nothing, use default
-                                }
-
-
-
-                            if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
-                                {
-                                    if(ratioSuccessFailure >= MED_SUCCESS_RATE )
-                                        {
-                                            sql.begin();
-                                            active = maxActive;
-                                            pathFollowed = 13;
-                                            ema = throughputEMA;
-                                            stmt10.execute(true);
-                                            sql.commit();
-
-                                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                                            continue;
-                                        }
-                                    else
-                                        {
-                                            sql.begin();
-                                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                            pathFollowed = 13;
-                                            ema = throughputEMA;
-                                            stmt10.execute(true);
-                                            sql.commit();
-
-                                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                                            continue;
-                                        }
-                                }
-
-                            //ensure minumin per link and do not overflow before taking sample
-                            if(active == maxActive)
-                                {
-                                    //do nothing for now
-                                }
-                            else
-                                {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 15, bandwidthIn);
-                                    continue;
-                                }
-
-                            sql.begin();
-
-                            if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE )) && throughputEMA > 0 &&  retry <= retryStored)
-                                {
-                                    if(throughputEMA > thrStored)
-                                        {
-                                            active = maxActive + 1;
-                                            pathFollowed = 2;
-                                        }
-                                    else if((throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION))
-                                        {
-                                            active = maxActive + 1;
-                                            pathFollowed = 3;
-                                        }
-                                    else if(throughputSamples == 10 && throughputEMA >= thrStored)
-                                        {
-                                            active = maxActive + 1;
-                                            pathFollowed = 4;
-                                        }
-                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && (throughputEMA >= thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
-                                        {
-                                            active = maxActive + 1;
-                                            pathFollowed = 5;
-                                        }
-                                    else
-                                        {
-                                            active = maxActive;
-                                            pathFollowed = 6;
-                                        }
-
-                                    ema = throughputEMA;
-                                    stmt10.execute(true);
-
-                                }
-                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored  && ratioSuccessFailure >= MED_SUCCESS_RATE)) && throughputEMA > 0 && throughputEMA < thrStored)
-                                {
-                                    if(retry > retryStored)
-                                        {
-                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                            pathFollowed = 7;
-                                        }
-                                    else if(thrSamplesStored == 3)
-                                        {
-                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                            pathFollowed = 8;
-                                        }
-                                    else if (avgDuration > MAX_TRANSFER_DURATION)
-                                        {
-                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                            pathFollowed = 9;
-                                        }
-                                    else
-                                        {
-                                            if(maxActive >= activeStored)
-                                                {
-                                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                                    pathFollowed = 10;
-                                                }
-                                            else
-                                                {
-                                                    active = maxActive;
-                                                    pathFollowed = 11;
-                                                }
-                                        }
-                                    ema = throughputEMA;
-                                    stmt10.execute(true);
-                                }
-                            else if (ratioSuccessFailure < LOW_SUCCESS_RATE)
-                                {
-                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
-                                        {
-                                            active = maxActive;
-                                            pathFollowed = 12;
-                                        }
-                                    else
-                                        {
-                                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                            pathFollowed = 13;
-                                        }
-                                    ema = throughputEMA;
-                                    stmt10.execute(true);
-                                }
-                            else
-                                {
-                                    active = maxActive;
-                                    pathFollowed = 14;
-                                    ema = throughputEMA;
-                                    stmt10.execute(true);
-                                }
-
-                            sql.commit();
-
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
-
+                            active = maxActive;
+                            pathFollowed = 11;
                         }
-                } //end for
-        } //end try
+                    }
+                    ema = throughputEMA;
+                    stmt10.execute(true);
+                }
+                else if (ratioSuccessFailure < LOW_SUCCESS_RATE)
+                {
+                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
+                    {
+                        active = maxActive;
+                        pathFollowed = 12;
+                    }
+                    else
+                    {
+                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                        pathFollowed = 13;
+                    }
+                    ema = throughputEMA;
+                    stmt10.execute(true);
+                }
+                else
+                {
+                    active = maxActive;
+                    pathFollowed = 14;
+                    ema = throughputEMA;
+                    stmt10.execute(true);
+                }
+
+                sql.commit();
+
+                updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
+
+            }
+        } //end for
+    } //end try
     catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
+    {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
     catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
+    {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " );
+    }
     return recordsFound;
 }
 
