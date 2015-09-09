@@ -38,15 +38,7 @@
 	</div>
 </div>
 
-<div data-ng-show="optimizer.fixed">
-    <h3>Fixed number of actives</h3>
-    <p>
-        This pair has a fixed number of <i class="icon-magnet"></i>{{optimizer.fixed}} active transfers configured,
-        so there is no information available from the auto optimizer.
-    </p>
-</div>
-
-<div data-ng-show="!optimizer.fixed">
+<div>
     <pagination rotate="false"
         page="optimizer.evolution.page" total-items="optimizer.evolution.count" items-per-page="optimizer.evolution.pageSize"
         max-size="15" class="pagination" boundary-links="true"
@@ -69,6 +61,19 @@
                 <td class="numeric">{{ o.success|number:2 }}%</td>
                 <td class="numeric">{{ o.throughput|number:3 }} MB/s</td>
                 <td data-ng-switch data-on="o.branch">
+                    <span data-ng-switch-when="-1">
+                        Fixed number of actives ({{ optimizer.fixed.active }})
+                    </span>
+                    <span data-ng-switch-when="0">
+                        Bandwidth restriction are set to
+                        <span data-ng-show="o.bandwidth_limits.source">
+                            {{ o.bandwidth_limits.source|number:2 }} MB/s on the source
+                        </span>
+                        <span data-ng-show="o.bandwidth_limits.destination">
+                            {{ o.bandwidth_limits.destination|number:2 }} MB/s on the destination
+                        </span>
+                    </span>
+                    <span data-ng-switch-when="1">Either source or destination endpoint reached the maximum number of active transfers per link (or endpoint)</span>
                     <span data-ng-switch-when="2">Good link efficiency, current average throughput is larger than the preceding average throughput and retrials steady or decreasing</span>
                     <span data-ng-switch-when="3">Good link efficiency, current average throughput is high and retrials steady or decreasing</span>
                     <span data-ng-switch-when="4">Good link efficiency, throughput is steady or little higher than the previous sample, retrials steady or decreasing, push one more transfer</span>
@@ -83,16 +88,6 @@
                     <span data-ng-switch-when="13">Bad link efficiency, reduce the number of active transfers</span>
                     <span data-ng-switch-when="14">Steady, optimizer has not taken any decision</span>
                     <span data-ng-switch-when="15">Steady, not enough feedback</span>
-                    <span data-ng-switch-when="0">
-                        Bandwidth restriction are set to
-                        <span data-ng-show="o.bandwidth_limits.source">
-                            {{ o.bandwidth_limits.source|number:2 }} MB/s on the source
-                        </span>
-                        <span data-ng-show="o.bandwidth_limits.destination">
-                            {{ o.bandwidth_limits.destination|number:2 }} MB/s on the destination
-                        </span>
-                    </span>
-                    <span data-ng-switch-when="1">Either source or destination endpoint reached the maximum number of active transfers per link (or endpoint)</span>
                 </td>
             </tr>
         </tbody>
@@ -100,6 +95,7 @@
 
     <div>
         <p>
+            <span class="label">Fixed number of actives configured</span><br/>
             <span class="label label-success">Increase number of active</span><br/>
             <span class="label label-info">Keep number of active</span><br/>
             <span class="label label-important">Decrease number of active</span><br/>

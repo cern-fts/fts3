@@ -221,6 +221,10 @@ td.SUBMITTED, .SUBMITTED {
 }
 
 /* Optimizer decisions */
+.optimizer-branch--1 {
+    border-left: solid 12px #999999;
+}
+
 .optimizer-branch-1 {
 	border-left: solid 12px #468847;
 }

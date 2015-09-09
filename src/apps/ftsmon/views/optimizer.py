@@ -16,11 +16,10 @@
 # limitations under the License.
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import Http404
 
 from ftsweb.models import OptimizerEvolution, OptimizerStreams, OptimizeActive
-from ftsweb.models import File, Job
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import paged
@@ -123,24 +122,15 @@ def get_optimizer_details(http_request):
     optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch')
     optimizer = optimizer.order_by('-datetime')
 
-    vo_throughput = {}
-    vos = Job.objects.values('vo_name').distinct()
-    for vo in [vo['vo_name'] for vo in vos]:
-        throughput = File.objects.filter(source_se=source_se, dest_se=dest_se, vo_name=vo, file_state='ACTIVE') \
-            .aggregate(thr=Sum('throughput'))['thr']
-        if throughput:
-            vo_throughput[vo] = throughput
-
-    n_fixed = None
-    if len(optimizer) == 0:
-        fixed = OptimizeActive.objects.filter(source_se=source_se, dest_se=dest_se).values('fixed', 'active').all()
-        if len(fixed) and fixed[0]['fixed'] is not None and fixed[0]['fixed'].lower() == 'on':
-            n_fixed = fixed[0]['active']
+    fixed = OptimizeActive.objects.filter(fixed='on', source_se=source_se, dest_se=dest_se)
+    if len(fixed):
+        fixed = fixed[0]
+    else:
+        fixed = None
 
     return {
         'evolution': paged(OptimizerAppendLimits(source_se, dest_se, optimizer), http_request),
-        'throughput': vo_throughput,
-        'fixed': n_fixed
+        'fixed': fixed
     }
 
 
