@@ -98,7 +98,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
             GSoapDelegationHandler handler(ctx);
             credID = handler.makeDelegationId();
 
-            DBSingleton::instance().getDBObjectInstance()->submitdelete(resp._jobid,rulsHost,dn,vo, credID);
+            DBSingleton::instance().getDBObjectInstance()->submitDelete(resp._jobid,rulsHost,dn,vo, credID);
 
         }
     catch(Err& ex)

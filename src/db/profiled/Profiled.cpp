@@ -930,10 +930,10 @@ void ProfiledDB::getStagingFilesForCanceling(std::set< std::pair<std::string, st
 }
 
 
-void ProfiledDB::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
+void ProfiledDB::submitDelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                               const std::string & DN, const std::string & voName, const std::string & credID)
 {
-    PROFILE_PREFIXED("DB::", db->submitdelete(jobId, rulsHost, DN, voName, credID));
+    PROFILE_PREFIXED("DB::", db->submitDelete(jobId, rulsHost, DN, voName, credID));
 }
 
 

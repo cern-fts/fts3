@@ -62,7 +62,7 @@ public:
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
 
-    virtual  void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
+    virtual void submitDelete(const std::string & jobId, const std::map<std::string,std::string>& urlsHost,
                                const std::string & DN, const std::string & voName, const std::string & credID);
 
     /**

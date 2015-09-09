@@ -87,18 +87,13 @@ public:
 
     virtual ~GenericDbIfce() {};
 
-    /**
-     * Intialize database connection  by providing information from fts3config file
-     **/
-
+    /// Intialize database connection  by providing information from fts3config file
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn) = 0;
 
-    virtual  void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
+    virtual  void submitDelete(const std::string & jobId, const std::map<std::string,std::string>& urlsHost,
                                const std::string & DN, const std::string & voName, const std::string & credID) = 0;
 
-    /**
-     * Submit a transfer request to be stored in the database
-     **/
+    /// Submit a transfer request to be stored in the database
     virtual void submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,

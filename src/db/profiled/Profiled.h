@@ -353,7 +353,7 @@ public:
     //file_id / surl / token
     void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
-    void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
+    void submitDelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                       const std::string & DN, const std::string & voName, const std::string & credID);
 
     bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
