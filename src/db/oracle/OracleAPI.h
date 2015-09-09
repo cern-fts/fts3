@@ -442,7 +442,10 @@ private:
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
+    void updateOptimizerEvolution(soci::session& sql,
+            const std::string & source_hostname,
+            const std::string & destination_hostname, int active,
+            double throughput, double successRate, int pathFollowed, int bandwidth);
 
     void getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname);
 

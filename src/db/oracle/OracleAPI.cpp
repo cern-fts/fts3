@@ -4151,22 +4151,16 @@ bool OracleAPI::updateOptimizer()
             if(lanTransferBool)
                 highDefault = LAN_ACTIVE;
 
-            // first thing, check if the number of actives have been fixed for this pair
-            stmt_fixed.execute(true);
-            if (isNullFixed == soci::i_ok && active_fixed == "on")
-                continue;
-
             //get the average transfer duration for this link
             stmt_avg_duration.execute(true);
 
-            int calcutateTimeFrame = 0;
+            int calculateTimeFrame = 0;
             if(avgDuration > 0 && avgDuration < 30)
-                calcutateTimeFrame  = 5;
+                calculateTimeFrame  = 5;
             else if(avgDuration > 30 && avgDuration < 900)
-                calcutateTimeFrame  = 15;
+                calculateTimeFrame  = 15;
             else
-                calcutateTimeFrame  = 30;
-
+                calculateTimeFrame  = 30;
 
             // Ratio of success
             soci::rowset<soci::row> rs = (sql.prepare <<
@@ -4175,55 +4169,67 @@ bool OracleAPI::updateOptimizer()
                                           " WHERE "
                                           "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                           "      ( "
-                                          "		    (t_file.job_finished is NULL AND current_failures > 0)  OR "
-                                          "		    (t_file.job_finished > (sys_extract_utc(systimestamp) - numtodsinterval(:calcutateTimeFrame, 'minute'))) "
-                                          "	     ) "
-                                          "	    AND file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-                                          soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
+                                          "         (t_file.job_finished is NULL AND current_failures > 0)  OR "
+                                          "         (t_file.job_finished > (sys_extract_utc(systimestamp) - numtodsinterval(:calculateTimeFrame, 'minute'))) "
+                                          "      ) "
+                                          "     AND file_state IN ('FAILED','FINISHED','SUBMITTED') ",
+                                          soci::use(source_hostname), soci::use(destin_hostname), soci::use(calculateTimeFrame));
 
 
-            //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+             //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
+             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+             {
+                 std::string state = i->get<std::string>("FILE_STATE", "");
+                 int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
+                 int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));
+                 std::string reason = i->get<std::string>("REASON", "");
+
+                 //we do not want BringOnline errors to affect transfer success rate, exclude them
+                 bool exists1 = (reason.find("BringOnline") != std::string::npos);
+                 bool exists2 = (reason.find("bring-online") != std::string::npos);
+
+                 if(state.compare("FAILED") == 0 && (exists1 || exists2) )
+                 {
+                     //do nothing, it's a non recoverable error so do not consider it
+                 }
+                 else if(state.compare("FAILED") == 0 && current_failures == 0)
+                 {
+                     //do nothing, it's a non recoverable error so do not consider it
+                 }
+                 else if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retryNum > 0)
+                 {
+                     nFailedLastHour+=1.0;
+                 }
+                 else if(state.compare("FAILED") == 0 && current_failures == 1)
+                 {
+                     nFailedLastHour+=1.0;
+                 }
+                 else if (state.compare("FINISHED") == 0)
+                 {
+                     nFinishedLastHour+=1.0;
+                 }
+             }
+
+             //round up efficiency
+             if(nFinishedLastHour > 0.0)
+             {
+                 ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
+             }
+
+             // Active transfers
+             stmt7.execute(true);
+
+            // if the number of actives has been fixed, store the values in the evolution table
+            // for reference, but do not run the optimizer
+            stmt_fixed.execute(true);
+            if (isNullFixed == soci::i_ok && active_fixed == "on")
             {
-                std::string state = i->get<std::string>("FILE_STATE", "");
-                int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
-                int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));
-                std::string reason = i->get<std::string>("REASON", "");
-
-                //we do not want BringOnline errors to affect transfer success rate, exclude them
-                bool exists1 = (reason.find("BringOnline") != std::string::npos);
-                bool exists2 = (reason.find("bring-online") != std::string::npos);
-
-                if(state.compare("FAILED") == 0 && (exists1 || exists2) )
-                {
-                    //do nothing, it's a non recoverable error so do not consider it
-                }
-                else if(state.compare("FAILED") == 0 && current_failures == 0)
-                {
-                    //do nothing, it's a non recoverable error so do not consider it
-                }
-                else if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retryNum > 0)
-                {
-                    nFailedLastHour+=1.0;
-                }
-                else if(state.compare("FAILED") == 0 && current_failures == 1)
-                {
-                    nFailedLastHour+=1.0;
-                }
-                else if (state.compare("FINISHED") == 0)
-                {
-                    nFinishedLastHour+=1.0;
-                }
+                updateOptimizerEvolution(sql,
+                        source_hostname, destin_hostname,
+                        active, throughput,
+                        ratioSuccessFailure, -1, 0);
+                continue;
             }
-
-            //round up efficiency
-            if(nFinishedLastHour > 0.0)
-            {
-                ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
-            }
-
-            // Active transfers
-            stmt7.execute(true);
 
             //get submitted for this link
             stmt19.execute(true);
@@ -9138,7 +9144,10 @@ void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, uns
 }
 
 
-void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth)
+void OracleAPI::updateOptimizerEvolution(soci::session& sql,
+        const std::string & source_hostname,
+        const std::string & destination_hostname, int active, double throughput,
+        double successRate, int calcutateTimeFrame, int bandwidth)
 {
     try
         {
@@ -9154,7 +9163,7 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
                         soci::use(active),
                         soci::use(throughput),
                         soci::use(successRate),
-                        soci::use(buffer),
+                        soci::use(calcutateTimeFrame),
                         soci::use(bandwidth),
                         soci::use(agrthroughput);
                     sql.commit();
