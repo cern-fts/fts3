@@ -172,8 +172,7 @@ void Configuration::addSe(std::string se, bool active)
         throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
 
     //check if SE exists
-    Se* ptr = 0;
-    db->getSe(ptr, se);
+    std::unique_ptr<Se> ptr(db->getSe(se));
     if (!ptr)
         {
             // if not add it to the DB
@@ -182,7 +181,6 @@ void Configuration::addSe(std::string se, bool active)
         }
     else
         db->updateSe(std::string(), std::string(), std::string(), se, active ? on : off, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
-    delete ptr;
 }
 
 void Configuration::eraseSe(std::string se)

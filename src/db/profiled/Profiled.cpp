@@ -121,9 +121,9 @@ void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<st
     PROFILE_PREFIXED("DB::", db->getMultihopJobs(files));
 }
 
-void ProfiledDB::getSe(Se* &se, std::string seName)
+std::unique_ptr<Se> ProfiledDB::getSe(const std::string& seName)
 {
-    PROFILE_PREFIXED("DB::", db->getSe(se, seName));
+    PROFILE_PREFIXED("DB::", return db->getSe(seName));
 }
 
 

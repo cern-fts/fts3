@@ -74,7 +74,7 @@ public:
 
     void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
-    void getSe(Se* &se, std::string seName);
+    std::unique_ptr<Se> getSe(const std::string& seName);
 
     unsigned int updateFileStatus(TransferFile& file, const std::string status);
 

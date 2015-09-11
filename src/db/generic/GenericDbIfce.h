@@ -130,7 +130,7 @@ public:
 
     virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
 
-    virtual void getSe(Se* &se, std::string seName) = 0;
+    virtual std::unique_ptr<Se> getSe(const std::string& seName) = 0;
 
     virtual unsigned int updateFileStatus(TransferFile& file, const std::string status) = 0;
 

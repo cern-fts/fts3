@@ -2397,38 +2397,34 @@ void MySqlAPI::getDmFileStatus(const std::string& requestID, bool archive,
     }
 }
 
-void MySqlAPI::getSe(Se* &se, std::string seName)
+
+std::unique_ptr<Se> MySqlAPI::getSe(const std::string& seName)
 {
     soci::session sql(*connectionPool);
-    se = NULL;
 
     try
     {
-        se = new Se();
+        Se se;
         sql << "SELECT * FROM t_se WHERE name = :name",
-            soci::use(seName), soci::into(*se);
+            soci::use(seName), soci::into(se);
 
-        if (!sql.got_data())
+        if (sql.got_data())
         {
-            delete se;
-            se = NULL;
+            return std::unique_ptr<Se>(new Se(se));
         }
 
     }
     catch (std::exception& e)
     {
-        if(se)
-            delete se;
         throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     }
     catch (...)
     {
-        if(se)
-            delete se;
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
-}
 
+    return std::unique_ptr<Se>();
+}
 
 
 void MySqlAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
