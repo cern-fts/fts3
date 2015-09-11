@@ -3475,14 +3475,13 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
 }
 
 
-
-/*custom optimization stuff*/
-
-void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
+OptimizerSample OracleAPI::fetchOptimizationConfig(const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
-    ops->streamsPerFile = DEFAULT_NOSTREAMS;
-    ops->timeout = MID_TIMEOUT;
-    ops->bufsize = DEFAULT_BUFFSIZE;
+    OptimizerSample ops;
+    ops.streamsPerFile = DEFAULT_NOSTREAMS;
+    ops.timeout = MID_TIMEOUT;
+    ops.bufsize = DEFAULT_BUFFSIZE;
+    return ops;
 }
 
 
@@ -3515,6 +3514,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
         }
     return !expired;
 }
+
 
 bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname, int &currentActive)
 {

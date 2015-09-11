@@ -3912,17 +3912,14 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
 }
 
 
-
-/*custom optimization stuff*/
-
-void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
+OptimizerSample MySqlAPI::fetchOptimizationConfig(const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
-    ops->streamsperfile = DEFAULT_NOSTREAMS;
-    ops->timeout = MID_TIMEOUT;
-    ops->bufsize = DEFAULT_BUFFSIZE;
+    OptimizerSample ops;
+    ops.streamsPerFile = DEFAULT_NOSTREAMS;
+    ops.timeout = MID_TIMEOUT;
+    ops.bufsize = DEFAULT_BUFFSIZE;
+    return ops;
 }
-
-
 
 
 bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string & dn)
@@ -3954,6 +3951,7 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
     }
     return !expired;
 }
+
 
 void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destin_hostname)
 {

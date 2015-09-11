@@ -171,7 +171,7 @@ public:
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
 
-    virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
+    virtual OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname) = 0;
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
 

@@ -242,9 +242,9 @@ void ProfiledDB::auditConfiguration(const std::string & dn, const std::string & 
 }
 
 
-void ProfiledDB::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname)
+OptimizerSample ProfiledDB::fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname)
 {
-    PROFILE_PREFIXED("DB::", db->fetchOptimizationConfig2(ops, source_hostname, destin_hostname));
+    PROFILE_PREFIXED("DB::", return db->fetchOptimizationConfig(source_hostname, destin_hostname));
 }
 
 

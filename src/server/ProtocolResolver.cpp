@@ -293,7 +293,7 @@ ProtocolResolver::protocol ProtocolResolver::autotune()
     std::string destination = file.destSe;
 
     OptimizerSample opt_config;
-    DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
+    opt_config = DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig(source, destination);
     ret.tcp_buffer_size = opt_config.bufsize;
     ret.nostreams = opt_config.streamsPerFile;
     ret.urlcopy_tx_to = opt_config.timeout;
