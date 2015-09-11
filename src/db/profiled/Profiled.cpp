@@ -418,12 +418,12 @@ std::string ProfiledDB::getGroupForSe(const std::string se)
 }
 
 
-void ProfiledDB::addLinkConfig(LinkConfig* cfg)
+void ProfiledDB::addLinkConfig(const LinkConfig& cfg)
 {
     PROFILE_PREFIXED("DB::", db->addLinkConfig(cfg));
 }
 
-void ProfiledDB::updateLinkConfig(LinkConfig* cfg)
+void ProfiledDB::updateLinkConfig(const LinkConfig& cfg)
 {
     PROFILE_PREFIXED("DB::", db->updateLinkConfig(cfg));
 }
@@ -454,12 +454,12 @@ bool ProfiledDB::isShareOnly(std::string se)
 }
 
 
-void ProfiledDB::addShareConfig(ShareConfig* cfg)
+void ProfiledDB::addShareConfig(const ShareConfig& cfg)
 {
     PROFILE_PREFIXED("DB::", db->addShareConfig(cfg));
 }
 
-void ProfiledDB::updateShareConfig(ShareConfig* cfg)
+void ProfiledDB::updateShareConfig(const ShareConfig& cfg)
 {
     PROFILE_PREFIXED("DB::", db->updateShareConfig(cfg));
 }

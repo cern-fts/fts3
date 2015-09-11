@@ -175,16 +175,16 @@ public:
 
     std::string getGroupForSe(const std::string se);
 
-    void addLinkConfig(LinkConfig* cfg);
-    void updateLinkConfig(LinkConfig* cfg);
+    void addLinkConfig(const LinkConfig& cfg);
+    void updateLinkConfig(const LinkConfig& cfg);
     void deleteLinkConfig(std::string source, std::string destination);
     std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination);
     std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name);
     bool isGrInPair(std::string group);
     bool isShareOnly(std::string se);
 
-    void addShareConfig(ShareConfig* cfg);
-    void updateShareConfig(ShareConfig* cfg);
+    void addShareConfig(const ShareConfig& cfg);
+    void updateShareConfig(const ShareConfig& cfg);
     void deleteShareConfig(std::string source, std::string destination, std::string vo);
     void deleteShareConfig(std::string source, std::string destination);
     std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo);

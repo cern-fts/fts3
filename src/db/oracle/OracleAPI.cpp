@@ -5475,7 +5475,7 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
 
 
 
-void OracleAPI::addLinkConfig(LinkConfig* cfg)
+void OracleAPI::addLinkConfig(const LinkConfig& cfg)
 {
     soci::session sql(*connectionPool);
 
@@ -5486,11 +5486,11 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg)
             sql << "INSERT INTO t_link_config (source, destination, state, symbolicName, "
                 "                          nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_tuning)"
                 "                  VALUES (:src, :dest, :state, :sname, :nstreams, :tcp, :txto, :txactivity, :auto_tuning)",
-                soci::use(cfg->source), soci::use(cfg->destination),
-                soci::use(cfg->state), soci::use(cfg->symbolicName),
-                soci::use(cfg->numberOfStreams), soci::use(cfg->tcpBufferSize),
-                soci::use(cfg->transferTimeout), soci::use(cfg->transferTimeout),
-                soci::use(cfg->autoTuning);
+                soci::use(cfg.source), soci::use(cfg.destination),
+                soci::use(cfg.state), soci::use(cfg.symbolicName),
+                soci::use(cfg.numberOfStreams), soci::use(cfg.tcpBufferSize),
+                soci::use(cfg.transferTimeout), soci::use(cfg.transferTimeout),
+                soci::use(cfg.autoTuning);
 
 
             sql.commit();
@@ -5509,7 +5509,7 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg)
 
 
 
-void OracleAPI::updateLinkConfig(LinkConfig* cfg)
+void OracleAPI::updateLinkConfig(const LinkConfig& cfg)
 {
     soci::session sql(*connectionPool);
 
@@ -5522,11 +5522,11 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg)
                 "  nostreams = :nostreams, tcp_buffer_size = :tcp, "
                 "  urlcopy_tx_to = :txto, no_tx_activity_to = 0, auto_tuning = :auto_tuning "
                 "WHERE source = :source AND destination = :dest",
-                soci::use(cfg->state), soci::use(cfg->symbolicName),
-                soci::use(cfg->numberOfStreams), soci::use(cfg->tcpBufferSize),
-                soci::use(cfg->transferTimeout),
-                soci::use(cfg->autoTuning),
-                soci::use(cfg->source), soci::use(cfg->destination);
+                soci::use(cfg.state), soci::use(cfg.symbolicName),
+                soci::use(cfg.numberOfStreams), soci::use(cfg.tcpBufferSize),
+                soci::use(cfg.transferTimeout),
+                soci::use(cfg.autoTuning),
+                soci::use(cfg.source), soci::use(cfg.destination);
 
             sql.commit();
         }
@@ -5655,7 +5655,7 @@ bool OracleAPI::isGrInPair(std::string group)
 
 
 
-void OracleAPI::addShareConfig(ShareConfig* cfg)
+void OracleAPI::addShareConfig(const ShareConfig& cfg)
 {
     soci::session sql(*connectionPool);
 
@@ -5665,8 +5665,8 @@ void OracleAPI::addShareConfig(ShareConfig* cfg)
 
             sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_link_config, T_LINK_CONFIG_PK) */ INTO t_share_config (source, destination, vo, active) "
                 "                    VALUES (:source, :destination, :vo, :active)",
-                soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo),
-                soci::use(cfg->activeTransfers);
+                soci::use(cfg.source), soci::use(cfg.destination), soci::use(cfg.vo),
+                soci::use(cfg.activeTransfers);
 
             sql.commit();
         }
@@ -5684,7 +5684,7 @@ void OracleAPI::addShareConfig(ShareConfig* cfg)
 
 
 
-void OracleAPI::updateShareConfig(ShareConfig* cfg)
+void OracleAPI::updateShareConfig(const ShareConfig& cfg)
 {
     soci::session sql(*connectionPool);
 
@@ -5695,8 +5695,8 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg)
             sql << "UPDATE t_share_config SET "
                 "  active = :active "
                 "WHERE source = :source AND destination = :dest AND vo = :vo",
-                soci::use(cfg->activeTransfers),
-                soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo);
+                soci::use(cfg.activeTransfers),
+                soci::use(cfg.source), soci::use(cfg.destination), soci::use(cfg.vo);
 
             sql.commit();
         }

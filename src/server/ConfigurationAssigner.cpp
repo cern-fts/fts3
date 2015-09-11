@@ -147,7 +147,7 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
                     ptr->vo = Configuration::pub;
                     ptr->activeTransfers = 0;
                     // insert into DB
-                    db->addShareConfig(ptr.get());
+                    db->addShareConfig(*ptr.get());
                 }
 
             // set the share only status

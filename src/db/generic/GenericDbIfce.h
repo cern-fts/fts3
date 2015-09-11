@@ -233,16 +233,16 @@ public:
     virtual std::string getGroupForSe(const std::string se) = 0;
 
     //t_config_symbolic
-    virtual void addLinkConfig(LinkConfig* cfg) = 0;
-    virtual void updateLinkConfig(LinkConfig* cfg) = 0;
+    virtual void addLinkConfig(const LinkConfig& cfg) = 0;
+    virtual void updateLinkConfig(const LinkConfig& cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination) = 0;
     virtual std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name) = 0;
     virtual bool isGrInPair(std::string group) = 0;
     virtual bool isShareOnly(std::string se) = 0;
 
-    virtual void addShareConfig(ShareConfig* cfg) = 0;
-    virtual void updateShareConfig(ShareConfig* cfg) = 0;
+    virtual void addShareConfig(const ShareConfig& cfg) = 0;
+    virtual void updateShareConfig(const ShareConfig& cfg) = 0;
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo) = 0;
     virtual void deleteShareConfig(std::string source, std::string destination) = 0;
     virtual std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo) = 0;

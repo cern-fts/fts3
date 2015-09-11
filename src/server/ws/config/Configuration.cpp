@@ -291,12 +291,12 @@ void Configuration::addLinkCfg(std::string source, std::string destination, bool
 
     if (cfg.second)
         {
-            db->updateLinkConfig(&cfg.first);
+            db->updateLinkConfig(cfg.first);
             updateCount++;
         }
     else
         {
-            db->addLinkConfig(&cfg.first);
+            db->addLinkConfig(cfg.first);
             insertCount++;
         }
 }
@@ -316,12 +316,12 @@ void Configuration::addLinkCfg(std::string source, std::string destination, bool
 
     if (cfg.second)
         {
-            db->updateLinkConfig(&cfg.first);
+            db->updateLinkConfig(cfg.first);
             updateCount++;
         }
     else
         {
-            db->addLinkConfig(&cfg.first);
+            db->addLinkConfig(cfg.first);
             insertCount++;
         }
 }
@@ -360,20 +360,20 @@ void Configuration::addShareCfg(std::string source, std::string destination, std
         {
             std::string vo = it->first;
             // create new share configuration
-            std::unique_ptr<ShareConfig> cfg(new ShareConfig);
-            cfg->source = source;
-            cfg->destination = destination;
-            cfg->vo = vo;
-            cfg->activeTransfers = it->second;
+            ShareConfig cfg;
+            cfg.source = source;
+            cfg.destination = destination;
+            cfg.vo = vo;
+            cfg.activeTransfers = it->second;
             // check if the configuration should use insert or update
             if (update.count(it->first))
                 {
-                    db->updateShareConfig(cfg.get());
+                    db->updateShareConfig(cfg);
                     updateCount++;
                 }
             else
                 {
-                    db->addShareConfig(cfg.get());
+                    db->addShareConfig(cfg);
                     insertCount++;
                 }
 
