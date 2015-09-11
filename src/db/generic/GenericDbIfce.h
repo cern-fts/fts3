@@ -37,6 +37,7 @@
 #include "SeProtocolConfig.h"
 #include "CredCache.h"
 #include "Cred.h"
+#include "QueueId.h"
 #include "common/definitions.h"
 #include "common/OptimizerSample.h"
 
@@ -163,10 +164,20 @@ public:
             const std::string& src, const std::string& dst,
             std::vector<JobStatus>& jobs) = 0;
 
+    /// Get a list of transfers ready to go for the given queues
+    /// When session reuse is enabled for a job, all the files belonging to that job should run at once
+    /// @param queues       Queues for which to check (see getQueuesWithSessionReusePending)
+    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
+    virtual void getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
+            std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile>>>>& files) = 0;
 
-    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
+    /// Get a list of transfers ready to go for the given queues
+    /// @param queues       Queues for which to check (see getQueuesWithPending)
+    /// @param[out] files   A map where the key is the VO. The value is a list of transfers belonging to that VO
+    virtual void getReadyTransfers(const std::vector<QueueId>& queues,
+            std::map< std::string, std::list<TransferFile>>& files) = 0;
 
-    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files) = 0;
+
 
     virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
 
@@ -445,9 +456,9 @@ public:
 
     virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files) = 0;
 
-    virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct) = 0;
+    virtual void getQueuesWithPending(std::vector<QueueId>& queues) = 0;
 
-    virtual void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct) = 0;
+    virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queued) = 0;
 
 
     //NEW deletions and staging API

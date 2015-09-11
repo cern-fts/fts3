@@ -173,16 +173,16 @@ protected:
         return u0.protocol + "://" + u0.host;
     }
 
-    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+    void getFiles(const std::vector<QueueId>& queues)
     {
         try
             {
-                if(distinct.empty())
+                if(queues.empty())
                     return;
 
                 //now get files to be scheduled
                 std::map< std::string, std::list<TransferFile> > voQueues;
-                DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+                DBSingleton::instance().getDBObjectInstance()->getReadyTransfers(queues, voQueues);
 
                 if(voQueues.empty())
                     return;
@@ -262,7 +262,7 @@ protected:
     void executeUrlcopy()
     {
         //get distinct source, dest, vo first
-        std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+        std::vector<QueueId> queues;
 
         try
             {
@@ -270,7 +270,7 @@ protected:
 
                 try
                     {
-                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                        DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
                     }
                 catch (std::exception& e)
                     {
@@ -278,17 +278,17 @@ protected:
                         sleep(1);
                         try
                             {
-                                distinct.clear();
-                                DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                                queues.clear();
+                                DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
                             }
                         catch (std::exception& e)
                             {
-                                distinct.clear();
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+                                queues.clear();
+
                             }
                         catch (...)
                             {
-                                distinct.clear();
+                                queues.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }
@@ -298,42 +298,42 @@ protected:
                         sleep(1);
                         try
                             {
-                                distinct.clear();
-                                DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                                queues.clear();
+                                DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
                             }
                         catch (std::exception& e)
                             {
-                                distinct.clear();
+                                queues.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                             }
                         catch (...)
                             {
-                                distinct.clear();
+                                queues.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }
 
-                if(distinct.empty())
+                if(queues.empty())
                     {
                         return;
                     }
-                else if(1 == distinct.size())
+                else if(1 == queues.size())
                     {
-                        getFiles(distinct);
+                        getFiles(queues);
                     }
                 else
                     {
-                        std::size_t const half_size1 = distinct.size() / 2;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
+                        std::size_t const half_size1 = queues.size() / 2;
+                        std::vector<QueueId> split_1(queues.begin(), queues.begin() + half_size1);
+                        std::vector<QueueId> split_2(queues.begin() + half_size1, queues.end());
 
                         std::size_t const half_size2 = split_1.size() / 2;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_11(split_1.begin(), split_1.begin() + half_size2);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_21(split_1.begin() + half_size2, split_1.end());
+                        std::vector<QueueId> split_11(split_1.begin(), split_1.begin() + half_size2);
+                        std::vector<QueueId> split_21(split_1.begin() + half_size2, split_1.end());
 
                         std::size_t const half_size3 = split_2.size() / 2;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
+                        std::vector<QueueId> split_12(split_2.begin(), split_2.begin() + half_size3);
+                        std::vector<QueueId> split_22(split_2.begin() + half_size3, split_2.end());
 
 
                         //create threads only when needed
@@ -350,16 +350,16 @@ protected:
                         g.join_all();
                     }
 
-                distinct.clear();
+                queues.clear();
             }
         catch (std::exception& e)
             {
-                distinct.clear();
+                queues.clear();
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
             }
         catch (...)
             {
-                distinct.clear();
+                queues.clear();
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
             }
     }

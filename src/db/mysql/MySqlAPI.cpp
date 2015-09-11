@@ -730,8 +730,7 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
 }
 
 
-
-void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
 {
     soci::session sql(*connectionPool);
     int file_id = 0;
@@ -766,12 +765,10 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
             stmt1.execute(true);
             if(isNull != soci::i_null && file_id > 0)
             {
-                distinct.push_back(
-                    boost::tuple< std::string, std::string, std::string>(
-                        source_se,
-                        dest_se,
-                        vo_name
-                    )
+                queues.emplace_back(
+                    source_se,
+                    dest_se,
+                    vo_name
                 );
             }
         }
@@ -787,7 +784,8 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
 
 }
 
-void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+
+void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
 {
     soci::session sql(*connectionPool);
 
@@ -810,13 +808,10 @@ void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::s
             std::string source_se = r.get<std::string>("source_se","");
             std::string dest_se = r.get<std::string>("dest_se","");
 
-            distinct.push_back(
-                boost::tuple< std::string, std::string, std::string>(
-                    r.get<std::string>("source_se",""),
-                    r.get<std::string>("dest_se",""),
-                    r.get<std::string>("vo_name","")
-                )
-
+            queues.emplace_back(
+                r.get<std::string>("source_se",""),
+                r.get<std::string>("dest_se",""),
+                r.get<std::string>("vo_name","")
             );
 
             long long int linkExists = 0;
@@ -845,8 +840,7 @@ void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::s
     }
 }
 
-void MySqlAPI::getByJobId(
-        std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
+void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::list<TransferFile> >& files)
 {
     soci::session sql(*connectionPool);
@@ -866,21 +860,17 @@ void MySqlAPI::getByJobId(
 
     try
     {
-        // Iterate through pairs, getting jobs IF the VO has not run out of credits
+        // Iterate through queues, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
-        boost::tuple<std::string, std::string, std::string> triplet;
-
-        std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-        for (it = distinct.begin(); it != distinct.end(); ++it)
+        for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            triplet = *it;
             count = 0;
             manualConfigExists = false;
             filesNum = defaultFilesNum;
 
             //1st check if manual config exists
             sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-                   soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
+                   soci::use(it->sourceSe), soci::use(it->destSe), soci::into(count);
             if(count > 0)
                 manualConfigExists = true;
 
@@ -888,7 +878,7 @@ void MySqlAPI::getByJobId(
             if(!manualConfigExists)
             {
                 sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                       soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
+                       soci::use(it->sourceSe), soci::use(it->destSe), soci::into(count);
                 if(count > 0)
                     manualConfigExists = true;
             }
@@ -902,13 +892,13 @@ void MySqlAPI::getByJobId(
 
                 sql << "SELECT COUNT(*) FROM t_file "
                        " WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE' AND job_finished is NULL ",
-                       soci::use(boost::get<0>(triplet)),
-                       soci::use(boost::get<1>(triplet)),
+                       soci::use(it->sourceSe),
+                       soci::use(it->destSe),
                        soci::into(limit);
 
                 sql << "SELECT active FROM t_optimize_active WHERE source_se=:source_se AND dest_se=:dest_se",
-                       soci::use(boost::get<0>(triplet)),
-                       soci::use(boost::get<1>(triplet)),
+                       soci::use(it->sourceSe),
+                       soci::use(it->destSe),
                        soci::into(maxActive, isNull);
 
                 if (isNull != soci::i_null && maxActive > 0)
@@ -931,12 +921,12 @@ void MySqlAPI::getByJobId(
                    "WHERE "
                    "    t_file.job_id = t_job.job_id AND t_file.job_finished IS NULL AND "
                    "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest",
-                   soci::use(boost::get<2>(triplet)), soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)),
+                   soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
                    soci::into(maxPriority);
 
             std::set<std::string> default_activities;
             std::map<std::string, int> activityFilesNum =
-                getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum, default_activities);
+                getFilesNumPerActivity(sql, it->sourceSe, it->destSe, it->voName, filesNum, default_activities);
 
             gmtime_r(&now, &tTime);
 
@@ -960,9 +950,9 @@ void MySqlAPI::getByJobId(
                                                   "     j.priority = :maxPriority "
                                                   " ORDER BY file_id ASC "
                                                   " LIMIT :filesNum",
-                                                  soci::use(boost::get<0>(triplet)),
-                                                  soci::use(boost::get<1>(triplet)),
-                                                  soci::use(boost::get<2>(triplet)),
+                                                  soci::use(it->sourceSe),
+                                                  soci::use(it->destSe),
+                                                  soci::use(it->voName),
                                                   soci::use(tTime),
                                                   soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                   soci::use(maxPriority),
@@ -1040,9 +1030,9 @@ void MySqlAPI::getByJobId(
                     soci::rowset<TransferFile> rs = (
                                                          sql.prepare <<
                                                          select,
-                                                         soci::use(boost::get<0>(triplet)),
-                                                         soci::use(boost::get<1>(triplet)),
-                                                         soci::use(boost::get<2>(triplet)),
+                                                         soci::use(it->sourceSe),
+                                                         soci::use(it->destSe),
+                                                         soci::use(it->voName),
                                                          soci::use(tTime),
                                                          soci::use(it_act->first),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -1499,11 +1489,10 @@ unsigned int MySqlAPI::updateFileStatus(TransferFile& file, const std::string st
 }
 
 
-void MySqlAPI::getByJobIdReuse(
-    std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
-    std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > >& files)
+void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
+        std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files)
 {
-    if(distinct.empty()) return;
+    if(queues.empty()) return;
 
     soci::session sql(*connectionPool);
 
@@ -1513,12 +1502,10 @@ void MySqlAPI::getByJobIdReuse(
 
     try
     {
-        // Iterate through pairs, getting jobs IF the VO has not run out of credits
+        // Iterate through queues, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
-        std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-        for (it = distinct.begin(); it != distinct.end(); ++it)
+        for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            boost::tuple<std::string, std::string, std::string>& triplet = *it;
             gmtime_r(&now, &tTime);
 
             std::string job;
@@ -1534,9 +1521,9 @@ void MySqlAPI::getByJobIdReuse(
                 "      (f.retry_timestamp is null or f.retry_timestamp < :tTime) "
                 "order by j.priority DESC, j.submit_time "
                 "limit 1 ",
-                soci::use(boost::get<0>(triplet)),
-                soci::use(boost::get<1>(triplet)),
-                soci::use(boost::get<2>(triplet)),
+                soci::use(it->sourceSe),
+                soci::use(it->destSe),
+                soci::use(it->voName),
                 soci::use(hashSegment.start),
                 soci::use(hashSegment.end),
                 soci::use(tTime),
@@ -1567,7 +1554,7 @@ void MySqlAPI::getByJobIdReuse(
                     tf.push_back(*ti);
                 }
                 if (!tf.empty())
-                    files[boost::get<2>(triplet)].push(std::make_pair(job, tf));
+                    files[it->voName].push(std::make_pair(job, tf));
             }
         }
     }

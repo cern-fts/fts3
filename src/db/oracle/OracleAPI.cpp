@@ -725,7 +725,7 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
 }
 
 
-void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+void OracleAPI::getQueuesWithPending(std::vector<QueueId>& queues)
 {
 
     soci::session sql(*connectionPool);
@@ -747,13 +747,10 @@ void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, s
                     std::string source_se = r.get<std::string>("SOURCE_SE","");
                     std::string dest_se = r.get<std::string>("DEST_SE","");
 
-                    distinct.push_back(
-                        boost::tuple< std::string, std::string, std::string>(
-                            r.get<std::string>("SOURCE_SE",""),
-                            r.get<std::string>("DEST_SE",""),
-                            r.get<std::string>("VO_NAME","")
-                        )
-
+                    queues.emplace_back(
+                        r.get<std::string>("SOURCE_SE",""),
+                        r.get<std::string>("DEST_SE",""),
+                        r.get<std::string>("VO_NAME","")
                     );
 
                     long long int linkExists = 0;
@@ -786,7 +783,7 @@ void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, s
         }
 }
 
-void OracleAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+void OracleAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
 {
     soci::session sql(*connectionPool);
 
@@ -809,13 +806,10 @@ void OracleAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::
                     std::string source_se = r.get<std::string>("SOURCE_SE","");
                     std::string dest_se = r.get<std::string>("DEST_SE","");
 
-                    distinct.push_back(
-                        boost::tuple< std::string, std::string, std::string>(
+                    queues.emplace_back(
                             r.get<std::string>("SOURCE_SE",""),
                             r.get<std::string>("DEST_SE",""),
                             r.get<std::string>("VO_NAME","")
-                        )
-
                     );
 
                     long long int linkExists = 0;
@@ -848,7 +842,8 @@ void OracleAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::
         }
 }
 
-void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files)
+void OracleAPI::getReadyTransfers(const std::vector<QueueId>& queues,
+        std::map< std::string, std::list<TransferFile>>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -860,7 +855,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
         {
             int defaultFilesNum = 10;
 
-            if(distinct.empty())
+            if(queues.empty())
                 return;
 
             long long hostCount = 0;
@@ -875,25 +870,23 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                 hostCount = 1;
 
 
-            // Iterate through pairs, getting jobs IF the VO has not run out of credits
+            // Iterate through qeues, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
-            std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-            for (it = distinct.begin(); it != distinct.end(); ++it)
+            for (auto it = queues.begin(); it != queues.end(); ++it)
                 {
-                    boost::tuple<std::string, std::string, std::string>& triplet = *it;
                     int count = 0;
                     bool manualConfigExists = false;
                     int filesNum = defaultFilesNum;
 
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                        soci::use(it->sourceSe), soci::use(it->destSe), soci::into(count);
                     if(count > 0)
                         manualConfigExists = true;
 
                     if(!manualConfigExists)
                         {
                             sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                                soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                                soci::use(it->sourceSe), soci::use(it->destSe), soci::into(count);
                             if(count > 0)
                                 manualConfigExists = true;
                         }
@@ -905,13 +898,13 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                             soci::indicator isNull = soci::i_ok;
 
                             sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state = 'ACTIVE' ",
-                                soci::use(boost::get<0>(triplet)),
-                                soci::use(boost::get<1>(triplet)),
+                                soci::use(it->sourceSe),
+                                soci::use(it->destSe),
                                 soci::into(limit);
 
                             sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
-                                soci::use(boost::get<0>(triplet)),
-                                soci::use(boost::get<1>(triplet)),
+                                soci::use(it->sourceSe),
+                                soci::use(it->destSe),
                                 soci::into(maxActive, isNull);
 
                             /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
@@ -933,7 +926,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
                     std::set<std::string> default_activities;
                     std::map<std::string, int> activityFilesNum =
-                        getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum, default_activities);
+                        getFilesNumPerActivity(sql, it->sourceSe, it->destSe, it->voName, filesNum, default_activities);
 
                     if (activityFilesNum.empty())
                         {
@@ -957,16 +950,16 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                  "    (j.reuse_job = 'N' OR j.reuse_job = 'R' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
                                                                  "     ORDER BY j.priority DESC, j.submit_time) "
                                                                  " WHERE rn <= :filesNum ",
-                                                                 soci::use(boost::get<0>(triplet)),
-                                                                 soci::use(boost::get<1>(triplet)),
-                                                                 soci::use(boost::get<2>(triplet)),
+                                                                 soci::use(it->sourceSe),
+                                                                 soci::use(it->destSe),
+                                                                 soci::use(it->voName),
                                                                  soci::use(tTime),
                                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                                 soci::use(boost::get<2>(triplet)),
+                                                                 soci::use(it->voName),
                                                                  soci::use(filesNum)
                                                              );
 
-                            for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                            for (auto ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
                                     TransferFile& tfile = *ti;
 
@@ -1041,13 +1034,13 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                     soci::rowset<TransferFile> rs = (
                                                                          sql.prepare <<
                                                                          select,
-                                                                         soci::use(boost::get<0>(triplet)),
-                                                                         soci::use(boost::get<1>(triplet)),
-                                                                         soci::use(boost::get<2>(triplet)),
+                                                                         soci::use(it->sourceSe),
+                                                                         soci::use(it->destSe),
+                                                                         soci::use(it->voName),
                                                                          soci::use(it_act->first),
                                                                          soci::use(tTime),
                                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                                         soci::use(boost::get<2>(triplet)),
+                                                                         soci::use(it->voName),
                                                                          soci::use(it_act->second)
                                                                      );
 
@@ -1436,7 +1429,6 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFile const & file, const s
 }
 
 
-
 unsigned int OracleAPI::updateFileStatus(TransferFile& file, const std::string status)
 {
     soci::session sql(*connectionPool);
@@ -1489,9 +1481,10 @@ unsigned int OracleAPI::updateFileStatus(TransferFile& file, const std::string s
 }
 
 
-void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
+void OracleAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile>>>>& files)
 {
-    if(distinct.empty()) return;
+    if(queues.empty()) return;
 
     soci::session sql(*connectionPool);
 
@@ -1501,12 +1494,10 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
 
     try
         {
-            // Iterate through pairs, getting jobs IF the VO has not run out of credits
+            // Iterate queues pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
-            std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-            for (it = distinct.begin(); it != distinct.end(); ++it)
+            for (auto it = queues.begin(); it != queues.end(); ++it)
                 {
-                    boost::tuple<std::string, std::string, std::string>& triplet = *it;
                     gmtime_r(&now, &tTime);
                     std::string job;
 
@@ -1522,9 +1513,9 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
                        "      (f.retry_timestamp is null or f.retry_timestamp < :tTime) "
                        "  order by j.priority DESC, j.submit_time "
                        ") where rownum <= 1 ",
-                       soci::use(boost::get<0>(triplet)),
-                       soci::use(boost::get<1>(triplet)),
-                       soci::use(boost::get<2>(triplet)),
+                       soci::use(it->sourceSe),
+                       soci::use(it->destSe),
+                       soci::use(it->voName),
                        soci::use(hashSegment.start),
                        soci::use(hashSegment.end),
                        soci::use(tTime),
@@ -1556,7 +1547,7 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
 
                                 }
                             if (!tf.empty())
-                                files[boost::get<2>(triplet)].push(std::make_pair(job, tf));
+                                files[it->voName].push(std::make_pair(job, tf));
                         }
                 }
         }
@@ -1571,6 +1562,7 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
+
 
 void OracleAPI::submitPhysical(const std::string& jobId,
         std::list<SubmittedTransfer>& transfers, const std::string& DN,

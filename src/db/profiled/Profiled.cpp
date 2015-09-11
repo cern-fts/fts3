@@ -94,20 +94,25 @@ boost::optional<Job> ProfiledDB::getJob(const std::string & jobId, bool archive)
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
+void ProfiledDB::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(distinct, files));
+    PROFILE_PREFIXED("DB::", db->getReadySessionReuseTransfers(queues, files));
 }
 
-void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files)
+
+void ProfiledDB::getReadyTransfers(const std::vector<QueueId>& queues,
+        std::map< std::string, std::list<TransferFile> >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
+    PROFILE_PREFIXED("DB::", db->getReadyTransfers(queues, files));
 }
+
 
 void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
 {
     PROFILE_PREFIXED("DB::", db->getMultihopJobs(files));
 }
+
 
 std::unique_ptr<StorageElement> ProfiledDB::getSe(const std::string& seName)
 {
@@ -866,14 +871,14 @@ void ProfiledDB::getTransferJobStatusDetailed(std::string job_id, std::vector<bo
     PROFILE_PREFIXED("DB::", db->getTransferJobStatusDetailed(job_id, files));
 }
 
-void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+void ProfiledDB::getQueuesWithPending(std::vector<QueueId>& queues)
 {
-    PROFILE_PREFIXED("DB::", db->getVOPairs(distinct));
+    PROFILE_PREFIXED("DB::", db->getQueuesWithPending(queues));
 }
 
-void ProfiledDB::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+void ProfiledDB::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
 {
-    PROFILE_PREFIXED("DB::", db->getVOPairsWithReuse(distinct));
+    PROFILE_PREFIXED("DB::", db->getQueuesWithSessionReusePending(queues));
 }
 
 //deletions

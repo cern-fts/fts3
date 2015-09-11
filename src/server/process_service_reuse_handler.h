@@ -129,11 +129,11 @@ protected:
         return fileIds;
     }
 
-    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+    void getFiles(const std::vector<QueueId>& queues)
     {
         //now get files to be scheduled
         std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > > voQueues;
-        DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(distinct, voQueues);
+        DBSingleton::instance().getDBObjectInstance()->getReadySessionReuseTransfers(queues, voQueues);
 
         std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >::iterator vo_it;
 
@@ -336,15 +336,13 @@ protected:
 
     void executeUrlcopy()
     {
-
         try
             {
-                //get distinct source, dest, vo first
-                std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+                std::vector<QueueId> queues;
 
                 try
                     {
-                        DBSingleton::instance().getDBObjectInstance()->getVOPairsWithReuse(distinct);
+                        DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
                     }
                 catch (std::exception& e)
                     {
@@ -352,8 +350,8 @@ protected:
                         sleep(1);
                         try
                             {
-                                distinct.clear();
-                                DBSingleton::instance().getDBObjectInstance()->getVOPairsWithReuse(distinct);
+                                queues.clear();
+                                DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
                             }
                         catch (std::exception& e)
                             {
@@ -370,8 +368,8 @@ protected:
                         sleep(1);
                         try
                             {
-                                distinct.clear();
-                                DBSingleton::instance().getDBObjectInstance()->getVOPairsWithReuse(distinct);
+                                queues.clear();
+                                DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
                             }
                         catch (std::exception& e)
                             {
@@ -383,11 +381,9 @@ protected:
                             }
                     }
 
-                if(distinct.empty()) return;
+                if(queues.empty()) return;
 
-                getFiles(distinct);
-
-
+                getFiles(queues);
             }
         catch (std::exception& e)
             {

@@ -68,13 +68,15 @@ public:
             const std::string& src, const std::string& dst,
             std::vector<JobStatus>& jobs);
 
+    void getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
+            std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
-
-    void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
-
-    void getByJobId( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files);
+    void getReadyTransfers(const std::vector<QueueId>& queues,
+            std::map< std::string, std::list<TransferFile> >& files);
 
     void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
+
+
 
     std::unique_ptr<StorageElement> getSe(const std::string& seName);
 
@@ -332,9 +334,9 @@ public:
 
     void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
-    void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+    void getQueuesWithPending(std::vector<QueueId>& queues);
 
-    void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+    void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
 
 
     //NEW deletions and staging API

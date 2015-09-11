@@ -90,9 +90,13 @@ public:
             const std::string& src, const std::string& dst,
             std::vector<JobStatus>& jobs);
 
-    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
+    virtual void getReadySessionReuseTransfers(
+            const std::vector<QueueId>& queues,
+            std::map<std::string,std::queue<std::pair<std::string, std::list<TransferFile>>>>& files);
 
-    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFile> >& files);
+    virtual void getReadyTransfers(const std::vector<QueueId>& queues,
+            std::map< std::string, std::list<TransferFile>>& files);
+
 
     virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
@@ -365,9 +369,9 @@ public:
 
     virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
-    virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+    virtual void getQueuesWithPending(std::vector<QueueId>& queues);
 
-    virtual void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+    virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
 
 
 
