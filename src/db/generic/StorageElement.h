@@ -19,12 +19,12 @@
  */
 
 #pragma once
-#ifndef SE_H_
-#define SE_H_
+#ifndef STORAGELEMENT_H_
+#define STORAGELEMENT_H_
 
 #include <string>
 
-class Se
+class StorageElement
 {
 public:
     std::string endpoint;
@@ -40,4 +40,4 @@ public:
     std::string gocdb_id;
 };
 
-#endif // SE_H_
+#endif // STORAGELEMENT_H_

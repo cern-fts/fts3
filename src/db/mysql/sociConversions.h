@@ -25,7 +25,7 @@
 #include "db/generic/FileTransferStatus.h"
 #include "db/generic/JobStatus.h"
 #include "db/generic/LinkConfig.h"
-#include "db/generic/Se.h"
+#include "db/generic/StorageElement.h"
 #include "db/generic/SeGroup.h"
 #include "db/generic/SeProtocolConfig.h"
 #include "db/generic/ShareConfig.h"
@@ -294,11 +294,11 @@ struct type_conversion<FileTransferStatus>
 };
 
 template <>
-struct type_conversion<Se>
+struct type_conversion<StorageElement>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, Se& se)
+    static void from_base(values const& v, indicator, StorageElement& se)
     {
         se.endpoint = v.get<std::string>("endpoint");
         se.seType  = v.get<std::string>("se_type");

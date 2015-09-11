@@ -172,7 +172,7 @@ void Configuration::addSe(std::string se, bool active)
         throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
 
     //check if SE exists
-    std::unique_ptr<Se> ptr(db->getSe(se));
+    std::unique_ptr<StorageElement> ptr(db->getSe(se));
     if (!ptr)
         {
             // if not add it to the DB

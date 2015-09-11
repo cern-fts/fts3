@@ -32,7 +32,6 @@
 #include "JobStatus.h"
 #include "common/JobParameterHandler.h"
 #include "FileTransferStatus.h"
-#include "Se.h"
 #include "SeConfig.h"
 #include "SeGroup.h"
 #include "SeProtocolConfig.h"
@@ -51,6 +50,7 @@
 
 #include "Job.h"
 #include "profiler/Profiler.h"
+#include "StorageElement.h"
 #include "TransferFile.h"
 
 
@@ -155,7 +155,7 @@ public:
 
     virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
 
-    virtual std::unique_ptr<Se> getSe(const std::string& seName) = 0;
+    virtual std::unique_ptr<StorageElement> getSe(const std::string& seName) = 0;
 
     virtual unsigned int updateFileStatus(TransferFile& file, const std::string status) = 0;
 

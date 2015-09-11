@@ -2208,19 +2208,19 @@ void OracleAPI::getDmStatuses(const std::string& requestID, bool archive,
 }
 
 
-std::unique_ptr<Se> OracleAPI::getSe(const std::string& seName)
+std::unique_ptr<StorageElement> OracleAPI::getSe(const std::string& seName)
 {
     soci::session sql(*connectionPool);
 
     try
         {
-            Se se;
+            StorageElement se;
             sql << "SELECT * FROM t_se WHERE name = :name",
                 soci::use(seName), soci::into(se);
 
             if (sql.got_data())
                 {
-                    return std::unique_ptr<Se>(new Se(se));
+                    return std::unique_ptr<StorageElement>(new StorageElement(se));
                 }
 
         }
@@ -2233,7 +2233,7 @@ std::unique_ptr<Se> OracleAPI::getSe(const std::string& seName)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return std::unique_ptr<Se>();
+    return std::unique_ptr<StorageElement>();
 }
 
 
