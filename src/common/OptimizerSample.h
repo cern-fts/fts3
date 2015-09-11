@@ -19,59 +19,30 @@
  */
 
 #pragma once
+#ifndef OPTIMIZERSAMPLE_H_
+#define OPTIMIZERSAMPLE_H_
 
 #include <vector>
 #include <iostream>
 #include <ctime>
 #include <boost/thread.hpp>
 
-
-struct transfersStore
-{
-    double numberOfFinishedAll;
-    double numberOfFailedAll;
-    int numFinished;
-    int numFailed;
-    int numOfActivePerPair;
-    double successRate;
-    std::string source;
-    std::string dest;
-    double throughput;
-    double avgThr;
-    int storedMaxActive;
-};
-
+namespace fts3 {
+namespace common {
 
 class OptimizerSample
 {
-
 public:
-    OptimizerSample();
-    ~OptimizerSample();
-    OptimizerSample(int spf, int nf, int bs, float gp);
-    int getStreamsperFile();
-    int getNumOfFiles();
-    int getBufSize();
-    float getGoodput();
-    int getTimeout();
-    bool transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
-                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr, int lowDefault, int highDefault);
-
-    int getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
-                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr);
-
-    int streamsperfile;
+    int streamsPerFile;
     int numoffiles;
     int bufsize;
     float goodput;
     int timeout;
-    int file_id;
     double throughput;
     double avgThr;
-
-private:
-    std::vector<struct transfersStore> transfersStoreVector;
-    mutable boost::mutex _mutex;
-
 };
 
+} // namespace common
+} // namespace fts3
+
+#endif // OPTIMIZERSAMPLE_H_

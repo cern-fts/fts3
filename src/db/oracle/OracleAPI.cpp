@@ -3480,7 +3480,7 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
 
 void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
-    ops->streamsperfile = DEFAULT_NOSTREAMS;
+    ops->streamsPerFile = DEFAULT_NOSTREAMS;
     ops->timeout = MID_TIMEOUT;
     ops->bufsize = DEFAULT_BUFFSIZE;
 }

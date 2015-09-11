@@ -294,9 +294,9 @@ ProtocolResolver::protocol ProtocolResolver::autotune()
 
     OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
-    ret.tcp_buffer_size = opt_config.getBufSize();
-    ret.nostreams = opt_config.getStreamsperFile();
-    ret.urlcopy_tx_to = opt_config.getTimeout();
+    ret.tcp_buffer_size = opt_config.bufsize;
+    ret.nostreams = opt_config.streamsPerFile;
+    ret.urlcopy_tx_to = opt_config.timeout;
 
     return ret;
 }
