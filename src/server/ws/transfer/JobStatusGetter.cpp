@@ -122,9 +122,9 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
                     for (auto ri = retries.begin(); ri != retries.end(); ++ri)
                         {
                             tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(ctx, -1);
-                            retry->attempt  = (*ri)->attempt;
-                            retry->datetime = (*ri)->datetime;
-                            retry->reason   = (*ri)->reason;
+                            retry->attempt  = ri->attempt;
+                            retry->datetime = ri->datetime;
+                            retry->reason   = ri->reason;
                             status->retries.push_back(retry);
                         }
                 }
@@ -275,7 +275,6 @@ tns3__JobStatus* JobStatusGetter::handleStatusExceptionForGLite()
 
 JobStatusGetter::~JobStatusGetter()
 {
-    release_vector(retries);
 }
 
 

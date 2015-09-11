@@ -342,7 +342,7 @@ public:
 
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason) = 0;
 
-    virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries) = 0;
+    virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries) = 0;
 
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages) = 0;
 

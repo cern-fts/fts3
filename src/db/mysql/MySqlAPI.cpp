@@ -9435,7 +9435,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
     }
 }
 
-void MySqlAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
+void MySqlAPI::getTransferRetries(int fileId, std::vector<FileRetry>& retries)
 {
     soci::session sql(*connectionPool);
 
@@ -9444,35 +9444,17 @@ void MySqlAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
         soci::rowset<FileRetry> rs = (sql.prepare << "SELECT * FROM t_file_retry_errors WHERE file_id = :fileId",
                                       soci::use(fileId));
 
-
         for (soci::rowset<FileRetry>::const_iterator i = rs.begin(); i != rs.end(); ++i)
         {
-            FileRetry const &retry = *i;
-            retries.push_back(new FileRetry(retry));
+            retries.emplace_back(*i);
         }
     }
     catch (std::exception& e)
     {
-        std::vector< FileRetry* >::iterator it;
-        for (it = retries.begin(); it != retries.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        retries.clear();
-
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
-        std::vector< FileRetry* >::iterator it;
-        for (it = retries.begin(); it != retries.end(); ++it)
-        {
-            if(*it)
-                delete (*it);
-        }
-        retries.clear();
-
         throw Err_Custom(std::string(__func__) + ": Caught exception ");
     }
 }

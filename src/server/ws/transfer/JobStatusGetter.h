@@ -63,13 +63,6 @@ private:
     template <typename SUMMARY>
     SUMMARY* make_summary();
 
-    template <typename T>
-    void release_vector(std::vector<T*> & vec)
-    {
-        typename std::vector<T*>::iterator it;
-        for (it = vec.begin(); it != vec.end(); ++it) delete *it;
-    }
-
     void count_ready(tns3__TransferJobSummary *, int)
     {
         // do nothing, there is no ready state in this structure
@@ -95,7 +88,7 @@ private:
 
     // keep vectors of pointers as fields so the can be released RAII style
     std::vector<FileTransferStatus> file_statuses;
-    std::vector<FileRetry*> retries;
+    std::vector<FileRetry> retries;
     std::vector<JobStatus> job_statuses;
 };
 

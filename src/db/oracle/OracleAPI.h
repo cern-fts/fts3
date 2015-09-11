@@ -315,7 +315,7 @@ public:
 
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
-    virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
+    virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
 
     bool assignSanityRuns(soci::session& sql, struct message_sanity &msg);
 

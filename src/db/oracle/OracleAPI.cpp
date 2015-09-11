@@ -8700,7 +8700,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 
 
 
-void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
+void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry>& retries)
 {
     soci::session sql(*connectionPool);
 
@@ -8712,32 +8712,15 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
 
             for (soci::rowset<FileRetry>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    FileRetry const &retry = *i;
-                    retries.push_back(new FileRetry(retry));
+                    retries.emplace_back(*i);
                 }
         }
     catch (std::exception& e)
         {
-            std::vector< FileRetry* >::iterator it;
-            for (it = retries.begin(); it != retries.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            retries.clear();
-
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            std::vector< FileRetry* >::iterator it;
-            for (it = retries.begin(); it != retries.end(); ++it)
-                {
-                    if(*it)
-                        delete (*it);
-                }
-            retries.clear();
-
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
