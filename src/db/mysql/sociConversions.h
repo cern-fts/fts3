@@ -29,10 +29,10 @@
 #include "db/generic/SeGroup.h"
 #include "db/generic/SeProtocolConfig.h"
 #include "db/generic/ShareConfig.h"
-#include "db/generic/TransferJob.h"
 #include "db/generic/OAuth.h"
 #include <soci.h>
 #include <time.h>
+#include "../generic/Job.h"
 
 inline time_t timeUTC()
 {
@@ -77,11 +77,11 @@ struct type_conversion<CredCache>
 };
 
 template <>
-struct type_conversion<TransferJob>
+struct type_conversion<Job>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, TransferJob& job)
+    static void from_base(values const& v, indicator, Job& job)
     {
         struct tm aux_tm;
 
@@ -241,7 +241,7 @@ struct type_conversion<FileTransferStatus>
         transfer.fileId            = v.get<int>("file_id");
         transfer.sourceSurl        = v.get<std::string>("source_surl");
         transfer.destSurl          = v.get<std::string>("dest_surl", "");
-        transfer.transferFileState = v.get<std::string>("file_state");
+        transfer.fileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
         transfer.numFailures	   = v.get<int>("retry", 0);
         transfer.duration	       = v.get<double>("tx_duration", 0);

@@ -35,13 +35,13 @@ class JobStatusGetter
 {
 
 public:
-    JobStatusGetter(soap * ctx, std::string const & job, bool archive, int offset, int limit, bool retry) :
+    JobStatusGetter(soap * ctx, std::string const & jobId, bool archive, int offset, int limit, bool retry) :
         ctx(ctx), db(*db::DBSingleton::instance().getDBObjectInstance()),
-        job(job), archive(archive), offset(offset), limit(limit), retry(retry) {}
+        jobId(jobId), archive(archive), offset(offset), limit(limit), retry(retry) {}
 
-    JobStatusGetter(soap * ctx, std::string const & job, bool archive) :
+    JobStatusGetter(soap * ctx, std::string const & jobId, bool archive) :
         ctx(ctx), db(*db::DBSingleton::instance().getDBObjectInstance()),
-        job(job), archive(archive), offset(0), limit(0), retry(false) {}
+        jobId(jobId), archive(archive), offset(0), limit(0), retry(false) {}
 
     virtual ~JobStatusGetter();
 
@@ -73,23 +73,18 @@ private:
         summary->numReady = count;
     }
 
-    tns3__JobStatus * to_gsoap_status(JobStatus const & job_status, bool glite = false);
+    tns3__JobStatus * to_gsoap_status(Job const & job_status, int numFiles, bool glite);
 
     std::string to_glite_state(std::string const & state, bool glite);
 
     soap * ctx;
     GenericDbIfce & db;
 
-    std::string const & job;
+    std::string const & jobId;
     bool archive;
     int offset;
     int limit;
     bool retry;
-
-    // keep vectors of pointers as fields so the can be released RAII style
-    std::vector<FileTransferStatus> file_statuses;
-    std::vector<FileRetry> retries;
-    std::vector<JobStatus> job_statuses;
 };
 
 

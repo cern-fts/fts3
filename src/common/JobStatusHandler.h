@@ -27,7 +27,7 @@
 #include <string>
 #include <iostream>
 
-#include "db/generic/JobStatus.h"
+#include "db/generic/FileTransferStatus.h"
 
 namespace fts3
 {
@@ -117,7 +117,7 @@ public:
      *
      * @return
      */
-    size_t countInState(const std::string& status, const std::vector<JobStatus>& statuses);
+    size_t countInState(const std::string& status, const std::vector<FileTransferStatus>& statuses);
 
 protected:
 

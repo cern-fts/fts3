@@ -57,27 +57,18 @@ void ProfiledDB::submitPhysical(const std::string & jobId,
                          sourceSe, destinationSe, params));
 }
 
-void ProfiledDB::getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
-{
-    PROFILE_PREFIXED("DB::", db->getTransferJobStatus(requestID, archive, jobs));
-}
 
-void ProfiledDB::getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
-{
-    PROFILE_PREFIXED("DB::", db->getDmJobStatus(requestID, archive, jobs));
-}
-
-void ProfiledDB::getTransferFileStatus(const std::string& requestID, bool archive,
+void ProfiledDB::getTransferStatuses(const std::string& jobId, bool archive,
         unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files)
 {
-    PROFILE_PREFIXED("DB::", db->getTransferFileStatus(requestID, archive, offset, limit, files));
+    PROFILE_PREFIXED("DB::", db->getTransferStatuses(jobId, archive, offset, limit, files));
 }
 
 
-void ProfiledDB::getDmFileStatus(const std::string& requestID, bool archive,
+void ProfiledDB::getDmStatuses(const std::string& requestID, bool archive,
         unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files)
 {
-    PROFILE_PREFIXED("DB::", db->getDmFileStatus(requestID, archive, offset, limit, files));
+    PROFILE_PREFIXED("DB::", db->getDmStatuses(requestID, archive, offset, limit, files));
 }
 
 
@@ -97,9 +88,9 @@ void ProfiledDB::listRequestsDm(const std::vector<std::string>& inGivenStates,
     PROFILE_PREFIXED("DB::", db->listRequestsDm(inGivenStates, restrictToClientDN, forDN, voName, src, dst, jobs));
 }
 
-std::unique_ptr<TransferJob> ProfiledDB::getTransferJob(const std::string & jobId, bool archive)
+boost::optional<Job> ProfiledDB::getJob(const std::string & jobId, bool archive)
 {
-    PROFILE_PREFIXED("DB::", return db->getTransferJob(jobId, archive));
+    PROFILE_PREFIXED("DB::", return db->getJob(jobId, archive));
 }
 
 

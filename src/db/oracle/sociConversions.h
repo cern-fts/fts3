@@ -29,7 +29,7 @@
 #include "db/generic/SeGroup.h"
 #include "db/generic/SeProtocolConfig.h"
 #include "db/generic/ShareConfig.h"
-#include "db/generic/TransferJob.h"
+#include "db/generic/Job.h"
 #include "db/generic/OAuth.h"
 #include <soci.h>
 #include <time.h>
@@ -128,11 +128,11 @@ struct type_conversion<CredCache>
 };
 
 template <>
-struct type_conversion<TransferJob>
+struct type_conversion<Job>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, TransferJob& job)
+    static void from_base(values const& v, indicator, Job& job)
     {
         job.jobId         = v.get<std::string>("JOB_ID");
         job.jobState      = v.get<std::string>("JOB_STATE");
@@ -288,7 +288,7 @@ struct type_conversion<FileTransferStatus>
         transfer.sourceSurl        = v.get<std::string>("SOURCE_SURL");
         transfer.destSurl          = v.get<std::string>("DEST_SURL", "");
 
-        transfer.transferFileState = v.get<std::string>("FILE_STATE");
+        transfer.fileState = v.get<std::string>("FILE_STATE");
         transfer.reason            = v.get<std::string>("REASON", "");
         transfer.numFailures	   = static_cast<int>(v.get<double>("RETRY", 0));
         transfer.duration	   = v.get<double>("TX_DURATION",0);

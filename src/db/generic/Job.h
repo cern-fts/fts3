@@ -19,22 +19,22 @@
  */
 
 #pragma once
-#ifndef TRANSFERJOB_H_
-#define TRANSFERJOB_H
+#ifndef JOB_H_
+#define JOB_H_
 
 #include <string>
 #include "OwnedResource.h"
 
-/**
- * Describes the status of one file in a transfer job.
- */
-class TransferJob: public OwnedResource
+
+/// Describes the status of a job
+/// A job can group several transfers, or several data management operations
+/// (i.e. deletions)
+class Job: public OwnedResource
 {
 public:
 
-    TransferJob() :
-            submitTime(0), finishTime(0), priority(3), maxTimeInQueue(0),
-            jobFinished(0), copyPinLifetime(0), bringOnline(0)
+    Job(): submitTime(0), finishTime(0), priority(3), maxTimeInQueue(0),
+           jobFinished(0), copyPinLifetime(0), bringOnline(0)
     {
     }
 
@@ -76,4 +76,4 @@ public:
     }
 };
 
-#endif // TRANSFERJOB_H_
+#endif // JOB_H_

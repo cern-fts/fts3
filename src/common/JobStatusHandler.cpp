@@ -136,13 +136,13 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-size_t JobStatusHandler::countInState(const std::string& status, const std::vector<JobStatus>& statuses)
+size_t JobStatusHandler::countInState(const std::string& status, const std::vector<FileTransferStatus>& statuses)
 {
     std::set<int> files;
 
     for (auto it = statuses.begin(); it < statuses.end(); it++)
         {
-            if (status == it->fileStatus)
+            if (status == it->fileState)
                 {
                     files.insert(it->fileIndex);
                 }

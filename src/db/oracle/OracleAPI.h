@@ -70,15 +70,13 @@ public:
             const std::string& sourceSe, const std::string& destinationSe,
             const fts3::common::JobParameterHandler& params);
 
-    virtual void getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs);
+    virtual boost::optional<Job> getJob(const std::string& jobId, bool archive);
 
-    virtual void getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs);
-
-    virtual void getTransferFileStatus(const std::string& requestID,
+    virtual void getTransferStatuses(const std::string& requestID,
             bool archive, unsigned offset, unsigned limit,
             std::vector<FileTransferStatus>& files);
 
-    virtual void getDmFileStatus(const std::string& requestID, bool archive,
+    virtual void getDmStatuses(const std::string& requestID, bool archive,
             unsigned offset, unsigned limit,
             std::vector<FileTransferStatus>& files);
 
@@ -91,8 +89,6 @@ public:
             const std::string& restrictToClientDN, const std::string& forDN,
             const std::string& voName, const std::string& src, const std::string& dst,
             std::vector<JobStatus>& jobs);
-
-    virtual std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive);
 
     virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 

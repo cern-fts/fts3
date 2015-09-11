@@ -135,16 +135,16 @@ void JobCancelHandler::cancel(impltns__cancel2Response & resp)
 
 }
 
-std::string JobCancelHandler::get_state(std::string const & job, std::string const & dn)
+std::string JobCancelHandler::get_state(std::string const & jobId, std::string const & dn)
 {
     // get the transfer job object from DB
-    std::unique_ptr<TransferJob> job_ptr (db.getTransferJob(job, false));
+    boost::optional<Job> job (db.getJob(jobId, false));
     // if not throw an exception
-    if (!job_ptr.get()) return DOES_NOT_EXIST;
+    if (!job) return DOES_NOT_EXIST;
     // Authorise the operation
-    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job_ptr.get());
+    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
     // get the status
-    std::string const & status = job_ptr->jobState;
+    std::string const & status = job->jobState;
     // make sure the transfer-job is not in terminal state
     if (JobStatusHandler::getInstance().isTransferFinished(status))
         {

@@ -432,33 +432,26 @@ void MySqlAPI::submitDelete(const std::string & jobId,
 }
 
 
-
-std::unique_ptr<TransferJob> MySqlAPI::getTransferJob(const std::string & jobId, bool archive)
+boost::optional<Job> MySqlAPI::getJob(const std::string& jobId, bool archive)
 {
     soci::session sql(*connectionPool);
 
     std::string query;
     if (archive)
     {
-        query = "SELECT t_job_backup.vo_name, t_job_backup.user_dn, t_job_backup.job_state "
+        query = "SELECT * "
                 "FROM t_job_backup WHERE t_job_backup.job_id = :jobId";
     }
     else
     {
-        query = "SELECT t_job.vo_name, t_job.user_dn, t_job.job_state "
+        query = "SELECT * "
                 "FROM t_job WHERE t_job.job_id = :jobId";
     }
 
     try
     {
-        std::unique_ptr<TransferJob> job(new TransferJob);
-
-        sql << query,
-            soci::use(jobId),
-            soci::into(job->voName),
-            soci::into(job->userDn),
-            soci::into(job->jobState);
-
+        Job job;
+        sql << query, soci::use(jobId), soci::into(job);
         if (sql.got_data())
         {
             return job;
@@ -472,7 +465,8 @@ std::unique_ptr<TransferJob> MySqlAPI::getTransferJob(const std::string & jobId,
     {
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
-    return std::unique_ptr<TransferJob>();
+
+    return boost::optional<Job>();
 }
 
 
@@ -1942,116 +1936,6 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<SubmittedTran
 }
 
 
-
-
-void MySqlAPI::getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
-{
-    soci::session sql(*connectionPool);
-
-    std::string fileCountQuery;
-    std::string statusQuery;
-
-    if (archive)
-    {
-        fileCountQuery = "SELECT COUNT(DISTINCT file_index) FROM t_file_backup WHERE t_file_backup.job_id = :jobId";
-        statusQuery = "SELECT t_job_backup.job_id, t_job_backup.job_state, t_file_backup.file_state, "
-                      "    t_job_backup.user_dn, t_job_backup.reason, t_job_backup.submit_time, t_job_backup.priority, "
-                      "    t_job_backup.vo_name, t_file_backup.file_index "
-                      "FROM t_job_backup, t_file_backup "
-                      "WHERE t_file_backup.job_id = :jobId and t_file_backup.job_id= t_job_backup.job_id";
-    }
-    else
-    {
-        fileCountQuery = "SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = :jobId";
-        statusQuery = "SELECT t_job.job_id, t_job.job_state, t_file.file_state, "
-                      "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
-                      "    t_job.vo_name, t_file.file_index "
-                      "FROM t_job, t_file "
-                      "WHERE t_file.job_id = :jobId and t_file.job_id=t_job.job_id";
-    }
-
-    try
-    {
-        long long numFiles = 0;
-        sql << fileCountQuery, soci::use(requestID), soci::into(numFiles);
-
-        soci::rowset<JobStatus> rs = (
-                                         sql.prepare << statusQuery,
-                                         soci::use(requestID, "jobId"));
-
-        for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            JobStatus& job = *i;
-            job.numFiles = numFiles;
-            jobs.emplace_back(job);
-        }
-    }
-    catch (std::exception& e)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-    catch (...)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-void MySqlAPI::getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
-{
-    soci::session sql(*connectionPool);
-
-    std::string fileCountQuery;
-    std::string statusQuery;
-
-    if (archive)
-    {
-        fileCountQuery = "SELECT COUNT(file_id) FROM t_dm_backup WHERE t_dm_backup.job_id = :jobId";
-        statusQuery = "SELECT t_job_backup.job_id, t_job_backup.job_state, t_dm_backup.file_state, "
-                      "    t_job_backup.user_dn, t_job_backup.reason, t_job_backup.submit_time, t_job_backup.priority, "
-                      "    t_job_backup.vo_name, t_dm_backup.file_id "
-                      "FROM t_job_backup, t_dm_backup "
-                      "WHERE t_dm_backup.job_id = :jobId and t_dm_backup.job_id= t_job_backup.job_id";
-    }
-    else
-    {
-        fileCountQuery = "SELECT COUNT(file_id) FROM t_dm WHERE t_dm.job_id = :jobId";
-        statusQuery = "SELECT t_job.job_id, t_job.job_state, t_dm.file_state, "
-                      "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
-                      "    t_job.vo_name, t_dm.file_id "
-                      "FROM t_job, t_dm "
-                      "WHERE t_dm.job_id = :jobId and t_dm.job_id=t_job.job_id";
-    }
-
-    try
-    {
-        long long numFiles = 0;
-        sql << fileCountQuery, soci::use(requestID), soci::into(numFiles);
-
-        soci::rowset<JobStatus> rs = (
-                                         sql.prepare << statusQuery,
-                                         soci::use(requestID, "jobId"));
-
-        int index = 0;
-        for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            JobStatus& job = *i;
-            job.numFiles = numFiles;
-            // make sure each deletion has different file index
-            job.fileIndex = index++;
-            jobs.emplace_back(job);
-        }
-    }
-    catch (std::exception& e)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-    catch (...)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
 void MySqlAPI::listRequests(const std::vector<std::string>& inGivenStates,
         const std::string& restrictToClientDN, const std::string& forDN,
         const std::string& voName, const std::string& src, const std::string& dst,
@@ -2278,8 +2162,9 @@ void MySqlAPI::listRequestsDm(const std::vector<std::string>& inGivenStates,
     }
 }
 
-void MySqlAPI::getTransferFileStatus(const std::string& requestID, bool archive,
-                                     unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files)
+
+void MySqlAPI::getTransferStatuses(const std::string& requestID, bool archive,
+        unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -2340,7 +2225,8 @@ void MySqlAPI::getTransferFileStatus(const std::string& requestID, bool archive,
     }
 }
 
-void MySqlAPI::getDmFileStatus(const std::string& requestID, bool archive,
+
+void MySqlAPI::getDmStatuses(const std::string& requestID, bool archive,
         unsigned offset, unsigned limit,
         std::vector<FileTransferStatus>& files)
 {

@@ -41,7 +41,7 @@ public:
     std::string logicalName;
     std::string sourceSurl;
     std::string destSurl;
-    std::string transferFileState;
+    std::string fileState;
     time_t finishTime;
     time_t startTime;
     time_t stagingStart;
@@ -52,6 +52,7 @@ public:
     std::string errorScope;
     std::string errorPhase;
     int fileId;
+    int fileIndex;
     double duration;
 };
 

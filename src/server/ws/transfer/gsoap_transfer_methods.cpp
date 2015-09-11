@@ -350,19 +350,19 @@ int fts3::impltns__listDeletionRequests(soap* ctx, impltns__ArrayOf_USCOREsoapen
 }
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
-int fts3::impltns__getFileStatus(soap *ctx, string requestID, int offset, int limit, impltns__getFileStatusResponse & resp)
+int fts3::impltns__getFileStatus(soap *ctx, string jobId, int offset, int limit, impltns__getFileStatusResponse & resp)
 {
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(requestID, false)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false)
             );
             // Authorise the request
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
             // create response
             resp._getFileStatusReturn = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus(ctx, -1);
             // fill the response
-            JobStatusGetter getter (ctx, requestID, false, offset, limit, false);
+            JobStatusGetter getter (ctx, jobId, false, offset, limit, false);
             getter.file_status<tns3__FileTransferStatus>(resp._getFileStatusReturn->item, true);
 
         }
@@ -387,11 +387,11 @@ int fts3::impltns__getFileStatus3(soap *ctx, fts3::tns3__FileRequest *req, fts3:
 {
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(req->jobId, req->archive)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(req->jobId, req->archive)
             );
             // Authorise the request
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
             // create response
             resp.getFileStatusReturn = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus(ctx, -1);
             // fill the response
@@ -422,11 +422,11 @@ int fts3::impltns__getFileStatus2(soap *ctx, string requestID, int offset, int l
 
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(requestID, false)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(requestID, false)
             );
             // Authorise the request
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
             // create response
             resp._getFileStatus2Return = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(ctx, -1);
             // fill the response
@@ -451,17 +451,16 @@ int fts3::impltns__getFileStatus2(soap *ctx, string requestID, int offset, int l
 }
 
 /// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
-int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
+int fts3::impltns__getTransferJobStatus(soap *ctx, string jobId,
                                         struct impltns__getTransferJobStatusResponse &resp)
 {
     try
         {
-            std::unique_ptr<TransferJob> job (DBSingleton::instance().getDBObjectInstance()->getTransferJob(requestID, false)
-            );
+            boost::optional<Job> job (DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false));
 
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
 
-            JobStatusGetter getter (ctx, requestID, false);
+            JobStatusGetter getter (ctx, jobId, false);
             getter.job_status(resp._getTransferJobStatusReturn, true);
         }
     catch (Err& ex)
@@ -485,11 +484,11 @@ int fts3::impltns__getTransferJobStatus2(soap *ctx, fts3::tns3__JobRequest *req,
 {
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(req->jobId, req->archive)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(req->jobId, req->archive)
             );
 
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
 
             JobStatusGetter getter (ctx, req->jobId, req->archive);
             getter.job_status(resp.getTransferJobStatusReturn);
@@ -510,18 +509,17 @@ int fts3::impltns__getTransferJobStatus2(soap *ctx, fts3::tns3__JobRequest *req,
 }
 
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
-int fts3::impltns__getTransferJobSummary(soap *ctx, string requestID, impltns__getTransferJobSummaryResponse &resp)
+int fts3::impltns__getTransferJobSummary(soap *ctx, string jobId, impltns__getTransferJobSummaryResponse &resp)
 {
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(requestID, false)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false)
             );
 
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
 
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
-
-            JobStatusGetter getter(ctx, requestID, false);
+            JobStatusGetter getter(ctx, jobId, false);
             getter.job_summary(resp._getTransferJobSummaryReturn);
 
         }
@@ -542,16 +540,16 @@ int fts3::impltns__getTransferJobSummary(soap *ctx, string requestID, impltns__g
 }
 
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
-int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__getTransferJobSummary2Response &resp)
+int fts3::impltns__getTransferJobSummary2(soap *ctx, string jobId, impltns__getTransferJobSummary2Response &resp)
 {
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(requestID, false)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false)
             );
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
 
-            JobStatusGetter getter(ctx, requestID, false);
+            JobStatusGetter getter(ctx, jobId, false);
             getter.job_summary(resp._getTransferJobSummary2Return, true);
 
         }
@@ -578,10 +576,10 @@ int fts3::impltns__getTransferJobSummary3(soap *ctx, fts3::tns3__JobRequest *req
 {
     try
         {
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(req->jobId, req->archive)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(req->jobId, req->archive)
             );
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
 
             JobStatusGetter getter(ctx, req->jobId, req->archive);
             getter.job_summary(resp.getTransferJobSummary2Return);
@@ -882,50 +880,36 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
     return SOAP_OK;
 }
 
-int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__prioritySetResponse &resp)
+int fts3::impltns__prioritySet(soap* ctx, string jobId, int priority, impltns__prioritySetResponse &resp)
 {
-
-    vector<JobStatus> fileStatuses;
-
     try
         {
-
             CGsiAdapter cgsi(ctx);
             string dn = cgsi.getClientDn();
 
-            std::unique_ptr<TransferJob> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(job_id, false)
+            boost::optional<Job> job (
+                DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false)
             );
 
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
 
-            // check job status
-            DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(job_id, false, fileStatuses);
-
-            std::string status;
-            if(!fileStatuses.empty())
-                {
-                    // get the job status
-                    status = fileStatuses.begin()->jobStatus;
-                }
-            else
-                {
-                    throw Err_Custom("Job ID <" + job_id + "> was not found");
-                }
+            if (!job)
+            {
+                throw Err_Custom("Job ID <" + jobId + "> was not found");
+            }
 
             // check if the job is not finished already
-            if (JobStatusHandler::getInstance().isTransferFinished(status))
-                {
-                    throw Err_Custom("The transfer job is in " + status + " state, it is not possible to set the priority");
-                }
+            if (JobStatusHandler::getInstance().isTransferFinished(job->jobState))
+            {
+                throw Err_Custom("The transfer job is in " + job->jobState + " state, it is not possible to set the priority");
+            }
 
+            std::string cmd = "fts-set-priority " + jobId + " " + boost::lexical_cast<std::string>(priority);
 
-            std::string cmd = "fts-set-priority " + job_id + " " + boost::lexical_cast<std::string>(priority);
-
-            DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
+            DBSingleton::instance().getDBObjectInstance()->setPriority(jobId, priority);
 
             // log it
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set priority of transfer job: " << job_id << " to " << priority << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set priority of transfer job: " << jobId << " to " << priority << commit;
 
         }
     catch(Err& ex)
@@ -972,7 +956,7 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
     return SOAP_OK;
 }
 
-int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__detailedJobStatusResponse& resp)
+int fts3::impltns__detailedJobStatus(soap* ctx, std::string jobId, impltns__detailedJobStatusResponse& resp)
 {
 
 //	resp._detailedJobStatus = soap_new_impltns__detailedJobStatus(ctx, -1);
@@ -980,14 +964,14 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
     try
         {
             // get the resource for authorization purposes
-            std::unique_ptr<TransferJob> job(
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(job_id, false)
+            boost::optional<Job> job(
+                DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false)
             );
             // authorise
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
             // get the data from DB
             std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> > files;
-            DBSingleton::instance().getDBObjectInstance()->getTransferJobStatusDetailed(job_id, files);
+            DBSingleton::instance().getDBObjectInstance()->getTransferJobStatusDetailed(jobId, files);
             // create response
             tns3__DetailedJobStatus *jobStatus = soap_new_tns3__DetailedJobStatus(ctx, -1);
             // reserve the space in response

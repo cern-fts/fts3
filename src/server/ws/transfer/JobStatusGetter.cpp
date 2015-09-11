@@ -62,17 +62,18 @@ template void JobStatusGetter::file_status<tns3__FileTransferStatus2>(std::vecto
 template <typename STATUS>
 void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
 {
-    bool dm_job = db.isDmJob(job);
+    bool dm_job = db.isDmJob(jobId);
+    std::vector<FileTransferStatus> fileStatuses;
 
     if (dm_job)
-        db.getDmFileStatus(job, archive, offset, limit, file_statuses);
+        db.getDmStatuses(jobId, archive, offset, limit, fileStatuses);
     else
-        db.getTransferFileStatus(job, archive, offset, limit, file_statuses);
+        db.getTransferStatuses(jobId, archive, offset, limit, fileStatuses);
 
-    for (auto it = file_statuses.begin(); it != file_statuses.end(); ++it)
+    for (auto it = fileStatuses.begin(); it != fileStatuses.end(); ++it)
         {
             FileTransferStatus& tmp = *it;
-            tmp.transferFileState = to_glite_state(tmp.transferFileState, glite);
+            tmp.fileState = to_glite_state(tmp.fileState, glite);
 
             STATUS* status = make_status<STATUS>();
 
@@ -92,9 +93,9 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
             *status->sourceSURL = tmp.sourceSurl;
 
             status->transferFileState = soap_new_std__string(ctx, -1);
-            *status->transferFileState = tmp.transferFileState;
+            *status->transferFileState = tmp.fileState;
 
-            if(tmp.transferFileState == "NOT_USED")
+            if(tmp.fileState == "NOT_USED")
                 {
                     status->duration = 0;
                     status->numFailures = 0;
@@ -121,6 +122,7 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
             // Retries only on request! This type of information exists only for transfer jobs
             if (retry && !dm_job)
                 {
+                    std::vector<FileRetry> retries;
                     db.getTransferRetries(tmp.fileId, retries);
 
                     for (auto ri = retries.begin(); ri != retries.end(); ++ri)
@@ -142,39 +144,44 @@ template void JobStatusGetter::job_summary<tns3__TransferJobSummary2>(tns3__Tran
 template <typename SUMMARY>
 void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
 {
-    if (db.isDmJob(job))
-        db.getDmJobStatus(job, archive, job_statuses);
-    else
-        db.getTransferJobStatus(job, archive, job_statuses);
+    boost::optional<Job> job(db.getJob(jobId, archive));
 
-    if(!job_statuses.empty())
+    if(job)
         {
+            bool dm_job = db.isDmJob(jobId);
+            std::vector<FileTransferStatus> fileStatuses;
+
+            if (dm_job)
+                db.getDmStatuses(jobId, archive, 0, 0, fileStatuses);
+            else
+                db.getTransferStatuses(jobId, archive, 0, 0, fileStatuses);
+
             ret = make_summary<SUMMARY>();
-            ret->jobStatus = to_gsoap_status(*job_statuses.begin(), glite);
+            ret->jobStatus = to_gsoap_status(*job.get_ptr(), fileStatuses.size(), glite);
 
             JobStatusHandler& handler = JobStatusHandler::getInstance();
-            ret->numActive = handler.countInState(JobStatusHandler::FTS3_STATUS_ACTIVE, job_statuses);
-            ret->numCanceled = handler.countInState(JobStatusHandler::FTS3_STATUS_CANCELED, job_statuses);
-            ret->numSubmitted = handler.countInState(JobStatusHandler::FTS3_STATUS_SUBMITTED, job_statuses);
-            ret->numFinished = handler.countInState(JobStatusHandler::FTS3_STATUS_FINISHED, job_statuses);
-            count_ready(ret, handler.countInState(JobStatusHandler::FTS3_STATUS_READY, job_statuses));
-            ret->numFailed = handler.countInState(JobStatusHandler::FTS3_STATUS_FAILED, job_statuses);
+            ret->numActive = handler.countInState(JobStatusHandler::FTS3_STATUS_ACTIVE, fileStatuses);
+            ret->numCanceled = handler.countInState(JobStatusHandler::FTS3_STATUS_CANCELED, fileStatuses);
+            ret->numSubmitted = handler.countInState(JobStatusHandler::FTS3_STATUS_SUBMITTED, fileStatuses);
+            ret->numFinished = handler.countInState(JobStatusHandler::FTS3_STATUS_FINISHED, fileStatuses);
+            count_ready(ret, handler.countInState(JobStatusHandler::FTS3_STATUS_READY, fileStatuses));
+            ret->numFailed = handler.countInState(JobStatusHandler::FTS3_STATUS_FAILED, fileStatuses);
             if (glite)
                 {
-                    ret->numSubmitted += handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, job_statuses);
-                    ret->numSubmitted += handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, job_statuses);
-                    ret->numActive += handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
+                    ret->numSubmitted += handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, fileStatuses);
+                    ret->numSubmitted += handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, fileStatuses);
+                    ret->numActive += handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, fileStatuses);
                 }
             else
                 {
-                    ret->numStaging = handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, job_statuses);
-                    ret->numStarted = handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
-                    ret->numDelete = handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, job_statuses);
+                    ret->numStaging = handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, fileStatuses);
+                    ret->numStarted = handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, fileStatuses);
+                    ret->numDelete = handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, fileStatuses);
                 }
         }
     else
         {
-            if (!glite) throw Err_Custom("requestID <" + job + "> was not found");
+            if (!glite) throw Err_Custom("requestID <" + jobId + "> was not found");
             ret = make_summary<SUMMARY>();
             ret->jobStatus = handleStatusExceptionForGLite();
         }
@@ -192,47 +199,46 @@ std::string JobStatusGetter::to_glite_state(std::string const & state, bool glit
     return state;
 }
 
-tns3__JobStatus * JobStatusGetter::to_gsoap_status(JobStatus const & job_status, bool glite)
+tns3__JobStatus * JobStatusGetter::to_gsoap_status(Job const & job, int numFiles, bool glite)
 {
     tns3__JobStatus * status = soap_new_tns3__JobStatus(ctx, -1);
 
     status->clientDN = soap_new_std__string(ctx, -1);
-    *status->clientDN = job_status.clientDN;
+    *status->clientDN = job.userDn;
 
     status->jobID = soap_new_std__string(ctx, -1);
-    *status->jobID = job_status.jobID;
+    *status->jobID = job.jobId;
 
     status->jobStatus = soap_new_std__string(ctx, -1);
-    *status->jobStatus = to_glite_state(job_status.jobStatus, glite);
+    *status->jobStatus = to_glite_state(job.jobState, glite);
 
     status->reason = soap_new_std__string(ctx, -1);
-    *status->reason = job_status.reason;
+    *status->reason = job.reason;
 
     status->voName = soap_new_std__string(ctx, -1);
-    *status->voName = job_status.voName;
+    *status->voName = job.voName;
 
     // change sec precision to msec precision so it is compatible with old glite cli
-    status->submitTime = job_status.submitTime * 1000;
-    status->numFiles = job_status.numFiles;
-    status->priority = job_status.priority;
+    status->submitTime = job.submitTime * 1000;
+    status->numFiles = numFiles;
+    status->priority = job.priority;
 
     return status;
 }
 
 void JobStatusGetter::job_status(tns3__JobStatus * & status, bool glite)
 {
-    if (db.isDmJob(job))
-        db.getDmJobStatus(job, archive, job_statuses);
-    else
-        db.getTransferJobStatus(job, archive, job_statuses);
+    boost::optional<Job> job(db.getJob(jobId, archive));
 
-    if(!job_statuses.empty())
+    if(job)
         {
-            status = to_gsoap_status(*job_statuses.begin(), glite);
+            std::vector<FileTransferStatus> fileStatuses;
+            db.getTransferStatuses(jobId, archive, 0, 0, fileStatuses);
+            status = to_gsoap_status(*job.get_ptr(), fileStatuses.size(), glite);
         }
     else
         {
-            if (!glite) throw Err_Custom("requestID <" + job + "> was not found");
+            if (!glite) throw Err_Custom("requestID <" + jobId + "> was not found");
             status = handleStatusExceptionForGLite();
         }
 }
@@ -252,7 +258,7 @@ tns3__JobStatus* JobStatusGetter::handleStatusExceptionForGLite()
     // backspace
     const char bs = 8;
     // error message
-    std::string msg = "getTransferJobStatus: RequestID <" + job + "> was not found";
+    std::string msg = "getTransferJobStatus: RequestID <" + jobId + "> was not found";
 
     // add backspaces at the begining of the error message
     for (size_t i = 0; i < replace.size(); i++)

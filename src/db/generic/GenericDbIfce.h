@@ -35,7 +35,6 @@
 #include "Se.h"
 #include "SeConfig.h"
 #include "SeGroup.h"
-#include "TransferJob.h"
 #include "SeProtocolConfig.h"
 #include "CredCache.h"
 #include "Cred.h"
@@ -50,6 +49,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
+#include "Job.h"
 #include "profiler/Profiler.h"
 #include "TransferFile.h"
 
@@ -114,17 +114,30 @@ public:
             const std::string& sourceSe, const std::string& destSe,
             const fts3::common::JobParameterHandler& params) = 0;
 
-    virtual void getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs) = 0;
+    /// Return the job with the given jobId
+    /// @param jobId    The job id
+    /// @param archive  If true, look for the job into the archive tables
+    virtual boost::optional<Job> getJob(const std::string & jobId, bool archive) = 0;
 
-    virtual void getDmJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs) = 0;
+    /// Get the status of the transfers associated with the given job id
+    /// @param jobId        The job id
+    /// @param archive      If true, look for the transfers into the archive tables
+    /// @param offset       Where to start the listing
+    /// @param limit        Limit the return to 'limit' elements. If 0, all entries are retrieved.
+    /// @param files[out]   The files belonging to the job are put here
+    virtual void getTransferStatuses(const std::string& jobId, bool archive,
+            unsigned offset, unsigned limit,
+            std::vector<FileTransferStatus>& files) = 0;
 
-    // If limit == 0, then all results
-    virtual void getTransferFileStatus(const std::string& requestID, bool archive,
-                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files) = 0;
-
-    // If limit == 0, then all results
-    virtual void getDmFileStatus(const std::string& requestID, bool archive,
-                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus>& files) = 0;
+    /// Get the status of the data management operations associated with the given job id
+    /// @param jobId        The job id
+    /// @param archive      If true, look for the data management operations into the archive tables
+    /// @param offset       Where to start the listing
+    /// @param limit        Limit the return to 'limit' elements. If 0, all entries are retrieved.
+    /// @param files[out]   The files belonging to the job are put here
+    virtual void getDmStatuses(const std::string& requestID, bool archive,
+            unsigned offset, unsigned limit,
+            std::vector<FileTransferStatus>& files) = 0;
 
     virtual void listRequests(const std::vector<std::string>& inGivenStates,
                               const std::string& restrictToClientDN, const std::string& forDN,
@@ -135,8 +148,6 @@ public:
                                 const std::string& restrictToClientDN, const std::string& forDN,
                                 const std::string& voName, const std::string& src, const std::string& dst,
                                 std::vector<JobStatus>& jobs) = 0;
-
-    virtual std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive) = 0;
 
     virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
 
