@@ -58,18 +58,17 @@ public:
             unsigned offset, unsigned limit,
             std::vector<FileTransferStatus>& files);
 
-
-
-
-    void listRequests(const std::vector<std::string>& inGivenStates,
-            const std::string& restrictToClientDN, const std::string& forDN,
-            const std::string& voName, const std::string& src, const std::string& dst,
+    void listJobs(const std::vector<std::string>& inGivenStates,
+            const std::string& forDN, const std::string& voName,
+            const std::string& src, const std::string& dst,
             std::vector<JobStatus>& jobs);
 
-    void listRequestsDm(const std::vector<std::string>& inGivenStates,
-            const std::string& restrictToClientDN, const std::string& forDN,
-            const std::string& voName, const std::string& src, const std::string& dst,
+    void listDmJobs(const std::vector<std::string>& inGivenStates,
+            const std::string& forDN, const std::string& voName,
+            const std::string& src, const std::string& dst,
             std::vector<JobStatus>& jobs);
+
+
 
     void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 

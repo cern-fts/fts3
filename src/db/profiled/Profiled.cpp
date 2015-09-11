@@ -72,20 +72,20 @@ void ProfiledDB::getDmStatuses(const std::string& requestID, bool archive,
 }
 
 
-void ProfiledDB::listRequests(const std::vector<std::string>& inGivenStates,
-        const std::string& restrictToClientDN, const std::string& forDN,
-        const std::string& voName, const std::string& src, const std::string& dst,
+void ProfiledDB::listJobs(const std::vector<std::string>& inGivenStates,
+        const std::string& forDN, const std::string& voName,
+        const std::string& src, const std::string& dst,
         std::vector<JobStatus>& jobs)
 {
-    PROFILE_PREFIXED("DB::", db->listRequests(inGivenStates, restrictToClientDN, forDN, voName, src, dst, jobs));
+    PROFILE_PREFIXED("DB::", db->listJobs(inGivenStates, forDN, voName, src, dst, jobs));
 }
 
-void ProfiledDB::listRequestsDm(const std::vector<std::string>& inGivenStates,
-        const std::string& restrictToClientDN, const std::string& forDN,
-        const std::string& voName, const std::string& src, const std::string& dst,
+void ProfiledDB::listDmJobs(const std::vector<std::string>& inGivenStates,
+        const std::string& forDN, const std::string& voName,
+        const std::string& src, const std::string& dst,
         std::vector<JobStatus>& jobs)
 {
-    PROFILE_PREFIXED("DB::", db->listRequestsDm(inGivenStates, restrictToClientDN, forDN, voName, src, dst, jobs));
+    PROFILE_PREFIXED("DB::", db->listDmJobs(inGivenStates, forDN, voName, src, dst, jobs));
 }
 
 boost::optional<Job> ProfiledDB::getJob(const std::string & jobId, bool archive)

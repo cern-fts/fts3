@@ -1936,9 +1936,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<SubmittedTran
 }
 
 
-void MySqlAPI::listRequests(const std::vector<std::string>& inGivenStates,
-        const std::string& restrictToClientDN, const std::string& forDN,
-        const std::string& voName, const std::string& src, const std::string& dst,
+void MySqlAPI::listJobs(const std::vector<std::string>& inGivenStates,
+        const std::string& forDN, const std::string& voName,
+        const std::string& src, const std::string& dst,
         std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
@@ -1955,12 +1955,6 @@ void MySqlAPI::listRequests(const std::vector<std::string>& inGivenStates,
               "                 vo_name, priority, cancel_job, "
               "                 (SELECT COUNT(*) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
               "FROM t_job ";
-
-        //joins
-        if (!restrictToClientDN.empty())
-        {
-            query << "LEFT OUTER JOIN t_vo_acl ON t_vo_acl.vo_name = t_job.vo_name ";
-        }
 
         //gain the benefit from the statement pooling
         //std::sort(inGivenStates.begin(), inGivenStates.end());
@@ -1989,12 +1983,6 @@ void MySqlAPI::listRequests(const std::vector<std::string>& inGivenStates,
         {
             // if there are no parameters query by default for ACTIVE, SUBMITTED and READY
             query << "WHERE job_finished IS NULL ";
-        }
-
-        if (!restrictToClientDN.empty())
-        {
-            query << " AND (t_job.user_dn = :clientDn OR t_vo_acl.principal = :clientDn) ";
-            stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
         }
 
         if (!voName.empty())
@@ -2054,9 +2042,9 @@ void MySqlAPI::listRequests(const std::vector<std::string>& inGivenStates,
     }
 }
 
-void MySqlAPI::listRequestsDm(const std::vector<std::string>& inGivenStates,
-        const std::string& restrictToClientDN, const std::string& forDN,
-        const std::string& voName, const std::string& src, const std::string& dst,
+void MySqlAPI::listDmJobs(const std::vector<std::string>& inGivenStates,
+        const std::string& forDN, const std::string& voName,
+        const std::string& src, const std::string& dst,
         std::vector<JobStatus>& jobs)
 {
     soci::session sql(*connectionPool);
@@ -2072,12 +2060,6 @@ void MySqlAPI::listRequestsDm(const std::vector<std::string>& inGivenStates,
               "                 vo_name, priority, cancel_job, "
               "                 (SELECT COUNT(t_dm.file_id) FROM t_dm WHERE t_dm.job_id = t_job.job_id) as numFiles "
               "FROM t_job ";
-
-        //joins
-        if (!restrictToClientDN.empty())
-        {
-            query << "LEFT OUTER JOIN t_vo_acl ON t_vo_acl.vo_name = t_job.vo_name ";
-        }
 
         //gain the benefit from the statement pooling
         //std::sort(inGivenStates.begin(), inGivenStates.end());
@@ -2097,12 +2079,6 @@ void MySqlAPI::listRequestsDm(const std::vector<std::string>& inGivenStates,
         else
         {
             query << "WHERE 1 ";
-        }
-
-        if (!restrictToClientDN.empty())
-        {
-            query << " AND (t_job.user_dn = :clientDn OR t_vo_acl.principal = :clientDn) ";
-            stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
         }
 
         if (!voName.empty())

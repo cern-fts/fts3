@@ -101,7 +101,7 @@ private:
 
     // pointer to GenericDbIfce member that queries jobs
     typedef void (GenericDbIfce::* query_t)(const std::vector<std::string>&,
-        const std::string&, const std::string&, const std::string&,
+        const std::string&, const std::string&,
         const std::string&, const std::string&, std::vector<JobStatus>&);
 
     /**

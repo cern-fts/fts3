@@ -139,15 +139,30 @@ public:
             unsigned offset, unsigned limit,
             std::vector<FileTransferStatus>& files) = 0;
 
-    virtual void listRequests(const std::vector<std::string>& inGivenStates,
-                              const std::string& restrictToClientDN, const std::string& forDN,
-                              const std::string& voName, const std::string& src, const std::string& dst,
-                              std::vector<JobStatus>& jobs) = 0;
+    /// Get a list of jobs that match the filtering options
+    /// @param inGivenStates    Filter by state. By default, if empty, only non-terminal jobs are retrieves
+    /// @param forDn            Filter by user DN
+    /// @param voName           Filter by VO
+    /// @param sourceSe         Filter by source storage
+    /// @param destSe           Filter by destination storage
+    /// @param[out] jobs        The list of jobs that match the filter
+    virtual void listJobs(const std::vector<std::string>& inGivenStates,
+            const std::string& forDn, const std::string& voName,
+            const std::string& sourceSe, const std::string& destSe,
+            std::vector<JobStatus>& jobs) = 0;
 
-    virtual void listRequestsDm(const std::vector<std::string>& inGivenStates,
-                                const std::string& restrictToClientDN, const std::string& forDN,
-                                const std::string& voName, const std::string& src, const std::string& dst,
-                                std::vector<JobStatus>& jobs) = 0;
+    /// Get a list of jobs with data management ops that match the filtering options
+    /// @param inGivenStates    Filter by state. By default, if empty, only non-terminal jobs are retrieves
+    /// @param forDn            Filter by user DN
+    /// @param voName           Filter by VO
+    /// @param sourceSe         Filter by source storage
+    /// @param destSe           Filter by destination storage
+    /// @param[out] jobs        The list of jobs that match the filter
+    virtual void listDmJobs(const std::vector<std::string>& inGivenStates,
+            const std::string& forDN, const std::string& voName,
+            const std::string& src, const std::string& dst,
+            std::vector<JobStatus>& jobs) = 0;
+
 
     virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
 
