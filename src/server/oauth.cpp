@@ -24,7 +24,10 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include <common/error.h>
-#include "../common/Uri.h"
+#include "common/Uri.h"
+
+
+using namespace fts3::common;
 
 
 static

@@ -46,24 +46,24 @@ class BlacklistInspector
         template<typename T>
         void operator ()(T& t)
         {
-            std::string const & src = t.source_se;
-            std::string const & dst = t.dest_se;
+            std::string const & src = t.sourceSe;
+            std::string const & dst = t.destSe;
             // if theres's nothing to do continue
             if (timeouts.find(src) == timeouts.end() && timeouts.find(dst) == timeouts.end()) return;
             // if src has no timeout use destination and continue
             if (timeouts.find(src) == timeouts.end())
                 {
-                    t.wait_timeout = timeouts[dst];
+                    t.waitTimeout = timeouts[dst];
                     return;
                 }
             // if dst has no time use source
             if (timeouts.find(dst) == timeouts.end())
                 {
-                    t.wait_timeout = timeouts[src];
+                    t.waitTimeout = timeouts[src];
                     return;
                 }
             // if both dst and src have timeout pick the lower value
-            t.wait_timeout = timeouts[src] < timeouts[dst] ? timeouts[src] : timeouts[dst];
+            t.waitTimeout = timeouts[src] < timeouts[dst] ? timeouts[src] : timeouts[dst];
         }
 
     private:
@@ -79,7 +79,7 @@ public:
     void add(std::string const & se);
 
     void inspect() const;
-    void setWaitTimeout(std::list<JobElementTuple> & jobs) const;
+    void setWaitTimeout(std::list<SubmittedTransfer> & jobs) const;
 
 private:
 

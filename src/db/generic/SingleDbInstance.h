@@ -35,16 +35,17 @@
 
 #include <iostream>
 
-#include "../../common/MonitorObject.h"
+#include "common/MonitorObject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 
 namespace db
 {
+
 /**
  * DBSingleton class declaration
  **/
-class DBSingleton: public MonitorObject
+class DBSingleton: public fts3::common::MonitorObject
 {
 public:
     ~DBSingleton();

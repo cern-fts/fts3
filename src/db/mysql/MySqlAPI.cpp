@@ -39,10 +39,11 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include "../../common/ThreadSafeList.h"
 #include "common/JobStatusHandler.h"
 
+using namespace fts3::common;
 using namespace db;
+
 
 #define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
@@ -252,7 +253,8 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 
 
-void MySqlAPI::init(std::string username, std::string password, std::string connectString, int pooledConn)
+void MySqlAPI::init(const std::string& username, const std::string& password,
+        const std::string& connectString, int pooledConn)
 {
     std::ostringstream connParams;
     std::string host, db;
@@ -325,8 +327,10 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 }
 
 
-void MySqlAPI::submitDelete(const std::string & jobId, const std::map<std::string,std::string>& urlsHost,
-                            const std::string & userDN, const std::string & voName, const std::string & credID)
+void MySqlAPI::submitDelete(const std::string & jobId,
+        const std::map<std::string, std::string>& urlsHost,
+        const std::string & userDN, const std::string & voName,
+        const std::string & credID)
 {
     if (urlsHost.empty()) return;
 
@@ -1588,7 +1592,7 @@ void MySqlAPI::getByJobIdReuse(
 
 
 
-void MySqlAPI::submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
+void MySqlAPI::submitPhysical(const std::string & jobId, std::list<SubmittedTransfer>& src_dest_pair,
                               const std::string & DN, const std::string & cred,
                               const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                               const std::string & sourceSe, const std::string & destinationSe,
@@ -1745,7 +1749,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<JobElementTup
         // the load balance between hosts
         jobHashedId = getHashedId();
 
-        std::list<JobElementTuple>::iterator iter;
+        std::list<SubmittedTransfer>::iterator iter;
         int index = 0;
         int insert_index = 0;
 
@@ -1799,12 +1803,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<JobElementTup
 
 
             //get distinct source_se / dest_se
-            Key p1 (iter->source_se, iter->dest_se);
+            Key p1 (iter->sourceSe, iter->destSe);
             mapa.insert(std::make_pair(p1, 0));
 
 
 
-            if (iter->wait_timeout.is_initialized())
+            if (iter->waitTimeout.is_initialized())
             {
                 pairQuerySeBlaklisted << "("
                                       << ":voName" << insert_index << ", "
@@ -1835,10 +1839,10 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<JobElementTup
                 insert_file_stmt.exchange(soci::use(iter->metadata));
                 insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
                 insert_file_stmt.exchange(soci::use(iter->fileIndex));
-                insert_file_stmt.exchange(soci::use(iter->source_se));
-                insert_file_stmt.exchange(soci::use(iter->dest_se));
+                insert_file_stmt.exchange(soci::use(iter->sourceSe));
+                insert_file_stmt.exchange(soci::use(iter->destSe));
                 insert_file_stmt.exchange(soci::use(tTime));
-                insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
+                insert_file_stmt.exchange(soci::use(iter->waitTimeout.get()));
                 insert_file_stmt.exchange(soci::use(iter->activity));
                 insert_file_stmt.exchange(soci::use(iter->hashedId));
             }
@@ -1873,8 +1877,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<JobElementTup
                 insert_file_stmt.exchange(soci::use(iter->metadata));
                 insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
                 insert_file_stmt.exchange(soci::use(iter->fileIndex));
-                insert_file_stmt.exchange(soci::use(iter->source_se));
-                insert_file_stmt.exchange(soci::use(iter->dest_se));
+                insert_file_stmt.exchange(soci::use(iter->sourceSe));
+                insert_file_stmt.exchange(soci::use(iter->destSe));
                 insert_file_stmt.exchange(soci::use(iter->activity));
                 insert_file_stmt.exchange(soci::use(iter->hashedId));
             }

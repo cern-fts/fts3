@@ -23,6 +23,10 @@
 #include "common/JobStatusHandler.h"
 #include "common/error.h"
 
+
+using namespace fts3::common;
+
+
 namespace fts3
 {
 namespace ws

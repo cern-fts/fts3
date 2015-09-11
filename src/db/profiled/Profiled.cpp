@@ -41,23 +41,20 @@ ProfiledDB::~ProfiledDB()
     destroy_db(db);
 }
 
-void ProfiledDB::init(std::string username, std::string password, std::string connectString, int pooledConn)
+void ProfiledDB::init(const std::string& username, const std::string& password, const std::string& connectString, int pooledConn)
 {
     PROFILE_PREFIXED("DB::", db->init(username, password, connectString, pooledConn));
 }
 
-void ProfiledDB::submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
-                                const std::string & DN, const std::string & cred,
-                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-                                const std::string & sourceSe, const std::string & destinationSe,
-                                const fts3::common::JobParameterHandler & params)
+void ProfiledDB::submitPhysical(const std::string & jobId,
+        std::list<SubmittedTransfer>& transfers, const std::string & DN,
+        const std::string & cred, const std::string & voName,
+        const std::string & myProxyServer, const std::string & delegationID,
+        const std::string & sourceSe, const std::string & destinationSe,
+        const fts3::common::JobParameterHandler & params)
 {
-    PROFILE_PREFIXED("DB::", db->submitPhysical(
-                         jobId, src_dest_pair,
-                         DN, cred,
-                         voName, myProxyServer, delegationID,
-                         sourceSe, destinationSe,
-                         params));
+    PROFILE_PREFIXED("DB::", db->submitPhysical(jobId, transfers, DN, cred, voName, myProxyServer, delegationID,
+                         sourceSe, destinationSe, params));
 }
 
 void ProfiledDB::getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs)
@@ -242,7 +239,7 @@ void ProfiledDB::auditConfiguration(const std::string & dn, const std::string & 
 }
 
 
-OptimizerSample ProfiledDB::fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname)
+fts3::common::OptimizerSample ProfiledDB::fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname)
 {
     PROFILE_PREFIXED("DB::", return db->fetchOptimizationConfig(source_hostname, destin_hostname));
 }

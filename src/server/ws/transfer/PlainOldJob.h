@@ -99,14 +99,14 @@ public:
      * @param jobs : list cpntainer for the extracted job elements
      * @param inspector : BlacklistInspector instance
      */
-    void get(std::list<JobElementTuple> & jobs, std::string vo)
+    void get(std::list<SubmittedTransfer> & jobs, std::string vo)
     {
         BlacklistInspector inspector(vo);
 
         typename std::vector<ELEMENT*>::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it)
             {
-                JobElementTuple tupple = create_job_element(it, inspector);
+                SubmittedTransfer tupple = create_job_element(it, inspector);
                 jobs.push_back(tupple);
             }
         // do blacklist inspection
@@ -138,7 +138,7 @@ protected:
      * @param inspector : BlacklistInspector instance
      */
     template <typename ITER>
-    JobElementTuple create_job_element(ITER const & it, BlacklistInspector& inspector);
+    SubmittedTransfer create_job_element(ITER const & it, BlacklistInspector& inspector);
 
     /**
      * the input vector
@@ -198,14 +198,14 @@ public:
     PlainOldJob(std::vector<tns3__TransferJobElement2*> const & elements, std::string const & initialState) :
         PlainOldJobBase<tns3__TransferJobElement2>(elements, initialState) {}
 
-    void get(std::list<JobElementTuple> & jobs, std::string vo, JobParameterHandler & params)
+    void get(std::list<SubmittedTransfer> & jobs, std::string vo, JobParameterHandler & params)
     {
         BlacklistInspector inspector(vo);
 
         std::vector<tns3__TransferJobElement2*>::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it)
             {
-                JobElementTuple tupple = create_job_element(it, inspector);
+                SubmittedTransfer tupple = create_job_element(it, inspector);
 
                 if((*it)->checksum)
                     {
@@ -251,7 +251,7 @@ typename PlainOldJobBase<ELEMENT>::job_type PlainOldJobBase<ELEMENT>::get_type(s
 
 template <typename ELEMENT>
 template <typename ITER>
-JobElementTuple PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it, BlacklistInspector& inspector)
+SubmittedTransfer PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it, BlacklistInspector& inspector)
 {
     // source and destination
     std::string src = *element(it).source, dest = *element(it).dest;
@@ -281,11 +281,11 @@ JobElementTuple PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it, Bl
             this->destinationSe = destinationSe;
         }
 
-    JobElementTuple job_element;
+    SubmittedTransfer job_element;
     job_element.source = src;
     job_element.destination = dest;
-    job_element.source_se = sourceSe;
-    job_element.dest_se = destinationSe;
+    job_element.sourceSe = sourceSe;
+    job_element.destSe = destinationSe;
     job_element.filesize = 0;
 
     job_element.state = initialState;

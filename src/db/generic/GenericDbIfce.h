@@ -19,13 +19,15 @@
  */
 
 #pragma once
+#ifndef GENERICDBIFCE_H_
+#define GENERICDBIFCE_H_
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <set>
 #include <list>
+#include <map>
 #include <queue>
+#include <set>
+#include <string>
+#include <vector>
 
 #include "JobStatus.h"
 #include "common/JobParameterHandler.h"
@@ -45,60 +47,72 @@
 
 #include "OAuth.h"
 
-#include <utility>
-
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
 #include "profiler/Profiler.h"
 #include "TransferFile.h"
 
-using namespace fts3::common;
 
-/**
- * GenericDbIfce class declaration
- **/
-
-
-/**
- * Map source/destination with the checksum provided
- **/
-struct JobElementTuple
+/// Hold information about individual submitted transfers
+struct SubmittedTransfer
 {
-    JobElementTuple(): filesize(0), fileIndex(0), hashedId(0) {}
+    SubmittedTransfer(): filesize(0), fileIndex(0), hashedId(0) {}
     std::string source;
     std::string destination;
-    std::string source_se;
-    std::string dest_se;
+    std::string sourceSe;
+    std::string destSe;
     std::string checksum;
     double filesize;
     std::string metadata;
     std::string selectionStrategy;
     int fileIndex;
-    boost::optional<int> wait_timeout;
+    boost::optional<int> waitTimeout;
     std::string activity;
     std::string state;
     unsigned hashedId;
 };
 
+///
 class GenericDbIfce
 {
 public:
 
     virtual ~GenericDbIfce() {};
 
-    /// Intialize database connection  by providing information from fts3config file
-    virtual void init(std::string username, std::string password, std::string connectString, int pooledConn) = 0;
+    /// Initialize database connection by providing information from fts3config file
+    /// @param nPooledConnections   The number connections to pool
+    virtual void init(const std::string& username, const std::string& password,
+            const std::string& connectString, int nPooledConnections) = 0;
 
-    virtual  void submitDelete(const std::string & jobId, const std::map<std::string,std::string>& urlsHost,
-                               const std::string & DN, const std::string & voName, const std::string & credID) = 0;
+    /// Submit a delete job
+    /// @param jobID        The job id
+    /// @param urlsHost     A map where the key is the SURL to delete, and the value the storage element
+    /// @param userDn       The user DN (Distinguished Name)
+    /// @param voName       The user VO
+    /// @param delegationId The delegation id of the proxy to be used
+    virtual void submitDelete(const std::string& jobId,
+            const std::map<std::string, std::string>& urlsHost,
+            const std::string& userDn, const std::string& voName,
+            const std::string& delegationId) = 0;
 
     /// Submit a transfer request to be stored in the database
-    virtual void submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
-                                const std::string & DN, const std::string & cred,
-                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-                                const std::string & sourceSe, const std::string & destinationSe,
-                                const JobParameterHandler & params) = 0;
+    /// @param jobId        The job id
+    /// @param[in,out] transfers    The list of submitted transfers. Some fields may be updated after this (i.e. activity, hashedId)
+    /// @param userDn       The user DN (Distinguished Name)
+    /// @param cred         To be used if credentials other than the proxy is to be used (i.e. S3 or Dropbox keys)
+    /// @param voName       The user VO
+    /// @param myProxyServer Stored, but unused
+    /// @param delegationID The delegation id of the proxy to be used
+    /// @param sourceSe     Source storage element. Should be empty when not all transfers share the source SE
+    /// @param destSe       Destination storage element. Should be empty when not all transfers share the source SE
+    /// @param params       Stores optional transfer parameters, as buffer size, checksum algorithm, etc...
+    virtual void submitPhysical(const std::string & jobId,
+            std::list<SubmittedTransfer>& transfers, const std::string& userDn,
+            const std::string& cred, const std::string& voName,
+            const std::string& myProxyServer, const std::string& delegationID,
+            const std::string& sourceSe, const std::string& destSe,
+            const fts3::common::JobParameterHandler& params) = 0;
 
     virtual void getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs) = 0;
 
@@ -171,7 +185,7 @@ public:
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
 
-    virtual OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname) = 0;
+    virtual fts3::common::OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname) = 0;
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
 
@@ -448,3 +462,5 @@ public:
 
     virtual bool getUserDnVisible() = 0;
 };
+
+#endif // GENERICDBIFCE_H_

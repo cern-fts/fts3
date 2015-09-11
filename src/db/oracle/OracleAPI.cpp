@@ -35,7 +35,9 @@
 #include "db/generic/DbUtils.h"
 
 
+using namespace fts3::common;
 using namespace db;
+
 
 static unsigned getHashedId(void)
 {
@@ -185,7 +187,8 @@ OracleAPI::~OracleAPI()
 
 
 
-void OracleAPI::init(std::string username, std::string password, std::string connectString, int pooledConn)
+void OracleAPI::init(const std::string& username, const std::string& password,
+        const std::string& connectString, int pooledConn)
 {
     std::ostringstream connParams;
     std::string host, db, port;
@@ -1575,11 +1578,12 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
         }
 }
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
-                               const std::string & DN, const std::string & cred,
-                               const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-                               const std::string & sourceSe, const std::string & destinationSe,
-                               const JobParameterHandler & params)
+void OracleAPI::submitPhysical(const std::string& jobId,
+        std::list<SubmittedTransfer>& transfers, const std::string& DN,
+        const std::string& cred, const std::string& voName,
+        const std::string& myProxyServer, const std::string& delegationID,
+        const std::string& sourceSe, const std::string& destinationSe,
+        const JobParameterHandler & params)
 {
     const int         bringOnline      = params.get<int>(JobParameterHandler::BRING_ONLINE);
     const char        checksumMethod   = params.get(JobParameterHandler::CHECKSUM_METHOD)[0];
@@ -1606,8 +1610,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTu
         reuseFlag = "H";
 
     //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
-    bool mreplica = is_mreplica(src_dest_pair);
-    bool mhop     = is_mhop(src_dest_pair) || hop == "Y";
+    bool mreplica = is_mreplica(transfers);
+    bool mhop     = is_mhop(transfers) || hop == "Y";
 
     if( reuseFlag != "N" && ((reuseFlag != "H" && mhop) || mreplica))
         {
@@ -1708,13 +1712,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTu
             // the load balance between hosts
             jobHashedId = getHashedId();
 
-            std::list<JobElementTuple>::iterator iter;
             int index = 0;
             int insert_index = 0;
 
             soci::statement insert_file_stmt(sql);
 
-            for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
+            for (auto iter = transfers.begin(); iter != transfers.end(); ++iter)
                 {
                     ++insert_index;
 
@@ -1760,10 +1763,10 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTu
                         }
 
                     //get distinct source_se / dest_se
-                    Key p1 (iter->source_se, iter->dest_se);
+                    Key p1 (iter->sourceSe, iter->destSe);
                     mapa.insert(std::make_pair(p1, 0));
 
-                    if (iter->wait_timeout.is_initialized())
+                    if (iter->waitTimeout.is_initialized())
                         {
                             pairQuerySeBlaklisted
                                     << " INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,"
@@ -1797,9 +1800,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTu
                             insert_file_stmt.exchange(soci::use(iter->metadata));
                             insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
                             insert_file_stmt.exchange(soci::use(iter->fileIndex));
-                            insert_file_stmt.exchange(soci::use(iter->source_se));
-                            insert_file_stmt.exchange(soci::use(iter->dest_se));
-                            insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
+                            insert_file_stmt.exchange(soci::use(iter->sourceSe));
+                            insert_file_stmt.exchange(soci::use(iter->destSe));
+                            insert_file_stmt.exchange(soci::use(iter->waitTimeout.get()));
                             insert_file_stmt.exchange(soci::use(iter->activity));
                             insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
@@ -1837,8 +1840,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTu
                             insert_file_stmt.exchange(soci::use(iter->metadata));
                             insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
                             insert_file_stmt.exchange(soci::use(iter->fileIndex));
-                            insert_file_stmt.exchange(soci::use(iter->source_se));
-                            insert_file_stmt.exchange(soci::use(iter->dest_se));
+                            insert_file_stmt.exchange(soci::use(iter->sourceSe));
+                            insert_file_stmt.exchange(soci::use(iter->destSe));
                             insert_file_stmt.exchange(soci::use(iter->activity));
                             insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }

@@ -35,6 +35,8 @@ extern time_t stallRecords;
 namespace fts3 {
 namespace server {
 
+using namespace fts3::common;
+
 template <typename TRAITS>
 class HeartBeatHandler: public TRAITS::ActiveObjectType
 {

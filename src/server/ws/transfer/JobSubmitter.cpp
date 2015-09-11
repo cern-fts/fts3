@@ -152,7 +152,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             tns3__TransferJobElement3* elem = (*it);
 
             // prepare the job element and add it to the job
-            JobElementTuple tupple;
+            SubmittedTransfer tupple;
 
             // common properties
             tupple.filesize = elem->filesize ? *elem->filesize : 0;
@@ -210,8 +210,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     // check if all the sources use SRM protocol
                     srm_source &= sourceSe.find(srm_protocol) == 0;
 
-                    tupple.source_se = sourceSe;
-                    tupple.dest_se = destinationSe;
+                    tupple.sourceSe = sourceSe;
+                    tupple.destSe = destinationSe;
 
                     jobs.push_back(tupple);
                 }
@@ -319,8 +319,8 @@ std::string JobSubmitter::submit()
 
     if (params.get(JobParameterHandler::MULTIHOP) == "Y")
         {
-            sourceSe = jobs.front().source_se;
-            destinationSe = jobs.back().dest_se;
+            sourceSe = jobs.front().sourceSe;
+            destinationSe = jobs.back().destSe;
         }
 
     bool protocol =

@@ -26,7 +26,9 @@
 #include "config/serverconfig.h"
 #include <sstream>
 
+
 using namespace db;
+using namespace fts3::common;
 using namespace fts3::config; 
 using namespace fts3::server;
 

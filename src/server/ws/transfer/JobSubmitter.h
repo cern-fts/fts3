@@ -120,7 +120,7 @@ private:
      * the job elements that have to be submitted (each job is a tuple of source,
      * destination, and optionally checksum)
      */
-    std::list<JobElementTuple> jobs;
+    std::list<SubmittedTransfer> jobs;
 
     /**
      * The common initialisation for both parameterised constructors

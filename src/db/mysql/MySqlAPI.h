@@ -54,25 +54,21 @@ public:
         bool returnValue;
     };
 
-
-    /**
-     * Intialize database connection  by providing information from fts3config file
-     **/
-
-    virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
+    virtual void init(const std::string& username, const std::string& password,
+            const std::string& connectString, int pooledConn);
 
 
-    virtual void submitDelete(const std::string & jobId, const std::map<std::string,std::string>& urlsHost,
-                               const std::string & DN, const std::string & voName, const std::string & credID);
+    virtual void submitDelete(const std::string & jobId,
+            const std::map<std::string, std::string>& urlsHost,
+            const std::string & DN, const std::string & voName,
+            const std::string & credID);
 
-    /**
-     * Submit a transfer request to be stored in the database
-     **/
-    virtual void submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
-                                const std::string & DN, const std::string & cred,
-                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-                                const std::string & sourceSe, const std::string & destinationSe,
-                                const JobParameterHandler & params);
+    virtual void submitPhysical(const std::string & jobId,
+            std::list<SubmittedTransfer>& src_dest_pair, const std::string & DN,
+            const std::string & cred, const std::string & voName,
+            const std::string & myProxyServer, const std::string & delegationID,
+            const std::string & sourceSe, const std::string & destinationSe,
+            const fts3::common::JobParameterHandler & params);
 
     virtual void getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs);
 
@@ -144,7 +140,7 @@ public:
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
-    virtual OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname);
+    virtual fts3::common::OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname);
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 

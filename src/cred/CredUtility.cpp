@@ -32,6 +32,7 @@
 
 #include <unistd.h>
 
+using namespace fts3::common;
 
 /*
  * get_proxy_lifetime

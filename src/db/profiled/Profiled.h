@@ -38,13 +38,15 @@ public:
     ProfiledDB(GenericDbIfce* db, void (*destroy_db)(void *));
     ~ProfiledDB();
 
-    void init(std::string username, std::string password, std::string connectString, int pooledConn);
+    void init(const std::string& username, const std::string& password, const std::string& connectString, int pooledConn);
 
-    void submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
-                        const std::string & DN, const std::string & cred,
-                        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-                        const std::string & sourceSe, const std::string & destinationSe,
-                        const JobParameterHandler & params);
+    void submitPhysical(const std::string& jobId,
+            std::list<SubmittedTransfer>& transfers,
+            const std::string& DN, const std::string& cred,
+            const std::string& voName, const std::string& myProxyServer,
+            const std::string& delegationID, const std::string& sourceSe,
+            const std::string& destinationSe,
+            const fts3::common::JobParameterHandler& params);
 
     void getTransferJobStatus(const std::string& requestID, bool archive, std::vector<JobStatus>& jobs);
 
@@ -115,7 +117,7 @@ public:
 
     void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
-    OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname);
+    fts3::common::OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname);
 
     bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
