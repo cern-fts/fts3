@@ -134,9 +134,9 @@ public:
 
     virtual void deleteCredential(const std::string& delegationId, const std::string& userDn);
 
-    virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
+    virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage);
 
-    virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
+    virtual void setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level);
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 

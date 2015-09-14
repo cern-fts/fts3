@@ -3098,7 +3098,7 @@ void OracleAPI::deleteCredential(const std::string& delegationId, const std::str
 
 
 
-unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string destin_hostname)
+unsigned OracleAPI::getDebugLevel(const std::string& sourceStorage, const std::string& destStorage)
 {
     soci::session sql(*connectionPool);
 
@@ -3112,8 +3112,8 @@ unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string desti
                 " SELECT debug_level "
                 " FROM t_debug "
                 " WHERE source_se = :source OR dest_se= :dest_se ",
-                soci::use(source_hostname),
-                soci::use(destin_hostname),
+                soci::use(sourceStorage),
+                soci::use(destStorage),
                 soci::into(level, isNull)
                 ;
 
@@ -3133,26 +3133,26 @@ unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string desti
 
 
 
-void OracleAPI::setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level)
+void OracleAPI::setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level)
 {
     soci::session sql(*connectionPool);
 
     try
         {
             sql.begin();
-            if (!source_hostname.empty())
+            if (!sourceStorage.empty())
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se IS NULL",
-                        soci::use(source_hostname);
+                        soci::use(sourceStorage);
                     sql << "INSERT INTO t_debug (source_se, debug_level) VALUES (:source, :level)",
-                        soci::use(source_hostname), soci::use(level);
+                        soci::use(sourceStorage), soci::use(level);
                 }
-            if (!destin_hostname.empty())
+            if (!destStorage.empty())
                 {
                     sql << "DELETE FROM t_debug WHERE source_se IS NULL AND dest_se = :dest",
-                        soci::use(destin_hostname);
+                        soci::use(destStorage);
                     sql << "INSERT INTO t_debug (dest_se, debug_level) VALUES (:dest, :level)",
-                        soci::use(destin_hostname), soci::use(level);
+                        soci::use(destStorage), soci::use(level);
                 }
             sql.commit();
         }

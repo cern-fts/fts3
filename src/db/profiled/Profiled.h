@@ -116,9 +116,9 @@ public:
 
     void deleteCredential(const std::string& delegationId, const std::string& userDn);
 
-    unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
+    unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage);
 
-    void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
+    void setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level);
 
     void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 

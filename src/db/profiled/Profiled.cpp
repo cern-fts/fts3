@@ -213,15 +213,15 @@ void ProfiledDB::deleteCredential(const std::string& delegationId, const std::st
 }
 
 
-unsigned ProfiledDB::getDebugLevel(std::string source_hostname, std::string destin_hostname)
+unsigned ProfiledDB::getDebugLevel(const std::string& sourceStorage, const std::string& destStorage)
 {
-    PROFILE_PREFIXED("DB::", return db->getDebugLevel(source_hostname, destin_hostname));
+    PROFILE_PREFIXED("DB::", return db->getDebugLevel(sourceStorage, destStorage));
 }
 
 
-void ProfiledDB::setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level)
+void ProfiledDB::setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level)
 {
-    PROFILE_PREFIXED("DB::", db->setDebugLevel(source_hostname, destin_hostname, level));
+    PROFILE_PREFIXED("DB::", db->setDebugLevel(sourceStorage, destStorage, level));
 }
 
 

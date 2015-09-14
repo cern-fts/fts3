@@ -282,15 +282,31 @@ public:
     /// @param userDn           The user's DN
     virtual void deleteCredential(const std::string& delegationId, const std::string& userDn) = 0;
 
-    virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname) = 0;
+    /// Check if the credential for the given delegation id and user is expired or not
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @return                 true if the stored credentials expired or do not exist
+    virtual bool isCredentialExpired(const std::string& delegationId, const std::string &userDn) = 0;
 
-    virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level) = 0;
+    /// Get the debug level for the given pair
+    /// @param sourceStorage    The source storage as protocol://host
+    /// @param destStorage      The destination storage as protocol://host
+    /// @return                 An integer with the debug level configured for the pair. 0 = no debug.
+    virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
-    virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
+    /// Set the debug level for the given pair
+    /// @param sourceStorage    The source storage as protocol://host
+    /// @param destStorage      The destination storage as protocol://host
+    virtual void setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level) = 0;
+
+    /// Store a configuration audit entry
+    /// @param userDn           The user that performed the action
+    /// @param config           The configuration value change
+    /// @param action           Simpler representation of the configuration involved (i.e. debug)
+    virtual void auditConfiguration(const std::string& userDn, const std::string& config, const std::string& action) = 0;
+
 
     virtual fts3::common::OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname) = 0;
-
-    virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
 
     virtual bool updateOptimizer() = 0;
 
