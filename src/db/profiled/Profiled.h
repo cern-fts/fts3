@@ -152,21 +152,22 @@ public:
 
     bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull);
 
-    void blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn);
+    void blacklistSe(const std::string& storage, const std::string& voName,
+            const std::string& status, int timeout,
+            const std::string& msg, const std::string& adminDn);
 
-    void blacklistDn(std::string dn, std::string msg, std::string adm_dn);
+    void blacklistDn(const std::string& userDn,
+            const std::string& msg, const std::string& adminDn);
 
-    void unblacklistSe(std::string se);
+    void unblacklistSe(const std::string& storage);
 
-    void unblacklistDn(std::string dn);
+    void unblacklistDn(const std::string& userDn);
 
-    void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
+    bool allowSubmit(const std::string& storage, const std::string& voName);
 
-    boost::optional<int> getTimeoutForSe(std::string se);
+    boost::optional<int> getTimeoutForSe(const std::string& storage);
 
-    void getTimeoutForSe(std::string ses, std::map<std::string, int>& ret);
-
-    bool isDnBlacklisted(std::string dn);
+    bool isDnBlacklisted(const std::string& userDn);
 
     bool isFileReadyState(int fileID);
 

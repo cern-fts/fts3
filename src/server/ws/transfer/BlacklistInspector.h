@@ -88,7 +88,6 @@ private:
 
     std::set<std::string> unique_ses;
     std::string const & vo;
-    std::string unique_ses_str;
 };
 
 } /* namespace cli */

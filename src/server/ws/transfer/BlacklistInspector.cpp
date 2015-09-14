@@ -37,26 +37,17 @@ using namespace fts3::common;
 
 void BlacklistInspector::add(std::string const & se)
 {
-    // treat the first one differently
-    if (unique_ses.empty())
-        {
-            unique_ses.insert(se);
-            // add the parenthesis
-            unique_ses_str += "('" + se + "')";
-        }
-    else if (!unique_ses.count(se))
-        {
-            unique_ses.insert(se);
-            // add any subsequent SE before the closing parenthesis
-            unique_ses_str.insert(unique_ses_str.size() - 1, ",'" + se + "'");
-        }
+    unique_ses.insert(se);
 }
 
 void BlacklistInspector::inspect() const
 {
     // get the list of SEs that are blacklisted
     std::list<std::string> notAllowed;
-    db->allowSubmit(unique_ses_str, vo, notAllowed);
+    for (auto i = unique_ses.begin(); i != unique_ses.end(); ++i) {
+        if (!db->allowSubmit(*i, vo))
+            notAllowed.push_back(*i);
+    }
 
     // if all the SEs are OK there's nothing to do ...
     if (notAllowed.empty()) return;
@@ -77,7 +68,12 @@ void BlacklistInspector::setWaitTimeout(std::list<SubmittedTransfer> & jobs) con
 {
     // get the timeouts from DB
     std::map<std::string, int> timeouts;
-    db->getTimeoutForSe(unique_ses_str, timeouts);
+    for (auto i = unique_ses.begin(); i != unique_ses.end(); ++i) {
+        boost::optional<int> timeout = db->getTimeoutForSe(*i);
+        if (timeout) {
+            timeouts[*i] = timeout.get();
+        }
+    }
     // create the assigner object
     TimeoutAssigner assign_timeout(timeouts);
     // fill in wait timeouts

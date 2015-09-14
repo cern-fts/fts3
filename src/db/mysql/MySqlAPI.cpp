@@ -5276,19 +5276,19 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
 }
 
 
-
-void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn)
+void MySqlAPI::blacklistSe(const std::string& storage, const std::string& voName,
+        const std::string& status, int timeout,
+        const std::string& msg, const std::string& adminDn)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-
         int count = 0;
 
         sql <<
             " SELECT COUNT(*) FROM t_bad_ses WHERE se = :se ",
-            soci::use(se),
+            soci::use(storage),
             soci::into(count)
             ;
 
@@ -5296,7 +5296,6 @@ void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, i
 
         if (count)
         {
-
             sql << " UPDATE t_bad_ses SET "
                 "	addition_time = UTC_TIMESTAMP(), "
                 "	admin_dn = :admin, "
@@ -5304,20 +5303,19 @@ void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, i
                 "	status = :status, "
                 "  	wait_timeout = :timeout "
                 " WHERE se = :se ",
-                soci::use(adm_dn),
-                soci::use(vo),
+                soci::use(adminDn),
+                soci::use(voName),
                 soci::use(status),
                 soci::use(timeout),
-                soci::use(se)
+                soci::use(storage)
                 ;
-
         }
         else
         {
 
             sql << "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) "
                 "               VALUES (:se, :message, UTC_TIMESTAMP(), :admin, :vo, :status, :timeout)",
-                soci::use(se), soci::use(msg), soci::use(adm_dn), soci::use(vo), soci::use(status), soci::use(timeout);
+                soci::use(storage), soci::use(msg), soci::use(adminDn), soci::use(voName), soci::use(status), soci::use(timeout);
         }
 
         sql.commit();
@@ -5335,8 +5333,8 @@ void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, i
 }
 
 
-
-void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
+void MySqlAPI::blacklistDn(const std::string& userDn, const std::string& msg,
+        const std::string& adminDn)
 {
     soci::session sql(*connectionPool);
 
@@ -5345,7 +5343,7 @@ void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
         sql.begin();
         sql << "INSERT IGNORE INTO t_bad_dns (dn, message, addition_time, admin_dn) "
             "               VALUES (:dn, :message, UTC_TIMESTAMP(), :admin)",
-            soci::use(dn), soci::use(msg), soci::use(adm_dn);
+            soci::use(userDn), soci::use(msg), soci::use(adminDn);
         sql.commit();
     }
     catch (std::exception& e)
@@ -5361,8 +5359,7 @@ void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 }
 
 
-
-void MySqlAPI::unblacklistSe(std::string se)
+void MySqlAPI::unblacklistSe(const std::string& storage)
 {
     soci::session sql(*connectionPool);
 
@@ -5372,8 +5369,8 @@ void MySqlAPI::unblacklistSe(std::string se)
 
         // delete the entry from DB
         sql << "DELETE FROM t_bad_ses WHERE se = :se",
-            soci::use(se)
-            ;
+            soci::use(storage);
+
         // set to null pending fields in respective files
         sql <<
             " UPDATE t_file f SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
@@ -5384,9 +5381,8 @@ void MySqlAPI::unblacklistSe(std::string se)
             "		FROM t_bad_ses "
             "		WHERE (se = f.source_se OR se = f.dest_se)  AND (status = 'WAIT' OR status = 'WAIT_AS')"
             "	)",
-            soci::use(se),
-            soci::use(se)
-            ;
+            soci::use(storage),
+            soci::use(storage);
 
         sql.commit();
     }
@@ -5403,8 +5399,7 @@ void MySqlAPI::unblacklistSe(std::string se)
 }
 
 
-
-void MySqlAPI::unblacklistDn(std::string dn)
+void MySqlAPI::unblacklistDn(const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
@@ -5414,8 +5409,7 @@ void MySqlAPI::unblacklistDn(std::string dn)
 
         // delete the entry from DB
         sql << "DELETE FROM t_bad_dns WHERE dn = :dn",
-            soci::use(dn)
-            ;
+            soci::use(userDn);
 
 
         // set to null pending fields in respective files
@@ -5428,8 +5422,7 @@ void MySqlAPI::unblacklistDn(std::string dn)
             "		FROM t_bad_dns "
             "		WHERE dn = j.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS') "
             "	)",
-            soci::use(dn)
-            ;
+            soci::use(userDn);
 
         sql.commit();
     }
@@ -5446,20 +5439,17 @@ void MySqlAPI::unblacklistDn(std::string dn)
 }
 
 
-void MySqlAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
+bool MySqlAPI::allowSubmit(const std::string& storage, const std::string& voName)
 {
     soci::session sql(*connectionPool);
 
-    std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
-
     try
     {
-        soci::rowset<std::string> rs = (sql.prepare << query, soci::use(vo));
-
-        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            notAllowed.push_back(*i);
-        }
+        int count;
+        sql << "SELECT COUNT(*) FROM t_bad_ses "
+               "WHERE se = :se AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)",
+               soci::use(storage), soci::use(voName), soci::into(count);
+        return count == 0;
     }
     catch (std::exception& e)
     {
@@ -5471,7 +5461,8 @@ void MySqlAPI::allowSubmit(std::string ses, std::string vo, std::list<std::strin
     }
 }
 
-boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
+
+boost::optional<int> MySqlAPI::getTimeoutForSe(const std::string& storage)
 {
     soci::session sql(*connectionPool);
 
@@ -5484,7 +5475,7 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
 
         sql <<
             " SELECT wait_timeout FROM t_bad_ses WHERE se = :se ",
-            soci::use(se),
+            soci::use(storage),
             soci::into(tmp, isNull)
             ;
 
@@ -5505,48 +5496,15 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
     return ret;
 }
 
-void MySqlAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
-{
-    soci::session sql(*connectionPool);
 
-    std::string query =
-        " select se, wait_timeout  "
-        " from t_bad_ses "
-        " where se in "
-        ;
-    query += ses;
-
-    try
-    {
-        soci::rowset<soci::row> rs = (
-                                         sql.prepare << query
-                                     );
-
-        for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            ret[i->get<std::string>("se")] =  i->get<int>("wait_timeout");
-        }
-
-    }
-    catch (std::exception& e)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-bool MySqlAPI::isDnBlacklisted(std::string dn)
+bool MySqlAPI::isDnBlacklisted(const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
     bool blacklisted = false;
     try
     {
-        sql << "SELECT dn FROM t_bad_dns WHERE dn = :dn", soci::use(dn);
+        sql << "SELECT dn FROM t_bad_dns WHERE dn = :dn", soci::use(userDn);
         blacklisted = sql.got_data();
     }
     catch (std::exception& e)

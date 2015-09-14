@@ -4718,19 +4718,19 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, boo
 }
 
 
-
-void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn)
+void OracleAPI::blacklistSe(const std::string& storage,
+        const std::string& voName, const std::string& status, int timeout,
+        const std::string& msg, const std::string& adminDn)
 {
     soci::session sql(*connectionPool);
 
     try
         {
-
             int count = 0;
 
             sql <<
                 " SELECT COUNT(*) FROM t_bad_ses WHERE se = :se ",
-                soci::use(se),
+                soci::use(storage),
                 soci::into(count)
                 ;
 
@@ -4738,7 +4738,6 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
 
             if (count)
                 {
-
                     sql << " UPDATE t_bad_ses SET "
                         "   addition_time = sys_extract_utc(systimestamp), "
                         "   admin_dn = :admin, "
@@ -4746,20 +4745,19 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
                         "   status = :status, "
                         "   wait_timeout = :timeout "
                         " WHERE se = :se ",
-                        soci::use(adm_dn),
-                        soci::use(vo),
+                        soci::use(adminDn),
+                        soci::use(voName),
                         soci::use(status),
                         soci::use(timeout),
-                        soci::use(se)
+                        soci::use(storage)
                         ;
-
                 }
             else
                 {
 
                     sql << "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) "
                         "               VALUES (:se, :message, sys_extract_utc(systimestamp), :admin, :vo, :status, :timeout)",
-                        soci::use(se), soci::use(msg), soci::use(adm_dn), soci::use(vo), soci::use(status), soci::use(timeout);
+                        soci::use(storage), soci::use(msg), soci::use(adminDn), soci::use(voName), soci::use(status), soci::use(timeout);
                 }
 
             sql.commit();
@@ -4777,8 +4775,8 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
 }
 
 
-
-void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
+void OracleAPI::blacklistDn(const std::string& userDn, const std::string& msg,
+        const std::string& adminDn)
 {
     soci::session sql(*connectionPool);
 
@@ -4791,7 +4789,7 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
                 " ON (t_bad_dns.dn = Blacklisted.dn) "
                 " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
                 "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
-                soci::use(dn), soci::use(msg), soci::use(adm_dn);
+                soci::use(userDn), soci::use(msg), soci::use(adminDn);
             sql.commit();
         }
     catch (std::exception& e)
@@ -4807,8 +4805,7 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 }
 
 
-
-void OracleAPI::unblacklistSe(std::string se)
+void OracleAPI::unblacklistSe(const std::string& storage)
 {
     soci::session sql(*connectionPool);
 
@@ -4818,7 +4815,7 @@ void OracleAPI::unblacklistSe(std::string se)
 
             // delete the entry from DB
             sql << "DELETE FROM t_bad_ses WHERE se = :se",
-                soci::use(se)
+                soci::use(storage)
                 ;
             // set to null pending fields in respective files
             sql <<
@@ -4831,8 +4828,8 @@ void OracleAPI::unblacklistSe(std::string se)
                 "       WHERE (se = f.source_se OR se = f.dest_se) AND "
                 "             (status = 'WAIT' OR status = 'WAIT_AS')"
                 "   )",
-                soci::use(se),
-                soci::use(se)
+                soci::use(storage),
+                soci::use(storage)
                 ;
 
             sql.commit();
@@ -4850,8 +4847,7 @@ void OracleAPI::unblacklistSe(std::string se)
 }
 
 
-
-void OracleAPI::unblacklistDn(std::string dn)
+void OracleAPI::unblacklistDn(const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
@@ -4861,7 +4857,7 @@ void OracleAPI::unblacklistDn(std::string dn)
 
             // delete the entry from DB
             sql << "DELETE FROM t_bad_dns WHERE dn = :dn",
-                soci::use(dn)
+                soci::use(userDn)
                 ;
             // set to null pending fields in respective files
             sql <<
@@ -4873,7 +4869,7 @@ void OracleAPI::unblacklistDn(std::string dn)
                 "                         FROM t_bad_dns "
                 "                         WHERE dn = t_job.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS') )"
                 " ) SET wait_timestamp = NULL, wait_timeout = NULL",
-                soci::use(dn, "dn")
+                soci::use(userDn, "dn")
                 ;
 
             sql.commit();
@@ -4891,20 +4887,17 @@ void OracleAPI::unblacklistDn(std::string dn)
 }
 
 
-void OracleAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
+bool OracleAPI::allowSubmit(const std::string& storage, const std::string& voName)
 {
     soci::session sql(*connectionPool);
 
-    std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
-
     try
         {
-            soci::rowset<std::string> rs = (sql.prepare << query, soci::use(vo));
-
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    notAllowed.push_back(*i);
-                }
+            int count;
+            sql << "SELECT COUNT(se) FROM t_bad_ses "
+                   "WHERE se = :se AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)",
+                   soci::use(storage), soci::use(voName), soci::into(count);
+            return count == 0;
         }
     catch (std::exception& e)
         {
@@ -4917,7 +4910,7 @@ void OracleAPI::allowSubmit(std::string ses, std::string vo, std::list<std::stri
 }
 
 
-boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
+boost::optional<int> OracleAPI::getTimeoutForSe(const std::string& storage)
 {
     soci::session sql(*connectionPool);
 
@@ -4930,7 +4923,7 @@ boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
 
             sql <<
                 " SELECT wait_timeout FROM t_bad_ses WHERE se = :se ",
-                soci::use(se),
+                soci::use(storage),
                 soci::into(tmp, isNull)
                 ;
 
@@ -4951,48 +4944,16 @@ boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
     return ret;
 }
 
-void OracleAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
-{
-    soci::session sql(*connectionPool);
 
-    std::string query =
-        " select se, wait_timeout  "
-        " from t_bad_ses "
-        " where se in "
-        ;
-    query += ses;
-
-    try
-        {
-            soci::rowset<soci::row> rs = (
-                                             sql.prepare << query
-                                         );
-
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    ret[i->get<std::string>("SE")] =  i->get<int>("WAIT_TIMEOUT");
-                }
-
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
-bool OracleAPI::isDnBlacklisted(std::string dn)
+bool OracleAPI::isDnBlacklisted(const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
     bool blacklisted = false;
     try
         {
-            sql << "SELECT dn FROM t_bad_dns WHERE dn = :dn", soci::use(dn), soci::into(dn);
+            std::string aux;
+            sql << "SELECT dn FROM t_bad_dns WHERE dn = :dn", soci::use(userDn), soci::into(aux);
             blacklisted = sql.got_data();
         }
     catch (std::exception& e)
@@ -5005,7 +4966,6 @@ bool OracleAPI::isDnBlacklisted(std::string dn)
         }
     return blacklisted;
 }
-
 
 
 bool OracleAPI::isFileReadyState(int fileID)

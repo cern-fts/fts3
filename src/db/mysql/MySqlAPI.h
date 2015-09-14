@@ -168,21 +168,22 @@ public:
 
     virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull);
 
-    virtual void blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn);
+    virtual void blacklistSe(const std::string& storage, const std::string& voName,
+            const std::string& status, int timeout,
+            const std::string& msg, const std::string& adminDn);
 
-    virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn);
+    virtual void blacklistDn(const std::string& userDn,
+            const std::string& msg, const std::string& adminDn);
 
-    virtual void unblacklistSe(std::string se);
+    virtual void unblacklistSe(const std::string& storage);
 
-    virtual void unblacklistDn(std::string dn);
+    virtual void unblacklistDn(const std::string& userDn);
 
-    virtual void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
+    virtual bool allowSubmit(const std::string& storage, const std::string& voName);
 
-    virtual boost::optional<int> getTimeoutForSe(std::string se);
+    virtual boost::optional<int> getTimeoutForSe(const std::string& storage);
 
-    virtual void getTimeoutForSe(std::string ses, std::map<std::string, int>& ret);
-
-    virtual bool isDnBlacklisted(std::string dn);
+    virtual bool isDnBlacklisted(const std::string& userDn);
 
     virtual bool isFileReadyState(int fileID);
 

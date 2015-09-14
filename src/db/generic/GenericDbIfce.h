@@ -304,6 +304,44 @@ public:
     /// @param action           Simpler representation of the configuration involved (i.e. debug)
     virtual void auditConfiguration(const std::string& userDn, const std::string& config, const std::string& action) = 0;
 
+    /// Blacklist a storage element
+    /// @param storage          The storage to blacklist (as protocol://host)
+    /// @param voName           A VO name is the banning is only for one VO
+    /// @param status           Can be 'CANCEL', 'WAIT', 'WAIT_AS' (accept submission)
+    /// @param timeout          Any 'waiting' file will be canceled after this timeout if the ban is not removed
+    /// @param msg              A justification message for the banning
+    /// @param adminDn          Who did the banning
+    virtual void blacklistSe(const std::string& storage, const std::string& voName,
+            const std::string& status, int timeout,
+            const std::string& msg, const std::string& adminDn) = 0;
+
+    /// Blacklist a user
+    /// @param userDn           The user to ban
+    /// @param msg              A justification message for the banning
+    /// @param adminDn          Who did the banning
+    virtual void blacklistDn(const std::string& userDn, const std::string& msg, const std::string& adminDn) = 0;
+
+    /// Lift the banning of a storage
+    /// @param storage          The storage to blacklist (as protocol://host)
+    virtual void unblacklistSe(const std::string& storage) = 0;
+
+    /// Lift the banning of a user
+    /// @param userDn           The user to ban
+    virtual void unblacklistDn(const std::string& userDn) = 0;
+
+    /// Check whether submission is allowed for the given storage
+    /// @param storage          The storage to blacklist (as protocol://host)
+    /// @param voName           The submitting VO
+    virtual bool allowSubmit(const std::string& storage, const std::string& voName) = 0;
+
+    /// If the banning is putting files in 'WAITING' state, get the associated timeout
+    /// @param storage          The storage to blacklist (as protocol://host)
+    /// @return                 The timeout, in seconds, if any
+    virtual boost::optional<int> getTimeoutForSe(const std::string& storage) = 0;
+
+    /// Check is the user has been banned
+    virtual bool isDnBlacklisted(const std::string& userDn) = 0;
+
     /// @note This does nothing really, since it uses defaults to initialize the return value (!?)
     virtual OptimizerSample fetchOptimizationConfig(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
@@ -335,21 +373,6 @@ public:
 
     virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull) = 0;
 
-    virtual void blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn) = 0;
-
-    virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn) = 0;
-
-    virtual void unblacklistSe(std::string se) = 0;
-
-    virtual void unblacklistDn(std::string dn) = 0;
-
-    virtual void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed) = 0;
-
-    virtual boost::optional<int> getTimeoutForSe(std::string se) = 0;
-
-    virtual void getTimeoutForSe(std::string ses, std::map<std::string, int>& ret) = 0;
-
-    virtual bool isDnBlacklisted(std::string dn) = 0;
 
     virtual bool isFileReadyState(int fileID) = 0;
 

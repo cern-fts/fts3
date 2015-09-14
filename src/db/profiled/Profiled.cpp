@@ -320,48 +320,48 @@ bool ProfiledDB::retryFromDead(std::vector<struct message_updater>& messages, bo
 }
 
 
-void ProfiledDB::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn)
+void ProfiledDB::blacklistSe(const std::string& storage,
+        const std::string& voName, const std::string& status, int timeout,
+        const std::string& msg, const std::string& adminDn)
 {
-    PROFILE_PREFIXED("DB::", db->blacklistSe(se, vo, status, timeout, msg, adm_dn));
+    PROFILE_PREFIXED("DB::", db->blacklistSe(storage, voName, status, timeout, msg, adminDn));
 }
 
 
-void ProfiledDB::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
+void ProfiledDB::blacklistDn(const std::string& userDn, const std::string& msg,
+        const std::string& adminDn)
 {
-    PROFILE_PREFIXED("DB::", db->blacklistDn(dn, msg, adm_dn));
+    PROFILE_PREFIXED("DB::", db->blacklistDn(userDn, msg, adminDn));
 }
 
 
-void ProfiledDB::unblacklistSe(std::string se)
+void ProfiledDB::unblacklistSe(const std::string& storage)
 {
-    PROFILE_PREFIXED("DB::", db->unblacklistSe(se));
+    PROFILE_PREFIXED("DB::", db->unblacklistSe(storage));
 }
 
 
-void ProfiledDB::unblacklistDn(std::string dn)
+void ProfiledDB::unblacklistDn(const std::string& userDn)
 {
-    PROFILE_PREFIXED("DB::", db->unblacklistDn(dn));
+    PROFILE_PREFIXED("DB::", db->unblacklistDn(userDn));
 }
 
 
-void ProfiledDB::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
+bool ProfiledDB::allowSubmit(const std::string& storage, const std::string& vo)
 {
-    PROFILE_PREFIXED("DB::", return db->allowSubmit(ses, vo, notAllowed));
+    PROFILE_PREFIXED("DB::", return db->allowSubmit(storage, vo));
 }
 
-boost::optional<int> ProfiledDB::getTimeoutForSe(std::string se)
+
+boost::optional<int> ProfiledDB::getTimeoutForSe(const std::string& storage)
 {
-    PROFILE_PREFIXED("DB::", return db->getTimeoutForSe(se));
+    PROFILE_PREFIXED("DB::", return db->getTimeoutForSe(storage));
 }
 
-void ProfiledDB::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
-{
-    PROFILE_PREFIXED("DB::", return db->getTimeoutForSe(ses, ret));
-}
 
-bool ProfiledDB::isDnBlacklisted(std::string dn)
+bool ProfiledDB::isDnBlacklisted(const std::string& userDn)
 {
-    PROFILE_PREFIXED("DB::", return db->isDnBlacklisted(dn));
+    PROFILE_PREFIXED("DB::", return db->isDnBlacklisted(userDn));
 }
 
 
