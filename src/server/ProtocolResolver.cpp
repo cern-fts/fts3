@@ -22,7 +22,7 @@
 
 #include "ws/config/Configuration.h"
 
-#include "common/OptimizerSample.h"
+#include "db/generic/OptimizerSample.h"
 
 #include <vector>
 

@@ -37,8 +37,6 @@
 #include "SeProtocolConfig.h"
 #include "QueueId.h"
 #include "common/definitions.h"
-#include "common/OptimizerSample.h"
-
 #include "LinkConfig.h"
 #include "ShareConfig.h"
 
@@ -48,6 +46,7 @@
 #include <boost/optional.hpp>
 
 #include "Job.h"
+#include "OptimizerSample.h"
 #include "profiler/Profiler.h"
 #include "StorageElement.h"
 #include "TransferFile.h"
@@ -305,12 +304,14 @@ public:
     /// @param action           Simpler representation of the configuration involved (i.e. debug)
     virtual void auditConfiguration(const std::string& userDn, const std::string& config, const std::string& action) = 0;
 
+    /// @note This does nothing really, since it uses defaults to initialize the return value (!?)
+    virtual OptimizerSample fetchOptimizationConfig(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
-    virtual fts3::common::OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname) = 0;
-
+    /// *this* is the optimizer
     virtual bool updateOptimizer() = 0;
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest, int &currentActive) = 0;
+
+    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive) = 0;
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
 

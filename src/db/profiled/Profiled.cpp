@@ -231,7 +231,7 @@ void ProfiledDB::auditConfiguration(const std::string & dn, const std::string & 
 }
 
 
-fts3::common::OptimizerSample ProfiledDB::fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname)
+OptimizerSample ProfiledDB::fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname)
 {
     PROFILE_PREFIXED("DB::", return db->fetchOptimizationConfig(source_hostname, destin_hostname));
 }

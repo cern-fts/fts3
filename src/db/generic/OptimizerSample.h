@@ -22,14 +22,6 @@
 #ifndef OPTIMIZERSAMPLE_H_
 #define OPTIMIZERSAMPLE_H_
 
-#include <vector>
-#include <iostream>
-#include <ctime>
-#include <boost/thread.hpp>
-
-namespace fts3 {
-namespace common {
-
 class OptimizerSample
 {
 public:
@@ -41,8 +33,5 @@ public:
     double throughput;
     double avgThr;
 };
-
-} // namespace common
-} // namespace fts3
 
 #endif // OPTIMIZERSAMPLE_H_
