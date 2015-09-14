@@ -55,15 +55,24 @@ def _calculate_availability(e_sls, servers):
                 e_subavailability.tail = "Status: running"
             total_count += 1
 
-
+    availability = float((total_count - down_count) / total_count * 100)
     e_availability = SubElement(e_sls, 'availability')
     if total_count:
-        e_availability.text = "%.2f"% float((total_count - down_count) / total_count * 100)
+        e_availability.text = "%.2f"% availability
     else:
         e_availability.text = "0"
     if down_count > 0 or draining_count > 0:
         e_availability_desc = SubElement(e_sls, 'availabilitydesc')
         e_availability_desc.text = '%d services are down, %d draining' % (down_count, draining_count)
+
+    if availability == 0:
+        SubElement(e_sls, 'status').text = 'unavailable'
+    elif availability >= 90:
+        SubElement(e_sls, 'status').text = 'available'
+    else:
+        SubElement(e_sls, 'status').text = 'degraded'
+
+    return availability
 
 
 def slsfy(servers, id_tail, color_mapper=_color_mapper):
@@ -147,5 +156,6 @@ def slsfy_error(message, id_tail):
     e_subavailability.text = str(message)
 
     SubElement(e_sls, 'availability').text = '0'
+    SubElement(e_sls, 'status').text = 'unavailable'
 
     return HttpResponse(tostring(e_sls), mimetype='application/xml')
