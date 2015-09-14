@@ -100,15 +100,13 @@ public:
 
     virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
-    virtual std::unique_ptr<StorageElement> getSe(const std::string& seName);
+    virtual boost::optional<StorageElement> getStorageElement(const std::string& seName);
 
     virtual unsigned int updateFileStatus(TransferFile& file, const std::string status);
 
-    virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                       std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
+    virtual void addStorageElement(const std::string& seName, const std::string& state);
 
-    virtual void updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                          std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
+    virtual void updateStorageElement(const std::string& seName, const std::string& state);
 
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry);

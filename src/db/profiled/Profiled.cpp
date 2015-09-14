@@ -114,9 +114,9 @@ void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<st
 }
 
 
-std::unique_ptr<StorageElement> ProfiledDB::getSe(const std::string& seName)
+boost::optional<StorageElement> ProfiledDB::getStorageElement(const std::string& seName)
 {
-    PROFILE_PREFIXED("DB::", return db->getSe(seName));
+    PROFILE_PREFIXED("DB::", return db->getStorageElement(seName));
 }
 
 
@@ -126,19 +126,15 @@ unsigned int ProfiledDB::updateFileStatus(TransferFile& file, const std::string 
 }
 
 
-void ProfiledDB::addSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
-                       std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id)
+void ProfiledDB::addStorageElement(const std::string& name, const std::string& state)
 {
-    PROFILE_PREFIXED("DB::", db->addSe(endpoint, se_type, site, name, state, version, host,
-                                       se_transfer_type, se_transfer_protocol, se_control_protocol, gocdb_id));
+    PROFILE_PREFIXED("DB::", db->addStorageElement(name, state));
 }
 
 
-void ProfiledDB::updateSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
-                          std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id)
+void ProfiledDB::updateStorageElement(const std::string& name, const std::string& state)
 {
-    PROFILE_PREFIXED("DB::", db->updateSe(endpoint, se_type, site, name, state, version, host,
-                                          se_transfer_type, se_transfer_protocol, se_control_protocol, gocdb_id));
+    PROFILE_PREFIXED("DB::", db->updateStorageElement(name, state));
 }
 
 

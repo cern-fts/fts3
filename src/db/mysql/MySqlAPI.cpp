@@ -2251,7 +2251,7 @@ void MySqlAPI::getDmStatuses(const std::string& requestID, bool archive,
 }
 
 
-std::unique_ptr<StorageElement> MySqlAPI::getSe(const std::string& seName)
+boost::optional<StorageElement> MySqlAPI::getStorageElement(const std::string& seName)
 {
     soci::session sql(*connectionPool);
 
@@ -2263,7 +2263,7 @@ std::unique_ptr<StorageElement> MySqlAPI::getSe(const std::string& seName)
 
         if (sql.got_data())
         {
-            return std::unique_ptr<StorageElement>(new StorageElement(se));
+            return se;
         }
 
     }
@@ -2276,25 +2276,20 @@ std::unique_ptr<StorageElement> MySqlAPI::getSe(const std::string& seName)
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 
-    return std::unique_ptr<StorageElement>();
+    return boost::optional<StorageElement>();
 }
 
 
-void MySqlAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                     std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID)
+void MySqlAPI::addStorageElement(const std::string& seName, const std::string& state)
 {
     soci::session sql(*connectionPool);
 
     try
     {
         sql.begin();
-        sql << "INSERT INTO t_se (endpoint, se_type, site, name, state, version, host, se_transfer_type, "
-            "                  se_transfer_protocol, se_control_protocol, gocdb_id) VALUES "
-            "                 (:endpoint, :seType, :site, :name, :state, :version, :host, :seTransferType, "
-            "                  :seTransferProtocol, :seControlProtocol, :gocdbId)",
-            soci::use(ENDPOINT), soci::use(SE_TYPE), soci::use(SITE), soci::use(NAME), soci::use(STATE), soci::use(VERSION),
-            soci::use(HOST), soci::use(SE_TRANSFER_TYPE), soci::use(SE_TRANSFER_PROTOCOL), soci::use(SE_CONTROL_PROTOCOL),
-            soci::use(GOCDB_ID);
+        sql << "INSERT INTO t_se (name, state) VALUES "
+            "                 (:name, :state)",
+            soci::use(seName), soci::use(state);
         sql.commit();
     }
     catch (std::exception& e)
@@ -2310,94 +2305,15 @@ void MySqlAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE
 }
 
 
-
-void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                        std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID)
+void MySqlAPI::updateStorageElement(const std::string& seName, const std::string& state)
 {
     soci::session sql(*connectionPool);
 
     try
     {
         sql.begin();
-
-        std::ostringstream query;
-        soci::statement stmt(sql);
-
-        query << "UPDATE t_se SET ";
-
-        if (ENDPOINT.length() > 0)
-        {
-            query << "ENDPOINT=:endpoint,";
-            stmt.exchange(soci::use(ENDPOINT, "endpoint"));
-        }
-
-        if (SE_TYPE.length() > 0)
-        {
-            query << " SE_TYPE = :seType,";
-            stmt.exchange(soci::use(SE_TYPE, "seType"));
-        }
-
-        if (SITE.length() > 0)
-        {
-            query << " SITE = :site,";
-            stmt.exchange(soci::use(SITE, "site"));
-        }
-
-        if (STATE.length() > 0)
-        {
-            query << " STATE = :state,";
-            stmt.exchange(soci::use(STATE, "state"));
-        }
-
-        if (VERSION.length() > 0)
-        {
-            query << " VERSION = :version,";
-            stmt.exchange(soci::use(VERSION, "version"));
-        }
-
-        if (HOST.length() > 0)
-        {
-            query << " HOST = :host,";
-            stmt.exchange(soci::use(HOST, "host"));
-        }
-
-        if (SE_TRANSFER_TYPE.length() > 0)
-        {
-            query << " SE_TRANSFER_TYPE = :transferType,";
-            stmt.exchange(soci::use(SE_TRANSFER_TYPE, "transferType"));
-        }
-
-        if (SE_TRANSFER_PROTOCOL.length() > 0)
-        {
-            query << " SE_TRANSFER_PROTOCOL = :transferProtocol,";
-            stmt.exchange(soci::use(SE_TRANSFER_PROTOCOL, "transferProtocol"));
-        }
-
-        if (SE_CONTROL_PROTOCOL.length() > 0)
-        {
-            query << " SE_CONTROL_PROTOCOL = :controlProtocol,";
-            stmt.exchange(soci::use(SE_CONTROL_PROTOCOL, "controlProtocol"));
-        }
-
-        if (GOCDB_ID.length() > 0)
-        {
-            query << " GOCDB_ID = :gocdbId,";
-            stmt.exchange(soci::use(GOCDB_ID, "gocdbId"));
-        }
-
-        // There is always a comma at the end, so truncate
-        std::string queryStr = query.str();
-        query.str(std::string());
-
-        query << queryStr.substr(0, queryStr.length() - 1);
-        query << " WHERE name = :name";
-        stmt.exchange(soci::use(NAME, "name"));
-
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-        stmt.execute(true);
-
+        sql << "UPDATE t_se SET STATE = :state WHERE name = :name",
+                soci::use(state), soci::use(seName);
         sql.commit();
     }
     catch (std::exception& e)

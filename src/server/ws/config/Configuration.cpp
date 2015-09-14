@@ -164,28 +164,29 @@ std::string Configuration::json(std::vector<std::string>& members)
     return ss.str();
 }
 
-void Configuration::addSe(std::string se, bool active)
+void Configuration::addSe(std::string seName, bool active)
 {
     static const boost::regex re(".+://[a-zA-Z0-9\\.-]+");
 
-    if (se != wildcard && !boost::regex_match(se, re))
-        throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
+    if (seName != wildcard && !boost::regex_match(seName, re))
+        throw Err_Custom("The SE name should be compliant with the following convention: 'protocol://hostname' !");
 
     //check if SE exists
-    std::unique_ptr<StorageElement> ptr(db->getSe(se));
-    if (!ptr)
+    boost::optional<StorageElement> storage(db->getStorageElement(seName));
+    if (!storage)
         {
-            // if not add it to the DB
-            db->addSe(std::string(), std::string(), std::string(), se, active ? on : off, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
+            db->addStorageElement(seName, active ? on : off);
             insertCount++;
         }
     else
-        db->updateSe(std::string(), std::string(), std::string(), se, active ? on : off, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
+        {
+            db->updateStorageElement(seName, active ? on : off);
+        }
 }
 
 void Configuration::eraseSe(std::string se)
 {
-    db->updateSe(std::string(), std::string(), std::string(), se, on, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
+    db->updateStorageElement(se, off);
     updateCount++;
 }
 

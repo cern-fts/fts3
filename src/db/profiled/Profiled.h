@@ -76,17 +76,14 @@ public:
 
     void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
+    boost::optional<StorageElement> getStorageElement(const std::string& seName);
 
+    void addStorageElement(const std::string& name, const std::string& state);
 
-    std::unique_ptr<StorageElement> getSe(const std::string& seName);
+    void updateStorageElement(const std::string& name, const std::string& state);
+
 
     unsigned int updateFileStatus(TransferFile& file, const std::string status);
-
-    void addSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
-               std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id);
-
-    void updateSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
-                  std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id);
 
     bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                   int process_id, double filesize, double duration, bool retry);

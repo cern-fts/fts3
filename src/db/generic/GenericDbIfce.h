@@ -177,19 +177,11 @@ public:
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
             std::map< std::string, std::list<TransferFile>>& files) = 0;
 
-
-
-    virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files) = 0;
-
-    virtual std::unique_ptr<StorageElement> getSe(const std::string& seName) = 0;
+    /// Get a list of multihop jobs ready to go
+    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
+    virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files) = 0;
 
     virtual unsigned int updateFileStatus(TransferFile& file, const std::string status) = 0;
-
-    virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                       std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
-
-    virtual void updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                          std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry) = 0;
@@ -200,6 +192,23 @@ public:
 
     // The canceled job ids will be put in canceledJobs
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs) = 0;
+
+    /// Get the storage element with the label seName
+    /// @param seName   The storage name
+    /// @note           Only the storage name is actually used as a foreign key for the SE groups
+    virtual boost::optional<StorageElement> getStorageElement(const std::string& seName) = 0;
+
+    /// Add a new storage element
+    /// @param seName   The storage name. Must follow the form protocol://host
+    /// @param state    The storage state (on/off normally)
+    /// @note           Only the storage name is actually used as a foreign key for the SE groups
+    virtual void addStorageElement(const std::string& seName, const std::string& state) = 0;
+
+    /// Update the information stored about a storage element
+    /// @param seName   The storage name. Must follow the form protocol://host
+    /// @param state    The storage state (on/off normally)
+    /// @note           Only the storage name is actually used as a foreign key for the SE groups
+    virtual void updateStorageElement(const std::string& seName, const std::string& state) = 0;
 
     /*t_credential API*/
     virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
