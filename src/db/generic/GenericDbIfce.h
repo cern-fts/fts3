@@ -181,15 +181,38 @@ public:
     /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
     virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files) = 0;
 
+    /// Update the status of a transfer
+    /// @param jobId            The job ID
+    /// @param fileId           The file ID
+    /// @param throughput       Transfer throughput
+    /// @param transferState    Transfer statue
+    /// @param errorReason      For failed states, the error message
+    /// @param processId        fts_url_copy process ID running the transfer
+    /// @param filesize         Actual filesize reported by the storage
+    /// @param duration         How long (in seconds) took to transfer the file
+    /// @param retry            If the error is considered recoverable by fts_url_copy
+    /// @return                 true if an updated was done into the DB, false otherwise
+    ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
+    /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
+    ///                         which transfers to update
+    virtual bool updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+            const std::string& transferState, const std::string& errorReason,
+            int processId, double filesize, double duration, bool retry) = 0;
 
-    virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                          int process_id, double filesize, double duration, bool retry) = 0;
+    /// Update the status of a job
+    /// @param jobId            The job ID
+    /// @param jobState         The job state
+    /// @param pid              The PID of the fts_url_copy process
+    /// @note                   If jobId is empty, the pid will be used to decide which job to update
+    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid) = 0;
 
-    virtual bool updateJobTransferStatus(std::string job_id, const std::string status, int pid) = 0;
+    /// Mark a set of jobs as canceled
+    /// @param jobIds           Set of job IDs to cancel
+    virtual void cancelJob(const std::vector<std::string>& jobIds) = 0;
 
-    virtual void cancelJob(std::vector<std::string>& requestIDs) = 0;
-
-    // The canceled job ids will be put in canceledJobs
+    /// Mark all jobs belonging to voName as canceled
+    /// @param voName           The VO that wants all its jobs canceled
+    /// @param[out] canceledJobs Job IDS that have been canceled
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs) = 0;
 
     /// Get the storage element with the label seName

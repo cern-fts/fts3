@@ -2277,14 +2277,16 @@ void MySqlAPI::updateStorageElement(const std::string& seName, const std::string
 }
 
 
-bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                        int process_id, double filesize, double duration, bool retry)
+bool MySqlAPI::updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+        const std::string& transferState, const std::string& errorReason,
+        int processId, double filesize, double duration, bool retry)
 {
 
     soci::session sql(*connectionPool);
     try
     {
-        return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+        return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
+                transferState, errorReason, processId, filesize, duration, retry);
     }
     catch (std::exception& e)
     {
@@ -2292,7 +2294,8 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         {
             //try again if deadlocked
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+            return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
+                            transferState, errorReason, processId, filesize, duration, retry);
         }
         catch (std::exception& e)
         {
@@ -2309,7 +2312,8 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         {
             //try again if deadlocked
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+            return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
+                            transferState, errorReason, processId, filesize, duration, retry);
         }
         catch (std::exception& e)
         {
@@ -2592,13 +2596,13 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 }
 
 
-bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string status, int pid)
+bool MySqlAPI::updateJobStatus(const std::string& jobId, const std::string& jobState, int pid)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        updateJobTransferStatusInternal(sql, job_id, status, pid);
+        updateJobTransferStatusInternal(sql, jobId, jobState, pid);
     }
     catch (std::exception& e)
     {
@@ -2606,7 +2610,7 @@ bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string sta
         {
             //try again if deadlocked
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            updateJobTransferStatusInternal(sql, job_id, status, pid);
+            updateJobTransferStatusInternal(sql, jobId, jobState, pid);
         }
         catch (std::exception& e)
         {
@@ -2624,7 +2628,7 @@ bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string sta
         {
             //try again if deadlocked
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            updateJobTransferStatusInternal(sql, job_id, status, pid);
+            updateJobTransferStatusInternal(sql, jobId, jobState, pid);
         }
         catch (std::exception& e)
         {
@@ -3032,7 +3036,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 }
 
 
-void MySqlAPI::cancelJobInternal(soci::session& sql, std::vector<std::string>& requestIDs)
+void MySqlAPI::cancelJobInternal(soci::session& sql, const std::vector<std::string>& requestIDs)
 {
     const std::string reason = "Job canceled by the user";
     std::string job_id;
@@ -3118,20 +3122,20 @@ void MySqlAPI::cancelJobInternal(soci::session& sql, std::vector<std::string>& r
     }
 }
 
-void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
+void MySqlAPI::cancelJob(const std::vector<std::string>& jobIds)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        cancelJobInternal(sql, requestIDs);
+        cancelJobInternal(sql, jobIds);
     }
     catch (std::exception& e)
     {
         try
         {
             sleep(1);
-            cancelJobInternal(sql, requestIDs);
+            cancelJobInternal(sql, jobIds);
         }
         catch (std::exception& e)
         {
@@ -3147,7 +3151,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
         try
         {
             sleep(1);
-            cancelJobInternal(sql, requestIDs);
+            cancelJobInternal(sql, jobIds);
         }
         catch (std::exception& e)
         {

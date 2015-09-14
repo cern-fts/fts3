@@ -138,21 +138,14 @@ bool FileTransferScheduler::schedule(int &currentActive)
                             // failed to allocate active transfers credits to transfer-job
                             std::string msg = getNoCreditsErrMsg(cfg.get());
                             // set file status to failed
-                            db->updateFileTransferStatus(
-                                0.0,
-                                file.jobId,
-                                file.fileId,
-                                JobStatusHandler::FTS3_STATUS_FAILED,
-                                msg,
-                                0,
-                                0,
-                                0,
-                                false
+                            db->updateTransferStatus(
+                                file.jobId, file.fileId, 0.0,
+                                JobStatusHandler::FTS3_STATUS_FAILED, msg,
+                                0, 0.0, 0.0, false
                             );
                             // set job states if necessary
-                            db->updateJobTransferStatus(
-                                file.jobId,
-                                JobStatusHandler::FTS3_STATUS_FAILED,0
+                            db->updateJobStatus(
+                                file.jobId, JobStatusHandler::FTS3_STATUS_FAILED, 0
                             );
                             // log it
                             FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;

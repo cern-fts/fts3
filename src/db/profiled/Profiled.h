@@ -83,14 +83,15 @@ public:
     void updateStorageElement(const std::string& name, const std::string& state);
 
 
-    bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                  int process_id, double filesize, double duration, bool retry);
+    bool updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+                const std::string& transferState, const std::string& errorReason,
+                int processId, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatus(std::string job_id, const std::string status, int pid);
+    bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
 
     void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
-    void cancelJob(std::vector<std::string>& requestIDs);
+    void cancelJob(const std::vector<std::string>& requestIDs);
 
     void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
 

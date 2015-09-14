@@ -243,29 +243,29 @@ void FileTransferExecutor::run(boost::any & ctx)
                                 {
                                     failed = true;
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf.jobId << "  " << tf.fileId << commit;
-                                    fileUpdated = db->updateFileTransferStatus(
-                                            0.0, tf.jobId, tf.fileId, "FAILED",
+                                    fileUpdated = db->updateTransferStatus(
+                                            tf.jobId, tf.fileId, 0.0, "FAILED",
                                             "Transfer failed to fork, check fts3server.log for more details",
                                             (int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf.jobId, "FAILED",0);
+                                    db->updateJobStatus(tf.jobId, "FAILED", 0);
                                 }
                             else
                                 {
                                     failed = true;
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf.jobId << "  " << tf.fileId << commit;
-                                    fileUpdated = db->updateFileTransferStatus(
-                                            0.0, tf.jobId, tf.fileId, "FAILED",
+                                    fileUpdated = db->updateTransferStatus(
+                                            tf.jobId, tf.fileId, 0.0, "FAILED",
                                             "Transfer failed to fork, check fts3server.log for more details",
                                             (int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf.jobId, "FAILED",0);
+                                    db->updateJobStatus(tf.jobId, "FAILED", 0);
                                 }
                         }
                     else
                         {
-                            fileUpdated = db->updateFileTransferStatus(
-                                    0.0, tf.jobId, tf.fileId, "ACTIVE", "",
+                            fileUpdated = db->updateTransferStatus(
+                                    tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
                                     (int) pr.getPid(), 0, 0, false);
-                            db->updateJobTransferStatus(tf.jobId, "ACTIVE",0);
+                            db->updateJobStatus(tf.jobId, "ACTIVE", 0);
                         }
 
                     // If fileUpdated == false, the transfer was *not* updated, which means we got

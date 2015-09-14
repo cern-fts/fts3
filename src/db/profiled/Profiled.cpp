@@ -132,18 +132,18 @@ void ProfiledDB::updateStorageElement(const std::string& name, const std::string
 }
 
 
-bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status,
-        std::string transfer_message, int process_id, double filesize, double duration, bool retry)
+bool ProfiledDB::updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+        const std::string& transferState, const std::string& errorReason,
+        int processId, double filesize, double duration, bool retry)
 {
-    PROFILE_PREFIXED("DB::", return db->updateFileTransferStatus(throughput, job_id, file_id, transfer_status,
-                                    transfer_message, process_id,
-                                    filesize, duration, retry));
+    PROFILE_PREFIXED("DB::", return db->updateTransferStatus(jobId, fileId, throughput,
+            transferState, errorReason, processId, filesize, duration, retry));
 }
 
 
-bool ProfiledDB::updateJobTransferStatus(std::string job_id, const std::string status, int pid)
+bool ProfiledDB::updateJobStatus(const std::string& jobId, const std::string& jobState, int pid)
 {
-    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(job_id, status, pid));
+    PROFILE_PREFIXED("DB::", return db->updateJobStatus(jobId, jobState, pid));
 }
 
 
@@ -153,7 +153,7 @@ void ProfiledDB::updateFileTransferProgressVector(std::vector<struct message_upd
 }
 
 
-void ProfiledDB::cancelJob(std::vector<std::string>& requestIDs)
+void ProfiledDB::cancelJob(const std::vector<std::string>& requestIDs)
 {
     PROFILE_PREFIXED("DB::", db->cancelJob(requestIDs));
 }

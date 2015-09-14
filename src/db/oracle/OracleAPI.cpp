@@ -2203,14 +2203,15 @@ void OracleAPI::updateStorageElement(const std::string& seName, const std::strin
 }
 
 
-bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-        int process_id, double filesize, double duration, bool retry)
+bool OracleAPI::updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+        const std::string& transferState, const std::string& errorReason,
+        int processId, double filesize, double duration, bool retry)
 {
-
     soci::session sql(*connectionPool);
     try
         {
-            return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+            return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
+                    transferState, errorReason, processId, filesize, duration, retry);
         }
     catch (std::exception& e)
         {
@@ -2224,7 +2225,9 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
 }
 
 
-bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql,
+        double throughputIn, std::string job_id, int file_id,
+        std::string transfer_status, std::string transfer_message,
         int process_id, double filesize, double duration, bool retry)
 {
     try
@@ -2381,14 +2384,15 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
     return true;
 }
 
-bool OracleAPI::updateJobTransferStatus(std::string job_id, const std::string status, int pid)
+
+bool OracleAPI::updateJobStatus(const std::string& jobId, const std::string& jobState, int pid)
 {
 
     soci::session sql(*connectionPool);
 
     try
         {
-            updateJobTransferStatusInternal(sql, job_id, status, pid);
+            updateJobTransferStatusInternal(sql, jobId, jobState, pid);
         }
     catch (std::exception& e)
         {
@@ -2400,7 +2404,6 @@ bool OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
         }
     return true;
 }
-
 
 
 bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid)
@@ -2679,7 +2682,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
 }
 
 
-void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
+void OracleAPI::cancelJob(const std::vector<std::string>& requestIDs)
 {
     soci::session sql(*connectionPool);
 

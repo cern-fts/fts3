@@ -106,12 +106,13 @@ public:
 
     virtual void updateStorageElement(const std::string& seName, const std::string& state);
 
-    virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                          int process_id, double filesize, double duration, bool retry);
+    virtual bool updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+            const std::string& transferState, const std::string& errorReason,
+            int processId, double filesize, double duration, bool retry);
 
-    virtual bool updateJobTransferStatus(std::string job_id, const std::string status, int pid);
+    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
 
-    virtual void cancelJob(std::vector<std::string>& requestIDs);
+    virtual void cancelJob(const std::vector<std::string>& jobIds);
 
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
 
@@ -464,7 +465,7 @@ private:
 
     void setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry, const std::string& reason);
 
-    void cancelJobInternal(soci::session& sql, std::vector<std::string>& requestIDs);
+    void cancelJobInternal(soci::session& sql, const std::vector<std::string>& requestIDs);
 
     bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
                              const std::string& cloud_name, OAuth& oauth);
