@@ -120,12 +120,6 @@ boost::optional<StorageElement> ProfiledDB::getStorageElement(const std::string&
 }
 
 
-unsigned int ProfiledDB::updateFileStatus(TransferFile& file, const std::string status)
-{
-    PROFILE_PREFIXED("DB::", return db->updateFileStatus(file, status));
-}
-
-
 void ProfiledDB::addStorageElement(const std::string& name, const std::string& state)
 {
     PROFILE_PREFIXED("DB::", db->addStorageElement(name, state));

@@ -83,8 +83,6 @@ public:
     void updateStorageElement(const std::string& name, const std::string& state);
 
 
-    unsigned int updateFileStatus(TransferFile& file, const std::string status);
-
     bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                   int process_id, double filesize, double duration, bool retry);
 

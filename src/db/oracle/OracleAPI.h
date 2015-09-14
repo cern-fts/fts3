@@ -103,8 +103,6 @@ public:
 
     virtual boost::optional<StorageElement> getStorageElement(const std::string& seName);
 
-    virtual unsigned int updateFileStatus(TransferFile& file, const std::string status);
-
     virtual void addStorageElement(const std::string& seName, const std::string& state);
 
     virtual void updateStorageElement(const std::string& seName, const std::string& state);

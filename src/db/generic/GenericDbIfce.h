@@ -181,7 +181,6 @@ public:
     /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
     virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files) = 0;
 
-    virtual unsigned int updateFileStatus(TransferFile& file, const std::string status) = 0;
 
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry) = 0;

@@ -1429,58 +1429,6 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFile const & file, const s
 }
 
 
-unsigned int OracleAPI::updateFileStatus(TransferFile& file, const std::string status)
-{
-    soci::session sql(*connectionPool);
-
-    unsigned int updated = 0;
-
-    try
-        {
-            sql.begin();
-
-            soci::statement stmt(sql);
-
-            stmt.exchange(soci::use(status, "state"));
-            stmt.exchange(soci::use(file.fileId, "fileId"));
-            stmt.exchange(soci::use(hostname, "hostname"));
-            stmt.alloc();
-            stmt.prepare("UPDATE t_file SET "
-                         "    file_state = :state, start_time = sys_extract_utc(systimestamp), transferHost = :hostname "
-                         "WHERE file_id = :fileId AND file_state = 'SUBMITTED'");
-            stmt.define_and_bind();
-            stmt.execute(true);
-
-            updated = (unsigned int) stmt.get_affected_rows();
-            if (updated > 0)
-                {
-                    soci::statement jobStmt(sql);
-                    jobStmt.exchange(soci::use(status, "state"));
-                    jobStmt.exchange(soci::use(file.jobId, "jobId"));
-                    jobStmt.alloc();
-                    jobStmt.prepare("UPDATE t_job SET "
-                                    "    job_state = :state "
-                                    "WHERE job_id = :jobId AND job_state = 'SUBMITTED'");
-                    jobStmt.define_and_bind();
-                    jobStmt.execute(true);
-                }
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-    return updated;
-}
-
-
 void OracleAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
         std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile>>>>& files)
 {
