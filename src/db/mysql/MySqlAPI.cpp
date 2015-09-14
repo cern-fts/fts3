@@ -3315,10 +3315,9 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 }
 
 
-
-
-/*t_credential API*/
-bool MySqlAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool MySqlAPI::insertCredentialCache(const std::string& delegationId,
+        const std::string& userDn, const std::string& certRequest,
+        const std::string& privateKey, const std::string& vomsAttrs)
 {
     soci::session sql(*connectionPool);
 
@@ -3328,7 +3327,8 @@ bool MySqlAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::st
         sql << "INSERT INTO t_credential_cache "
             "    (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES "
             "    (:dlgId, :dn, :certRequest, :privKey, :vomsAttrs)",
-            soci::use(dlg_id), soci::use(dn), soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs);
+            soci::use(delegationId), soci::use(userDn), soci::use(certRequest),
+            soci::use(privateKey), soci::use(vomsAttrs);
         sql.commit();
     }
     catch (soci::mysql_soci_error const &e)
@@ -3357,18 +3357,18 @@ bool MySqlAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::st
 }
 
 
-
-std::unique_ptr<CredCache> MySqlAPI::findCredentialCache(std::string delegationID, std::string dn)
+boost::optional<UserCredentialCache> MySqlAPI::findCredentialCache(
+        const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        std::unique_ptr<CredCache> cred(new CredCache);
+        UserCredentialCache cred;
         sql << "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key "
             "FROM t_credential_cache "
             "WHERE dlg_id = :dlgId and dn = :dn",
-            soci::use(delegationID), soci::use(dn), soci::into(*cred);
+            soci::use(delegationId), soci::use(userDn), soci::into(cred);
         if (sql.got_data())
         {
             return cred;
@@ -3383,12 +3383,11 @@ std::unique_ptr<CredCache> MySqlAPI::findCredentialCache(std::string delegationI
         throw Err_Custom(std::string(__func__) + ": Caught exception ");
     }
 
-    return std::unique_ptr<CredCache>();
+    return boost::optional<UserCredentialCache>();
 }
 
 
-
-void MySqlAPI::deleteCredentialCache(std::string delegationID, std::string dn)
+void MySqlAPI::deleteCredentialCache(const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
@@ -3396,7 +3395,7 @@ void MySqlAPI::deleteCredentialCache(std::string delegationID, std::string dn)
     {
         sql.begin();
         sql << "DELETE FROM t_credential_cache WHERE dlg_id = :dlgId AND dn = :dn",
-            soci::use(delegationID), soci::use(dn);
+            soci::use(delegationId), soci::use(userDn);
         sql.commit();
     }
     catch (std::exception& e)
@@ -3412,21 +3411,23 @@ void MySqlAPI::deleteCredentialCache(std::string delegationID, std::string dn)
 }
 
 
-
-void MySqlAPI::insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void MySqlAPI::insertCredential(const std::string& delegationId,
+        const std::string& userDn, const std::string& proxy, const std::string& vomsAttrs,
+        time_t terminationTime)
 {
     soci::session sql(*connectionPool);
 
     try
     {
         struct tm tTime;
-        gmtime_r(&termination_time, &tTime);
+        gmtime_r(&terminationTime, &tTime);
 
         sql.begin();
         sql << "INSERT INTO t_credential "
             "    (dlg_id, dn, termination_time, proxy, voms_attrs) VALUES "
             "    (:dlgId, :dn, :terminationTime, :proxy, :vomsAttrs)",
-            soci::use(dlg_id), soci::use(dn), soci::use(tTime), soci::use(proxy), soci::use(voms_attrs);
+            soci::use(delegationId), soci::use(userDn), soci::use(tTime),
+            soci::use(proxy), soci::use(vomsAttrs);
         sql.commit();
     }
     catch (std::exception& e)
@@ -3442,25 +3443,25 @@ void MySqlAPI::insertCredential(std::string dlg_id, std::string dn, std::string 
 }
 
 
-
-void MySqlAPI::updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void MySqlAPI::updateCredential(const std::string& delegationId,
+        const std::string& dn, const std::string& proxy, const std::string& vomsAttrs,
+        time_t terminationTime)
 {
     soci::session sql(*connectionPool);
-
 
     try
     {
         sql.begin();
         struct tm tTime;
-        gmtime_r(&termination_time, &tTime);
+        gmtime_r(&terminationTime, &tTime);
 
         sql << "UPDATE t_credential SET "
             "    proxy = :proxy, "
             "    voms_attrs = :vomsAttrs, "
             "    termination_time = :terminationTime "
             "WHERE dlg_id = :dlgId AND dn = :dn",
-            soci::use(proxy), soci::use(voms_attrs), soci::use(tTime),
-            soci::use(dlg_id), soci::use(dn);
+            soci::use(proxy), soci::use(vomsAttrs), soci::use(tTime),
+            soci::use(delegationId), soci::use(dn);
 
         sql.commit();
     }
@@ -3477,19 +3478,19 @@ void MySqlAPI::updateCredential(std::string dlg_id, std::string dn, std::string 
 }
 
 
-
-std::unique_ptr<Cred> MySqlAPI::findCredential(std::string delegationID, std::string dn)
+boost::optional<UserCredential> MySqlAPI::findCredential(
+        const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        std::unique_ptr<Cred> cred(new Cred);
+        UserCredential cred;
         sql << "SELECT dlg_id, dn, voms_attrs, proxy, termination_time "
             "FROM t_credential "
             "WHERE dlg_id = :dlgId AND dn =:dn",
-            soci::use(delegationID), soci::use(dn),
-            soci::into(*cred);
+            soci::use(delegationId), soci::use(userDn),
+            soci::into(cred);
 
         if (sql.got_data())
         {
@@ -3505,12 +3506,11 @@ std::unique_ptr<Cred> MySqlAPI::findCredential(std::string delegationID, std::st
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 
-    return std::unique_ptr<Cred>();
+    return boost::optional<UserCredential>();
 }
 
 
-
-void MySqlAPI::deleteCredential(std::string delegationID, std::string dn)
+void MySqlAPI::deleteCredential(const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
@@ -3518,7 +3518,7 @@ void MySqlAPI::deleteCredential(std::string delegationID, std::string dn)
     {
         sql.begin();
         sql << "DELETE FROM t_credential WHERE dlg_id = :dlgId AND dn = :dn",
-            soci::use(delegationID), soci::use(dn);
+            soci::use(delegationId), soci::use(userDn);
         sql.commit();
     }
     catch (std::exception& e)
@@ -3532,7 +3532,6 @@ void MySqlAPI::deleteCredential(std::string delegationID, std::string dn)
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
-
 
 
 unsigned MySqlAPI::getDebugLevel(std::string source_hostname, std::string destin_hostname)

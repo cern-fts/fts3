@@ -97,7 +97,6 @@ public:
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
             std::map< std::string, std::list<TransferFile>>& files);
 
-
     virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
 
     virtual boost::optional<StorageElement> getStorageElement(const std::string& seName);
@@ -116,20 +115,22 @@ public:
 
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
 
-    /*t_credential API*/
-    virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    virtual bool insertCredentialCache(const std::string& delegationId, const std::string& userDn,
+            const std::string& certRequest, const std::string& privateKey, const std::string& vomsAttrs);
 
-    virtual std::unique_ptr<CredCache> findCredentialCache(std::string delegationID, std::string dn);
+    virtual boost::optional<UserCredentialCache> findCredentialCache(const std::string& delegationId, const std::string& userDn);
 
-    virtual void deleteCredentialCache(std::string delegationID, std::string dn);
+    virtual void deleteCredentialCache(const std::string& delegationId, const std::string& userDn);
 
-    virtual void insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    virtual void insertCredential(const std::string& delegationId, const std::string& userDn,
+            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime);
 
-    virtual void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    virtual void updateCredential(const std::string& delegationId, const std::string& userDn,
+            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime);
 
-    virtual std::unique_ptr<Cred> findCredential(std::string delegationID, std::string dn);
+    virtual boost::optional<UserCredential> findCredential(const std::string& delegationId, const std::string& userDn);
 
-    virtual void deleteCredential(std::string delegationID, std::string dn);
+    virtual void deleteCredential(const std::string& delegationId, const std::string& userDn);
 
     virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 

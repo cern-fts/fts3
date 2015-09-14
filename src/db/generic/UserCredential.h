@@ -19,24 +19,24 @@
  */
 
 #pragma once
-#ifndef CRED_H_
-#define CRED_H_
+#ifndef USERCREDENTIAL_H_
+#define USERCREDENTIAL_H_
 
 #include <string>
 
-class Cred
+class UserCredential
 {
 public:
 
-    Cred(): terminationTime(0)
+    UserCredential(): terminationTime(0)
     {
     }
 
-    std::string delegationID;
-    std::string DN;
+    std::string delegationId;
+    std::string userDn;
     std::string vomsAttributes;
     std::string proxy;
     time_t terminationTime;
 };
 
-#endif // CRED_H_
+#endif // USERCREDENTIAL_H_

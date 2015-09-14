@@ -200,7 +200,7 @@ void DelegCred::getNewCertificate(const std::string& userDn,
 
     try {
         // Get the Cred Id
-        std::unique_ptr<Cred> cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
+        boost::optional<UserCredential> cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Get the Cred Id " << cred_id << " " << userDn << commit;
 

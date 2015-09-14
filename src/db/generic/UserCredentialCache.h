@@ -19,20 +19,22 @@
  */
 
 #pragma once
-#ifndef CREDCACHE_H
-#define CREDCACHE_H
+#ifndef USERCREDENTIALCACHE_H_
+#define USERCREDENTIALCACHE_H_
 
 #include <string>
 
-class CredCache
+/// Stores the proxy request and associated private key
+/// generated to a given user/delegation ID
+class UserCredentialCache
 {
 public:
 
-    std::string delegationID;
-    std::string DN;
+    std::string delegationId;
+    std::string userDn;
     std::string vomsAttributes;
     std::string certificateRequest;
     std::string privateKey;
 };
 
-#endif // CREDCACHE_H
+#endif // USERCREDENTIALCACHE_H_

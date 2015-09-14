@@ -165,45 +165,51 @@ void ProfiledDB::cancelAllJobs(const std::string& voName, std::vector<std::strin
 }
 
 
-bool ProfiledDB::insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool ProfiledDB::insertCredentialCache(const std::string& delegationId,
+        const std::string& userDn, const std::string& certRequest,
+        const std::string& privateKey, const std::string& vomsAttrs)
 {
-    PROFILE_PREFIXED("DB::", return db->insertCredentialCache(dlg_id, dn, cert_request, priv_key, voms_attrs));
+    PROFILE_PREFIXED("DB::", return db->insertCredentialCache(delegationId, userDn, certRequest, privateKey, vomsAttrs));
 }
 
 
-std::unique_ptr<CredCache> ProfiledDB::findCredentialCache(std::string delegationID, std::string dn)
+boost::optional<UserCredentialCache> ProfiledDB::findCredentialCache(const std::string& delegationId, const std::string& userDn)
 {
-    PROFILE_PREFIXED("DB::", return db->findCredentialCache(delegationID, dn));
+    PROFILE_PREFIXED("DB::", return db->findCredentialCache(delegationId, userDn));
 }
 
 
-void ProfiledDB::deleteCredentialCache(std::string delegationID, std::string dn)
+void ProfiledDB::deleteCredentialCache(const std::string& delegationId, const std::string& userDn)
 {
-    PROFILE_PREFIXED("DB::", db->deleteCredentialCache(delegationID, dn));
+    PROFILE_PREFIXED("DB::", db->deleteCredentialCache(delegationId, userDn));
 }
 
 
-void ProfiledDB::insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void ProfiledDB::insertCredential(const std::string& delegationId,
+        const std::string& userDn, const std::string& proxy, const std::string& vomsAttrs,
+        time_t terminationTime)
 {
-    PROFILE_PREFIXED("DB::", db->insertCredential(dlg_id, dn, proxy, voms_attrs, termination_time));
+    PROFILE_PREFIXED("DB::", db->insertCredential(delegationId, userDn, proxy, vomsAttrs, terminationTime));
 }
 
 
-void ProfiledDB::updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void ProfiledDB::updateCredential(const std::string& delegationId,
+        const std::string& userDn, const std::string& proxy,
+        const std::string& vomsAttrs, time_t terminationTime)
 {
-    PROFILE_PREFIXED("DB::", db->updateCredential(dlg_id, dn, proxy, voms_attrs, termination_time));
+    PROFILE_PREFIXED("DB::", db->updateCredential(delegationId, userDn, proxy, vomsAttrs, terminationTime));
 }
 
 
-std::unique_ptr<Cred> ProfiledDB::findCredential(std::string delegationID, std::string dn)
+boost::optional<UserCredential> ProfiledDB::findCredential(const std::string& delegationId, const std::string& userDn)
 {
-    PROFILE_PREFIXED("DB::", return db->findCredential(delegationID, dn));
+    PROFILE_PREFIXED("DB::", return db->findCredential(delegationId, userDn));
 }
 
 
-void ProfiledDB::deleteCredential(std::string delegationID, std::string dn)
+void ProfiledDB::deleteCredential(const std::string& delegationId, const std::string& userDn)
 {
-    PROFILE_PREFIXED("DB::", db->deleteCredential(delegationID, dn));
+    PROFILE_PREFIXED("DB::", db->deleteCredential(delegationId, userDn));
 }
 
 

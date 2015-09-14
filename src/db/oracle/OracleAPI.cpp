@@ -2880,11 +2880,10 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 }
 
 
-/*t_credential API*/
-bool OracleAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool OracleAPI::insertCredentialCache(const std::string& delegationId, const std::string& userDn,
+        const std::string& certRequest, const std::string& privateKey, const std::string& vomsAttrs)
 {
     soci::session sql(*connectionPool);
-
 
     try
         {
@@ -2892,7 +2891,7 @@ bool OracleAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::s
             sql << "INSERT INTO t_credential_cache "
                 "    (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES "
                 "    (:dlgId, :dn, :certRequest, :privKey, :vomsAttrs)",
-                soci::use(dlg_id), soci::use(dn), soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs);
+                soci::use(delegationId), soci::use(userDn), soci::use(certRequest), soci::use(privateKey), soci::use(vomsAttrs);
             sql.commit();
         }
     catch (soci::oracle_soci_error const &e)
@@ -2921,19 +2920,18 @@ bool OracleAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::s
 }
 
 
-
-std::unique_ptr<CredCache> OracleAPI::findCredentialCache(std::string delegationID, std::string dn)
+boost::optional<UserCredentialCache> OracleAPI::findCredentialCache(const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
     try
         {
-            std::unique_ptr<CredCache> cred(new CredCache);
+            UserCredentialCache cred;
 
             sql << "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key "
                 "FROM t_credential_cache "
                 "WHERE dlg_id = :dlgId and dn = :dn",
-                soci::use(delegationID), soci::use(dn), soci::into(*cred);
+                soci::use(delegationId), soci::use(userDn), soci::into(cred);
 
             if (sql.got_data())
                 {
@@ -2949,12 +2947,11 @@ std::unique_ptr<CredCache> OracleAPI::findCredentialCache(std::string delegation
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return std::unique_ptr<CredCache>();
+    return boost::optional<UserCredentialCache>();
 }
 
 
-
-void OracleAPI::deleteCredentialCache(std::string delegationID, std::string dn)
+void OracleAPI::deleteCredentialCache(const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
@@ -2962,7 +2959,7 @@ void OracleAPI::deleteCredentialCache(std::string delegationID, std::string dn)
         {
             sql.begin();
             sql << "DELETE FROM t_credential_cache WHERE dlg_id = :dlgId AND dn = :dn",
-                soci::use(delegationID), soci::use(dn);
+                soci::use(delegationId), soci::use(userDn);
             sql.commit();
         }
     catch (std::exception& e)
@@ -2978,21 +2975,22 @@ void OracleAPI::deleteCredentialCache(std::string delegationID, std::string dn)
 }
 
 
-
-void OracleAPI::insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void OracleAPI::insertCredential(const std::string& delegationId,
+        const std::string& userDn, const std::string& proxy, const std::string& vomsAttrs,
+        time_t terminationTime)
 {
     soci::session sql(*connectionPool);
 
     try
         {
             struct tm tTime;
-            gmtime_r(&termination_time, &tTime);
+            gmtime_r(&terminationTime, &tTime);
 
             sql.begin();
             sql << "INSERT INTO t_credential "
                 "    (dlg_id, dn, termination_time, proxy, voms_attrs) VALUES "
                 "    (:dlgId, :dn, :terminationTime, :proxy, :vomsAttrs)",
-                soci::use(dlg_id), soci::use(dn), soci::use(tTime), soci::use(proxy), soci::use(voms_attrs);
+                soci::use(delegationId), soci::use(userDn), soci::use(tTime), soci::use(proxy), soci::use(vomsAttrs);
             sql.commit();
         }
     catch (std::exception& e)
@@ -3008,17 +3006,16 @@ void OracleAPI::insertCredential(std::string dlg_id, std::string dn, std::string
 }
 
 
-
-void OracleAPI::updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void OracleAPI::updateCredential(const std::string& delegationId, const std::string& userDn,
+        const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime)
 {
     soci::session sql(*connectionPool);
-
 
     try
         {
             sql.begin();
             struct tm tTime;
-            gmtime_r(&termination_time, &tTime);
+            gmtime_r(&terminationTime, &tTime);
 
             sql << "UPDATE t_credential SET "
                 "    dlg_id = :dlgId, dn = :dn, " // Workaround for ORA-24816
@@ -3026,9 +3023,9 @@ void OracleAPI::updateCredential(std::string dlg_id, std::string dn, std::string
                 "    voms_attrs = :vomsAttrs, "
                 "    termination_time = :terminationTime "
                 "WHERE dlg_id = :dlgId AND dn = :dn",
-                soci::use(proxy, "proxy"), soci::use(voms_attrs, "vomsAttrs"),
-                soci::use(tTime, "terminationTime"), soci::use(dlg_id, "dlgId"),
-                soci::use(dn, "dn");
+                soci::use(proxy, "proxy"), soci::use(vomsAttrs, "vomsAttrs"),
+                soci::use(tTime, "terminationTime"), soci::use(delegationId, "dlgId"),
+                soci::use(userDn, "dn");
 
             sql.commit();
         }
@@ -3045,19 +3042,18 @@ void OracleAPI::updateCredential(std::string dlg_id, std::string dn, std::string
 }
 
 
-
-std::unique_ptr<Cred> OracleAPI::findCredential(std::string delegationID, std::string dn)
+boost::optional<UserCredential> OracleAPI::findCredential(const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
     try
         {
-            std::unique_ptr<Cred> cred(new Cred);
+            UserCredential cred;
             sql << "SELECT dlg_id, dn, voms_attrs, proxy, termination_time AS TERMINATION_TIME "
                 "FROM t_credential "
                 "WHERE dlg_id = :dlgId AND dn =:dn",
-                soci::use(delegationID), soci::use(dn),
-                soci::into(*cred);
+                soci::use(delegationId), soci::use(userDn),
+                soci::into(cred);
 
             if (sql.got_data())
                 {
@@ -3073,12 +3069,11 @@ std::unique_ptr<Cred> OracleAPI::findCredential(std::string delegationID, std::s
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return std::unique_ptr<Cred>();
+    return boost::optional<UserCredential>();
 }
 
 
-
-void OracleAPI::deleteCredential(std::string delegationID, std::string dn)
+void OracleAPI::deleteCredential(const std::string& delegationId, const std::string& userDn)
 {
     soci::session sql(*connectionPool);
 
@@ -3086,7 +3081,7 @@ void OracleAPI::deleteCredential(std::string delegationID, std::string dn)
         {
             sql.begin();
             sql << "DELETE FROM t_credential WHERE dlg_id = :dlgId AND dn = :dn",
-                soci::use(delegationID), soci::use(dn);
+                soci::use(delegationId), soci::use(userDn);
             sql.commit();
         }
     catch (std::exception& e)

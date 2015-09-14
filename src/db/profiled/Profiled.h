@@ -95,19 +95,26 @@ public:
 
     void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
 
-    bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    bool insertCredentialCache(const std::string& delegationId,
+            const std::string& userDn, const std::string& certRequest,
+            const std::string& privateKey, const std::string& vomsAttrs);
 
-    std::unique_ptr<CredCache> findCredentialCache(std::string delegationID, std::string dn);
+    boost::optional<UserCredentialCache> findCredentialCache(
+            const std::string& delegationId, const std::string& userDn);
 
-    void deleteCredentialCache(std::string delegationID, std::string dn);
+    void deleteCredentialCache(const std::string& delegationId, const std::string& userDn);
 
-    void insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    void insertCredential(const std::string& delegationId,
+            const std::string& userDn, const std::string& proxy,
+            const std::string& vomsAttrs, time_t terminationTime);
 
-    void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    void updateCredential(const std::string& delegationId,
+            const std::string& userDn, const std::string& proxy,
+            const std::string& vomsAttrs, time_t terminationTime);
 
-    std::unique_ptr<Cred> findCredential(std::string delegationID, std::string dn);
+    boost::optional<UserCredential> findCredential(const std::string& delegationId, const std::string& userDn);
 
-    void deleteCredential(std::string delegationID, std::string dn);
+    void deleteCredential(const std::string& delegationId, const std::string& userDn);
 
     unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 

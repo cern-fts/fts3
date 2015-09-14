@@ -145,11 +145,11 @@ std::string GSoapDelegationHandler::getProxyReq(std::string delegationId)
     if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
     // check if the public - private key pair has been already generated and is in the DB cache
-    std::unique_ptr<CredCache> cache (
+    boost::optional<UserCredentialCache> cache (
         DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
     );
 
-    if (cache.get())
+    if (cache)
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " public-private key pair has been found in DB and is returned to the user" << commit;
             return cache->certificateRequest;
@@ -182,7 +182,7 @@ std::string GSoapDelegationHandler::getProxyReq(std::string delegationId)
                     // double check if the public - private key pair has been already generated and is in the DB cache
                     cache = DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn);
 
-                    if (cache.get())
+                    if (cache)
                         {
                             free(reqtxt);
                             free(keytxt);
@@ -223,11 +223,11 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
     std::string delegationId = makeDelegationId();
     if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
-    std::unique_ptr<CredCache> cache (
+    boost::optional<UserCredentialCache> cache (
         DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
     );
 
-    if (cache.get())
+    if (cache)
         {
             delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
             ret->proxyRequest = soap_new_std__string(ctx, -1);
@@ -408,13 +408,13 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
                     throw Err_Custom("The proxy has to be valid for at least an hour!");
                 }
 
-            std::unique_ptr<CredCache> cache (
+            boost::optional<UserCredentialCache> cache (
                 DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
             );
 
             // if the DB cache is empty it means someone else
             // already delegated and cleared the cache
-            if (!cache.get())
+            if (!cache)
                 {
 
                     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "t_credential_cache has been cleared - so there's nothing to do" << commit;
@@ -423,13 +423,13 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
 
             proxy = addKeyToProxyCertificate(proxy, cache->privateKey);
 
-            std::unique_ptr<Cred> cred (
+            boost::optional<UserCredential> cred (
                 DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );
 
             try
                 {
-                    if (cred.get())
+                    if (cred)
                         {
                             // check if the termination time is better than for the current proxy (if not we don't bother)
                             if (incomingExpirationTime < cred->terminationTime)
@@ -501,11 +501,11 @@ std::string GSoapDelegationHandler::renewProxyReq(std::string delegationId)
             delegationId = handleDelegationId(delegationId);
             if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
-            std::unique_ptr<CredCache> cache (
+            boost::optional<UserCredentialCache> cache (
                 DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
             );
 
-            if(cache.get())
+            if(cache)
                 {
                     return cache->certificateRequest;
                 }
@@ -569,11 +569,11 @@ time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
             std::string delegationId = makeDelegationId();
             if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
-            std::unique_ptr<Cred> cred (
+            boost::optional<UserCredential> cred (
                 DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );
 
-            if (cred.get())
+            if (cred)
                 {
                     return cred->terminationTime;
                 }

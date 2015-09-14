@@ -35,8 +35,6 @@
 #include "SeConfig.h"
 #include "SeGroup.h"
 #include "SeProtocolConfig.h"
-#include "CredCache.h"
-#include "Cred.h"
 #include "QueueId.h"
 #include "common/definitions.h"
 #include "common/OptimizerSample.h"
@@ -53,6 +51,8 @@
 #include "profiler/Profiler.h"
 #include "StorageElement.h"
 #include "TransferFile.h"
+#include "UserCredential.h"
+#include "UserCredentialCache.h"
 
 
 /// Hold information about individual submitted transfers
@@ -232,20 +232,55 @@ public:
     /// @note           Only the storage name is actually used as a foreign key for the SE groups
     virtual void updateStorageElement(const std::string& seName, const std::string& state) = 0;
 
-    /*t_credential API*/
-    virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    /// Insert a new credential cache entry
+    /// A credential cache is a certificate request (to be signed by the user) and its associated private key
+    /// @param delegationId Delegation ID. Normally, a hash of some sort of the user's DN and VO extensions.
+    /// @param userDn           The user's DN
+    /// @param certRequest      A PEM-encoded certificate request
+    /// @param privateKey       A PEM-encoded private key, associated to the certificate request
+    /// @param vomsAttrs        Any VOMS extensions from the credentials used by the client
+    virtual bool insertCredentialCache(const std::string& delegationId, const std::string& userDn,
+            const std::string& certRequest, const std::string& privateKey, const std::string& vomsAttrs) = 0;
 
-    virtual std::unique_ptr<CredCache> findCredentialCache(std::string delegationID, std::string dn) = 0;
+    /// Get the credential cache (certificate request) associated with the given delegation ID
+    /// @param delegationId Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @return                 The credential cache if it exists
+    virtual boost::optional<UserCredentialCache> findCredentialCache(const std::string& delegationId, const std::string& userDn) = 0;
 
-    virtual void deleteCredentialCache(std::string delegationID, std::string dn) = 0;
+    /// Delete the certificate request from the database
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    virtual void deleteCredentialCache(const std::string& delegationId, const std::string& userDn) = 0;
 
-    virtual void insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    /// Insert a new delegated credential
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @param proxy            PEM-encoded proxy (cert request signed by the user)
+    /// @param vomsAttrs        Any VOMS extensions from the credentials used by the client
+    /// @param terminationTime  When does the proxy expire
+    virtual void insertCredential(const std::string& delegationId, const std::string& userDn,
+            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime) = 0;
 
-    virtual void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    /// Updated the delegated credentials
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @param proxy            PEM-encoded proxy (cert request signed by the user)
+    /// @param vomsAttrs        Any VOMS extensions from the credentials used by the client
+    /// @param terminationTime  When does the proxy expire
+    virtual void updateCredential(const std::string& delegationId, const std::string& userDn,
+            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime) = 0;
 
-    virtual std::unique_ptr<Cred> findCredential(std::string delegationID, std::string dn) = 0;
+    /// Get the credentials associated with the given delegation ID and user
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @return                 The delegated credentials, if any
+    virtual boost::optional<UserCredential> findCredential(const std::string& delegationId, const std::string& userDn) = 0;
 
-    virtual void deleteCredential(std::string delegationID, std::string dn) = 0;
+    /// Delete the delegated credentials
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    virtual void deleteCredential(const std::string& delegationId, const std::string& userDn) = 0;
 
     virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname) = 0;
 

@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include "db/generic/Cred.h"
-#include "db/generic/CredCache.h"
+#include "db/generic/UserCredential.h"
+#include "db/generic/UserCredentialCache.h"
 #include "db/generic/FileTransferStatus.h"
 #include "db/generic/JobStatus.h"
 #include "db/generic/LinkConfig.h"
@@ -98,14 +98,14 @@ inline time_t getTimeT(row const& r, const std::string& name)
 
 
 template <>
-struct type_conversion<Cred>
+struct type_conversion<UserCredential>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, Cred& cred)
+    static void from_base(values const& v, indicator, UserCredential& cred)
     {
-        cred.DN               = v.get<std::string>("DN");
-        cred.delegationID     = v.get<std::string>("DLG_ID");
+        cred.userDn               = v.get<std::string>("DN");
+        cred.delegationId     = v.get<std::string>("DLG_ID");
         cred.proxy            = v.get<std::string>("PROXY");
         cred.terminationTime = getTimeT(v, "TERMINATION_TIME");
         cred.vomsAttributes   = v.get<std::string>("VOMS_ATTRS", std::string());
@@ -113,15 +113,15 @@ struct type_conversion<Cred>
 };
 
 template <>
-struct type_conversion<CredCache>
+struct type_conversion<UserCredentialCache>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, CredCache& ccache)
+    static void from_base(values const& v, indicator, UserCredentialCache& ccache)
     {
-        ccache.DN                 = v.get<std::string>("DN");
+        ccache.userDn                 = v.get<std::string>("DN");
         ccache.certificateRequest = v.get<std::string>("CERT_REQUEST");
-        ccache.delegationID       = v.get<std::string>("DLG_ID");
+        ccache.delegationId       = v.get<std::string>("DLG_ID");
         ccache.privateKey         = v.get<std::string>("PRIV_KEY");
         ccache.vomsAttributes     = v.get<std::string>("VOMS_ATTRS", std::string());
     }
