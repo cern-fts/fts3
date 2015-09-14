@@ -302,12 +302,6 @@ void ProfiledDB::backup(long* nJobs, long* nFiles)
 }
 
 
-void ProfiledDB::forkFailedRevertState(const std::string & jobId, int fileId)
-{
-    PROFILE_PREFIXED("DB::", db->forkFailedRevertState(jobId, fileId));
-}
-
-
 void ProfiledDB::forkFailedRevertStateV(std::map<int,std::string>& pids)
 {
     PROFILE_PREFIXED("DB::", db->forkFailedRevertStateV(pids));
@@ -362,12 +356,6 @@ boost::optional<int> ProfiledDB::getTimeoutForSe(const std::string& storage)
 bool ProfiledDB::isDnBlacklisted(const std::string& userDn)
 {
     PROFILE_PREFIXED("DB::", return db->isDnBlacklisted(userDn));
-}
-
-
-bool ProfiledDB::isFileReadyState(int fileID)
-{
-    PROFILE_PREFIXED("DB::", return db->isFileReadyState(fileID));
 }
 
 

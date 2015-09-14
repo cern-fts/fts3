@@ -367,14 +367,9 @@ public:
 
     virtual void backup(long* nJobs, long* nFiles) = 0;
 
-    virtual void forkFailedRevertState(const std::string & jobId, int fileId) = 0;
-
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0;
 
     virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull) = 0;
-
-
-    virtual bool isFileReadyState(int fileID) = 0;
 
     virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds) = 0;
 

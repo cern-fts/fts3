@@ -162,8 +162,6 @@ public:
 
     virtual void backup(long* nJobs, long* nFiles);
 
-    virtual void forkFailedRevertState(const std::string & jobId, int fileId);
-
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids);
 
     virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull);
@@ -184,8 +182,6 @@ public:
     virtual boost::optional<int> getTimeoutForSe(const std::string& storage);
 
     virtual bool isDnBlacklisted(const std::string& userDn);
-
-    virtual bool isFileReadyState(int fileID);
 
     virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds);
 

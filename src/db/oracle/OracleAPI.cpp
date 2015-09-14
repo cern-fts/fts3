@@ -4573,37 +4573,6 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 }
 
 
-
-
-void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
-                "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
-                "      file_state NOT IN ('FINISHED','FAILED','CANCELED','NOT_USED')",
-                soci::use(fileId), soci::use(jobId), soci::use(hostname);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
-
 void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 {
     soci::session sql(*connectionPool);
@@ -4966,48 +4935,6 @@ bool OracleAPI::isDnBlacklisted(const std::string& userDn)
         }
     return blacklisted;
 }
-
-
-bool OracleAPI::isFileReadyState(int fileID)
-{
-    soci::session sql(*connectionPool);
-    bool isReadyState = false;
-    bool isReadyHost = false;
-    std::string host;
-    std::string state;
-    soci::indicator isNull = soci::i_ok;
-    std::string vo_name;
-    std::string dest_se;
-    std::string dest_surl;
-
-    try
-        {
-            sql << "SELECT file_state, transferHost, dest_surl, vo_name, dest_se FROM t_file WHERE file_id = :fileId",
-                soci::use(fileID),
-                soci::into(state),
-                soci::into(host, isNull),
-                soci::into(dest_surl),
-                soci::into(vo_name),
-                soci::into(dest_se);
-
-            isReadyState = (state == "READY");
-
-            if (isNull != soci::i_null)
-                isReadyHost = (host == hostname);
-
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
-    return (isReadyState && isReadyHost);
-}
-
 
 
 bool OracleAPI::checkGroupExists(const std::string & groupName)
