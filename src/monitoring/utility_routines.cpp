@@ -79,9 +79,6 @@ std::string USERNAME;
 std::string PASSWORD;
 bool USE_BROKER_CREDENTIALS;
 
-//msg config file
-static std::map<std::string, std::string> cfg;
-
 
 int fexists(const char *filename)
 {
@@ -249,10 +246,11 @@ bool getUSE_BROKER_CREDENTIALS()
 }
 
 
-//message broker config file
-
+/// message broker config file
 bool get_mon_cfg_file()
 {
+    std::map<std::string, std::string> cfg;
+
     std::string boolTOPIC;
     std::string boolACTIVE;
     std::string boolENABLELOG;
