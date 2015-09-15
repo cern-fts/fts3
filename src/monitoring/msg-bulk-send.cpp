@@ -58,8 +58,6 @@
 
 using namespace std;
 
-const char* config_file = "/etc/fts3/fts-msg-monitoring.conf";
-int requiredMode = R_OK;
 
 int proc_find()
 {
@@ -124,6 +122,13 @@ int proc_find()
 
 void DoServer() throw()
 {
+    if (!get_mon_cfg_file()) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the monitoring configuration file");
+        return;
+    }
+
+    fts3::common::theLogger().open(getLOGFILEDIR() + "" + getLOGFILENAME());
+
     std::string errorMessage;
     try
         {
@@ -143,6 +148,7 @@ void DoServer() throw()
             Thread producerThread(&producer);
             producerThread.start();
 
+            FTS3_COMMON_LOGGER_LOG(INFO, "Threads started");
 
             // Wait for the threads to complete.
             pipeThread.join();
@@ -170,6 +176,7 @@ void DoServer() throw()
         }
 }
 
+
 int main(int argc,  char** /*argv*/)
 {
     // Do not even try if already running
@@ -190,15 +197,8 @@ int main(int argc,  char** /*argv*/)
     setuid(pw_uid);
     seteuid(pw_uid);
 
-    //check of the file is readable
-    if (access(config_file, requiredMode) != 0)
-        {
-
-            std::cerr << "Not enough permissions on " << config_file << " to read" << std::endl;
-            return EXIT_FAILURE;
-        }
-
-    if(argc <= 1) //if any param is provided stay attached to terminal
+    //if any param is provided stay attached to terminal
+    if(argc <= 1)
         {
             int d =  daemon(0,0);
             if(d < 0)
@@ -206,6 +206,9 @@ int main(int argc,  char** /*argv*/)
                     std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
                     return EXIT_FAILURE;
                 }
+
+            // Detach stdout
+            freopen("/dev/null", "a", stderr);
         }
 
     DoServer();
