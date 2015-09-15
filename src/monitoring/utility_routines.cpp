@@ -94,124 +94,6 @@ static std::vector<std::string> recoveryVector(3, "");
 static std::map<std::string, std::string> ftsendpoint;
 
 
-
-std::string get_channel_(std::string tr_id)
-{
-    size_t found = tr_id.find("__");
-    if (found != std::string::npos)
-        return tr_id.substr(0, (found));
-
-    return tr_id;
-}
-
-std::string get_hostname(std::string hostname)
-{
-    size_t found = 0;
-    size_t found_colon = 0;
-    size_t found_extra_slash = 0; //for gsiftp only
-
-    if (hostname.compare(0, 9, "gsiftp://") == 0)
-        {
-            std::string temp = hostname.substr(9, found - 9);
-            found = temp.find_first_of('/');
-            if (found != std::string::npos)
-                {
-                    found_extra_slash = temp.find_first_of('/');
-                    if (found_extra_slash != std::string::npos)
-                        return temp.substr(0, found_extra_slash);
-                    found_colon = temp.find_first_of(':');
-                    if (found_colon != std::string::npos)
-                        return temp.substr(0, found_colon);
-                    else
-                        return temp.substr(0, found);
-                }
-            else
-                {
-                    found = temp.find_first_of(':');
-                    if (found != std::string::npos)
-                        return temp.substr(0, found);
-                }
-        }
-
-
-    if (hostname.compare(0, 6, "srm://") == 0)
-        {
-            std::string temp = hostname.substr(6, found - 6);
-            found = temp.find_first_of('/');
-            if (found != std::string::npos)
-                {
-                    found_colon = temp.find_first_of(':');
-                    if (found_colon != std::string::npos)
-                        return temp.substr(0, found_colon);
-                    else
-                        return temp.substr(0, found);
-                }
-            else
-                {
-                    found = temp.find_first_of(':');
-                    if (found != std::string::npos)
-                        return temp.substr(0, found);
-                }
-        }
-    return "invalid hostname";
-}
-
-std::string getUserName(std::string & value, std::vector<std::string>::iterator it)
-{
-    size_t found = value.find("User");
-    std::string username;
-    if (found != std::string::npos)
-        {
-            username = *(++it);
-            return username.substr(7, (username.length() - 15));
-        }
-    return "";
-}
-
-std::string getPassword(std::string & value, std::vector<std::string>::iterator it)
-{
-    size_t found = value.find("Password");
-    std::string password;
-    if (found != std::string::npos)
-        {
-            password = *(++it);
-            return password.substr(7, (password.length() - 15));
-        }
-    return "";
-}
-
-std::string getConnectString(std::string & value, std::vector<std::string>::iterator it)
-{
-    size_t found = value.find("ConnectString");
-    std::string connectstring("");
-    std::string connectStringConcat("");
-    size_t val;
-    std::string::iterator itr;
-    if (found != std::string::npos)
-        {
-            connectstring = *(++it);
-            val = connectstring.find("</value>");
-            if (val != std::string::npos)
-                return connectstring.substr(7, (connectstring.length() - 15));
-            else
-                {
-                    --it;
-                    while( 1 )
-                        {
-                            connectStringConcat += *(++it);
-                            val = connectStringConcat.find("</value>");
-                            if (val != std::string::npos)
-                                {
-                                    connectStringConcat.erase(0,7);
-                                    connectStringConcat.erase(connectStringConcat.length()-8, connectStringConcat.length());
-                                    break;
-                                }
-                        }
-                }
-        }
-    return connectStringConcat;
-}
-
 int fexists(const char *filename)
 {
     struct stat buffer;
@@ -330,123 +212,8 @@ std::string filesStore(const char* filename, const char *path, char *env)
         }
 }
 
-std::string getGliteLocationFile()
-{
-    std::string filename;
-    char * pPath = NULL;
-    try
-        {
-            pPath = getenv("GLITE_LOCATION");
-            if (pPath != NULL)
-                {
-                    filename = filesStore(DATABASE_FILE_NAME.c_str(), DATABASE_FILE_PATH.c_str(), pPath);
-                    if (filename.length() > 0)
-                        return filename;
-                    else
-                        {
-                            logger::writeLog("GLITE_LOCATION is set, but *.properties file cannot be found under " + DATABASE_FILE_PATH, true);
-                            return "";
-                        }
-
-                }
-            else
-                {
-                    filename = filesStore(DATABASE_FILE_NAME.c_str(), DATABASE_FILE_PATH.c_str(), NULL);
-                    if (filename.length() > 0)
-                        return filename;
-                    else
-                        {
-                            logger::writeLog("GLITE_LOCATION is not set, and not other location contains the *.properties file", true);
-                            return "";
-                        }
-                }
-        }
-    catch (...)
-        {
-            logger::writeLog("Database credentials file cannot be found, pls check FTS database *.properties file location", true);
-            return "";
-        }
-}
-
-std::vector<std::string> const& oracleCredentials()
-{
-    std::string word;
-    std::string username = "";
-    std::string password = "";
-    std::string connectstring = "";
-    bool userOk = false, passOk = false, connectOk = false;
-    std::string filename;
-
-    try
-        {
-            filename = getGliteLocationFile();
-            if (filename.length() == 0)
-                return recoveryVector;
-
-            std::ifstream in(filename.c_str());
-            if(!in)
-                {
-                    logger::writeLog("Database credentials file cannot be read, check location and permissions", true);
-                    return recoveryVector;
-                }
-
-            std::vector<std::string>::iterator it;
-
-            while (in >> word)
-                {
-                    fileDB.push_back(word);
-                }
-
-            for (it = fileDB.begin(); it < fileDB.end(); it++)
-                {
-                    if (!userOk)
-                        {
-                            username = getUserName(*it, it);
-                            if (username.length() > 0)
-                                {
-                                    userOk = true;
-                                    continue;
-                                }
-                        }
-
-                    if (!passOk)
-                        {
-                            password = getPassword(*it, it);
-                            if (password.length() > 0)
-                                {
-                                    passOk = true;
-                                    continue;
-                                }
-                        }
-
-                    if (!connectOk)
-                        {
-                            connectstring = getConnectString(*it, it);
-                            if (connectstring.length() > 0)
-                                {
-                                    connectOk = true;
-                                    continue;
-                                }
-                        }
-                }
-
-            in.close();
-            fileDB.clear();
-            fileDB.push_back(username);
-            fileDB.push_back(password);
-            fileDB.push_back(connectstring);
-
-            return fileDB;
-        }
-    catch (...)
-        {
-            logger::writeLog("Database credentials file cannot be found", true);
-            return recoveryVector;
-        }
-}
 
 //checks if a std::string is full of digits
-
 bool isDigits(std::string word)
 {
     for (unsigned int i = 0; i < word.size(); ++i)
@@ -479,6 +246,7 @@ std::string extractNumber(const std::string & value)
     return "";
 }
 
+
 std::string strip_space(const std::string & s)
 {
     std::string ret(s);
@@ -488,6 +256,7 @@ std::string strip_space(const std::string & s)
         ret = ret.substr(0, ret.length() - 1);
     return ret;
 }
+
 
 std::string getMsgConfigFile()
 {
@@ -884,72 +653,14 @@ bool caseInsCompare(const std::string& s1, const std::string& s2)
 
 std::string restoreMessageToDisk(std::string & text)
 {
-            struct message_monitoring message;
-            strncpy(message.msg, text.c_str(), sizeof(message.msg));
-            message.msg[sizeof(message.msg) - 1] = '\0';
-            message.timestamp = milliseconds_since_epoch();
-            int returnValue = runProducerMonitoring(message);
+    struct message_monitoring message;
+    strncpy(message.msg, text.c_str(), sizeof(message.msg));
+    message.msg[sizeof(message.msg) - 1] = '\0';
+    message.timestamp = milliseconds_since_epoch();
+    int returnValue = runProducerMonitoring(message);
 
-	    if(returnValue == 0)
-	    	return std::string();
-	    else
-	    	return boost::lexical_cast<std::string>(returnValue);
-}
-
-
-bool getResolveAlias()
-{
-    return true;
-}
-
-std::string getFTSEndpoint()
-{
-    const char* path[2] = {"/etc/glite-sd2cache-cron.conf","/opt/glite/etc/glite-sd2cache-cron.conf"};
-    std::string line;
-    std::string fts = "";
-    std::string result = "";
-
-    for(int index=0; index<2; index++)
-        {
-            std::string ifname(path[index]);
-            std::ifstream in(ifname.c_str());
-            if(!in)
-                {
-                    continue;
-                }
-
-            std::string line;
-            while (!in.eof())
-                {
-                    getline(in, line);
-                    line = strip_space(line);
-                    if (line.length() && line[0] != '#')
-                        {
-                            size_t pos = line.find("=");
-                            if (pos != std::string::npos)
-                                {
-                                    std::string key = strip_space(line.substr(0, pos));
-                                    std::string value = strip_space(line.substr(pos + 1));
-                                    ftsendpoint.insert(make_pair(key, value));
-                                }
-                        }
-                }
-
-            auto iter = ftsendpoint.find("FTS_HOST");
-            if (iter != ftsendpoint.end())
-                {
-                    fts = ftsendpoint.find("FTS_HOST")->second;
-                    if (fts.length() == 0)
-                        fts = "";
-                }
-        }
-    if(fts.length() > 0)
-        {
-            fts.erase(0, 1);
-            fts.erase(fts.length()-1, fts.length());
-            result = "https://";
-            result += fts;
-            result += ":8443/glite-data-transfer-fts/services/FileTransfer";
-        }
-    return result;
+    if(returnValue == 0)
+        return std::string();
+    else
+        return boost::lexical_cast<std::string>(returnValue);
 }

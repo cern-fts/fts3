@@ -54,43 +54,6 @@ inline std::string _getTimestamp()
     return transfer_started_to_string;
 }
 
-
-/*
-extract channel information from the transfer id
- */
-std::string get_channel_(std::string tr_id);
-
-
-/*
-get transfer agent hostname
- */
-std::string get_hostname(std::string hostname);
-
-/*
-retrieve database username from the config xml file
- */
-std::string getUserName(std::string & value, std::vector<std::string>::iterator it);
-
-/*
-retrieve database password from the config xml file
- */
-std::string getPassword(std::string & value, std::vector<std::string>::iterator it);
-
-/*
-retrieve database connection string from the config xml file
- */
-std::string getConnectString(std::string & value, std::vector<std::string>::iterator it);
-
-/*
-retrieve glite location from GLITE_LOCATION env variable
- */
-std::string getGliteLocationFile();
-
-/*
-store database connection credentials to an STL vector
- */
-std::vector<std::string> const& oracleCredentials();
-
 /*
 extract a number from a given string
 used for retrieving the error code of a failed transfer
@@ -163,9 +126,3 @@ inline std::string  timestamp()
     ltime=time(NULL); /* get current cal time */
     return asctime( localtime(&ltime));
 }
-
-
-bool getResolveAlias();
-
-std::string getFTSEndpoint();
-
