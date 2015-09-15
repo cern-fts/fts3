@@ -208,7 +208,7 @@ int main(int argc,  char** /*argv*/)
                 }
 
             // Detach stdout
-            freopen("/dev/null", "a", stderr);
+            freopen("/dev/null", "a", stdout);
         }
 
     DoServer();

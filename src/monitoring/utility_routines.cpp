@@ -80,34 +80,6 @@ std::string PASSWORD;
 bool USE_BROKER_CREDENTIALS;
 
 
-int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
-
-int getdir(std::string rootDir, std::vector<std::string> &files)
-{
-    DIR *dir; //the directory
-    struct dirent *dp;
-
-    //open the directory
-    if ((dir = opendir(rootDir.c_str())) == NULL)
-        {
-            return errno;
-        }
-
-    while ((dp = readdir(dir)) != NULL)
-        {
-            files.push_back(std::string(dp->d_name));
-        }
-
-    closedir(dir);
-    return 0;
-}
-
-
 //checks if a std::string is full of digits
 bool isDigits(std::string word)
 {
@@ -158,7 +130,7 @@ std::string getMsgConfigFile()
 {
     std::string filename = CFG_FILE_PATH + CFG_FILE_NAME;
 
-    if(fexists(filename.c_str()) == 0)
+    if(access(filename.c_str(), F_OK) == 0)
         return filename;
     return std::string();
 }
