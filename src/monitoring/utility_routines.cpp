@@ -121,97 +121,6 @@ int getdir(std::string rootDir, std::vector<std::string> &files)
     return 0;
 }
 
-std::string filesStore(const char* filename, const char *path, char *env)
-{
-    std::string dirname;
-    std::string rootDir;
-    std::vector<std::string> files = std::vector<std::string > ();
-    std::string inventory[3] = {"", "/usr", "/opt/glite"};
-    std::string xmlfile;
-    size_t found;
-
-    try
-        {
-            if (env == NULL)
-                {
-                    for (int i = 0; i < 3; ++i)
-                        {
-                            dirname = inventory[i];
-                            dirname = dirname + path;
-                            rootDir = std::string(dirname);
-                            getdir(rootDir, files);
-
-                            const std::string fname = filename;
-                            if(true == caseInsCompare(fname, CFG_FILE_NAME))
-                                {
-                                    std::string fullPath = CFG_FILE_PATH + CFG_FILE_NAME;
-                                    if(0 == fexists(fullPath.c_str()))
-                                        {
-                                            return fullPath;
-                                        }
-                                    else
-                                        {
-                                            logger::writeMsgNoConfig("/etc/fts3/fts-msg-monitoring.conf configuration file cannot be found");
-
-                                        }
-                                }
-                            else
-                                {
-                                    for (unsigned int i = 0; i < files.size(); i++)
-                                        {
-                                            xmlfile = files[i];
-                                            found = xmlfile.find(filename);
-                                            if (found != std::string::npos)
-                                                {
-                                                    return dirname + xmlfile;
-                                                }
-                                        }
-                                }
-                        }
-                }
-            else
-                {
-                    dirname = env;
-                    dirname = dirname + path;
-                    rootDir = std::string(dirname);
-                    getdir(rootDir, files);
-
-                    for (unsigned int i = 0; i < files.size(); i++)
-                        {
-                            xmlfile = files[i];
-                            found = xmlfile.find(filename);
-                            if (found != std::string::npos)
-                                {
-                                    return dirname + xmlfile;
-                                }
-                        }
-                    for (int i = 0; i < 3; ++i)
-                        {
-                            dirname = inventory[i];
-                            dirname = dirname + path;
-                            rootDir = std::string(dirname);
-                            getdir(rootDir, files);
-
-                            for (unsigned int i = 0; i < files.size(); i++)
-                                {
-                                    xmlfile = files[i];
-                                    found = xmlfile.find(filename);
-                                    if (found != std::string::npos)
-                                        {
-                                            return dirname + xmlfile;
-                                        }
-                                }
-                        }
-                }
-            return "";
-        }
-    catch (...)
-        {
-            logger::writeLog("Configuration file cannot be found", true);
-            return "";
-        }
-}
-
 
 //checks if a std::string is full of digits
 bool isDigits(std::string word)
@@ -260,23 +169,11 @@ std::string strip_space(const std::string & s)
 
 std::string getMsgConfigFile()
 {
-    std::string filename("");
-    try
-        {
-            filename = filesStore(CFG_FILE_NAME.c_str(), CFG_FILE_PATH.c_str(), NULL);
-            if (filename.length() > 0)
-                return filename;
-            else
-                {
-                    return std::string("");
-                }
+    std::string filename = CFG_FILE_PATH + CFG_FILE_NAME;
 
-        }
-    catch (...)
-        {
-            logger::writeMsgNoConfig("/etc/fts3/fts-msg-monitoring.conf file cannot be found");
-            return std::string("");
-        }
+    if(fexists(filename.c_str()) == 0)
+        return filename;
+    return std::string();
 }
 
 std::string getBROKER()
