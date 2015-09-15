@@ -29,13 +29,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
-#include "Logger.h"
 #include <vector>
 #include <boost/filesystem.hpp>
-#include "common/definitions.h"
 #include <boost/lexical_cast.hpp>
 
-#include "../common/ConcurrentQueue.h"
+#include "common/definitions.h"
+#include "common/Logger.h"
+#include "common/ConcurrentQueue.h"
 
 extern bool stopThreads;
 static bool signalReceived = false;
@@ -101,7 +101,7 @@ void MsgPipe::run()
                     {
                         std::ostringstream errorMessage;
                         errorMessage << "runConsumerMonitoring returned " << returnValue;
-                        LOGGER_ERROR(errorMessage.str());
+                        FTS3_COMMON_LOGGER_LOG(ERR, errorMessage.str());
                     }
 
                     if(!messages.empty())
@@ -116,13 +116,13 @@ void MsgPipe::run()
                 }
             catch (const fs::filesystem_error& ex)
                 {
-                    LOGGER_ERROR(ex.what());
+                    FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
                     cleanup();
                     sleep(1);
                 }
             catch (...)
                 {
-                    LOGGER_ERROR("Unexpected exception");
+                    FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
                     cleanup();
                     sleep(1);
                 }

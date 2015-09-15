@@ -22,10 +22,10 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
-#include<cctype> //for isdigit
-#include<sstream> //to phrase std::string
-#include<string>
-#include "Logger.h"
+#include <cctype> //for isdigit
+#include <sstream> //to phrase std::string
+#include <string>
+#include "common/Logger.h"
 #include <sys/stat.h>
 #include <algorithm>
 #include <string.h>
@@ -79,19 +79,8 @@ std::string USERNAME;
 std::string PASSWORD;
 bool USE_BROKER_CREDENTIALS;
 
-static bool init = false;
-
-//oracle credentials
-static std::vector<std::string> fileDB;
-
 //msg config file
 static std::map<std::string, std::string> cfg;
-
-//recovery vector in case no data is retrieved
-static std::vector<std::string> recoveryVector(3, "");
-
-//store fts endpoint for usage in the message field
-static std::map<std::string, std::string> ftsendpoint;
 
 
 int fexists(const char *filename)
@@ -131,6 +120,7 @@ bool isDigits(std::string word)
         }
     return true;
 }
+
 
 std::string extractNumber(const std::string & value)
 {
@@ -280,7 +270,7 @@ bool get_mon_cfg_file()
             std::ifstream in(ifname.c_str());
             if(!in)
                 {
-                    logger::writeLog("msg config file cannot be read, check location and permissions", true);
+                    FTS3_COMMON_LOGGER_LOG(CRIT, "msg config file cannot be read, check location and permissions");
                     return false;
                 }
 
@@ -428,74 +418,15 @@ bool get_mon_cfg_file()
         }
     catch (const std::exception& e)
         {
-            LOGGER_ERROR(std::string("msg config file error " )+ e.what());
+            FTS3_COMMON_LOGGER_LOG(ERR, std::string("msg config file error " )+ e.what());
             return false;
         }
     catch (...)
         {
-            LOGGER_ERROR(std::string("msg config file error: unexpected exception"));
+            FTS3_COMMON_LOGGER_LOG(ERR, std::string("msg config file error: unexpected exception"));
             return false;
         }
 }
-
-void appendMessageToLogFile(std::string & text)
-{
-    static std::string filename = LOGFILEDIR + "" + LOGFILENAME;
-    const char* logFileName = filename.c_str();
-    static std::ofstream fout;
-    uid_t pw_uid = name_to_uid();
-
-    if(!init)
-        {
-            fout.open(filename.c_str(), std::ios::app); // open file for appending
-            init = true;
-        }
-    if (fout.is_open()  && fexists(filename.c_str())==0)
-        {
-            fout << text << std::endl; //send to file
-
-            if(fout.bad())
-                {
-                    fout.close();
-                    init = false;
-                }
-        }
-    else
-        {
-            fout.open(filename.c_str(), std::ios::app); // open file for appending
-            fout << text << std::endl; //send to file
-            fout.close();
-            init = false;
-        }
-    int chownExec = chown(logFileName, pw_uid, getgid());
-    if(chownExec == -1)
-        {
-            //do nothing
-        }
-
-}
-
-
-void appendMessageToLogFileNoConfig(std::string & text)
-{
-    static std::string filename = TEMPLOG;
-    const char* logFileName = filename.c_str();
-    static std::ofstream fout;
-    uid_t pw_uid = name_to_uid();
-
-    fout.open(filename.c_str(), std::ios::app); // open file for appending
-    if (fout.is_open())
-        {
-            fout << text << std::endl; //send to file
-        }
-    fout.close(); //close file
-    int chownExec = chown(logFileName, pw_uid, getgid());
-    if(chownExec == -1)
-        {
-            //do nothing
-        }
-}
-
 
 
 int GetIntVal(std::string strConvert)

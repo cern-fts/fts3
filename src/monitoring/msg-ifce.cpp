@@ -39,9 +39,7 @@
 
 #include "msg-ifce.h"
 #include "utility_routines.h"
-#include "Logger.h"
-
-
+#include "common/Logger.h"
 
 
 bool msg_ifce::instanceFlag = false;
@@ -78,7 +76,7 @@ std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
     std::string message;
 
     if (state != MSG_IFCE_WAITING_START) {
-        logger::writeLog("WARNING Trying to send a start message, but the internal state is not MSG_IFCE_WAITING_START");
+        FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a start message, but the internal state is not MSG_IFCE_WAITING_START");
         return message;
     }
 
@@ -216,7 +214,7 @@ std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed
     std::string message;
 
     if (!force && state != MSG_IFCE_WAITING_FINISH) {
-        logger::writeLog("WARNING Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
+        FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
         return message;
     }
 
@@ -494,13 +492,13 @@ bool msg_ifce::read_initial_config()
             bool fileIsOk = get_mon_cfg_file();
             if(!fileIsOk)
                 {
-                    logger::writeLog("Cannot read msg cfg file, check file name and path");
+                    FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
                     return false;
                 }
         }
     catch(...)
         {
-            logger::writeLog("Cannot read msg cfg file, check file name and path");
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
             return false;
         }
 

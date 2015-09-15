@@ -91,17 +91,6 @@ std::string getPASSWORD();
 bool getUSE_BROKER_CREDENTIALS();
 
 
-/*
-append the content of the message to a log file
-*/
-void appendMessageToLogFile(std::string & text);
-
-/*
-append error message to a default log file
-*/
-void appendMessageToLogFileNoConfig(std::string & text);
-
-
 /*convert string to int safely*/
 int GetIntVal(std::string strConvert);
 

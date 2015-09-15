@@ -52,10 +52,9 @@
 #include "common/name_to_uid.h"
 #include <execinfo.h>
 
-#include "../common/ConcurrentQueue.h"
+#include "common/ConcurrentQueue.h"
 #include "common/error.h"
-
-#include "Logger.h"
+#include "common/Logger.h"
 
 using namespace std;
 
@@ -157,20 +156,17 @@ void DoServer() throw()
     catch (CMSException& e)
         {
             errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
-            logger::writeLog(errorMessage, true);
-            std::cerr << errorMessage << std::endl;
+            FTS3_COMMON_LOGGER_LOG(ERR, errorMessage);
         }
     catch (const std::exception& e)
         {
             errorMessage = "PROCESS_ERROR " + std::string(e.what());
-            logger::writeLog(errorMessage, true);
-            std::cerr << errorMessage << std::endl;
+            FTS3_COMMON_LOGGER_LOG(ERR, errorMessage);
         }
     catch (...)
         {
             errorMessage = "PROCESS_ERROR Unknown exception";
-            logger::writeLog(errorMessage, true);
-            std::cerr << errorMessage << std::endl;
+            FTS3_COMMON_LOGGER_LOG(ERR, errorMessage);
         }
 }
 

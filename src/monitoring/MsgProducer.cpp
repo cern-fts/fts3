@@ -22,9 +22,9 @@
 #include <memory>
 #include "MsgProducer.h"
 #include "utility_routines.h"
-#include "Logger.h"
 #include <signal.h>
 #include "common/error.h"
+#include "common/Logger.h"
 #include "config/serverconfig.h"
 #include <sstream>
 
@@ -143,7 +143,7 @@ void MsgProducer::sendMessage(std::string &temp)
                 temp += EOT;
                 TextMessage* message = session->createTextMessage(temp);
                 producer_transfer_started->send(message);
-                logger::writeLog(temp);
+                FTS3_COMMON_LOGGER_LOG(DEBUG, temp);
                 delete message;
             }
         else if (temp.compare(0, 2, "CO") == 0)
@@ -167,14 +167,14 @@ void MsgProducer::sendMessage(std::string &temp)
                     {
                         std::ostringstream error_message;
                         error_message << "(" << e.what() << ") " << temp;
-                        LOGGER_ERROR(error_message.str());
+                        FTS3_COMMON_LOGGER_LOG(WARNING, error_message.str());
                     }
 
                 temp += EOT;
                 TextMessage* message = session->createTextMessage(temp);
                 message->setStringProperty("vo",vo);
                 producer_transfer_completed->send(message);
-                logger::writeLog(temp);
+                FTS3_COMMON_LOGGER_LOG(DEBUG, temp);
                 delete message;
             }
         else if (temp.compare(0, 2, "SS") == 0)
@@ -192,14 +192,14 @@ void MsgProducer::sendMessage(std::string &temp)
                     {
                         std::ostringstream error_message;
                         error_message << "(" << e.what() << ") " << temp;
-                        LOGGER_ERROR(error_message.str());
+                        FTS3_COMMON_LOGGER_LOG(WARNING, error_message.str());
                     }
 
                 temp += EOT;
                 TextMessage* message = session->createTextMessage(temp);
                 message->setStringProperty("vo",vo);
                 producer_transfer_state->send(message);
-                logger::writeLog(temp);
+                FTS3_COMMON_LOGGER_LOG(DEBUG, temp);
                 delete message;
             }
 }
@@ -257,13 +257,13 @@ bool MsgProducer::getConnection()
         }
     catch (CMSException& e)
         {
-            LOGGER_ERROR(e.getMessage());
+            FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
             connected = false;
             sleep(10);
         }
     catch (...)
         {
-            LOGGER_ERROR("Unknown exception");
+            FTS3_COMMON_LOGGER_LOG(ERR, "Unknown exception");
             connected = false;
             sleep(10);
         }
@@ -277,7 +277,7 @@ void MsgProducer::readConfig()
 
     if ((fileExists == false) || (false == getACTIVE()))
         {
-            LOGGER_ERROR("Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false");
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false");
             exit(0);
         }
 
@@ -296,7 +296,7 @@ void MsgProducer::readConfig()
 // registered as an ExceptionListener with the connection.
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
-    LOGGER_ERROR(ex.getMessage());
+    FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
     stopThreads = true;
     std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
     std::string ret;
@@ -344,14 +344,14 @@ void MsgProducer::run()
             catch (CMSException& e)
                 {
                     restoreMessageToDisk(msgBk);
-                    LOGGER_ERROR(e.getMessage());
+                    FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
                     connected = false;
                     sleep(5);
                 }
             catch (...)
                 {
                     restoreMessageToDisk(msgBk);
-                    LOGGER_ERROR("Unexpected exception");
+                    FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
                     connected = false;
                     sleep(5);
                 }

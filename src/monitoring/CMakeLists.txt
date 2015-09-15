@@ -27,20 +27,16 @@ find_package (JSONC REQUIRED)
 include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
 include_directories (${JSONC_INCLUDE_DIRS})
 
-# We include directly the sources from common to avoid pulling
-# lots of dependencies to the messaging, increasing its size
+# libfts_msg_ifce
 set(fts_msg_ifce_SOURCES
     msg-ifce.cpp
     utility_routines.cpp
-    Logger.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/name_to_uid.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/producer.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/consumer.cpp
 )
 
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
-add_dependencies(fts_msg_ifce fts_common)
-
+target_link_libraries(fts_msg_ifce
+    fts_common
+)
 set_target_properties(fts_msg_ifce PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/monitoring
     VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
@@ -48,8 +44,12 @@ set_target_properties(fts_msg_ifce PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
 )
 
+# fts_msg_bulk binary
 set(fts_msg_bulk_SOURCES
-    utility_routines.cpp msg-bulk-send.cpp MsgPipe.cpp MsgProducer.cpp Logger.cpp
+    utility_routines.cpp
+    msg-bulk-send.cpp
+    MsgPipe.cpp
+    MsgProducer.cpp
 )
 
 add_executable(fts_msg_bulk ${fts_msg_bulk_SOURCES})

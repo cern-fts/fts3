@@ -145,7 +145,7 @@ inline Logger& theLogger()
 /// Log a simple string message in one line (with implicit commit). Parameters:
 /// log level label and the message string.
 #define FTS3_COMMON_LOGGER_LOG(level,message) \
-    FTS3_COMMON_LOGGER_NEWLOG(level) << message << commit
+    FTS3_COMMON_LOGGER_NEWLOG(level) << message << fts3::common::commit
 
 
 } // namespace common
