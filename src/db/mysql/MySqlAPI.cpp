@@ -3761,51 +3761,34 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
 
 }
 
-bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname, int &currentActive)
+
+bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
+        const std::string & destStorage, int &currentActive)
 {
     soci::session sql(*connectionPool);
 
     int maxActive = 0;
-    int active = 0;
     bool allowed = false;
-    soci::indicator isNull = soci::i_ok;
-    soci::indicator isNullFixed = soci::i_ok;
-    std::string active_fixed;
+    soci::indicator isMaxActiveNull = soci::i_ok;
+    soci::indicator isFixedNull = soci::i_ok;
+    std::string activeFixed;
 
     try
     {
-        int highDefault = MIN_ACTIVE;
+        sql << "SELECT active, fixed FROM t_optimize_active "
+               "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
+               soci::use(sourceStorage), soci::use(destStorage),
+               soci::into(maxActive, isMaxActiveNull), soci::into(activeFixed, isFixedNull);
 
-        soci::statement stmt1 = (
-                                    sql.prepare << "SELECT active, fixed FROM t_optimize_active "
-                                    "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
-                                    soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNull), soci::into(active_fixed, isNullFixed));
-        stmt1.execute(true);
+        sql << "SELECT count(*) FROM t_file "
+               "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
+               soci::use(sourceStorage), soci::use(destStorage),
+               soci::into(currentActive);
 
-        soci::statement stmt2 = (
-                                    sql.prepare << "SELECT count(*) FROM t_file "
-                                    "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
-                                    soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
-        stmt2.execute(true);
+        if (isMaxActiveNull == soci::i_null)
+            maxActive = MIN_ACTIVE;
 
-        if (isNull != soci::i_null)
-        {
-            if(active < maxActive)
-                allowed = true;
-        }
-
-        if(active < highDefault)
-        {
-            allowed = true;
-        }
-
-        //stop here to respect fixed for a given link
-        if (isNullFixed != soci::i_null && active_fixed == "on")
-            return allowed;
-
-
-        //keep track of active for this link in url_copy
-        currentActive = active;
+        allowed = (currentActive < maxActive);
     }
     catch (std::exception& e)
     {
@@ -3817,6 +3800,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     }
     return allowed;
 }
+
 
 bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int& bandwidthIn)
 {

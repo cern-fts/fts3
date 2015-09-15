@@ -348,7 +348,10 @@ public:
     /// *this* is the optimizer
     virtual bool updateOptimizer() = 0;
 
-
+    /// Checks if there are available slots to run transfers for the given pair
+    /// @param sourceStorage        The source storage  (as protocol://host)
+    /// @param destStorage          The destination storage  (as protocol://host)
+    /// @param[out] currentActive   The current number of running transfers is put here
     virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive) = 0;
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
