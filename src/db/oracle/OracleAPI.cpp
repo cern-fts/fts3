@@ -4393,32 +4393,6 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
 }
 
 
-
-void OracleAPI::setPid(const std::string & /*jobId*/, int fileId, int pid)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-            sql << "UPDATE t_file SET pid = :pid WHERE file_id = :fileId",
-                soci::use(pid), soci::use(fileId);
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
-
 void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
 {
     soci::session sql(*connectionPool);
@@ -4442,9 +4416,6 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
-
-
 
 
 void OracleAPI::backup(long* nJobs, long* nFiles)

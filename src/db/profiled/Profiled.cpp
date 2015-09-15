@@ -278,12 +278,6 @@ void ProfiledDB::forceFailTransfers(std::map<int, std::string>& collectJobs)
 }
 
 
-void ProfiledDB::setPid(const std::string & jobId, int fileId, int pid)
-{
-    PROFILE_PREFIXED("DB::", db->setPid(jobId, fileId, pid));
-}
-
-
 void ProfiledDB::setPidV(int pid, std::map<int,std::string>& pids)
 {
     PROFILE_PREFIXED("DB::", db->setPidV(pid, pids));

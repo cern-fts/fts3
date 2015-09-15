@@ -359,8 +359,6 @@ public:
 
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
 
-    virtual void setPid(const std::string & jobId, int fileId, int pid) = 0;
-
     virtual void setPidV(int pid, std::map<int,std::string>& pids) = 0;
 
     virtual void revertToSubmitted() = 0;

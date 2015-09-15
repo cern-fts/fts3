@@ -4908,34 +4908,6 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
 }
 
 
-
-void MySqlAPI::setPid(const std::string & /*jobId*/, int fileId, int pid)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        sql.begin();
-        soci::statement stmt1 = (
-                                    sql.prepare << "UPDATE t_file SET pid = :pid WHERE file_id = :fileId",
-                                    soci::use(pid), soci::use(fileId));
-        stmt1.execute(true);
-        sql.commit();
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-
 void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
 {
     soci::session sql(*connectionPool);
@@ -4959,9 +4931,6 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
-
-
-
 
 
 void MySqlAPI::backup(long* nJobs, long* nFiles)
