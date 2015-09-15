@@ -21,6 +21,7 @@
 /** \file error.cpp Implementation of FTS3 error handling component. */
 
 #include "error.h"
+#include <string.h>
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
@@ -35,14 +36,14 @@ namespace common {
 template<>
 void Error<true>::_logSystemError()
 {
-    theLogger() << " (System reported: \"" << addErr << "\")";
+    theLogger() << " (System reported: \"" << ::strerror(errno) << "\")";
 }
 
 /* -------------------------------------------------------------------------- */
 
 void Err::log(const char* aFile, const char* aFunc, const int aLineNo)
 {
-    theLogger().newLog<Logger::type_traits::ERR>(aFile, aFunc, aLineNo) << _description();
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << _description();
     _logSystemError();
     theLogger() << commit;
 }

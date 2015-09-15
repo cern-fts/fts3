@@ -19,8 +19,9 @@
  */
 
 #include "Profiler.h"
+
+#include "../common/Logger.h"
 #include "config/serverconfig.h"
-#include "common/logger.h"
 #include "db/generic/SingleDbInstance.h"
 
 using namespace fts3;

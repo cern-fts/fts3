@@ -23,8 +23,9 @@
 /** \file task.h Interface of Task class. */
 
 #include "common/error.h"
+#include "common/Logger.h"
 
-#include <iostream>
+#include <typeinfo>
 
 namespace fts3 {
 namespace server {
@@ -82,7 +83,7 @@ public:
             }
         catch (...)
             {
-                std::cerr << "Unknown exception " << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception " << fts3::common::commit;
                 throw;
             }
     }

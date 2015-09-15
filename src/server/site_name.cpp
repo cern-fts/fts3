@@ -20,8 +20,8 @@
 
 #include "site_name.h"
 
+#include "../common/Logger.h"
 #include "../common/Uri.h"
-#include "common/logger.h"
 #include "common/error.h"
 
 #include "infosys/SiteNameRetriever.h"

@@ -21,10 +21,10 @@
 #pragma once
 
 #include "config/serverconfig.h"
-#include "common/logger.h"
 #include "web_service_handler.h"
 #include <string>
 #include <iostream>
+#include "../common/Logger.h"
 
 namespace fts3 {
 namespace server {

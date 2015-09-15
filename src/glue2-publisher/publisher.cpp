@@ -25,13 +25,13 @@
 #include <iostream>
 #include <sstream>
 #include "common/error.h"
-#include "common/logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "../common/Logger.h"
 
 using namespace fts3::config;
 using namespace fts3::common;

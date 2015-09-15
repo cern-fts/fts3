@@ -23,13 +23,13 @@
 #include <boost/regex.hpp>
 
 #include "common/error.h"
-#include "common/logger.h"
 #include <soci/oracle/soci-oracle.h>
 #include <signal.h>
 #include <sys/param.h>
 #include <unistd.h>
 #include "OracleAPI.h"
 
+#include "../../common/Logger.h"
 #include "../../common/ThreadSafeList.h"
 #include "sociConversions.h"
 #include "db/generic/DbUtils.h"

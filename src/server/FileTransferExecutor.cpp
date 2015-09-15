@@ -20,12 +20,12 @@
 
 #include "FileTransferExecutor.h"
 
+#include "../common/Logger.h"
 #include "common/ThreadSafeList.h"
 #include "common/Uri.h"
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
 #include "db/generic/OptimizerSample.h"
-#include "common/logger.h"
 #include "common/name_to_uid.h"
 #include "common/producer_consumer_common.h"
 #include "ConfigurationAssigner.h"

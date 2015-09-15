@@ -26,7 +26,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 #include <boost/tuple/tuple.hpp>
@@ -35,6 +34,7 @@
 #include <string>
 #include <unordered_map>
 #include <set>
+#include "../../common/Logger.h"
 
 extern bool stopThreads;
 

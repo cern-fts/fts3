@@ -34,7 +34,6 @@
 
 #include "common/JobStatusHandler.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
 
@@ -46,6 +45,7 @@
 
 #include <cgsi_plugin.h>
 
+#include "../../../common/Logger.h"
 #include "../../../common/Uri.h"
 #include "../../../common/UuidGenerator.h"
 //#include "fts3.nsmap"

@@ -19,7 +19,6 @@
  */
 
 #include "TempFile.h"
-#include "common/logger.h"
 #include "common/error.h"
 #include "DelegCred.h"
 
@@ -35,6 +34,7 @@
 #include <errno.h>
 #include <boost/lexical_cast.hpp>
 #include <fstream>
+#include "../common/Logger.h"
 
 using namespace db;
 using namespace fts3::common;

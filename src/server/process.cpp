@@ -33,7 +33,6 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include "common/logger.h"
 #include "common/error.h"
 #include <stdio.h>
 #include <signal.h>
@@ -45,13 +44,14 @@
 #include <errno.h>
 #include "process.h"
 #include "stringhelper.h"
-#include "common/logger.h"
 #include "common/error.h"
 #include <iostream>
 #include <fstream>
 #include "db/generic/SingleDbInstance.h"
 #include <dirent.h>
 #include <sys/socket.h>
+#include "../common/Logger.h"
+#include "../common/Logger.h"
 
 using namespace fts3::common; 
 using namespace StringHelper;

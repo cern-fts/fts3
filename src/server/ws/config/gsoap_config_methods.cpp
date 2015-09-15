@@ -27,7 +27,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 #include "DrainMode.h"
@@ -40,6 +39,7 @@
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
+#include "../../../common/Logger.h"
 
 using namespace std;
 using namespace db;

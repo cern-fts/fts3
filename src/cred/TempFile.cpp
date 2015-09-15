@@ -21,7 +21,7 @@
 #include "TempFile.h"
 
 #include <common/error.h>
-
+#include <string.h>
 #include <sys/stat.h>
 
 

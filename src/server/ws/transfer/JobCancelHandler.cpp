@@ -24,13 +24,13 @@
 #include "ws/AuthorizationManager.h"
 #include "ws/SingleTrStateInstance.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 #include "common/JobStatusHandler.h"
 
 #include <algorithm>
 
 #include <boost/bind.hpp>
+#include "../../../common/Logger.h"
 
 namespace fts3
 {

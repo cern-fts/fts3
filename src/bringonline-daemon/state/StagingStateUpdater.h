@@ -30,8 +30,9 @@
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
+
+#include "../../common/Logger.h"
 #include "common/producer_consumer_common.h"
-#include "common/logger.h"
 
 using namespace fts3::common; 
 

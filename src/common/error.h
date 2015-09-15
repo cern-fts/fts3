@@ -25,7 +25,7 @@
 #include <string>
 #include <exception>
 
-#include "logger.h"
+#include "Logger.h"
 
 /* -------------------------------------------------------------------------- */
 

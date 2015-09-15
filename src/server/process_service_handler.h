@@ -24,7 +24,6 @@
 #include <boost/function.hpp>
 #include <string>
 #include "db/generic/SingleDbInstance.h"
-#include "common/logger.h"
 #include "common/error.h"
 #include "common/ThreadPool.h"
 #include "process.h"
@@ -67,6 +66,7 @@
 #include "profiler/Macros.h"
 #include <boost/thread.hpp>
 
+#include "../common/Logger.h"
 #include "../common/ThreadSafeList.h"
 #include "../common/Uri.h"
 #include "../cred/CredUtility.h"

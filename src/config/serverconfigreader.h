@@ -22,10 +22,10 @@
 
 #pragma once
 
-#include "common/logger.h"
 #include <boost/program_options.hpp>
 #include <map>
 
+#include "../common/Logger.h"
 #include "version.h"
 
 namespace fts3 {

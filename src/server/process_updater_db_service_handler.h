@@ -24,7 +24,6 @@
 #include <boost/function.hpp>
 #include <string>
 #include "db/generic/SingleDbInstance.h"
-#include "common/logger.h"
 #include "common/error.h"
 #include <iostream>
 #include <string>
@@ -43,6 +42,7 @@
 #include "ws/SingleTrStateInstance.h"
 #include <boost/filesystem.hpp>
 
+#include "../common/Logger.h"
 #include "../common/ThreadSafeList.h"
 #include "DrainMode.h"
 

@@ -19,8 +19,6 @@
  */
 
 #include "common/error.h"
-#include "common/logger.h"
-
 #include "config/serverconfig.h"
 
 #include "infosys/SiteNameCacheRetriever.h"
@@ -35,6 +33,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include "../common/Logger.h"
 
 using namespace std;
 using namespace fts3::common;

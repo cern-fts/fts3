@@ -19,7 +19,8 @@
  */
 
 #include "DynamicLibraryManagerException.h"
-#include "common/logger.h"
+
+#include "../../common/Logger.h"
 
 
 using namespace fts3::common; 

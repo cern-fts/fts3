@@ -19,11 +19,12 @@
  */
 
 #include "BringOnlineTask.h"
+
+#include "../../common/Logger.h"
 #include "PollTask.h"
 
 #include "WaitingRoom.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 boost::shared_mutex BringOnlineTask::mx;

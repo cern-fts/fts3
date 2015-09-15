@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include "common/logger.h"
 #include "common/error.h"
 #include <limits>
 #include <deque>
 #include <boost/thread/condition.hpp>
 
+#include "../common/Logger.h"
 #include "../common/MonitorObject.h"
 #include "../common/Timeout.h"
 

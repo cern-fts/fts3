@@ -23,13 +23,13 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 #include <stdlib.h>
 
 #include <boost/regex.hpp>
 #include <sstream>
+#include "../../../common/Logger.h"
 
 using namespace fts3::ws;
 using namespace db;

@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <iostream>
 #include "common/error.h"
-#include "common/logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
@@ -43,6 +42,8 @@
 #include <fstream>
 #include "common/panic.h"
 #include <execinfo.h>
+
+#include "../common/Logger.h"
 #include "../common/ThreadSafeList.h"
 
 namespace fs = boost::filesystem;

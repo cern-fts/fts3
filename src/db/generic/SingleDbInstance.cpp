@@ -20,7 +20,8 @@
 
 #include "SingleDbInstance.h"
 #include <fstream>
-#include "common/logger.h"
+
+#include "../../common/Logger.h"
 #include "common/error.h"
 #include "config/serverconfig.h"
 #include "version.h"

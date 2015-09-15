@@ -24,7 +24,6 @@
 #include <unistd.h>
 #include <iostream>
 #include "common/error.h"
-#include "common/logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "profiler/Profiler.h"
@@ -32,6 +31,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "../common/Logger.h"
 
 using namespace fts3::config; 
 using namespace fts3::common;
@@ -89,18 +89,7 @@ int main(int argc, char** argv)
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
-                    int filedesc = open(logDir.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
-                    if (filedesc != -1)   //if ok
-                        {
-                            close(filedesc);
-                            FILE* freopenLogFile = freopen(logDir.c_str(), "a", stderr);
-                            if (freopenLogFile == NULL)
-                                {
-                                    std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
-                                    exit(1);
-                                }
-                        }
-                    else
+                    if (theLogger().open(logDir) < 0)
                         {
                             std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
                             exit(1);

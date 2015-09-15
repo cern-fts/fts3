@@ -24,7 +24,6 @@
 #include <boost/function.hpp>
 #include <string>
 #include "db/generic/SingleDbInstance.h"
-#include "common/logger.h"
 #include "common/error.h"
 #include <iostream>
 #include <string>
@@ -33,6 +32,7 @@
 #include "common/producer_consumer_common.h"
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include "../common/Logger.h"
 
 extern bool stopThreads;
 extern time_t updateRecords;

@@ -25,13 +25,12 @@
 #include "config/serverconfig.h"
 
 #include "common/error.h"
-#include "common/logger.h"
-
 #include <string>
 #include <fstream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include "../common/Logger.h"
 
 using namespace std;
 using namespace fts3::common;

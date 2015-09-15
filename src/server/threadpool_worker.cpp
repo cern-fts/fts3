@@ -19,8 +19,9 @@
  */
 
 #include "threadpool_worker.h"
+
+#include "../common/Logger.h"
 #include "threadpool.h"
-#include "common/logger.h"
 
 extern bool  stopThreads;
 

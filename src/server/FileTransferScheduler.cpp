@@ -25,9 +25,9 @@
 
 #include "FileTransferScheduler.h"
 
+#include "../common/Logger.h"
 #include "ws/config/Configuration.h"
 
-#include "common/logger.h"
 #include "common/JobStatusHandler.h"
 
 #include "ws/SingleTrStateInstance.h"

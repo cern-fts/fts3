@@ -25,7 +25,6 @@
 #include <cstdlib>
 #include <map>
 #include "common/error.h"
-#include "common/logger.h"
 #include <soci/mysql/soci-mysql.h>
 #include <mysql/mysql.h>
 #include <signal.h>
@@ -39,6 +38,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include "../../common/Logger.h"
 #include "common/JobStatusHandler.h"
 
 using namespace fts3::common;

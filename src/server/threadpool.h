@@ -26,10 +26,10 @@
 
 #include "config/serverconfig.h"
 
-#include "common/logger.h"
-
 #include <limits>
 #include <boost/ptr_container/ptr_vector.hpp>
+
+#include "../common/Logger.h"
 #include "../common/MonitorObject.h"
 
 namespace fts3 {

@@ -20,7 +20,6 @@
 
 #include "CredUtility.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 #include <boost/thread.hpp>
 #include "gridsite.h"
@@ -31,6 +30,7 @@
 #include <globus_gsi_credential.h>
 
 #include <unistd.h>
+#include "../common/Logger.h"
 
 using namespace fts3::common;
 

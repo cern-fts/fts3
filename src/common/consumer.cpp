@@ -32,7 +32,8 @@
 #include "definitions.h"
 #include <algorithm>
 #include <ctime>
-#include "logger.h"
+
+#include "Logger.h"
 
 using namespace std;
 

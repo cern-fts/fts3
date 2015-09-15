@@ -23,9 +23,8 @@
 #include "BringOnlineTask.h"
 #include "WaitingRoom.h"
 
-#include "common/logger.h"
-
 #include <gfal_api.h>
+#include "../../common/Logger.h"
 
 void PollTask::run(boost::any const &)
 {

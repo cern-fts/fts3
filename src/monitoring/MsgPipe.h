@@ -41,7 +41,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "common/logger.h"
+
+#include "../common/Logger.h"
 #include "common/error.h"
 #include "common/producer_consumer_common.h"
 

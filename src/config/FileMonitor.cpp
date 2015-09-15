@@ -20,9 +20,8 @@
 
 #include "FileMonitor.h"
 #include "serverconfig.h"
-#include "common/logger.h"
-
 #include <sys/stat.h>
+#include "../common/Logger.h"
 
 using namespace fts3::config;
 

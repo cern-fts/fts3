@@ -21,11 +21,12 @@
 #ifndef DMTASK_H_
 #define DMTASK_H_
 
-#include "common/error.h"
-
+#include <sstream>
 #include <boost/any.hpp>
 
 #include <gfal_api.h>
+
+#include "common/error.h"
 
 // forward declaration
 class JobContext;

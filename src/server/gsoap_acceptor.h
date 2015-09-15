@@ -24,10 +24,10 @@
 #include <boost/static_assert.hpp>
 #include <queue>
 
-#include "common/error.h"
-#include "common/logger.h"
-//#include "ws-ifce/gsoap/gsoap_stubs.h"
 #include <stdsoap2.h>
+
+#include "common/error.h"
+#include "common/MonitorObject.h"
 
 namespace fts3 {
 namespace server {

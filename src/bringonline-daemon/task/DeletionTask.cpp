@@ -21,10 +21,10 @@
 #include "DeletionTask.h"
 #include "WaitingRoom.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 #include <unordered_map>
+#include "../../common/Logger.h"
 
 DeletionTask::DeletionTask(DeletionContext const & ctx) : Gfal2Task("DELETION"), ctx(ctx)
 {

@@ -25,7 +25,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 #include "config/serverconfig.h"
@@ -47,6 +46,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
+#include "../../../common/Logger.h"
 #include "../../../common/Uri.h"
 #include "../../../common/UuidGenerator.h"
 #include "ws/SingleTrStateInstance.h"

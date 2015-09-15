@@ -19,12 +19,13 @@
  */
 
 #include "RequestLister.h"
+
+#include "../../../common/Logger.h"
 #include "GSoapJobStatus.h"
 
 
 
 #include "common/error.h"
-#include "common/logger.h"
 #include "common/JobStatusHandler.h"
 
 using namespace db;

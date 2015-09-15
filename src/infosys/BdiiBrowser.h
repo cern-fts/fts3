@@ -21,7 +21,6 @@
 #ifndef BDIIBROWSER_H_
 #define BDIIBROWSER_H_
 
-#include "common/logger.h"
 #include "common/ThreadSafeInstanceHolder.h"
 #include <sys/types.h>
 #include <signal.h>
@@ -38,6 +37,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
+#include "../common/Logger.h"
 
 namespace fts3
 {

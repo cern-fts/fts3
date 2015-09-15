@@ -20,7 +20,6 @@
 
 #include "Blacklister.h"
 
-#include "common/logger.h"
 #include "common/error.h"
 
 #include "ws/CGsiAdapter.h"
@@ -29,6 +28,7 @@
 
 #include <vector>
 #include <set>
+#include "../../../common/Logger.h"
 
 namespace fts3
 {

@@ -24,10 +24,10 @@
 #include "GSoapDelegationHandler.h"
 #include "ws/AuthorizationManager.h"
 
-#include "common/logger.h"
 #include <common/error.h>
 
 #include <boost/thread/locks.hpp>
+#include "../../../common/Logger.h"
 
 using namespace std;
 using namespace fts3::common;

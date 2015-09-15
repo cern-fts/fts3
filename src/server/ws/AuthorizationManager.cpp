@@ -22,13 +22,12 @@
 #include "CGsiAdapter.h"
 
 #include "common/error.h"
-#include "common/logger.h"
-
 #include "config/serverconfig.h"
 
 #include "db/generic/SingleDbInstance.h"
 
 #include <boost/algorithm/string.hpp>
+#include "../../common/Logger.h"
 
 
 using namespace fts3::config;

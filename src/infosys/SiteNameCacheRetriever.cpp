@@ -20,9 +20,8 @@
 
 #include "SiteNameCacheRetriever.h"
 
-#include "common/logger.h"
-
 #include <iostream>
+#include "../common/Logger.h"
 
 namespace fts3
 {

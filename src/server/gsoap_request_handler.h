@@ -24,7 +24,7 @@
 #include <boost/static_assert.hpp>
 #include <queue>
 
-#include "common/logger.h"
+#include "../common/Logger.h"
 #include "common/error.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 

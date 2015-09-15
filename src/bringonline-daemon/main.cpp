@@ -19,7 +19,6 @@
  */
 
 #include "common/error.h"
-#include "common/logger.h"
 #include "common/ThreadPool.h"
 #include "common/panic.h"
 #include "common/name_to_uid.h"
@@ -34,6 +33,7 @@
 #include "server/DrainMode.h"
 
 #include <string>
+#include "../common/Logger.h"
 
 using namespace fts3::common;
 using namespace fts3::config;
