@@ -9900,8 +9900,9 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
             sql.begin();
             soci::statement stmt3 = (sql.prepare <<
                                      "DELETE FROM t_hosts "
-                                     "WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) "
-                                     "   AND drain = 0");
+                                     "WHERE "
+                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) AND drain = 0) OR "
+                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 2 DAY)) ");
             stmt3.execute(true);
             sql.commit();
         }
