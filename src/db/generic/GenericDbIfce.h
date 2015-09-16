@@ -376,6 +376,10 @@ public:
     /// @note           Transfers within reuse and multihop jobs go all together to a single fts_url_copy process
     virtual void setPidForJob(const std::string& jobId, int pid) = 0;
 
+    /// Search for transfers stuck in 'READY' state and revert them to 'SUBMITTED'
+    /// @note   AFAIK 'READY' only applies for reuse and multihop, but inside
+    ///         MySQL reuse seems to be explicitly filtered out, so I am not sure
+    ///         how much is this method actually doing
     virtual void revertToSubmitted() = 0;
 
     /// Moves old transfer and job records to the archive tables
@@ -384,7 +388,10 @@ public:
     /// @param[out] nFiles  How many files have been moved
     virtual void backup(long* nJobs, long* nFiles) = 0;
 
-    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0;
+    /// Mark all the transfers as failed because the process fork failed
+    /// @param jobId    The job id for which url copy failed to fork
+    /// @note           This method is used only for reuse and multihop jobs
+    virtual void forkFailed(const std::string& jobId) = 0;
 
     virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull) = 0;
 

@@ -144,7 +144,7 @@ public:
 
     void backup(long* nJobs, long* nFiles);
 
-    void forkFailedRevertStateV(std::map<int,std::string>& pids);
+    void forkFailed(const std::string& jobId);
 
     bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull);
 

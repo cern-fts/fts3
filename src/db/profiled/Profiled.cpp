@@ -296,9 +296,9 @@ void ProfiledDB::backup(long* nJobs, long* nFiles)
 }
 
 
-void ProfiledDB::forkFailedRevertStateV(std::map<int,std::string>& pids)
+void ProfiledDB::forkFailed(const std::string& jobId)
 {
-    PROFILE_PREFIXED("DB::", db->forkFailedRevertStateV(pids));
+    PROFILE_PREFIXED("DB::", db->forkFailed(jobId));
 }
 
 

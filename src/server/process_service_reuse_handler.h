@@ -301,12 +301,12 @@ protected:
                         if(forkMessage.empty())
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
-                                db->forkFailedRevertStateV(fileIds);
+                                db->forkFailed(job_id);
                             }
                         else
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << forkMessage << commit;
-                                db->forkFailedRevertStateV(fileIds);
+                                db->forkFailed(job_id);
                             }
                     }
                 else
