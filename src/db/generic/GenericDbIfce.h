@@ -398,7 +398,11 @@ public:
     /// @param diskFull Set to true if there are no messages because the disk is full
     virtual bool markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull) = 0;
 
-    virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds) = 0;
+
+    /// Checks if the files that belong to jobId are in 'READY'
+    /// @param jobId    The job ID
+    /// @note           This is only used, and only makes sense, for reuse and multihop
+    virtual bool areFilesInReadyState(const std::string &jobId) = 0;
 
     //t_group_members
     virtual bool checkGroupExists(const std::string & groupName) = 0;

@@ -6056,18 +6056,20 @@ std::map< std::string, double > MySqlAPI::getActivityConfig(std::string vo)
 
 
 /*for session reuse check only*/
-bool MySqlAPI::isFileReadyStateV(std::map<int, std::string>& fileIds)
+bool MySqlAPI::areFilesInReadyState(const std::string& jobId)
 {
     soci::session sql(*connectionPool);
 
-    bool isReady = false;
+    bool isReady = true;
     try
     {
-        std::string state;
-        sql << "SELECT file_state FROM t_file WHERE file_id = :fileId",
-            soci::use(fileIds.begin()->first), soci::into(state);
-
-        isReady = (state == "READY");
+        soci::rowset<std::string> rs = (sql.prepare <<
+                "SELECT file_state FROM t_file WHERE job_id = :jobId",
+                soci::use(jobId));
+        for (auto i = rs.begin(); i != rs.end(); ++i)
+        {
+            isReady = (isReady && (*i == "READY"));
+        }
     }
     catch (std::exception& e)
     {

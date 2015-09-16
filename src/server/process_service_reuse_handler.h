@@ -286,8 +286,7 @@ protected:
         // Current number of actives
         cmd_builder.setNumberOfActive(currentActive);
 
-
-        bool ready = db->isFileReadyStateV(fileIds);
+        bool ready = db->areFilesInReadyState(job_id);
 
         if (ready)
             {

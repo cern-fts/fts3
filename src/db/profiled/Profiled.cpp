@@ -353,9 +353,9 @@ bool ProfiledDB::isDnBlacklisted(const std::string& userDn)
 }
 
 
-bool ProfiledDB::isFileReadyStateV(std::map<int,std::string>& fileIds)
+bool ProfiledDB::areFilesInReadyState(const std::string& jobId)
 {
-    PROFILE_PREFIXED("DB::", return db->isFileReadyStateV(fileIds));
+    PROFILE_PREFIXED("DB::", return db->areFilesInReadyState(jobId));
 }
 
 

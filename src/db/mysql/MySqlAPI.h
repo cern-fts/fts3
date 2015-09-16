@@ -182,7 +182,7 @@ public:
 
     virtual bool isDnBlacklisted(const std::string& userDn);
 
-    virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds);
+    virtual bool areFilesInReadyState(const std::string& jobId);
 
     //t_group_members
     virtual  bool checkGroupExists(const std::string & groupName);
