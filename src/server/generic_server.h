@@ -40,6 +40,12 @@ public:
     /** Start the service. */
     void start()
     {
+        boost::thread_group systemThreads;
+
+        typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
+        systemThreads.create_thread(boost::bind(&TRAITS::CleanLogsTypeActive::clean, cLeanLogsHandlerActive));
+
+        /*** Old style ***/
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();
 
@@ -49,8 +55,6 @@ public:
         if (!config::theServerConfig().get<bool> ("rush"))
             sleep(8);
 
-        typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
-        cLeanLogsHandlerActive.beat();
 
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
@@ -78,6 +82,9 @@ public:
         handler_t.listen_p(port, ip);
 
         TRAITS::ThreadPoolType::instance().wait();
+
+
+        systemThreads.join_all();
     }
 
     /* ---------------------------------------------------------------------- */
