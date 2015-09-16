@@ -82,11 +82,11 @@ struct HeartBeatTraitsActive
 
 /* -------------------------------------------------------------------------- */
 
-class HearBeatActive : public HeartBeatHandlerActive <HeartBeatTraitsActive>
+class HeartBeatActive : public HeartBeatHandlerActive <HeartBeatTraitsActive>
 {
 public:
-    explicit HearBeatActive() {}
-    virtual ~HearBeatActive() {};
+    explicit HeartBeatActive() {}
+    virtual ~HeartBeatActive() {};
 };
 
 } // end namespace server

@@ -36,6 +36,9 @@
 #include "common/error.h"
 #include "common/producer_consumer_common.h"
 #include "common/Logger.h"
+#include "common/ThreadSafeList.h"
+
+#include "ws/SingleTrStateInstance.h"
 
 extern bool stopThreads;
 extern time_t updateRecords;
@@ -86,7 +89,7 @@ public:
                 //use one fast query
                 try
                 {
-                    DBSingleton::instance().getDBObjectInstance()->getDrain();
+                    db::DBSingleton::instance().getDBObjectInstance()->getDrain();
                 }
                 catch (...)
                 {
@@ -99,7 +102,7 @@ public:
                     if (runConsumerStatus(messages) != 0)
                     {
                         char buffer[128] = {0};
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << fts3::common::commit;
                     }
                 }
 
@@ -108,7 +111,7 @@ public:
                     executeUpdate(messages);
 
                     //now update the protocol
-                    DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);
+                    db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);
 
                     //finally clear store
                     messages.clear();
@@ -121,7 +124,7 @@ public:
                     {
                         char buffer[128] =
                         { 0 };
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << fts3::common::commit;
                     }
                 }
 
@@ -129,23 +132,23 @@ public:
                 {
                     if (!messagesLog.empty())
                     {
-                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                        db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
                         messagesLog.clear();
                     }
                 }
                 catch (std::exception& e)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR)<< e.what() << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR)<< e.what() << fts3::common::commit;
 
                     //try again
                     try
                     {
-                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                        db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
                         messagesLog.clear();
                     }
                     catch(...)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 1" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 1" << fts3::common::commit;
                         std::map<int, struct message_log>::const_iterator iterLogBreak;
                         for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                         {
@@ -156,16 +159,16 @@ public:
                 }
                 catch (...)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 2" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 2" << fts3::common::commit;
                     //try again
                     try
                     {
-                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                        db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
                         messagesLog.clear();
                     }
                     catch(...)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 3" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 3" << fts3::common::commit;
                         std::map<int, struct message_log>::const_iterator iterLogBreak;
                         for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                         {
@@ -184,7 +187,7 @@ public:
                         {
                             char buffer[128] =
                             { 0 };
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << fts3::common::commit;
                         }
                     }
 
@@ -203,7 +206,7 @@ public:
                                 << "\nTimestamp: " << (*iterUpdater).timestamp
                                 << "\nThroughput: " << (*iterUpdater).throughput
                                 << "\nTransferred: " << (*iterUpdater).transferred
-                                << commit;
+                                << fts3::common::commit;
                                 ThreadSafeList::get_instance().updateMsg(*iterUpdater);
                             }
                         }
@@ -211,22 +214,22 @@ public:
                         //now update the progress markers in a "bulk fashion"
                         try
                         {
-                            DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                            db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                         }
                         catch (std::exception& e)
                         {
                             try
                             {
                                 sleep(1);
-                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                             }
                             catch (std::exception& e)
                             {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << fts3::common::commit;
                             }
                             catch (...)
                             {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << fts3::common::commit;
                             }
                         }
                         catch (...)
@@ -234,15 +237,15 @@ public:
                             try
                             {
                                 sleep(1);
-                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                             }
                             catch (std::exception& e)
                             {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << fts3::common::commit;
                             }
                             catch (...)
                             {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << fts3::common::commit;
                             }
                         }
                     }
@@ -250,22 +253,22 @@ public:
                 }
                 catch (const fs::filesystem_error& ex)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << fts3::common::commit;
                 }
-                catch (Err& e)
+                catch (fts3::common::Err& e)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << fts3::common::commit;
                 }
                 catch (...)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << fts3::common::commit;
                 }
 
                 sleep(1);
             }
             catch (const fs::filesystem_error& ex)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)<<ex.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)<<ex.what() << fts3::common::commit;
 
                 std::vector<struct message>::const_iterator iterBreak;
                 for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
@@ -285,7 +288,7 @@ public:
             }
             catch (std::exception& ex2)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << fts3::common::commit;
 
                 std::vector<struct message>::const_iterator iterBreak;
                 for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
@@ -305,7 +308,7 @@ public:
             }
             catch (...)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << fts3::common::commit;
 
                 std::vector<struct message>::const_iterator iterBreak;
                 for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
@@ -342,7 +345,7 @@ private:
                     std::string(msg.transfer_status).compare("FAILED") == 0 ||
                     std::string(msg.transfer_status).compare("CANCELED") == 0)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << fts3::common::commit;
                 ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
             }
 
@@ -351,14 +354,14 @@ private:
                 try
                 {
                     //multiple replica files belonging to a job will not be retried
-                    int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
+                    int retry = db::DBSingleton::instance().getDBObjectInstance()->getRetry(job);
 
                     if(msg.retry==true && retry > 0 && msg.file_id > 0 && !job.empty())
                     {
-                        int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
+                        int retryTimes = db::DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
                         if( retryTimes <= retry-1 )
                         {
-                            DBSingleton::instance().getDBObjectInstance()
+                            db::DBSingleton::instance().getDBObjectInstance()
                             ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                             return;
                         }
@@ -366,11 +369,11 @@ private:
                 }
                 catch (std::exception& e)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << fts3::common::commit;
                 }
                 catch (...)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << fts3::common::commit;
                 }
             }
 
@@ -384,22 +387,22 @@ private:
             {
                 if(std::string(msg.job_id).length() == 0)
                 {
-                    DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(), static_cast<int> (msg.process_id),std::string(msg.transfer_message));
+                    db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(), static_cast<int> (msg.process_id),std::string(msg.transfer_message));
                 }
                 else
                 {
-                    DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36),static_cast<int> (msg.process_id), std::string(msg.transfer_message));
+                    db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36),static_cast<int> (msg.process_id), std::string(msg.transfer_message));
                 }
             }
 
             //update file/job state
-            DBSingleton::instance().
+            db::DBSingleton::instance().
             getDBObjectInstance()->
             updateTransferStatus(job, msg.file_id, msg.throughput, std::string(msg.transfer_status),
                     std::string(msg.transfer_message), static_cast<int> (msg.process_id),
                     msg.filesize, msg.timeInSecs, msg.retry);
 
-            DBSingleton::instance().
+            db::DBSingleton::instance().
             getDBObjectInstance()->
             updateJobStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
 
@@ -410,13 +413,13 @@ private:
         }
         catch (std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << fts3::common::commit;
             struct message msgTemp = msg;
             runProducerStatus( msgTemp);
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << fts3::common::commit;
             struct message msgTemp = msg;
             runProducerStatus( msgTemp);
         }
@@ -466,22 +469,22 @@ private:
                     << "\nPid: " << (*iter).process_id
                     << "\nState: " << (*iter).transfer_status
                     << "\nSource: " << (*iter).source_se
-                    << "\nDest: " << (*iter).dest_se << commit;
+                    << "\nDest: " << (*iter).dest_se << fts3::common::commit;
 
                     updateDatabase((*iter));
                 }
             }
             catch (const boost::filesystem::filesystem_error& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << fts3::common::commit;
             }
             catch (std::exception& ex)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << fts3::common::commit;
             }
             catch (...)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << fts3::common::commit;
             }
         } //end for
     }

@@ -197,11 +197,11 @@ struct HeartBeatTraits
 
 /* -------------------------------------------------------------------------- */
 
-class HearBeat : public HeartBeatHandler <HeartBeatTraits>
+class HeartBeat : public HeartBeatHandler <HeartBeatTraits>
 {
 public:
-    explicit HearBeat() {}
-    virtual ~HearBeat() {};
+    explicit HeartBeat() {}
+    virtual ~HeartBeat() {};
 };
 
 } // end namespace server

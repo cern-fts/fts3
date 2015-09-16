@@ -30,13 +30,15 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#include "common/Logger.h"
+#include "db/generic/SingleDbInstance.h"
 
 extern bool stopThreads;
 
 namespace fts3 {
 namespace server {
 
-class CleanLogsActive
+class CleanMessageFiles
 {
 private:
     int counter;
@@ -60,7 +62,7 @@ private:
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir
                             << " because it was created " << std::ctime( &t )
-                            <<  commit;
+                            <<  fts3::common::commit;
                     boost::filesystem::remove(*dir);
                 }
             }
@@ -92,16 +94,16 @@ public:
                 // Every hour
                 if (counter % 3600 == 0)
                 {
-                    DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+                    db::DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                 }
             }
             catch(std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() <<  commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() <<  fts3::common::commit;
             }
             catch(...)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  fts3::common::commit;
             }
 
             sleep(1);

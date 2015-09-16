@@ -29,7 +29,7 @@
 #include "db/generic/SingleDbInstance.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
 #include <fstream>
-#include "server.h"
+#include "Server.h"
 #include <iomanip>
 #include <sys/types.h>
 #include <sys/wait.h>
