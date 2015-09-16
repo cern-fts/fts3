@@ -419,29 +419,21 @@ int DoServer(int argc, char** argv)
 
             //re-read here
             theServerConfig().read(argc, argv, true);
+            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
 
             // Set X509_ environment variables properly - reset here is case the child crashes
             setenv("X509_USER_CERT", hostcert, 1);
             setenv("X509_USER_KEY", hostkey, 1);
 
             std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
-            if (logDir.length() > 0)
+            if (isDaemon && logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
-                    if (theLogger().open(logDir) != 0)
+                    if (theLogger().redirect(logDir, logDir) != 0)
                         {
                             std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
                             return -1;
                         }
-                }
-
-            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
-
-            if (isDaemon)
-                {
-                    FILE* openlog = freopen(logDir.c_str(), "a", stderr);
-                    if (openlog == NULL)
-                        std::cerr << "Can't open log file" << std::endl;
                 }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;

@@ -183,6 +183,7 @@ int DoServer(int argc, char** argv)
 
             //re-read here
             theServerConfig().read(argc, argv, true);
+            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
 
             std::string arguments("");
             if (argc > 1)
@@ -201,23 +202,14 @@ int DoServer(int argc, char** argv)
                 }
 
             std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
-            if (logDir.length() > 0)
+            if (isDaemon && logDir.length() > 0)
                 {
                     logDir += "/fts3bringonline.log";
-                    if (theLogger().open(logDir) != 0)
+                    if (theLogger().redirect(logDir, logDir) != 0)
                         {
                             std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
                             return -1;
                         }
-                }
-
-            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
-
-            if (isDaemon)
-                {
-                    FILE* openlog = freopen(logDir.c_str(), "a", stderr);
-                    if (openlog == NULL)
-                        std::cerr << "BRINGONLINE  Can't open log file" << std::endl;
                 }
 
             /*set infosys to gfal2*/

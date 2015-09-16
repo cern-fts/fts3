@@ -60,7 +60,6 @@ void Logger::_commit()
     if (_isLogOn)
     {
         std::cout << std::endl;
-        std::cerr << std::endl;
         ++_nCommits;
         if (_nCommits >= NB_COMMITS_BEFORE_CHECK)
         {
@@ -91,40 +90,42 @@ Logger& Logger::operator << (Logger& (*aFunc)(Logger &aLogger))
 }
 
 
-int Logger::open(const std::string& path) throw()
+static int createAndReopen(const std::string& path, FILE* stream)
 {
-    int filedesc = ::open(path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
-    if (filedesc >= 0)
-    {
-        close(filedesc);
-        FILE* freopenLogFile = freopen(path.c_str(), "a", stderr);
-        if (freopenLogFile == NULL)
-            return -1;
-    }
-    else
-        {
-            return -1;
-        }
-    logPath = path;
+    int fd = ::open(path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+    if (fd < 0)
+        return -1;
+    FILE* aux = freopen(path.c_str(), "a", stream);
+    if (!aux)
+        return -1;
+    return 0;
+}
+
+
+int Logger::redirect(const std::string& outPath, const std::string& errPath) throw()
+{
+    if (createAndReopen(outPath, stdout) < 0)
+        return -1;
+    if (createAndReopen(errPath, stderr) < 0)
+        return -1;
     return 0;
 }
 
 
 void Logger::checkFd(void)
 {
-    if (std::cerr.fail())
+    if (std::cout.fail())
     {
-        std::cerr.clear();
+        std::cout.clear();
         *this << logLevelStringRepresentation(WARNING) << timestamp() << _separator;
-        *this << "std::cerr fail bit cleared";
+        *this << "std::cout fail bit cleared";
     }
     else
     {
         *this << logLevelStringRepresentation(INFO) << timestamp() << _separator;
-        *this << "std::cerr clear!";
+        *this << "std::cout clear!";
     }
 
-    std::cerr << std::endl;
     std::cout << std::endl;
 }
 

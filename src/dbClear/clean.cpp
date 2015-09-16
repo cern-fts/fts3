@@ -89,7 +89,7 @@ int main(int argc, char** argv)
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
-                    if (theLogger().open(logDir) < 0)
+                    if (theLogger().redirect(logDir, logDir) < 0)
                         {
                             std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
                             exit(1);

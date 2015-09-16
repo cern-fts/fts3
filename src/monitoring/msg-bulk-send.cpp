@@ -120,14 +120,17 @@ int proc_find()
 	If the child hangs or for any reason die, transparently it's restarting it and restoring all mesgs
 */
 
-void DoServer() throw()
+void DoServer(bool isDaemon) throw()
 {
     if (!get_mon_cfg_file()) {
         FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the monitoring configuration file");
         return;
     }
 
-    fts3::common::theLogger().open(getLOGFILEDIR() + "" + getLOGFILENAME());
+    std::string logFile = getLOGFILEDIR() + "" + getLOGFILENAME();
+    if (isDaemon) {
+        fts3::common::theLogger().redirect(logFile, logFile);
+    }
 
     std::string errorMessage;
     try
@@ -206,12 +209,9 @@ int main(int argc,  char** /*argv*/)
                     std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
                     return EXIT_FAILURE;
                 }
-
-            // Detach stdout
-            freopen("/dev/null", "a", stdout);
         }
 
-    DoServer();
+    DoServer(argc <= 1);
 
     return 0;
 }

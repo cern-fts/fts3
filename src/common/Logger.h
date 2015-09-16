@@ -72,14 +72,15 @@ public:
         if (_isLogOn)
         {
             std::cout << aSrc;
-            std::cerr << aSrc;
         }
         return *this;
     }
 
-    /// Redirect the output streams to path
+    /// Redirect the output and error streams
+    /// @param stdout   File for the standard output
+    /// @param stderr   File for the standard error
     /// Return 0 on success
-    int open(const std::string& path) throw();
+    int redirect(const std::string& stdout, const std::string& stderr) throw();
 
 private:
     /// true: log lines are written, false: no log is written.
@@ -90,9 +91,6 @@ private:
 
     /// Separator for the logging
     std::string _separator;
-
-    /// Remember the path!
-    std::string logPath;
 
     /// Check file descriptor every X iterations
     static const unsigned NB_COMMITS_BEFORE_CHECK = 1000;
@@ -107,7 +105,7 @@ private:
     /// Commits (writes) the actual log line.
     void _commit();
 
-    /// When the disk is full, std::cerr fail bits are set
+    /// When the disk is full, std::cout fail bits are set
     /// Afterwards, any attempt to write will fail even if space is recovered
     /// So we clean here the fail bits to keep doing business as usual
     void checkFd(void);
