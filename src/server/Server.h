@@ -30,7 +30,7 @@
 #include "ProcessQueue.h"
 #include "HeartBeat.h"
 #include "OptimizerService.h"
-#include "process_updater_db_service.h"
+#include "ProcessUpdaterDbService.h"
 #include "process_multihop.h"
 #include "process_reuse.h"
 #include "process_service.h"
@@ -61,13 +61,11 @@ public:
         HeartBeat heartBeatHandler;
         systemThreads.create_thread(boost::bind(&HeartBeat::beat, heartBeatHandler));
 
-        /*** Old style ***/
         if (!config::theServerConfig().get<bool> ("rush"))
             sleep(8);
 
-
         ProcessUpdaterDBService processUpdaterDBHandler;
-        processUpdaterDBHandler.executeTransfer_p();
+        systemThreads.create_thread(boost::bind(&ProcessUpdaterDBService::updateDbService, processUpdaterDBHandler));
 
         /*wait for status updates to be processed and then start sanity threads*/
         if (!config::theServerConfig().get<bool> ("rush"))
@@ -75,6 +73,8 @@ public:
 
         OptimizerService optimizerService;
         systemThreads.create_thread(boost::bind(&OptimizerService::runOptimizer, optimizerService));
+
+        /*** Old style ***/
 
         ProcessService processHandler;
         processHandler.executeTransfer_p();
