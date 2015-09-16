@@ -187,11 +187,14 @@ public:
     //t_group_members
     virtual  bool checkGroupExists(const std::string & groupName);
 
-    virtual void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void getGroupMembers(const std::string & groupName,
+            std::vector<std::string>& groupMembers);
 
-    virtual void addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void addMemberToGroup(const std::string & groupName,
+            const std::vector<std::string>& groupMembers);
 
-    virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void deleteMembersFromGroup(const std::string & groupName,
+            const std::vector<std::string>& groupMembers);
 
     virtual std::string getGroupForSe(const std::string se);
 

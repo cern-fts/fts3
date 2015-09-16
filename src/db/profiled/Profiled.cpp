@@ -371,13 +371,15 @@ void ProfiledDB::getGroupMembers(const std::string & groupName, std::vector<std:
 }
 
 
-void ProfiledDB::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers)
+void ProfiledDB::addMemberToGroup(const std::string & groupName,
+    const std::vector<std::string>& groupMembers)
 {
     PROFILE_PREFIXED("DB::", db->addMemberToGroup(groupName, groupMembers));
 }
 
 
-void ProfiledDB::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers)
+void ProfiledDB::deleteMembersFromGroup(const std::string & groupName,
+    const std::vector<std::string>& groupMembers)
 {
     PROFILE_PREFIXED("DB::", db->deleteMembersFromGroup(groupName, groupMembers));
 }

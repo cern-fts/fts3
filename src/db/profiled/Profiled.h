@@ -169,11 +169,14 @@ public:
 
     bool checkGroupExists(const std::string & groupName);
 
-    void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers);
+    void getGroupMembers(const std::string & groupName,
+            std::vector<std::string>& groupMembers);
 
-    void addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    void addMemberToGroup(const std::string & groupName,
+            const std::vector<std::string>& groupMembers);
 
-    void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    void deleteMembersFromGroup(const std::string & groupName,
+            const std::vector<std::string>& groupMembers);
 
     std::string getGroupForSe(const std::string se);
 

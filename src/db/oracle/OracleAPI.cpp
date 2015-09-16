@@ -4975,8 +4975,8 @@ std::string OracleAPI::getGroupForSe(const std::string se)
 }
 
 
-
-void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers)
+void OracleAPI::addMemberToGroup(const std::string & groupName,
+    const std::vector<std::string>& groupMembers)
 {
     soci::session sql(*connectionPool);
 
@@ -5011,8 +5011,8 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
 }
 
 
-
-void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers)
+void OracleAPI::deleteMembersFromGroup(const std::string& groupName,
+    const std::vector<std::string>& groupMembers)
 {
     soci::session sql(*connectionPool);
 
@@ -5043,7 +5043,6 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
 
 
 void OracleAPI::addLinkConfig(const LinkConfig& cfg)

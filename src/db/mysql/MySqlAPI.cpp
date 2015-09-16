@@ -5506,8 +5506,8 @@ std::string MySqlAPI::getGroupForSe(const std::string se)
 }
 
 
-
-void MySqlAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers)
+void MySqlAPI::addMemberToGroup(const std::string & groupName,
+        const std::vector<std::string>& groupMembers)
 {
     soci::session sql(*connectionPool);
 
@@ -5542,8 +5542,8 @@ void MySqlAPI::addMemberToGroup(const std::string & groupName, std::vector<std::
 }
 
 
-
-void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers)
+void MySqlAPI::deleteMembersFromGroup(const std::string & groupName,
+    const std::vector<std::string>& groupMembers)
 {
     soci::session sql(*connectionPool);
 

@@ -404,16 +404,26 @@ public:
     /// @note           This is only used, and only makes sense, for reuse and multihop
     virtual bool areFilesInReadyState(const std::string &jobId) = 0;
 
-    //t_group_members
+    /// Return true if the group 'groupName' exists
     virtual bool checkGroupExists(const std::string & groupName) = 0;
 
-    virtual void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
+    /// Get the members that belong to the group 'groupName'
+    /// @param groupName            The group name
+    /// @param[out] groupMembers    A vector with the storages that belong to the group
+    virtual void getGroupMembers(const std::string & groupName,
+            std::vector<std::string>& groupMembers) = 0;
 
-    virtual void addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
+    /// Add all entries in 'groupMembers' into the group
+    virtual void addMemberToGroup(const std::string & groupName,
+            const std::vector<std::string>& groupMembers) = 0;
 
-    virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
+    /// Delete all entries in 'groupMemebrs' from the group
+    virtual void deleteMembersFromGroup(const std::string & groupName,
+            const std::vector<std::string>& groupMembers) = 0;
 
-    virtual std::string getGroupForSe(const std::string se) = 0;
+    /// @return the group to which storage belong
+    /// @note   It will be the empty string if there is no group
+    virtual std::string getGroupForSe(const std::string storage) = 0;
 
     //t_config_symbolic
     virtual void addLinkConfig(const LinkConfig& cfg) = 0;
