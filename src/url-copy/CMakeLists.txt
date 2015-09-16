@@ -22,7 +22,6 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(GFAL2)
 find_package(GLIB2)
-
 include_directories (
     ${GLIB2_INCLUDE_DIRS}
     ${GFAL2_INCLUDE_DIRS}
@@ -36,17 +35,13 @@ set(fts_url_copy_SOURCES
     main.cpp
     file_management.cpp
     heuristics.cpp
-    logger.cpp
     reporter.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/UserProxyEnv.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/name_to_uid.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/producer.cpp
-    ${PROJECT_SOURCE_DIR}/src/common/consumer.cpp
 )
 
 add_executable(fts_url_copy ${fts_url_copy_SOURCES})
 target_link_libraries(fts_url_copy
     uuid ssl crypto
+    fts_common
     fts_msg_ifce fts_proxy
     ${Boost_LIBRARIES}
     ${GLIB2_LIBRARIES}

@@ -33,7 +33,7 @@
 #include "errors.h"
 #include "file_management.h"
 #include "heuristics.h"
-#include "logger.h"
+#include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
 #include "common/name_to_uid.h"
 #include "reporter.h"
@@ -210,11 +210,11 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
 
             size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
             time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
-            Logger::getInstance().INFO() << "bytes: " << trans
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "bytes: " << trans
                                          << ", avg KB/sec:" << avg
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
-                                         << std::endl;
+                                         << commit;
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
         }
@@ -257,7 +257,7 @@ void abnormalTermination(std::string classification, std::string, std::string fi
     if(classification != "CANCELED")
         retry = true;
 
-    Logger::getInstance().ERROR() << errorMessage << std::endl;
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
 
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -298,9 +298,9 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     if(UrlCopyOpts::getInstance().monitoringMessages)
         {
-            Logger::getInstance().INFO() << "Send monitoring complete message" << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring complete message" << commit;
             std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-            Logger::getInstance().INFO() << "Complete message content: " << msgReturnValue << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Complete message content: " << msgReturnValue << commit;
         }
 
     reporter.timeout = UrlCopyOpts::getInstance().timeout;
@@ -323,8 +323,8 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     if (moveFile.length() != 0)
         {
-            Logger::getInstance().ERROR() << "INIT Failed to archive file: " << moveFile
-                                          << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "INIT Failed to archive file: " << moveFile
+                                          << commit;
         }
     if (UrlCopyOpts::getInstance().areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
@@ -425,9 +425,7 @@ void shutdown_callback(int signum, void*)
     //stop reporting progress to the server if a signal is received
     inShutdown = true;
 
-    Logger& logger = Logger::getInstance();
-
-    logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Received signal " << signum << " (" << strsignal(signum) << ")" << commit;
 
 
     if (signum == SIGABRT || signum == SIGSEGV || signum ==  SIGILL || signum ==  SIGFPE || signum == SIGBUS || signum ==  SIGTRAP || signum ==  SIGSYS)
@@ -436,9 +434,9 @@ void shutdown_callback(int signum, void*)
                 {
                     std::string stackTrace = fts3::common::panic::stack_dump(fts3::common::panic::stack_backtrace, fts3::common::panic::stack_backtrace_size);
                     propagated = true;
-                    logger.ERROR() << "TRANSFER process died: " << currentTransfer.jobId << std::endl;
-                    logger.ERROR() << "Received signal: " << signum << std::endl;
-                    logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "TRANSFER process died: " << currentTransfer.jobId << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Received signal: " << signum << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stacktrace: " << stackTrace << commit;
 
                     errorMessage = "Transfer process died with: " + stackTrace;
                     abnormalTermination("FAILED", errorMessage, "Error");
@@ -450,7 +448,7 @@ void shutdown_callback(int signum, void*)
                 {
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
-                    logger.WARNING() << errorMessage << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
         }
@@ -460,7 +458,7 @@ void shutdown_callback(int signum, void*)
                 {
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
-                    logger.WARNING() << errorMessage << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
         }
@@ -470,7 +468,7 @@ void shutdown_callback(int signum, void*)
                 {
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
-                    logger.WARNING() << errorMessage << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
         }
@@ -485,11 +483,11 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     msg_ifce* msg = msg_ifce::getInstance();
     std::string timestampStr = boost::lexical_cast<std::string>(e->timestamp);
 
-    Logger::getInstance().INFO() << '[' << timestampStr << "] "
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << '[' << timestampStr << "] "
                                  << sideStr[e->side] << ' '
                                  << g_quark_to_string(e->domain) << '\t'
                                  << g_quark_to_string(e->stage) << '\t'
-                                 << e->description << std::endl;
+                                 << e->description << commit;
 
     std::string quark = std::string(g_quark_to_string(e->stage));
     std::string source = currentTransfer.sourceUrl;
@@ -537,7 +535,7 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 {
     if (message)
         {
-            Logger::getInstance().DEBUG() << message << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << message << commit;
         }
 }
 
@@ -549,7 +547,7 @@ void myunexpected()
         currentTransfer.fileId = file_id;
 
     errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;
-    Logger::getInstance().ERROR() << errorMessage << std::endl;
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
 
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
@@ -562,7 +560,7 @@ void myterminate()
         currentTransfer.fileId = file_id;
 
     errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;
-    Logger::getInstance().ERROR() << errorMessage << std::endl;
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
 
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
@@ -595,12 +593,12 @@ int statWithRetries(gfal2_context_t handle, const std::string& category, const s
                     return 0;
                 }
 
-            Logger::getInstance().WARNING() << category << " Stat failed with " << *errMsg << "(" << errorCode << ")" << std::endl;
-            Logger::getInstance().WARNING() << category << " Stat the file will be retried" << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << category << " Stat failed with " << *errMsg << "(" << errorCode << ")" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << category << " Stat the file will be retried" << commit;
             sleep(3); //give it some time to breath
         }
 
-    Logger::getInstance().ERROR() << "No more retries for stat the file" << std::endl;
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "No more retries for stat the file" << commit;
     return errorCode;
 }
 
@@ -609,7 +607,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
     for (unsigned i = currentIndex; i < transferList.size(); ++i)
         {
             Transfer& t = transferList[i];
-            Logger::getInstance().INFO() << "Report FAILED back to the server for " << t.fileId << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report FAILED back to the server for " << t.fileId << commit;
 
             msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(t.sourceUrl));
             msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(t.destUrl));
@@ -660,13 +658,8 @@ int main(int argc, char **argv)
     else
         file_id = opts.fileId;
 
-    // Initialize logger
-    Logger &logger = Logger::getInstance();
-
     // register signals handler
     fts3::common::panic::setup_signal_handlers(shutdown_callback, NULL);
-
-
 
 
     fileManagement.init(opts.logDir);
@@ -752,7 +745,7 @@ int main(int argc, char **argv)
     gfal2_log_set_handler((GLogFunc) log_func, NULL);
     if (opts.debugLevel > 0)
         {
-            logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set the transfer to debug level " << opts.debugLevel << commit;
             gfal2_log_set_level(G_LOG_LEVEL_DEBUG);
 
             if (opts.debugLevel >= 2)
@@ -901,7 +894,10 @@ int main(int argc, char **argv)
 
             if (!opts.logToStderr)
                 {
-                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
+                    std::string debugOutput = "/dev/null";
+                    if (opts.debugLevel)
+                        debugOutput = fileManagement.getLogFilePath() + ".debug";
+                    int checkError = theLogger().redirect(fileManagement.getLogFilePath(), debugOutput);
                     if (checkError != 0)
                         {
                             std::string message = mapErrnoToString(checkError);
@@ -912,61 +908,61 @@ int main(int argc, char **argv)
 
             if(opts.monitoringMessages)
 	    {
-		logger.INFO() << "Send monitoring start message " << std::endl;
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring start message " << commit;
                 std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
-  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;
+  	        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message content: " << msgReturnValue << commit;
 	    }
 
             //also reuse session when both url's are gsiftp
             if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
                 {
                     gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
-                    logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "GridFTP session reuse enabled since both uri's are gsiftp" << commit;
                 }
 
             // Scope
             {
-                logger.INFO() << "Transfer accepted" << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer accepted" << commit;
                 if(opts.hide_user_dn)
                     {
-                        logger.INFO() << "Proxy: Hidden" << std::endl;
-                        logger.INFO() << "User DN Hidden:" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy: Hidden" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User DN Hidden:" << commit;
                     }
                 else
                     {
-                        logger.INFO() << "Proxy:" << opts.proxy << std::endl;
-                        logger.INFO() << "User DN:" << replace_dn(opts.user_dn) << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy:" << opts.proxy << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User DN:" << replace_dn(opts.user_dn) << commit;
                     }
-                logger.INFO() << "VO:" << opts.vo << std::endl; //a
-                logger.INFO() << "Job id:" << opts.jobId << std::endl;
-                logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;
-                logger.INFO() << "Source url:" << currentTransfer.sourceUrl << std::endl;
-                logger.INFO() << "Dest url:" << currentTransfer.destUrl << std::endl;
-                logger.INFO() << "Overwrite enabled:" << opts.overwrite << std::endl;
-                logger.INFO() << "Dest space token:" << opts.destTokenDescription << std::endl;
-                logger.INFO() << "Source space token:" << opts.sourceTokenDescription << std::endl;
-                logger.INFO() << "Pin lifetime:" << opts.copyPinLifetime << std::endl;
-                logger.INFO() << "BringOnline:" << opts.bringOnline << std::endl;
-                logger.INFO() << "Checksum:" << currentTransfer.checksumValue << std::endl;
-                logger.INFO() << "Checksum enabled:" << currentTransfer.checksumMethod << std::endl;
-                logger.INFO() << "User filesize:" << currentTransfer.userFileSize << std::endl;
-                logger.INFO() << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << std::endl;
-                logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
-                logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
-                logger.INFO() << "Multihop: " << opts.multihop << std::endl;
-                logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
-                logger.INFO() << "Active: " << opts.active << std::endl;
-                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO:" << opts.vo << commit; //a
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << opts.jobId << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id:" << currentTransfer.fileId << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source url:" << currentTransfer.sourceUrl << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest url:" << currentTransfer.destUrl << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled:" << opts.overwrite << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token:" << opts.destTokenDescription << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token:" << opts.sourceTokenDescription << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Pin lifetime:" << opts.copyPinLifetime << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BringOnline:" << opts.bringOnline << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum:" << currentTransfer.checksumValue << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled:" << currentTransfer.checksumMethod << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize:" << currentTransfer.userFileSize << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Bringonline token:" << currentTransfer.tokenBringOnline << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Multihop: " << opts.multihop << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enable_udt << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Active: " << opts.active << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Debug level: " << opts.debugLevel << commit;
 
                 if (opts.strictCopy)
                     {
-                        logger.INFO() << "Copy only transfer!" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
                     }
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
                     {
-                        logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set the transfer to ACTIVE, report back to the server" << commit;
                         reporter.setMultipleTransfers(true);
                         reporter.sendMessage(currentTransfer.throughput, false,
                                              opts.jobId, currentTransfer.fileId,
@@ -981,14 +977,14 @@ int main(int argc, char **argv)
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
-                        logger.ERROR() << errorMessage << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                         goto stop;
                     }
 
                 /*set infosys to gfal2*/
                 if (handle)
                     {
-                        logger.INFO() << "BDII:" << opts.infosys << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
                         if (opts.infosys.compare("false") == 0)
                             {
                                 gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
@@ -1013,7 +1009,7 @@ int main(int argc, char **argv)
 
                 //get checksum timeout from gfal2
                 int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
-                logger.INFO() << "Checksum timeout " << checksumTimeout << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum timeout " << checksumTimeout << commit;
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, checksumTimeout);
 
                 /*Checksuming*/
@@ -1034,7 +1030,7 @@ int main(int argc, char **argv)
 
                         if (!currentTransfer.checksumValue.empty() && currentTransfer.checksumValue != "x")   //user provided checksum
                             {
-                                logger.INFO() << "User  provided checksum" << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User  provided checksum" << commit;
                                 gfalt_set_user_defined_checksum(params,
                                                                 currentTransfer.checksumAlgorithm.c_str(),
                                                                 currentTransfer.checksumValue.c_str(),
@@ -1042,7 +1038,7 @@ int main(int argc, char **argv)
                             }
                         else    //use auto checksum
                             {
-                                logger.INFO() << "Calculate checksum auto" << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Calculate checksum auto" << commit;
                             }
                     }
 
@@ -1053,7 +1049,7 @@ int main(int argc, char **argv)
                 if(!isValid)
                     {
                         errorMessage = "INIT" + message;
-                        logger.ERROR() << errorMessage << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_PREPARATION;
@@ -1062,12 +1058,12 @@ int main(int argc, char **argv)
                     }
 
                 /* Stat source file */
-                logger.INFO() << "SOURCE Stat the source surl start" << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SOURCE Stat the source surl start" << commit;
                 int errorCode = statWithRetries(handle, "SOURCE", currentTransfer.sourceUrl, &currentTransfer.fileSize, &errorMessage);
                 if (errorCode != 0)
                     {
-                        logger.ERROR() << "SOURCE Failed to get source file size, errno:"
-                                       << errorCode << ", " << errorMessage << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "SOURCE Failed to get source file size, errno:"
+                                       << errorCode << ", " << errorMessage << commit;
 
                         errorMessage = "SOURCE Failed to get source file size: " + errorMessage;
                         errorScope = SOURCE;
@@ -1080,7 +1076,7 @@ int main(int argc, char **argv)
                 if (currentTransfer.fileSize == 0)
                     {
                         errorMessage = "SOURCE file size is 0";
-                        logger.ERROR() << errorMessage << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_PREPARATION;
@@ -1093,7 +1089,7 @@ int main(int argc, char **argv)
                         std::stringstream error_;
                         error_ << "SOURCE User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << currentTransfer.fileSize;
                         errorMessage = error_.str();
-                        logger.ERROR() << errorMessage << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_PREPARATION;
@@ -1101,24 +1097,24 @@ int main(int argc, char **argv)
                         goto stop;
                     }
 
-                logger.INFO() << "Source file size: " << currentTransfer.fileSize << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source file size: " << currentTransfer.fileSize << commit;
                 msg_ifce::getInstance()->set_file_size(&tr_completed, currentTransfer.fileSize);
 
                 //overwrite dest file if exists
                 if (opts.overwrite)
                     {
-                        logger.INFO() << "Overwrite is enabled" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite is enabled" << commit;
                         gfalt_set_replace_existing_file(params, TRUE, NULL);
                     }
                 else if (opts.strictCopy)
                     {
-                        logger.INFO() << "Overwrite is not enabled, but this is a copy-only transfer" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite is not enabled, but this is a copy-only transfer" << commit;
                     }
                 else
                     {
                         struct stat statbufdestOver;
                         // if overwrite is not enabled, check if  exists and stop the transfer if it does
-                        logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Stat the dest surl to check if file already exists" << commit;
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdestOver, &tmp_err) == 0)
                             {
@@ -1126,7 +1122,7 @@ int main(int argc, char **argv)
                                 if(dest_sizeOver > 0)
                                     {
                                         errorMessage = "DESTINATION file already exists and overwrite is not enabled";
-                                        logger.ERROR() << errorMessage << std::endl;
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                                         errorScope = DESTINATION;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                                         errorPhase = TRANSFER_PREPARATION;
@@ -1146,18 +1142,18 @@ int main(int argc, char **argv)
 
                 if (opts.global_timeout)
                     {
-                        logger.INFO() << "Transfer timeout is set globally:" << opts.timeout << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer timeout is set globally:" << opts.timeout << commit;
                     }
                 else
                     {
-                        logger.INFO() << "Transfer timeout:" << opts.timeout << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer timeout:" << opts.timeout << commit;
                     }
-                logger.INFO() << "Add " << opts.secPerMb << " seconds per MB transfer timeout "  << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Add " << opts.secPerMb << " seconds per MB transfer timeout "  << commit;
 
                 gfalt_set_timeout(params, opts.timeout, NULL);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
                 globalTimeout = experimentalTimeout + 3600;
-                logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Resetting global timeout thread to " << globalTimeout << " seconds" << commit;
 
                 //tune streams based on levels and/or session reuse
                 if (!opts.multihop && opts.reuse)
@@ -1217,11 +1213,11 @@ int main(int argc, char **argv)
 
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, opts.tcpBuffersize);
-                logger.INFO() << "TCP streams: " << opts.nStreams << std::endl;
-                logger.INFO() << "TCP buffer size: " << opts.tcpBuffersize << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << opts.nStreams << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
 
                 //update protocol stuff
-                logger.INFO() << "Update protocol stuff, report back to the server" << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Update protocol stuff, report back to the server" << commit;
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
@@ -1237,7 +1233,7 @@ int main(int argc, char **argv)
                 if ((currentTransfer.sourceUrl).c_str() == NULL || (currentTransfer.destUrl).c_str() == NULL)
                     {
                         errorMessage = "INIT Failed to get source or dest surl";
-                        logger.ERROR() << errorMessage << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                         errorScope = TRANSFER;
                         reasonClass = GENERAL_FAILURE;
                         errorPhase = TRANSFER;
@@ -1246,14 +1242,14 @@ int main(int argc, char **argv)
                     }
 
 
-                logger.INFO() << "Transfer Starting" << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer Starting" << commit;
                 reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debugLevel);
 
                 if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
-                                logger.ERROR() <<  std::string(tmp_err->message) << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) <<  std::string(tmp_err->message) << commit;
                                 if (tmp_err->code == ETIMEDOUT)
                                     {
                                         errorMessage = std::string(tmp_err->message);
@@ -1269,7 +1265,7 @@ int main(int argc, char **argv)
                             }
                         else
                             {
-                                logger.ERROR() << "TRANSFER failed - Error message: Unresolved error" << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "TRANSFER failed - Error message: Unresolved error" << commit;
                                 errorMessage = std::string("Unresolved error");
                                 errorScope = TRANSFER;
                                 reasonClass = GENERAL_FAILURE;
@@ -1287,7 +1283,7 @@ int main(int argc, char **argv)
                     }
                 else
                     {
-                        logger.INFO() << "Transfer completed successfully" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
                     }
 
 
@@ -1297,13 +1293,13 @@ int main(int argc, char **argv)
 
                 if (!opts.strictCopy)
                     {
-                        logger.INFO() << "DESTINATION Stat the dest surl start" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Stat the dest surl start" << commit;
                         off_t dest_size;
                         errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
                         if (errorCode != 0)
                             {
-                                logger.ERROR() << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
-                                               << errorMessage << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
+                                               << errorMessage << commit;
                                 errorMessage = "DESTINATION Failed to get dest file size: " + errorMessage;
                                 errorScope = DESTINATION;
                                 reasonClass = mapErrnoToString(errorCode);
@@ -1315,7 +1311,7 @@ int main(int argc, char **argv)
                         if (dest_size <= 0)
                             {
                                 errorMessage = "DESTINATION file size is 0";
-                                logger.ERROR() << errorMessage << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                                 errorScope = DESTINATION;
                                 reasonClass = mapErrnoToString(gfal_posix_code_error());
                                 errorPhase = TRANSFER_FINALIZATION;
@@ -1328,7 +1324,7 @@ int main(int argc, char **argv)
                                 std::stringstream error_;
                                 error_ << "DESTINATION User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
                                 errorMessage = error_.str();
-                                logger.ERROR() << errorMessage << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                                 errorScope = DESTINATION;
                                 reasonClass = mapErrnoToString(gfal_posix_code_error());
                                 errorPhase = TRANSFER_FINALIZATION;
@@ -1336,12 +1332,12 @@ int main(int argc, char **argv)
                                 goto stop;
                             }
 
-                        logger.INFO() << "DESTINATION  file size: " << dest_size << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION  file size: " << dest_size << commit;
 
                         //check source and dest file sizes
                         if (currentTransfer.fileSize == dest_size)
                             {
-                                logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Source and destination file size matching" << commit;
                                 errorMessage = "";
                             }
                         else
@@ -1350,7 +1346,7 @@ int main(int argc, char **argv)
                                 errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
                                 errorMessage += " <> ";
                                 errorMessage += boost::lexical_cast<std::string>(dest_size);
-                                logger.ERROR() << errorMessage << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
                                 errorScope = DESTINATION;
                                 reasonClass = mapErrnoToString(gfal_posix_code_error());
                                 errorPhase = TRANSFER_FINALIZATION;
@@ -1359,7 +1355,7 @@ int main(int argc, char **argv)
                     }
                 else
                     {
-                        logger.INFO() << "Skipping destination file size check" << std::endl;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skipping destination file size check" << commit;
                     }
             }//logStream
 stop:
@@ -1413,7 +1409,7 @@ stop:
                     reporter.buffersize = opts.tcpBuffersize;
                     if (!terminalState)
                         {
-                            logger.INFO() << "Report FAILED back to the server" << std::endl;
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report FAILED back to the server" << commit;
                             reporter.sendTerminal(currentTransfer.throughput, retry,
                                                   opts.jobId, currentTransfer.fileId,
                                                   "FAILED", errorMessage,
@@ -1442,12 +1438,12 @@ stop:
                     // all the remaining transfers
                     if (opts.multihop)
                         {
-                            logger.ERROR() << "Setting to fail the remaining transfers" << std::endl;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Setting to fail the remaining transfers" << commit;
                             setRemainingTransfersToFailed(transferList, ii);
 
                             std::string archiveErr = fileManagement.archive();
                             if (!archiveErr.empty())
-                                logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not archive: " << archiveErr << commit;
                             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
                                              opts.debugLevel);
                             break; // exit the loop
@@ -1469,7 +1465,7 @@ stop:
                     reporter.timeout = opts.timeout;
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
-                    logger.INFO() << "Report FINISHED back to the server" << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report FINISHED back to the server" << commit;
                     reporter.sendTerminal(currentTransfer.throughput, false,
                                           opts.jobId, currentTransfer.fileId,
                                           "FINISHED", errorMessage,
@@ -1496,17 +1492,17 @@ stop:
                     /*Do not remove it, just in case we need it in the future
                             if (opts.bringOnline > 0)
                                 {
-                                    logger.INFO() << "Token will be unpinned: " << currentTransfer.tokenBringOnline << std::endl;
+                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Token will be unpinned: " << currentTransfer.tokenBringOnline << commit;
                                     if(gfal2_release_file(handle, (currentTransfer.sourceUrl).c_str(), (currentTransfer.tokenBringOnline).c_str(), &tmp_err) < 0)
                                         {
                                             if (tmp_err && tmp_err->message)
                                                 {
-                                                    logger.WARNING() << "SOURCE Failed unpinning the file: " << std::string(tmp_err->message) << std::endl;
+                                                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "SOURCE Failed unpinning the file: " << std::string(tmp_err->message) << commit;
                                                 }
                                         }
                                     else
                                         {
-                                            logger.INFO() << "Token unpinned: " << currentTransfer.tokenBringOnline << std::endl;
+                                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Token unpinned: " << currentTransfer.tokenBringOnline << commit;
                                         }
                                 }
                      */
@@ -1517,16 +1513,16 @@ stop:
 
             if(opts.monitoringMessages)
                 {
-                    logger.INFO() << "Send monitoring complete message" << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring complete message" << commit;
                     std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-                    logger.INFO() << "Complete message content: " << msgReturnValue << std::endl;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Complete message content: " << msgReturnValue << commit;
                 }
 
             inShutdown = true;
             std::string archiveErr = fileManagement.archive();
 
             if (!archiveErr.empty())
-                logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not archive: " << archiveErr << commit;
             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
                              opts.debugLevel);
         }//end for reuse loop

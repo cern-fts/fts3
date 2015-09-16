@@ -22,7 +22,9 @@
 #include <limits.h>
 #include "common/definitions.h"
 #include "heuristics.h"
-#include "logger.h"
+#include "common/Logger.h"
+
+using namespace fts3::common;
 
 
 static bool findSubstring(const std::string& stack, const char* needles[])
@@ -136,9 +138,9 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
 {
     bool retry = retryTransferInternal(errorNo, category, message);
     if (retry)
-        Logger::getInstance().WARNING() << "Recoverable error: [" << errorNo << "] " << message << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Recoverable error: [" << errorNo << "] " << message << commit;
     else
-        Logger::getInstance().WARNING() << "Non-recoverable error: [" << errorNo << "] " << message << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Non-recoverable error: [" << errorNo << "] " << message << commit;
     return retry;
 }
 
