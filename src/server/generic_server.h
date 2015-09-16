@@ -45,10 +45,10 @@ public:
         typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
         systemThreads.create_thread(boost::bind(&TRAITS::CleanLogsTypeActive::clean, cLeanLogsHandlerActive));
 
-        /*** Old style ***/
         typename TRAITS::ProcessQueueType queueHandler;
-        queueHandler.executeTransfer_p();
+        systemThreads.create_thread(boost::bind(&TRAITS::ProcessQueueType::processQueue, queueHandler));
 
+        /*** Old style ***/
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
 

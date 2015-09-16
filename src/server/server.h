@@ -29,7 +29,7 @@
 #include "transfer_web_service.h"
 #include "process_service.h"
 #include "process_updater_db_service.h"
-#include "process_queue.h"
+#include "ProcessQueue.h"
 #include "process_reuse.h"
 #include "process_multihop.h"
 #include "cleanStateLogs.h"
