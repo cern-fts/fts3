@@ -23,6 +23,7 @@
 #include "active_object.h"
 #include "db/generic/SingleDbInstance.h"
 #include "threadpool.h"
+#include "common/Logger.h"
 
 extern bool stopThreads;
 
@@ -60,12 +61,12 @@ private:
                     }
                 catch(std::exception& e)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() <<  commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() << fts3::common::commit;
                         sleep(60);
                     }
                 catch(...)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" <<  commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" << fts3::common::commit;
                         sleep(60);
                     }
             }

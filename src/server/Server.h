@@ -28,8 +28,8 @@
 
 #include "CleanMessageFiles.h"
 #include "ProcessQueue.h"
-#include "heartbeat.h"
 #include "heartbeatActive.h"
+#include "HeartBeat.h"
 #include "process_updater_db_service.h"
 #include "process_multihop.h"
 #include "process_reuse.h"
@@ -58,10 +58,10 @@ public:
         ProcessQueue queueHandler;
         systemThreads.create_thread(boost::bind(&ProcessQueue::processQueue, queueHandler));
 
-        /*** Old style ***/
         HeartBeat heartBeatHandler;
-        heartBeatHandler.beat();
+        systemThreads.create_thread(boost::bind(&HeartBeat::beat, heartBeatHandler));
 
+        /*** Old style ***/
         if (!config::theServerConfig().get<bool> ("rush"))
             sleep(8);
 
