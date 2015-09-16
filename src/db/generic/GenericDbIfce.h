@@ -393,7 +393,10 @@ public:
     /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId) = 0;
 
-    virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull) = 0;
+    /// Mark the files contained in 'messages' as stalled (FAILED)
+    /// @param messages Only file_id, job_id and process_id from this is used
+    /// @param diskFull Set to true if there are no messages because the disk is full
+    virtual bool markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull) = 0;
 
     virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds) = 0;
 

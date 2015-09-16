@@ -4581,7 +4581,7 @@ void OracleAPI::forkFailed(const std::string& jobId)
 }
 
 
-bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
+bool OracleAPI::markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 

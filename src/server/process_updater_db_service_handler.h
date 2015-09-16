@@ -153,7 +153,7 @@ protected:
 
                                 if(s.free <=0 || s.available <= 0)
                                     {
-                                        bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages, true);
+                                        bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, true);
                                         if(updated)
                                             {
                                                 ThreadSafeList::get_instance().deleteMsg(messages);
@@ -169,7 +169,7 @@ protected:
                                     }
                                 else
                                     {
-                                        bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages, false);
+                                        bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, false);
                                         if(updated)
                                             {
                                                 ThreadSafeList::get_instance().deleteMsg(messages);

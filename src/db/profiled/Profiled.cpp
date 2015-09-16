@@ -302,9 +302,9 @@ void ProfiledDB::forkFailed(const std::string& jobId)
 }
 
 
-bool ProfiledDB::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
+bool ProfiledDB::markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull)
 {
-    PROFILE_PREFIXED("DB::", return db->retryFromDead(messages, diskFull));
+    PROFILE_PREFIXED("DB::", return db->markAsStalled(messages, diskFull));
 }
 
 

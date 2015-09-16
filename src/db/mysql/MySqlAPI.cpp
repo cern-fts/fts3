@@ -5123,14 +5123,11 @@ void MySqlAPI::forkFailed(const std::string& jobId)
 }
 
 
-
-bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
+bool MySqlAPI::markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 
     bool ok = false;
-    std::vector<struct message_updater>::const_iterator iter;
-    const std::string transfer_status = "FAILED";
     std::string transfer_message;
     if(diskFull)
     {
@@ -5141,11 +5138,9 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
         transfer_message = "no FTS server had updated the transfer status the last 600 seconds, probably stalled in " + hostname;
     }
 
-    const std::string status = "FAILED";
-
     try
     {
-        for (iter = messages.begin(); iter != messages.end(); ++iter)
+        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
         {
 
             soci::rowset<int> rs = (
@@ -5161,8 +5156,10 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
             if (rs.begin() != rs.end())
             {
                 ok = true;
-                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0,false);
-                updateJobTransferStatusInternal(sql, (*iter).job_id, status,0);
+                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id,
+                        (*iter).file_id, "FAILED", transfer_message,
+                        (*iter).process_id, 0, 0, false);
+                updateJobTransferStatusInternal(sql, (*iter).job_id, "FAILED", 0);
 
                 std::vector<struct message_state> files;
                 //send state monitoring message for the state transition

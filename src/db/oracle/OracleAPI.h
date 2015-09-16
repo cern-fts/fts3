@@ -166,7 +166,7 @@ public:
 
     virtual void forkFailed(const std::string& jobId);
 
-    virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull);
+    virtual bool markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull);
 
     virtual void blacklistSe(const std::string& storage, const std::string& voName,
             const std::string& status, int timeout, const std::string& msg, const std::string& adminDn);
