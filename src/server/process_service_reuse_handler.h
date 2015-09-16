@@ -311,7 +311,7 @@ protected:
                     }
                 else
                     {
-                        db->setPidV(pr.getPid(), fileIds);
+                        db->setPidForJob(job_id, pr.getPid());
                     }
                 std::map<int, std::string>::const_iterator iterFileIds;
                 for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)

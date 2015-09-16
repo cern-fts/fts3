@@ -158,7 +158,7 @@ public:
 
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs);
 
-    virtual void setPidV(int pid, std::map<int,std::string>& pids);
+    virtual void setPidForJob(const std::string& jobId, int pid);
 
     virtual void revertToSubmitted();
 

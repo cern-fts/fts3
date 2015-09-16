@@ -358,11 +358,23 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination) = 0;
 
+    /// Mark a reuse or multihop job (and its files) as failed
+    /// @param jobId    The job id
+    /// @param pid      The PID of the fts_url_copy
+    /// @param message  The error message
+    /// @note           If jobId is empty, the implementation may look for the job bound to the pid.
+    ///                 Note that I am not completely sure you can get an empty jobId.
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
+    /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
+    /// @param[out] collectJobs A map of fileId with its corresponding jobId that have been cancelled
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
 
-    virtual void setPidV(int pid, std::map<int,std::string>& pids) = 0;
+    /// Set the PID for all the files inside a reuse or multihop job
+    /// @param jobId    The job id for which the files will be updated
+    /// @param pid      The process ID
+    /// @note           Transfers within reuse and multihop jobs go all together to a single fts_url_copy process
+    virtual void setPidForJob(const std::string& jobId, int pid) = 0;
 
     virtual void revertToSubmitted() = 0;
 
