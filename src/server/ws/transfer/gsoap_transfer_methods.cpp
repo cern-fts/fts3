@@ -970,22 +970,21 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string jobId, impltns__deta
             // authorise
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
             // get the data from DB
-            std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> > files;
-            DBSingleton::instance().getDBObjectInstance()->getTransferJobStatusDetailed(jobId, files);
+            std::vector<FileTransferStatus> files;
+            DBSingleton::instance().getDBObjectInstance()->getTransferStatuses(jobId, false, 0, 0, files);
             // create response
             tns3__DetailedJobStatus *jobStatus = soap_new_tns3__DetailedJobStatus(ctx, -1);
             // reserve the space in response
             jobStatus->transferStatus.reserve(files.size());
             // copy the data to response
-            std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >::const_iterator it;
-            for (it = files.begin(); it != files.end(); ++it)
+            for (auto it = files.begin(); it != files.end(); ++it)
                 {
                     tns3__DetailedFileStatus * item = soap_new_tns3__DetailedFileStatus(ctx, -1);
-                    item->jobId = boost::get<0>(*it);
-                    item->fileState = boost::get<1>(*it);
-                    item->fileId = boost::get<2>(*it);
-                    item->sourceSurl = boost::get<3>(*it);
-                    item->destSurl = boost::get<4>(*it);
+                    item->jobId = jobId;
+                    item->fileState = it->fileState;
+                    item->fileId = it->fileId;
+                    item->sourceSurl = it->sourceSurl;
+                    item->destSurl = it->destSurl;
                     jobStatus->transferStatus.push_back(item);
                 }
             // set the response

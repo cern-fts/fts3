@@ -10665,44 +10665,6 @@ int MySqlAPI::getBufferOptimization()
 }
 
 
-void MySqlAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
-{
-    soci::session sql(*connectionPool);
-    files.reserve(400);
-
-    try
-    {
-
-        soci::rowset<soci::row> rs = (
-                                         sql.prepare <<
-                                         " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id order by file_id asc", soci::use(job_id)
-                                     );
-
-
-        for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            std::string job_id = i->get<std::string>("job_id");
-            std::string file_state = i->get<std::string>("file_state");
-            int file_id = i->get<int>("file_id");
-            std::string source_surl = i->get<std::string>("source_surl");
-            std::string dest_surl = i->get<std::string>("dest_surl");
-
-            boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
-            files.push_back(record);
-        }
-    }
-    catch (std::exception& e)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-    catch (...)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-
 void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     soci::session sql(*connectionPool);
@@ -10720,6 +10682,7 @@ void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, 
     }
 }
 
+
 void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     soci::session sql(*connectionPool);
@@ -10736,6 +10699,7 @@ void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, st
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }
+
 
 void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
 {

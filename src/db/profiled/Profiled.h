@@ -333,8 +333,6 @@ public:
 
     int getBufferOptimization();
 
-    void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
-
     void getQueuesWithPending(std::vector<QueueId>& queues);
 
     void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);

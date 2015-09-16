@@ -596,8 +596,6 @@ public:
 
     virtual int getBufferOptimization() = 0;
 
-    virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files) = 0;
-
     virtual void getQueuesWithPending(std::vector<QueueId>& queues) = 0;
 
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queued) = 0;
