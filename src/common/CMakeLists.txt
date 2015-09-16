@@ -81,6 +81,20 @@ set_target_properties(fts_common PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
 )
 
+# Compile minimalistic static library to be used by url_copy
+# and the messaging library, to reduce the memory footprint of those
+add_library(fts_common_min STATIC
+    Logger.cpp
+    UserProxyEnv.cpp
+    name_to_uid.cpp
+    producer.cpp
+    consumer.cpp
+)
+set_target_properties(fts_common_min PROPERTIES
+    COMPILE_FLAGS "-fPIC"
+)
+
+# Unit tests
 if(FTS3_COMPILE_WITH_UNITTEST)
     find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 	target_link_libraries(fts_common ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )

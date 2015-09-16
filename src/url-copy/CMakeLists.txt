@@ -41,7 +41,7 @@ set(fts_url_copy_SOURCES
 add_executable(fts_url_copy ${fts_url_copy_SOURCES})
 target_link_libraries(fts_url_copy
     uuid ssl crypto
-    fts_common
+    #fts_common_min     Symbols brought in by fts_msg_ifce
     fts_msg_ifce fts_proxy
     ${Boost_LIBRARIES}
     ${GLIB2_LIBRARIES}
