@@ -28,8 +28,8 @@
 
 #include "CleanMessageFiles.h"
 #include "ProcessQueue.h"
-#include "heartbeatActive.h"
 #include "HeartBeat.h"
+#include "OptimizerService.h"
 #include "process_updater_db_service.h"
 #include "process_multihop.h"
 #include "process_reuse.h"
@@ -73,8 +73,8 @@ public:
         if (!config::theServerConfig().get<bool> ("rush"))
             sleep(12);
 
-        HeartBeatActive heartBeatHandlerActive;
-        heartBeatHandlerActive.beat();
+        OptimizerService optimizerService;
+        systemThreads.create_thread(boost::bind(&OptimizerService::runOptimizer, optimizerService));
 
         ProcessService processHandler;
         processHandler.executeTransfer_p();
