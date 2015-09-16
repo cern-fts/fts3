@@ -151,6 +151,10 @@ public:
             const std::string& sourceSe, const std::string& destSe,
             std::vector<JobStatus>& jobs) = 0;
 
+    /// Return truw if the job is a data management job
+    /// Jobs can only be either data management or transfer, *not* both
+    virtual bool isDmJob(const std::string& jobId) = 0;
+
     /// Get a list of jobs with data management ops that match the filtering options
     /// @param inGivenStates    Filter by state. By default, if empty, only non-terminal jobs are retrieves
     /// @param forDn            Filter by user DN
@@ -213,6 +217,9 @@ public:
     /// @param voName           The VO that wants all its jobs canceled
     /// @param[out] canceledJobs Job IDS that have been canceled
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs) = 0;
+
+    /// Cancel data management jobs
+    virtual void cancelDmJobs(const std::vector<std::string> & jobIds) = 0;
 
     /// Get the storage element with the label seName
     /// @param seName   The storage name
@@ -568,8 +575,6 @@ public:
 
     virtual void setDrain(bool drain) = 0;
 
-    virtual void setShowUserDn(bool show) = 0;
-
     virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit) = 0;
 
     virtual std::string getBandwidthLimit() = 0;
@@ -624,19 +629,34 @@ public:
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
-    virtual bool isDmJob(std::string const & job) = 0;
-
-    // Cloud storage API
-    virtual bool getOauthCredentials(const std::string& user_dn,
-                                     const std::string& vo, const std::string& cloud_name,
+    /// Retrieve the credentials for a storage endpoint for the given user/VO
+    /// @note   It is called OAuth, but can actually store S3 credentials as well
+    virtual bool getOauthCredentials(const std::string& userDn,
+                                     const std::string& voName, const std::string& cloudName,
                                      OAuth& oauth) = 0;
 
-    virtual void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey) = 0;
+    /// Set the storage credentials for a given user or VO
+    /// For S3, accessKey is the access key, and secret key the secret key
+    /// For Dropbox, this step would be normally done by WebFTS, although it can be set manually as well
+    /// In any case, accessKey come from this OAuth authentication
+    virtual void setCloudStorageCredential(const std::string& userDn,
+            const std::string& voName, const std::string& storage,
+            const std::string& accessKey, const std::string& secretKey) = 0;
 
-    virtual void setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl) = 0;
+    /// Set the configuration for a cloud storage
+    /// For S3, service_api_url must be the storage endpoint (i.e cs3.cern.ch)
+    /// For Dropbox, appKey and appSecret are required for the OAuth authentication
+    /// @param storage      A symbolic name
+    /// @param appKey       Application key (empty for S3)
+    /// @param appSecret    Application secret (empty for S3)
+    /// @param apiUrl       API URL
+    virtual void setCloudStorage(const std::string& storage, const std::string& appKey,
+            const std::string& appSecret, const std::string& apiUrl) = 0;
 
-    virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
+    /// Set if the user dn should be visible or not in the logs
+    virtual void setShowUserDn(bool show) = 0;
 
+    /// Get if the user dn should be visible or not in the logs
     virtual bool getUserDnVisible() = 0;
 };
 

@@ -28,8 +28,8 @@ struct OAuth
     std::string cloudName;
     std::string appKey;
     std::string appSecret;
-    std::string accessToken;
-    std::string accessTokenSecret;
+    std::string accessToken;       ///< Access key for S3
+    std::string accessTokenSecret; ///< Secret key for S3
 };
 
 #endif // OAUTH_H_
