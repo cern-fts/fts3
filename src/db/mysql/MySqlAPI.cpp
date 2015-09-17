@@ -3769,8 +3769,6 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
 
     int maxActive = 0;
     bool allowed = false;
-    soci::indicator isMaxActiveNull = soci::i_ok;
-    soci::indicator isFixedNull = soci::i_ok;
     std::string activeFixed;
 
     try
@@ -3778,15 +3776,14 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
         sql << "SELECT active, fixed FROM t_optimize_active "
                "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
                soci::use(sourceStorage), soci::use(destStorage),
-               soci::into(maxActive, isMaxActiveNull), soci::into(activeFixed, isFixedNull);
+               soci::into(maxActive), soci::into(activeFixed);
+        if (!sql.got_data())
+            maxActive = MIN_ACTIVE;
 
         sql << "SELECT count(*) FROM t_file "
                "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
                soci::use(sourceStorage), soci::use(destStorage),
                soci::into(currentActive);
-
-        if (isMaxActiveNull == soci::i_null)
-            maxActive = MIN_ACTIVE;
 
         allowed = (currentActive < maxActive);
     }
