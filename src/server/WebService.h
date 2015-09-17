@@ -59,7 +59,11 @@ public:
 
     WebService(int port, const std::string& ip): port(port), ip(ip)
     {
-        size_t threadPoolSize = fts3::config::theServerConfig().get<size_t> ("ThreadNum");
+        int threadPoolSize = fts3::config::theServerConfig().get<int>("ThreadNum");
+        if (threadPoolSize > 100)
+            threadPoolSize = 100;
+        else if (threadPoolSize < 0)
+            threadPoolSize = 2;
         threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 

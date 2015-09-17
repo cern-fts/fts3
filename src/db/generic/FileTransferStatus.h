@@ -34,7 +34,7 @@ public:
     FileTransferStatus() :
              finishTime(time(NULL)), startTime(time(NULL)),
             stagingStart(0), stagingFinished(0),
-            numFailures(0), fileId(0), duration(0)
+            numFailures(0), fileId(0), fileIndex(0), duration(0)
     {
     }
 

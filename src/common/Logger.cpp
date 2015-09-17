@@ -92,11 +92,12 @@ Logger& Logger::operator << (Logger& (*aFunc)(Logger &aLogger))
 
 static int createAndReopen(const std::string& path, FILE* stream)
 {
-    int fd = ::open(path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+    int fd = ::creat(path.c_str(), 0644);
     if (fd < 0)
         return -1;
-    FILE* aux = freopen(path.c_str(), "a", stream);
-    if (!aux)
+    close(fd);
+    stream = freopen(path.c_str(), "a", stream);
+    if (!stream)
         return -1;
     return 0;
 }

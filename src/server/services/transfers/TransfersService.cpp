@@ -104,6 +104,7 @@ void TransfersService::operator () ()
             if (DrainMode::getInstance())
             {
                 if (!drainMode)
+                {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more transfers for this instance!" << commit;
                     drainMode = true;
                     sleep(15);
@@ -113,12 +114,9 @@ void TransfersService::operator () ()
                 {
                     drainMode = false;
                 }
+            }
 
-            /*check for non-reused jobs*/
             executeUrlcopy();
-
-            if (stopThreads)
-                return;
         }
         catch (std::exception& e)
         {

@@ -19,6 +19,9 @@
  */
 
 #include "oauth.h"
+
+#include <sys/stat.h>
+
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -99,7 +102,10 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
         return "";
 
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
+
+    mode_t oldMask = umask(0117);
     int fd = mkstemp(oauth_path);
+    umask(oldMask);
     if (fd < 0)
         {
             char err_descr[128];

@@ -47,15 +47,17 @@ void MultihopTransfersService::operator () ()
             if (DrainMode::getInstance())
             {
                 if (!drainMode)
+                {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more transfers for this instance!" << commit;
                     drainMode = true;
                     sleep(15);
                     continue;
                 }
-                else
-                {
-                    drainMode = false;
-                }
+            }
+            else
+            {
+                drainMode = false;
+            }
 
             executeUrlcopy();
         }

@@ -3200,7 +3200,7 @@ OptimizerSample OracleAPI::fetchOptimizationConfig(const std::string & /*source_
     OptimizerSample ops;
     ops.streamsPerFile = DEFAULT_NOSTREAMS;
     ops.timeout = MID_TIMEOUT;
-    ops.bufsize = DEFAULT_BUFFSIZE;
+    ops.bufferSize = DEFAULT_BUFFSIZE;
     return ops;
 }
 

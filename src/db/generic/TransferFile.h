@@ -33,7 +33,8 @@ public:
 
 
     TransferFile() :
-            fileId(0), fileIndex(0), filesize(0.0), pinLifetime(0),
+            fileId(0), fileIndex(0),  numFailures(0),filesize(0.0),
+            finishTime(0), jobFinished(0), pinLifetime(0),
             bringOnline(0), userFilesize(0.0), lastReplica(0)
     {
     }

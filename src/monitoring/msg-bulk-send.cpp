@@ -129,7 +129,10 @@ void DoServer(bool isDaemon) throw()
 
     std::string logFile = getLOGFILEDIR() + "" + getLOGFILENAME();
     if (isDaemon) {
-        fts3::common::theLogger().redirect(logFile, logFile);
+        if (fts3::common::theLogger().redirect(logFile, logFile) != 0) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the log file");
+            return;
+        }
     }
 
     std::string errorMessage;

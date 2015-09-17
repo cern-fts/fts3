@@ -1186,7 +1186,7 @@ int main(int argc, char **argv)
                                     }
                                 else
                                     {
-                                        opts.nStreams = static_cast<int>( (ceil((currentTransfer.fileSize / tcp_buffer_size))) + 1);
+                                        opts.nStreams = static_cast<int>((ceil((currentTransfer.fileSize / static_cast<double>(tcp_buffer_size)))) + 1);
                                         opts.tcpBuffersize  = tcp_buffer_size;
                                         gfalt_set_nbstreams(params, opts.nStreams, NULL);
                                         gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);

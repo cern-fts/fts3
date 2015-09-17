@@ -25,13 +25,18 @@
 class OptimizerSample
 {
 public:
+    OptimizerSample(): streamsPerFile(0), numOfFiles(0),
+    bufferSize(0), goodput(0), timeout(0), throughput(0),
+    avgThroughput(0)
+    {}
+
     int streamsPerFile;
-    int numoffiles;
-    int bufsize;
+    int numOfFiles;
+    int bufferSize;
     float goodput;
     int timeout;
     double throughput;
-    double avgThr;
+    double avgThroughput;
 };
 
 #endif // OPTIMIZERSAMPLE_H_
