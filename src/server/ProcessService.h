@@ -68,13 +68,13 @@
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
 
-#include "process.h"
 #include "FileTransferScheduler.h"
 #include "FileTransferExecutor.h"
 #include "TransferFileHandler.h"
 #include "ConfigurationAssigner.h"
 #include "ProtocolResolver.h"
 #include "DrainMode.h"
+#include "ExecuteProcess.h"
 #include "ws/SingleTrStateInstance.h"
 #include "oauth.h"
 

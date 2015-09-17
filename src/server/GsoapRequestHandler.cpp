@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#include "gsoap_request_handler.h"
-#include "gsoap_acceptor.h"
+#include "GsoapAcceptor.h"
+#include "GsoapRequest_handler.h"
 
 using namespace fts3::common;
 using namespace fts3::server;

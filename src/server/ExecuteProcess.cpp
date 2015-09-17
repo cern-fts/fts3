@@ -52,7 +52,7 @@
 #include "db/generic/SingleDbInstance.h"
 #include "common/error.h"
 #include "common/Logger.h"
-#include "process.h"
+#include "ExecuteProcess.h"
 
 using namespace fts3::common; 
 using namespace db;

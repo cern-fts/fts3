@@ -18,14 +18,14 @@
  * limitations under the License.
  */
 
-#include "gsoap_acceptor.h"
-#include "gsoap_request_handler.h"
 #include "fts3.nsmap"
 #include "config/serverconfig.h"
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include <sys/socket.h>
 #include <fstream>
+#include "GsoapAcceptor.h"
+#include "GsoapRequest_handler.h"
 
 bool  stopThreads;
 

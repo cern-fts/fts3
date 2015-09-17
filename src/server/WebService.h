@@ -29,8 +29,8 @@
 
 #include "common/ThreadPool.h"
 
-#include "gsoap_acceptor.h"
-#include "gsoap_request_handler.h"
+#include "GsoapAcceptor.h"
+#include "GsoapRequest_handler.h"
 
 
 extern bool  stopThreads;

@@ -29,9 +29,9 @@
 #include "common/name_to_uid.h"
 #include "common/producer_consumer_common.h"
 #include "ConfigurationAssigner.h"
+#include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"
 #include "ProtocolResolver.h"
-#include "process.h"
 #include "ws/SingleTrStateInstance.h"
 
 #include "oauth.h"
