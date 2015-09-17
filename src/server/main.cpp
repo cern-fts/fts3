@@ -375,7 +375,7 @@ static void shutdown_callback(int signal, void*)
 
     try
         {
-            theServer().stop();
+            Server::getInstance().stop();
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
             db::DBSingleton::tearDown();
             if (!theServerConfig().get<bool> ("rush"))
@@ -447,7 +447,7 @@ int DoServer(int argc, char** argv)
             ProfilingSubsystem::getInstance().start();
 
             // Start server
-            theServer().start();
+            Server::getInstance().start();
 
         }
     catch (Err& e)

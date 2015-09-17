@@ -54,6 +54,7 @@ set_target_properties(fts_server_gsoap_transfer PROPERTIES
 find_package(Boost COMPONENTS thread regex filesystem)
 
 file(GLOB fts_server_lib_sources
+    RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "*.cpp"
     "services/*/*.cpp"
 )

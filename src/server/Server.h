@@ -19,94 +19,33 @@
  */
 
 #pragma once
+#ifndef SERVER_H_
+#define SERVER_H_
 
-#include <iostream>
-#include <string>
+#include <boost/noncopyable.hpp>
+#include <boost/thread.hpp>
 
-#include "common/Logger.h"
-#include "config/serverconfig.h"
-
-#include "ProcessQueue.h"
-#include "HeartBeat.h"
-#include "services/optimizer/OptimizerService.h"
-#include "ProcessUpdaterDbService.h"
-#include "ProcessServiceMultihop.h"
-#include "ProcessServiceReuse.h"
-#include "ProcessService.h"
-#include "services/cleaner/CleanerService.h"
-#include "WebService.h"
+#include "common/InstanceHolder.h"
 
 
 namespace fts3 {
 namespace server {
 
-
-/** Class representing the FTS3 server logic. */
-class Server: public boost::noncopyable
+/// Class representing the FTS3 server logic
+class Server: public fts3::common::InstanceHolder<Server>
 {
 public:
-
-    /** Start the service. */
-    void start()
-    {
-        CleanerService cleanMessages;
-        systemThreads.create_thread(boost::ref(cleanMessages));
-
-        ProcessQueue queueHandler;
-        systemThreads.create_thread(boost::ref(queueHandler));
-
-        HeartBeat heartBeatHandler;
-        systemThreads.create_thread(boost::ref(heartBeatHandler));
-
-        if (!config::theServerConfig().get<bool> ("rush"))
-            sleep(8);
-
-        ProcessUpdaterDBService processUpdaterDBHandler;
-        systemThreads.create_thread(boost::ref(processUpdaterDBHandler));
-
-        /*wait for status updates to be processed and then start sanity threads*/
-        if (!config::theServerConfig().get<bool> ("rush"))
-            sleep(12);
-
-        OptimizerService optimizerService;
-        systemThreads.create_thread(boost::ref(optimizerService));
-
-        ProcessService processHandler;
-        systemThreads.create_thread(boost::ref(processHandler));
-
-        ProcessServiceReuse processReuseHandler;
-        systemThreads.create_thread(boost::ref(processReuseHandler));
-
-        ProcessServiceMultihop processMultihopHandler;
-        systemThreads.create_thread(boost::ref(processMultihopHandler));
-
-        unsigned int port = config::theServerConfig().get<unsigned int>("Port");
-        const std::string& ip = config::theServerConfig().get<std::string>("IP");
-
-        WebService webServiceHandler(port, ip);
-        systemThreads.create_thread(boost::ref(webServiceHandler));
-
-        // Wait for all to finish
-        systemThreads.join_all();
-    }
+    /// Start the service
+    void start();
 
     /// Stop the service
-    void stop()
-    {
-        systemThreads.interrupt_all();
-    }
+    void stop();
 
 private:
     boost::thread_group systemThreads;
 };
 
-
-/** Singleton instance of the FTS 3 server. */
-inline Server& theServer()
-{
-    static Server s;
-    return s;
-}
-
 } // end namespace server
 } // end namespace fts3
+
+#endif // SERVER_H_
