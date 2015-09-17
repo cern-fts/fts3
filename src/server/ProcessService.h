@@ -69,7 +69,6 @@
 #include "profiler/Macros.h"
 
 #include "process.h"
-#include "site_name.h"
 #include "FileTransferScheduler.h"
 #include "FileTransferExecutor.h"
 #include "TransferFileHandler.h"
@@ -178,7 +177,6 @@ public:
     }
 
 protected:
-    SiteName siteResolver;
     std::string ftsHostName;
     std::string allowedVOs;
     std::string infosys;

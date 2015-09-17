@@ -27,7 +27,6 @@
 #include "db/generic/SingleDbInstance.h"
 
 #include "TransferFileHandler.h"
-#include "site_name.h"
 
 #include <set>
 #include <string>
@@ -89,7 +88,6 @@ private:
     bool monitoringMsg;
     std::string infosys;
     std::string ftsHostName;
-    SiteName siteResolver;
     std::string proxy;
     std::string logsDir;
 
