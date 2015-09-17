@@ -23,12 +23,12 @@
 #include "ProcessServiceReuse.h"
 
 extern bool stopThreads;
-extern time_t retrieveRecords;
 
 
 namespace fts3 {
 namespace server {
 
+extern time_t retrieveRecords;
 
 class ProcessServiceMultihop : public ProcessServiceReuse
 {

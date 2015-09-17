@@ -24,7 +24,7 @@
 #include "config/serverconfig.h"
 
 #include "ProcessQueue.h"
-#include "HeartBeat.h"
+#include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
 #include "ProcessUpdaterDbService.h"
 #include "ProcessServiceMultihop.h"

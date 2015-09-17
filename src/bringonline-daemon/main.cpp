@@ -139,7 +139,7 @@ void heartbeat(void)
             try
                 {
                     //check if draining is on
-                    if (DrainMode::getInstance())
+                    if (fts3::server::DrainMode::getInstance())
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
                             sleep(15);

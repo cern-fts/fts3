@@ -50,12 +50,12 @@
 #include "DrainMode.h"
 
 extern bool stopThreads;
-extern time_t stallRecords;
 
 
 namespace fts3 {
 namespace server {
 
+extern time_t stallRecords;
 
 class ProcessUpdaterDBService
 {
@@ -95,7 +95,7 @@ public:
                 //if we drain a host, no need to check if url_copy are reporting being alive
                 if (DrainMode::getInstance())
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking url_copy for this instance!" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking url_copy for this instance!" << fts3::common::commit;
                     messages.clear();
                     sleep(15);
                     continue;
@@ -190,13 +190,12 @@ public:
                             counterCanceled = 0;
                             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Message updater thrown exception "
                             << e.what()
-                            << commit;
+                            << fts3::common::commit;
                         }
                         catch (...)
                         {
                             counterCanceled = 0;
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << fts3::common::commit;
                         }
                     }
                     catch (...)
@@ -217,12 +216,12 @@ public:
                             counterCanceled = 0;
                             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                             << e.what()
-                            << commit;
+                            << fts3::common::commit;
                         }
                         catch (...)
                         {
                             counterCanceled = 0;
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << fts3::common::commit;
                         }
                     }
                 }
@@ -315,7 +314,7 @@ public:
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Message updater thrown exception "
                 << e.what()
-                << commit;
+                << fts3::common::commit;
                 sleep(10);
                 counter1 = 0;
                 counterFailAll = 0;
@@ -326,7 +325,7 @@ public:
             }
             catch (...)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << fts3::common::commit;
                 sleep(10);
                 counter1 = 0;
                 counterFailAll = 0;
@@ -347,7 +346,7 @@ private:
         for (auto iter = pids.begin(); iter != pids.end(); ++iter)
         {
             int pid = *iter;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Canceling and killing running processes: " << pid << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Canceling and killing running processes: " << pid << fts3::common::commit;
             kill(pid, SIGTERM);
         }
     }

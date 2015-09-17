@@ -80,11 +80,11 @@
 
 
 extern bool stopThreads;
-extern time_t retrieveRecords;
 
 namespace fts3 {
 namespace server {
 
+extern time_t retrieveRecords;
 
 class ProcessService: public boost::noncopyable
 {

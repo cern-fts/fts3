@@ -30,10 +30,6 @@
 
 bool  stopThreads;
 
-time_t retrieveRecords = time(0);
-time_t updateRecords = time(0);
-time_t stallRecords = time(0);
-
 
 using namespace fts3::config;
 using namespace fts3::common;

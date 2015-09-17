@@ -28,7 +28,7 @@ using namespace db;
 
 namespace fts3
 {
-namespace common
+namespace server
 {
 
 
@@ -41,10 +41,10 @@ namespace common
  * not synchronized since its an atomic value and theres no
  * risk of run condition.
  */
-class DrainMode : public ThreadSafeInstanceHolder<DrainMode>
+class DrainMode : public fts3::common::ThreadSafeInstanceHolder<DrainMode>
 {
 
-    friend class ThreadSafeInstanceHolder<DrainMode>;
+    friend class fts3::common::ThreadSafeInstanceHolder<DrainMode>;
 
 public:
 

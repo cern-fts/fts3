@@ -41,11 +41,11 @@
 #include "ws/SingleTrStateInstance.h"
 
 extern bool stopThreads;
-extern time_t updateRecords;
 
 namespace fts3 {
 namespace server {
 
+extern time_t updateRecords;
 
 class ProcessQueue
 {

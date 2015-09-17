@@ -240,7 +240,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
             cmd << "fts-config-set --drain " << (drain ? "on" : "off");
 
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
-            DrainMode::getInstance() = drain;
+            fts3::server::DrainMode::getInstance() = drain;
             // audit the operation
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "drain");
         }
