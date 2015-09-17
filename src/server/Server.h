@@ -26,14 +26,14 @@
 #include "common/Logger.h"
 #include "config/serverconfig.h"
 
-#include "CleanMessageFiles.h"
 #include "ProcessQueue.h"
 #include "HeartBeat.h"
-#include "OptimizerService.h"
+#include "services/optimizer/OptimizerService.h"
 #include "ProcessUpdaterDbService.h"
 #include "ProcessServiceMultihop.h"
 #include "ProcessServiceReuse.h"
 #include "ProcessService.h"
+#include "services/cleaner/CleanerService.h"
 #include "WebService.h"
 
 
@@ -49,7 +49,7 @@ public:
     /** Start the service. */
     void start()
     {
-        CleanMessageFiles cleanMessages;
+        CleanerService cleanMessages;
         systemThreads.create_thread(boost::ref(cleanMessages));
 
         ProcessQueue queueHandler;

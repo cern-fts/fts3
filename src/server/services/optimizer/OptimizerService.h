@@ -22,10 +22,8 @@
 #ifndef OPTIMIZERSERVICE_H_
 #define OPTIMIZERSERVICE_H_
 
-#include "db/generic/SingleDbInstance.h"
-#include "common/Logger.h"
+#include <boost/noncopyable.hpp>
 
-extern bool stopThreads;
 
 namespace fts3 {
 namespace server {
@@ -34,29 +32,7 @@ namespace server {
 class OptimizerService: boost::noncopyable
 {
 public:
-
-
-    void operator () ()
-    {
-        while (!stopThreads)
-        {
-            try
-            {
-                db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
-                sleep(60);
-            }
-            catch (std::exception& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)<<"Process thread HeartBeatHandlerActive " << e.what() << fts3::common::commit;
-                sleep(60);
-            }
-            catch(...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" << fts3::common::commit;
-                sleep(60);
-            }
-        }
-    }
+    void operator () ();
 };
 
 } // end namespace server

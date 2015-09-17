@@ -53,9 +53,9 @@ set_target_properties(fts_server_gsoap_transfer PROPERTIES
 # Server lib
 find_package(Boost COMPONENTS thread regex filesystem)
 
-file(GLOB fts_server_lib_sources RELATIVE
-    "${PROJECT_SOURCE_DIR}/src/server"
+file(GLOB fts_server_lib_sources
     "*.cpp"
+    "services/*/*.cpp"
 )
 list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
 
