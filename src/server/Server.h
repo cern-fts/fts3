@@ -31,9 +31,9 @@
 #include "HeartBeat.h"
 #include "OptimizerService.h"
 #include "ProcessUpdaterDbService.h"
-#include "process_multihop.h"
-#include "process_reuse.h"
-#include "process_service.h"
+#include "ProcessServiceMultihop.h"
+#include "ProcessServiceReuse.h"
+#include "ProcessService.h"
 #include "transfer_web_service.h"
 
 
@@ -74,17 +74,16 @@ public:
         OptimizerService optimizerService;
         systemThreads.create_thread(boost::bind(&OptimizerService::runOptimizer, optimizerService));
 
-        /*** Old style ***/
-
         ProcessService processHandler;
-        processHandler.executeTransfer_p();
+        systemThreads.create_thread(boost::bind(&ProcessService::executeTransfers, processHandler));
 
         ProcessServiceReuse processReuseHandler;
-        processReuseHandler.executeTransfer_p();
+        systemThreads.create_thread(boost::bind(&ProcessServiceReuse::executeTransfers, processReuseHandler));
 
         ProcessServiceMultihop processMultihopHandler;
-        processMultihopHandler.executeTransfer_p();
+        systemThreads.create_thread(boost::bind(&ProcessServiceMultihop::executeTransfers, processMultihopHandler));
 
+        /*** Old style ***/
         unsigned int port = config::theServerConfig().get<unsigned int>("Port");
         const std::string& ip = config::theServerConfig().get<std::string>("IP");
 
