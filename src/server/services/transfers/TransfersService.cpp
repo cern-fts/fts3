@@ -32,8 +32,9 @@
 #include "profiler/Macros.h"
 
 #include "server/DrainMode.h"
-#include "server/TransferFileHandler.h"
-#include "server/FileTransferExecutor.h"
+
+#include "TransferFileHandler.h"
+#include "FileTransferExecutor.h"
 
 
 extern bool stopThreads;

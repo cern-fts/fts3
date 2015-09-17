@@ -31,9 +31,10 @@
 #include "server/ConfigurationAssigner.h"
 #include "server/DrainMode.h"
 #include "server/ExecuteProcess.h"
-#include "server/oauth.h"
-#include "server/FileTransferScheduler.h"
 #include "server/ws/SingleTrStateInstance.h"
+
+#include "oauth.h"
+#include "FileTransferScheduler.h"
 
 
 extern bool stopThreads;
