@@ -22,7 +22,6 @@
 #ifndef OPTIMIZERSERVICE_H_
 #define OPTIMIZERSERVICE_H_
 
-#include "active_object.h"
 #include "db/generic/SingleDbInstance.h"
 #include "common/Logger.h"
 
