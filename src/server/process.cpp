@@ -33,7 +33,6 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include "common/error.h"
 #include <stdio.h>
 #include <signal.h>
 #include <paths.h>
@@ -42,19 +41,20 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include "process.h"
-#include "stringhelper.h"
-#include "common/error.h"
 #include <iostream>
 #include <fstream>
-#include "db/generic/SingleDbInstance.h"
 #include <dirent.h>
 #include <sys/socket.h>
-#include "../common/Logger.h"
-#include "../common/Logger.h"
+
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+
+#include "db/generic/SingleDbInstance.h"
+#include "common/error.h"
+#include "common/Logger.h"
+#include "process.h"
 
 using namespace fts3::common; 
-using namespace StringHelper;
 using namespace db;
 
 
@@ -72,7 +72,7 @@ int ExecuteProcess::executeProcessShell(std::string& forkMessage)
 // for as long as needed
 void ExecuteProcess::getArgv(std::list<std::string>& argsHolder, size_t* argc, char*** argv)
 {
-    split(m_arguments, ' ', argsHolder, 0, false);
+    boost::split(argsHolder, m_arguments, boost::is_any_of(" "));
 
     *argc = argsHolder.size() + 2; // Need place for the binary and the NULL
     *argv = new char*[*argc];
