@@ -25,7 +25,8 @@
 #include <sys/socket.h>
 #include <fstream>
 #include "GsoapAcceptor.h"
-#include "GsoapRequest_handler.h"
+
+#include "GsoapRequestHandler.h"
 
 bool  stopThreads;
 

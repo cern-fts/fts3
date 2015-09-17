@@ -30,7 +30,7 @@
 #include "common/ThreadPool.h"
 
 #include "GsoapAcceptor.h"
-#include "GsoapRequest_handler.h"
+#include "GsoapRequestHandler.h"
 
 
 extern bool  stopThreads;
