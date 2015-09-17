@@ -23,14 +23,14 @@
 #include "common/Logger.h"
 #include "config/serverconfig.h"
 
-#include "ProcessQueue.h"
+#include "services/cleaner/CleanerService.h"
+#include "services/transfers/TransfersService.h"
+#include "services/transfers/MultihopTransfersService.h"
+#include "services/transfers/ReuseTransfersService.h"
+#include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
-#include "ProcessUpdaterDbService.h"
-#include "ProcessServiceMultihop.h"
-#include "ProcessServiceReuse.h"
-#include "ProcessService.h"
-#include "services/cleaner/CleanerService.h"
+#include "ProcessQueue.h"
 #include "WebService.h"
 
 
@@ -52,7 +52,7 @@ void Server::start()
     if (!config::theServerConfig().get<bool> ("rush"))
         sleep(8);
 
-    ProcessUpdaterDBService processUpdaterDBHandler;
+    CancelerService processUpdaterDBHandler;
     systemThreads.create_thread(boost::ref(processUpdaterDBHandler));
 
     /*wait for status updates to be processed and then start sanity threads*/
@@ -62,13 +62,13 @@ void Server::start()
     OptimizerService optimizerService;
     systemThreads.create_thread(boost::ref(optimizerService));
 
-    ProcessService processHandler;
+    TransfersService processHandler;
     systemThreads.create_thread(boost::ref(processHandler));
 
-    ProcessServiceReuse processReuseHandler;
+    ReuseTransfersService processReuseHandler;
     systemThreads.create_thread(boost::ref(processReuseHandler));
 
-    ProcessServiceMultihop processMultihopHandler;
+    MultihopTransfersService processMultihopHandler;
     systemThreads.create_thread(boost::ref(processMultihopHandler));
 
     unsigned int port = config::theServerConfig().get<unsigned int>("Port");
