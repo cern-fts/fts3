@@ -20,9 +20,7 @@
 
 #include "Server.h"
 
-#include "common/Logger.h"
 #include "config/serverconfig.h"
-
 #include "services/cleaner/CleanerService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/MultihopTransfersService.h"
@@ -30,7 +28,7 @@
 #include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
-#include "ProcessQueue.h"
+#include "services/transfers/MessageProcessingService.h"
 #include "WebService.h"
 
 
@@ -43,7 +41,7 @@ void Server::start()
     CleanerService cleanMessages;
     systemThreads.create_thread(boost::ref(cleanMessages));
 
-    ProcessQueue queueHandler;
+    MessageProcessingService queueHandler;
     systemThreads.create_thread(boost::ref(queueHandler));
 
     HeartBeat heartBeatHandler;
@@ -55,7 +53,7 @@ void Server::start()
     CancelerService processUpdaterDBHandler;
     systemThreads.create_thread(boost::ref(processUpdaterDBHandler));
 
-    /*wait for status updates to be processed and then start sanity threads*/
+    // Wait for status updates to be processed and then start sanity threads
     if (!config::theServerConfig().get<bool> ("rush"))
         sleep(12);
 
