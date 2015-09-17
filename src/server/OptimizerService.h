@@ -32,12 +32,12 @@ namespace fts3 {
 namespace server {
 
 
-class OptimizerService
+class OptimizerService: boost::noncopyable
 {
 public:
 
 
-    void runOptimizer()
+    void operator () ()
     {
         while (!stopThreads)
         {

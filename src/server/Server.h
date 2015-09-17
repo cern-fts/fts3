@@ -42,7 +42,7 @@ namespace server {
 
 
 /** Class representing the FTS3 server logic. */
-class Server
+class Server: public boost::noncopyable
 {
 public:
 
@@ -50,41 +50,41 @@ public:
     void start()
     {
         CleanMessageFiles cleanMessages;
-        systemThreads.create_thread(boost::bind(&CleanMessageFiles::clean, cleanMessages));
+        systemThreads.create_thread(boost::ref(cleanMessages));
 
         ProcessQueue queueHandler;
-        systemThreads.create_thread(boost::bind(&ProcessQueue::processQueue, queueHandler));
+        systemThreads.create_thread(boost::ref(queueHandler));
 
         HeartBeat heartBeatHandler;
-        systemThreads.create_thread(boost::bind(&HeartBeat::beat, heartBeatHandler));
+        systemThreads.create_thread(boost::ref(heartBeatHandler));
 
         if (!config::theServerConfig().get<bool> ("rush"))
             sleep(8);
 
         ProcessUpdaterDBService processUpdaterDBHandler;
-        systemThreads.create_thread(boost::bind(&ProcessUpdaterDBService::updateDbService, processUpdaterDBHandler));
+        systemThreads.create_thread(boost::ref(processUpdaterDBHandler));
 
         /*wait for status updates to be processed and then start sanity threads*/
         if (!config::theServerConfig().get<bool> ("rush"))
             sleep(12);
 
         OptimizerService optimizerService;
-        systemThreads.create_thread(boost::bind(&OptimizerService::runOptimizer, optimizerService));
+        systemThreads.create_thread(boost::ref(optimizerService));
 
         ProcessService processHandler;
-        systemThreads.create_thread(boost::bind(&ProcessService::executeTransfers, processHandler));
+        systemThreads.create_thread(boost::ref(processHandler));
 
         ProcessServiceReuse processReuseHandler;
-        systemThreads.create_thread(boost::bind(&ProcessServiceReuse::executeTransfers, processReuseHandler));
+        systemThreads.create_thread(boost::ref(processReuseHandler));
 
         ProcessServiceMultihop processMultihopHandler;
-        systemThreads.create_thread(boost::bind(&ProcessServiceMultihop::executeTransfers, processMultihopHandler));
+        systemThreads.create_thread(boost::ref(processMultihopHandler));
 
         unsigned int port = config::theServerConfig().get<unsigned int>("Port");
         const std::string& ip = config::theServerConfig().get<std::string>("IP");
 
-        WebService webServiceHandler;
-        systemThreads.create_thread(boost::bind(&WebService::listen, webServiceHandler, port, ip));
+        WebService webServiceHandler(port, ip);
+        systemThreads.create_thread(boost::ref(webServiceHandler));
 
         // Wait for all to finish
         systemThreads.join_all();

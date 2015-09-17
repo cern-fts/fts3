@@ -71,7 +71,7 @@ private:
 
 public:
 
-    void clean()
+    void operator () ()
     {
         while (!stopThreads)
         {

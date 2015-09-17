@@ -46,7 +46,7 @@ public:
     soap* getSoapContext();
     void recycleSoapContext(soap* ctx);
 
-    std::shared_ptr<GSoapRequestHandler> accept();
+    std::unique_ptr<GSoapRequestHandler> accept();
 
 protected:
 

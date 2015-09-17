@@ -73,7 +73,7 @@ public:
     }
 
     /// Run the service
-    void updateDbService()
+    void operator () ()
     {
         static unsigned int counter1 = 0;
         static unsigned int counterFailAll = 0;

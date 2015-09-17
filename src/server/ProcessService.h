@@ -87,7 +87,7 @@ namespace fts3 {
 namespace server {
 
 
-class ProcessService
+class ProcessService: public boost::noncopyable
 {
 public:
 
@@ -134,7 +134,7 @@ public:
     {
     }
 
-    void executeTransfers()
+    void operator () ()
     {
         static bool drainMode = false;
 
@@ -212,7 +212,6 @@ protected:
             std::map<std::pair<std::string, std::string>, std::string> proxies;
 
             // loop until all files have been served
-
             int initial_size = tfh.size();
 
             while (!tfh.empty())
@@ -260,7 +259,9 @@ protected:
 
             // wait for all the workers to finish
             execPool.join();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO)<<"Threadpool processed: " << initial_size << " files (" << execPool.reduce(std::plus<int>()) << " have been scheduled)" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) <<"Threadpool processed: " << initial_size
+                    << " files (" << execPool.reduce(std::plus<int>())
+                    << " have been scheduled)" << commit;
 
         }
         catch (std::exception& e)

@@ -34,7 +34,7 @@ class ProcessServiceMultihop : public ProcessServiceReuse
 {
 public:
 
-    void executeTransfers()
+    void operator () ()
     {
         static bool drainMode = false;
 

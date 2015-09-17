@@ -48,31 +48,32 @@ namespace server {
  * - Schedule mthod handling
  * - Handle the event
  */
-class WebService
+class WebService: public boost::noncopyable
 {
 private:
+    int port;
+    std::string ip;
     std::shared_ptr<common::ThreadPool<GSoapRequestHandler>> threadPool;
 
 public:
 
-    WebService()
+    WebService(int port, const std::string& ip): port(port), ip(ip)
     {
         size_t threadPoolSize = fts3::config::theServerConfig().get<size_t> ("ThreadNum");
         threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 
-    void listen(unsigned int port, const std::string& ip)
+    void operator () ()
     {
         GSoapAcceptor acceptor(port, ip);
 
         while (stopThreads == false)
         {
-            std::shared_ptr<GSoapRequestHandler> handler = acceptor.accept();
+            std::unique_ptr<GSoapRequestHandler> handler = acceptor.accept();
 
             if (handler.get())
             {
-                threadPool->start(handler.get());
-                handler.reset();
+                threadPool->start(handler.release());
             }
             else
             {

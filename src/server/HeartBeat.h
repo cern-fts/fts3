@@ -45,7 +45,7 @@ class HeartBeat
 {
 public:
 
-    void beat()
+    void operator () ()
     {
         while (!stopThreads)
         {

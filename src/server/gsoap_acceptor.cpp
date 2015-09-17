@@ -127,10 +127,10 @@ GSoapAcceptor::~GSoapAcceptor()
         }
 }
 
-std::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
+std::unique_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
 {
     SOAP_SOCKET sock = soap_accept(ctx);
-    std::shared_ptr<GSoapRequestHandler> handler;
+    std::unique_ptr<GSoapRequestHandler> handler;
 
     if (sock >= 0)
         {

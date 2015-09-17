@@ -38,7 +38,7 @@ class ProcessServiceReuse: public ProcessService
 {
 public:
 
-    void executeTransfers()
+    void operator () ()
     {
         static bool drainMode = false;
 

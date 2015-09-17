@@ -70,7 +70,7 @@ public:
     }
 
     /// Thread that process the queue
-    void processQueue()
+    void operator () ()
     {
         namespace fs = boost::filesystem;
 
