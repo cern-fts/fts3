@@ -34,7 +34,7 @@
 #include "ProcessServiceMultihop.h"
 #include "ProcessServiceReuse.h"
 #include "ProcessService.h"
-#include "transfer_web_service.h"
+#include "WebService.h"
 
 
 namespace fts3 {
@@ -83,12 +83,11 @@ public:
         ProcessServiceMultihop processMultihopHandler;
         systemThreads.create_thread(boost::bind(&ProcessServiceMultihop::executeTransfers, processMultihopHandler));
 
-        /*** Old style ***/
         unsigned int port = config::theServerConfig().get<unsigned int>("Port");
         const std::string& ip = config::theServerConfig().get<std::string>("IP");
 
-        TransferWebService handler_t;
-        handler_t.listen_p(port, ip);
+        WebService webServiceHandler;
+        systemThreads.create_thread(boost::bind(&WebService::listen, webServiceHandler, port, ip));
 
         // Wait for all to finish
         ThreadPool::ThreadPool::instance().wait();

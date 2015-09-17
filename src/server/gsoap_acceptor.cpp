@@ -134,7 +134,6 @@ std::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
 
     if (sock >= 0)
         {
-
             handler.reset (
                 new GSoapRequestHandler(*this)
             );

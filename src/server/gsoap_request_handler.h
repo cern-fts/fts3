@@ -20,12 +20,8 @@
 
 #pragma once
 
-#include <boost/type_traits/is_base_of.hpp>
-#include <boost/static_assert.hpp>
-#include <queue>
+#include <boost/any.hpp>
 
-#include "../common/Logger.h"
-#include "common/error.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 
@@ -46,18 +42,12 @@ public:
     GSoapRequestHandler(const fts3::server::GSoapRequestHandler&);
     ~GSoapRequestHandler();
 
-    void handle();
-
+    void run(boost::any&);
 
 private:
     soap* ctx;
     GSoapAcceptor& acceptor;
 };
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-
-#endif // FTS3_COMPILE_WITH_UNITTESTS
-
 } // end namespace server
 } // end namespace fts3
-

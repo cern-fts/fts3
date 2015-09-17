@@ -70,7 +70,7 @@ const char* peek_http_method(SOAP_SOCKET socket, char* method, size_t msize)
     return NULL;
 }
 
-void GSoapRequestHandler::handle()
+void GSoapRequestHandler::run(boost::any&)
 {
     if(ctx)
         {
