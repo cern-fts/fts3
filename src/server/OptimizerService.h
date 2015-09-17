@@ -24,7 +24,6 @@
 
 #include "active_object.h"
 #include "db/generic/SingleDbInstance.h"
-#include "threadpool.h"
 #include "common/Logger.h"
 
 extern bool stopThreads;

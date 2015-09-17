@@ -44,14 +44,11 @@ namespace server {
 /** Class representing the FTS3 server logic. */
 class Server
 {
-
 public:
 
     /** Start the service. */
     void start()
     {
-        boost::thread_group systemThreads;
-
         CleanMessageFiles cleanMessages;
         systemThreads.create_thread(boost::bind(&CleanMessageFiles::clean, cleanMessages));
 
@@ -90,17 +87,17 @@ public:
         systemThreads.create_thread(boost::bind(&WebService::listen, webServiceHandler, port, ip));
 
         // Wait for all to finish
-        ThreadPool::ThreadPool::instance().wait();
         systemThreads.join_all();
     }
 
-    /* ---------------------------------------------------------------------- */
-
-    /** Stop the service. */
+    /// Stop the service
     void stop()
     {
-        ThreadPool::ThreadPool::instance().stop();
+        systemThreads.interrupt_all();
     }
+
+private:
+    boost::thread_group systemThreads;
 };
 
 

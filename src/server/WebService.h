@@ -51,19 +51,14 @@ namespace server {
 class WebService
 {
 private:
-    common::ThreadPool<GSoapRequestHandler>* threadPool;
+    std::shared_ptr<common::ThreadPool<GSoapRequestHandler>> threadPool;
 
 public:
 
     WebService()
     {
         size_t threadPoolSize = fts3::config::theServerConfig().get<size_t> ("ThreadNum");
-        threadPool = new common::ThreadPool<GSoapRequestHandler>(threadPoolSize);
-    }
-
-    ~WebService()
-    {
-        delete threadPool;
+        threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 
     void listen(unsigned int port, const std::string& ip)
