@@ -43,46 +43,52 @@
 #define STATUS_DIR "/var/lib/fts3/status/"
 #define LOG_DIR "/var/lib/fts3/logs/"
 #define STATUS_DM_DIR "/var/lib/fts3/status/"
+#define DEFAULT_LIMIT 10000
 
-int getDir (std::string dir, std::vector<std::string> &files, const std::string& extension);
+int getDir(const std::string& dir, std::vector<std::string> &files,
+        const std::string& extension, unsigned limit);
 
 void getUniqueTempFileName(const std::string& basename, std::string& tempname);
 
 void mktempfile(const std::string& basename, std::string& tempname);
 
 //for monitoring
-int runConsumerMonitoring(std::vector<struct message_monitoring>& messages);
+int runConsumerMonitoring(std::vector<struct message_monitoring>& messages,
+        unsigned limit=DEFAULT_LIMIT);
 
 int runProducerMonitoring(struct message_monitoring &msg);
 
 
 //for receiving the status from url_copy
-int runConsumerStatus(std::vector<struct message>& messages);
+int runConsumerStatus(std::vector<struct message>& messages,
+        unsigned limit=DEFAULT_LIMIT);
 
 int runProducerStatus(struct message &msg);
 
 
 //for checking is the process is stalled
-int runConsumerStall(std::vector<struct message_updater>& messages);
+int runConsumerStall(std::vector<struct message_updater>& messages,
+        unsigned limit = DEFAULT_LIMIT);
 
 int runProducerStall(struct message_updater &msg);
 
 
 //for checking the log file path
-int runConsumerLog(std::map<int, struct message_log>& messages);
+int runConsumerLog(std::map<int, struct message_log>& messages, unsigned limit =
+        DEFAULT_LIMIT);
 
 int runProducerLog(struct message_log &msg);
 
 //for staging and deletion recovery
-int runConsumerDeletions(std::vector<struct message_bringonline>& messages);
+int runConsumerDeletions(std::vector<struct message_bringonline>& messages,
+        unsigned limit = DEFAULT_LIMIT);
 int runProducerDeletions(struct message_bringonline &msg);
 
-int runConsumerStaging(std::vector<struct message_bringonline>& messages);
+int runConsumerStaging(std::vector<struct message_bringonline>& messages,
+        unsigned limit = DEFAULT_LIMIT);
 int runProducerStaging(struct message_bringonline &msg);
 
 int runProducer(struct message_bringonline &msg, std::string const & operation);
-
-
 
 
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch();

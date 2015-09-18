@@ -4919,17 +4919,16 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     soci::session sql(*connectionPool);
 
-    unsigned index=0, count1=0, start=0, end=0;
-    std::string service_name = "fts_backup";
+    unsigned index=0, activeHosts=0, start=0, end=0;
+    std::string serviceName = "fts_backup";
     *nJobs = 0;
     *nFiles = 0;
     std::ostringstream jobIdStmt;
     std::string job_id;
-    std::string stmt;
     int count = 0;
     int countBeat = 0;
     bool drain = false;
-    int activeHosts = 0;
+    int hostsRunningBackup = 0;
 
     try
     {
@@ -4938,11 +4937,11 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
         soci::statement stmtActiveHosts = (
                                               sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
                                               "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 30 minute) and service_name = :service_name",
-                                              soci::use(service_name),
-                                              soci::into(activeHosts));
+                                              soci::use(serviceName),
+                                              soci::into(hostsRunningBackup));
         stmtActiveHosts.execute(true);
 
-        if(activeHosts > 0)
+        if(hostsRunningBackup > 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup already running, won't start" << commit;
             return;
@@ -4951,7 +4950,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
         try
         {
             //update heartbeat first, the first must get 0
-            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+            updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
         }
         catch(...)
         {
@@ -4959,7 +4958,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
             {
                 sleep(1);
                 //update heartbeat first, the first must get 0
-                updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+                updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
             }
             catch(...)
             {
@@ -4978,8 +4977,8 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
             {
-                count++;
-                countBeat++;
+                ++count;
+                ++countBeat;
 
                 if(countBeat == 1000)
                 {
@@ -4990,7 +4989,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     try
                     {
                         //update heartbeat first, the first must get 0
-                        updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+                        updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
                     }
                     catch(...)
                     {
@@ -4998,7 +4997,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                         {
                             sleep(1);
                             //update heartbeat first, the first must get 0
-                            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+                            updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
                         }
                         catch(...)
                         {
@@ -5027,19 +5026,19 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                     sql.begin();
 
-                    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
-                    sql << stmt;
-                    stmt = "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id  in (" +job_id+ ")";
-                    sql << stmt;
+                    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
 
-                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
-                    sql << stmt;
+                    soci::statement insertFiles = (sql.prepare <<
+                            "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id in (" +job_id+ ")");
+                    insertFiles.execute();
+                    (*nFiles) += insertFiles.get_affected_rows();
 
-                    stmt = "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
-                    sql << stmt;
+                    sql << "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
 
-                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
-                    sql << stmt;
+                    sql << "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
+
+                    sql << "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
+                    (*nJobs) += count;
 
                     count = 0;
                     jobIdStmt.str(std::string());
