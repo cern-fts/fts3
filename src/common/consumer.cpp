@@ -33,8 +33,6 @@
 #include <ctime>
 #include "logger.h"
 
-using namespace std;
-
 
 struct sort_functor_updater
 {
@@ -53,7 +51,6 @@ struct sort_functor_status
 };
 
 
-
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 {
     using boost::gregorian::date;
@@ -65,7 +62,8 @@ boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 }
 
 
-int getDir (string dir, vector<string> &files, const std::string& extension)
+int getDir(const std::string& dir, std::vector<std::string> &files,
+    const std::string& extension, unsigned limit)
 {
     DIR *dp=NULL;
     struct dirent *dirp=NULL;
@@ -75,9 +73,9 @@ int getDir (string dir, vector<string> &files, const std::string& extension)
             return errno;
         }
 
-    while ((dirp = readdir(dp)) != NULL)
+    while ((dirp = readdir(dp)) != NULL && files.size() < limit)
         {
-            std::string fileName = string(dirp->d_name);
+            std::string fileName = std::string(dirp->d_name);
             size_t found = fileName.find(extension);
             if(found!=std::string::npos)
                 {
@@ -93,13 +91,13 @@ int getDir (string dir, vector<string> &files, const std::string& extension)
     return 0;
 }
 
-int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
+int runConsumerMonitoring(std::vector<struct message_monitoring>& messages, unsigned limit)
 {
-    string dir = string(MONITORING_DIR);
-    vector<string> files = vector<string>();
+    std::string dir = MONITORING_DIR;
+    std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "ready") != 0)
+    if (getDir(dir, files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -131,13 +129,13 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 }
 
 
-int runConsumerStatus(std::vector<struct message>& messages)
+int runConsumerStatus(std::vector<struct message>& messages, unsigned limit)
 {
-    string dir = string(STATUS_DIR);
-    vector<string> files = vector<string>();
+    std::string dir = STATUS_DIR;
+    std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "ready") != 0)
+    if (getDir(dir,files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -168,13 +166,14 @@ int runConsumerStatus(std::vector<struct message>& messages)
     return 0;
 }
 
-int runConsumerStall(std::vector<struct message_updater>& messages)
+
+int runConsumerStall(std::vector<struct message_updater>& messages, unsigned limit)
 {
-    string dir = string(STALLED_DIR);
-    vector<string> files = vector<string>();
+    std::string dir = STALLED_DIR;
+    std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "ready") != 0)
+    if (getDir(dir,files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -207,13 +206,13 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
 }
 
 
-int runConsumerLog(std::map<int, struct message_log>& messages)
+int runConsumerLog(std::map<int, struct message_log>& messages, unsigned limit)
 {
-    string dir = string(LOG_DIR);
-    vector<string> files = vector<string>();
+    std::string dir = LOG_DIR;
+    std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "ready") != 0)
+    if (getDir(dir,files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -245,13 +244,13 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
 }
 
 
-int runConsumerDeletions(std::vector<struct message_bringonline>& messages)
+int runConsumerDeletions(std::vector<struct message_bringonline>& messages, unsigned limit)
 {
-    string dir = string(STATUS_DM_DIR);
-    vector<string> files = vector<string>();
+    std::string dir = STATUS_DM_DIR;
+    std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "delete") != 0)
+    if (getDir(dir,files, "delete", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -282,13 +281,13 @@ int runConsumerDeletions(std::vector<struct message_bringonline>& messages)
     return 0;
 }
 
-int runConsumerStaging(std::vector<struct message_bringonline>& messages)
+int runConsumerStaging(std::vector<struct message_bringonline>& messages, unsigned limit)
 {
-    string dir = string(STATUS_DM_DIR);
-    vector<string> files = vector<string>();
+    std::string dir = STATUS_DM_DIR;
+    std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "staging") != 0)
+    if (getDir(dir,files, "staging", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
