@@ -9283,7 +9283,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                      "DELETE FROM t_hosts "
                                      "WHERE "
                                      " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) AND drain = 0) OR "
-                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 2 DAY)) ");
+                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 15 DAY)) ");
             stmt3.execute(true);
             sql.commit();
         }
