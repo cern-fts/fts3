@@ -9127,7 +9127,7 @@ void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, uns
                                              "DELETE FROM t_hosts "
                                              "WHERE "
                                              " (beat <= (sys_extract_utc(systimestamp) - interval '120' MINUTE) AND drain = 0) OR "
-                                             " (beat <= (sys_extract_utc(systimestamp) - interval '2' DAY))  ");
+                                             " (beat <= (sys_extract_utc(systimestamp) - interval '15' DAY))  ");
                     stmt3.execute(true);
                     sql.commit();
                 }
