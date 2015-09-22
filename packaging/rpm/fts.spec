@@ -9,7 +9,7 @@ ExcludeArch: armv7hl
 %global selinux_variants mls targeted
 
 Name:       fts
-Version:    3.3.2
+Version:    3.4.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
