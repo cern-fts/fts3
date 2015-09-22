@@ -1,6 +1,3 @@
-ExcludeArch: armv7hl
-
-
 %bcond_with oracle
 
 %global _hardened_build 1
@@ -221,12 +218,18 @@ cd build
         -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_INSTALL_PREFIX='' \
+%ifnarch x86_64 i386 i686
+        -DWITHOUT_GOOGLE_COREDUMPER=ON \
+%endif
         ..
 %else
     %cmake28 -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
         -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_INSTALL_PREFIX='' \
+%ifnarch x86_64 i386 i686
+        -DWITHOUT_GOOGLE_COREDUMPER=ON \
+%endif
         ..
 %endif
 
@@ -413,62 +416,30 @@ fi
 %{_mandir}/man8/fts_msg_bulk.8.gz
 
 %files client
-%{_bindir}/fts-config-set
-%{_bindir}/fts-config-get
-%{_bindir}/fts-config-del
-%{_bindir}/fts-set-debug
-%{_bindir}/fts-set-blacklist
-%{_bindir}/fts-set-priority
-%{_bindir}/fts-transfer-list
-%{_bindir}/fts-transfer-status
-%{_bindir}/fts-transfer-submit
-%{_bindir}/fts-transfer-cancel
-%{_bindir}/fts-transfer-delete
-%{_bindir}/fts-transfer-snapshot
-%{_bindir}/fts-delegation-init
-
+%{_bindir}/fts-*
 %{_mandir}/man1/fts*
 
 %files libs
-%{_libdir}/libfts_common.so.*
-%{_libdir}/libfts_config.so.*
-%{_libdir}/libfts_infosys.so.*
-%{_libdir}/libfts_db_generic.so.*
-%{_libdir}/libfts_db_profiled.so.*
-%{_libdir}/libfts_msg_ifce.so.*
-%{_libdir}/libfts_proxy.so.*
-%{_libdir}/libfts_server_gsoap_transfer.so.*
-%{_libdir}/libfts_server_lib.so.*
-%{_libdir}/libfts_cli_common.so.*
-%{_libdir}/libfts_ws_ifce_client.so.*
-%{_libdir}/libfts_ws_ifce_server.so.*
-%{_libdir}/libfts_delegation_api_simple.so.*
-%{_libdir}/libfts_delegation_api_cpp.so.*
-%{_libdir}/libfts_profiler.so.*
+%{_libdir}/libfts_common.so*
+%{_libdir}/libfts_config.so*
+%{_libdir}/libfts_infosys.so*
+%{_libdir}/libfts_db_generic.so*
+%{_libdir}/libfts_db_profiled.so*
+%{_libdir}/libfts_msg_ifce.so*
+%{_libdir}/libfts_proxy.so*
+%{_libdir}/libfts_server_gsoap_transfer.so*
+%{_libdir}/libfts_server_lib.so*
+%{_libdir}/libfts_cli_common.so*
+%{_libdir}/libfts_ws_ifce_client.so*
+%{_libdir}/libfts_ws_ifce_server.so*
+%{_libdir}/libfts_delegation_api_simple.so*
+%{_libdir}/libfts_delegation_api_cpp.so*
+%{_libdir}/libfts_profiler.so*
 %doc README
 %doc LICENSE
 
-
 %files python
 %{python_sitearch}/fts
-
-
-%files devel
-%{_bindir}/fts*
-%{_libdir}/libfts_common.so
-%{_libdir}/libfts_config.so
-%{_libdir}/libfts_infosys.so
-%{_libdir}/libfts_db_generic.so
-%{_libdir}/libfts_msg_ifce.so
-%{_libdir}/libfts_proxy.so
-%{_libdir}/libfts_server_gsoap_transfer.so
-%{_libdir}/libfts_server_lib.so
-%{_libdir}/libfts_cli_common.so
-%{_libdir}/libfts_ws_ifce_client.so
-%{_libdir}/libfts_ws_ifce_server.so
-%{_libdir}/libfts_delegation_api_simple.so
-%{_libdir}/libfts_delegation_api_cpp.so
-%{_mandir}/man1/fts*
 
 %files server-selinux
 %defattr(-,root,root,0755)
@@ -485,6 +456,12 @@ fi
 }
 
 %changelog
+* Tue Sep 22 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-3
+- Supress -devel rpm
+
+* Tue Sep 08 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-2
+- Patch to disable Google Coredumper in non x86 architectures
+
 * Fri Sep 04 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-1
 - New upstream release
 - fts-mysql integrated
