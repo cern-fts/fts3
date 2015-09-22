@@ -33,6 +33,8 @@ if DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
     DATABASES['default']['OPTIONS']['threaded'] = True
 
 if DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+    import MySQLdb.cursors
     DATABASES['default']['OPTIONS']['init_command'] = "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
+    DATABASES['default']['OPTIONS']['cursorclass'] = MySQLdb.cursors.SSCursor
 
 DISABLE_TRANSACTION_MANAGEMENT = True
