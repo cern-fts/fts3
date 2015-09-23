@@ -27,9 +27,7 @@
 #include <stdio.h>
 #include <string>
 #include <boost/thread.hpp>
-#ifndef WITHOUT_GOOGLE_COREDUMPER
-#include <google/coredumper.h>
-#endif
+#include <sys/prctl.h>
 
 /*
  * This file contains the logic to handle signals, logging them and
@@ -63,16 +61,18 @@ static void get_backtrace(int signum)
         backtrace_symbols_fd(panic::stack_backtrace, panic::stack_backtrace_size, STDOUT_FILENO);
 }
 
-
-static void generate_coredump()
+// Reset handler and re-raise, so the system handles it
+// If ulimit -c is unlimited, a coredump will be generated for
+// some of them (as SIGSEGV)
+static void delegate_to_default(int signum)
 {
-#ifndef WITHOUT_GOOGLE_COREDUMPER
-    extern char *program_invocation_short_name;
-
-    char fname[1024];
-    snprintf(fname, sizeof(fname), "/tmp/%s-%d.core", program_invocation_short_name, getpid());
-    WriteCoreDump(fname);
-#endif
+    // Change working directory to a writeable directory!
+    chdir("/tmp");
+    // setxid clears this flag, so need to reset to get the dump
+    prctl(PR_SET_DUMPABLE, 1);
+    // re-issue and let the system do the work
+    signal(signum, SIG_DFL);
+    raise(signum);
 }
 
 // Minimalistic logic inside a signal!
@@ -87,7 +87,6 @@ static void signal_handler(int signum)
             signum ==  SIGTRAP ||
             signum ==  SIGSYS) {
                 get_backtrace(signum);
-                generate_coredump();
         }
     }
     raised_signal = signum;
@@ -95,17 +94,13 @@ static void signal_handler(int signum)
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
     sem_post(&semaphore);
 
-    //special condition for ungraceful termination to avoid recurcive signals being received
-    if (signum == SIGABRT ||
-            signum == SIGSEGV ||
-            signum ==  SIGILL ||
-            signum ==  SIGFPE ||
-            signum == SIGBUS ||
-            signum ==  SIGTRAP ||
-            signum ==  SIGSYS)
+    // Let the system handle these ones
+    if (signum == SIGABRT || signum == SIGSEGV || signum == SIGILL
+            || signum == SIGFPE || signum == SIGBUS || signum == SIGTRAP
+            || signum == SIGSYS)
         {
-            sleep(120);
-            exit(0);
+            sleep(30);
+            delegate_to_default(signum);
         }
 }
 

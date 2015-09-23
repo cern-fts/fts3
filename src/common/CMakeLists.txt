@@ -20,46 +20,12 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-option(WITHOUT_GOOGLE_COREDUMPER "Include Google Coredumper" OFF)
-
 # Find libuuid
 find_package(LibUuid REQUIRED)
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
 # Find boost
 find_package(Boost COMPONENTS regex iostreams system thread)
-
-# Build Google coredumper
-# Depend on .touch to avoid re-running configure every time
-if(NOT WITHOUT_GOOGLE_COREDUMPER)
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
-        COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper
-        COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
-    )
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
-        WORKING_DIRECTORY google-coredumper
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/configure CFLAGS='-fPIC -D_GNU_SOURCE'
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
-    )
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
-        WORKING_DIRECTORY google-coredumper
-        COMMAND make
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
-    )
-    add_custom_target(libcoredumper
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
-    )
-    
-    add_library(coredumper STATIC IMPORTED)
-    add_dependencies(coredumper libcoredumper)
-    set_target_properties(coredumper PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
-    )
-    
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/src)
-else()
-    add_definitions(-DWITHOUT_GOOGLE_COREDUMPER)
-endif()
 
 # Sources
 file(GLOB fts_common_sources "*.cpp")
@@ -70,9 +36,6 @@ target_link_libraries(fts_common
     ${LIBUUID_LIBRARIES}
     -lpthread
 )
-if(NOT WITHOUT_GOOGLE_COREDUMPER)
-    target_link_libraries (fts_common coredumper)
-endif()
 
 set_target_properties(fts_common PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/common

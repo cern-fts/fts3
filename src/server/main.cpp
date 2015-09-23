@@ -21,6 +21,7 @@
 /** \file main.cpp FTS3 server entry point. */
 
 #include <cstdio>
+#include <dirent.h>
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
@@ -42,9 +43,9 @@
 #include <fstream>
 #include "common/panic.h"
 #include <execinfo.h>
+#include "common/Logger.h"
+#include "common/ThreadSafeList.h"
 
-#include "../common/Logger.h"
-#include "../common/ThreadSafeList.h"
 
 namespace fs = boost::filesystem;
 using boost::thread;
@@ -341,18 +342,18 @@ void checkInitDirs(std::string logsDir)
         }
 }
 
-static void shutdown_callback(int signal, void*)
+static void shutdown_callback(int signum, void*)
 {
     int exit_status = 0;
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
-                                    << " (" << strsignal(signal) << ")" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
+                                    << " (" << strsignal(signum) << ")" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
     stopThreads = true;
 
     // Some require traceback
-    switch (signal)
+    switch (signum)
         {
         case SIGABRT:
         case SIGSEGV:
@@ -361,7 +362,7 @@ static void shutdown_callback(int signal, void*)
         case SIGBUS:
         case SIGTRAP:
         case SIGSYS:
-            exit_status = -signal;
+            exit_status = -signum;
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
             break;
         default:
@@ -388,7 +389,7 @@ static void shutdown_callback(int signal, void*)
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-    _exit(exit_status);
+    // Let the default handler do the rest (coredump, exit, whatever is neccessary)
 }
 
 

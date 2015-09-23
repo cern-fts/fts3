@@ -98,7 +98,7 @@ void shutdown_callback(int signal, void*)
     sleep(5);
     int db_status = fts3_teardown_db_backend();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
-    _exit(db_status);
+    // Let the default handler do the rest (coredump, exit, whatever is neccessary)
 }
 
 /* -------------------------------------------------------------------------- */
