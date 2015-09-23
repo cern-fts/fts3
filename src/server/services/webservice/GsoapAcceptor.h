@@ -22,12 +22,13 @@
 
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/static_assert.hpp>
+#include <memory>
+#include <mutex>
 #include <queue>
 
 #include <stdsoap2.h>
 
 #include "common/error.h"
-#include "common/MonitorObject.h"
 
 namespace fts3 {
 namespace server {
@@ -35,7 +36,7 @@ namespace server {
 class GSoapRequestHandler;
 
 
-class GSoapAcceptor: public fts3::common::MonitorObject
+class GSoapAcceptor
 {
 
 public:
@@ -49,12 +50,11 @@ public:
     std::unique_ptr<GSoapRequestHandler> accept();
 
 protected:
-
     soap* ctx;
     std::queue<soap*> recycle;
 
 public:
-    mutable boost::recursive_mutex _mutex;
+    mutable std::recursive_mutex _mutex;
 };
 
 } // end namespace server

@@ -27,7 +27,6 @@
 using namespace fts3;
 using namespace fts3::common;
 
-ProfilingSubsystem ProfilingSubsystem::instance;
 
 /**
  * Current timestamp in milliseconds
@@ -53,9 +52,9 @@ ScopeProfiler::ScopeProfiler(const std::string& scope):
 ScopeProfiler::~ScopeProfiler()
 {
     double end = getMilliseconds();
-    Profile& prof = ProfilingSubsystem::getInstance().getProfile(scope);
+    Profile& prof = ProfilingSubsystem::instance().getProfile(scope);
 
-    boost::mutex::scoped_lock lock(prof.mutex);
+    std::lock_guard<std::mutex> lock(prof.mutex);
 
     ++prof.nCalled;
     prof.nExceptions += nExceptions;
@@ -113,12 +112,6 @@ ProfilingSubsystem::~ProfilingSubsystem()
 
 
 
-ProfilingSubsystem& ProfilingSubsystem::getInstance()
-{
-    return ProfilingSubsystem::instance;
-}
-
-
 void ProfilingSubsystem::start()
 {
     dumpInterval = config::theServerConfig().get<unsigned>("Profiling");
@@ -133,7 +126,7 @@ Profile& ProfilingSubsystem::getProfile(const std::string& scope)
 {
     // Note: scope may not be in profiles, so this may modify the map,
     // in which case it needs to lock
-    boost::lock_guard<boost::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     return profiles[scope];
 }
 
@@ -147,21 +140,21 @@ unsigned ProfilingSubsystem::getInterval() const
 
 std::map<std::string, Profile> ProfilingSubsystem::getProfiles() const
 {
-    boost::lock_guard<boost::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     return profiles;
 }
 
 
 void ProfilingSubsystem::clear()
 {
-    boost::lock_guard<boost::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     profiles.clear();
 }
 
 
 std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
 {
-    boost::lock_guard<boost::mutex> lock(prof.mutex);
+    std::lock_guard<std::mutex> lock(prof.mutex);
 
     out << "executed " << std::setw(3) << std::dec << prof.nCalled << " times, "
         <<  "thrown " << std::setw(3) << prof.nExceptions << " exceptions, average of "
@@ -173,7 +166,7 @@ std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
 
 std::ostream& fts3::operator << (std::ostream& out, const ProfilingSubsystem& profSubsys)
 {
-    boost::lock_guard<boost::mutex> lock(profSubsys.mutex);
+    std::lock_guard<std::mutex> lock(profSubsys.mutex);
 
     std::map<std::string, Profile>::const_iterator i;
     for (i = profSubsys.profiles.begin(); i != profSubsys.profiles.end(); ++i)

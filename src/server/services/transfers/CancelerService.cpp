@@ -74,7 +74,7 @@ void CancelerService::operator () ()
             }
 
             //if we drain a host, no need to check if url_copy are reporting being alive
-            if (DrainMode::getInstance())
+            if (DrainMode::instance())
             {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking url_copy for this instance!" << commit;
                 messages.clear();

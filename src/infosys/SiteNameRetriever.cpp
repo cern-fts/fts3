@@ -72,7 +72,7 @@ SiteNameRetriever::~SiteNameRetriever()
 std::string SiteNameRetriever::getFromBdii(std::string se)
 {
 
-    BdiiBrowser& bdii = BdiiBrowser::getInstance();
+    BdiiBrowser& bdii = BdiiBrowser::instance();
 
     // first check glue2
     std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
@@ -137,7 +137,7 @@ std::string SiteNameRetriever::getSiteName(std::string se)
 
 #ifndef WITHOUT_PUGI
     // check in BDII cache
-    site = BdiiCacheParser::getInstance().getSiteName(se);
+    site = BdiiCacheParser::instance().getSiteName(se);
     if (!site.empty())
         {
             // save it in cache
@@ -161,7 +161,7 @@ std::string SiteNameRetriever::getSiteName(std::string se)
 
 #ifndef WITHOUT_PUGI
     // check in MyOSG
-    site = OsgParser::getInstance().getSiteName(se);
+    site = OsgParser::instance().getSiteName(se);
 
     // update the cache
     if (!site.empty())

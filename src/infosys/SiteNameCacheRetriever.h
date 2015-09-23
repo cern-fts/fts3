@@ -26,9 +26,9 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include "../common/Singleton.h"
 #include "BdiiBrowser.h"
 
-#include "common/ThreadSafeInstanceHolder.h"
 
 namespace fts3
 {
@@ -44,10 +44,10 @@ struct EndpointInfo
     std::string version;
 };
 
-class SiteNameCacheRetriever: public ThreadSafeInstanceHolder<SiteNameCacheRetriever>
+class SiteNameCacheRetriever: public Singleton<SiteNameCacheRetriever>
 {
 
-    friend class ThreadSafeInstanceHolder<SiteNameCacheRetriever>;
+    friend class Singleton<SiteNameCacheRetriever>;
 
 public:
 

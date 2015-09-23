@@ -25,14 +25,14 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
-#include "common/InstanceHolder.h"
+#include "common/Singleton.h"
 
 
 namespace fts3 {
 namespace server {
 
 /// Class representing the FTS3 server logic
-class Server: public fts3::common::InstanceHolder<Server>
+class Server: public fts3::common::Singleton<Server>
 {
 public:
     /// Start the service

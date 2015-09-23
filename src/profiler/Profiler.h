@@ -20,11 +20,12 @@
 
 #pragma once
 
-#include <boost/thread/mutex.hpp>
 #include <iomanip>
 #include <map>
+#include <mutex>
 #include <ostream>
 #include <string>
+#include "common/Singleton.h"
 
 namespace fts3
 {
@@ -35,7 +36,7 @@ namespace fts3
  */
 struct Profile
 {
-    mutable boost::mutex mutex;
+    mutable std::mutex mutex;
 
     unsigned long   nCalled;
     unsigned long   nExceptions;
@@ -88,23 +89,19 @@ public:
 /**
  * Profiler singleton. Aggregates the profiling data.
  */
-class ProfilingSubsystem
+class ProfilingSubsystem: public fts3::common::Singleton<ProfilingSubsystem>
 {
 private:
-    static ProfilingSubsystem instance;
+    mutable std::mutex mutex;
 
     unsigned dumpInterval;
-
-    mutable boost::mutex mutex;
     std::map<std::string, Profile> profiles;
 
     friend std::ostream& operator << (std::ostream& out, const ProfilingSubsystem& profSubsys);
 
-    ProfilingSubsystem();
-    ~ProfilingSubsystem();
-
 public:
-    static ProfilingSubsystem& getInstance();
+    ProfilingSubsystem();
+    virtual ~ProfilingSubsystem();
 
     void start();
 

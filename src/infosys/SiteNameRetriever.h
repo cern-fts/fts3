@@ -33,7 +33,7 @@
 #  include "BdiiCacheParser.h"
 #endif
 
-#include "common/ThreadSafeInstanceHolder.h"
+#include "../common/Singleton.h"
 
 namespace fts3
 {
@@ -43,10 +43,10 @@ namespace infosys
 /**
  *
  */
-class SiteNameRetriever: public ThreadSafeInstanceHolder<SiteNameRetriever>
+class SiteNameRetriever: public Singleton<SiteNameRetriever>
 {
 
-    friend class ThreadSafeInstanceHolder<SiteNameRetriever>;
+    friend class Singleton<SiteNameRetriever>;
 
 public:
 

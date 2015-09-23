@@ -113,7 +113,7 @@ int main(int argc, char** argv)
                                            << commit;
 
             // If profiling is configured, dump the timing
-            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&fts3::ProfilingSubsystem::getInstance());
+            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&fts3::ProfilingSubsystem::instance());
 
         }
     catch (Err& e)

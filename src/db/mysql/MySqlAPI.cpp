@@ -1903,7 +1903,7 @@ void MySqlAPI::listJobs(const std::vector<std::string>& inGivenStates,
             std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
             for (unsigned i = 1; i < inGivenStates.size(); ++i)
             {
-                if (JobStatusHandler::getInstance().isTransferFinished(inGivenStates[0]))
+                if (JobStatusHandler::instance().isTransferFinished(inGivenStates[0]))
                     ++countTerminal;
                 else
                     ++countInitial;

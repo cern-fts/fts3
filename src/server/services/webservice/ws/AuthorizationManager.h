@@ -21,10 +21,11 @@
 #ifndef AUTHORIZATIONMANAGER_H_
 #define AUTHORIZATIONMANAGER_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
+#include "common/Singleton.h"
 #include "db/generic/OwnedResource.h"
 //#include "ws-ifce/gsoap/gsoap_stubs.h"
 
+#include <map>
 #include <set>
 #include <vector>
 #include <utility>
@@ -41,19 +42,9 @@ using namespace fts3::common;
 
 /**
  * AuthorizationManager facilitates the authorization of a fts operation
- *
- * AuthorizationManager implements the Singleton design pattern (ThreadSafeInstanceHolder).
- *
- * @see ThreadSafeInstanceHolder
  */
-class AuthorizationManager : public ThreadSafeInstanceHolder<AuthorizationManager>
+class AuthorizationManager: public Singleton<AuthorizationManager>
 {
-
-    /**
-     * friend to the singleton holder
-     */
-    friend class ThreadSafeInstanceHolder<AuthorizationManager>;
-
 public:
 
     /**
@@ -99,6 +90,7 @@ public:
     Level authorize(soap* ctx, Operation op, const OwnedResource* rsc = NULL);
 
 private:
+    friend class Singleton<AuthorizationManager>;
 
     /// authorization level 'all' corresponding to global access
     static const std::string ALL_LVL;

@@ -21,11 +21,10 @@
 #ifndef BDIICACHEPARSER_H_
 #define BDIICACHEPARSER_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
-
 #include <string>
 
 #include <pugixml.hpp>
+#include "../common/Singleton.h"
 
 using namespace pugi;
 
@@ -39,10 +38,10 @@ namespace infosys
 /**
  *
  */
-class BdiiCacheParser : public ThreadSafeInstanceHolder<BdiiCacheParser>
+class BdiiCacheParser : public Singleton<BdiiCacheParser>
 {
 
-    friend class ThreadSafeInstanceHolder<BdiiCacheParser>;
+    friend class Singleton<BdiiCacheParser>;
 
 public:
 

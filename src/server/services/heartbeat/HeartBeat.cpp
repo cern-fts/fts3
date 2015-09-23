@@ -44,7 +44,7 @@ void HeartBeat::operator () ()
         try
         {
             //if we drain a host, we need to let the other hosts know about it, hand-over all files to the rest
-            if (DrainMode::getInstance())
+            if (DrainMode::instance())
             {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)
                         << "Set to drain mode, no more transfers for this instance!"

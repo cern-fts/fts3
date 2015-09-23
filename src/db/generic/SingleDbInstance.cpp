@@ -21,7 +21,7 @@
 #include "SingleDbInstance.h"
 #include <fstream>
 
-#include "../../common/Logger.h"
+#include "common/Logger.h"
 #include "common/error.h"
 #include "config/serverconfig.h"
 #include "version.h"
@@ -37,10 +37,6 @@ using namespace fts3::common;
 namespace db
 {
 
-std::unique_ptr<DBSingleton> DBSingleton::i;
-boost::mutex DBSingleton::_mutex;
-
-// Implementation
 
 DBSingleton::DBSingleton(): dbBackend(NULL)
 {

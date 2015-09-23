@@ -35,7 +35,7 @@
 
 #include <iostream>
 
-#include "common/MonitorObject.h"
+#include "common/Singleton.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 
@@ -45,26 +45,11 @@ namespace db
 /**
  * DBSingleton class declaration
  **/
-class DBSingleton: public fts3::common::MonitorObject
+class DBSingleton: public fts3::common::Singleton<DBSingleton>
 {
 public:
+    DBSingleton();
     ~DBSingleton();
-
-    /**
-     * DBSingleton thread-safe upon init singleton
-     **/
-    static DBSingleton & instance()
-    {
-        if (i.get() == 0)
-            {
-                boost::mutex::scoped_lock lock(_mutex);
-                if (i.get() == 0)
-                    {
-                        i.reset(new DBSingleton);
-                    }
-            }
-        return *i;
-    }
 
     /**
      * used by the client to obtain access to the backend instance
@@ -74,29 +59,7 @@ public:
         return dbBackend;
     }
 
-    /**
-     * Force the destruction of the backend
-     * Needed to keep a consistent state on fork!
-     */
-    static void tearDown()
-    {
-        if (i.get() != 0)
-            {
-                i.reset(0);
-            }
-    }
-
-
 private:
-    DBSingleton(); // Private so that it can  not be called
-
-    DBSingleton(DBSingleton const&)
-    {
-    }; // copy constructor is private
-    static boost::mutex _mutex;
-    DBSingleton & operator=(DBSingleton const&);
-    // assignment operator is private
-    static std::unique_ptr<DBSingleton> i;
     DynamicLibraryManager *dlm;
     std::string libraryFileName;
 

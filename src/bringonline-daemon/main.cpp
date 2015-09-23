@@ -55,7 +55,7 @@ int fts3_teardown_db_backend()
 {
     try
         {
-            db::DBSingleton::tearDown();
+            db::DBSingleton::destroy();
         }
     catch (...)
         {
@@ -139,7 +139,7 @@ void heartbeat(void)
             try
                 {
                     //check if draining is on
-                    if (fts3::server::DrainMode::getInstance())
+                    if (fts3::server::DrainMode::instance())
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
                             sleep(15);
@@ -233,7 +233,7 @@ int DoServer(int argc, char** argv)
                 }
 
             // Start profiling
-            fts3::ProfilingSubsystem::getInstance().start();
+            fts3::ProfilingSubsystem::instance().start();
 
             boost::thread hbThread(heartbeat);
 

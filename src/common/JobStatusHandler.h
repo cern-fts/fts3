@@ -21,13 +21,12 @@
 #ifndef JOBSTATUSHANDLER_H_
 #define JOBSTATUSHANDLER_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
-
 #include <map>
 #include <string>
 #include <iostream>
 
 #include "db/generic/FileTransferStatus.h"
+#include "Singleton.h"
 
 namespace fts3
 {
@@ -41,10 +40,10 @@ namespace common
  * and grands access to a map containing all state names and the corresponding
  * IDs. The class inherits after MonitorObject and is thread safe.
  */
-class JobStatusHandler: public ThreadSafeInstanceHolder<JobStatusHandler>
+class JobStatusHandler: public Singleton<JobStatusHandler>
 {
 
-    friend class ThreadSafeInstanceHolder<JobStatusHandler>;
+    friend class Singleton<JobStatusHandler>;
 
 public:
 

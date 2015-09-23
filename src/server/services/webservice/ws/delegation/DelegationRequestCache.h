@@ -21,7 +21,7 @@
 #ifndef DELEGATIONOORCHESTRATOR_H_
 #define DELEGATIONOORCHESTRATOR_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
+#include "common/Singleton.h"
 
 #include <boost/thread.hpp>
 
@@ -42,10 +42,10 @@ using namespace fts3::common;
  * DelegationOrchestrator is a singleton
  *
  */
-class DelegationRequestCache: public ThreadSafeInstanceHolder<DelegationRequestCache>
+class DelegationRequestCache: public Singleton<DelegationRequestCache>
 {
 
-    friend class ThreadSafeInstanceHolder<DelegationRequestCache>;
+    friend class Singleton<DelegationRequestCache>;
 
 public:
 

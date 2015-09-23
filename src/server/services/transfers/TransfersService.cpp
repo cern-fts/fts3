@@ -101,7 +101,7 @@ void TransfersService::operator () ()
 
         try
         {
-            if (DrainMode::getInstance())
+            if (DrainMode::instance())
             {
                 if (!drainMode)
                 {

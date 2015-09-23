@@ -93,7 +93,7 @@ private:
     void freeList(std::list<TransferFile>& l);
 
     /// mutex that ensures thread safety
-    boost::mutex m;
+    std::mutex m;
 
     /// next pair in given VO queue
     std::map< std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> >::iterator > nextPairForVo;

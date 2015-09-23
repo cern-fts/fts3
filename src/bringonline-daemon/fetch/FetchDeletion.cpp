@@ -53,7 +53,7 @@ void FetchDeletion::fetch()
             try  //this loop must never exit
                 {
                     //if we drain a host, stop with deletions
-                    if (fts3::server::DrainMode::getInstance())
+                    if (fts3::server::DrainMode::instance())
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Set to drain mode, stopped deleting files with this instance!" << commit;
                             boost::this_thread::sleep(boost::posix_time::milliseconds(15000));

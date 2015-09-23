@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     try
         {
             // instance of the site name cache retriever
-            SiteNameCacheRetriever& bdii_cache = SiteNameCacheRetriever::getInstance();
+            SiteNameCacheRetriever& bdii_cache = SiteNameCacheRetriever::instance();
 
             xml_document doc;
             doc.load_file(bdii_path.c_str());

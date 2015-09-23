@@ -121,7 +121,7 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
             throw Err_Custom("No states were defined!");
         }
 
-    JobStatusHandler& handler = JobStatusHandler::getInstance();
+    JobStatusHandler& handler = JobStatusHandler::instance();
     for (auto it = inGivenStates->item.begin(); it < inGivenStates->item.end(); ++it)
         {
             if (*it == "Pending") continue; // We are ignoring the legacy state 'Pending'

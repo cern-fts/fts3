@@ -72,7 +72,7 @@ int main(int ac, char* av[])
                             sleep(2);
                             status = ctx->getTransferJobStatus(jobId, false).getStatus();
                         }
-                    while (!JobStatusHandler::getInstance().isTransferFinished(status));
+                    while (!JobStatusHandler::instance().isTransferFinished(status));
                 }
 
         }

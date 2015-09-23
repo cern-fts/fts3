@@ -44,7 +44,7 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 soap,
                 AuthorizationManager::DELEG,
                 AuthorizationManager::dummy
@@ -71,7 +71,7 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 soap,
                 AuthorizationManager::DELEG,
                 AuthorizationManager::dummy
@@ -99,7 +99,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 soap,
                 AuthorizationManager::DELEG,
                 AuthorizationManager::dummy
@@ -126,7 +126,7 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 soap,
                 AuthorizationManager::DELEG,
                 AuthorizationManager::dummy
@@ -155,7 +155,7 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 soap,
                 AuthorizationManager::DELEG,
                 AuthorizationManager::dummy
@@ -180,7 +180,7 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 {
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 soap,
                 AuthorizationManager::DELEG,
                 AuthorizationManager::dummy

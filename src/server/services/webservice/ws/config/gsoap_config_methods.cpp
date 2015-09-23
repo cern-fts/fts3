@@ -67,7 +67,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
                 {
                     handler.parse(*it);
                     // authorize each configuration operation separately for each se/se group
-                    AuthorizationManager::getInstance().authorize(
+                    AuthorizationManager::instance().authorize(
                         soap,
                         AuthorizationManager::CONFIG,
                         AuthorizationManager::dummy
@@ -187,7 +187,7 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
                 {
                     handler.parse(*it);
                     // authorize each configuration operation separately for each se/se group
-                    AuthorizationManager::getInstance().authorize(
+                    AuthorizationManager::instance().authorize(
                         soap,
                         AuthorizationManager::CONFIG,
                         AuthorizationManager::dummy
@@ -225,7 +225,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -240,7 +240,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
             cmd << "fts-config-set --drain " << (drain ? "on" : "off");
 
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
-            fts3::server::DrainMode::getInstance() = drain;
+            fts3::server::DrainMode::instance() = drain;
             // audit the operation
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "drain");
         }
@@ -268,7 +268,7 @@ int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse&
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -314,7 +314,7 @@ int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRe
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -362,7 +362,7 @@ int fts3::implcfg__setOptimizerMode(soap* ctx, int optimizer_mode, implcfg__setO
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -411,7 +411,7 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -458,7 +458,7 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -530,7 +530,7 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
     try
         {
             // authorize
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -632,7 +632,7 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
             if (state != "on" && state != "off") throw Err_Custom("the protocol may be either set to 'on' or 'off'");
 
             // Authorise operation
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            AuthorizationManager::instance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             DBSingleton::instance().getDBObjectInstance()->setSeProtocol(protocol, se, state);
 
@@ -664,7 +664,7 @@ int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int active, implcfg__max
     try
         {
             // Authorise
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -708,7 +708,7 @@ int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__max
     try
         {
             // Authorise
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -750,7 +750,7 @@ int fts3::implcfg__fixActivePerPair(soap* ctx, string source, string destination
 {
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -794,7 +794,7 @@ int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResp
     try
         {
             // Authorise
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -834,7 +834,7 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
     try
         {
             // Authorise
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -874,7 +874,7 @@ int fts3::implcfg__setGlobalLimits(soap* ctx, fts3::config__GlobalLimits* limits
     try
         {
             // Authorise
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -921,7 +921,7 @@ int fts3::implcfg__authorizeAction(soap* ctx, fts3::config__SetAuthz* authz, fts
 {
     try
         {
-            AuthorizationManager::getInstance().authorize(
+            AuthorizationManager::instance().authorize(
                 ctx,
                 AuthorizationManager::CONFIG,
                 AuthorizationManager::dummy
@@ -1034,7 +1034,7 @@ int fts3::impltns__debugLevelSet(struct soap* soap, string source, string destin
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is setting debug level to " << level
                                              << "for source: " << source << " and destination: " << destination << commit;
 
-            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            AuthorizationManager::instance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             if (!source.empty())
                 DBSingleton::instance().getDBObjectInstance()->setDebugLevel(source, std::string(), level);
@@ -1067,7 +1067,7 @@ int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string v
 
     try
         {
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            AuthorizationManager::instance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             Blacklister blacklister (ctx, name, vo, status, timeout, blk);
             blacklister.executeRequest();
@@ -1093,7 +1093,7 @@ int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string statu
     try
         {
 
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            AuthorizationManager::instance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             Blacklister blacklister(ctx, subject, status, timeout, blk);
             blacklister.executeRequest();

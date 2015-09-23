@@ -142,11 +142,11 @@ std::string JobCancelHandler::get_state(std::string const & jobId, std::string c
     // if not throw an exception
     if (!job) return DOES_NOT_EXIST;
     // Authorise the operation
-    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
+    AuthorizationManager::instance().authorize(ctx, AuthorizationManager::TRANSFER, job.get_ptr());
     // get the status
     std::string const & status = job->jobState;
     // make sure the transfer-job is not in terminal state
-    if (JobStatusHandler::getInstance().isTransferFinished(status))
+    if (JobStatusHandler::instance().isTransferFinished(status))
         {
             return status;
         }

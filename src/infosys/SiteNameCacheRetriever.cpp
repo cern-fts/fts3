@@ -108,7 +108,7 @@ void SiteNameCacheRetriever::get(std::map<std::string, EndpointInfo>& cache)
 void SiteNameCacheRetriever::fromGlue1(std::map<std::string, EndpointInfo>& cache)
 {
 
-    static BdiiBrowser& bdii = BdiiBrowser::getInstance();
+    static BdiiBrowser& bdii = BdiiBrowser::instance();
 
     // browse for se names and respective site names
     time_t start = time(0);
@@ -147,7 +147,7 @@ void SiteNameCacheRetriever::fromGlue1(std::map<std::string, EndpointInfo>& cach
 void SiteNameCacheRetriever::fromGlue2(std::map<std::string, EndpointInfo>& cache)
 {
 
-    static BdiiBrowser& bdii = BdiiBrowser::getInstance();
+    static BdiiBrowser& bdii = BdiiBrowser::instance();
 
     // browse for se names and foreign keys that are pointing to the site name
     time_t start = time(0);

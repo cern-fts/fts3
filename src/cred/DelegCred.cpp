@@ -139,8 +139,8 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
 bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
 {
     //prevent ssl_library_init from getting called by multiple threads
-    static boost::mutex qm_cred_service;
-    boost::mutex::scoped_lock lock(qm_cred_service);
+    static std::mutex qm_cred_service;
+    std::lock_guard<std::mutex> lock(qm_cred_service);
 
     // Check if it's valid
     time_t lifetime, voms_lifetime;

@@ -159,7 +159,7 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
             ret = make_summary<SUMMARY>();
             ret->jobStatus = to_gsoap_status(*job.get_ptr(), fileStatuses.size(), glite);
 
-            JobStatusHandler& handler = JobStatusHandler::getInstance();
+            JobStatusHandler& handler = JobStatusHandler::instance();
             ret->numActive = handler.countInState(JobStatusHandler::FTS3_STATUS_ACTIVE, fileStatuses);
             ret->numCanceled = handler.countInState(JobStatusHandler::FTS3_STATUS_CANCELED, fileStatuses);
             ret->numSubmitted = handler.countInState(JobStatusHandler::FTS3_STATUS_SUBMITTED, fileStatuses);

@@ -21,7 +21,6 @@
 #ifndef BDIIBROWSER_H_
 #define BDIIBROWSER_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
 #include <sys/types.h>
 #include <signal.h>
 #include "config/serverconfig.h"
@@ -38,6 +37,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 #include "../common/Logger.h"
+#include "../common/Singleton.h"
 
 namespace fts3
 {
@@ -53,10 +53,10 @@ using namespace common;
  *
  * @see ThreadSafeInstanceHolder
  */
-class BdiiBrowser: public ThreadSafeInstanceHolder<BdiiBrowser>
+class BdiiBrowser: public Singleton<BdiiBrowser>
 {
 
-    friend class ThreadSafeInstanceHolder<BdiiBrowser>;
+    friend class Singleton<BdiiBrowser>;
 
 public:
 

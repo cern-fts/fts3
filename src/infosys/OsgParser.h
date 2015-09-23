@@ -21,11 +21,10 @@
 #ifndef OSGPARSER_H_
 #define OSGPARSER_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
-
 #include <pugixml.hpp>
 #include <string>
 #include <boost/optional.hpp>
+#include "../common/Singleton.h"
 
 namespace fts3
 {
@@ -43,10 +42,10 @@ using namespace fts3::common;
  *
  * @see ThreadSafeInstanceHolder
  */
-class OsgParser : public ThreadSafeInstanceHolder<OsgParser>
+class OsgParser : public Singleton<OsgParser>
 {
 
-    friend class ThreadSafeInstanceHolder<OsgParser>;
+    friend class Singleton<OsgParser>;
 
 public:
 

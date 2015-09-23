@@ -58,7 +58,7 @@ void ReuseTransfersService::operator () ()
 
         try
         {
-            if (DrainMode::getInstance())
+            if (DrainMode::instance())
             {
                 if (!drainMode)
                     FTS3_COMMON_LOGGER_NEWLOG(INFO)

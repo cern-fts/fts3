@@ -44,6 +44,6 @@ PROFILE_END;
 // Create a ScopeProfiler ONLY if profiling is set
 #define PROFILE_SCOPE(scope) \
 std::unique_ptr<fts3::ScopeProfiler> __profiler;\
-if (fts3::ProfilingSubsystem::getInstance().getInterval() > 0) {\
+if (fts3::ProfilingSubsystem::instance().getInterval() > 0) {\
     __profiler.reset(new fts3::ScopeProfiler(scope));\
 }

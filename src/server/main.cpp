@@ -281,8 +281,7 @@ void checkDbSchema()
             fts3_initialize_db_backend(true);
 
             db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
-
-            db::DBSingleton::tearDown();
+            db::DBSingleton::destroy();
 
         }
     catch (Err& e)
@@ -375,9 +374,9 @@ static void shutdown_callback(int signum, void*)
 
     try
         {
-            Server::getInstance().stop();
+            Server::instance().stop();
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
-            db::DBSingleton::tearDown();
+            db::DBSingleton::destroy();
             if (!theServerConfig().get<bool> ("rush"))
                 sleep(10);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
@@ -443,10 +442,10 @@ int DoServer(int argc, char** argv)
             ThreadSafeList::get_instance();
 
             // Start profiling
-            fts3::ProfilingSubsystem::getInstance().start();
+            fts3::ProfilingSubsystem::instance().start();
 
             // Start server
-            Server::getInstance().start();
+            Server::instance().start();
 
         }
     catch (Err& e)
@@ -530,7 +529,7 @@ int main(int argc, char** argv)
             theServerConfig().read(argc, argv, true);
 
             //check file/dir persmissions
-	    std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
+	        std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
             checkInitDirs(logDir);
 
             //check if db schema is installed

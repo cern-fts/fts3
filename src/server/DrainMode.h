@@ -21,7 +21,7 @@
 #ifndef FTSDRAIN_H_
 #define FTSDRAIN_H_
 
-#include "common/ThreadSafeInstanceHolder.h"
+#include "../common/Singleton.h"
 #include "db/generic/SingleDbInstance.h"
 
 using namespace db;
@@ -41,10 +41,10 @@ namespace server
  * not synchronized since its an atomic value and theres no
  * risk of run condition.
  */
-class DrainMode : public fts3::common::ThreadSafeInstanceHolder<DrainMode>
+class DrainMode : public fts3::common::Singleton<DrainMode>
 {
 
-    friend class fts3::common::ThreadSafeInstanceHolder<DrainMode>;
+    friend class fts3::common::Singleton<DrainMode>;
 
 public:
 
