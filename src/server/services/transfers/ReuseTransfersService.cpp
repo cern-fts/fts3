@@ -28,9 +28,9 @@
 #include "cred/DelegCred.h"
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
-#include "server/ConfigurationAssigner.h"
+#include "ConfigurationAssigner.h"
+#include "ExecuteProcess.h"
 #include "server/DrainMode.h"
-#include "server/ExecuteProcess.h"
 #include "server/ws/SingleTrStateInstance.h"
 
 #include "oauth.h"
