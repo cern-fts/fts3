@@ -94,14 +94,17 @@ static void signal_handler(int signum)
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
     sem_post(&semaphore);
 
-    // Let the system handle these ones
-    if (signum == SIGABRT || signum == SIGSEGV || signum == SIGILL
-            || signum == SIGFPE || signum == SIGBUS || signum == SIGTRAP
-            || signum == SIGSYS)
-        {
-            sleep(30);
+    sleep(30);
+
+    switch (signum) {
+        case SIGINT: case SIGUSR1: case SIGTERM:
+            _exit(0);
+            break;
+        // Let the system handle the rest
+        default:
             delegate_to_default(signum);
-        }
+            break;
+    }
 }
 
 // Thread that logs, waits and kills
@@ -125,7 +128,7 @@ static void set_handlers(void)
     {
         SIGABRT, SIGSEGV, SIGILL, SIGFPE,
         SIGBUS, SIGTRAP, SIGSYS,
-        SIGINT, SIGUSR1, SIGTERM
+        SIGQUIT, SIGINT, SIGUSR1, SIGTERM
     };
     static const size_t N_CATCH_SIGNALS = sizeof(CATCH_SIGNALS) / sizeof(int);
     static struct sigaction actions[N_CATCH_SIGNALS];
