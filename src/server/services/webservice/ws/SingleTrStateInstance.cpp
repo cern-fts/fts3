@@ -103,29 +103,6 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
         }
 }
 
-void SingleTrStateInstance::sendStateMessage(  const std::string&  vo_name, const std::string&  source_se, const std::string&  dest_se, const std::string&  job_id, int file_id, const std::string&
-        job_state, const std::string&  file_state, int retry_counter, int retry_max, const std::string&  job_metadata, const std::string&  file_metadata)
-{
-
-    if(!monitoringMessages)
-        return;
-
-    struct message_state state;
-    state.vo_name = vo_name;
-    state.source_se = source_se;
-    state.dest_se = dest_se;
-    state.job_id = job_id;
-    state.file_id = file_id;
-    state.job_state = job_state;
-    state.file_state = file_state;
-    state.retry_counter = retry_counter;
-    state.retry_max = retry_max;
-    state.job_metadata = job_metadata;
-    state.file_metadata = file_metadata;
-
-    constructJSONMsg(&state);
-}
-
 
 void SingleTrStateInstance::constructJSONMsg(const struct message_state* state)
 {
