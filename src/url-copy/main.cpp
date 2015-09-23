@@ -238,7 +238,7 @@ void taskTimerCanceler()
     exit(1);
 }
 
-void abnormalTermination(std::string classification, std::string, std::string finalState)
+void abnormalTermination(std::string classification, std::string, std::string finalState, bool exit=true)
 {
     terminalState = true;
 
@@ -361,7 +361,8 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     cancelTransfer();
     sleep(1);
-    _exit(1);
+    if (exit)
+        _exit(1);
 }
 
 void canceler()
@@ -437,7 +438,7 @@ void shutdown_callback(int signum, void*)
                     logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
 
                     errorMessage = "Transfer process died with: " + stackTrace;
-                    abnormalTermination("FAILED", errorMessage, "Error");
+                    abnormalTermination("FAILED", errorMessage, "Error", false);
                 }
         }
     else if (signum == SIGINT || signum == SIGTERM)
@@ -447,7 +448,7 @@ void shutdown_callback(int signum, void*)
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("CANCELED", errorMessage, "Abort");
+                    abnormalTermination("CANCELED", errorMessage, "Abort", true);
                 }
         }
     else if (signum == SIGUSR1)
@@ -457,7 +458,7 @@ void shutdown_callback(int signum, void*)
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("FAILED", errorMessage, "Abort");
+                    abnormalTermination("FAILED", errorMessage, "Abort", true);
                 }
         }
     else
@@ -467,7 +468,7 @@ void shutdown_callback(int signum, void*)
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("FAILED", errorMessage, "Abort");
+                    abnormalTermination("FAILED", errorMessage, "Abort", false);
                 }
         }
 }

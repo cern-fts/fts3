@@ -44,6 +44,7 @@ limitations under the License. */
 #include "panic.h"
 #include <execinfo.h>
 
+
 namespace fs = boost::filesystem;
 using boost::thread;
 using namespace FTS3_SERVER_NAMESPACE;
@@ -338,18 +339,18 @@ void checkInitDirs(std::string logsDir)
         }
 }
 
-static void shutdown_callback(int signal, void*)
+static void shutdown_callback(int signum, void*)
 {
     int exit_status = 0;
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
-                                    << " (" << strsignal(signal) << ")" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
+                                    << " (" << strsignal(signum) << ")" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
     stopThreads = true;
 
     // Some require traceback
-    switch (signal)
+    switch (signum)
         {
         case SIGABRT:
         case SIGSEGV:
@@ -358,7 +359,7 @@ static void shutdown_callback(int signal, void*)
         case SIGBUS:
         case SIGTRAP:
         case SIGSYS:
-            exit_status = -signal;
+            exit_status = -signum;
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << Panic::stack_dump(Panic::stack_backtrace, Panic::stack_backtrace_size) << commit;
             break;
         default:
@@ -385,7 +386,7 @@ static void shutdown_callback(int signal, void*)
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-    _exit(exit_status);
+    // Let the default handler do the rest (coredump, exit, whatever is neccessary)
 }
 
 
