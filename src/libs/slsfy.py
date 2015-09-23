@@ -55,10 +55,10 @@ def _calculate_availability(e_sls, servers):
                 e_subavailability.tail = "Status: running"
             total_count += 1
 
-    availability = float((total_count - down_count) / total_count * 100)
+    availability = ((float(total_count - down_count) / total_count) * 100)
     if availability == 0:
         SubElement(e_sls, 'status').text = 'unavailable'
-    elif availability >= 90:
+    elif availability >= 75:
         SubElement(e_sls, 'status').text = 'available'
     else:
         SubElement(e_sls, 'status').text = 'degraded'
