@@ -27,7 +27,7 @@
 #include "db/generic/SingleDbInstance.h"
 
 #include <boost/algorithm/string.hpp>
-#include "../../common/Logger.h"
+#include "common/Logger.h"
 
 
 using namespace fts3::config;

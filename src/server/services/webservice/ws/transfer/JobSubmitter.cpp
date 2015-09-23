@@ -29,9 +29,9 @@
 
 #include "config/serverconfig.h"
 
-#include "ws/CGsiAdapter.h"
-#include "ws/delegation/GSoapDelegationHandler.h"
-#include "ws/config/Configuration.h"
+#include "../CGsiAdapter.h"
+#include "../delegation/GSoapDelegationHandler.h"
+#include "../config/Configuration.h"
 
 #include "profiler/Macros.h"
 
@@ -46,10 +46,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "../../../common/Logger.h"
-#include "../../../common/Uri.h"
-#include "../../../common/UuidGenerator.h"
-#include "ws/SingleTrStateInstance.h"
+#include "common/Logger.h"
+#include "common/Uri.h"
+#include "common/UuidGenerator.h"
+#include "../SingleTrStateInstance.h"
 
 using namespace db;
 using namespace fts3::config;

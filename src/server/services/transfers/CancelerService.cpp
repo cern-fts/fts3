@@ -27,7 +27,7 @@
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 #include "server/DrainMode.h"
-#include "server/ws/SingleTrStateInstance.h"
+#include "server/services/webservice/ws/SingleTrStateInstance.h"
 
 
 extern bool stopThreads;

@@ -25,12 +25,12 @@
 
 #include "FileTransferScheduler.h"
 
-#include "../common/Logger.h"
-#include "ws/config/Configuration.h"
+#include "common/Logger.h"
 
 #include "common/JobStatusHandler.h"
 
-#include "ws/SingleTrStateInstance.h"
+#include "services/webservice/ws/config/Configuration.h"
+#include "services/webservice/ws/SingleTrStateInstance.h"
 
 
 using namespace db;

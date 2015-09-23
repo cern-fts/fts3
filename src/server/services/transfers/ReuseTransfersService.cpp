@@ -31,7 +31,7 @@
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "server/DrainMode.h"
-#include "server/ws/SingleTrStateInstance.h"
+#include "server/services/webservice/ws/SingleTrStateInstance.h"
 
 #include "oauth.h"
 #include "FileTransferScheduler.h"

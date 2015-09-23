@@ -31,7 +31,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "../../../common/Logger.h"
+#include "common/Logger.h"
 #include "common/error.h"
 #include "common/CfgParser.h"
 

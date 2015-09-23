@@ -28,7 +28,7 @@
 #include "common/ThreadSafeList.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/ws/SingleTrStateInstance.h"
+#include "server/services/webservice/ws/SingleTrStateInstance.h"
 
 
 extern bool stopThreads;

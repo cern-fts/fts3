@@ -32,7 +32,7 @@
 #include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"
 #include "ProtocolResolver.h"
-#include "ws/SingleTrStateInstance.h"
+#include "services/webservice/ws/SingleTrStateInstance.h"
 
 #include "oauth.h"
 

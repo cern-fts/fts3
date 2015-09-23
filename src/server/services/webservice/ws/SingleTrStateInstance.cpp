@@ -24,7 +24,7 @@
 #include "db/generic/SingleDbInstance.h"
 #include "config/serverconfig.h"
 #include <sstream>
-#include "../../common/Logger.h"
+#include "common/Logger.h"
 
 
 using namespace db;

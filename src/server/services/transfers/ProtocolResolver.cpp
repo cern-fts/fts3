@@ -20,7 +20,7 @@
 
 #include "ProtocolResolver.h"
 
-#include "ws/config/Configuration.h"
+#include "server/services/webservice/ws/config/Configuration.h"
 
 #include "db/generic/OptimizerSample.h"
 

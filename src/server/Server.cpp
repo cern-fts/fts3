@@ -29,7 +29,7 @@
 #include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
 #include "services/transfers/MessageProcessingService.h"
-#include "WebService.h"
+#include "services/webservice/WebService.h"
 
 
 namespace fts3 {

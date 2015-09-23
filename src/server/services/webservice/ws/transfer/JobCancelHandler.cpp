@@ -20,9 +20,9 @@
 
 #include "JobCancelHandler.h"
 
-#include "ws/CGsiAdapter.h"
-#include "ws/AuthorizationManager.h"
-#include "ws/SingleTrStateInstance.h"
+#include "../CGsiAdapter.h"
+#include "../AuthorizationManager.h"
+#include "../SingleTrStateInstance.h"
 
 #include "common/error.h"
 #include "common/JobStatusHandler.h"
@@ -30,7 +30,7 @@
 #include <algorithm>
 
 #include <boost/bind.hpp>
-#include "../../../common/Logger.h"
+#include "common/Logger.h"
 
 namespace fts3
 {

@@ -19,17 +19,17 @@
  */
 
 #include "GSoapDelegationHandler.h"
-#include "ws/CGsiAdapter.h"
+#include "../CGsiAdapter.h"
 
 #include "db/generic/SingleDbInstance.h"
 
 #include "common/error.h"
+#include "common/Logger.h"
 
 #include <stdlib.h>
 
 #include <boost/regex.hpp>
 #include <sstream>
-#include "../../../common/Logger.h"
 
 using namespace fts3::ws;
 using namespace db;

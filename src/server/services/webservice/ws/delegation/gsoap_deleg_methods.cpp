@@ -22,12 +22,12 @@
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include "GSoapDelegationHandler.h"
-#include "ws/AuthorizationManager.h"
+#include "../AuthorizationManager.h"
 
-#include <common/error.h>
+#include "common/error.h"
+#include "common/Logger.h"
 
 #include <boost/thread/locks.hpp>
-#include "../../../common/Logger.h"
 
 using namespace std;
 using namespace fts3::common;

@@ -29,13 +29,13 @@
 #include "JobCancelHandler.h"
 #include "JobStatusGetter.h"
 
-#include "ws/CGsiAdapter.h"
-#include "ws/AuthorizationManager.h"
+#include "../CGsiAdapter.h"
+#include "../AuthorizationManager.h"
 
 #include "common/JobStatusHandler.h"
 
 #include "common/error.h"
-#include "ws/delegation/GSoapDelegationHandler.h"
+#include "../delegation/GSoapDelegationHandler.h"
 
 #include <fstream>
 #include <sstream>
@@ -45,12 +45,12 @@
 
 #include <cgsi_plugin.h>
 
-#include "../../../common/Logger.h"
-#include "../../../common/Uri.h"
-#include "../../../common/UuidGenerator.h"
+#include "common/Logger.h"
+#include "common/Uri.h"
+#include "common/UuidGenerator.h"
 //#include "fts3.nsmap"
 
-#include "ws/SingleTrStateInstance.h"
+#include "../SingleTrStateInstance.h"
 
 using namespace db;
 using namespace fts3::config;

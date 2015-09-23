@@ -20,7 +20,7 @@
 
 #include "RequestLister.h"
 
-#include "../../../common/Logger.h"
+#include "common/Logger.h"
 #include "GSoapJobStatus.h"
 
 

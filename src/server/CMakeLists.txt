@@ -28,10 +28,10 @@ include_directories(${GLIB2_INCLUDE_DIRS})
 # Web service / gsoap subsystem
 include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
 file(GLOB fts_server_gsoap_transfer_sources
-    "ws/*.cpp"
-    "ws/transfer/*.cpp"
-    "ws/delegation/*.cpp"
-    "ws/config/*.cpp"
+    "services/webservice/ws/*.cpp"
+    "services/webservice/ws/transfer/*.cpp"
+    "services/webservice/ws/delegation/*.cpp"
+    "services/webservice/ws/config/*.cpp"
 )
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})

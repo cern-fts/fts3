@@ -28,7 +28,6 @@
 #include "common/error.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "ws/delegation/GSoapDelegationHandler.h"
 #include <fstream>
 #include "Server.h"
 #include <iomanip>
@@ -445,7 +444,7 @@ int DoServer(int argc, char** argv)
             ThreadSafeList::get_instance();
 
             // Start profiling
-            ProfilingSubsystem::getInstance().start();
+            fts3::ProfilingSubsystem::getInstance().start();
 
             // Start server
             Server::getInstance().start();

@@ -22,12 +22,13 @@
 
 #include "ConfigurationHandler.h"
 #include "Blacklister.h"
-#include "ws/AuthorizationManager.h"
-#include "ws/CGsiAdapter.h"
+#include "../AuthorizationManager.h"
+#include "../CGsiAdapter.h"
 
 #include "db/generic/SingleDbInstance.h"
 
 #include "common/error.h"
+#include "common/Logger.h"
 
 #include "DrainMode.h"
 
@@ -39,7 +40,6 @@
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
-#include "../../../common/Logger.h"
 
 using namespace std;
 using namespace db;

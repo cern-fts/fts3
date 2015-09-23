@@ -26,8 +26,8 @@
 #include "db/generic/JobStatus.h"
 #include "db/generic/SingleDbInstance.h"
 
-#include "ws/CGsiAdapter.h"
-#include "ws/AuthorizationManager.h"
+#include "../CGsiAdapter.h"
+#include "../AuthorizationManager.h"
 
 #include <string>
 #include <vector>

@@ -20,7 +20,7 @@
 
 #include "ConfigurationAssigner.h"
 
-#include "ws/config/Configuration.h"
+#include "server/services/webservice/ws/config/Configuration.h"
 
 #include "common/JobStatusHandler.h"
 

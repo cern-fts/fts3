@@ -22,13 +22,13 @@
 
 #include "common/error.h"
 
-#include "ws/CGsiAdapter.h"
+#include "../CGsiAdapter.h"
 
-#include "ws/SingleTrStateInstance.h"
+#include "../SingleTrStateInstance.h"
 
 #include <vector>
 #include <set>
-#include "../../../common/Logger.h"
+#include "common/Logger.h"
 
 namespace fts3
 {
