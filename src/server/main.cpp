@@ -386,7 +386,6 @@ static void shutdown_callback(int signum, void*)
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-    // Let the default handler do the rest (coredump, exit, whatever is neccessary)
 }
 
 
