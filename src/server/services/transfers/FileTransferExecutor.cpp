@@ -237,6 +237,21 @@ void FileTransferExecutor::run(boost::any & ctx)
                     scheduled += 1;
 
                     bool fileUpdated = false;
+                    fileUpdated = db->updateTransferStatus(
+                            tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
+                            (int) pr.getPid(), 0, 0, false);
+                    db->updateJobStatus(tf.jobId, "ACTIVE",0);
+
+                    // If fileUpdated == false, the transfer was *not* updated, which means we got
+                    // probably a collision with some other node
+                    if (!fileUpdated) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                              << "Transfer " <<  tf.jobId << " " << tf.fileId
+                              << " not updated. Probably picked by another node" << commit;
+                        return;
+                    }
+
+                    // Spawn the fts_url_copy
                     if (-1 == pr.executeProcessShell(forkMessage))
                         {
                             if(forkMessage.empty())
@@ -260,24 +275,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                                     db->updateJobStatus(tf.jobId, "FAILED", 0);
                                 }
                         }
-                    else
-                        {
-                            fileUpdated = db->updateTransferStatus(
-                                    tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
-                                    (int) pr.getPid(), 0, 0, false);
-                            db->updateJobStatus(tf.jobId, "ACTIVE", 0);
-                        }
 
-                    // If fileUpdated == false, the transfer was *not* updated, which means we got
-                    // probably a collision with some other node
-                    if (!fileUpdated) {
-                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
-                                << "Transfer " <<  tf.jobId << " " << tf.fileId
-                                << " not updated. Probably picked by another node" << commit;
-                        return;
-                    }
-
-                    //send ACTIVE
+                    // Send current state
                     SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
                     struct message_updater msg;
                     strncpy(msg.job_id, std::string(tf.jobId).c_str(), sizeof(msg.job_id));
