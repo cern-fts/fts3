@@ -939,7 +939,8 @@ void MySqlAPI::getByJobId(
                    "FROM t_job, t_file "
                    "WHERE "
                    "    t_file.job_id = t_job.job_id AND t_file.job_finished IS NULL AND "
-                   "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest",
+                   "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest AND "
+                   "    t_file.file_state = 'SUBMITTED'",
                    soci::use(boost::get<2>(triplet)), soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)),
                    soci::into(maxPriority);
 
