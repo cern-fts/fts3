@@ -89,14 +89,13 @@ static void signal_handler(int signum)
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
     sem_post(&semaphore);
 
-    sleep(30);
-
     switch (signum) {
+        // Termination signals, do nothing, the installed callback should handle it
         case SIGINT: case SIGUSR1: case SIGTERM:
-            _exit(0);
             break;
         // Let the system handle the rest
         default:
+            sleep(30);
             delegate_to_default(signum);
             break;
     }
