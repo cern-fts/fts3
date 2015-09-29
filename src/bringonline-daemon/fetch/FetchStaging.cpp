@@ -43,7 +43,7 @@ void FetchStaging::fetch()
         {
             recoverStartedTasks();
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
         }
@@ -96,7 +96,7 @@ void FetchStaging::fetch()
                                 {
                                     threadpool.start(new BringOnlineTask(it_t->second));
                                 }
-                            catch(Err_Custom const & ex)
+                            catch(UserError const & ex)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                                 }
@@ -108,7 +108,7 @@ void FetchStaging::fetch()
 
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000)); //10 secs interval
                 }
-            catch (Err& e)
+            catch (BaseException& e)
                 {
                     sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
@@ -130,7 +130,7 @@ void FetchStaging::recoverStartedTasks()
         {
             db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(files);
         }
-    catch(Err_Custom const & ex)
+    catch(UserError const & ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
         }
@@ -158,7 +158,7 @@ void FetchStaging::recoverStartedTasks()
                 {
                     threadpool.start(new PollTask(it_t->second, it_t->first));
                 }
-            catch(Err_Custom const & ex)
+            catch(UserError const & ex)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                 }

@@ -19,13 +19,15 @@
  */
 
 #include "fts3.nsmap"
-#include "config/serverconfig.h"
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include <sys/socket.h>
 #include <fstream>
-#include "GsoapAcceptor.h"
 
+#include "common/Logger.h"
+#include "config/serverconfig.h"
+
+#include "GsoapAcceptor.h"
 #include "GsoapRequestHandler.h"
 
 bool  stopThreads;
@@ -61,7 +63,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
                 }
             else
                 {
-                    FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bind socket."));
+                    FTS3_COMMON_LOGGER_NEWLOG (CRIT) << "Unable to bind socket.";
                     fclose (stderr);
                     _exit(1);
                 }
@@ -87,7 +89,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
                 }
             else
                 {
-                    FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bind socket."));
+                    FTS3_COMMON_LOGGER_NEWLOG (CRIT) << "Unable to bind socket.";
                     fclose (stderr);
                     _exit(1);
                 }
@@ -141,7 +143,7 @@ std::unique_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
         }
     else
         {
-            FTS3_COMMON_EXCEPTION_LOGERROR (Err_System ("Unable to accept connection request."));
+            throw SystemError ("Unable to accept connection request.");
         }
 
     return handler;

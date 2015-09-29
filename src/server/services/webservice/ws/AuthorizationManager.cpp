@@ -21,12 +21,13 @@
 #include "AuthorizationManager.h"
 #include "CGsiAdapter.h"
 
-#include "common/error.h"
 #include "config/serverconfig.h"
 
 #include "db/generic/SingleDbInstance.h"
 
 #include <boost/algorithm/string.hpp>
+
+#include "../../../../common/Exceptions.h"
 #include "common/Logger.h"
 
 
@@ -235,7 +236,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
         {
             if (op != DELEG) return ALL;
             std::string msg = "Authorization failed, a host certificate has been used to submit a transfer!";
-            throw Err_Custom(msg);
+            throw UserError(msg);
         }
 
     // if the VO authorization list was specified and a wildcard was not used ...
@@ -283,7 +284,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
             msg += ") has not the right Role to perform '";
             msg += op_str;
             msg += 	"' operation)";
-            throw Err_Custom(msg);
+            throw UserError(msg);
         }
 }
 
@@ -348,7 +349,7 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
                     break;
                 }
 
-            throw Err_Custom(msg);
+            throw UserError(msg);
         }
 
     return grantedLvl;

@@ -88,7 +88,7 @@ void ConfigurationHandler::parse(std::string configuration)
             break;
         case CfgParser::NOT_A_CFG:
         default:
-            throw Err_Custom("Wrong configuration format!");
+            throw UserError("Wrong configuration format!");
         }
 }
 
@@ -213,7 +213,7 @@ std::vector<std::string> ConfigurationHandler::getAll(std::string name)
             // get the standalone configuration
             ret.push_back(get(name));
         }
-    catch (Err& ex)
+    catch (BaseException& ex)
         {
             // we don't care if nothing has been found
         }
@@ -270,7 +270,7 @@ std::string ConfigurationHandler::getPair(std::string src, std::string dest)
             );
         }
     else
-        throw Err_Custom("The source and destination have to be either two SEs or two SE groups!");
+        throw UserError("The source and destination have to be either two SEs or two SE groups!");
 
     return cfg->json();
 }
@@ -284,7 +284,7 @@ std::string ConfigurationHandler::getPair(std::string symbolic)
     if (p.get())
         return getPair(p->first, p->second);
     else
-        throw Err_Custom("The symbolic name does not exist!");
+        throw UserError("The symbolic name does not exist!");
 }
 
 std::string ConfigurationHandler::getVo(std::string vo)

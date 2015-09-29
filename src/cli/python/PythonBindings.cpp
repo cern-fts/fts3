@@ -24,12 +24,11 @@
 #include "python/PyFile.h"
 #include "python/PythonProxyDelegator.h"
 
-#include "common/error.h"
-
 #include <boost/optional/optional.hpp>
 #include <boost/python.hpp>
 
 #include <exception>
+#include "../../common/Exceptions.h"
 
 using namespace fts3::common;
 
@@ -39,7 +38,7 @@ void exceptTranslator(std::exception const& ex)
 }
 
 
-void errExTranslator(Err_Custom const& ex)
+void errExTranslator(UserError const& ex)
 {
     PyErr_SetString(PyExc_UserWarning, ex.what());
 }
@@ -50,7 +49,7 @@ BOOST_PYTHON_MODULE(libftspython)
     using namespace fts3::cli;
 
     py::register_exception_translator<std::exception>(exceptTranslator);
-    py::register_exception_translator<Err_Custom>(errExTranslator);
+    py::register_exception_translator<UserError>(errExTranslator);
 
     py::class_<PythonApi>("Fts", py::init<py::str>())
     .def("submit", &PythonApi::submit)

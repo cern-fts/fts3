@@ -23,13 +23,13 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/error.h"
 #include "common/Logger.h"
 
 #include <stdlib.h>
 
 #include <boost/regex.hpp>
 #include <sstream>
+#include "../../../../../common/Exceptions.h"
 
 using namespace fts3::ws;
 using namespace db;
@@ -142,7 +142,7 @@ std::string GSoapDelegationHandler::getProxyReq(std::string delegationId)
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate request" << commit;
 
     delegationId = handleDelegationId(delegationId);
-    if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
+    if (delegationId.empty()) throw UserError("'handleDelegationId' failed!");
 
     // check if the public - private key pair has been already generated and is in the DB cache
     boost::optional<UserCredentialCache> cache (
@@ -162,7 +162,7 @@ std::string GSoapDelegationHandler::getProxyReq(std::string delegationId)
         {
             free(reqtxt);
             free(keytxt);
-            throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
+            throw UserError("'GRSTx509CreateProxyRequest' failed!");
         }
 
     std::string req (reqtxt);
@@ -190,21 +190,21 @@ std::string GSoapDelegationHandler::getProxyReq(std::string delegationId)
                             return cache->certificateRequest;
                         }
 
-                    throw Err_Custom("Failed to insert the 'public-private' key into t_credential_cache!");
+                    throw UserError("Failed to insert the 'public-private' key into t_credential_cache!");
                 }
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             free(reqtxt);
             free(keytxt);
-            throw Err_Custom(ex.what());
+            throw UserError(ex.what());
 
         }
     catch(...)
         {
             free(reqtxt);
             free(keytxt);
-            throw Err_Custom("Problem while renewing proxy");
+            throw UserError("Problem while renewing proxy");
         }
 
     free(reqtxt);
@@ -221,7 +221,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets new proxy certificate request" << commit;
 
     std::string delegationId = makeDelegationId();
-    if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
+    if (delegationId.empty()) throw UserError("'getDelegationId' failed!");
 
     boost::optional<UserCredentialCache> cache (
         DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
@@ -244,7 +244,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
         {
             if (reqtxt) free (reqtxt);
             if (keytxt) free (keytxt);
-            throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
+            throw UserError("'GRSTx509CreateProxyRequest' failed!");
         }
 
     std::string req (reqtxt);
@@ -259,17 +259,17 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
                 fqansToString(attrs)
             );
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             if (reqtxt) free (reqtxt);
             if (keytxt) free (keytxt);
-            throw Err_Custom(ex.what());
+            throw UserError(ex.what());
         }
     catch(...)
         {
             if (reqtxt) free (reqtxt);
             if (keytxt) free (keytxt);
-            throw Err_Custom("Problem while renewing proxy");
+            throw UserError("Problem while renewing proxy");
         }
     delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
     ret->proxyRequest = soap_new_std__string(ctx, -1);
@@ -325,7 +325,7 @@ std::string GSoapDelegationHandler::addKeyToProxyCertificate(std::string proxy, 
     // if the private key does not match throw an exception
     if (mismatch)
         {
-            throw Err_Transient("Failed to add private key to the proxy certificate: key values mismatch!");
+            throw UserError("Failed to add private key to the proxy certificate: key values mismatch!");
         }
 
     std::stringstream ss;
@@ -333,7 +333,7 @@ std::string GSoapDelegationHandler::addKeyToProxyCertificate(std::string proxy, 
 
     if (GRSTx509StringToChain(&certstack, const_cast<char*>(proxy.c_str())) != GRST_RET_OK)
         {
-            throw Err_Custom("Failed to add private key to the proxy certificate!");
+            throw UserError("Failed to add private key to the proxy certificate!");
         }
 
     // first cert
@@ -365,7 +365,7 @@ time_t GSoapDelegationHandler::readTerminationTime(std::string proxy)
     X509 *cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
     BIO_free(bio);
 
-    if(!cert) throw Err_Custom("Failed to determine proxy's termination time!");
+    if(!cert) throw UserError("Failed to determine proxy's termination time!");
 
     time_t time = GRSTasn1TimeToTimeT( (char*) ASN1_STRING_data(X509_get_notAfter(cert)), 0);
     X509_free(cert);
@@ -396,7 +396,7 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " puts proxy certificate" << commit;
 
             delegationId = handleDelegationId(delegationId);
-            if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
+            if (delegationId.empty()) throw UserError("'handleDelegationId' failed!");
 
             time_t incomingExpirationTime = readTerminationTime(proxy);
 
@@ -405,7 +405,7 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
 
             if (difftime(incomingExpirationTime, now) < 3600)
                 {
-                    throw Err_Custom("The proxy has to be valid for at least an hour!");
+                    throw UserError("The proxy has to be valid for at least an hour!");
                 }
 
             boost::optional<UserCredentialCache> cache (
@@ -465,26 +465,26 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
                         }
                     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " new proxy is in t_credential" << commit;
                 }
-            catch(Err& ex)
+            catch(BaseException& ex)
                 {
-                    throw Err_Custom(ex.what());
+                    throw UserError(ex.what());
                 }
             catch(...)
                 {
-                    throw Err_Custom("Failed to put proxy certificate");
+                    throw UserError("Failed to put proxy certificate");
                 }
 
             // clear the DB cache
             DBSingleton::instance().getDBObjectInstance()->deleteCredentialCache(delegationId, dn);
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " t_credential_cache has been cleared" << commit;
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
-            throw Err_Custom(ex.what());
+            throw UserError(ex.what());
         }
     catch(...)
         {
-            throw Err_Custom("Failed to put proxy certificate");
+            throw UserError("Failed to put proxy certificate");
         }
 }
 
@@ -499,7 +499,7 @@ std::string GSoapDelegationHandler::renewProxyReq(std::string delegationId)
             // it is different to gridsite implementation but it is done like that in delegation-java
             // in GliteDelegation.java
             delegationId = handleDelegationId(delegationId);
-            if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
+            if (delegationId.empty()) throw UserError("'handleDelegationId' failed!");
 
             boost::optional<UserCredentialCache> cache (
                 DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
@@ -517,7 +517,7 @@ std::string GSoapDelegationHandler::renewProxyReq(std::string delegationId)
                 {
                     if (reqtxt) free (reqtxt);
                     if (keytxt) free (keytxt);
-                    throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
+                    throw UserError("'GRSTx509CreateProxyRequest' failed!");
                 }
 
             req = std::string(reqtxt);
@@ -532,29 +532,29 @@ std::string GSoapDelegationHandler::renewProxyReq(std::string delegationId)
                         fqansToString(attrs)
                     );
                 }
-            catch(Err& ex)
+            catch(BaseException& ex)
                 {
                     if (reqtxt) free (reqtxt);
                     if (keytxt) free (keytxt);
-                    throw Err_Custom(ex.what());
+                    throw UserError(ex.what());
                 }
             catch(...)
                 {
                     if (reqtxt) free (reqtxt);
                     if (keytxt) free (keytxt);
-                    throw Err_Custom("Failed to renew proxy certificate");
+                    throw UserError("Failed to renew proxy certificate");
                 }
 
             if (reqtxt) free (reqtxt);
             if (keytxt) free (keytxt);
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
-            throw Err_Custom(ex.what());
+            throw UserError(ex.what());
         }
     catch(...)
         {
-            throw Err_Custom("Failed to renewProxyReq proxy certificate");
+            throw UserError("Failed to renewProxyReq proxy certificate");
         }
     return req;
 }
@@ -567,7 +567,7 @@ time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate termination time" << commit;
 
             std::string delegationId = makeDelegationId();
-            if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
+            if (delegationId.empty()) throw UserError("'getDelegationId' failed!");
 
             boost::optional<UserCredential> cred (
                 DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
@@ -579,16 +579,16 @@ time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
                 }
             else
                 {
-                    throw Err_Custom("Failed to retrieve termination time for DN " + dn);
+                    throw UserError("Failed to retrieve termination time for DN " + dn);
                 }
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
-            throw Err_Custom(ex.what());
+            throw UserError(ex.what());
         }
     catch(...)
         {
-            throw Err_Custom("Failed proxy getTerminationTime certificate");
+            throw UserError("Failed proxy getTerminationTime certificate");
         }
 }
 
@@ -598,19 +598,19 @@ void GSoapDelegationHandler::destroy(std::string delegationId)
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " destroys proxy certificate" << commit;
 
     delegationId = handleDelegationId(delegationId);
-    if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
+    if (delegationId.empty()) throw UserError("'handleDelegationId' failed!");
 
     try
         {
             DBSingleton::instance().getDBObjectInstance()->deleteCredentialCache(delegationId, dn);
             DBSingleton::instance().getDBObjectInstance()->deleteCredential(delegationId, dn);
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
-            throw Err_Custom(ex.what());
+            throw UserError(ex.what());
         }
     catch(...)
         {
-            throw Err_Custom("Failed to destroy proxy certificate");
+            throw UserError("Failed to destroy proxy certificate");
         }
 }

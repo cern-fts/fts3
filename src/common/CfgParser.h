@@ -21,8 +21,6 @@
 #ifndef CONFIGURATIONPARSER_H_
 #define CONFIGURATIONPARSER_H_
 
-#include "common/error.h"
-
 #include <set>
 #include <map>
 #include <vector>
@@ -31,6 +29,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
+#include "Exceptions.h"
 
 namespace fts3
 {
@@ -181,13 +180,13 @@ T CfgParser::get(std::string path)
         }
     catch (boost::property_tree::ptree_bad_path& ex)
         {
-            throw Err_Custom("The " + path + " has to be specified!");
+            throw UserError("The " + path + " has to be specified!");
 
         }
     catch (boost::property_tree::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
-            throw Err_Custom("Wrong value type of " + path);
+            throw UserError("Wrong value type of " + path);
         }
 
     return v;
@@ -203,7 +202,7 @@ inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::
     if (!value.is_initialized())
         {
             // the vector member was not specified in the configuration
-            throw Err_Custom("The " + path + " has to be specified!");
+            throw UserError("The " + path + " has to be specified!");
         }
     boost::property_tree::ptree& array = value.get();
 
@@ -212,7 +211,7 @@ inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::
     std::string wrong = array.get_value<std::string>();
     if (!wrong.empty())
         {
-            throw Err_Custom("Wrong value: '" + wrong + "'");
+            throw UserError("Wrong value: '" + wrong + "'");
         }
 
     for (auto it = array.begin(); it != array.end(); ++it)
@@ -224,13 +223,13 @@ inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::
             // members of the array (our case)
             if (!v.first.empty())
                 {
-                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                    throw UserError("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
                 }
 
             // check if the node has children, it should only have a value!
             if (!v.second.empty())
                 {
-                    throw Err_Custom("Unexpected object in array '" + path + "' (only a list of values was expected)");
+                    throw UserError("Unexpected object in array '" + path + "' (only a list of values was expected)");
                 }
 
             ret.push_back(v.second.get_value<std::string>());
@@ -247,7 +246,7 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
 
     boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
     if (!value.is_initialized())
-        throw Err_Custom("The " + path + " has to be specified!");
+        throw UserError("The " + path + " has to be specified!");
     boost::property_tree::ptree& array = value.get();
 
     // check if the node has a value,
@@ -255,7 +254,7 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
     std::string wrong = array.get_value<std::string>();
     if (!wrong.empty())
         {
-            throw Err_Custom("Wrong value: '" + wrong + "'");
+            throw UserError("Wrong value: '" + wrong + "'");
         }
 
     for (auto it = array.begin(); it != array.end(); ++it)
@@ -267,20 +266,20 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
             // members of the array (our case)
             if (!v.first.empty())
                 {
-                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                    throw UserError("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
                 }
 
             // check if there is a value,
             // the value should be empty because only a 'key:value' object should be specified
             if (!v.second.get_value<std::string>().empty())
                 {
-                    throw Err_Custom("'{key:value}' object was expected, not just the value");
+                    throw UserError("'{key:value}' object was expected, not just the value");
                 }
 
             // there should be only one child the 'key:value' object
             if (v.second.size() != 1)
                 {
-                    throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
+                    throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
                 }
 
             std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
@@ -298,7 +297,7 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
                             // get the integer value
                             int value = kv.second.get_value<int>();
                             // make sure it's not negative
-                            if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
+                            if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
                             // std::set the value
                             ret[kv.first] = value;
                         }
@@ -306,7 +305,7 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
                 }
             catch(boost::property_tree::ptree_bad_data& ex)
                 {
-                    throw Err_Custom("Wrong value type of " + kv.first);
+                    throw UserError("Wrong value type of " + kv.first);
                 }
         }
 
@@ -321,7 +320,7 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
 
     boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
     if (!value.is_initialized())
-        throw Err_Custom("The " + path + " has to be specified!");
+        throw UserError("The " + path + " has to be specified!");
     boost::property_tree::ptree& array = value.get();
 
     // check if the node has a value,
@@ -329,7 +328,7 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
     std::string wrong = array.get_value<std::string>();
     if (!wrong.empty())
         {
-            throw Err_Custom("Wrong value: '" + wrong + "'");
+            throw UserError("Wrong value: '" + wrong + "'");
         }
 
     for (auto it = array.begin(); it != array.end(); ++it)
@@ -341,20 +340,20 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
             // members of the array (our case)
             if (!v.first.empty())
                 {
-                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                    throw UserError("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
                 }
 
             // check if there is a value,
             // the value should be empty because only a 'key:value' object should be specified
             if (!v.second.get_value<std::string>().empty())
                 {
-                    throw Err_Custom("'{key:value}' object was expected, not just the value");
+                    throw UserError("'{key:value}' object was expected, not just the value");
                 }
 
             // there should be only one child the 'key:value' object
             if (v.second.size() != 1)
                 {
-                    throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
+                    throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
                 }
 
             std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
@@ -372,7 +371,7 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
                             // get the integer value
                             double value = kv.second.get_value<double>();
                             // make sure it's not negative
-                            if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
+                            if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
                             // Set the value
                             ret[kv.first] = value;
                         }
@@ -380,7 +379,7 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
                 }
             catch(boost::property_tree::ptree_bad_data& ex)
                 {
-                    throw Err_Custom("Wrong value type of " + kv.first);
+                    throw UserError("Wrong value type of " + kv.first);
                 }
         }
 

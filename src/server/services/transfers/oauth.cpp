@@ -26,7 +26,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include <common/error.h>
+#include "../../../common/Exceptions.h"
 #include "common/Uri.h"
 
 
@@ -110,7 +110,7 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
         {
             char err_descr[128];
             strerror_r(errno, err_descr, sizeof(err_descr));
-            throw fts3::common::Err_Custom(std::string(__func__) + ": Can not open temporary file, " + err_descr);
+            throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + err_descr);
         }
     FILE* f = fdopen(fd, "w");
 

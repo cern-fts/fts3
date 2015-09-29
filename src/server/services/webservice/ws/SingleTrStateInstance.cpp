@@ -19,11 +19,12 @@
  */
 
 #include "SingleTrStateInstance.h"
-#include "common/error.h"
 #include "common/producer_consumer_common.h"
 #include "db/generic/SingleDbInstance.h"
 #include "config/serverconfig.h"
 #include <sstream>
+
+#include "../../../../common/Exceptions.h"
 #include "common/Logger.h"
 
 
@@ -89,7 +90,7 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
                         }
                 }
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state, " << e.what() << commit;
         }

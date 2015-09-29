@@ -20,13 +20,12 @@
 
 #include "BlacklistInspector.h"
 
-#include "common/error.h"
-
 #include <list>
 #include <algorithm>
 #include <numeric>
 
 #include <boost/lambda/lambda.hpp>
+#include "../../../../../common/Exceptions.h"
 
 namespace fts3
 {
@@ -61,7 +60,7 @@ void BlacklistInspector::inspect() const
     notAllowedStr.resize(notAllowedStr.size() - 1);
 
     // throw an exception ...
-    throw Err_Custom("Following SEs: " + notAllowedStr + " are blacklisted!");
+    throw UserError("Following SEs: " + notAllowedStr + " are blacklisted!");
 }
 
 void BlacklistInspector::setWaitTimeout(std::list<SubmittedTransfer> & jobs) const

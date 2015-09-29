@@ -24,12 +24,13 @@
 
 #include "config/serverconfig.h"
 
-#include "common/error.h"
 #include <string>
 #include <fstream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+
+#include "../common/Exceptions.h"
 #include "../common/Logger.h"
 
 using namespace std;
@@ -142,7 +143,7 @@ int main(int argc, char** argv)
                 }
 
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             return EXIT_FAILURE;

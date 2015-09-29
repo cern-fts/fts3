@@ -22,8 +22,9 @@
 
 #include <boost/program_options.hpp>
 
-#include "common/error.h"
 #include "serverconfig.h"
+
+#include "../common/Exceptions.h"
 #include "serverconfigreader.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
@@ -57,8 +58,7 @@ const std::string& ServerConfig::_get_str(const std::string& aVariable)
 
     if (itr == _vars.end())
         {
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Server config variable " + aVariable + " not defined."));
-            throw Err_Custom("Server config variable " + aVariable + " not defined.");
+            throw UserError("Server config variable " + aVariable + " not defined.");
         }
 
     // No worry, it will not be 0 pointer due to the exception
@@ -72,7 +72,7 @@ const std::string& ServerConfig::_get_str(const std::string& aVariable)
 BOOST_AUTO_TEST_SUITE( config )
 BOOST_AUTO_TEST_SUITE(ServerConfigSuite)
 
-bool Config_ServerConfig_get_str_CheckMessage (const Err_Custom&)
+bool Config_ServerConfig_get_str_CheckMessage (const UserError&)
 {
     return true;
 }
@@ -93,7 +93,7 @@ BOOST_FIXTURE_TEST_CASE (ServerConfig_get_str, ServerConfig)
     BOOST_CHECK_EXCEPTION
     (
         val = _get_str ("notkey"),
-        Err_Custom,
+        UserError,
         Config_ServerConfig_get_str_CheckMessage
     );
 }

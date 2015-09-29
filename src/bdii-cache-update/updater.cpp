@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-#include "common/error.h"
 #include "config/serverconfig.h"
 
 #include "infosys/SiteNameCacheRetriever.h"
@@ -33,6 +32,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+
+#include "../common/Exceptions.h"
 #include "../common/Logger.h"
 
 using namespace std;
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
         {
             theServerConfig().read(argc, argv);
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             std::string msg = "Fatal error, exiting...";
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;

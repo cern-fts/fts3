@@ -27,7 +27,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/error.h"
 #include "common/Logger.h"
 
 #include "DrainMode.h"
@@ -40,6 +39,7 @@
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
+#include "../../../../../common/Exceptions.h"
 
 using namespace std;
 using namespace db;
@@ -78,7 +78,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
                     DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, *it, "set-config");
                 }
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -144,11 +144,11 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 }
             else
                 {
-                    throw Err_Custom("Wrongly specified parameters, either both the source and destination have to be specified or the configuration name!");
+                    throw UserError("Wrongly specified parameters, either both the source and destination have to be specified or the configuration name!");
                 }
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -199,7 +199,7 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
                 }
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -244,7 +244,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
             // audit the operation
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "drain");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -289,7 +289,7 @@ int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse&
             // audit the operation
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "show-user-dn");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -338,7 +338,7 @@ int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRe
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the retry value to " << retry << " for VO " << vo << commit;
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -386,7 +386,7 @@ int fts3::implcfg__setOptimizerMode(soap* ctx, int optimizer_mode, implcfg__setO
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the optmizer mode to " << optimizer_mode << commit;
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -435,7 +435,7 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the maximum timeout in the queue to " << timeout << commit;
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -508,7 +508,7 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
                 }
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -546,9 +546,9 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
                     config__BandwidthLimitPair* pair = *it;
 
                     if (!pair->source.empty() && !pair->dest.empty())
-                        throw Err_Custom("Only source OR destination can be specified");
+                        throw UserError("Only source OR destination can be specified");
                     if (pair->source.empty() && pair->dest.empty())
-                        throw Err_Custom("Need to specify source OR destination");
+                        throw UserError("Need to specify source OR destination");
 
                     DBSingleton::instance().getDBObjectInstance()->setBandwidthLimit(
                         pair->source, pair->dest, pair->limit);
@@ -584,7 +584,7 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
                     DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-bandwidth");
                 }
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -607,7 +607,7 @@ int fts3::implcfg__getBandwidthLimit(soap* ctx, fts3::implcfg__getBandwidthLimit
         {
             resp.limit = DBSingleton::instance().getDBObjectInstance()->getBandwidthLimit();
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -629,7 +629,7 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
 
     try
         {
-            if (state != "on" && state != "off") throw Err_Custom("the protocol may be either set to 'on' or 'off'");
+            if (state != "on" && state != "off") throw UserError("the protocol may be either set to 'on' or 'off'");
 
             // Authorise operation
             AuthorizationManager::instance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
@@ -644,7 +644,7 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
             string cmd = "fts3-config-set --protocol " + protocol + " " + se + " " + state;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "protocol");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationnException");
@@ -686,7 +686,7 @@ int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int active, implcfg__max
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-se-source-active");
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -729,7 +729,7 @@ int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__max
             cmd << active;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-se-dest-active");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -773,7 +773,7 @@ int fts3::implcfg__fixActivePerPair(soap* ctx, string source, string destination
             cmd << active;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "fix-active-per-pair");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -812,7 +812,7 @@ int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResp
             cmd << " had set the seconds per MB to " << secPerMb;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "sec-per-mb");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -852,7 +852,7 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
             cmd << " had set the global timeout to " << timeout;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "global-timeout");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -899,7 +899,7 @@ int fts3::implcfg__setGlobalLimits(soap* ctx, fts3::config__GlobalLimits* limits
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "global-limits");
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << cmd.str() << commit;
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -947,7 +947,7 @@ int fts3::implcfg__authorizeAction(soap* ctx, fts3::config__SetAuthz* authz, fts
                     FTS3_COMMON_LOGGER_NEWLOG (INFO) << audit.str() << commit;
                 }
         }
-    catch (Err& ex)
+    catch (BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
@@ -970,7 +970,7 @@ int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string
         {
             // only Root is allowed to set S3 credentials
             CGsiAdapter cgsi(ctx);
-            if (!cgsi.isRoot()) throw Err_Custom("Only root is allowed to set S3 credentials!");
+            if (!cgsi.isRoot()) throw UserError("Only root is allowed to set S3 credentials!");
 
             // make sure the host name is upper case
             boost::to_upper(storage);
@@ -978,7 +978,7 @@ int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string
                 cgsi.getClientDn(), vo, storage, accessKey, secretKey
             );
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -1001,12 +1001,12 @@ int fts3::implcfg__setDropboxCredential(soap* ctx, std::string appKey, std::stri
         {
             // only Root is allowed to set S3 credentials
             CGsiAdapter cgsi(ctx);
-            if (!cgsi.isRoot()) throw Err_Custom("Only root is allowed to set S3 credentials!");
+            if (!cgsi.isRoot()) throw UserError("Only root is allowed to set S3 credentials!");
 
             DBSingleton::instance().getDBObjectInstance()->setCloudStorage("dropbox", appKey, appSecret, apiUrl);
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -1048,7 +1048,7 @@ int fts3::impltns__debugLevelSet(struct soap* soap, string source, string destin
             cmd += " " + boost::lexical_cast<std::string>(level);
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
@@ -1072,7 +1072,7 @@ int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string v
             Blacklister blacklister (ctx, name, vo, status, timeout, blk);
             blacklister.executeRequest();
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
@@ -1099,7 +1099,7 @@ int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string statu
             blacklister.executeRequest();
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");

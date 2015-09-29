@@ -50,9 +50,9 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include "db/generic/SingleDbInstance.h"
-#include "common/error.h"
 #include "common/Logger.h"
 #include "ExecuteProcess.h"
+#include "../../../common/Exceptions.h"
 
 using namespace fts3::common; 
 using namespace db;

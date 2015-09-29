@@ -52,8 +52,8 @@
 #include "common/name_to_uid.h"
 #include <execinfo.h>
 
+#include "../common/Exceptions.h"
 #include "common/ConcurrentQueue.h"
-#include "common/error.h"
 #include "common/Logger.h"
 
 using namespace std;

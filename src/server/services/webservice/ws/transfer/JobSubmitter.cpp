@@ -25,8 +25,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/error.h"
-
 #include "config/serverconfig.h"
 
 #include "../CGsiAdapter.h"
@@ -46,6 +44,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
+#include "../../../../../common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
 #include "common/UuidGenerator.h"
@@ -67,7 +66,7 @@ static Uri checkValidUrl(const std::string &uri)
     if (!ok)
         {
             std::string errMsg = "Not valid uri format, check submitted uri's";
-            throw Err_Custom(errMsg);
+            throw UserError(errMsg);
         }
     return u0;
 }
@@ -87,7 +86,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
         {
             if (job->credential)
                 {
-                    throw Err_Custom("The MyProxy password should not be provided if delegation is used");
+                    throw UserError("The MyProxy password should not be provided if delegation is used");
                 }
         }
 
@@ -114,7 +113,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob2 *job) :
     // checksum uses always delegation?
     if (job->credential)
         {
-            throw Err_Custom("The MyProxy password should not be provided if delegation is used");
+            throw UserError("The MyProxy password should not be provided if delegation is used");
         }
 
 
@@ -161,7 +160,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
             tupple.selectionStrategy = elem->selectionStrategy ? *elem->selectionStrategy : std::string();
             if (!tupple.selectionStrategy.empty() && tupple.selectionStrategy != "orderly" && tupple.selectionStrategy != "auto")
-                throw Err_Custom("'" + tupple.selectionStrategy + "'");
+                throw UserError("'" + tupple.selectionStrategy + "'");
 
             // in the future the checksum should be assigned to pairs!
             if (!elem->checksum.empty())
@@ -189,7 +188,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             // multiple pairs and reuse are not compatible!
             if (tuples.size() > 1 && params.get(JobParameterHandler::REUSE) == "Y")
                 {
-                    throw Err_Custom("Reuse and multiple replica selection are incompatible!");
+                    throw UserError("Reuse and multiple replica selection are incompatible!");
                 }
 
             // add each pair
@@ -228,7 +227,7 @@ void JobSubmitter::init(soap* ctx, JOB* job)
     // check wether the job is well specified
     if (job == 0 || job->transferJobElements.empty())
         {
-            throw Err_Custom("The job was not defined or job file is empty?");
+            throw UserError("The job was not defined or job file is empty?");
         }
 
 
@@ -243,7 +242,7 @@ void JobSubmitter::init(soap* ctx, JOB* job)
 
     if (db->isDnBlacklisted(dn))
         {
-            throw Err_Custom("The DN: " + dn + " is blacklisted!");
+            throw UserError("The DN: " + dn + " is blacklisted!");
         }
 
     id = UuidGenerator::generateUUID();
@@ -292,7 +291,7 @@ std::string JobSubmitter::submit()
             // make sure that bring online has been used for SRM source
             // (bring online is not supported for multiple source/destination submission)
             if (params.get(JobParameterHandler::COPY_PIN_LIFETIME) != "-1" && !srm_source)
-                throw Err_Custom("The 'ping-lifetime' operation can be used only with source SEs that are using SRM protocol!");
+                throw UserError("The 'ping-lifetime' operation can be used only with source SEs that are using SRM protocol!");
         }
 
     if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
@@ -304,7 +303,7 @@ std::string JobSubmitter::submit()
             // make sure that bring online has been used for SRM source
             // (bring online is not supported for multiple source/destination submission)
             if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
-                throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
+                throw UserError("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
         }
 
     if (!params.isParamSet(JobParameterHandler::RETRY))
@@ -366,7 +365,7 @@ std::string JobSubmitter::submit()
                 params
             );
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             try
@@ -387,16 +386,16 @@ std::string JobSubmitter::submit()
                         params
                     );
                 }
-            catch(Err& ex)
+            catch(BaseException& ex)
                 {
 
                     FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+                    throw UserError(std::string(__func__) + ": Caught exception " + ex.what());
                 }
             catch(...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                    throw UserError(std::string(__func__) + ": Caught exception " );
                 }
         }
     catch(...)
@@ -418,16 +417,16 @@ std::string JobSubmitter::submit()
                         params
                     );
                 }
-            catch(Err& ex)
+            catch(BaseException& ex)
                 {
 
                     FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+                    throw UserError(std::string(__func__) + ": Caught exception " + ex.what());
                 }
             catch(...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                    throw UserError(std::string(__func__) + ": Caught exception " );
                 }
         }
 
@@ -458,7 +457,7 @@ void JobSubmitter::checkProtocol(std::string file, bool source)
         {
             std::string msg = (source ? "Source" : "Destination");
             msg += " protocol is not supported for file: "  + file;
-            throw Err_Custom(msg);
+            throw UserError(msg);
         }
 }
 

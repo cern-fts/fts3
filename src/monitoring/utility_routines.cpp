@@ -49,8 +49,8 @@
 #include <netinet/in.h>
 #include "common/producer_consumer_common.h"
 #include "common/name_to_uid.h"
-#include "common/error.h"
 #include <boost/lexical_cast.hpp>
+#include "../common/Exceptions.h"
 
 #define MILLI 36000000
 
@@ -382,7 +382,7 @@ bool get_mon_cfg_file()
                 }
 
             if (USERNAME == "replacethis" || PASSWORD == "replacethis" || CRONFQDN == "replacethis")
-                throw fts3::common::Err_Custom("Can not start with the default configuration");
+                throw fts3::common::UserError("Can not start with the default configuration");
 
             return true;
         }

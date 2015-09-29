@@ -85,7 +85,7 @@ void ActivityCfg::init(std::string vo)
     shares = db->getActivityConfig(vo);
 
     if (shares.empty())
-        throw Err_Custom("There is no activity configuration for: " + vo);
+        throw UserError("There is no activity configuration for: " + vo);
 }
 
 } /* namespace ws */

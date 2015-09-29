@@ -26,14 +26,14 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/error.h"
-
 #include <boost/tuple/tuple.hpp>
 
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <set>
+
+#include "../../common/Exceptions.h"
 #include "../../common/Logger.h"
 
 extern bool stopThreads;
@@ -66,7 +66,7 @@ void FetchCancelStaging::fetch()
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
 
                 }
-            catch (Err& e)
+            catch (BaseException& e)
                 {
                     sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;

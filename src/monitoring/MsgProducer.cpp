@@ -23,12 +23,12 @@
 #include "MsgProducer.h"
 #include "utility_routines.h"
 #include <signal.h>
-#include "common/error.h"
 #include "common/Logger.h"
 #include "config/serverconfig.h"
 #include <sstream>
 
 #include "../common/ConcurrentQueue.h"
+#include "../common/Exceptions.h"
 
 // End-Of-Transmission character
 static const char EOT = 0x04;
@@ -110,14 +110,14 @@ static std::string _getVoFromMessage(const std::string& msg, const char* key)
     json_object * jobj = json_tokener_parse_verbose(msg.c_str(), &error);
     if (!jobj)
         {
-            throw Err_System(json_tokener_error_desc(error));
+            throw SystemError(json_tokener_error_desc(error));
         }
 
     struct json_object *vo_name_obj = NULL;
     if (!json_object_object_get_ex(jobj, key, &vo_name_obj))
         {
             json_object_put(jobj);
-            throw Err_System("Could not find vo_name in the message");
+            throw SystemError("Could not find vo_name in the message");
         }
 
     std::string vo_name = json_object_get_string(vo_name_obj);

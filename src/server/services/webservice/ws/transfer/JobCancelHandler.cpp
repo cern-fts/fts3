@@ -24,12 +24,13 @@
 #include "../AuthorizationManager.h"
 #include "../SingleTrStateInstance.h"
 
-#include "common/error.h"
 #include "common/JobStatusHandler.h"
 
 #include <algorithm>
 
 #include <boost/bind.hpp>
+
+#include "../../../../../common/Exceptions.h"
 #include "common/Logger.h"
 
 namespace fts3
@@ -55,9 +56,9 @@ void JobCancelHandler::cancel()
             std::string const & job = *it;
             std::string status = get_state(job, dn);
             if (status == DOES_NOT_EXIST)
-                throw Err_Custom("Transfer job: " + job + " does not exist!");
+                throw UserError("Transfer job: " + job + " does not exist!");
             else if (status != CANCELED)
-                throw Err_Custom("Transfer job: " + job + " cannot be cancelled (it is in " + status + " state)");
+                throw UserError("Transfer job: " + job + " cannot be cancelled (it is in " + status + " state)");
             // if the job is OK add it to respective vector
             if (db.isDmJob(job))
                 cancel_dm.push_back(job);

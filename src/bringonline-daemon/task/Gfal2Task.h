@@ -26,7 +26,7 @@
 
 #include <gfal_api.h>
 
-#include "common/error.h"
+#include "../../common/Exceptions.h"
 
 // forward declaration
 class JobContext;
@@ -104,7 +104,7 @@ protected:
                     ss << operation << " bad initialisation " << error->code << " " << error->message;
                     g_clear_error(&error);
                     // the memory was not allocated so it is safe to throw
-                    throw fts3::common::Err_Custom(ss.str());
+                    throw fts3::common::UserError(ss.str());
                 }
 
             if (infosys == "false")
@@ -124,7 +124,7 @@ protected:
                     std::stringstream ss;
                     ss << operation << " could not set the protocol list " << error->code << " " << error->message;
                     g_clear_error(&error);
-                    throw fts3::common::Err_Custom(ss.str());
+                    throw fts3::common::UserError(ss.str());
                 }
 
             gfal2_set_opt_boolean(gfal2_ctx, "GRIDFTP PLUGIN", "SESSION_REUSE", true, &error);
@@ -133,7 +133,7 @@ protected:
                     std::stringstream ss;
                     ss << operation << " could not set the session reuse " << error->code << " " << error->message;
                     g_clear_error(&error);
-                    throw fts3::common::Err_Custom(ss.str());
+                    throw fts3::common::UserError(ss.str());
                 }
         }
 

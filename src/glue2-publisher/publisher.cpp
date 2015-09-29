@@ -24,13 +24,14 @@
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
-#include "common/error.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "../common/Exceptions.h"
 #include "../common/Logger.h"
 
 using namespace fts3::config;
@@ -48,7 +49,7 @@ void fts3_initialize_db_backend()
         {
             db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 1);
         }
-    catch (Err_Custom& e)
+    catch (UserError& e)
         {
             exit(1);
         }

@@ -29,7 +29,7 @@ ShareOnlyCfg::ShareOnlyCfg(std::string dn, std::string name) : Configuration(dn)
 {
 
     if (notAllowed.count(se))
-        throw Err_Custom("The SE name is not a valid!");
+        throw UserError("The SE name is not a valid!");
 
     // replace any with wildcard
     if (se == any) se = wildcard;
@@ -39,7 +39,7 @@ ShareOnlyCfg::ShareOnlyCfg(std::string dn, std::string name) : Configuration(dn)
     if (ptr.get())
         active = ptr->state == on;
     else
-        throw Err_Custom("The SE: " + name + " does not exist!");
+        throw UserError("The SE: " + name + " does not exist!");
 
     init(se);
 }
@@ -50,7 +50,7 @@ ShareOnlyCfg::ShareOnlyCfg(std::string dn, CfgParser& parser) : Configuration(dn
     se = parser.get<std::string>("se");
 
     if (notAllowed.count(se))
-        throw Err_Custom("The SE name is not a valid!");
+        throw UserError("The SE name is not a valid!");
 
     // replace any with wildcard
     if (se == any) se = wildcard;
@@ -132,7 +132,7 @@ void ShareOnlyCfg::checkShare(std::map<std::string, int>& share)
             sum += it->second;
         }
 
-    if (sum != 100) throw Err_Custom("In a share-only configuration the sum of all share has to be equal to 100%");
+    if (sum != 100) throw UserError("In a share-only configuration the sum of all share has to be equal to 100%");
 }
 
 } /* namespace ws */

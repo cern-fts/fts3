@@ -20,11 +20,10 @@
 
 #include "TransferCreator.h"
 
-#include "common/error.h"
-
 #include <map>
 #include <algorithm>
 #include <iterator>
+#include "../../../../../common/Exceptions.h"
 
 namespace fts3
 {
@@ -105,7 +104,7 @@ std::list< boost::tuple<std::string, std::string, std::string, int> > TransferCr
             );
         }
 
-    if (ret.empty()) throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
+    if (ret.empty()) throw UserError("It has not been possible to pair the sources with destinations (protocols don't match)!");
 
     // set the first one to initial sate
     boost::get<2>(*ret.begin()) = initialState;

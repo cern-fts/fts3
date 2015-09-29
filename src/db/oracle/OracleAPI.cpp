@@ -22,13 +22,13 @@
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
 
-#include "common/error.h"
 #include <soci/oracle/soci-oracle.h>
 #include <signal.h>
 #include <sys/param.h>
 #include <unistd.h>
 #include "OracleAPI.h"
 
+#include "../../common/Exceptions.h"
 #include "../../common/Logger.h"
 #include "../../common/ThreadSafeList.h"
 #include "sociConversions.h"
@@ -220,7 +220,7 @@ void OracleAPI::init(const std::string& username, const std::string& password,
                     delete connectionPool;
                     connectionPool = NULL;
                 }
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
@@ -229,7 +229,7 @@ void OracleAPI::init(const std::string& username, const std::string& password,
                     delete connectionPool;
                     connectionPool = NULL;
                 }
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -325,12 +325,12 @@ void OracleAPI::submitDelete(const std::string & jobId, const std::map<std::stri
     catch(std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch(...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
 }
@@ -366,11 +366,11 @@ boost::optional<Job> OracleAPI::getJob(const std::string& jobId, bool archive)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return boost::optional<Job>();
@@ -425,11 +425,11 @@ std::map<std::string, double> OracleAPI::getActivityShareConf(soci::session& sql
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return ret;
 }
@@ -456,11 +456,11 @@ std::vector<std::string> OracleAPI::getAllActivityShareConf()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -549,12 +549,12 @@ void OracleAPI::revertToSubmitted()
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -635,11 +635,11 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -714,11 +714,11 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return activityFilesNum;
@@ -774,12 +774,12 @@ void OracleAPI::getQueuesWithPending(std::vector<QueueId>& queues)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -833,12 +833,12 @@ void OracleAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -1073,12 +1073,12 @@ void OracleAPI::getReadyTransfers(const std::vector<QueueId>& queues,
     catch (std::exception& e)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -1192,12 +1192,12 @@ void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std
     catch (std::exception& e)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -1282,12 +1282,12 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
 }
@@ -1364,11 +1364,11 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return bestFileId;
@@ -1418,12 +1418,12 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFile const & file, const s
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return updated;
 }
@@ -1502,12 +1502,12 @@ void OracleAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues
     catch (std::exception& e)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -1549,12 +1549,12 @@ void OracleAPI::submitPhysical(const std::string& jobId,
 
     if( reuseFlag != "N" && ((reuseFlag != "H" && mhop) || mreplica))
         {
-            throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
+            throw UserError("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
 
     if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop || reuse == "Y"))
         {
-            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
+            throw UserError("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
         }
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
@@ -1796,12 +1796,12 @@ void OracleAPI::submitPhysical(const std::string& jobId,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -1894,11 +1894,11 @@ void OracleAPI::listJobs(const std::vector<std::string>& inGivenStates,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -1990,11 +1990,11 @@ void OracleAPI::listDmJobs(const std::vector<std::string>& inGivenStates,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2054,11 +2054,11 @@ void OracleAPI::getTransferStatuses(const std::string& requestID,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2115,11 +2115,11 @@ void OracleAPI::getDmStatuses(const std::string& requestID, bool archive,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2142,11 +2142,11 @@ boost::optional<StorageElement> OracleAPI::getStorageElement(const std::string& 
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return boost::optional<StorageElement>();
@@ -2168,12 +2168,12 @@ void OracleAPI::addStorageElement(const std::string& seName, const std::string& 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2193,12 +2193,12 @@ void OracleAPI::updateStorageElement(const std::string& seName, const std::strin
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2215,11 +2215,11 @@ bool OracleAPI::updateTransferStatus(const std::string& jobId, int fileId, doubl
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return true;
 }
@@ -2374,12 +2374,12 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return true;
 }
@@ -2396,11 +2396,11 @@ bool OracleAPI::updateJobStatus(const std::string& jobId, const std::string& job
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return true;
 }
@@ -2556,12 +2556,12 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
             ok = false;
             sql.rollback();
             std::string msg = e.what();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + msg);
+            throw UserError(std::string(__func__) + ": Caught exception " + msg);
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ok;
@@ -2672,12 +2672,12 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2719,12 +2719,12 @@ void OracleAPI::cancelJob(const std::vector<std::string>& requestIDs)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2824,12 +2824,12 @@ void OracleAPI::cancelAllJobs(const std::string& voName, std::vector<std::string
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2870,12 +2870,12 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2903,17 +2903,17 @@ bool OracleAPI::insertCredentialCache(const std::string& delegationId, const std
             // ORA-00001: unique constraint (XXX) violated
             if (err_code == 1) return false;
 
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return true;
@@ -2940,11 +2940,11 @@ boost::optional<UserCredentialCache> OracleAPI::findCredentialCache(const std::s
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return boost::optional<UserCredentialCache>();
@@ -2965,12 +2965,12 @@ void OracleAPI::deleteCredentialCache(const std::string& delegationId, const std
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -2996,12 +2996,12 @@ void OracleAPI::insertCredential(const std::string& delegationId,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -3032,12 +3032,12 @@ void OracleAPI::updateCredential(const std::string& delegationId, const std::str
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -3062,11 +3062,11 @@ boost::optional<UserCredential> OracleAPI::findCredential(const std::string& del
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return boost::optional<UserCredential>();
@@ -3087,12 +3087,12 @@ void OracleAPI::deleteCredential(const std::string& delegationId, const std::str
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -3122,11 +3122,11 @@ unsigned OracleAPI::getDebugLevel(const std::string& sourceStorage, const std::s
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return 0;
 }
@@ -3159,12 +3159,12 @@ void OracleAPI::setDebugLevel(const std::string& sourceStorage, const std::strin
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -3185,12 +3185,12 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -3226,11 +3226,11 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return !expired;
 }
@@ -3291,11 +3291,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return allowed;
 }
@@ -3366,11 +3366,11 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4090,12 +4090,12 @@ bool OracleAPI::updateOptimizer()
     catch (std::exception& e)
     {
         sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
         sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        throw UserError(std::string(__func__) + ": Caught exception " );
     }
     return recordsFound;
 }
@@ -4132,11 +4132,11 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -4172,11 +4172,11 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -4209,12 +4209,12 @@ int OracleAPI::getCredits(const std::string & source_hostname, const std::string
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return freeCredits;
 }
@@ -4323,11 +4323,11 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4408,12 +4408,12 @@ void OracleAPI::setPidForJob(const std::string& jobId, int pid)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4532,14 +4532,14 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
             jobIdStmt.str(std::string());
             jobIdStmt.clear();
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             jobIdStmt.str(std::string());
             jobIdStmt.clear();
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4571,12 +4571,12 @@ void OracleAPI::forkFailed(const std::string& jobId)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4641,11 +4641,11 @@ bool OracleAPI::markAsStalled(const std::vector<struct message_updater>& message
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return ok;
 }
@@ -4698,12 +4698,12 @@ void OracleAPI::blacklistSe(const std::string& storage,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4728,12 +4728,12 @@ void OracleAPI::blacklistDn(const std::string& userDn, const std::string& msg,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4770,12 +4770,12 @@ void OracleAPI::unblacklistSe(const std::string& storage)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4810,12 +4810,12 @@ void OracleAPI::unblacklistDn(const std::string& userDn)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4834,11 +4834,11 @@ bool OracleAPI::allowSubmit(const std::string& storage, const std::string& voNam
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4867,11 +4867,11 @@ boost::optional<int> OracleAPI::getTimeoutForSe(const std::string& storage)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -4891,11 +4891,11 @@ bool OracleAPI::isDnBlacklisted(const std::string& userDn)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return blacklisted;
 }
@@ -4916,11 +4916,11 @@ bool OracleAPI::checkGroupExists(const std::string & groupName)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return exists;
 }
@@ -4942,11 +4942,11 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -4965,11 +4965,11 @@ std::string OracleAPI::getGroupForSe(const std::string se)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return group;
 }
@@ -5001,12 +5001,12 @@ void OracleAPI::addMemberToGroup(const std::string & groupName,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5035,12 +5035,12 @@ void OracleAPI::deleteMembersFromGroup(const std::string& groupName,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5068,12 +5068,12 @@ void OracleAPI::addLinkConfig(const LinkConfig& cfg)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5103,12 +5103,12 @@ void OracleAPI::updateLinkConfig(const LinkConfig& cfg)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5132,12 +5132,12 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5161,11 +5161,11 @@ std::unique_ptr<LinkConfig> OracleAPI::getLinkConfig(std::string source, std::st
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return std::unique_ptr<LinkConfig>();
 }
@@ -5187,11 +5187,11 @@ std::unique_ptr<std::pair<std::string, std::string>> OracleAPI::getSourceAndDest
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return std::unique_ptr<std::pair<std::string, std::string>>();
 }
@@ -5214,11 +5214,11 @@ bool OracleAPI::isGrInPair(std::string group)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return inPair;
 }
@@ -5243,12 +5243,12 @@ void OracleAPI::addShareConfig(const ShareConfig& cfg)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5273,12 +5273,12 @@ void OracleAPI::updateShareConfig(const ShareConfig& cfg)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5300,12 +5300,12 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5327,12 +5327,12 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5355,11 +5355,11 @@ std::unique_ptr<ShareConfig> OracleAPI::getShareConfig(std::string source, std::
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return std::unique_ptr<ShareConfig>();
 }
@@ -5384,11 +5384,11 @@ std::vector<ShareConfig> OracleAPI::getShareConfig(std::string source, std::stri
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return cfg;
 }
@@ -5416,12 +5416,12 @@ void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool activ
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5449,12 +5449,12 @@ void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool ac
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5474,12 +5474,12 @@ void OracleAPI::deleteActivityConfig(std::string vo)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5498,11 +5498,11 @@ bool OracleAPI::isActivityConfigActive(std::string vo)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return active == "on";
@@ -5517,11 +5517,11 @@ std::map< std::string, double > OracleAPI::getActivityConfig(std::string vo)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5545,11 +5545,11 @@ bool OracleAPI::areFilesInReadyState(const std::string& jobId)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return isReady;
 }
@@ -5575,11 +5575,11 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return isMember;
 }
@@ -5610,12 +5610,12 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5639,11 +5639,11 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return nActive;
 }
@@ -5668,11 +5668,11 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return nActiveOutbound;
 }
@@ -5697,11 +5697,11 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return nActiveInbound;
 }
@@ -5769,11 +5769,11 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return sum;
@@ -5798,12 +5798,12 @@ void OracleAPI::setPriority(std::string job_id, int priority)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5850,12 +5850,12 @@ void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5886,12 +5886,12 @@ void OracleAPI::setShowUserDn(bool show)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5939,12 +5939,12 @@ void OracleAPI::setRetry(int retry, const std::string & vo_name)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -5993,11 +5993,11 @@ int OracleAPI::getRetry(const std::string & jobId)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return nRetries;
 }
@@ -6021,11 +6021,11 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return nRetries;
 }
@@ -6050,11 +6050,11 @@ int OracleAPI::getMaxTimeInQueue()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return boost::lexical_cast<int>(maxTime);
 }
@@ -6077,12 +6077,12 @@ void OracleAPI::setMaxTimeInQueue(int afterXHours)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6132,12 +6132,12 @@ void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActiv
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6168,12 +6168,12 @@ void OracleAPI::authorize(bool add, const std::string& op, const std::string& dn
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6256,12 +6256,12 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
     catch (std::exception& e)
     {
         sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
         sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        throw UserError(std::string(__func__) + ": Caught exception ");
     }
 }
 
@@ -6293,11 +6293,11 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getPairsForSe(std:
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -6327,11 +6327,11 @@ std::vector<std::string> OracleAPI::getAllStandAlloneCfgs()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -6358,11 +6358,11 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getAllPairCfgs()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -6423,12 +6423,12 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6474,12 +6474,12 @@ void OracleAPI::updateProtocol(std::vector<struct message>& messages)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6564,12 +6564,12 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6602,11 +6602,11 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6657,12 +6657,12 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -6782,11 +6782,11 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return temp;
@@ -6881,11 +6881,11 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return temp;
@@ -6902,11 +6902,11 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return temp;
@@ -6940,11 +6940,11 @@ void OracleAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -6975,11 +6975,11 @@ void OracleAPI::getFilesForJobInCancelState(const std::string& jobId, std::vecto
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7028,12 +7028,12 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7062,12 +7062,12 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7116,12 +7116,12 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7178,12 +7178,12 @@ void OracleAPI::revertNotUsedFiles()
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7204,11 +7204,11 @@ bool OracleAPI::isShareOnly(std::string se)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -7237,11 +7237,11 @@ std::vector<std::string> OracleAPI::getAllShareOnlyCfgs()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return ret;
@@ -7610,12 +7610,12 @@ void OracleAPI::checkSanityState()
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread ended " << commit;
@@ -7672,11 +7672,11 @@ void OracleAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7708,11 +7708,11 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7766,11 +7766,11 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7798,12 +7798,12 @@ void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7836,12 +7836,12 @@ void OracleAPI::delFileShareConfig(std::string group, std::string se)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -7872,11 +7872,11 @@ bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return count > 0;
@@ -7908,11 +7908,11 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return count > 0;
@@ -7946,11 +7946,11 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return count > 0;
@@ -7973,11 +7973,11 @@ void OracleAPI::checkSchemaLoaded()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8033,12 +8033,12 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8074,12 +8074,12 @@ void OracleAPI::setOptimizerMode(int mode)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8109,11 +8109,11 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught mode exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught mode exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return modeDefault;
@@ -8158,11 +8158,11 @@ int OracleAPI::getOptimizerMode(soci::session& sql)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught mode exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught mode exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return modeDefault;
@@ -8259,12 +8259,12 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -8289,11 +8289,11 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry>& retries)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8411,12 +8411,12 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return false;
@@ -8480,12 +8480,12 @@ void OracleAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8499,11 +8499,11 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8576,12 +8576,12 @@ void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, uns
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -8614,12 +8614,12 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql,
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -9064,11 +9064,11 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -9082,11 +9082,11 @@ bool OracleAPI::getDrain()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -9108,11 +9108,11 @@ bool OracleAPI::getDrainInternal(soci::session& sql)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return true;
 }
@@ -9147,12 +9147,12 @@ void OracleAPI::setDrain(bool drain)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -9256,11 +9256,11 @@ std::string OracleAPI::getBandwidthLimit()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return result;
@@ -9322,11 +9322,11 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return result.str();
@@ -9412,12 +9412,12 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 }
 
@@ -9440,11 +9440,11 @@ bool OracleAPI::isProtocolUDT(const std::string & source_hostname, const std::st
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return false;
@@ -9469,11 +9469,11 @@ bool OracleAPI::isProtocolIPv6(const std::string & source_hostname, const std::s
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return false;
@@ -9542,12 +9542,12 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return defaultStreams;
@@ -9573,11 +9573,11 @@ int OracleAPI::getGlobalTimeout()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return boost::lexical_cast<int>(timeout);
@@ -9616,12 +9616,12 @@ void OracleAPI::setGlobalTimeout(int timeout)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
 }
@@ -9644,11 +9644,11 @@ int OracleAPI::getSecPerMb()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw UserError(std::string(__func__) + ": Caught exception ");
         }
 
     return boost::lexical_cast<int>(seconds);
@@ -9687,12 +9687,12 @@ void OracleAPI::setSecPerMb(int seconds)
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
 }
@@ -9744,12 +9744,12 @@ void OracleAPI::setSourceMaxActive(const std::string & source_hostname, int maxA
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
 }
@@ -9795,12 +9795,12 @@ void OracleAPI::setDestMaxActive(const std::string & destination_hostname, int m
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -9835,12 +9835,12 @@ void OracleAPI::setFixActive(const std::string & source, const std::string & des
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -9854,11 +9854,11 @@ int OracleAPI::getBufferOptimization()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return 1; //default level
@@ -9874,11 +9874,11 @@ void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -9892,11 +9892,11 @@ void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, s
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -9933,12 +9933,12 @@ void OracleAPI::updateBringOnlineToken(std::map< std::string, std::map<std::stri
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -10149,12 +10149,12 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -10375,11 +10375,11 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -10402,12 +10402,12 @@ void OracleAPI::revertDeletionToStarted()
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -10703,11 +10703,11 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -10776,12 +10776,12 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -10958,12 +10958,12 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -11008,12 +11008,12 @@ void OracleAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -11117,12 +11117,12 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
             catch (std::exception& e)
                 {
                     sql.rollback();
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                    throw UserError(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
                     sql.rollback();
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                    throw UserError(std::string(__func__) + ": Caught exception " );
                 }
         }
 
@@ -11220,12 +11220,12 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
             catch (std::exception& e)
                 {
                     sql.rollback();
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                    throw UserError(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
                     sql.rollback();
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                    throw UserError(std::string(__func__) + ": Caught exception " );
                 }
         }
 
@@ -11250,11 +11250,11 @@ bool OracleAPI::getOauthCredentials(const std::string& user_dn,
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
     return true;
 }
@@ -11322,12 +11322,12 @@ void OracleAPI::setCloudStorageCredential(std::string const & dn, std::string co
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -11363,12 +11363,12 @@ void OracleAPI::setCloudStorage(std::string const & storage, std::string const &
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -11392,11 +11392,11 @@ bool OracleAPI::isDmJob(std::string const & job)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -11472,7 +11472,7 @@ void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             cancelStmt2.clear();
 
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
@@ -11484,7 +11484,7 @@ void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             cancelStmt2.clear();
 
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -11517,11 +11517,11 @@ bool OracleAPI::getUserDnVisibleInternal(soci::session& sql)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return true;
@@ -11537,11 +11537,11 @@ bool OracleAPI::getUserDnVisible()
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     return true;

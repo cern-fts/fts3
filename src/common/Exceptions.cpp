@@ -18,45 +18,26 @@
  * limitations under the License.
  */
 
-#pragma once
+/** \file error.cpp Implementation of FTS3 error handling component. */
 
-#include <boost/type_traits/is_base_of.hpp>
-#include <boost/static_assert.hpp>
-#include <memory>
-#include <mutex>
-#include <queue>
+#include <string.h>
+#include "Exceptions.h"
 
-#include <stdsoap2.h>
-
-#include "../../../common/Exceptions.h"
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+#include "unittest/testsuite.h"
+#include <boost/algorithm/string/find.hpp>
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 namespace fts3 {
-namespace server {
+namespace common {
 
-class GSoapRequestHandler;
+/* -------------------------------------------------------------------------- */
 
-
-class GSoapAcceptor
+const char* BaseException::what() const throw()
 {
+    return "Unknown error";
+}
 
-public:
-    GSoapAcceptor(const unsigned int port, const std::string& ip);
-    GSoapAcceptor(const fts3::server::GSoapAcceptor&);
-    virtual ~GSoapAcceptor();
 
-    soap* getSoapContext();
-    void recycleSoapContext(soap* ctx);
-
-    std::unique_ptr<GSoapRequestHandler> accept();
-
-protected:
-    soap* ctx;
-    std::queue<soap*> recycle;
-
-public:
-    mutable std::recursive_mutex _mutex;
-};
-
-} // end namespace server
+} // end namespace common
 } // end namespace fts3
-

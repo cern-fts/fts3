@@ -24,10 +24,10 @@
 #include "GSoapDelegationHandler.h"
 #include "../AuthorizationManager.h"
 
-#include "common/error.h"
 #include "common/Logger.h"
 
 #include <boost/thread/locks.hpp>
+#include "../../../../../common/Exceptions.h"
 
 using namespace std;
 using namespace fts3::common;
@@ -54,7 +54,7 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
             _param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
         }
-    catch (Err& ex)
+    catch (BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -81,7 +81,7 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
             _param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
         }
-    catch (Err& ex)
+    catch (BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -109,7 +109,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
             _param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -136,11 +136,7 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
             handler.putProxy(_delegationID, _proxy);
 
         }
-    catch (Err_Transient& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-        }
-    catch (Err& ex)
+    catch (BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "DelegationException");
@@ -165,7 +161,7 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
             _param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
 
         }
-    catch (Err& ex)
+    catch (BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -190,7 +186,7 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
             handler.destroy(_delegationID);
 
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;

@@ -20,15 +20,16 @@
 
 #include "TempFile.h"
 
-#include <common/error.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 
 
 TempFile::TempFile(const std::string& prefix, const std::string& dir)
 {
     if (prefix.empty()) {
-        throw fts3::common::Err_System("Empty prefix");
+        throw fts3::common::SystemError("Empty prefix");
     }
 
     char tmp_proxy[FILENAME_MAX];
@@ -45,7 +46,7 @@ TempFile::TempFile(const std::string& prefix, const std::string& dir)
     umask(restore);
     if (fd == -1) {
         std::string reason = (std::string) "Cannot create temporary file <"+ tmp_proxy + ">.    Error is: " + strerror(errno);
-        throw fts3::common::Err_System(reason);
+        throw fts3::common::SystemError(reason);
     }
 
     m_filename = tmp_proxy;

@@ -19,7 +19,6 @@
  */
 
 #include "TempFile.h"
-#include "common/error.h"
 #include "DelegCred.h"
 
 #include "CredUtility.h"
@@ -34,6 +33,8 @@
 #include <errno.h>
 #include <boost/lexical_cast.hpp>
 #include <fstream>
+
+#include "../common/Exceptions.h"
 #include "../common/Logger.h"
 
 using namespace db;
@@ -79,11 +80,11 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
     try {
         // Check Preconditions
         if (userDn.empty()) {
-            throw Err_System("Invalid User DN specified");
+            throw SystemError("Invalid User DN specified");
         }
 
         if(id.empty()) {
-            throw Err_System("Invalid credential id specified");
+            throw SystemError("Invalid credential id specified");
         }
 
         // Get the filename to be for the given DN
@@ -92,7 +93,7 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
         if(filename.length() > (FILENAME_MAX - 7))
         {
-            throw Err_System("Invalid credential file name generated");
+            throw SystemError("Invalid credential file name generated");
         }
 
         // Check if the Proxy Certificate is already there and it's valid

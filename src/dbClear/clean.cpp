@@ -23,7 +23,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
-#include "common/error.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "profiler/Profiler.h"
@@ -31,6 +30,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "../common/Exceptions.h"
 #include "../common/Logger.h"
 
 using namespace fts3::config; 
@@ -48,7 +49,7 @@ void fts3_initialize_db_backend()
         {
             db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 1);
         }
-    catch(Err_Custom& e)
+    catch(UserError& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             exit(1);
@@ -116,7 +117,7 @@ int main(int argc, char** argv)
             db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&fts3::ProfilingSubsystem::instance());
 
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Backup fatal error, exiting... " << e.what() << commit;
             return EXIT_FAILURE;

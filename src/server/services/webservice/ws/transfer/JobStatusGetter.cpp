@@ -20,8 +20,8 @@
 
 #include "JobStatusGetter.h"
 
+#include "../../../../../common/Exceptions.h"
 #include "common/JobStatusHandler.h"
-#include "common/error.h"
 
 
 using namespace fts3::common;
@@ -181,7 +181,7 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
         }
     else
         {
-            if (!glite) throw Err_Custom("requestID <" + jobId + "> was not found");
+            if (!glite) throw UserError("requestID <" + jobId + "> was not found");
             ret = make_summary<SUMMARY>();
             ret->jobStatus = handleStatusExceptionForGLite();
         }
@@ -238,7 +238,7 @@ void JobStatusGetter::job_status(tns3__JobStatus * & status, bool glite)
         }
     else
         {
-            if (!glite) throw Err_Custom("requestID <" + jobId + "> was not found");
+            if (!glite) throw UserError("requestID <" + jobId + "> was not found");
             status = handleStatusExceptionForGLite();
         }
 }

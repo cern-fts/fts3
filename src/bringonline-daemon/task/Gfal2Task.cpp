@@ -40,7 +40,7 @@ void Gfal2Task::setProxy(JobContext const & ctx)
             ctx.state_update("FAILED", message, false);
             std::stringstream ss;
             ss << gfal2_ctx.operation << " proxy certificate not valid: " << message;
-            throw Err_Custom(ss.str());
+            throw UserError(ss.str());
         }
 
     char* cert = const_cast<char*>(ctx.getProxy().c_str());
@@ -52,7 +52,7 @@ void Gfal2Task::setProxy(JobContext const & ctx)
             std::stringstream ss;
             ss << gfal2_ctx.operation << " setting X509 CERT failed " << error->code << " " << error->message;
             g_clear_error(&error);
-            throw Err_Custom(ss.str());
+            throw UserError(ss.str());
         }
 
     status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
@@ -62,7 +62,7 @@ void Gfal2Task::setProxy(JobContext const & ctx)
             std::stringstream ss;
             ss << gfal2_ctx.operation << " setting X509 KEY failed " << error->code << " " << error->message;
             g_clear_error(&error);
-            throw Err_Custom(ss.str());
+            throw UserError(ss.str());
         }
 }
 
@@ -168,7 +168,7 @@ void Gfal2Task::setSpaceToken(std::string const & spaceToken)
                     std::stringstream ss;
                     ss << gfal2_ctx.operation << " could not set the destination space token " << error->code << " " << error->message;
                     g_clear_error(&error);
-                    throw Err_Custom(ss.str());
+                    throw UserError(ss.str());
                 }
         }
 }

@@ -31,8 +31,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
+#include "../../../../../common/Exceptions.h"
 #include "common/Logger.h"
-#include "common/error.h"
 #include "common/CfgParser.h"
 
 #include "db/generic/SingleDbInstance.h"

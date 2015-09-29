@@ -19,13 +19,13 @@
  */
 
 #include "Configuration.h"
-#include "common/error.h"
 #include "common/definitions.h"
 
 #include <set>
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+#include "../../../../../common/Exceptions.h"
 
 namespace fts3
 {
@@ -169,7 +169,7 @@ void Configuration::addSe(std::string seName, bool active)
     static const boost::regex re(".+://[a-zA-Z0-9\\.-]+");
 
     if (seName != wildcard && !boost::regex_match(seName, re))
-        throw Err_Custom("The SE name should be compliant with the following convention: 'protocol://hostname' !");
+        throw UserError("The SE name should be compliant with the following convention: 'protocol://hostname' !");
 
     //check if SE exists
     boost::optional<StorageElement> storage(db->getStorageElement(seName));
@@ -196,7 +196,7 @@ void Configuration::addGroup(std::string group, std::vector<std::string>& member
     for (auto it = members.begin(); it != members.end(); it++)
         {
             if (db->checkIfSeIsMemberOfAnotherGroup(*it))
-                throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
+                throw UserError("The SE: " + *it + " is already a member of another SE group!");
         }
     // if the group already exists delete it
     if (db->checkGroupExists(group))
@@ -226,7 +226,7 @@ void Configuration::checkGroup(std::string group)
     // check if the group exists
     if (!db->checkGroupExists(group))
         {
-            throw Err_Custom(
+            throw UserError(
                 "The group: " +  group + " does not exist!"
             );
         }
@@ -242,7 +242,7 @@ std::pair< LinkConfig, bool > Configuration::getLinkConfig(std::string source, s
     if (p.get())
         {
             if (source != p->first || destination != p->second)
-                throw Err_Custom("A 'pair' with the same symbolic name exists already!");
+                throw UserError("A 'pair' with the same symbolic name exists already!");
         }
 
     std::unique_ptr<LinkConfig> cfg (
@@ -502,7 +502,7 @@ std::map<std::string, int> Configuration::getShareMap(std::string source, std::s
 
     if (vec.empty())
         {
-            throw Err_Custom(
+            throw UserError(
                 "A configuration for source: '" + source + "' and destination: '" + destination + "' does not exist!"
             );
         }
@@ -529,7 +529,7 @@ void Configuration::delLinkCfg(std::string source, std::string destination)
 
             if (source == wildcard || destination == wildcard)
                 {
-                    throw Err_Custom("The default configuration does not exist!");
+                    throw UserError("The default configuration does not exist!");
                 }
 
             std::string msg;
@@ -548,7 +548,7 @@ void Configuration::delLinkCfg(std::string source, std::string destination)
 
             msg += " does not exist!";
 
-            throw Err_Custom(msg);
+            throw UserError(msg);
         }
 
 

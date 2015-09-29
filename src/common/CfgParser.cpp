@@ -233,7 +233,7 @@ CfgParser::CfgParser(std::string configuration)
 
     if (opening != closing)
         {
-            throw Err_Custom("The number of opening braces does not much the number of closing braces");
+            throw UserError("The number of opening braces does not much the number of closing braces");
         }
 
     // break into lines to give later better feedback to users
@@ -273,7 +273,7 @@ CfgParser::CfgParser(std::string configuration)
                 "(around: '" + lines[ex.line() - 1] + "')"
                 ;
 
-            throw Err_Custom(msg);
+            throw UserError(msg);
         }
 
     if (validate(pt, shareOnlyCfgTokens))
@@ -322,11 +322,11 @@ BOOST_AUTO_TEST_SUITE(CfgParserTest)
 BOOST_AUTO_TEST_CASE (constructor)
 {
     // the number of '{' and '}' must be equal
-    BOOST_CHECK_THROW(CfgParser p("{{{}}"), Err_Custom);
+    BOOST_CHECK_THROW(CfgParser p("{{{}}"), UserError);
     // it must be in valid json format
-    BOOST_CHECK_THROW(CfgParser p("{lalala}"), Err_Custom);
+    BOOST_CHECK_THROW(CfgParser p("{lalala}"), UserError);
     // it must not use invalid tokens
-    BOOST_CHECK_THROW(CfgParser p("{\"invalid token\" : 8}"), Err_Custom);
+    BOOST_CHECK_THROW(CfgParser p("{\"invalid token\" : 8}"), UserError);
     // try parsing share only config
     CfgParser share_only_cfg (share_only_cfg_str);
     BOOST_CHECK_EQUAL(share_only_cfg.getCfgType(), CfgParser::SHARE_ONLY_CFG);
@@ -375,7 +375,7 @@ bool CfgParser::validate(boost::property_tree::ptree pt, std::map< std::string, 
                         {
                             std::string msg = "unexpected identifier: " + p.first;
                             if (!path.empty()) msg += " in " + path + " object";
-                            throw Err_Custom(msg);
+                            throw UserError(msg);
                         }
                     return false;
                 }
@@ -385,7 +385,7 @@ bool CfgParser::validate(boost::property_tree::ptree pt, std::map< std::string, 
                     // check if it should be an object or a value
                     if(allowed.find(p.first) != allowed.end())
                         {
-                            throw Err_Custom("A member object was expected in " + p.first);
+                            throw UserError("A member object was expected in " + p.first);
                         }
                 }
             else
@@ -414,7 +414,7 @@ boost::optional<std::string> CfgParser::get_opt(std::string path)
     catch (boost::property_tree::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
-            throw Err_Custom("Wrong value type of " + path);
+            throw UserError("Wrong value type of " + path);
         }
 
     return v;
@@ -451,12 +451,12 @@ bool CfgParser::isAuto(std::string path)
     catch (boost::property_tree::ptree_bad_path& ex)
         {
             // if the path is not correct throw en exception
-            throw Err_Custom("The " + path + " has to be specified!");
+            throw UserError("The " + path + " has to be specified!");
         }
     catch (boost::property_tree::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
-            throw Err_Custom("Wrong value type of " + path);
+            throw UserError("Wrong value type of " + path);
         }
 
     return v == auto_value;

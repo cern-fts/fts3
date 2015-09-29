@@ -32,7 +32,7 @@ GrPairCfg::GrPairCfg(std::string dn, CfgParser& parser) : PairCfg(dn, parser)
     destination = parser.get<std::string>("destination_group");
 
     if (notAllowed.count(source) || notAllowed.count(destination))
-        throw Err_Custom("The source or destination name is not a valid!");
+        throw UserError("The source or destination name is not a valid!");
 
     if (symbolic_name_opt)
         symbolic_name = *symbolic_name_opt;

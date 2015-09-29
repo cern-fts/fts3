@@ -25,7 +25,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
-#include "common/error.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include <fstream>
@@ -42,6 +41,8 @@
 #include <fstream>
 #include "common/panic.h"
 #include <execinfo.h>
+
+#include "../common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 
@@ -140,7 +141,7 @@ void fts3_initialize_db_backend(bool test)
         {
             db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             throw;
         }
@@ -227,13 +228,13 @@ static void isPathSane(const std::string& path,
                                     if (checkChown != 0)
                                         {
                                             msg << "Failed to chown for " << path;
-                                            throw Err_System(msg.str());
+                                            throw SystemError(msg.str());
                                         }
                                     int checkmode = chmod (path.c_str(), 0755);
                                     if (checkmode != 0)
                                         {
                                             msg << "Failed to chmod for " << path;
-                                            throw Err_System(msg.str());
+                                            throw SystemError(msg.str());
                                         }
                                 }
                         }
@@ -241,14 +242,14 @@ static void isPathSane(const std::string& path,
                         {
                             msg << "Directory " << path
                                 << " does not exist and could not be created";
-                            throw Err_System(msg.str());
+                            throw SystemError(msg.str());
                         }
                 }
             else
                 {
                     msg << "File " << path
                         << " does not exist";
-                    throw Err_System(msg.str());
+                    throw SystemError(msg.str());
                 }
         }
     // It does exist, but it is not the kind of file we want
@@ -256,13 +257,13 @@ static void isPathSane(const std::string& path,
         {
             msg << path
                 << " exists but it is not a directory";
-            throw Err_System(msg.str());
+            throw SystemError(msg.str());
         }
     else if (!isDir && fs::is_directory(path))
         {
             msg << path
                 << " exists but it is a directory";
-            throw Err_System(msg.str());
+            throw SystemError(msg.str());
         }
 
     // It exists, so check we have the right permissions
@@ -270,7 +271,7 @@ static void isPathSane(const std::string& path,
         {
             msg << "Not enough permissions on " << path
                 << " (Required " << requiredToString(requiredMode) << ")";
-            throw Err_System(msg.str());
+            throw SystemError(msg.str());
         }
 }
 
@@ -284,7 +285,7 @@ void checkDbSchema()
             db::DBSingleton::destroy();
 
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             throw;
@@ -323,7 +324,7 @@ void checkInitDirs(std::string logsDir)
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
             throw;
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             throw;
@@ -452,7 +453,7 @@ int DoServer(int argc, char** argv)
             Server::instance().start();
 
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             exit(1);
@@ -543,7 +544,7 @@ int main(int argc, char** argv)
             setenv("X509_USER_CERT", hostcert, 1);
             setenv("X509_USER_KEY", hostkey, 1);
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             return EXIT_FAILURE;

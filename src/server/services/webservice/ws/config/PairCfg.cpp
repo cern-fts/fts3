@@ -37,14 +37,14 @@ PairCfg::PairCfg(std::string dn, std::string source, std::string destination) :
 
     notAllowed.insert(any);
     if (notAllowed.count(source) || notAllowed.count(destination))
-        throw Err_Custom("The source or destination name is not a valid!");
+        throw UserError("The source or destination name is not a valid!");
 
     std::unique_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 
     if (!cfg.get())
-        throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
+        throw UserError("A configuration for " + source + " - " + destination + " pair does not exist!");
 
     symbolic_name = cfg->symbolicName;
     active = cfg->state == on;

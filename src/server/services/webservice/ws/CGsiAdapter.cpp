@@ -28,10 +28,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 
-#include "common/error.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "../../../../common/Exceptions.h"
 
 namespace fts3
 {
@@ -91,7 +91,7 @@ CGsiAdapter::CGsiAdapter(soap* ctx) : ctx(ctx)
     // get client DN
     const int len = 200;
     char buff[len] = {0};
-    if (get_client_dn(ctx, buff, len)) throw Err_Custom("'get_client_dn' failed!");
+    if (get_client_dn(ctx, buff, len)) throw UserError("'get_client_dn' failed!");
     dn = buff;
 
     // get client VO

@@ -25,8 +25,6 @@
 
 #include "exception/cli_exception.h"
 
-#include "common/error.h"
-
 #include <vector>
 #include <string>
 #include <set>
@@ -34,6 +32,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include "../common/Exceptions.h"
 
 
 namespace fts3

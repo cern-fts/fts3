@@ -39,7 +39,7 @@ void FetchDeletion::fetch()
         {
             db::DBSingleton::instance().getDBObjectInstance()->revertDeletionToStarted();
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
         }
@@ -94,7 +94,7 @@ void FetchDeletion::fetch()
                                 {
                                     threadpool.start(new DeletionTask(it_t->second));
                                 }
-                            catch(Err_Custom const & ex)
+                            catch(UserError const & ex)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                                 }
@@ -106,7 +106,7 @@ void FetchDeletion::fetch()
 
                     boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
                 }
-            catch (Err& e)
+            catch (BaseException& e)
                 {
                     sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;

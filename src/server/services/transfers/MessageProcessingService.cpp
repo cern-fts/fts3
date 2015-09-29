@@ -22,7 +22,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "common/error.h"
+#include "../../../common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/producer_consumer_common.h"
 #include "common/ThreadSafeList.h"
@@ -239,7 +239,7 @@ void MessageProcessingService::operator () ()
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
             }
-            catch (Err& e)
+            catch (BaseException& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
             }

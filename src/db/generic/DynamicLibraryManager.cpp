@@ -19,11 +19,11 @@
  */
 
 #include "DynamicLibraryManager.h"
-#include "common/error.h"
 #include <dlfcn.h>
 #include <unistd.h>
 #include <iostream>
 #include <memory>
+#include "../../common/Exceptions.h"
 
 
 using namespace fts3::common; 
@@ -51,7 +51,7 @@ DynamicLibraryManager::findSymbol(const std::string &symbol)
         }
     catch (...)
         {
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Symbol cannot be found in the database plugin library"));
+            throw SystemError("Symbol cannot be found in the database plugin library");
         }
 
     return NULL; // keep compiler happy
@@ -75,7 +75,7 @@ DynamicLibraryManager::loadLibrary(const std::string &libraryName)
         }
     catch (...)
         {
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library"));
+            throw SystemError("Failed to load database plugin library");
         }
 }
 

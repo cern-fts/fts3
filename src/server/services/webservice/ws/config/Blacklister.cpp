@@ -20,14 +20,14 @@
 
 #include "Blacklister.h"
 
-#include "common/error.h"
-
 #include "../CGsiAdapter.h"
 
 #include "../SingleTrStateInstance.h"
 
 #include <vector>
 #include <set>
+
+#include "../../../../../common/Exceptions.h"
 #include "common/Logger.h"
 
 namespace fts3
@@ -121,7 +121,7 @@ void Blacklister::handleDnBlacklisting()
         {
             if (name == adminDn)
                 {
-                    throw Err_Custom ("A user cannot blacklist himself!");
+                    throw UserError ("A user cannot blacklist himself!");
                 }
 
             db->blacklistDn(name, std::string(), adminDn);
@@ -135,7 +135,7 @@ void Blacklister::handleDnBlacklisting()
         {
             if (name == adminDn)
                 {
-                    throw Err_Custom ("A user cannot unblacklist himself!");
+                    throw UserError ("A user cannot unblacklist himself!");
                 }
 
             db->unblacklistDn(name);

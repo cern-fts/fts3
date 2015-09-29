@@ -21,10 +21,9 @@
 /** \file serverconfigreader.h Implementation of FTS3 server config reader. */
 
 #include "serverconfigreader.h"
-#include "common/error.h"
-
 #include <iostream>
 #include <fstream>
+#include "../common/Exceptions.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
@@ -275,8 +274,7 @@ struct ReadConfigFile_SystemTraits
             {
                 std::stringstream msg;
                 msg << "Error opening file " << aName;
-                FTS3_COMMON_EXCEPTION_THROW ( Err_System (msg.str()) );
-                throw Err_System(msg.str());
+                throw SystemError(msg.str());
             }
 
         return in;
@@ -312,7 +310,7 @@ BOOST_FIXTURE_TEST_CASE
     BOOST_CHECK_EXCEPTION
     (
         getStream("/atyala/patyala/thisfile-doesnot_exis"),
-        fts3::common::Err_System,
+        fts3::common::SystemError,
         fts3_unittest_always_true
     );
 
@@ -822,7 +820,7 @@ void ServerConfigReader::validateRequired (std::string key)
 {
 
     if (!_vm.count("SiteName"))
-        throw Err_Custom("The required configuration option: '" + key + "' has not been found!");
+        throw UserError("The required configuration option: '" + key + "' has not been found!");
 }
 
 /* ========================================================================== */

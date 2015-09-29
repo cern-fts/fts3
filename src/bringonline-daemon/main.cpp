@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-#include "common/error.h"
 #include "common/ThreadPool.h"
 #include "common/panic.h"
 #include "common/name_to_uid.h"
@@ -33,6 +32,8 @@
 #include "server/DrainMode.h"
 
 #include <string>
+
+#include "../common/Exceptions.h"
 #include "../common/Logger.h"
 
 using namespace fts3::common;
@@ -120,7 +121,7 @@ void fts3_initialize_db_backend()
             //use 4 hardcoded connection
             db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 8);
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             throw;
         }
@@ -227,7 +228,7 @@ int DoServer(int argc, char** argv)
                 {
                     fts3_initialize_db_backend();
                 }
-            catch (Err& e)
+            catch (BaseException& e)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
                     return -1;
@@ -257,7 +258,7 @@ int DoServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
             gr.join_all();
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
             return -1;
@@ -342,7 +343,7 @@ int main(int argc, char** argv)
                 }
             DoServer(argc, argv);
         }
-    catch (Err& e)
+    catch (BaseException& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
             return EXIT_FAILURE;

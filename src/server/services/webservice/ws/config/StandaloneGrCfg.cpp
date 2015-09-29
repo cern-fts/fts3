@@ -29,10 +29,10 @@ StandaloneGrCfg::StandaloneGrCfg(std::string dn, std::string name) : StandaloneC
 {
     notAllowed.insert(any);
     if (notAllowed.count(group))
-        throw Err_Custom("The SE name is not a valid!");
+        throw UserError("The SE name is not a valid!");
 
     if (!db->checkGroupExists(group))
-        throw Err_Custom("The SE group: " + group + " does not exist!");
+        throw UserError("The SE group: " + group + " does not exist!");
 
     active = true;
 
@@ -53,7 +53,7 @@ StandaloneGrCfg::StandaloneGrCfg(std::string dn, CfgParser& parser) : Standalone
     all = json();
 
     if (notAllowed.count(group))
-        throw Err_Custom("The SE name is not a valid!");
+        throw UserError("The SE name is not a valid!");
 }
 
 StandaloneGrCfg::~StandaloneGrCfg()
@@ -83,7 +83,7 @@ void StandaloneGrCfg::del()
 {
     // check if pair configuration uses the group
     if (db->isGrInPair(group))
-        throw Err_Custom("The group is used in a group-pair configuration, you need first to remove the pair!");
+        throw UserError("The group is used in a group-pair configuration, you need first to remove the pair!");
 
     // delete group
     StandaloneCfg::del(group);

@@ -21,13 +21,12 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/SetCfgCli.h"
-#include "common/error.h"
-
 #include "exception/cli_exception.h"
 
 #include <string>
 #include <vector>
 #include <memory>
+#include "../../common/Exceptions.h"
 
 using namespace fts3::cli;
 using namespace fts3::common;

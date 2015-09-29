@@ -20,12 +20,12 @@
 
 #include "RequestLister.h"
 
+#include "../../../../../common/Exceptions.h"
 #include "common/Logger.h"
 #include "GSoapJobStatus.h"
 
 
 
-#include "common/error.h"
 #include "common/JobStatusHandler.h"
 
 using namespace db;
@@ -86,15 +86,15 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list_impl(Authorizat
             (db.*list)(inGivenStates, dn, vo, src, dst, jobs);
             FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
         }
-    catch(Err& ex)
+    catch(BaseException& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+            throw UserError(std::string(__func__) + ": Caught exception " + ex.what());
         }
     catch(...)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: RequestLister::list"  << commit;
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw UserError(std::string(__func__) + ": Caught exception " );
         }
 
     // create the object
@@ -118,7 +118,7 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
 
     if (!inGivenStates || inGivenStates->item.empty())
         {
-            throw Err_Custom("No states were defined!");
+            throw UserError("No states were defined!");
         }
 
     JobStatusHandler& handler = JobStatusHandler::instance();
@@ -127,7 +127,7 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
             if (*it == "Pending") continue; // We are ignoring the legacy state 'Pending'
             if(!handler.isStatusValid(*it))
                 {
-                    throw Err_Custom("Unknown job status: " + *it);
+                    throw UserError("Unknown job status: " + *it);
                 }
         }
 
