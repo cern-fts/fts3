@@ -35,6 +35,10 @@ namespace common {
 class BaseException: public std::exception
 {
 public:
+    virtual ~BaseException() throw ()
+    {
+    }
+
     virtual const char* what() const throw();
 };
 
@@ -49,6 +53,10 @@ public:
     {
         // EMPTY
     };
+
+    virtual ~SystemError() throw()
+    {
+    }
 
     virtual const char* what() const throw()
     {
@@ -70,6 +78,10 @@ public:
     {
         // EMPTY
     };
+
+    virtual ~UserError() throw ()
+    {
+    }
 
     virtual const char* what() const throw()
     {
