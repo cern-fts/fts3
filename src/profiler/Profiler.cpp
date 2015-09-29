@@ -20,7 +20,7 @@
 
 #include "Profiler.h"
 
-#include "../common/Logger.h"
+#include "common/Logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 

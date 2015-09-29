@@ -44,7 +44,7 @@
 
 #include <cgsi_plugin.h>
 
-#include "../../../../../common/Exceptions.h"
+#include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
 #include "common/UuidGenerator.h"

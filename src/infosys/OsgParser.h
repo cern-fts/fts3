@@ -24,7 +24,7 @@
 #include <pugixml.hpp>
 #include <string>
 #include <boost/optional.hpp>
-#include "../common/Singleton.h"
+#include "common/Singleton.h"
 
 namespace fts3
 {

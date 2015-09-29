@@ -24,7 +24,7 @@
 
 #include "serverconfig.h"
 
-#include "../common/Exceptions.h"
+#include "common/Exceptions.h"
 #include "serverconfigreader.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW

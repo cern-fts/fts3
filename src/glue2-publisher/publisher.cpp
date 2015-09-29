@@ -31,8 +31,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../common/Exceptions.h"
-#include "../common/Logger.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 
 using namespace fts3::config;
 using namespace fts3::common;

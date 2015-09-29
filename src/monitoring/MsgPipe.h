@@ -42,8 +42,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../common/Exceptions.h"
-#include "../common/Logger.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 #include "common/producer_consumer_common.h"
 
 using namespace activemq;

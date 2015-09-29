@@ -20,7 +20,7 @@
 
 #include "FileTransferExecutor.h"
 
-#include "../common/Logger.h"
+#include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 #include "common/Uri.h"
 #include "cred/CredUtility.h"

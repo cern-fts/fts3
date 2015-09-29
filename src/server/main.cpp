@@ -42,7 +42,7 @@
 #include "common/panic.h"
 #include <execinfo.h>
 
-#include "../common/Exceptions.h"
+#include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 

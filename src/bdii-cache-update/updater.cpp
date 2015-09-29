@@ -33,8 +33,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
-#include "../common/Exceptions.h"
-#include "../common/Logger.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 
 using namespace std;
 using namespace fts3::common;

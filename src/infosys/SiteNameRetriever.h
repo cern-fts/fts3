@@ -33,7 +33,7 @@
 #  include "BdiiCacheParser.h"
 #endif
 
-#include "../common/Singleton.h"
+#include "common/Singleton.h"
 
 namespace fts3
 {

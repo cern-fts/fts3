@@ -26,7 +26,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "../common/Singleton.h"
+#include "common/Singleton.h"
 #include "BdiiBrowser.h"
 
 

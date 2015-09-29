@@ -20,7 +20,7 @@
 
 #include "SiteNameRetriever.h"
 
-#include "../common/Logger.h"
+#include "common/Logger.h"
 #include "config/serverconfig.h"
 
 

@@ -33,8 +33,8 @@
 
 #include <string>
 
-#include "../common/Exceptions.h"
-#include "../common/Logger.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 
 using namespace fts3::common;
 using namespace fts3::config;

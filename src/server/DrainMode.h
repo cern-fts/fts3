@@ -21,7 +21,7 @@
 #ifndef FTSDRAIN_H_
 #define FTSDRAIN_H_
 
-#include "../common/Singleton.h"
+#include "common/Singleton.h"
 #include "db/generic/SingleDbInstance.h"
 
 using namespace db;

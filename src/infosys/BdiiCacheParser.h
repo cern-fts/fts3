@@ -24,7 +24,7 @@
 #include <string>
 
 #include <pugixml.hpp>
-#include "../common/Singleton.h"
+#include "common/Singleton.h"
 
 using namespace pugi;
 

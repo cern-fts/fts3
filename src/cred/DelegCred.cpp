@@ -34,8 +34,8 @@
 #include <boost/lexical_cast.hpp>
 #include <fstream>
 
-#include "../common/Exceptions.h"
-#include "../common/Logger.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 
 using namespace db;
 using namespace fts3::common;

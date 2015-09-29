@@ -23,7 +23,7 @@
 #include "serverconfigreader.h"
 #include <iostream>
 #include <fstream>
-#include "../common/Exceptions.h"
+#include "common/Exceptions.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"

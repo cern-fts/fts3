@@ -32,7 +32,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "../common/Exceptions.h"
+#include "common/Exceptions.h"
 
 
 namespace fts3

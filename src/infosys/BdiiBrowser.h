@@ -36,8 +36,8 @@
 
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
-#include "../common/Logger.h"
-#include "../common/Singleton.h"
+#include "common/Logger.h"
+#include "common/Singleton.h"
 
 namespace fts3
 {
