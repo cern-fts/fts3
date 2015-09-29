@@ -25,7 +25,7 @@ find_package(LibUuid REQUIRED)
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
 # Find boost
-find_package(Boost COMPONENTS regex iostreams system thread)
+find_package(Boost COMPONENTS regex iostreams system thread filesystem REQUIRED)
 
 # Sources
 file(GLOB fts_common_sources "*.cpp")
@@ -49,7 +49,7 @@ set_target_properties(fts_common PROPERTIES
 add_library(fts_common_min STATIC
     Logger.cpp
     UserProxyEnv.cpp
-    name_to_uid.cpp
+    DaemonTools.cpp
     producer.cpp
     consumer.cpp
 )

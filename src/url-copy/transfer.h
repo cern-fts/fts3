@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <fstream>
 
 class Transfer
 {

@@ -87,7 +87,6 @@ void ExecuteProcess::getArgv(std::list<std::string>& argsHolder, size_t* argc, c
         }
 
     ++i;
-    assert(i + 1 == argc);
     (*argv)[i] = NULL;
 }
 

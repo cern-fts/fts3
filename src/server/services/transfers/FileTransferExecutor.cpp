@@ -26,7 +26,6 @@
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
 #include "db/generic/OptimizerSample.h"
-#include "common/name_to_uid.h"
 #include "common/producer_consumer_common.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"

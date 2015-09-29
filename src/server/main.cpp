@@ -33,22 +33,19 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <boost/filesystem.hpp>
-#include "common/name_to_uid.h"
 #include <sys/resource.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread.hpp>
 #include "profiler/Profiler.h"
 #include <fstream>
 #include "common/panic.h"
 #include <execinfo.h>
 
+#include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 
 
 namespace fs = boost::filesystem;
-using boost::thread;
 using namespace fts3::common;
 using namespace fts3::config;
 using namespace fts3::server; 
@@ -58,65 +55,6 @@ extern bool stopThreads;
 const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
 const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";
-
-/* -------------------------------------------------------------------------- */
-
-/* -------------------------------------------------------------------------- */
-
-
-int proc_find()
-{
-    DIR* dir=NULL;
-    struct dirent* ent=NULL;
-    char* endptr=NULL;
-    char buf[512]= {0};
-    unsigned count = 0;
-    const char* name = "fts_server";
-
-    if (!(dir = opendir("/proc")))
-        {
-            return -1;
-        }
-
-
-    while((ent = readdir(dir)) != NULL)
-        {
-            /* if endptr is not a null character, the directory is not
-             * entirely numeric, so ignore it */
-            long lpid = strtol(ent->d_name, &endptr, 10);
-            if (*endptr != '\0')
-                {
-                    continue;
-                }
-
-            /* try to open the cmdline file */
-            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
-            FILE* fp = fopen(buf, "r");
-
-            if (fp)
-                {
-                    if (fgets(buf, sizeof(buf), fp) != NULL)
-                        {
-                            /* check the first token in the file, the program name */
-                            char* first = NULL;
-                            first = strtok(buf, " ");
-
-                            if (first && strstr(first, name))
-                                {
-                                    fclose(fp);
-                                    fp = NULL;
-                                    ++count;
-                                    continue;
-                                }
-                        }
-                    if(fp)
-                        fclose(fp);
-                }
-
-        }
-    closedir(dir);
-    return count;
-}
 
 
 void fts3_initialize_db_backend(bool test)
@@ -148,41 +86,6 @@ void fts3_initialize_db_backend(bool test)
 
 }
 
-static bool checkUrlCopy()
-{
-    std::string p("");
-    std::vector<std::string> pathV;
-    std::vector<std::string>::iterator iter;
-    char *token=NULL;
-    const char *path = getenv("PATH");
-    if(path)
-        {
-            char *copy = (char *) malloc(strlen(path) + 1);
-            strcpy(copy, path);
-            token = strtok(copy, ":");
-            if(token)
-                pathV.push_back(std::string(token));
-            while ((token = strtok(0, ":")) != NULL)
-                {
-                    pathV.push_back(std::string(token));
-                }
-
-            for (iter = pathV.begin(); iter < pathV.end(); ++iter)
-                {
-                    p = *iter + "/fts_url_copy";
-                    if (fs::exists(p.c_str()) == 0)
-                        {
-                            free(copy);
-                            copy = NULL;
-                            pathV.clear();
-                            return true;
-                        }
-                }
-
-            free(copy);
-        }
-    return false;
-}
 
 static std::string requiredToString(int mode)
 {
@@ -214,7 +117,7 @@ static void isPathSane(const std::string& path,
                         {
                             if (changeOwner)
                                 {
-                                    uid_t pw_uid = name_to_uid();
+                                    uid_t pw_uid = getUserUid("fts3");
                                     int checkChown = chown(path.c_str(), pw_uid, getgid());
                                     if (checkChown != 0)
                                         {
@@ -470,10 +373,11 @@ void SpawnServer(int argc, char** argv)
         }
 }
 
+
 int main(int argc, char** argv)
 {
     // Do not even try if already running
-    int n_running = proc_find();
+    int n_running = countProcessesWithName("fts_server");
     if (n_running < 0)
         {
             std::cerr << "Could not check if FTS3 is already running" << std::endl;
@@ -486,7 +390,7 @@ int main(int argc, char** argv)
         }
 
     //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid = name_to_uid();
+    uid_t pw_uid = getUserUid("fts3");
     setuid(pw_uid);
     seteuid(pw_uid);
 
@@ -510,11 +414,13 @@ int main(int argc, char** argv)
                     return EXIT_FAILURE;
                 }
 
-            if (false == checkUrlCopy())
+            std::string urlCopyPath;
+            if (!binaryExists("fts_url_copy", &urlCopyPath))
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts_url_copy process is set in the PATH env variable" << commit;
                     return EXIT_FAILURE;
                 }
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "fts_url_copy full path " << urlCopyPath << commit;
 
             if (!fs::exists(hostcert))
                 {

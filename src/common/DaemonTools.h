@@ -19,16 +19,28 @@
  */
 
 #pragma once
+#ifndef DAEMONTOOLS_H_
+#define DAEMONTOOLS_H_
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <fstream>
 #include <sys/types.h>
-#include <grp.h>
-#include <sys/stat.h>
-#include <pwd.h>
+#include <string>
 
-uid_t name_to_uid();
+namespace fts3 {
+namespace common {
+
+/// Returns the user UID for the given name
+/// Throws exception if not found, or error
+uid_t getUserUid(const std::string& name);
+
+/// Returns how many processes with the given name are running
+/// @return < 0 on error, number of processes with the given name otherwise
+int countProcessesWithName(const std::string& name);
+
+/// Checks if there is a binary 'name' in the PATH, and it is executable
+/// @param fullPath Stores here the full path, if found.
+bool binaryExists(const std::string& name, std::string* fullPath);
+
+} // namespace common
+} // namespace fts3
+
+#endif // DAEMONTOOLS_H_

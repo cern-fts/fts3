@@ -35,7 +35,6 @@
 #include "heuristics.h"
 #include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
-#include "common/name_to_uid.h"
 #include "reporter.h"
 #include "transfer.h"
 #include "common/UserProxyEnv.h"
@@ -50,6 +49,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 
+#include "common/DaemonTools.h"
 #include "common/panic.h"
 #include "version.h"
 
@@ -635,7 +635,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
 __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid = name_to_uid();
+    uid_t pw_uid = getUserUid("fts3");
     setuid(pw_uid);
     seteuid(pw_uid);
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);

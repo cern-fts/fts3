@@ -48,8 +48,9 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include "common/producer_consumer_common.h"
-#include "common/name_to_uid.h"
 #include <boost/lexical_cast.hpp>
+
+#include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 
 #define MILLI 36000000

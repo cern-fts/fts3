@@ -49,76 +49,15 @@
 #include "MsgPipe.h"
 #include "MsgProducer.h"
 #include "utility_routines.h"
-#include "common/name_to_uid.h"
 #include <execinfo.h>
 
+#include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/ConcurrentQueue.h"
 #include "common/Logger.h"
 
 using namespace std;
-
-
-int proc_find()
-{
-    DIR* dir=NULL;
-    struct dirent* ent=NULL;
-    char* endptr=NULL;
-    char buf[512]= {0};
-    unsigned count = 0;
-    const char* name = "fts_msg_bulk";
-
-    if (!(dir = opendir("/proc")))
-        {
-            return -1;
-        }
-
-
-    while((ent = readdir(dir)) != NULL)
-        {
-            /* if endptr is not a null character, the directory is not
-             * entirely numeric, so ignore it */
-            long lpid = strtol(ent->d_name, &endptr, 10);
-            if (*endptr != '\0')
-                {
-                    continue;
-                }
-
-            /* try to open the cmdline file */
-            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
-            FILE* fp = fopen(buf, "r");
-
-            if (fp)
-                {
-                    if (fgets(buf, sizeof(buf), fp) != NULL)
-                        {
-                            /* check the first token in the file, the program name */
-                            char* first = NULL;
-                            first = strtok(buf, " ");
-
-                            if (first && strstr(first, name))
-                                {
-                                    fclose(fp);
-                                    fp = NULL;
-                                    ++count;
-                                    continue;
-                                }
-                        }
-                    if(fp)
-                        fclose(fp);
-                }
-
-        }
-    closedir(dir);
-    return count;
-}
-
-
-
-/*
-	There is a parent process which checks/monitors the status of the child.
-	If the child hangs or for any reason die, transparently it's restarting it and restoring all mesgs
-*/
+using namespace fts3::common;
 
 void DoServer(bool isDaemon) throw()
 {
@@ -129,7 +68,7 @@ void DoServer(bool isDaemon) throw()
 
     std::string logFile = getLOGFILEDIR() + "" + getLOGFILENAME();
     if (isDaemon) {
-        if (fts3::common::theLogger().redirect(logFile, logFile) != 0) {
+        if (theLogger().redirect(logFile, logFile) != 0) {
             FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the log file");
             return;
         }
@@ -186,7 +125,7 @@ void DoServer(bool isDaemon) throw()
 int main(int argc,  char** /*argv*/)
 {
     // Do not even try if already running
-    int n_running = proc_find();
+    int n_running = countProcessesWithName("fts_msg_bulk");
     if (n_running < 0)
         {
             std::cerr << "Could not check if FTS3 is already running" << std::endl;
@@ -199,7 +138,7 @@ int main(int argc,  char** /*argv*/)
         }
 
     //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid = name_to_uid();
+    uid_t pw_uid = getUserUid("fts3");
     setuid(pw_uid);
     seteuid(pw_uid);
 

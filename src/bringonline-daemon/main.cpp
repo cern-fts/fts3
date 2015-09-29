@@ -20,9 +20,9 @@
 
 #include <boost/filesystem.hpp>
 
+#include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "common/name_to_uid.h"
 #include "common/panic.h"
 #include "config/serverconfig.h"
 #include "common/ThreadPool.h"
@@ -94,7 +94,7 @@ void shutdown_callback(int signum, void*)
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
     sleep(5);
-    int db_status = fts3_teardown_db_backend();
+    fts3_teardown_db_backend();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
     // Handle termination for signals that do not imply errors
     // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
@@ -274,13 +274,26 @@ __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid;
-    pw_uid = name_to_uid();
+    pw_uid = getUserUid("fts3");
     setuid(pw_uid);
     seteuid(pw_uid);
 }
 
 int main(int argc, char** argv)
 {
+    // Do not even try if already running
+    int n_running = countProcessesWithName("fts_bringonline");
+    if (n_running < 0)
+        {
+            std::cerr << "Could not check if FTS3 is already running" << std::endl;
+            return EXIT_FAILURE;
+        }
+    else if (n_running > 1)
+        {
+            std::cerr << "Only one instance of FTS3 can run at the time" << std::endl;
+            return EXIT_FAILURE;
+        }
+
     if (!fs::exists(hostcert))
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE ERROR check if hostcert/key are installed" << commit;
