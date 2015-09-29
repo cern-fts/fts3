@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include "db/generic/FileTransferStatus.h"
 #include "Singleton.h"

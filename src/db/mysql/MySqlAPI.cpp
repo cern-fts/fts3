@@ -920,7 +920,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "FROM t_job, t_file "
                    "WHERE "
                    "    t_file.job_id = t_job.job_id AND t_file.job_finished IS NULL AND "
-                   "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest",
+                   "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest AND "
+                   "    t_file.file_state = 'SUBMITTED'",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
                    soci::into(maxPriority);
 
