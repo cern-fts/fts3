@@ -18,10 +18,15 @@
  * limitations under the License.
  */
 
-#include "common/ThreadPool.h"
-#include "common/panic.h"
+#include <boost/filesystem.hpp>
+
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 #include "common/name_to_uid.h"
+#include "common/panic.h"
 #include "config/serverconfig.h"
+#include "common/ThreadPool.h"
+
 
 #include "task/Gfal2Task.h"
 #include "fetch/FetchStaging.h"
@@ -31,13 +36,11 @@
 #include "state/DeletionStateUpdater.h"
 #include "server/DrainMode.h"
 
-#include <string>
-
-#include "common/Exceptions.h"
-#include "common/Logger.h"
 
 using namespace fts3::common;
 using namespace fts3::config;
+namespace fs = boost::filesystem;
+
 
 extern std::string stackTrace;
 bool stopThreads = false;
@@ -45,12 +48,6 @@ const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
 const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
 
 int fts3_teardown_db_backend()
 {
@@ -284,14 +281,14 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char** argv)
 {
-    if (fexists(hostcert) != 0)
+    if (!fs::exists(hostcert))
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE ERROR check if hostcert/key are installed" << commit;
             return EXIT_FAILURE;
         }
 
 
-    if (fexists(configfile) != 0)
+    if (!fs::exists(configfile))
         {
             std::cerr << "BRINGONLINE ERROR config file " << configfile << " doesn't exist" << std::endl;
             return EXIT_FAILURE;

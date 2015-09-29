@@ -21,7 +21,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 
-find_package (Boost COMPONENTS system)
+find_package (Boost COMPONENTS system filesystem REQUIRED)
 find_package (GLIB2)
 
 include_directories (${GLIB2_INCLUDE_DIRS})

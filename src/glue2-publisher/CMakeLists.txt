@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-find_package (Boost COMPONENTS system REQUIRED)
+find_package (Boost COMPONENTS system filesystem REQUIRED)
 find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
 
@@ -33,7 +33,7 @@ target_link_libraries(fts_info_publisher
     fts_db_generic
     fts_config
     fts_common
-    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_LIBRARIES}
 )
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 	target_link_libraries(fts_info_publisher -lboost_unit_test_framework)

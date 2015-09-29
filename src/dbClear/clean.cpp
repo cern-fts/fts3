@@ -18,22 +18,24 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <cstdio>
 #include <signal.h>
-#include <unistd.h>
-#include <iostream>
-#include "config/serverconfig.h"
-#include "db/generic/SingleDbInstance.h"
-#include "profiler/Profiler.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <cstdio>
+#include <iostream>
+#include <boost/filesystem.hpp>
+
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "config/serverconfig.h"
+#include "db/generic/SingleDbInstance.h"
+#include "profiler/Profiler.h"
 
+
+namespace fs = boost::filesystem;
 using namespace fts3::config; 
 using namespace fts3::common;
 using namespace db;
@@ -61,15 +63,6 @@ void fts3_initialize_db_backend()
         }
 }
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (::stat(filename, &buffer) == 0)
-        return 0;
-    return -1;
-}
-
-
 
 int main(int argc, char** argv)
 {
@@ -78,7 +71,7 @@ int main(int argc, char** argv)
         {
             const char *configfile = "/etc/fts3/fts3config";
 
-            if (fexists(configfile) != 0)
+            if (!fs::exists(configfile))
                 {
                     std::cerr << "fts3 server config file doesn't exist"  << std::endl;
                     exit(1);

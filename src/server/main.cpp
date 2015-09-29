@@ -119,15 +119,6 @@ int proc_find()
 }
 
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
-
-/* -------------------------------------------------------------------------- */
-
 void fts3_initialize_db_backend(bool test)
 {
     std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
@@ -179,7 +170,7 @@ static bool checkUrlCopy()
             for (iter = pathV.begin(); iter < pathV.end(); ++iter)
                 {
                     p = *iter + "/fts_url_copy";
-                    if (fexists(p.c_str()) == 0)
+                    if (fs::exists(p.c_str()) == 0)
                         {
                             free(copy);
                             copy = NULL;
@@ -513,7 +504,7 @@ int main(int argc, char** argv)
     //very first check before it goes to daemon mode
     try
         {
-            if (fexists(configfile) != 0)
+            if (!fs::exists(configfile))
                 {
                     std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
                     return EXIT_FAILURE;
@@ -525,7 +516,7 @@ int main(int argc, char** argv)
                     return EXIT_FAILURE;
                 }
 
-            if (fexists(hostcert) != 0)
+            if (!fs::exists(hostcert))
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert/key are installed" << commit;
                     return EXIT_FAILURE;

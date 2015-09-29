@@ -23,7 +23,7 @@ cmake_minimum_required(VERSION 2.8)
 # Dependencies
 find_package(GFAL2)
 find_package(GLIB2)
-find_package(Boost COMPONENTS thread system)
+find_package(Boost COMPONENTS thread system filesystem)
 
 include_directories (
     ${GFAL2_INCLUDE_DIRS}

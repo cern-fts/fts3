@@ -18,22 +18,25 @@
  * limitations under the License.
  */
 
-#include <fstream>
-#include <cstdio>
 #include <signal.h>
-#include <unistd.h>
-#include <iostream>
-#include <sstream>
-#include "config/serverconfig.h"
-#include "db/generic/SingleDbInstance.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <boost/filesystem.hpp>
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "config/serverconfig.h"
+#include "db/generic/SingleDbInstance.h"
 
+
+namespace fs = boost::filesystem;
 using namespace fts3::config;
 using namespace fts3::common;
 using namespace db;
@@ -60,18 +63,10 @@ void fts3_initialize_db_backend()
         }
 }
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
 
 int main(int argc, char** argv)
 {
-
     std::stringstream versionFTS;
-    const char *emiVersion = "/etc/emi-version";
     std::stringstream issuerCA;
 
     //get fts server version
@@ -96,21 +91,16 @@ int main(int argc, char** argv)
 
 
     //get emi-version
-    std::string versionEMI("");
-    if (fexists(emiVersion) == 0)
+    std::string versionEMI;
+    if (fs::exists("/etc/emi-version"))
         {
-            std::ifstream myfile(emiVersion);
+            std::ifstream myfile("/etc/emi-version");
             getline(myfile, versionEMI);
-        }
-    else
-        {
-            versionEMI = "3.0.0-1";
         }
 
     //get fts server health state
-    const char *serverRunning = "/var/lock/subsys/fts-server";
     std::string serverStatus("");
-    if (fexists(serverRunning) == 0)
+    if (fs::exists("/var/lock/subsys/fts-server"))
         {
             serverStatus = "ok";
         }
@@ -134,9 +124,8 @@ int main(int argc, char** argv)
     try
         {
             std::stringstream stream;
-            const char *configfile = "/etc/fts3/fts3config";
 
-            if (fexists(configfile) != 0)
+            if (!fs::exists("/etc/fts3/fts3config"))
                 {
                     std::cerr << "fts3 server config file doesn't exist" << std::endl;
                     exit(1);
@@ -170,7 +159,7 @@ int main(int argc, char** argv)
             stream << "GLUE2EndpointImplementationVersion: " << versionFTS.str() << "\n";
 
             //publish emi when it's EMI!
-            if (fexists(emiVersion) == 0)
+            if (!versionEMI.empty())
                 {
                     stream << "GLUE2EntityOtherInfo: MiddlewareName=EMI" << "\n";
                     stream << "GLUE2EntityOtherInfo: MiddlewareVersion=" << versionEMI << "\n";
