@@ -65,20 +65,20 @@ int fts3_teardown_db_backend()
     return 0;
 }
 
-void shutdown_callback(int signal, void*)
+void shutdown_callback(int signum, void*)
 {
     StagingStateUpdater::instance().recover();
     DeletionStateUpdater::instance().recover();
 
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
-                                    << " (" << strsignal(signal) << ")" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
+                                    << " (" << strsignal(signum) << ")" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
     stopThreads = true;
 
     // Some require traceback
-    switch (signal)
+    switch (signum)
         {
         case SIGABRT:
         case SIGSEGV:
@@ -98,7 +98,13 @@ void shutdown_callback(int signal, void*)
     sleep(5);
     int db_status = fts3_teardown_db_backend();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
-    // Let the default handler do the rest (coredump, exit, whatever is neccessary)
+    // Handle termination for signals that do not imply errors
+    // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
+    switch (signum)
+    {
+        case SIGINT: case SIGTERM: case SIGUSR1:
+            _exit(-signum);
+    }
 }
 
 /* -------------------------------------------------------------------------- */

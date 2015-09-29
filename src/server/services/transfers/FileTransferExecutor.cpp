@@ -238,8 +238,8 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     bool fileUpdated = false;
                     fileUpdated = db->updateTransferStatus(
-                            tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
-                            (int) pr.getPid(), 0, 0, false);
+                            tf.jobId, tf.fileId, 0.0, "READY", "",
+                            0, 0, 0, false);
                     db->updateJobStatus(tf.jobId, "ACTIVE",0);
 
                     // If fileUpdated == false, the transfer was *not* updated, which means we got
@@ -275,6 +275,10 @@ void FileTransferExecutor::run(boost::any & ctx)
                                     db->updateJobStatus(tf.jobId, "FAILED", 0);
                                 }
                         }
+
+                    db->updateTransferStatus(
+                            tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
+                            (int) pr.getPid(), 0, 0, false);
 
                     // Send current state
                     SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);

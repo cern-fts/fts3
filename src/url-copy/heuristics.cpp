@@ -43,6 +43,10 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
     if (errorNo == ETIMEDOUT)
         return true;
 
+    // Do not retry cancelation
+    if (errorNo == ECANCELED)
+        return false;
+
     // If the following strings appear in the error message, assume retriable
     const char* msg_imply_retry[] = {
         "performance marker",

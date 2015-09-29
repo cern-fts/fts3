@@ -2476,6 +2476,12 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             }
         }
 
+        // If trying to go from ACTIVE back to READY, do nothing either
+        if (st == "ACTIVE" && transfer_status == "READY") {
+            sql.rollback();
+            return false;
+        }
+
         // If the file already in the same state, don't do anything either
         if (st == transfer_status) {
             sql.rollback();

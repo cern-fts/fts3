@@ -342,8 +342,6 @@ void checkInitDirs(std::string logsDir)
 
 static void shutdown_callback(int signum, void*)
 {
-    int exit_status = 0;
-
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
                                     << " (" << strsignal(signum) << ")" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
@@ -360,7 +358,6 @@ static void shutdown_callback(int signum, void*)
         case SIGBUS:
         case SIGTRAP:
         case SIGSYS:
-            exit_status = -signum;
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
             break;
         default:
@@ -387,6 +384,13 @@ static void shutdown_callback(int signum, void*)
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
+    // Handle termination for signals that do not imply errors
+    // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
+    switch (signum)
+    {
+        case SIGINT: case SIGTERM: case SIGUSR1:
+            _exit(-signum);
+    }
 }
 
 
