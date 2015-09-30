@@ -186,7 +186,7 @@ int doServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE signal handlers installed" << commit;
 
             //re-read here
-            ServerConfig::instance().read(argc, argv, true);
+            ServerConfig::instance().read(argc, argv);
             bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
 
             std::string arguments("");
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
     //very first check before it goes to deamon mode
     try
         {
-            ServerConfig::instance().read(argc, argv, true);
+            ServerConfig::instance().read(argc, argv);
 
             std::string arguments("");
             int d = 0;

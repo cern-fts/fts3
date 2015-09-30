@@ -48,53 +48,35 @@ public:
     /// Constructor
     ServerConfig();
 
-    /* ---------------------------------------------------------------------- */
-
     /// Destructor
     virtual ~ServerConfig();
 
-    /* ---------------------------------------------------------------------- */
+    /// Read the configurations
+    /// @param argc     The number of command line arguments
+    /// @param argv     The command line arguments
+    void read(int argc, char** argv);
 
-    /** Read the configurations */
-    void read
-    (
-        int argc, /**< The command line arguments (from main) */
-        char** argv, /**< The command line arguments (from main) */
-        bool monitor = false
-    );
-
-    /* ---------------------------------------------------------------------- */
-
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-    /** Read the configurations from config file only */
+    /// Read the configurations from config file only
     void read(const std::string& aFileName);
-#endif // FTS3_COMPILE_WITH_UNITTEST_NEW
 
-    /* ---------------------------------------------------------------------- */
+    /// Return the last time the configuration was reloaded
+    time_t getReadTime();
 
-    /** General getter of an option. It returns the option, converted to the
-     * desired type. Throws exception if the option is not found. */
+    /// General getter of an option. It returns the option, converted to the
+    /// desired type. Throws exception if the option is not found.
     template <typename RET> RET get(const std::string& aVariable);
 
 protected:
 
-    /** Type of the internal store of config variables. */
+    /// Type of the internal store of config variables.
     typedef std::map<std::string, std::string> _t_vars;
 
-    /* ---------------------------------------------------------------------- */
-
-    /** Return the variable value as a string. */
+    /// Return the variable value as a string.
     const std::string& _get_str(const std::string& aVariable);
 
-    /* ---------------------------------------------------------------------- */
-
-    /** Read the configurations - using injected reader type. */
+    /// Read the configurations - using injected reader type.
     template <typename READER_TYPE>
-    void _read
-    (
-        int argc, /**< The command line arguments (from main) */
-        char** argv /**< The command line arguments (from main) */
-    )
+    void _read(int argc, char** argv)
     {
         READER_TYPE reader;
         waitIfGetting();
@@ -103,25 +85,18 @@ protected:
         notifyGetters();
     }
 
-    /* ---------------------------------------------------------------------- */
-
-    /** Read the configurations from config file only - using injected reader.*/
+    /// Read the configurations from config file only - using injected reader.
     template <typename READER_TYPE>
-    void _read
-    (
-        const std::string& aFileName /**< Config file name */
-    )
+    void _read(const std::string& aFileName)
     {
         READER_TYPE reader;
         _vars = reader(aFileName);
     }
 
-    /* ---------------------------------------------------------------------- */
-
-    /** The internal store of config variables. */
+    /// The internal store of config variables.
     _t_vars _vars;
 
-    /// configuration file monitor
+    /// Configuration file monitor
     FileMonitor cfgmonitor;
 
     bool reading;
@@ -132,31 +107,10 @@ protected:
 
     time_t readTime;
 
-    /**
-     *
-     */
     void waitIfReading();
-
-    /**
-     *
-     */
     void notifyReaders();
-
-    /**
-     *
-     */
     void waitIfGetting();
-
-    /**
-     *
-     */
     void notifyGetters();
-
-public:
-    time_t getReadTime()
-    {
-        return readTime;
-    }
 };
 
 
@@ -197,13 +151,11 @@ inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (c
 
     boost::char_separator<char> sep(";");
     boost::tokenizer< boost::char_separator<char> > tokens(str, sep);
-    boost::tokenizer< boost::char_separator<char> >::iterator it;
 
     std::vector<std::string> ret;
-    for (it = tokens.begin(); it != tokens.end(); ++it)
-        {
-            ret.push_back(*it);
-        }
+    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+        ret.push_back(*it);
+    }
 
     return ret;
 }
@@ -217,14 +169,11 @@ inline std::map<std::string, std::string> ServerConfig::get< std::map<std::strin
 
     waitIfReading();
 
-    _t_vars::iterator it;
-    for (it = _vars.begin(); it != _vars.end(); ++it)
-        {
-            if (boost::regex_match(it->first, re))
-                {
-                    ret[it->first] = it->second;
-                }
+    for (auto it = _vars.begin(); it != _vars.end(); ++it) {
+        if (boost::regex_match(it->first, re)) {
+            ret[it->first] = it->second;
         }
+    }
 
     notifyReaders();
 

@@ -135,18 +135,19 @@ BOOST_AUTO_TEST_SUITE_END()
 
 /* ---------------------------------------------------------------------- */
 
-void ServerConfig::read
-(
-    int argc,
-    char** argv,
-    bool
-)
+void ServerConfig::read(int argc, char** argv)
 {
     _read<ServerConfigReader> (argc, argv);
 
     cfgmonitor.start(
         get<std::string>("configfile")
     );
+}
+
+
+time_t ServerConfig::getReadTime()
+{
+    return readTime;
 }
 
 /* ---------------------------------------------------------------------- */

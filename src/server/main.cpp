@@ -232,7 +232,7 @@ static void spawnServer(int argc, char** argv)
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
 
-    ServerConfig::instance().read(argc, argv, true);
+    ServerConfig::instance().read(argc, argv);
     dropPrivileges();
     runEnvironmentChecks();
 
