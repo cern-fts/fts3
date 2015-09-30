@@ -18,8 +18,6 @@
  * limitations under the License.
  */
 
-#include "config/serverconfig.h"
-
 #include "infosys/SiteNameCacheRetriever.h"
 
 #include <map>
@@ -33,6 +31,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "../config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 
@@ -69,7 +68,7 @@ int main(int argc, char** argv)
 
     try
         {
-            theServerConfig().read(argc, argv);
+            ServerConfig::instance().read(argc, argv);
         }
     catch (BaseException& e)
         {

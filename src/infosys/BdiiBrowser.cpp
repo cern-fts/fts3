@@ -95,7 +95,7 @@ bool BdiiBrowser::connect(std::string infosys, time_t sec)
         }
 
     // set the keep alive if it has been set to 'true' in the fts3config file
-    if (config::theServerConfig().get<bool>("BDIIKeepAlive"))
+    if (config::ServerConfig::instance().get<bool>("BDIIKeepAlive"))
         {
 
             int val = keepalive_idle;
@@ -154,7 +154,7 @@ bool BdiiBrowser::reconnect()
     boost::unique_lock<boost::shared_mutex> lock(qm);
 
     if (connected) disconnect();
-    bool ret = connect(config::theServerConfig().get<std::string>("Infosys"));
+    bool ret = connect(config::ServerConfig::instance().get<std::string>("Infosys"));
 
     return ret;
 }
@@ -165,7 +165,7 @@ bool BdiiBrowser::isValid()
     // if we are not connected the connection is not valid
     if (!connected) return false;
     // if the bdii host have changed it is also not valid
-    if (config::theServerConfig().get<std::string>("Infosys") != this->infosys)
+    if (config::ServerConfig::instance().get<std::string>("Infosys") != this->infosys)
         return false;
 
     LDAPMessage *result = 0;
@@ -255,7 +255,7 @@ bool BdiiBrowser::checkIfInUse(const std::string& base)
 
     std::string base_str = baseToStr(base);
 
-    std::vector<std::string> providers = config::theServerConfig().get< std::vector<std::string> >("InfoProviders");
+    std::vector<std::string> providers = config::ServerConfig::instance().get< std::vector<std::string> >("InfoProviders");
     std::vector<std::string>::iterator it;
 
     for (it = providers.begin(); it != providers.end(); ++it)

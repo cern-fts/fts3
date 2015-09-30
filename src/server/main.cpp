@@ -25,11 +25,11 @@
 #include <boost/filesystem.hpp>
 #include <sstream>
 
+#include "../config/ServerConfig.h"
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/panic.h"
-#include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "profiler/Profiler.h"
 
@@ -53,10 +53,10 @@ extern bool stopThreads;
 /// @param test If set to true, do not use full pool size
 static void intializeDatabase(bool test = false)
 {
-    std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
-    std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
-    std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
-    int pooledConn = theServerConfig().get<int> ("DbThreadsNum");
+    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
+    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
+    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
+    int pooledConn = ServerConfig::instance().get<int> ("DbThreadsNum");
     if(test)
         pooledConn = 2;
 
@@ -88,7 +88,7 @@ static void shutdownCallback(int signum, void*)
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
 
-    if (!theServerConfig().get<bool> ("rush"))
+    if (!ServerConfig::instance().get<bool> ("rush"))
         sleep(15);
 
     try {
@@ -123,8 +123,8 @@ static void doServer(void)
     setenv("X509_USER_KEY", HOST_KEY, 1);
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
-    bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
-    std::string logPath = theServerConfig().get<std::string>("ServerLogDirectory");
+    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
+    std::string logPath = ServerConfig::instance().get<std::string>("ServerLogDirectory");
 
     if (isDaemon && logPath.length() > 0) {
         logPath += "/fts3server.log";
@@ -200,7 +200,7 @@ static void runEnvironmentChecks()
         throw SystemError("Check if hostcert/key are installed");
     }
 
-    std::string logsDir = theServerConfig().get<std::string > ("ServerLogDirectory");
+    std::string logsDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
 
     checkPath("/etc/fts3", R_OK, fs::directory_file);
     checkPath(HOST_CERT, R_OK, fs::regular_file);
@@ -232,11 +232,11 @@ static void spawnServer(int argc, char** argv)
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
 
-    theServerConfig().read(argc, argv, true);
+    ServerConfig::instance().read(argc, argv, true);
     dropPrivileges();
     runEnvironmentChecks();
 
-    bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
+    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
 
     if (isDaemon) {
         int d = daemon(0, 0);

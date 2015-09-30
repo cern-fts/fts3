@@ -20,8 +20,8 @@
 
 #include "SiteNameRetriever.h"
 
+#include "../config/ServerConfig.h"
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 
 
 namespace fts3
@@ -120,7 +120,7 @@ std::string SiteNameRetriever::getFromBdii(std::string se)
 std::string SiteNameRetriever::getSiteName(std::string se)
 {
     // check if the infosys has been activated in the fts3config file
-    bool active = config::theServerConfig().get<bool>("Infosys");
+    bool active = config::ServerConfig::instance().get<bool>("Infosys");
     if (!active) return std::string();
 
     // lock the cache

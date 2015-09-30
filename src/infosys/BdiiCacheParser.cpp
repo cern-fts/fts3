@@ -20,7 +20,7 @@
 
 #include "BdiiCacheParser.h"
 
-#include "config/serverconfig.h"
+#include "../config/ServerConfig.h"
 
 namespace fts3
 {

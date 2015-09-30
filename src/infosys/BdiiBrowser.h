@@ -23,7 +23,7 @@
 
 #include <sys/types.h>
 #include <signal.h>
-#include "config/serverconfig.h"
+#include "config/ServerConfig.h"
 
 #include <ldap.h>
 
@@ -292,7 +292,7 @@ std::list< std::map<std::string, R> > BdiiBrowser::browse(std::string base, std:
         return std::list< std::map<std::string, R> >();
 
     // check in the fts3config if the host name for BDII was specified, if no return an empty result set
-    if (!config::theServerConfig().get<bool>("Infosys"))
+    if (!config::ServerConfig::instance().get<bool>("Infosys"))
         return std::list< std::map<std::string, R> >();
 
     // check if the connection is valid

@@ -20,8 +20,8 @@
 
 #include "TransfersService.h"
 
+#include "../../../config/ServerConfig.h"
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 #include "common/ThreadPool.h"
 
 #include "cred/DelegCred.h"
@@ -52,12 +52,12 @@ TransfersService::TransfersService()
 {
     cmd = "fts_url_copy";
 
-    logDir = config::theServerConfig().get<std::string>("TransferLogDirectory");
-    execPoolSize = config::theServerConfig().get<int>("InternalThreadPool");
-    ftsHostName = config::theServerConfig().get<std::string>("Alias");
-    infosys = config::theServerConfig().get<std::string>("Infosys");
+    logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
+    execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
+    ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
+    infosys = config::ServerConfig::instance().get<std::string>("Infosys");
     const std::vector<std::string> voNameList(
-            config::theServerConfig().get<std::vector<std::string> >("AuthorizedVO"));
+            config::ServerConfig::instance().get<std::vector<std::string> >("AuthorizedVO"));
 
     if (voNameList.size() > 0 && voNameList[0].compare("*") != 0)
     {
@@ -77,7 +77,7 @@ TransfersService::TransfersService()
         allowedVOs = voNameList[0];
     }
 
-    std::string monitoringMessagesStr = config::theServerConfig().get<
+    std::string monitoringMessagesStr = config::ServerConfig::instance().get<
             std::string>("MonitoringMessaging");
     if (monitoringMessagesStr == "false")
         monitoringMessages = false;

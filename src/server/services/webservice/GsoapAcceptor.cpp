@@ -25,9 +25,9 @@
 #include <fstream>
 
 #include "common/Logger.h"
-#include "config/serverconfig.h"
-
 #include "GsoapAcceptor.h"
+
+#include "../../../config/ServerConfig.h"
 #include "GsoapRequestHandler.h"
 
 bool  stopThreads;
@@ -41,7 +41,7 @@ using namespace fts3::server;
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
 {
 
-    bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true" ? true : false;
+    bool keepAlive = ServerConfig::instance().get<std::string>("HttpKeepAlive")=="true" ? true : false;
     if (keepAlive)
         {
             ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);

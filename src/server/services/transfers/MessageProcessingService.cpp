@@ -23,10 +23,10 @@
 #include <boost/filesystem.hpp>
 
 #include "../../../common/Exceptions.h"
+#include "../../../config/ServerConfig.h"
 #include "common/Logger.h"
 #include "common/producer_consumer_common.h"
 #include "common/ThreadSafeList.h"
-#include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
@@ -44,7 +44,7 @@ extern time_t updateRecords;
 
 MessageProcessingService::MessageProcessingService()
 {
-    enableOptimization = config::theServerConfig().get<std::string > ("Optimizer");
+    enableOptimization = config::ServerConfig::instance().get<std::string > ("Optimizer");
     messages.reserve(600);
 }
 

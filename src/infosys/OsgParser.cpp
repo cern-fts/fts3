@@ -20,7 +20,7 @@
 
 #include "OsgParser.h"
 
-#include "config/serverconfig.h"
+#include "../config/ServerConfig.h"
 
 namespace fts3
 {
@@ -55,7 +55,7 @@ bool OsgParser::isInUse()
 
     static const std::string myosg_str = "myosg";
 
-    std::vector<std::string> providers = theServerConfig().get< std::vector<std::string> >("InfoProviders");
+    std::vector<std::string> providers = ServerConfig::instance().get< std::vector<std::string> >("InfoProviders");
     std::vector<std::string>::iterator it;
 
     for (it = providers.begin(); it != providers.end(); ++it)
@@ -73,7 +73,7 @@ std::string OsgParser::get(std::string fqdn, std::string property)
     if (!isInUse()) return std::string();
 
     // if the MyOSG was set to 'flase' return an empty std::string
-    if (!theServerConfig().get<bool>("MyOSG")) return std::string();
+    if (!ServerConfig::instance().get<bool>("MyOSG")) return std::string();
 
     // look for the resource name (assume that the user has provided a fqdn)
     xpath_node node = doc.select_single_node(xpath_fqdn(fqdn).c_str());

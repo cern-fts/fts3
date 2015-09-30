@@ -26,8 +26,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <time.h>
+
+#include "../../config/ServerConfig.h"
 #include "common/producer_consumer_common.h"
-#include "config/serverconfig.h"
 #include "GenericDbIfce.h"
 
 using namespace fts3::config;
@@ -161,14 +162,14 @@ inline int extractTimeout(std::string & str)
 static inline void constructJSONMsg(struct message_state* state)
 {
     bool monitoringMessages = true;
-    std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+    std::string monitoringMessagesStr = ServerConfig::instance().get<std::string > ("MonitoringMessaging");
     if(monitoringMessagesStr == "false")
         monitoringMessages = false;
 
     if(!monitoringMessages)
         return;
 
-    std::string ftsAlias = theServerConfig().get<std::string > ("Alias");
+    std::string ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
 
     std::ostringstream json_message;
     json_message << "SS {";

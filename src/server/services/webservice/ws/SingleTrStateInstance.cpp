@@ -21,10 +21,10 @@
 #include "SingleTrStateInstance.h"
 #include "common/producer_consumer_common.h"
 #include "db/generic/SingleDbInstance.h"
-#include "config/serverconfig.h"
 #include <sstream>
 
 #include "../../../../common/Exceptions.h"
+#include "../../../../config/ServerConfig.h"
 #include "common/Logger.h"
 
 
@@ -42,11 +42,11 @@ boost::mutex SingleTrStateInstance::_mutex;
 
 SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
 {
-    std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+    std::string monitoringMessagesStr = ServerConfig::instance().get<std::string > ("MonitoringMessaging");
     if(monitoringMessagesStr == "false")
         monitoringMessages = false;
 
-    ftsAlias = theServerConfig().get<std::string > ("Alias");
+    ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
 }
 
 SingleTrStateInstance::~SingleTrStateInstance()

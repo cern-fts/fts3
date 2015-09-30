@@ -60,7 +60,7 @@ public:
 
     WebService(int port, const std::string& ip): port(port), ip(ip)
     {
-        int threadPoolSize = fts3::config::theServerConfig().get<int>("ThreadNum");
+        int threadPoolSize = fts3::config::ServerConfig::instance().get<int>("ThreadNum");
         if (threadPoolSize > 100)
             threadPoolSize = 100;
         else if (threadPoolSize < 0)

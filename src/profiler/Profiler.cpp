@@ -20,8 +20,8 @@
 
 #include "Profiler.h"
 
+#include "../config/ServerConfig.h"
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 
 using namespace fts3;
@@ -114,7 +114,7 @@ ProfilingSubsystem::~ProfilingSubsystem()
 
 void ProfilingSubsystem::start()
 {
-    dumpInterval = config::theServerConfig().get<unsigned>("Profiling");
+    dumpInterval = config::ServerConfig::instance().get<unsigned>("Profiling");
     if (dumpInterval)
         {
             boost::thread btUpdater(profilerThread, this);

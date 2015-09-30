@@ -20,11 +20,11 @@
 
 #include <boost/filesystem.hpp>
 
+#include "../config/ServerConfig.h"
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/panic.h"
-#include "config/serverconfig.h"
 #include "common/ThreadPool.h"
 
 
@@ -109,9 +109,9 @@ void shutdown_callback(int signum, void*)
 
 void fts3_initialize_db_backend()
 {
-    std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
-    std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
-    std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
+    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
+    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
+    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
 
     try
         {
@@ -186,8 +186,8 @@ int doServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE signal handlers installed" << commit;
 
             //re-read here
-            theServerConfig().read(argc, argv, true);
-            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
+            ServerConfig::instance().read(argc, argv, true);
+            bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
 
             std::string arguments("");
             if (argc > 1)
@@ -205,7 +205,7 @@ int doServer(int argc, char** argv)
                         }
                 }
 
-            std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
+            std::string logDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
             if (isDaemon && logDir.length() > 0)
                 {
                     logDir += "/fts3bringonline.log";
@@ -217,7 +217,7 @@ int doServer(int argc, char** argv)
                 }
 
             /*set infosys to gfal2*/
-            infosys = theServerConfig().get<std::string > ("Infosys");
+            infosys = ServerConfig::instance().get<std::string > ("Infosys");
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;
 
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
     //very first check before it goes to deamon mode
     try
         {
-            theServerConfig().read(argc, argv, true);
+            ServerConfig::instance().read(argc, argv, true);
 
             std::string arguments("");
             int d = 0;

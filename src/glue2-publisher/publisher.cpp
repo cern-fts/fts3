@@ -30,9 +30,9 @@
 #include <iostream>
 #include <sstream>
 
+#include "../config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 
 
@@ -44,9 +44,9 @@ using namespace db;
 /* -------------------------------------------------------------------------- */
 void fts3_initialize_db_backend()
 {
-    std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
-    std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
-    std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
+    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
+    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
+    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
 
     try
         {
@@ -131,15 +131,15 @@ int main(int argc, char** argv)
                     exit(1);
                 }
 
-            theServerConfig().read(argc, argv);
+            ServerConfig::instance().read(argc, argv);
             /*
             DO not connect to the db for now
             fts3_initialize_db_backend();
             */
 
-            std::string alias = theServerConfig().get<std::string > ("Alias");
-            int port = theServerConfig().get<int>("Port");
-            std::string sitename = theServerConfig().get<std::string > ("SiteName");
+            std::string alias = ServerConfig::instance().get<std::string > ("Alias");
+            int port = ServerConfig::instance().get<int>("Port");
+            std::string sitename = ServerConfig::instance().get<std::string > ("SiteName");
 
             stream << "dn: GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "GLUE2ServiceID: https://" << alias << ":" << port << "_org.glite.fts" << "\n";

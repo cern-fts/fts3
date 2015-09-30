@@ -24,9 +24,9 @@
 #include "utility_routines.h"
 #include <signal.h>
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 #include <sstream>
 
+#include "../config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
 
@@ -93,8 +93,8 @@ MsgProducer::MsgProducer()
     producer_transfer_started = NULL;
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
-    fts3::config::theServerConfig().read(0, NULL);
-    FTSEndpoint = fts3::config::theServerConfig().get<std::string>("Alias");
+    fts3::config::ServerConfig::instance().read(0, NULL);
+    FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
     readConfig();
     connected = false;
 }

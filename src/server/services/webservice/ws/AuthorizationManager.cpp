@@ -21,13 +21,12 @@
 #include "AuthorizationManager.h"
 #include "CGsiAdapter.h"
 
-#include "config/serverconfig.h"
-
 #include "db/generic/SingleDbInstance.h"
 
 #include <boost/algorithm/string.hpp>
 
 #include "../../../../common/Exceptions.h"
+#include "../../../../config/ServerConfig.h"
 #include "common/Logger.h"
 
 
@@ -104,7 +103,7 @@ std::set<std::string> AuthorizationManager::vostInit()
 {
 
     // parse the authorized vo list
-    std::vector<std::string> voNameList = theServerConfig().get< std::vector<std::string> >("AuthorizedVO");
+    std::vector<std::string> voNameList = ServerConfig::instance().get< std::vector<std::string> >("AuthorizedVO");
     return std::set<std::string> (voNameList.begin(), voNameList.end());
 }
 
@@ -114,7 +113,7 @@ std::map<std::string, std::map<std::string, AuthorizationManager::Level> > Autho
     std::map<std::string, std::map<std::string, Level> > ret;
 
     // roles.* is a regular expression for all role entries
-    std::map<std::string, std::string> rolerights = theServerConfig().get< std::map<std::string, std::string> > (ROLES_SECTION_PREFIX + WILD_CARD);
+    std::map<std::string, std::string> rolerights = ServerConfig::instance().get< std::map<std::string, std::string> > (ROLES_SECTION_PREFIX + WILD_CARD);
     if (!rolerights.empty())
         {
             for (auto it = rolerights.begin(); it != rolerights.end(); it++)
@@ -146,7 +145,7 @@ std::map<std::string, std::map<std::string, AuthorizationManager::Level> > Autho
 AuthorizationManager::AuthorizationManager() :
     vos(vostInit()),
     access(accessInit()),
-    cfgReadTime(theServerConfig().getReadTime())
+    cfgReadTime(ServerConfig::instance().getReadTime())
 {
 
 }
@@ -319,12 +318,12 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 {
 
     // check if the configuration file has been modified
-    if (cfgReadTime != theServerConfig().getReadTime())
+    if (cfgReadTime != ServerConfig::instance().getReadTime())
         {
             // if yes we have to update the data
             vos = vostInit();
             access = accessInit();
-            cfgReadTime = theServerConfig().getReadTime();
+            cfgReadTime = ServerConfig::instance().getReadTime();
         }
 
     Level grantedLvl = getGrantedLvl(ctx, op);

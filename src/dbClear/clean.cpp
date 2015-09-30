@@ -28,9 +28,9 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 
+#include "../config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "profiler/Profiler.h"
 
@@ -43,9 +43,9 @@ using namespace db;
 /* -------------------------------------------------------------------------- */
 void fts3_initialize_db_backend()
 {
-    std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
-    std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
-    std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
+    std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
 
     try
         {
@@ -77,9 +77,9 @@ int main(int argc, char** argv)
                     exit(1);
                 }
 
-            theServerConfig().read(argc, argv);
+            ServerConfig::instance().read(argc, argv);
 
-            std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
+            std::string logDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 
             fts3_initialize_db_backend();
 
-            std::string cleanRecordsHost = theServerConfig().get<std::string>("CleanRecordsHost");
+            std::string cleanRecordsHost = ServerConfig::instance().get<std::string>("CleanRecordsHost");
 
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting" << commit;

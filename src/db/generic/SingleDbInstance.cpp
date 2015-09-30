@@ -22,8 +22,8 @@
 #include <fstream>
 
 #include "../../common/Exceptions.h"
+#include "../../config/ServerConfig.h"
 #include "common/Logger.h"
-#include "config/serverconfig.h"
 #include "version.h"
 #include "../profiled/Profiled.h"
 
@@ -41,7 +41,7 @@ namespace db
 DBSingleton::DBSingleton(): dbBackend(NULL)
 {
 
-    std::string dbType = theServerConfig().get<std::string>("DbType");
+    std::string dbType = ServerConfig::instance().get<std::string>("DbType");
     std::string versionFTS(VERSION);
 
     libraryFileName = "libfts_db_";
@@ -66,7 +66,7 @@ DBSingleton::DBSingleton(): dbBackend(NULL)
             dbBackend = create_db();
 
             // If profiling is enabled, wrap it!
-            int profileDumpInterval = theServerConfig().get<int>("Profiling");
+            int profileDumpInterval = ServerConfig::instance().get<int>("Profiling");
             if (profileDumpInterval)
                 {
                     dbBackend = new ProfiledDB(dbBackend, destroy_db);

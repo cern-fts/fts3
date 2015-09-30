@@ -21,8 +21,6 @@
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include "db/generic/SingleDbInstance.h"
-#include "config/serverconfig.h"
-
 #include "JobSubmitter.h"
 #include "RequestLister.h"
 #include "GSoapJobStatus.h"
@@ -44,6 +42,7 @@
 
 #include <cgsi_plugin.h>
 
+#include "../../../../../config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
@@ -932,7 +931,7 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
     try
         {
 
-            std::string endpoint = theServerConfig().get<std::string > ("Alias");
+            std::string endpoint = ServerConfig::instance().get<std::string > ("Alias");
             std::stringstream result;
             DBSingleton::instance().getDBObjectInstance()->snapshot(vo, src, dst, endpoint, result);
 

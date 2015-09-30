@@ -20,7 +20,7 @@
 
 #include "Server.h"
 
-#include "config/serverconfig.h"
+#include "../config/ServerConfig.h"
 #include "services/cleaner/CleanerService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/MultihopTransfersService.h"
@@ -59,14 +59,14 @@ void Server::start()
     }
 
     // Give cleaner and heartbeat some time ahead
-    if (!config::theServerConfig().get<bool> ("rush"))
+    if (!config::ServerConfig::instance().get<bool> ("rush"))
         sleep(8);
 
     services.emplace_back(new CancelerService);
     systemThreads.create_thread(boost::ref(*services.back().get()));
 
     // Wait for status updates to be processed
-    if (!config::theServerConfig().get<bool> ("rush"))
+    if (!config::ServerConfig::instance().get<bool> ("rush"))
         sleep(12);
 
     services.emplace_back(new OptimizerService);
@@ -81,8 +81,8 @@ void Server::start()
     services.emplace_back(new MultihopTransfersService);
     systemThreads.create_thread(boost::ref(*services.back().get()));
 
-    unsigned int port = config::theServerConfig().get<unsigned int>("Port");
-    const std::string& ip = config::theServerConfig().get<std::string>("IP");
+    unsigned int port = config::ServerConfig::instance().get<unsigned int>("Port");
+    const std::string& ip = config::ServerConfig::instance().get<std::string>("IP");
 
     services.emplace_back(new WebService(port, ip));
     systemThreads.create_thread(boost::ref(*services.back().get()));

@@ -22,14 +22,13 @@
 #include <stdio.h>
 #include <curl/curl.h>
 
-#include "config/serverconfig.h"
-
 #include <string>
 #include <fstream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "../config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 
@@ -58,7 +57,7 @@ int main(int argc, char** argv)
 
     try
         {
-            theServerConfig().read(argc, argv);
+            ServerConfig::instance().read(argc, argv);
 
             // path to local the MyOSG XML file and a temporary file
             const string myosg_path_part = "/var/lib/fts3/myosg.xml.part";
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
             // false string
             const string false_str = "false";
             // URL of the MyOSG
-            const string url = theServerConfig().get<string>("MyOSG");
+            const string url = ServerConfig::instance().get<string>("MyOSG");
 
             // if the MyOSG file is not specified return
             if (url == false_str) return ret;

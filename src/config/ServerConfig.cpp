@@ -22,10 +22,9 @@
 
 #include <boost/program_options.hpp>
 
-#include "serverconfig.h"
-
 #include "common/Exceptions.h"
 #include "serverconfigreader.h"
+#include "ServerConfig.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"

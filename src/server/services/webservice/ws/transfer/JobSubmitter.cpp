@@ -25,8 +25,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "config/serverconfig.h"
-
 #include "../CGsiAdapter.h"
 #include "../delegation/GSoapDelegationHandler.h"
 #include "../config/Configuration.h"
@@ -45,6 +43,7 @@
 #include <boost/tuple/tuple.hpp>
 
 #include "../../../../../common/Exceptions.h"
+#include "../../../../../config/ServerConfig.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
 #include "common/UuidGenerator.h"

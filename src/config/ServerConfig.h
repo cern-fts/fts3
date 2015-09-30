@@ -34,13 +34,15 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "common/Singleton.h"
+
 
 namespace fts3 {
 namespace config {
 
 /** \brief Class representing server configuration. Server configuration read once,
  * when the server starts. It provides read-only singleton access. */
-class ServerConfig
+class ServerConfig: public fts3::common::Singleton<ServerConfig>
 {
 public:
     /// Constructor
@@ -157,14 +159,6 @@ public:
     }
 };
 
-/* ========================================================================== */
-
-/** Singleton access to the server config. */
-inline ServerConfig& theServerConfig()
-{
-    static ServerConfig e;
-    return e;
-}
 
 template <typename RET>
 RET ServerConfig::get (const std::string& aVariable /**< A config variable name. */)
