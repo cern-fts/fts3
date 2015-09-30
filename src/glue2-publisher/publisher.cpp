@@ -30,7 +30,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "db/generic/SingleDbInstance.h"
@@ -40,28 +40,6 @@ namespace fs = boost::filesystem;
 using namespace fts3::config;
 using namespace fts3::common;
 using namespace db;
-
-/* -------------------------------------------------------------------------- */
-void fts3_initialize_db_backend()
-{
-    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
-
-    try
-        {
-            db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 1);
-        }
-    catch (UserError& e)
-        {
-            exit(1);
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the database, check username/password/connstring" << commit;
-            exit(1);
-        }
-}
 
 
 int main(int argc, char** argv)
