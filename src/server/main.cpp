@@ -141,6 +141,10 @@ static void doServer(void)
     fts3::ProfilingSubsystem::instance().start();
     Server::instance().start();
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server started" << commit;
+
+    Server::instance().wait();
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server halt" << commit;
 }
 

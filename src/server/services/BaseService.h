@@ -1,9 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
- *
- * Copyright (c) Members of the EMI Collaboration. 2010-2013
- *  See  http://www.eu-emi.eu/partners for details on the copyright
- *  holders.
+ * Copyright (c) CERN 2015
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,27 +15,24 @@
  */
 
 #pragma once
-#ifndef CLEANERSERVICE_H_
-#define CLEANERSERVICE_H_
+#ifndef BASESERVICE_H_
+#define BASESERVICE_H_
 
-#include <string>
-#include "../BaseService.h"
+#include <boost/noncopyable.hpp>
 
 
 namespace fts3 {
 namespace server {
 
-class CleanerService: public BaseService
-{
-private:
-    int counter;
-    void removeOldFiles(const std::string& path);
-
+/// Base class for all services
+/// Intented to be able to treat all of them with the same API
+class BaseService: public boost::noncopyable {
 public:
-    virtual void operator () ();
+    virtual ~BaseService() {};
+    virtual void operator() () = 0;
 };
 
-} // end namespace server
-} // end namespace fts3
+} // namespace server
+} // namespace fts3
 
-#endif // CLEANERSERVICE_H_
+#endif // BASESERVICE_H_

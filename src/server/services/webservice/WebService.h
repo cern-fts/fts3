@@ -31,6 +31,7 @@
 
 #include "GsoapAcceptor.h"
 #include "GsoapRequestHandler.h"
+#include "../BaseService.h"
 
 
 extern bool  stopThreads;
@@ -48,7 +49,7 @@ namespace server {
  * - Schedule mthod handling
  * - Handle the event
  */
-class WebService: public boost::noncopyable
+class WebService: public BaseService
 {
 private:
     int port;
@@ -67,7 +68,7 @@ public:
         threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 
-    void operator () ()
+    virtual void operator () ()
     {
         GSoapAcceptor acceptor(port, ip);
 

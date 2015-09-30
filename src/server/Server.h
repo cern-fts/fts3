@@ -26,6 +26,7 @@
 #include <boost/thread.hpp>
 
 #include "common/Singleton.h"
+#include "services/BaseService.h"
 
 
 namespace fts3 {
@@ -35,14 +36,20 @@ namespace server {
 class Server: public fts3::common::Singleton<Server>
 {
 public:
-    /// Start the service
+    ~Server();
+
+    /// Start the services
     void start();
 
-    /// Stop the service
+    /// Wait for all services to finish
+    void wait();
+
+    /// Stop the services
     void stop();
 
 private:
     boost::thread_group systemThreads;
+    std::vector<std::shared_ptr<BaseService>> services;
 };
 
 } // end namespace server

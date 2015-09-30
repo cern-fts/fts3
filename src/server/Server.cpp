@@ -36,46 +36,61 @@ namespace fts3 {
 namespace server {
 
 
+Server::~Server()
+{
+    try {
+        this->stop();
+        this->wait();
+    }
+    catch (...) {
+        // pass
+    }
+}
+
+
 void Server::start()
 {
-    CleanerService cleanMessages;
-    systemThreads.create_thread(boost::ref(cleanMessages));
+    services.emplace_back(new CleanerService);
+    services.emplace_back(new MessageProcessingService);
+    services.emplace_back(new HeartBeat);
 
-    MessageProcessingService queueHandler;
-    systemThreads.create_thread(boost::ref(queueHandler));
+    for (auto i = services.begin(); i != services.end(); ++i) {
+        systemThreads.create_thread(boost::ref(*(i->get())));
+    }
 
-    HeartBeat heartBeatHandler;
-    systemThreads.create_thread(boost::ref(heartBeatHandler));
-
+    // Give cleaner and heartbeat some time ahead
     if (!config::theServerConfig().get<bool> ("rush"))
         sleep(8);
 
-    CancelerService processUpdaterDBHandler;
-    systemThreads.create_thread(boost::ref(processUpdaterDBHandler));
+    services.emplace_back(new CancelerService);
+    systemThreads.create_thread(boost::ref(*services.back().get()));
 
     // Wait for status updates to be processed
     if (!config::theServerConfig().get<bool> ("rush"))
         sleep(12);
 
-    OptimizerService optimizerService;
-    systemThreads.create_thread(boost::ref(optimizerService));
+    services.emplace_back(new OptimizerService);
+    systemThreads.create_thread(boost::ref(*services.back().get()));
 
-    TransfersService processHandler;
-    systemThreads.create_thread(boost::ref(processHandler));
+    services.emplace_back(new TransfersService);
+    systemThreads.create_thread(boost::ref(*services.back().get()));
 
-    ReuseTransfersService processReuseHandler;
-    systemThreads.create_thread(boost::ref(processReuseHandler));
+    services.emplace_back(new ReuseTransfersService);
+    systemThreads.create_thread(boost::ref(*services.back().get()));
 
-    MultihopTransfersService processMultihopHandler;
-    systemThreads.create_thread(boost::ref(processMultihopHandler));
+    services.emplace_back(new MultihopTransfersService);
+    systemThreads.create_thread(boost::ref(*services.back().get()));
 
     unsigned int port = config::theServerConfig().get<unsigned int>("Port");
     const std::string& ip = config::theServerConfig().get<std::string>("IP");
 
-    WebService webServiceHandler(port, ip);
-    systemThreads.create_thread(boost::ref(webServiceHandler));
+    services.emplace_back(new WebService(port, ip));
+    systemThreads.create_thread(boost::ref(*services.back().get()));
+}
 
-    // Wait for all to finish
+
+void Server::wait()
+{
     systemThreads.join_all();
 }
 

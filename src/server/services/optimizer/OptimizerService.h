@@ -22,17 +22,17 @@
 #ifndef OPTIMIZERSERVICE_H_
 #define OPTIMIZERSERVICE_H_
 
-#include <boost/noncopyable.hpp>
+#include "../BaseService.h"
 
 
 namespace fts3 {
 namespace server {
 
 
-class OptimizerService: boost::noncopyable
+class OptimizerService: public BaseService
 {
 public:
-    void operator () ();
+    virtual void operator () ();
 };
 
 } // end namespace server

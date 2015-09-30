@@ -25,15 +25,15 @@
 #include <string>
 #include <vector>
 
-#include <boost/noncopyable.hpp>
-
 #include "db/generic/QueueId.h"
+#include "../BaseService.h"
+
 
 namespace fts3 {
 namespace server {
 
 
-class TransfersService: public boost::noncopyable
+class TransfersService: public BaseService
 {
 public:
 
@@ -41,10 +41,10 @@ public:
     TransfersService();
 
     /// Destructor
-    ~TransfersService();
+    virtual ~TransfersService();
 
     /// Run the service
-    void operator () ();
+    virtual void operator () ();
 
 protected:
     std::string ftsHostName;

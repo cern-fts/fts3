@@ -33,7 +33,7 @@ class MultihopTransfersService : public ReuseTransfersService
 {
 public:
     /// Run service
-    void operator () ();
+    virtual void operator () ();
 
 protected:
     void executeUrlcopy();

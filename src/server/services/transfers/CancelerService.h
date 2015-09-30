@@ -23,10 +23,9 @@
 #define CANCELERSERVICE_H_
 
 #include <vector>
-#include <boost/noncopyable.hpp>
 
 #include "common/definitions.h"
-
+#include "../BaseService.h"
 
 extern bool stopThreads;
 
@@ -34,7 +33,7 @@ extern bool stopThreads;
 namespace fts3 {
 namespace server {
 
-class CancelerService: public boost::noncopyable
+class CancelerService: public BaseService
 {
 public:
 
@@ -45,7 +44,7 @@ public:
     virtual ~CancelerService();
 
     /// Run the service
-    void operator () ();
+    virtual void operator () ();
 
 private:
     void killRunningJob(const std::vector<int>& pids);

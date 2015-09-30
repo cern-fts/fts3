@@ -23,16 +23,15 @@
 #define PROCESSQUEUE_H_
 
 #include <vector>
-#include <boost/noncopyable.hpp>
 
 #include "common/definitions.h"
-
+#include "../BaseService.h"
 
 namespace fts3 {
 namespace server {
 
 
-class MessageProcessingService: boost::noncopyable
+class MessageProcessingService: public BaseService
 {
 private:
     std::vector<struct message> messages;
@@ -49,7 +48,7 @@ public:
     virtual ~MessageProcessingService();
 
     /// Thread that process the messages comming from fts_url_copy
-    void operator () ();
+    virtual void operator () ();
 
 private:
     void updateDatabase(const struct message& msg);

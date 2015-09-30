@@ -34,7 +34,7 @@ class ReuseTransfersService: public TransfersService
 {
 public:
     /// Run service
-    void operator () ();
+    virtual void operator () ();
 
 protected:
     void writeJobFile(const std::string& jobId, const std::vector<std::string>& files);

@@ -22,8 +22,8 @@
 #ifndef HEARTBEAT_H_
 #define HEARTBEAT_H_
 
-#include <boost/noncopyable.hpp>
 #include <ctime>
+#include "../BaseService.h"
 
 
 namespace fts3 {
@@ -33,10 +33,10 @@ extern time_t retrieveRecords;
 extern time_t updateRecords;
 extern time_t stallRecords;
 
-class HeartBeat: public boost::noncopyable
+class HeartBeat: public BaseService
 {
 public:
-    void operator () ();
+    virtual void operator () ();
 
 private:
     bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords,
