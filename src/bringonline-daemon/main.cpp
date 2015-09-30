@@ -44,9 +44,9 @@ namespace fs = boost::filesystem;
 
 extern std::string stackTrace;
 bool stopThreads = false;
-const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
-const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
-const char *configfile = "/etc/fts3/fts3config";
+const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
+const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
+const char *CONFIG_FILE = "/etc/fts3/fts3config";
 
 
 int fts3_teardown_db_backend()
@@ -173,7 +173,7 @@ void heartbeat(void)
         }
 }
 
-int DoServer(int argc, char** argv)
+int doServer(int argc, char** argv)
 {
     std::string proxy_file("");
     std::string infosys("");
@@ -294,16 +294,16 @@ int main(int argc, char** argv)
             return EXIT_FAILURE;
         }
 
-    if (!fs::exists(hostcert))
+    if (!fs::exists(HOST_CERT))
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE ERROR check if hostcert/key are installed" << commit;
             return EXIT_FAILURE;
         }
 
 
-    if (!fs::exists(configfile))
+    if (!fs::exists(CONFIG_FILE))
         {
-            std::cerr << "BRINGONLINE ERROR config file " << configfile << " doesn't exist" << std::endl;
+            std::cerr << "BRINGONLINE ERROR config file " << CONFIG_FILE << " doesn't exist" << std::endl;
             return EXIT_FAILURE;
         }
 
@@ -327,14 +327,14 @@ int main(int argc, char** argv)
                     if (found != std::string::npos)
                         {
                             {
-                                DoServer(argc, argv);
+                                doServer(argc, argv);
                             }
                             return EXIT_SUCCESS;
                         }
                     else if (foundHelp != std::string::npos)
                         {
                             {
-                                DoServer(argc, argv);
+                                doServer(argc, argv);
                             }
                             return EXIT_SUCCESS;
                         }
@@ -351,7 +351,7 @@ int main(int argc, char** argv)
                     if (d < 0)
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
                 }
-            DoServer(argc, argv);
+            doServer(argc, argv);
         }
     catch (BaseException& e)
         {

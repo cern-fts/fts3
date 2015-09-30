@@ -20,29 +20,20 @@
 
 /** \file main.cpp FTS3 server entry point. */
 
-#include <cstdio>
-#include <dirent.h>
 #include <signal.h>
-#include <unistd.h>
-#include <iostream>
-#include "config/serverconfig.h"
-#include "db/generic/SingleDbInstance.h"
-#include <fstream>
-#include "Server.h"
-#include <iomanip>
-#include <sys/types.h>
-#include <sys/wait.h>
+
 #include <boost/filesystem.hpp>
-#include <sys/resource.h>
-#include "profiler/Profiler.h"
-#include <fstream>
-#include "common/panic.h"
-#include <execinfo.h>
+#include <sstream>
 
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "common/ThreadSafeList.h"
+#include "common/panic.h"
+#include "config/serverconfig.h"
+#include "db/generic/SingleDbInstance.h"
+#include "profiler/Profiler.h"
+
+#include "Server.h"
 
 
 namespace fs = boost::filesystem;
@@ -50,14 +41,17 @@ using namespace fts3::common;
 using namespace fts3::config;
 using namespace fts3::server; 
 
-extern std::string stackTrace;
+const char *USER_NAME = "fts3";
+const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
+const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
+const char *CONFIG_FILE = "/etc/fts3/fts3config";
+
 extern bool stopThreads;
-const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
-const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
-const char *configfile = "/etc/fts3/fts3config";
 
 
-void fts3_initialize_db_backend(bool test)
+/// Initialize the database backend
+/// @param test If set to true, do not use full pool size
+static void intializeDatabase(bool test = false)
 {
     std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
     std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
@@ -66,176 +60,11 @@ void fts3_initialize_db_backend(bool test)
     if(test)
         pooledConn = 2;
 
-    try
-        {
-            db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
-        }
-    catch (BaseException& e)
-        {
-            throw;
-        }
-    catch (std::exception& ex)
-        {
-            throw;
-        }
-    catch (...)
-        {
-            throw;
-        }
-
-
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
-
-static std::string requiredToString(int mode)
-{
-    char strMode[] = "---";
-
-    if (mode & R_OK)
-        strMode[0] = 'r';
-    if (mode & W_OK)
-        strMode[1] = 'w';
-    if (mode & X_OK)
-        strMode[2] = 'x';
-
-    return strMode;
-}
-
-static void isPathSane(const std::string& path,
-                       bool isDir = true,
-                       int requiredMode = R_OK | W_OK,
-                       bool changeOwner = true)
-{
-    std::ostringstream msg;
-
-    // If it does not exist, create
-    if (!fs::exists(path))
-        {
-            if (isDir)
-                {
-                    if (fs::create_directory(path))
-                        {
-                            if (changeOwner)
-                                {
-                                    uid_t pw_uid = getUserUid("fts3");
-                                    int checkChown = chown(path.c_str(), pw_uid, getgid());
-                                    if (checkChown != 0)
-                                        {
-                                            msg << "Failed to chown for " << path;
-                                            throw SystemError(msg.str());
-                                        }
-                                    int checkmode = chmod (path.c_str(), 0755);
-                                    if (checkmode != 0)
-                                        {
-                                            msg << "Failed to chmod for " << path;
-                                            throw SystemError(msg.str());
-                                        }
-                                }
-                        }
-                    else
-                        {
-                            msg << "Directory " << path
-                                << " does not exist and could not be created";
-                            throw SystemError(msg.str());
-                        }
-                }
-            else
-                {
-                    msg << "File " << path
-                        << " does not exist";
-                    throw SystemError(msg.str());
-                }
-        }
-    // It does exist, but it is not the kind of file we want
-    else if (isDir && !fs::is_directory(path))
-        {
-            msg << path
-                << " exists but it is not a directory";
-            throw SystemError(msg.str());
-        }
-    else if (!isDir && fs::is_directory(path))
-        {
-            msg << path
-                << " exists but it is a directory";
-            throw SystemError(msg.str());
-        }
-
-    // It exists, so check we have the right permissions
-    if (access(path.c_str(), requiredMode) != 0)
-        {
-            msg << "Not enough permissions on " << path
-                << " (Required " << requiredToString(requiredMode) << ")";
-            throw SystemError(msg.str());
-        }
-}
-
-void checkDbSchema()
-{
-    try
-        {
-            fts3_initialize_db_backend(true);
-
-            db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
-            db::DBSingleton::destroy();
-
-        }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            throw;
-        }
-    catch (std::exception& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            throw;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on the db schema, check if installed" << commit;
-            throw;
-        }
-}
-
-
-
-void checkInitDirs(std::string logsDir)
-{
-    try
-        {
-            isPathSane("/etc/fts3", true, R_OK, false);
-            isPathSane(hostcert, false, R_OK);
-            isPathSane(hostkey, false, R_OK);
-            isPathSane(configfile, false, R_OK, true);
-            isPathSane(logsDir);
-            isPathSane("/var/lib/fts3");
-            isPathSane("/var/lib/fts3/monitoring");
-            isPathSane("/var/lib/fts3/status");
-            isPathSane("/var/lib/fts3/stalled");
-            isPathSane("/var/lib/fts3/logs");
-        }
-    catch (const fs::filesystem_error& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            throw;
-        }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            throw;
-        }
-    catch (std::exception& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            throw;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the filesystem required directories" << commit;
-            throw;
-        }
-}
-
-static void shutdown_callback(int signum, void*)
+/// Called by the signal handler
+static void shutdownCallback(int signum, void*)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
                                     << " (" << strsignal(signum) << ")" << commit;
@@ -245,40 +74,38 @@ static void shutdown_callback(int signum, void*)
 
     // Some require traceback
     switch (signum)
-        {
-        case SIGABRT:
-        case SIGSEGV:
-        case SIGILL:
-        case SIGFPE:
-        case SIGBUS:
-        case SIGTRAP:
+    {
+        case SIGABRT: case SIGSEGV: case SIGILL:
+        case SIGFPE: case SIGBUS: case SIGTRAP:
         case SIGSYS:
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n"
+                << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size)
+                << commit;
             break;
         default:
             break;
-        }
+    }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
 
     if (!theServerConfig().get<bool> ("rush"))
         sleep(15);
 
-    try
-        {
-            Server::instance().stop();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
-            db::DBSingleton::destroy();
-            if (!theServerConfig().get<bool> ("rush"))
-                sleep(10);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
-        }
-    catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-        }
+    try {
+        Server::instance().stop();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
+        db::DBSingleton::destroy();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
+    }
+    catch (const std::exception& ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception when forcing the database teardown: " << ex.what() << commit;
+    }
+    catch(...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
+    }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
+
     // Handle termination for signals that do not imply errors
     // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
     switch (signum)
@@ -288,218 +115,160 @@ static void shutdown_callback(int signum, void*)
     }
 }
 
-
-int DoServer(int argc, char** argv)
+/// Main body of the FTS3 server
+/// The configuration should have been loaded already
+static void doServer(void)
 {
-    setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
-    // Register signal handlers
-    panic::setup_signal_handlers(shutdown_callback, NULL);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Signal handlers installed" << commit;
+    setenv("X509_USER_CERT", HOST_CERT, 1);
+    setenv("X509_USER_KEY", HOST_KEY, 1);
+    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
-    try
-        {
-            std::string arguments("");
-            size_t foundHelp;
-            if (argc > 1)
-                {
-                    int i;
-                    for (i = 1; i < argc; i++)
-                        {
-                            arguments += argv[i];
-                        }
-                    foundHelp = arguments.find("-h");
-                    if (foundHelp != std::string::npos)
-                        {
-                            exit(0);
-                        }
-                }
+    bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
+    std::string logPath = theServerConfig().get<std::string>("ServerLogDirectory");
 
-            //re-read here
-            theServerConfig().read(argc, argv, true);
-            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
-
-            // Set X509_ environment variables properly - reset here is case the child crashes
-            setenv("X509_USER_CERT", hostcert, 1);
-            setenv("X509_USER_KEY", hostkey, 1);
-
-            std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
-            if (isDaemon && logDir.length() > 0)
-                {
-                    logDir += "/fts3server.log";
-                    if (theLogger().redirect(logDir, logDir) != 0)
-                        {
-                            std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
-                            return -1;
-                        }
-                }
-
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
-
-            fts3_initialize_db_backend(false);
-
-            //initialize queue updater here to avoid race conditions
-            ThreadSafeList::get_instance();
-
-            // Start profiling
-            fts3::ProfilingSubsystem::instance().start();
-
-            // Start server
-            Server::instance().start();
-
+    if (isDaemon && logPath.length() > 0) {
+        logPath += "/fts3server.log";
+        if (theLogger().redirect(logPath, logPath) != 0) {
+            std::ostringstream msg;
+            msg << "fts3 server failed to open log file " << logPath << " error is:" << strerror(errno);
+            throw SystemError(msg.str());
         }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            exit(1);
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
-            exit(1);
-        }
-    return EXIT_SUCCESS;
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting server..." << commit;
+
+    intializeDatabase();
+    fts3::ProfilingSubsystem::instance().start();
+    Server::instance().start();
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server halt" << commit;
 }
 
-/// Spawn the process that runs the server
-/// Returns the child PID on success, -1 on failure
-/// Does NOT return on the child process
-void SpawnServer(int argc, char** argv)
+/// Validate the file or directory path exists, has the right type
+/// and permissions
+/// @param mode    as for access (R_OK, W_OK, ...)
+/// @param type    file type
+static void checkPath(const std::string& path, int mode, fs::file_type type)
 {
-    int resultExec = DoServer(argc, argv);
-    if (resultExec < 0)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
-            exit(1);
+    if (type == fs::directory_file) {
+        if (!fs::is_directory(path)) {
+            throw SystemError(path + " expected to exist and be a directory. Please, create it.");
         }
+    }
+    else {
+        if (!fs::exists(path)) {
+            throw SystemError(path + " does not exist");
+        }
+    }
+
+    if (access(path.c_str(), mode) != 0) {
+        std::ostringstream msg;
+        msg << "Not enough permissions on " << path << " (Required " << std::ios_base::oct << mode << ")";
+        throw SystemError(msg.str());
+    }
 }
 
-
-int main(int argc, char** argv)
+/// Validate database availability and schema
+void checkDbSchema()
 {
-    // Do not even try if already running
-    int n_running = countProcessesWithName("fts_server");
-    if (n_running < 0)
-        {
-            std::cerr << "Could not check if FTS3 is already running" << std::endl;
-            return EXIT_FAILURE;
-        }
-    else if (n_running > 1)
-        {
-            std::cerr << "Only one instance of FTS3 can run at the time" << std::endl;
-            return EXIT_FAILURE;
-        }
+    intializeDatabase(true);
+    db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
+    db::DBSingleton::destroy();
+}
 
-    //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid = getUserUid("fts3");
+/// Check the environment is properly setup for FTS3 to run
+static void runEnvironmentChecks()
+{
+    if (!fs::exists(CONFIG_FILE))
+    {
+        throw SystemError(std::string("fts3 server config file ") + CONFIG_FILE + " doesn't exist");
+    }
+
+    std::string urlCopyPath;
+    if (!binaryExists("fts_url_copy", &urlCopyPath))
+    {
+        throw SystemError("Check if fts_url_copy process is set in the PATH env variable");
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "fts_url_copy full path " << urlCopyPath << commit;
+
+    if (!fs::exists(HOST_CERT))
+    {
+        throw SystemError("Check if hostcert/key are installed");
+    }
+
+    std::string logsDir = theServerConfig().get<std::string > ("ServerLogDirectory");
+
+    checkPath("/etc/fts3", R_OK, fs::directory_file);
+    checkPath(HOST_CERT, R_OK, fs::regular_file);
+    checkPath(HOST_KEY, R_OK, fs::regular_file);
+    checkPath(CONFIG_FILE, R_OK, fs::regular_file);
+    checkPath(logsDir, R_OK, fs::directory_file);
+    checkPath("/var/lib/fts3", R_OK | W_OK, fs::directory_file);
+    checkPath("/var/lib/fts3/monitoring", R_OK | W_OK, fs::directory_file);
+    checkPath("/var/lib/fts3/status", R_OK | W_OK, fs::directory_file);
+    checkPath("/var/lib/fts3/stalled", R_OK | W_OK, fs::directory_file);
+    checkPath("/var/lib/fts3/logs", R_OK | W_OK, fs::directory_file);
+
+    checkDbSchema();
+}
+
+/// Change running UID
+static void dropPrivileges()
+{
+    uid_t pw_uid = getUserUid(USER_NAME);
     setuid(pw_uid);
     seteuid(pw_uid);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Process UID changed to " << pw_uid << commit;
+}
 
-    //check if user is set to fts3
-    char *buf = {0};
-    buf=(char *)malloc(10*sizeof(char));
-    cuserid(buf);
-    std::string user(buf);
-    if(user.empty() || user != "fts3")
-        {
-            std::cerr << "user fts3 does not exist, create first" << std::endl;
-            return EXIT_FAILURE;
+/// Prepare, fork and run FTS3
+static void spawnServer(int argc, char** argv)
+{
+    // Register signal handlers
+    panic::setup_signal_handlers(shutdownCallback, NULL);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
+
+    theServerConfig().read(argc, argv, true);
+    dropPrivileges();
+    runEnvironmentChecks();
+
+    bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
+
+    if (isDaemon) {
+        int d = daemon(0, 0);
+        if (d < 0) {
+            throw SystemError("Can't fork the daemon");
         }
+    }
 
-    //very first check before it goes to daemon mode
-    try
-        {
-            if (!fs::exists(configfile))
-                {
-                    std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
-                    return EXIT_FAILURE;
-                }
+    doServer();
+}
 
-            std::string urlCopyPath;
-            if (!binaryExists("fts_url_copy", &urlCopyPath))
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts_url_copy process is set in the PATH env variable" << commit;
-                    return EXIT_FAILURE;
-                }
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "fts_url_copy full path " << urlCopyPath << commit;
+/// Entry point
+int main(int argc, char** argv)
+{
+    int n_running = countProcessesWithName("fts_server");
+    if (n_running < 0) {
+        std::cerr << "Could not check if FTS3 is already running" << std::endl;
+        return EXIT_FAILURE;
+    }
+    else if (n_running > 1) {
+        std::cerr << "Only one instance of FTS3 can run at the time"
+                << std::endl;
+        return EXIT_FAILURE;
+    }
 
-            if (!fs::exists(hostcert))
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert/key are installed" << commit;
-                    return EXIT_FAILURE;
-                }
-
-            theServerConfig().read(argc, argv, true);
-
-            //check file/dir persmissions
-	        std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
-            checkInitDirs(logDir);
-
-            //check if db schema is installed
-            checkDbSchema();
-
-            // Set X509_ environment variables properly
-            setenv("X509_USER_CERT", hostcert, 1);
-            setenv("X509_USER_KEY", hostkey, 1);
-        }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            return EXIT_FAILURE;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
-            return EXIT_FAILURE;
-        }
-
-    std::string arguments("");
-    size_t found;
-    size_t foundHelp;
-    int d = 0;
-    if (argc > 1)
-        {
-            int i;
-            for (i = 1; i < argc; i++)
-                {
-                    arguments += argv[i];
-                }
-            found = arguments.find("-n");
-            foundHelp = arguments.find("-h");
-            if (found != std::string::npos)
-                {
-                    {
-                        DoServer(argc, argv);
-                    }
-                    pthread_exit(0);
-                    return EXIT_SUCCESS;
-                }
-            else if (foundHelp != std::string::npos)
-                {
-                    {
-                        DoServer(argc, argv);
-                    }
-                    pthread_exit(0);
-                    return EXIT_SUCCESS;
-                }
-            else
-                {
-                    d = daemon(0, 0);
-                    if (d < 0)
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
-                }
-        }
-    else
-        {
-            d = daemon(0, 0);
-            if (d < 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon"  << commit;
-                    exit(1);
-                }
-        }
-
-    SpawnServer(argc, argv);
-
-    return 0;
+    try {
+        spawnServer(argc, argv);
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Failed to spawn the server! " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::cerr << "Failed to spawn the server! Unknown exception" << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
 

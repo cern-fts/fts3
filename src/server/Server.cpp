@@ -53,7 +53,7 @@ void Server::start()
     CancelerService processUpdaterDBHandler;
     systemThreads.create_thread(boost::ref(processUpdaterDBHandler));
 
-    // Wait for status updates to be processed and then start sanity threads
+    // Wait for status updates to be processed
     if (!config::theServerConfig().get<bool> ("rush"))
         sleep(12);
 
