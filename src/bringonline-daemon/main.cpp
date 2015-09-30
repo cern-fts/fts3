@@ -20,7 +20,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
@@ -42,60 +42,53 @@ using namespace fts3::config;
 namespace fs = boost::filesystem;
 
 
-extern std::string stackTrace;
 bool stopThreads = false;
 const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
 const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
 const char *CONFIG_FILE = "/etc/fts3/fts3config";
+const char *USER_NAME = "fts3";
 
 
-int fts3_teardown_db_backend()
-{
-    try
-        {
-            db::DBSingleton::destroy();
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Unexpected exception when forcing the database teardown" << commit;
-            return -1;
-        }
-    return 0;
-}
-
-void shutdown_callback(int signum, void*)
+/// Called by the signal handler
+static void shutdownCallback(int signum, void*)
 {
     StagingStateUpdater::instance().recover();
     DeletionStateUpdater::instance().recover();
 
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
-                                    << " (" << strsignal(signum) << ")" << commit;
+                                    << " (" << strsignal(signum) << ")"
+                                    << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
     stopThreads = true;
 
     // Some require traceback
     switch (signum)
-        {
-        case SIGABRT:
-        case SIGSEGV:
-        case SIGTERM:
-        case SIGILL:
-        case SIGFPE:
-        case SIGBUS:
-        case SIGTRAP:
+    {
+        case SIGABRT: case SIGSEGV: case SIGILL:
+        case SIGFPE: case SIGBUS: case SIGTRAP:
         case SIGSYS:
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
             break;
         default:
             break;
-        }
+    }
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
-    sleep(5);
-    fts3_teardown_db_backend();
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon stopping" << commit;
+
+    try {
+        db::DBSingleton::destroy();
+    }
+    catch (const std::exception& ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Exception when forcing the database teardown: " << ex.what() << commit;
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Unexpected exception when forcing the database teardown" << commit;
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon stopped" << commit;
+
     // Handle termination for signals that do not imply errors
     // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
     switch (signum)
@@ -105,265 +98,160 @@ void shutdown_callback(int signum, void*)
     }
 }
 
-/* -------------------------------------------------------------------------- */
 
-void fts3_initialize_db_backend()
+/// Initialize the database backend
+static void initializeDatabase()
 {
-    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
+    std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
 
-    try
-        {
-            //use 4 hardcoded connection
-            db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 8);
-        }
-    catch (BaseException& e)
-        {
-            throw;
-        }
-    catch (std::exception& ex)
-        {
-            throw;
-        }
-    catch (...)
-        {
-            throw;
-        }
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 8);
 }
 
-void heartbeat(void)
+/// Run in the background updating the status of this server
+/// This is a thread! Do not let exceptions exit the scope
+static void heartBeat(void)
 {
     unsigned myIndex=0, count=0;
     unsigned hashStart=0, hashEnd=0;
-    std::string service_name = "fts_bringonline";
+    const std::string service_name = "fts_bringonline";
 
-    while (!stopThreads)
-        {
-            try
-                {
-                    //check if draining is on
-                    if (fts3::server::DrainMode::instance())
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-                            sleep(15);
-                            continue;
-                        }
+    while (!stopThreads) {
+        try {
+            //check if draining is on
+            if (fts3::server::DrainMode::instance()) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                sleep(15);
+                continue;
+            }
 
-                    db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                        &myIndex, &count, &hashStart, &hashEnd, service_name);
+            db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
+                &myIndex, &count, &hashStart, &hashEnd, service_name);
 
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
-                                                    << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
-                                                    << std::dec
-                                                    << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
+            << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
+            << std::dec
+            << commit;
 
-                    boost::this_thread::sleep(boost::posix_time::seconds(60));
-                }
-            catch (std::exception& ex)
-                {
-                    sleep(2);
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                }
-            catch (...)
-                {
-                    sleep(2);
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
-                }
+            sleep(60);
         }
+        catch (std::exception& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            sleep(2);
+        }
+        catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
+            sleep(2);
+        }
+    }
 }
 
-int doServer(int argc, char** argv)
+/// Main body of the bring online daemon
+/// The configuration should have been loaded already
+static void doServer(void)
 {
-    std::string proxy_file("");
-    std::string infosys("");
+    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
-    try
-        {
-            setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting daemon..." << commit;
 
-            panic::setup_signal_handlers(shutdown_callback, NULL);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE signal handlers installed" << commit;
+    initializeDatabase();
+    fts3::ProfilingSubsystem::instance().start();
 
-            //re-read here
-            ServerConfig::instance().read(argc, argv);
-            bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
+    boost::thread heartBeatThread(heartBeat);
 
-            std::string arguments("");
-            if (argc > 1)
-                {
-                    int i;
-                    for (i = 1; i < argc; i++)
-                        {
-                            arguments += argv[i];
-                        }
-                    // Should never happen, actually
-                    size_t foundHelp = arguments.find("-h");
-                    if (foundHelp != std::string::npos)
-                        {
-                            return -1;
-                        }
-                }
+    std::string infosys = ServerConfig::instance().get<std::string>("Infosys");
+    Gfal2Task::createPrototype (infosys);
 
-            std::string logDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
-            if (isDaemon && logDir.length() > 0)
-                {
-                    logDir += "/fts3bringonline.log";
-                    if (theLogger().redirect(logDir, logDir) != 0)
-                        {
-                            std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
-                            return -1;
-                        }
-                }
+    fts3::common::ThreadPool<Gfal2Task> threadpool(10);
+    FetchStaging fs(threadpool);
+    FetchCancelStaging fcs(threadpool);
+    FetchDeletion fd(threadpool);
 
-            /*set infosys to gfal2*/
-            infosys = ServerConfig::instance().get<std::string > ("Infosys");
+    boost::thread_group gr;
+    gr.create_thread(boost::bind(&FetchStaging::fetch, fs));
+    gr.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
+    gr.create_thread(boost::bind(&FetchDeletion::fetch, fd));
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Daemon started..." << commit;
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;
-
-            try
-                {
-                    fts3_initialize_db_backend();
-                }
-            catch (BaseException& e)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
-                    return -1;
-                }
-            catch (...)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
-                    return -1;
-                }
-
-            // Start profiling
-            fts3::ProfilingSubsystem::instance().start();
-
-            boost::thread hbThread(heartbeat);
-
-            Gfal2Task::createPrototype(infosys);
-
-            fts3::common::ThreadPool<Gfal2Task> threadpool(10);
-            FetchStaging fs(threadpool);
-            FetchCancelStaging fcs(threadpool);
-            FetchDeletion fd(threadpool);
-
-            boost::thread_group gr;
-            gr.create_thread(boost::bind(&FetchStaging::fetch, fs));
-            gr.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
-            gr.create_thread(boost::bind(&FetchDeletion::fetch, fd));
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
-            gr.join_all();
-        }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
-            return -1;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
-            return -1;
-        }
-    stopThreads = true;
-    return EXIT_SUCCESS;
+    gr.join_all();
 }
 
-
-__attribute__((constructor)) void begin(void)
+/// Check the environment is properly setup for FTS3 to run
+static void runEnvironmentChecks()
 {
-    //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid;
-    pw_uid = getUserUid("fts3");
+    if (!fs::exists(CONFIG_FILE)) {
+        throw SystemError(std::string("fts3 server config file ") + CONFIG_FILE + " doesn't exist");
+    }
+}
+
+/// Change running UID
+static void dropPrivileges()
+{
+    uid_t pw_uid = getUserUid(USER_NAME);
     setuid(pw_uid);
     seteuid(pw_uid);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Process UID changed to " << pw_uid << commit;
 }
 
+/// Prepare, fork and run bring online daemon
+static void spawnServer(int argc, char** argv)
+{
+    panic::setup_signal_handlers(shutdownCallback, NULL);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
+
+    ServerConfig::instance().read(argc, argv);
+    dropPrivileges();
+    runEnvironmentChecks();
+
+    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
+
+    if (isDaemon) {
+        std::string logPath = ServerConfig::instance().get<std::string>("ServerLogDirectory");
+        if (!logPath.empty()) {
+            logPath += "/fts3bringonline.log";
+            if (theLogger().redirect(logPath, logPath) != 0) {
+                std::ostringstream msg;
+                msg << "fts3 server failed to open log file " << logPath << " error is:" << strerror(errno);
+                throw SystemError(msg.str());
+            }
+        }
+
+        int d = daemon(0, 0);
+        if (d < 0) {
+            throw SystemError("Can't fork the daemon");
+        }
+    }
+
+    doServer();
+}
+
+/// Entry point
 int main(int argc, char** argv)
 {
     // Do not even try if already running
     int n_running = countProcessesWithName("fts_bringonline");
-    if (n_running < 0)
-        {
-            std::cerr << "Could not check if FTS3 is already running" << std::endl;
-            return EXIT_FAILURE;
-        }
-    else if (n_running > 1)
-        {
-            std::cerr << "Only one instance of FTS3 can run at the time" << std::endl;
-            return EXIT_FAILURE;
-        }
+    if (n_running < 0) {
+        std::cerr << "Could not check if FTS3 is already running" << std::endl;
+        return EXIT_FAILURE;
+    }
+    else if (n_running > 1) {
+        std::cerr << "Only one instance of FTS3 can run at the time" << std::endl;
+        return EXIT_FAILURE;
+    }
 
-    if (!fs::exists(HOST_CERT))
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE ERROR check if hostcert/key are installed" << commit;
-            return EXIT_FAILURE;
-        }
-
-
-    if (!fs::exists(CONFIG_FILE))
-        {
-            std::cerr << "BRINGONLINE ERROR config file " << CONFIG_FILE << " doesn't exist" << std::endl;
-            return EXIT_FAILURE;
-        }
-
-
-    //very first check before it goes to deamon mode
-    try
-        {
-            ServerConfig::instance().read(argc, argv);
-
-            std::string arguments("");
-            int d = 0;
-            if (argc > 1)
-                {
-                    int i;
-                    for (i = 1; i < argc; i++)
-                        {
-                            arguments += argv[i];
-                        }
-                    size_t found = arguments.find("-n");
-                    size_t foundHelp = arguments.find("-h");
-                    if (found != std::string::npos)
-                        {
-                            {
-                                doServer(argc, argv);
-                            }
-                            return EXIT_SUCCESS;
-                        }
-                    else if (foundHelp != std::string::npos)
-                        {
-                            {
-                                doServer(argc, argv);
-                            }
-                            return EXIT_SUCCESS;
-                        }
-                    else
-                        {
-                            d = daemon(0, 0);
-                            if (d < 0)
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
-                        }
-                }
-            else
-                {
-                    d = daemon(0, 0);
-                    if (d < 0)
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
-                }
-            doServer(argc, argv);
-        }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
-            return EXIT_FAILURE;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
-            return EXIT_FAILURE;
-        }
-
-    return 0;
+    try {
+        spawnServer(argc, argv);
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Failed to spawn the server! " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::cerr << "Failed to spawn the server! Unknown exception" << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
-
