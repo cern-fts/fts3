@@ -75,7 +75,7 @@ int countProcessesWithName(const std::string& name)
             cmdline /= "cmdline";
 
             try {
-                std::ifstream cmdlineStream(cmdline.file_string().c_str(), std::ios_base::in);
+                std::ifstream cmdlineStream(cmdline.string().c_str(), std::ios_base::in);
                 char cmdName[256];
 
                 cmdlineStream.getline(cmdName, sizeof(cmdName), '\0');
@@ -108,8 +108,8 @@ bool binaryExists(const std::string& name, std::string* fullPath)
     for (auto pathIter = tokenizer.begin(); pathIter != tokenizer.end(); ++pathIter) {
         fs::path path(*pathIter);
         path /= name;
-        if (fs::exists(path) && access(path.file_string().c_str(), X_OK) == 0) {
-            *fullPath = path.file_string();
+        if (fs::exists(path) && access(path.string().c_str(), X_OK) == 0) {
+            *fullPath = path.string();
             return true;
         }
     }
