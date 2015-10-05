@@ -324,54 +324,49 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     // Current number of actives
     cmd_builder.setNumberOfActive(currentActive);
 
-    bool ready = db->areFilesInReadyState(job_id);
-
-    if (ready)
+    std::string params = cmd_builder.generateParameters();
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " "
+            << params << commit;
+    ExecuteProcess pr(cmd, params);
+    /*check if fork failed , check if execvp failed, */
+    std::string forkMessage;
+    if (-1 == pr.executeProcessShell(forkMessage))
     {
-        std::string params = cmd_builder.generateParameters();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " "
-                << params << commit;
-        ExecuteProcess pr(cmd, params);
-        /*check if fork failed , check if execvp failed, */
-        std::string forkMessage;
-        if (-1 == pr.executeProcessShell(forkMessage))
+        if (forkMessage.empty())
         {
-            if (forkMessage.empty())
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                        << "Transfer failed to spawn " << commit;
-                db->forkFailed(job_id);
-            }
-            else
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                        << "Transfer failed to spawn " << forkMessage
-                        << commit;
-                db->forkFailed(job_id);
-            }
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                    << "Transfer failed to spawn " << commit;
+            db->forkFailed(job_id);
         }
         else
         {
-            db->setPidForJob(job_id, pr.getPid());
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                    << "Transfer failed to spawn " << forkMessage
+                    << commit;
+            db->forkFailed(job_id);
         }
-        std::map<int, std::string>::const_iterator iterFileIds;
-        for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
+    }
+    else
+    {
+        db->setPidForJob(job_id, pr.getPid());
+    }
+    std::map<int, std::string>::const_iterator iterFileIds;
+    for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
+    {
+        struct message_updater msg2;
+        if (std::string(job_id).length() <= 37)
         {
-            struct message_updater msg2;
-            if (std::string(job_id).length() <= 37)
-            {
-                strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
-                msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
-                msg2.file_id = iterFileIds->first;
-                msg2.process_id = (int) pr.getPid();
-                msg2.timestamp = milliseconds_since_epoch();
-                ThreadSafeList::get_instance().push_back(msg2);
-            }
-            else
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun"
-                        << std::string(job_id).length() << commit;
-            }
+            strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
+            msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
+            msg2.file_id = iterFileIds->first;
+            msg2.process_id = (int) pr.getPid();
+            msg2.timestamp = milliseconds_since_epoch();
+            ThreadSafeList::get_instance().push_back(msg2);
+        }
+        else
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun"
+                    << std::string(job_id).length() << commit;
         }
     }
 }
