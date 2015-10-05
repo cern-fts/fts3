@@ -1527,7 +1527,7 @@ void MySqlAPI::getByJobIdReuse(
                 "from t_job j inner join t_file f on j.job_id = f.job_id "
                 "where j.source_se=:source_se and j.dest_se=:dest_se and "
                 "      j.vo_name=:vo_name and j.reuse_job = 'Y' and "
-                "      j.job_state = 'SUBMITTED' and "
+                "      j.job_state in ('SUBMITTED', 'ACTIVE') and "
                 "      (f.hashed_id >= :hStart and f.hashed_id <= :hEnd) and "
                 "      f.wait_timestamp is null and "
                 "      (f.retry_timestamp is null or f.retry_timestamp < :tTime) "
@@ -1556,7 +1556,8 @@ void MySqlAPI::getByJobIdReuse(
                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
                         "       j.internal_job_params, j.user_cred, j.reuse_job "
                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                        " WHERE j.job_id = :job_id ",
+                        " WHERE j.job_id = :job_id AND "
+                        "       f.file_state = 'SUBMITTED'",
                         soci::use(job)
                     );
 
