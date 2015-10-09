@@ -19,7 +19,7 @@ const option UrlCopyOpts::long_options[] =
     {"bringonline",       required_argument, 0, 'H'},
     {"reuse",             no_argument,       0, 'G'},
     {"multi-hop",         no_argument,       0, 'R'},
-    {"debug",             optional_argument, 0, 'F'},
+    {"debug",             required_argument, 0, 'F'},
     {"source-site",       required_argument, 0, 'D'},
     {"dest-site",         required_argument, 0, 'E'},
     {"vo",                required_argument, 0, 'C'},
