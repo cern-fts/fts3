@@ -80,7 +80,7 @@ public:
         SOURCE_WILDCARD, //< standalone default source SE
         DESTINATION_SE, //< standalone destination SE
         DESTINATION_GROUP, //< standalone destination SE group
-        DESTINATION_WILDCARD //< standalone defalt destination SE
+        DESTINATION_WILDCARD //< standalone default destination SE
     };
 
     /**
@@ -144,6 +144,16 @@ public:
      * @return url-copy timeout
      */
     int getUrlCopyTxTo();
+
+    /**
+     * returns if strict copy is set
+     */
+    bool getStrictCopy();
+
+    /**
+     * returns if ipv6 is set
+     */
+    bool getIPv6();
 
     /**
      * Gets the user defined protocol parameters (submitted with the job)

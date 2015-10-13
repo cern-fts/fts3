@@ -238,6 +238,9 @@ boost::optional<ProtocolResolver::protocol> ProtocolResolver::merge(boost::optio
                 ;
         }
 
+    ret.strict_copy = (src_prot.strict_copy || dst_prot.strict_copy);
+    ret.ipv6 = (src_prot.ipv6 || dst_prot.strict_copy);
+
     return ret;
 }
 
@@ -276,7 +279,7 @@ bool ProtocolResolver::resolve()
                 boost::assign::list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
             );
 
-    // merge the configuration of the most specific standlone source and destination links
+    // merge the configuration of the most specific standalone source and destination links
     prot = merge(
                getProtocolCfg(source_link),
                getProtocolCfg(destination_link)
@@ -319,5 +322,15 @@ int ProtocolResolver::getTcpBufferSize()
 int ProtocolResolver::getUrlCopyTxTo()
 {
     return (*prot).urlcopy_tx_to;
+}
+
+bool ProtocolResolver::getStrictCopy()
+{
+    return (*prot).strict_copy;
+}
+
+bool ProtocolResolver::getIPv6()
+{
+    return (*prot).ipv6;
 }
 
