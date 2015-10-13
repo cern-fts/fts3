@@ -128,7 +128,7 @@ private:
      *
      * @param pt - the ptree that has to be validated
      * @param allowed - a collection of fileds name in the cfg JASON
-     * 					characteristic for a given type of configuration
+     *                  characteristic for a given type of configuration
      * @param path - the path in main ptree (by default root)
      *
      * @return true if it's a configuration of a given type, false otherwise

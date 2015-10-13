@@ -37,17 +37,17 @@ const char* SiteNameCacheRetriever::ATTR_GLUE1_VERSION  = "GlueServiceVersion";
 
 const std::string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
     "("
-    "	&"
-    "	(GlueServiceUniqueID=*)"
-    "	("
-    "		|"
-    "		(GlueServiceType=SRM)"
-    "		(GlueServiceType=xroot)"
-    "		(GlueServiceType=webdav)"
-    "		(GlueServiceType=gsiftp)"
-    "		(GlueServiceType=http)"
-    "		(GlueServiceType=https)"
-    "	)"
+    "   &"
+    "   (GlueServiceUniqueID=*)"
+    "   ("
+    "       |"
+    "       (GlueServiceType=SRM)"
+    "       (GlueServiceType=xroot)"
+    "       (GlueServiceType=webdav)"
+    "       (GlueServiceType=gsiftp)"
+    "       (GlueServiceType=http)"
+    "       (GlueServiceType=https)"
+    "   )"
     ")"
     ;
 const char* SiteNameCacheRetriever::FIND_SE_SITE_ATTR_GLUE1[] =
@@ -61,18 +61,18 @@ const char* SiteNameCacheRetriever::ATTR_GLUE2_VERSION  = "GLUE2EndpointInterfac
 
 const std::string SiteNameCacheRetriever::FIND_SE_FK_GLUE2 =
     "("
-    "	&"
-    "	(objectClass=GLUE2Endpoint)"
-    "	(GLUE2EndpointURL=*)"
-    "	("
-    "		|"
-    "		(GLUE2EndpointInterfaceName=SRM)"
-    "		(GLUE2EndpointInterfaceName=xroot)"
-    "		(GLUE2EndpointInterfaceName=webdav)"
-    "		(GLUE2EndpointInterfaceName=gsiftp)"
-    "		(GLUE2EndpointInterfaceName=http)"
-    "		(GLUE2EndpointInterfaceName=https)"
-    "	)"
+    "   &"
+    "   (objectClass=GLUE2Endpoint)"
+    "   (GLUE2EndpointURL=*)"
+    "   ("
+    "       |"
+    "       (GLUE2EndpointInterfaceName=SRM)"
+    "       (GLUE2EndpointInterfaceName=xroot)"
+    "       (GLUE2EndpointInterfaceName=webdav)"
+    "       (GLUE2EndpointInterfaceName=gsiftp)"
+    "       (GLUE2EndpointInterfaceName=http)"
+    "       (GLUE2EndpointInterfaceName=https)"
+    "   )"
     ")"
     ;
 const char* SiteNameCacheRetriever::FIND_SE_FK_ATTR_GLUE2[] =
@@ -83,9 +83,9 @@ const std::string SiteNameCacheRetriever::FIND_FK_SITE_GLUE2(std::string fk)
     std::stringstream ss;
 
     ss << "(";
-    ss << "	&";
-    ss << "	(objectClass=GLUE2Service)";
-    ss << "	(GLUE2ServiceID=" << fk << ")";
+    ss << " &";
+    ss << " (objectClass=GLUE2Service)";
+    ss << " (GLUE2ServiceID=" << fk << ")";
     ss << ")";
     return ss.str();
 }

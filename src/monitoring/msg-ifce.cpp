@@ -193,19 +193,19 @@ std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
             text.append("}");
 
             message = restoreMessageToDisk(text);
-	    if(message.empty())
-	    	return text;
-	    else
-	        return message;	    
+        if(message.empty())
+            return text;
+        else
+            return message;     
         }
     catch (...)
         {
-	    //try again
-	    message = restoreMessageToDisk(text);
-	    if(message.empty())
-	    	return text;
-	    else
-	        return message;            
+        //try again
+        message = restoreMessageToDisk(text);
+        if(message.empty())
+            return text;
+        else
+            return message;            
         }
 }
 
@@ -467,20 +467,20 @@ std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed
             text.append("}");
 
             message = restoreMessageToDisk(text);
-	    if(message.empty())
-	    	return text;
-	    else
-	        return message;	 
-		
+        if(message.empty())
+            return text;
+        else
+            return message;  
+        
         }
     catch (...)
         {
-	    //try again
+        //try again
             message = restoreMessageToDisk(text);
-	    if(message.empty())
-	    	return text;
-	    else
-	        return message;	 
+        if(message.empty())
+            return text;
+        else
+            return message;  
         }
 }
 

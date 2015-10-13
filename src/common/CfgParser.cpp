@@ -45,36 +45,36 @@ using namespace boost::assign;
 // share only configuration
 const std::string share_only_cfg_str =
     "{"
-    "	\"se\":\" srm://se.cern.ch\","
-    "	\"active\":true,"
-    "	\"in\":[{\"cms\":50},{\"atlas\":50}],"
-    "	\"out\":[{\"cms\":60},{\"atlas\":30},{\"public\":10}]"
+    "   \"se\":\" srm://se.cern.ch\","
+    "   \"active\":true,"
+    "   \"in\":[{\"cms\":50},{\"atlas\":50}],"
+    "   \"out\":[{\"cms\":60},{\"atlas\":30},{\"public\":10}]"
     "}"
     ;
 // standalone SE configuration
 const std::string standalone_se_cfg_str =
     "{"
-    "	\"se\" : \"srm://se.cernc.h\","
-    "	\"active\" : true,"
-    "	\"in\" : {"
-    "	   \"share\" : [{\"public\" : 5}],"
-    "	   \"protocol\" : [{\"nostreams\" : 10}]"
-    "	},"
-    "	\"out\" : {"
-    "	   \"share\" : [{\"public\" : 4}],"
-    "	   \"protocol\" : \"auto\""
-    "	}"
+    "   \"se\" : \"srm://se.cernc.h\","
+    "   \"active\" : true,"
+    "   \"in\" : {"
+    "      \"share\" : [{\"public\" : 5}],"
+    "      \"protocol\" : [{\"nostreams\" : 10}]"
+    "   },"
+    "   \"out\" : {"
+    "      \"share\" : [{\"public\" : 4}],"
+    "      \"protocol\" : \"auto\""
+    "   }"
     "}"
     ;
 // SE pair configuration
 const std::string se_pair_cfg_str=
     "{"
-    "	\"symbolic_name\" : \"se-link\","
-    "	\"source_se\" : \" srm://se1.cern.ch\","
-    "	\"destination_se\" : \" srm://se2.cern.ch\","
-    "	\"share\" : [{\"cms\" : 1}, {\"atlas\" : 2}, {\"public\" : 3}],"
-    "	\"protocol\" : [{\"nostreams\" : 12}, {\"urlcopy_tx_to\" : 3600}],"
-    "	\"active\":true"
+    "   \"symbolic_name\" : \"se-link\","
+    "   \"source_se\" : \" srm://se1.cern.ch\","
+    "   \"destination_se\" : \" srm://se2.cern.ch\","
+    "   \"share\" : [{\"cms\" : 1}, {\"atlas\" : 2}, {\"public\" : 3}],"
+    "   \"protocol\" : [{\"nostreams\" : 12}, {\"urlcopy_tx_to\" : 3600}],"
+    "   \"active\":true"
     "}"
     ;
 

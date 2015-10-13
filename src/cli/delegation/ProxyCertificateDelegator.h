@@ -51,7 +51,7 @@ public:
      * @param endpoint - the FTS3 service endpoint
      * @param delegationId - delegation ID (empty std::string means that the default ID should be used)
      * @param userRequestedDelegationExpTime - user specified delegation expire time
-     * 											(0 means that the default value should be used)
+     *                                          (0 means that the default value should be used)
      * @param proxy - The proxy path
      */
     ProxyCertificateDelegator(std::string const & endpoint,

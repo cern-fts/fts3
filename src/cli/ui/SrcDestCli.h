@@ -33,8 +33,8 @@ namespace cli
  * SrcDestCli provides the CLI for specifying source and destination SE
  *
  * In addition to the functionalities inherited from CliBase, the class provides:
- *  	- source (positional)
- *  	- destination (positional)
+ *      - source (positional)
+ *      - destination (positional)
  */
 class SrcDestCli : virtual public CliBase
 {

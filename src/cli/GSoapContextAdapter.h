@@ -92,7 +92,7 @@ public:
      * @param elements - job elements to be executed
      * @param parameters - parameters for the job that is being submitted
      * @param checksum - flag indicating whether the checksum should be used
-     * 	(if false transferSubmit2 is used, otherwise transferSubmit3 is used)
+     *  (if false transferSubmit2 is used, otherwise transferSubmit3 is used)
      *
      * @return the job ID
      */
@@ -242,9 +242,9 @@ public:
 
     /**
      * Splits the given string, and sets:
-     * 		- major number
-     * 		- minor number
-     * 		- patch number
+     *      - major number
+     *      - minor number
+     *      - patch number
      *
      * @param interface - interface version of FTS3 service
      */

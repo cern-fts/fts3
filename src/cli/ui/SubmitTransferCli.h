@@ -38,21 +38,21 @@ namespace cli
  * SubmitTransferCli is the command line utility used for the fts3-transfer-submit tool.
  *
  * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 	 	- blocking (-b)
- * 	 	- bulk-job file (-f)
- * 	 	- grid ftp parameters (-g)
- * 	 	- interval (-i)
- * 	 	- MyProxy server (-m)
- * 	 	- password (-p)
- * 	 	- ID (-I)
- * 	 	- expire (-e)
- * 	 	- overwrite (-o)
- * 	 	- destination token (-t)
- * 	 	- source token (-S)
- * 	 	- compare checksum (-K)
- * 	 	- pin lifetime (--copy-pin-lifetime)
- * 	 	- LAN connection (--lan-connection)
- * 	 	- fail if nearline (--fail-nearline)
+ *      - blocking (-b)
+ *      - bulk-job file (-f)
+ *      - grid ftp parameters (-g)
+ *      - interval (-i)
+ *      - MyProxy server (-m)
+ *      - password (-p)
+ *      - ID (-I)
+ *      - expire (-e)
+ *      - overwrite (-o)
+ *      - destination token (-t)
+ *      - source token (-S)
+ *      - compare checksum (-K)
+ *      - pin lifetime (--copy-pin-lifetime)
+ *      - LAN connection (--lan-connection)
+ *      - fail if nearline (--fail-nearline)
  *
  * @see CliBase
  */
@@ -97,7 +97,7 @@ public:
      * 5. If verbal additional info is printed
      *
      * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     *              requested using program options have been done.
      */
     void validate();
 
@@ -115,10 +115,10 @@ public:
     /**
      * Performs standard checks.
      *
-     *  	- decides on delegation (checks whether it is supported)
-     *  	- collects user password if needed
-     *  	- checks if the job is specified twice (using command line and bulk-job file)
-     *  	- checks if used options are supported (e.g. checksum)
+     *      - decides on delegation (checks whether it is supported)
+     *      - collects user password if needed
+     *      - checks if the job is specified twice (using command line and bulk-job file)
+     *      - checks if used options are supported (e.g. checksum)
      */
     void performChecks();
 

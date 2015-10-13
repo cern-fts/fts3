@@ -71,17 +71,17 @@ public:
 
     /**
      * Parses the configuration std::string (JSON format)
-     * 	Throws an Err_Custom if the given configuration is in wrong format.
+     *  Throws an Err_Custom if the given configuration is in wrong format.
      *
      * It has to be called before 'add'!
      *
-     * 	@param configuration - std::string containing the configuration in JSON format
+     *  @param configuration - std::string containing the configuration in JSON format
      */
     void parse(std::string configuration);
 
     /**
      * Adds a configuration to the DB.
-     * 	First the 'parse' method has to be called
+     *  First the 'parse' method has to be called
      *
      * @see parse
      */
@@ -96,7 +96,7 @@ public:
 
     /**
      * Gets the whole configuration regarding all SEs and all SE groups from the DB.
-     * 	The configuration can also be restricted to a given SE and/or VO.
+     *  The configuration can also be restricted to a given SE and/or VO.
      *
      * @param se - SE name
      *
@@ -106,7 +106,7 @@ public:
 
     /**
      * Gets the whole configuration regarding all SEs and all SE groups from the DB.
-     * 	The configuration can also be restricted to a given SE and/or VO.
+     *  The configuration can also be restricted to a given SE and/or VO.
      *
      * @param se - SE name
      *
@@ -131,7 +131,7 @@ public:
 
     /**
      * Deletes the configuration specified by the argument
-     * 	Only share and protocol specific configurations will be deleted.
+     *  Only share and protocol specific configurations will be deleted.
      *
      * @param cfg - the configuration that should be deleted
      */

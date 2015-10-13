@@ -40,12 +40,12 @@
  */
 
 #ifndef G_OS_WIN32
-#define DEFAULT_GLITE_LOCATION		"/opt/glite"
-#define DEFAULT_GLITE_CONF		"/etc/glite.conf"
+#define DEFAULT_GLITE_LOCATION      "/opt/glite"
+#define DEFAULT_GLITE_CONF      "/etc/glite.conf"
 #else
 /* XXX Check the values */
-#define DEFAULT_GLITE_LOCATION		"c:\\opt\\glite"
-#define DEFAULT_GLITE_CONF		"c:\\etc\\glite.conf"
+#define DEFAULT_GLITE_LOCATION      "c:\\opt\\glite"
+#define DEFAULT_GLITE_CONF      "c:\\etc\\glite.conf"
 #endif
 
 

@@ -200,7 +200,7 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersionResponse &_param_1)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getVersion' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getVersion' request" << commit;
     _param_1.getVersionReturn = "3.7.6-1";
 
     return SOAP_OK;
@@ -209,7 +209,7 @@ int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersio
 int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__getInterfaceVersionResponse &_param_2)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getInterfaceVersion' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getInterfaceVersion' request" << commit;
     _param_2.getInterfaceVersionReturn = "3.7.0";
 
     return SOAP_OK;
@@ -218,7 +218,7 @@ int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__
 int fts3::delegation__getServiceMetadata(struct soap* soap, std::string _key, struct delegation__getServiceMetadataResponse &_param_3)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getServiceMetadata' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getServiceMetadata' request" << commit;
     _param_3._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 
     return SOAP_OK;

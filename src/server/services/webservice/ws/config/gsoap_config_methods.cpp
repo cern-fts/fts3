@@ -52,7 +52,7 @@ using namespace fts3::ws;
 int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__setConfigurationResponse &response)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 
     vector<string>& cfgs = _configuration->cfg;
     vector<string>::iterator it;
@@ -172,7 +172,7 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
 int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__delConfigurationResponse &_param_11)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delConfiguration' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delConfiguration' request" << commit;
 
     vector<string>& cfgs = _configuration->cfg;
     vector<string>::iterator it;

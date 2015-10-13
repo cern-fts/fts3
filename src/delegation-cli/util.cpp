@@ -423,9 +423,9 @@ SDVOList *check_voms_proxy(void)
             return NULL;
         }
 
-    const size_t credlen = 512;	/* Credential size */
-    const int maxcreds = 10;	/* Maximum credential number */
-    int lastcred = -1;		/* Initial "last" credential */
+    const size_t credlen = 512; /* Credential size */
+    const int maxcreds = 10;    /* Maximum credential number */
+    int lastcred = -1;      /* Initial "last" credential */
     char *creds, *vomsdir;
 
     if (NULL == (vomsdir = getenv("X509_VOMS_DIR")))

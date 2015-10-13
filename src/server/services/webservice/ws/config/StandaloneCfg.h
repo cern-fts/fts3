@@ -35,9 +35,9 @@ using namespace fts3::common;
 
 /**
  * The base class for all 'standalone' configuration,
- * 	it's derived from COnfiguration
+ *  it's derived from COnfiguration
  *
- * 	@see Configuration
+ *  @see Configuration
  */
 class StandaloneCfg : public Configuration
 {

@@ -30,9 +30,9 @@ namespace ws
 
 /**
  * SE group pair configuration,
- * 	it's derived from PairCfg
+ *  it's derived from PairCfg
  *
- * 	@see PairCfg
+ *  @see PairCfg
  */
 class GrPairCfg : public PairCfg
 {

@@ -32,7 +32,7 @@ namespace common
 
 /**
  * The Singleton ensures a thread safe access to the hold instance.
- * 	Note that it grands access to the same instance as the InstanceHolder class!
+ *  Note that it grands access to the same instance as the InstanceHolder class!
  *
  * It might be used as a base class for a thread-safe singleton.
  *

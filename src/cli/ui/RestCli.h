@@ -32,7 +32,7 @@ namespace cli
  * The command line utility for getting the 'rest' option
  *
  * The class provides:
- * 		- rest, allows to use the REST interface instead of SOAP
+ *      - rest, allows to use the REST interface instead of SOAP
  */
 class RestCli  : public virtual CliBase
 {

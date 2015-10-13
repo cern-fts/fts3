@@ -38,7 +38,7 @@ using namespace fts3::common;
 
 /**
  * It is the base class for 'pair' configurations,
- * 	it is derived from Configuration
+ *  it is derived from Configuration
  *
  * @see Configuration
  */

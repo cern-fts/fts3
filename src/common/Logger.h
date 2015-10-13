@@ -137,8 +137,8 @@ inline Logger& theLogger()
 ///
 /// The log level labels are system specific,
 ///
-#define FTS3_COMMON_LOGGER_NEWLOG(aLevel)	\
-	fts3::common::theLogger().newLog(fts3::common::Logger::aLevel, __FILE__, __FUNCTION__, __LINE__)
+#define FTS3_COMMON_LOGGER_NEWLOG(aLevel)   \
+    fts3::common::theLogger().newLog(fts3::common::Logger::aLevel, __FILE__, __FUNCTION__, __LINE__)
 
 /// Log a simple string message in one line (with implicit commit). Parameters:
 /// log level label and the message string.

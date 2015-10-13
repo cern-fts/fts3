@@ -37,7 +37,7 @@ extern "C" {
 /*
  * Opaque data structure used by the library.
  */
-typedef struct _glite_delegation_ctx		glite_delegation_ctx;
+typedef struct _glite_delegation_ctx        glite_delegation_ctx;
 
 /**********************************************************************
  * Constants

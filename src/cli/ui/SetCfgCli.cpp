@@ -73,7 +73,7 @@ SetCfgCli::SetCfgCli(bool spec)
                 "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0)."
                 "\n(Example: --queue-timeout $TIMEOUT)"
             )
-            (	"source", po::value<std::string>(),
+            (   "source", po::value<std::string>(),
                 "The source SE"
                 "\n(Example: --source $SE_NAME)"
             )
@@ -87,7 +87,7 @@ SetCfgCli::SetCfgCli(bool spec)
                 "The maximum bandwidth that can be used (in MB/s) for the given source or destination (see --source & --destination)"
                 "\n(Example: --max-bandwidth $LIMIT)"
             )
-            (	"protocol", po::value< std::vector<std::string> >()->multitoken(),
+            (   "protocol", po::value< std::vector<std::string> >()->multitoken(),
                 "Set protocol (UDT | IPv6) for given SE"
                 "\n(Example: --protocol udt $SE_NAME on|off)"
                 "\n(Example: --protocol ipv6 $SE_NAME on|off)"

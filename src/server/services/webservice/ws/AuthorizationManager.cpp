@@ -25,8 +25,8 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "../../../../common/Exceptions.h"
-#include "../../../../config/ServerConfig.h"
+#include "common/Exceptions.h"
+#include "config/ServerConfig.h"
 #include "common/Logger.h"
 
 
@@ -239,21 +239,21 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
         }
 
     // if the VO authorization list was specified and a wildcard was not used ...
-//	if (!vos.empty() && !vos.count("*")) {
+//  if (!vos.empty() && !vos.count("*")) {
 //
-//		string vo = cgsi.getClientVo();
-//		to_lower(vo);
+//      string vo = cgsi.getClientVo();
+//      to_lower(vo);
 //
-//		if (!vos.count(vo)) {
+//      if (!vos.count(vo)) {
 //
-//			string msg = "Authorization failed, access was not granted. ";
-//			msg += "(Please check if the fts3 configuration file contains the VO: '";
-//			msg += vo;
-//			msg += "' and if the right delimiter was used!)";
+//          string msg = "Authorization failed, access was not granted. ";
+//          msg += "(Please check if the fts3 configuration file contains the VO: '";
+//          msg += vo;
+//          msg += "' and if the right delimiter was used!)";
 //
-//			throw Err_Custom(msg);
-//		}
-//	}
+//          throw Err_Custom(msg);
+//      }
+//  }
 
     // get operation std::string
     std::string op_str = operationToStr(op);
@@ -282,7 +282,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
             msg += cgsi.getClientDn();
             msg += ") has not the right Role to perform '";
             msg += op_str;
-            msg += 	"' operation)";
+            msg +=  "' operation)";
             throw UserError(msg);
         }
 }

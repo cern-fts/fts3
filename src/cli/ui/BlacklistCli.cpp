@@ -114,8 +114,8 @@ bool BlacklistCli::printHelp() const
             std::cout << std::endl << getUsageString(basename) << std::endl << std::endl;
 
             std::cout << "List of Commands:" << std::endl << std::endl;
-            std::cout << "dn		Blacklist DN (user)" << std::endl;
-            std::cout << "se [options]	Blacklist SE (to get further information use '-h')" << std::endl;
+            std::cout << "dn        Blacklist DN (user)" << std::endl;
+            std::cout << "se [options]  Blacklist SE (to get further information use '-h')" << std::endl;
             std::cout << std::endl << std::endl;
 
             // print the available options

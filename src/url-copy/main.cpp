@@ -908,11 +908,11 @@ int main(int argc, char **argv)
                 }
 
             if(opts.monitoringMessages)
-	    {
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring start message " << commit;
-                std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
-  	        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message content: " << msgReturnValue << commit;
-	    }
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring start message " << commit;
+                    std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message content: " << msgReturnValue << commit;
+                }
 
             //also reuse session when both url's are gsiftp
             if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))

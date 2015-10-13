@@ -104,7 +104,7 @@ struct type_conversion<Job>
         job.sourceSpaceToken = v.get<std::string>("source_space_token", "");
         job.sourceSpaceTokenDescription = v.get<std::string>("source_token_description", "");
         job.copyPinLifetime  = v.get<int>("copy_pin_lifetime");
-        job.bringOnline 	= v.get<int>("bring_online");
+        job.bringOnline     = v.get<int>("bring_online");
         job.checksumMethod    = v.get<std::string>("checksum_method");
         aux_tm = v.get<struct tm>("submit_time");
         job.submitTime = timegm(&aux_tm);
@@ -243,8 +243,8 @@ struct type_conversion<FileTransferStatus>
         transfer.destSurl          = v.get<std::string>("dest_surl", "");
         transfer.fileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
-        transfer.numFailures	   = v.get<int>("retry", 0);
-        transfer.duration	       = v.get<double>("tx_duration", 0);
+        transfer.numFailures       = v.get<int>("retry", 0);
+        transfer.duration          = v.get<double>("tx_duration", 0);
 
         if (v.get_indicator("start_time") == soci::i_ok)
             {

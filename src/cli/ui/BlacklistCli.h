@@ -55,10 +55,10 @@ public:
 
     /**
      * Validates command line options.
-     *	Checks that the debug mode was set correctly.
+     *  Checks that the debug mode was set correctly.
      *
      * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     *              requested using program options have been done.
      */
     virtual void validate();
 

@@ -43,9 +43,9 @@ using namespace fts3::common;
 /**
  * SetCfgCli provides the user interface for configuring SEs
  *
- * 		- cfg, positional parameter, the configuration in JSON format
- * 			corresponding to a SE (maybe given multiple times to configure
- * 			multiple SEs)
+ *      - cfg, positional parameter, the configuration in JSON format
+ *          corresponding to a SE (maybe given multiple times to configure
+ *          multiple SEs)
  *
  */
 class SetCfgCli: public CliBase
@@ -88,7 +88,7 @@ public:
      * 5. If verbal additional info is printed
      *
      * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     *              requested using program options have been done.
      */
     virtual void validate();
 
@@ -103,7 +103,7 @@ public:
      * Gets a vector with SE configurations.
      *
      * @return if SE configurations were given as command line parameters a
-     * 			vector containing the value names, otherwise an empty vector
+     *          vector containing the value names, otherwise an empty vector
      */
     std::vector<std::string> getConfigurations();
 

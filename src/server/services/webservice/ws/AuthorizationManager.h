@@ -63,9 +63,9 @@ public:
      */
     enum Operation
     {
-        DELEG, 	  //< delegation
+        DELEG,    //< delegation
         TRANSFER, //< transfer
-        CONFIG 	  //< configuration
+        CONFIG    //< configuration
     };
 
     /// it is used as resource ID for all authorization operations for which the rsc_id doesn't matter
@@ -136,7 +136,7 @@ private:
      * @resource - the resource being the subject of the operation
      *
      * @return the access level required to execute operation 'op' on resource 'rsc_id'
-     * 			If the resource is not specified 'NONE' is returned!
+     *          If the resource is not specified 'NONE' is returned!
      */
     Level getRequiredLvl(soap* ctx, Operation op, const OwnedResource* rsc = NULL);
 
@@ -171,7 +171,7 @@ private:
      * Method for extracting values from roles/authorization entries in the fts3config file
      *
      * @param R - return type,
-     * 		the configuration entry may be parsed to 'Level', 'string' or 'vector<string>'
+     *      the configuration entry may be parsed to 'Level', 'string' or 'vector<string>'
      * @param cfg - config entry
      *
      * @return parsed config entry

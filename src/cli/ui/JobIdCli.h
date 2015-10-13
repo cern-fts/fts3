@@ -35,7 +35,7 @@ namespace cli
  * JobIDCli is the command line utility used for retreiving job IDs.
  *
  * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 		- job ID (--jobid), positional parameter (passed without any switch option)
+ *      - job ID (--jobid), positional parameter (passed without any switch option)
  *
  * @see CliBase
  */
@@ -67,7 +67,7 @@ public:
      * Gets a vector with job IDs.
      *
      * @return if job IDs were given as command line parameters a
-     * 			vector containing job IDs otherwise an empty vector
+     *          vector containing job IDs otherwise an empty vector
      */
     std::vector<std::string> getJobIds();
 };

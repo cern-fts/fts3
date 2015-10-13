@@ -149,7 +149,7 @@ protected:
 
     /**
      * Converts a STL map to JSON configuration std::string,
-     * 	if the optional is not initialized "auto" value is used
+     *  if the optional is not initialized "auto" value is used
      *
      * @param params - the parameters to be converted to JSON
      * @return std::string containing the JSON configuration
@@ -166,7 +166,7 @@ protected:
 
     /**
      * Gets a map containing the protocol parameter names and the respective values.
-     *	If auto-protocol has been used an uninitialized optional is returned.
+     *  If auto-protocol has been used an uninitialized optional is returned.
      *
      * @param source - the source (SE, SE group or 'any')
      * @param destination - the destination (SE, SE group or 'any')
@@ -186,7 +186,7 @@ protected:
 
     /**
      * Gets a map containing the VO names and the respective share value (for the given source-destination pair).
-     *	If auto-protocol has been used an uninitialized optional is returned.
+     *  If auto-protocol has been used an uninitialized optional is returned.
      *
      * @param source - the source (SE, SE group or 'any')
      * @param destination - the destination (SE, SE group or 'any')
@@ -205,7 +205,7 @@ protected:
 
     /**
      * Changes the SE state to the default one ('on'),
-     * 	should be used in case a SE configuration is being removed
+     *  should be used in case a SE configuration is being removed
      *
      * @param se - SE name
      */

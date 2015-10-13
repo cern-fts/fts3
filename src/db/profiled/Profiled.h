@@ -339,7 +339,7 @@ public:
 
 
     //NEW deletions and staging API
-    //deletions						 //file_id / state / reason
+    //deletions                      //file_id / state / reason
     void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
     //vo_name, source_url, job_id, file_id, user_dn, cred_id
@@ -347,7 +347,7 @@ public:
 
     void revertDeletionToStarted();
 
-    //staging						//file_id / state / reason / token
+    //staging                       //file_id / state / reason / token
     void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
     void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);

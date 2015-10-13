@@ -47,7 +47,7 @@ public:
      * Gets a vector with job IDs.
      *
      * @return if job IDs were given as command line parameters a
-     * 			vector containing job IDs otherwise an empty vector
+     *          vector containing job IDs otherwise an empty vector
      */
     std::vector<std::string> getJobIds()
     {

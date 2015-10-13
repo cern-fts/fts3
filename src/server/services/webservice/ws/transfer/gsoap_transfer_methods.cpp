@@ -42,7 +42,7 @@
 
 #include <cgsi_plugin.h>
 
-#include "../../../../../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
@@ -121,7 +121,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
 int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmitResponse &_param_3)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
     try
         {
@@ -158,7 +158,7 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmit2Response &_param_4)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
     try
         {
@@ -194,7 +194,7 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct impltns__transferSubmit3Response &_param_5)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
     try
         {
@@ -263,7 +263,7 @@ int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, im
 int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct impltns__listRequestsResponse &_param_7)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
 
     try
         {
@@ -294,7 +294,7 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string placeHolder, string _forDN, string _forVO, string src, string dst, struct impltns__listRequests2Response &_param_8)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
 
     try
         {
@@ -417,7 +417,7 @@ int fts3::impltns__getFileStatus3(soap *ctx, fts3::tns3__FileRequest *req, fts3:
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus2(soap *ctx, string requestID, int offset, int limit, impltns__getFileStatus2Response &resp)
 {
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
 
     try
         {
@@ -604,7 +604,7 @@ int fts3::impltns__getTransferJobSummary3(soap *ctx, fts3::tns3__JobRequest *req
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_param_21)
 {
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
     _param_21.getVersionReturn = "3.7.6-1";
     return SOAP_OK;
 }
@@ -612,7 +612,7 @@ int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_p
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersionResponse &_param_22)
 {
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
     _param_22.getSchemaVersionReturn = "3.5.0";
     return SOAP_OK;
 }
@@ -620,7 +620,7 @@ int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersion
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceVersionResponse &_param_23)
 {
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
     _param_23.getInterfaceVersionReturn = "3.7.0";
     return SOAP_OK;
 }
@@ -628,7 +628,7 @@ int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceV
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
 int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__getServiceMetadataResponse &_param_24)
 {
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
     _param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
     return SOAP_OK;
 }
@@ -780,7 +780,7 @@ int fts3::impltns__removeVOManager(soap *soap, string _VOName, string _principal
 int fts3::impltns__listVOManagers(soap *soap, string _VOName, struct impltns__listVOManagersResponse &_param_18)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
 
     _param_18._listVOManagersReturn = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
     _param_18._listVOManagersReturn->item.push_back("default username");
@@ -792,7 +792,7 @@ int fts3::impltns__listVOManagers(soap *soap, string _VOName, struct impltns__li
 int fts3::impltns__getRoles(soap *soap, struct impltns__getRolesResponse &_param_19)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
 
     _param_19.getRolesReturn = soap_new_tns3__Roles(soap, -1);
 
@@ -817,7 +817,7 @@ int fts3::impltns__getRoles(soap *soap, struct impltns__getRolesResponse &_param
 int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRolesOfResponse &_param_20)
 {
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
 
     _param_20._getRolesOfReturn = soap_new_tns3__Roles(soap, -1);
 
@@ -841,7 +841,7 @@ int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRo
 /// Web service operation 'debugSet' (returns error code or SOAP_OK)
 int fts3::impltns__debugSet(struct soap* soap, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16)
 {
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
     try
         {
             CGsiAdapter cgsi(soap);
@@ -958,7 +958,7 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
 int fts3::impltns__detailedJobStatus(soap* ctx, std::string jobId, impltns__detailedJobStatusResponse& resp)
 {
 
-//	resp._detailedJobStatus = soap_new_impltns__detailedJobStatus(ctx, -1);
+//  resp._detailedJobStatus = soap_new_impltns__detailedJobStatus(ctx, -1);
 
     try
         {

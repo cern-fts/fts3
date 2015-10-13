@@ -30,9 +30,9 @@ namespace ws
 
 /**
  * The share-only configuration
- * 	it is derived from Configuration
+ *  it is derived from Configuration
  *
- * 	@see Configuration
+ *  @see Configuration
  */
 class ShareOnlyCfg : public Configuration
 {

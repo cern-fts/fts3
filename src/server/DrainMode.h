@@ -63,9 +63,9 @@ public:
 
     /**
      * boolean casting
-     * 	casts the FtsDrain instance to bool value
+     *  casts the FtsDrain instance to bool value
      *
-     * 	@return true if drain mode is on, otherwise false
+     *  @return true if drain mode is on, otherwise false
      */
     operator bool() const
     {

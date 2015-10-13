@@ -34,8 +34,8 @@ namespace cli
  * TransferStatusCli is the command line utility used for the fts3-transfer-status tool.
  *
  * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 		- list (-l)
- * 		- job ID (--jobid), positional parameter (passed without any switch option)
+ *      - list (-l)
+ *      - job ID (--jobid), positional parameter (passed without any switch option)
  *
  * @see CliBase
  */
@@ -64,7 +64,7 @@ public:
      * 5. If verbal additional info is printed
      *
      * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     *              requested using program options have been done.
      */
     void validate();
 

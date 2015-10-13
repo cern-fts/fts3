@@ -873,7 +873,7 @@ void ProfiledDB::revertDeletionToStarted()
     PROFILE_PREFIXED("DB::", return db->revertDeletionToStarted());
 }
 
-//staging						//file_id / state / reason / token
+//staging                       //file_id / state / reason / token
 void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     PROFILE_PREFIXED("DB::", db->updateStagingState(files));

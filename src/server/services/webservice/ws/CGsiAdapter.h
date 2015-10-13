@@ -70,9 +70,9 @@ public:
 
     /**
      * Checks if the client was a root user of the server hosting fts3
-     * 	(it is assumed that the client is the root user of the server
-     * 	hosting fts3 if he uses the server certificate to authenticate
-     * 	himself)
+     *  (it is assumed that the client is the root user of the server
+     *  hosting fts3 if he uses the server certificate to authenticate
+     *  himself)
      *
      * @return true if the client is a root user, false otherwise
      */

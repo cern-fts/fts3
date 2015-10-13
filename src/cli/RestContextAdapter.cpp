@@ -58,7 +58,7 @@ void RestContextAdapter::getInterfaceDetails()
 }
 
 std::vector<JobStatus> RestContextAdapter::listRequests (
-	std::vector<std::string> const & statuses,
+    std::vector<std::string> const & statuses,
         std::string const & dn,
         std::string const & vo,
         std::string const & /*source*/, std::string const & /*destination*/)
@@ -102,7 +102,7 @@ std::vector<JobStatus> RestContextAdapter::listRequests (
 }
 
 std::vector<JobStatus> RestContextAdapter::listDeletionRequests (
-	std::vector<std::string> const & /*statuses*/,
+    std::vector<std::string> const & /*statuses*/,
         std::string const & /*dn*/,
         std::string const & /*vo*/,
         std::string const & /*source*/,

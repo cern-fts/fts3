@@ -43,10 +43,10 @@ namespace po = boost::program_options;
  * CliBase is a base class for developing FTS3 command line tools.
  *
  * The class provides following functionalities:
- *  	- help (-h)
- *  	- quite (-q) and verbose (-v)
- *  	- version (-V)
- *  	- service (-s)
+ *      - help (-h)
+ *      - quite (-q) and verbose (-v)
+ *      - version (-V)
+ *      - service (-s)
  *
  *  The CliBase is an abstract class, each class that inherits after CliBase
  *  has to implement 'getUsageString()', which returns an instruction on how

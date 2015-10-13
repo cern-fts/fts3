@@ -153,7 +153,7 @@ struct type_conversion<Job>
         job.sourceSpaceToken = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
         job.sourceSpaceTokenDescription = v.get<std::string>("SOURCE_TOKEN_DESCRIPTION", "");
         job.copyPinLifetime  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"));
-        job.bringOnline 	= static_cast<int>(v.get<double>("BRING_ONLINE"));
+        job.bringOnline     = static_cast<int>(v.get<double>("BRING_ONLINE"));
         job.checksumMethod = v.get<std::string>("CHECKSUM_METHOD", "");
         job.submitTime     = getTimeT(v, "SUBMIT_TIME");
 
@@ -290,8 +290,8 @@ struct type_conversion<FileTransferStatus>
 
         transfer.fileState = v.get<std::string>("FILE_STATE");
         transfer.reason            = v.get<std::string>("REASON", "");
-        transfer.numFailures	   = static_cast<int>(v.get<double>("RETRY", 0));
-        transfer.duration	   = v.get<double>("TX_DURATION",0);
+        transfer.numFailures       = static_cast<int>(v.get<double>("RETRY", 0));
+        transfer.duration      = v.get<double>("TX_DURATION",0);
 
         transfer.startTime        = getTimeT(v, "START_TIME");
         transfer.finishTime       = getTimeT(v, "FINISH_TIME");

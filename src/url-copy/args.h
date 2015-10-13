@@ -80,7 +80,7 @@ public:
     unsigned    tcpBuffersize;
     unsigned    blockSize;
     unsigned    timeout;
-    int    	secPerMb;
+    int     secPerMb;
     std::string user_dn;
     std::string alias;
     std::string oauthFile;

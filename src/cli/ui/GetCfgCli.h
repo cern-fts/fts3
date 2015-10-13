@@ -88,9 +88,9 @@ public:
      * 5. If verbal additional info is printed
      *
      * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     *              requested using program options have been done.
      */
-//	virtual optional<GSoapContextAdapter&> validate(bool init = true);
+//  virtual optional<GSoapContextAdapter&> validate(bool init = true);
 };
 
 }

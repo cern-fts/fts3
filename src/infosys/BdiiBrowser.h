@@ -387,7 +387,7 @@ inline std::string BdiiBrowser::parseBdiiEntryAttribute<std::string>(berval **va
 {
 
     if (value && value[0] && value[0]->bv_val)
-	return value[0]->bv_val;
+        return value[0]->bv_val;
     return std::string();
 }
 

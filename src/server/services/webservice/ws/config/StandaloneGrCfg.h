@@ -35,7 +35,7 @@ using namespace fts3::common;
 
 /**
  * The standalone SE group configuration
- * 	it is derived from StandaloneCfg
+ *  it is derived from StandaloneCfg
  *
  * @see StandaloneCfg
  */

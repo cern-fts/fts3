@@ -37,28 +37,28 @@ namespace cli
  * SrcDestCli provides the CLI for specifying source and destination SE
  *
  * In addition to the functionalities inherited from CliBase, the class provides:
- *  	- source (positional)
- *  	- destination (positional)
+ *      - source (positional)
+ *      - destination (positional)
  */
 class SrcDelCli : public DelegationCli
 {
 
 public:
     /**
-         * Default constructor.
-         *
-         * Creates FileName command line options
-         * @return FileName string if it was given as CLI option, or an empty string if not
-         */
+     * Default constructor.
+     *
+     * Creates FileName command line options
+     * @return FileName string if it was given as CLI option, or an empty string if not
+     */
     SrcDelCli();
 
     /*
-     * 	Destructor
+     *  Destructor
      */
     ~SrcDelCli();
 
     /*
-     * 	Gets the file name (string) for the job.
+     *  Gets the file name (string) for the job.
      */
     std::vector<std::string> getFileName();
 
@@ -83,7 +83,7 @@ public:
     std::string bulk_file;
 
     /**
-     * 	all the url's (files for deletion) which included in the file
+     *  all the url's (files for deletion) which included in the file
      */
     std::vector<std::string> allFilenames;
 };

@@ -70,7 +70,7 @@ public:
      * Creates a unique delegation ID based on the client DN and VOMS attributes
      *
      * @return unique delegation ID, it will be always the same
-     * 			for the same user and VOMS attributes
+     *          for the same user and VOMS attributes
      */
     std::string makeDelegationId();
 
@@ -142,9 +142,9 @@ public:
      * key is sent to the client
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty std::string is also accepted
+     *                          an empty std::string is also accepted
      *
-     * 	@return std::string containing the public key
+     *  @return std::string containing the public key
      */
     std::string getProxyReq(std::string delegationId);
 
@@ -152,7 +152,7 @@ public:
      * The WebServer renewProxy request method.
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty std::string is also accepted
+     *                          an empty std::string is also accepted
      *
      * @return std::string containing a new public key
      */
@@ -165,8 +165,8 @@ public:
      * (identified by the delegation ID)
      *
      * @param delegationId - NOT used (implemented in the same way as it is in gridsite)
-     * 						the delegationId is generated inside based on client DN and
-     * 						VOMS attributes
+     *                      the delegationId is generated inside based on client DN and
+     *                      VOMS attributes
      *
      * @return expiration time of the respective proxy certificate
      */
@@ -180,8 +180,8 @@ public:
      * private key is stored in the DB, the public
      * key is sent to the client
      *
-     * 	@return delegation__NewProxyReq struct containing
-     * 			the public key and the delegation ID
+     *  @return delegation__NewProxyReq struct containing
+     *          the public key and the delegation ID
      */
     delegation__NewProxyReq* getNewProxyReq();
 
@@ -193,18 +193,18 @@ public:
      * proxy certificate is stored in the DB for later use.
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty std::string is also accepted
+     *                          an empty std::string is also accepted
      * @param proxy - the delegated proxy certificate
      */
     void putProxy(std::string delegationId, std::string proxy);
 
     /**
-     *	The WebServer destroy request method.
+     *  The WebServer destroy request method.
      *
-     *	Removes the respective proxy certificate from the DB.
+     *  Removes the respective proxy certificate from the DB.
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty std::string is also accepted
+     *                          an empty std::string is also accepted
      */
     void destroy(std::string delegationId);
 
