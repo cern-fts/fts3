@@ -52,8 +52,13 @@ BOOST_PYTHON_MODULE(libftspython)
 {
     using namespace fts3::cli;
 
+#if PY_VERSION_HEX >= 0x02050000
     PyErr_WarnEx(PyExc_DeprecationWarning,
         "libftspython is deprecated. Please, migrate to fts3.rest.client(.easy)", 1);
+#else
+    PyErr_Warn(PyExc_DeprecationWarning,
+        "libftspython is deprecated. Please, migrate to fts3.rest.client(.easy)");
+#endif
 
     py::register_exception_translator<std::exception>(exceptTranslator);
     py::register_exception_translator<Err_Custom>(errExTranslator);
