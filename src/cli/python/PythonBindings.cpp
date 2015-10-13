@@ -50,8 +50,10 @@ void errExTranslator(Err_Custom const& ex)
 
 BOOST_PYTHON_MODULE(libftspython)
 {
-
     using namespace fts3::cli;
+
+    PyErr_WarnEx(PyExc_DeprecationWarning,
+        "libftspython is deprecated. Please, migrate to fts3.rest.client(.easy)", 1);
 
     py::register_exception_translator<std::exception>(exceptTranslator);
     py::register_exception_translator<Err_Custom>(errExTranslator);
