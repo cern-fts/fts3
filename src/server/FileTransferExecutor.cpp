@@ -156,6 +156,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                                     protocol.no_tx_activity_to = resolver.getNoTxActiveTo();
                                     protocol.tcp_buffer_size = resolver.getTcpBufferSize();
                                     protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
+                                    protocol.strict_copy = resolver.getStrictCopy();
+                                    protocol.ipv6 = resolver.getIPv6();
                                     cmd_builder.setFromProtocol(protocol);
                                 }
 
