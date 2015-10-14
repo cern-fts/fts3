@@ -148,6 +148,22 @@ static void doServer(void)
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server halt" << commit;
 }
 
+
+static std::string requiredToString(int mode)
+{
+    char strMode[] = "---";
+
+    if (mode & R_OK)
+        strMode[0] = 'r';
+    if (mode & W_OK)
+        strMode[1] = 'w';
+    if (mode & X_OK)
+        strMode[2] = 'x';
+
+    return strMode;
+}
+
+
 /// Validate the file or directory path exists, has the right type
 /// and permissions
 /// @param mode    as for access (R_OK, W_OK, ...)
@@ -167,7 +183,7 @@ static void checkPath(const std::string& path, int mode, fs::file_type type)
 
     if (access(path.c_str(), mode) != 0) {
         std::ostringstream msg;
-        msg << "Not enough permissions on " << path << " (Required " << std::ios_base::oct << mode << ")";
+        msg << "Not enough permissions on " << path << " (Required " << requiredToString(mode) << ")";
         throw SystemError(msg.str());
     }
 }
