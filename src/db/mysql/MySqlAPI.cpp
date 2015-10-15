@@ -5377,7 +5377,7 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
 
 
 
-void MySqlAPI::backup(long* nJobs, long* nFiles)
+void MySqlAPI::backup(long bulkSize, long* nJobs, long* nFiles)
 {
 
     soci::session sql(*connectionPool);
@@ -5386,7 +5386,6 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
     std::string serviceName = "fts_backup";
     *nJobs = 0;
     *nFiles = 0;
-    std::ostringstream jobIdStmt;
     std::string job_id;
     int count = 0;
     int countBeat = 0;
@@ -5438,6 +5437,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                              "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '7' DAY ) "
                                          );
 
+            std::ostringstream jobIdStmt;
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
             {
                 ++count;
@@ -5482,7 +5482,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                 jobIdStmt << job_id;
                 jobIdStmt << "',";
 
-                if(count == 5000)
+                if(count == bulkSize)
                 {
                     std::string queryStr = jobIdStmt.str();
                     job_id = queryStr.substr(0, queryStr.length() - 1);
@@ -5520,26 +5520,16 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
             sql.begin();
             sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
             sql.commit();
-
         }
-
-        jobIdStmt.str(std::string());
-        jobIdStmt.clear();
     }
     catch (std::exception& e)
     {
         sql.rollback();
-        jobIdStmt.str(std::string());
-        jobIdStmt.clear();
-
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
         sql.rollback();
-        jobIdStmt.str(std::string());
-        jobIdStmt.clear();
-
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 }

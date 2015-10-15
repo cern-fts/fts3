@@ -4833,7 +4833,7 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
 
 
 
-void OracleAPI::backup(long* nJobs, long* nFiles)
+void OracleAPI::backup(long bulkSize, long* nJobs, long* nFiles)
 {
 
     soci::session sql(*connectionPool);
@@ -4842,7 +4842,6 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
     std::string serviceName = "fts_backup";
     *nJobs = 0;
     *nFiles = 0;
-    std::ostringstream jobIdStmt;
     std::string job_id;
     std::string stmt;
     int count = 0;
@@ -4870,6 +4869,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
+                    std::ostringstream jobIdStmt;
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      "  select  job_id from t_job where job_finished < (systimestamp - interval '7' DAY ) "
@@ -4899,7 +4899,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                             jobIdStmt << job_id;
                             jobIdStmt << "',";
 
-                            if(count == 5000)
+                            if(count == bulkSize)
                                 {
                                     std::string queryStr = jobIdStmt.str();
                                     job_id = queryStr.substr(0, queryStr.length() - 1);
@@ -4938,21 +4938,14 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
                     sql.commit();
                 }
-
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
         }
     catch (std::exception& e)
         {
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }

@@ -200,7 +200,7 @@ public:
 
     virtual void revertToSubmitted() = 0;
 
-    virtual void backup(long* nJobs, long* nFiles) = 0;
+    virtual void backup(long bulkSize, long* nJobs, long* nFiles) = 0;
 
     virtual void forkFailedRevertState(const std::string & jobId, int fileId) = 0;
 
