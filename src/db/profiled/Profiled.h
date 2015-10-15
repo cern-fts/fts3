@@ -142,7 +142,7 @@ public:
 
     void revertToSubmitted();
 
-    void backup(long* nJobs, long* nFiles);
+    void backup(long bulkSize, long* nJobs, long* nFiles);
 
     void forkFailed(const std::string& jobId);
 

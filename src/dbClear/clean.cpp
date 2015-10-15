@@ -93,13 +93,12 @@ int main(int argc, char** argv)
 
             fts3_initialize_db_backend();
 
-            std::string cleanRecordsHost = ServerConfig::instance().get<std::string>("CleanRecordsHost");
+            long bulkSize = ServerConfig::instance().get<long>("CleanBulkSize");
 
-
-            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting with bulk size of " << bulkSize << commit;
             long nJobs = 0, nFiles = 0;
 
-            db::DBSingleton::instance().getDBObjectInstance()->backup(&nJobs, &nFiles);
+            db::DBSingleton::instance().getDBObjectInstance()->backup(bulkSize, &nJobs, &nFiles);
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup ending: "
                                            << nJobs << " jobs and "
@@ -110,7 +109,7 @@ int main(int argc, char** argv)
             db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&fts3::ProfilingSubsystem::instance());
 
         }
-    catch (BaseException& e)
+    catch (const std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Backup fatal error, exiting... " << e.what() << commit;
             return EXIT_FAILURE;

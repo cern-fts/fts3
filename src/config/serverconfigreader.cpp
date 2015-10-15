@@ -203,6 +203,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["InternalThreadPool"]) )->default_value("5"),
         "Set the number of threads in the internal threadpool"
     )
+    (
+        "CleanBulkSize",
+        po::value<std::string>( &(_vars["CleanBulkSize"]) )->default_value("5000"),
+        "Set the bulk size, in number of jobs, used for cleaning the old records"
+    )
     ;
 
     return config;
