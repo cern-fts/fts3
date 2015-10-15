@@ -131,7 +131,7 @@ public:
 
     void revertToSubmitted();
 
-    void backup(long* nJobs, long* nFiles);
+    void backup(long bulkSize, long* nJobs, long* nFiles);
 
     void forkFailedRevertState(const std::string & jobId, int fileId);
 
