@@ -28,12 +28,16 @@
 #include "common/ThreadSafeInstanceHolder.h"
 #include "SingleDbInstance.h"
 
+#include <sys/sysinfo.h>
+
 using namespace db;
 
 namespace fts3
 {
 namespace common
 {
+
+static const unsigned long REQUIRED_FREE_RAM = 150;
 
 
 /**
@@ -49,6 +53,13 @@ class DrainMode : public ThreadSafeInstanceHolder<DrainMode>
 {
 
     friend class ThreadSafeInstanceHolder<DrainMode>;
+
+    unsigned long getFreeRamInMb(void) const
+    {
+        struct sysinfo info;
+        sysinfo(&info);
+        return info.freeram / (1024 * 1024);
+    }
 
 public:
 
@@ -73,7 +84,17 @@ public:
      */
     operator bool() const
     {
-        return DBSingleton::instance().getDBObjectInstance()->getDrain();
+        unsigned long availableRam = getFreeRamInMb();
+        bool drain = DBSingleton::instance().getDBObjectInstance()->getDrain();
+
+        if (availableRam < REQUIRED_FREE_RAM) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                << "Auto-drain mode: available RAM is not enough ("
+                << availableRam << " < " <<  REQUIRED_FREE_RAM
+                << ");" << commit;
+            return true;
+        }
+        return drain;
     }
 
     /**
