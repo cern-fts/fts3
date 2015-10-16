@@ -18,103 +18,100 @@
  * limitations under the License.
  */
 
-#include "FetchDeletion.h"
+#include <map>
+
+#include "common/Uri.h"
+#include "cred/CredUtility.h"
+#include "db/generic/SingleDbInstance.h"
+#include "server/DrainMode.h"
 
 #include "../task/DeletionTask.h"
 #include "../context/DeletionContext.h"
 
-#include "server/DrainMode.h"
-#include "db/generic/SingleDbInstance.h"
-#include <map>
-
-#include "../../common/Uri.h"
-#include "cred/CredUtility.h"
+#include "FetchDeletion.h"
 
 extern bool stopThreads;
 
 
+/// At the beginning of the subsystem, revert
+/// started delete operations assigned to this host
+// back to started, so they re-enter the queue
+static void revertDeleteToStart() {
+    try {
+        db::DBSingleton::instance().getDBObjectInstance()->requeueStartedDeletes();
+    }
+    catch (BaseException& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "DELETION " << e.what() << commit;
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;
+    }
+}
+
+
 void FetchDeletion::fetch()
 {
-    try
+    typedef std::tuple<std::string, std::string, std::string> Triplet;
+
+    revertDeleteToStart();
+
+    while (!stopThreads)
+    {
+        try //this loop must never exit
         {
-            db::DBSingleton::instance().getDBObjectInstance()->revertDeletionToStarted();
+            //if we drain a host, stop with deletions
+            if (fts3::server::DrainMode::instance())
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Set to drain mode, stopped deleting files with this instance!" << commit;
+                boost::this_thread::sleep(boost::posix_time::milliseconds(15000));
+                continue;
+            }
+
+            std::map<Triplet, DeletionContext> deletionContext;
+            std::vector<DeleteOperation> deletions;
+
+            db::DBSingleton::instance().getDBObjectInstance()->getFilesForDeletion(deletions);
+
+            // Generate a list of deletion contexts, grouping urls belonging to the same
+            // storage under the same context
+            for (auto i = deletions.begin(); i != deletions.end() && !stopThreads; ++i) {
+                const std::string storage = Uri::parse(i->url).host;
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                    << "DELETION To be deleted: \""
+                    << i->userDn << "\"  \"" << i->voName << "\"  " << i->url
+                    << commit;
+
+                Triplet key(i->voName, i->userDn, storage);
+                auto itContext = deletionContext.find(key);
+                if (itContext == deletionContext.end()) {
+                    deletionContext.insert(std::make_pair(key, DeletionContext(*i)));
+                }
+                else {
+                    itContext->second.add(*i);
+                }
+            }
+
+            // Trigger a task per populated context
+            for (auto i = deletionContext.begin(); i != deletionContext.end() && !stopThreads; ++i) {
+                try {
+                    threadpool.start(new DeletionTask(i->second));
+                }
+                catch(UserError const & ex) {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                }
+                catch(...) {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+                }
+            }
         }
-    catch (BaseException& e)
-        {
+        catch (BaseException& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
         }
-    catch (...)
-        {
+        catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;
         }
 
-    while (!stopThreads)
-        {
-            try  //this loop must never exit
-                {
-                    //if we drain a host, stop with deletions
-                    if (fts3::server::DrainMode::instance())
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Set to drain mode, stopped deleting files with this instance!" << commit;
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(15000));
-                            continue;
-                        }
-
-                    std::map<key_type, DeletionContext> tasks;
-                    std::map<key_type, DeletionContext>::iterator it_t;
-
-                    std::vector<DeletionContext::context_type> files;
-                    db::DBSingleton::instance().getDBObjectInstance()->getFilesForDeletion(files);
-
-                    std::vector<DeletionContext::context_type>::iterator it_f;
-                    for (it_f = files.begin(); it_f != files.end() && !stopThreads; ++it_f)
-                        {
-                            // make sure it is a srm SE
-                            std::string const & url = boost::get<DeletionContext::source_url>(*it_f);
-                            // get the SE name
-                            Uri uri = Uri::parse(url);
-                            std::string se = uri.host;
-                            // get the other values necessary for the key
-                            std::string const & dn = boost::get<DeletionContext::user_dn>(*it_f);
-                            std::string const & vo = boost::get<DeletionContext::vo_name>(*it_f);
-
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION To be deleted: \"" << dn << "\"  \"" << vo << "\"  " << url << commit;
-
-                            key_type key(vo, dn, se);
-                            it_t = tasks.find(key);
-                            if (it_t == tasks.end())
-                                tasks.insert(std::make_pair(key, DeletionContext(*it_f)));
-                            else
-                                it_t->second.add(*it_f);
-                        }
-
-                    for (it_t = tasks.begin(); it_t != tasks.end() && !stopThreads; ++it_t)
-                        {
-                            try
-                                {
-                                    threadpool.start(new DeletionTask(it_t->second));
-                                }
-                            catch(UserError const & ex)
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                                }
-                            catch(...)
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-                                }
-                        }
-
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-                }
-            catch (BaseException& e)
-                {
-                    sleep(2);
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
-                }
-            catch (...)
-                {
-                    sleep(2);
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;
-                }
-        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    }
 }

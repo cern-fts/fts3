@@ -37,7 +37,7 @@ void Gfal2Task::setProxy(JobContext const & ctx)
     if(!isValid)
         {
 //            state_update(ctx.jobs, "FAILED", message, false);
-            ctx.state_update("FAILED", message, false);
+            ctx.updateState("FAILED", message, false);
             std::stringstream ss;
             ss << gfal2_ctx.operation << " proxy certificate not valid: " << message;
             throw UserError(ss.str());
@@ -48,7 +48,7 @@ void Gfal2Task::setProxy(JobContext const & ctx)
     int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
     if (status < 0)
         {
-            ctx.state_update("FAILED", error->message, false);
+            ctx.updateState("FAILED", error->message, false);
             std::stringstream ss;
             ss << gfal2_ctx.operation << " setting X509 CERT failed " << error->code << " " << error->message;
             g_clear_error(&error);
@@ -58,7 +58,7 @@ void Gfal2Task::setProxy(JobContext const & ctx)
     status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
     if (status < 0)
         {
-            ctx.state_update("FAILED", error->message, false);
+            ctx.updateState("FAILED", error->message, false);
             std::stringstream ss;
             ss << gfal2_ctx.operation << " setting X509 KEY failed " << error->code << " " << error->message;
             g_clear_error(&error);

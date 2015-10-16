@@ -342,10 +342,9 @@ public:
     //deletions                      //file_id / state / reason
     void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
-    //vo_name, source_url, job_id, file_id, user_dn, cred_id
-    void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
+    void getFilesForDeletion(std::vector<DeleteOperation>& delOps);
 
-    void revertDeletionToStarted();
+    void requeueStartedDeletes();
 
     //staging                       //file_id / state / reason / token
     void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);

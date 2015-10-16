@@ -21,14 +21,26 @@
 #include "DeletionContext.h"
 
 #include <sstream>
-#include "../../cred/CredUtility.h"
+#include "cred/CredUtility.h"
 
 
-void DeletionContext::add(context_type const & ctx)
+void DeletionContext::add(const DeleteOperation &nsOp)
 {
-    std::string const & surl = boost::get<source_url>(ctx);
-    std::string const & jobId = boost::get<job_id>(ctx);
-    int fileId = boost::get<file_id>(ctx);
+    add(nsOp.url, nsOp.jobId, nsOp.fileId);
+}
 
-    add(surl, jobId, fileId);
+
+void DeletionContext::updateState(const std::string &jobId, int fileId, const std::string &state,
+    const std::string &reason, bool retry) const
+{
+    static DeletionStateUpdater & stateUpdater = DeletionStateUpdater::instance();
+    stateUpdater(jobId, fileId, state, reason, retry);
+}
+
+
+void DeletionContext::updateState(const std::string &state, const std::string &reason,
+    bool retry) const
+{
+    static DeletionStateUpdater & stateUpdater = DeletionStateUpdater::instance();
+    stateUpdater(jobs, state, reason, retry);
 }

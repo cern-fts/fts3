@@ -26,8 +26,9 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "../../common/Logger.h"
-#include "../../cred/CredUtility.h"
+#include "common/Logger.h"
+#include "cred/CredUtility.h"
+
 
 JobContext::JobContext(std::string const & dn, std::string const & vo, std::string const & delegationId, std::string const & spaceToken) : spaceToken(spaceToken)
 {

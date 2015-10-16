@@ -81,19 +81,19 @@ public:
     /**
      * Asynchronous update of a single transfer-file within a job
      */
-    void state_update(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry) const
+    void updateState(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry) const
     {
         static StagingStateUpdater & state_update = StagingStateUpdater::instance();
         state_update(job_id, file_id, state, reason, retry);
     }
 
-    void state_update(std::string const & state, std::string const & reason, bool retry) const
+    void updateState(std::string const & state, std::string const & reason, bool retry) const
     {
         static StagingStateUpdater & state_update = StagingStateUpdater::instance();
         state_update(jobs, state, reason, retry);
     }
 
-    void state_update(std::string const & token)
+    void updateState(std::string const & token)
     {
         static StagingStateUpdater & state_update = StagingStateUpdater::instance();
         state_update(jobs, token);

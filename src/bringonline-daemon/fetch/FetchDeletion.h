@@ -46,11 +46,6 @@ public:
     void fetch();
 
 private:
-
-    // typedefs for convenience
-    // vo, dn ,se
-    typedef std::tuple<std::string, std::string, std::string> key_type;
-
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
 
 };

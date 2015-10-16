@@ -61,21 +61,21 @@ void PollTask::run(boost::any const &)
 
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                                ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                         }
                     else if (errors[i] && errors[i]->code == EOPNOTSUPP)
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FINISHED for " << urls[i]
                                                             << ": not supported, keep going (" << errors[i]->message << ")" << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
                         }
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
                                                             << ": returned -1 but error was not set ";
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                                ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
                     g_clear_error(&errors[i]);
                 }
@@ -95,7 +95,7 @@ void PollTask::run(boost::any const &)
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
                                                             << urls[i] << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
                             ctx.removeUrl(urls[i]);
                         }
                     else if (errors[i]->code == EAGAIN)
@@ -110,7 +110,7 @@ void PollTask::run(boost::any const &)
                                                             << urls[i]
                                                             << ": not supported, keep going (" << errors[i]->message << ")" << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
                             ctx.removeUrl(urls[i]);
                         }
                     else
@@ -121,7 +121,7 @@ void PollTask::run(boost::any const &)
 
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                             for (auto it = ids.begin(); it != ids.end() ; ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                                ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                             ctx.removeUrl(urls[i]);
 
                         }
@@ -174,7 +174,7 @@ bool PollTask::timeout_occurred()
     // and abort the bring-online operation
     abort(urls, false);
     // set the state
-    ctx.state_update("FAILED", "bring-online timeout has been exceeded", true);
+    ctx.updateState("FAILED", "bring-online timeout has been exceeded", true);
     // confirm the timeout
     return true;
 }
@@ -207,7 +207,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                                 {
                                     bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                                     for (auto it = ids.begin(); it != ids.end(); ++it)
-                                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                                        ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                                 }
                             g_clear_error(&errors[i]);
                         }
@@ -219,7 +219,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                             if (report)
                                 {
                                     for (auto it = ids.begin(); it != ids.end(); ++it)
-                                        ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                                        ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                                 }
                         }
                 }

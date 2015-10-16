@@ -82,7 +82,7 @@ public:
      * @param reason : reason for changing the state
      * @param retry : if true the job will be retried
      */
-    virtual void state_update(std::string const & state, std::string const & reason, bool retry) const = 0;
+    virtual void updateState(std::string const & state, std::string const & reason, bool retry) const = 0;
 
     /**
      * Checks if the proxy is valid

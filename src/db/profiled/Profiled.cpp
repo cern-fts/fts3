@@ -863,14 +863,14 @@ void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string
 }
 
 //file_id / surl / proxy
-void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
+void ProfiledDB::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
-    PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
+    PROFILE_PREFIXED("DB::", db->getFilesForDeletion(delOps));
 }
 
-void ProfiledDB::revertDeletionToStarted()
+void ProfiledDB::requeueStartedDeletes()
 {
-    PROFILE_PREFIXED("DB::", return db->revertDeletionToStarted());
+    PROFILE_PREFIXED("DB::", return db->requeueStartedDeletes());
 }
 
 //staging                       //file_id / state / reason / token

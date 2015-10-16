@@ -77,7 +77,7 @@ void BringOnlineTask::run(boost::any const &)
 
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                                ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                         }
                     else if (errors[i] && errors[i]->code == EOPNOTSUPP)
                         {
@@ -85,14 +85,14 @@ void BringOnlineTask::run(boost::any const &)
                                                             << urls[i]
                                                             << ": not supported, keep going (" << errors[i]->message << ")" << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
                         }
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
                                                             << ": returned -1 but error was not set ";
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                                ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
                 }
         }
@@ -101,7 +101,7 @@ void BringOnlineTask::run(boost::any const &)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
                                             << ctx.getLogMsg() << commit;
 
-            ctx.state_update(token);
+            ctx.updateState(token);
             WaitingRoom<PollTask>::instance().add(new PollTask(std::move(*this), token));
         }
     else
@@ -117,7 +117,7 @@ void BringOnlineTask::run(boost::any const &)
                                                             << urls[i] << " , got token " << token
                                                             << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
                         }
                     else if (errors[i]->code == EOPNOTSUPP)
                         {
@@ -125,7 +125,7 @@ void BringOnlineTask::run(boost::any const &)
                                                             << urls[i]
                                                             << ": not supported, keep going (" << errors[i]->message << ")" << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
                             ctx.removeUrl(urls[i]);
                         }
                     else
@@ -136,7 +136,7 @@ void BringOnlineTask::run(boost::any const &)
 
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                                ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                         }
                 }
         }

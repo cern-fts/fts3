@@ -10961,8 +10961,8 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
     }
 }
 
-//file_id / surl / proxy
-void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
+
+void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     soci::session sql(*connectionPool);
     std::vector<struct message_bringonline> messages;
@@ -11111,8 +11111,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                     user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
 
-                    boost::tuple<std::string, std::string, std::string, int, std::string, std::string> record(vo_name, source_url, job_id, file_id, user_dn, cred_id);
-                    files.push_back(record);
+                    delOps.emplace_back(job_id, file_id, vo_name, user_dn, cred_id, source_url);
 
                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                     filesState.push_back(recordState);
@@ -11192,7 +11191,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
 }
 
 
-void MySqlAPI::revertDeletionToStarted()
+void MySqlAPI::requeueStartedDeletes()
 {
     soci::session sql(*connectionPool);
 

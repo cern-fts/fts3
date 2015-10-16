@@ -36,26 +36,19 @@
 
 class DeletionContext : public JobContext
 {
-
 public:
 
     using JobContext::add;
-
-    // typedef for convenience
-    // vo_name, source_url, job_id, file_id, user_dn, cred_id
-    typedef boost::tuple<std::string, std::string, std::string, int, std::string, std::string> context_type;
-
-    enum {vo_name, source_url, job_id, file_id, user_dn, cred_id};
 
     /**
      * Constructor (adds the first for deletion)
      *
      * @param ctx : the tuple with data necessary to initialise an instance
      */
-    DeletionContext(context_type const & ctx) :
-        JobContext(boost::get<user_dn>(ctx), boost::get<vo_name>(ctx), boost::get<cred_id>(ctx))
+    DeletionContext(const DeleteOperation &nsOp):
+        JobContext(nsOp.userDn, nsOp.voName, nsOp.credId)
     {
-        add(ctx);
+        add(nsOp);
     }
 
     /**
@@ -63,7 +56,8 @@ public:
      *
      * @param copy : other DeletionContext instance
      */
-    DeletionContext(DeletionContext const & copy) : JobContext(copy) {}
+    DeletionContext(const DeletionContext &copy): JobContext(copy)
+    {}
 
 
     /**
@@ -71,8 +65,9 @@ public:
      *
      * @param copy : the context to be moved
      */
-    DeletionContext(DeletionContext && copy) :
-        JobContext(std::move(copy)) {}
+    DeletionContext(DeletionContext && copy):
+        JobContext(std::move(copy))
+    {}
 
     /**
      * Destructor
@@ -84,25 +79,18 @@ public:
      *
      * @param ctx : file for deletion
      */
-    void add(context_type const & ctx);
+    void add(const DeleteOperation &nsOp);
 
     /**
      * Asynchronous update of a single transfer-file within a job
      */
-    void state_update(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry) const
-    {
-        static DeletionStateUpdater & state_update = DeletionStateUpdater::instance();
-        state_update(job_id, file_id, state, reason, retry);
-    }
+    void updateState(const std::string &jobId, int fileId, const std::string &state,
+        const std::string &reason, bool retry) const;
 
     /**
      * Bulk state update implementation for srm endpoints
      */
-    void state_update(std::string const & state, std::string const & reason, bool retry) const
-    {
-        static DeletionStateUpdater & state_update = DeletionStateUpdater::instance();
-        state_update(jobs, state, reason, retry);
-    }
+    void updateState(const std::string &state, const std::string &reason, bool retry) const;
 };
 
 #endif /* DELETIONCONTEXT_H_ */

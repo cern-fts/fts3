@@ -10152,8 +10152,8 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
         }
 }
 
-//file_id / surl / proxy
-void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
+
+void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     soci::session sql(*connectionPool);
     std::vector<struct message_bringonline> messages;
@@ -10299,8 +10299,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
 
-                                    boost::tuple<std::string, std::string, std::string, int, std::string, std::string> record(vo_name, source_url, job_id, file_id, user_dn, cred_id);
-                                    files.push_back(record);
+                                    delOps.emplace_back(job_id, file_id, vo_name, user_dn, cred_id, source_url);
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
@@ -10378,7 +10377,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 }
 
 
-void OracleAPI::revertDeletionToStarted()
+void OracleAPI::requeueStartedDeletes()
 {
     soci::session sql(*connectionPool);
 

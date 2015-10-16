@@ -374,10 +374,9 @@ public:
     //deletions                      //file_id / state / reason
     virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
-    //file_id / surl / proxy
-    virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
+    virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps);
 
-    virtual void revertDeletionToStarted();
+    virtual void requeueStartedDeletes();
 
     //staging                       //file_id / state / reason / token
     virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);

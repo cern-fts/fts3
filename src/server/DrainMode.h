@@ -21,6 +21,7 @@
 #ifndef FTSDRAIN_H_
 #define FTSDRAIN_H_
 
+#include "common/Logger.h"
 #include "common/Singleton.h"
 #include "db/generic/SingleDbInstance.h"
 

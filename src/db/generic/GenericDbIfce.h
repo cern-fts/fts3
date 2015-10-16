@@ -29,6 +29,8 @@
 #include <string>
 #include <vector>
 
+#include "common/definitions.h"
+
 #include "JobStatus.h"
 #include "common/JobParameterHandler.h"
 #include "FileTransferStatus.h"
@@ -36,15 +38,14 @@
 #include "SeGroup.h"
 #include "SeProtocolConfig.h"
 #include "QueueId.h"
-#include "common/definitions.h"
 #include "LinkConfig.h"
 #include "ShareConfig.h"
-
 #include "OAuth.h"
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
+#include "DeleteOperation.h"
 #include "Job.h"
 #include "OptimizerSample.h"
 #include "profiler/Profiler.h"
@@ -611,10 +612,13 @@ public:
     //deletions                      //file_id / state / reason
     virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
 
-    //vo_name, source_url, job_id, file_id, user_dn, cred_id
-    virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files) = 0;
+    /// Gets a list of delete operations in the queue
+    /// @params[out] delOps A list of namespace operations (deletion)
+    virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps) = 0;
 
-    virtual void revertDeletionToStarted() = 0;
+    /// Revert namespace operations already in 'STARTED' back to the 'DELETE'
+    /// state, so they re-enter the queue
+    virtual void requeueStartedDeletes() = 0;
 
     //staging                       //file_id / state / reason / token
     virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
