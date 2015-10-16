@@ -30,7 +30,7 @@ include_directories (${GLOBUS_INCLUDE_DIRS})
 include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
 
 
-set(fts_delegation_api_simple_SOURCES util.cpp cfg.cpp delegation_simple_api.cpp)
+set(fts_delegation_api_simple_SOURCES util.cpp delegation_simple_api.cpp)
 add_library(fts_delegation_api_simple SHARED ${fts_delegation_api_simple_SOURCES})
 target_link_libraries(fts_delegation_api_simple
     gridsite

@@ -30,48 +30,14 @@
 extern "C" {
 #endif
 
-/* Common URI schemes. */
-#define GLITE_URI_LFN           "lfn"
-#define GLITE_URI_GUID          "guid"
-#define GLITE_URI_SRM           "srm"
-#define GLITE_URI_HTTP          "http"
-#define GLITE_URI_HTTPS         "https"
-#define GLITE_URI_HTTPG         "httpg"
 
 /*
  * Names of the environment variables that define the location of gLite
  * components.
  */
 #define GLITE_LOCATION          "GLITE_LOCATION"
-#define GLITE_LOCATION_VAR      "GLITE_LOCATION_VAR"
-#define GLITE_LOCATION_LOG      "GLITE_LOCATION_LOG"
-#define GLITE_TMP           "GLITE_TMP"
 
-#include "ServiceDiscoveryIfce.h"
-
-/**
- * Broken up URI
- */
-typedef struct _glite_uri           glite_uri;
-
-/**
- * \brief The broken up URI structure.
- *
- * The following combinations are valid:
- *  - hierarchical:
- *    - &lt;scheme&gt;://&lt;path&gt;
- *    - Non-LFN URIs: &lt;scheme&gt;://[&lt;endpoint&gt;]&lt;path&gt;[?&lt;query&gt;]
- *    - LFN URIs: &lt;scheme&gt;://&lt;endpoint&gt;?lfn=&lt;path&gt;
- *  - non-hierarchical: &lt;scheme&gt;:&lt;path&gt;
- */
-struct _glite_uri
-{
-    int             hierarchical; /**< specifies wheter the URI is hierarhical or not. */
-    char                *scheme; /**< the URI scheme */
-    char                *endpoint; /**< the authority */
-    char                *path; /**< the path part of the URI */
-    char                *query; /**< the query part of the URI */
-};
+#include <ServiceDiscoveryIfce.h>
 
 /**
  * \defgroup glite_util GLITE Utils
