@@ -25,7 +25,7 @@
 #include <boost/filesystem.hpp>
 #include <sstream>
 
-#include "../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"

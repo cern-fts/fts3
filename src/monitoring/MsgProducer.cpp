@@ -21,7 +21,6 @@
 #include <json.h>
 #include <memory>
 #include "MsgProducer.h"
-#include "utility_routines.h"
 #include <signal.h>
 #include "common/Logger.h"
 #include <sstream>
@@ -29,6 +28,7 @@
 #include "../config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
+#include "UtilityRoutines.h"
 
 // End-Of-Transmission character
 static const char EOT = 0x04;

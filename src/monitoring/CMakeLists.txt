@@ -30,7 +30,7 @@ include_directories (${JSONC_INCLUDE_DIRS})
 # libfts_msg_ifce
 set(fts_msg_ifce_SOURCES
     msg-ifce.cpp
-    utility_routines.cpp
+    UtilityRoutines.cpp
 )
 
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
@@ -46,7 +46,7 @@ set_target_properties(fts_msg_ifce PROPERTIES
 
 # fts_msg_bulk binary
 set(fts_msg_bulk_SOURCES
-    utility_routines.cpp
+    UtilityRoutines.cpp
     msg-bulk-send.cpp
     MsgPipe.cpp
     MsgProducer.cpp

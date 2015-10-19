@@ -38,7 +38,7 @@
 #include <fcntl.h>
 
 #include "msg-ifce.h"
-#include "utility_routines.h"
+#include "UtilityRoutines.h"
 #include "common/Logger.h"
 
 

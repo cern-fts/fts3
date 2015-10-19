@@ -19,7 +19,6 @@
  */
 
 #include "MsgPipe.h"
-#include "utility_routines.h"
 #include <iostream>
 #include <string>
 #include <errno.h>
@@ -36,6 +35,7 @@
 #include "common/definitions.h"
 #include "common/Logger.h"
 #include "common/ConcurrentQueue.h"
+#include "UtilityRoutines.h"
 
 extern bool stopThreads;
 static bool signalReceived = false;

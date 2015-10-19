@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-#include "utility_routines.h"
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
@@ -52,6 +51,7 @@
 
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
+#include "UtilityRoutines.h"
 
 #define MILLI 36000000
 
