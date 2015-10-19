@@ -22,9 +22,10 @@
 
 #include <iomanip>
 #include <map>
-#include <mutex>
 #include <ostream>
 #include <string>
+#include <boost/thread.hpp>
+
 #include "common/Singleton.h"
 
 namespace fts3
@@ -36,7 +37,7 @@ namespace fts3
  */
 struct Profile
 {
-    mutable std::mutex mutex;
+    mutable boost::mutex mutex;
 
     unsigned long   nCalled;
     unsigned long   nExceptions;
@@ -92,7 +93,7 @@ public:
 class ProfilingSubsystem: public fts3::common::Singleton<ProfilingSubsystem>
 {
 private:
-    mutable std::mutex mutex;
+    mutable boost::mutex mutex;
 
     unsigned dumpInterval;
     std::map<std::string, Profile> profiles;

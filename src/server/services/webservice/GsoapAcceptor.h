@@ -22,13 +22,13 @@
 
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/thread.hpp>
 #include <memory>
-#include <mutex>
 #include <queue>
 
 #include <stdsoap2.h>
 
-#include "../../../common/Exceptions.h"
+#include "common/Exceptions.h"
 
 namespace fts3 {
 namespace server {
@@ -54,7 +54,7 @@ protected:
     std::queue<soap*> recycle;
 
 public:
-    mutable std::recursive_mutex _mutex;
+    mutable boost::recursive_mutex _mutex;
 };
 
 } // end namespace server

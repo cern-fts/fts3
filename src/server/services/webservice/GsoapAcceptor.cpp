@@ -151,7 +151,7 @@ std::unique_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
 
 soap* GSoapAcceptor::getSoapContext()
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    boost::recursive_mutex::scoped_lock lock(_mutex);
     if (!recycle.empty())
         {
             soap* ctx = recycle.front();
@@ -178,7 +178,7 @@ void GSoapAcceptor::recycleSoapContext(soap* ctx)
     if(stopThreads)
         return;
 
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    boost::recursive_mutex::scoped_lock lock(_mutex);
 
     if(ctx)
         {

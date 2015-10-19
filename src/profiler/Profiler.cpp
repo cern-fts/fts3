@@ -54,7 +54,7 @@ ScopeProfiler::~ScopeProfiler()
     double end = getMilliseconds();
     Profile& prof = ProfilingSubsystem::instance().getProfile(scope);
 
-    std::lock_guard<std::mutex> lock(prof.mutex);
+    boost::mutex::scoped_lock lock(prof.mutex);
 
     ++prof.nCalled;
     prof.nExceptions += nExceptions;
@@ -126,7 +126,7 @@ Profile& ProfilingSubsystem::getProfile(const std::string& scope)
 {
     // Note: scope may not be in profiles, so this may modify the map,
     // in which case it needs to lock
-    std::lock_guard<std::mutex> lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
     return profiles[scope];
 }
 
@@ -140,21 +140,21 @@ unsigned ProfilingSubsystem::getInterval() const
 
 std::map<std::string, Profile> ProfilingSubsystem::getProfiles() const
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
     return profiles;
 }
 
 
 void ProfilingSubsystem::clear()
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
     profiles.clear();
 }
 
 
 std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
 {
-    std::lock_guard<std::mutex> lock(prof.mutex);
+    boost::mutex::scoped_lock lock(prof.mutex);
 
     out << "executed " << std::setw(3) << std::dec << prof.nCalled << " times, "
         <<  "thrown " << std::setw(3) << prof.nExceptions << " exceptions, average of "
@@ -166,7 +166,7 @@ std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
 
 std::ostream& fts3::operator << (std::ostream& out, const ProfilingSubsystem& profSubsys)
 {
-    std::lock_guard<std::mutex> lock(profSubsys.mutex);
+    boost::mutex::scoped_lock lock(profSubsys.mutex);
 
     std::map<std::string, Profile>::const_iterator i;
     for (i = profSubsys.profiles.begin(); i != profSubsys.profiles.end(); ++i)

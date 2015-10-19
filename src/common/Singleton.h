@@ -22,7 +22,7 @@
 #define SINGLETON_H_
 
 #include <memory>
-#include <mutex>
+#include <boost/thread.hpp>
 
 
 namespace fts3
@@ -49,7 +49,7 @@ public:
         // thread safe lazy loading
         if (Singleton<T>::getInstancePtr().get() == NULL)
         {
-            std::lock_guard<std::mutex> lock(Singleton<T>::getMutex());
+            boost::mutex::scoped_lock lock(Singleton<T>::getMutex());
             if (Singleton<T>::getInstancePtr().get() == 0)
             {
                 Singleton<T>::getInstancePtr().reset(new T);
@@ -61,7 +61,7 @@ public:
     /// Destroy the singleton
     static void destroy()
     {
-        std::lock_guard<std::mutex> lock(Singleton<T>::getMutex());
+        boost::mutex::scoped_lock lock(Singleton<T>::getMutex());
         Singleton<T>::getInstancePtr().reset(NULL);
     }
 
@@ -79,8 +79,8 @@ private:
     }
 
     /// Mutex for thread-safe instantiation
-    static std::mutex& getMutex() {
-        static std::mutex mutex;
+    static boost::mutex& getMutex() {
+        static boost::mutex mutex;
         return mutex;
     }
 
