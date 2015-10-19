@@ -38,7 +38,7 @@ namespace common
 {
 
 static const unsigned long REQUIRED_FREE_RAM = 150;
-
+static const time_t AUTO_DRAIN_TIME = 300;
 
 /**
  * The DrainMode class is a thread safe singleton
@@ -82,8 +82,16 @@ public:
      *
      * 	@return true if drain mode is on, otherwise false
      */
-    operator bool() const
+    operator bool()
     {
+        if (autoDrainExpires >= time(NULL)) {
+            time_t remaining = autoDrainExpires - time(NULL);
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Auto-drain mode because hit memory limits. Retry in "
+                << remaining << " seconds" << commit;
+            return true;
+        }
+
         unsigned long availableRam = getFreeRamInMb();
         bool drain = DBSingleton::instance().getDBObjectInstance()->getDrain();
 
@@ -92,8 +100,12 @@ public:
                 << "Auto-drain mode: available RAM is not enough ("
                 << availableRam << " < " <<  REQUIRED_FREE_RAM
                 << ");" << commit;
+
+            autoDrainExpires = time(NULL) + AUTO_DRAIN_TIME;
+
             return true;
         }
+
         return drain;
     }
 
@@ -109,7 +121,7 @@ private:
      *
      * Private, should not be used
      */
-    DrainMode() {} ;
+    DrainMode(): autoDrainExpires(0) {} ;
 
     /**
      * Copying constructor
@@ -125,6 +137,10 @@ private:
      */
     DrainMode& operator=(DrainMode const&);
 
+    /**
+     * Timestamp of auto-drain
+     */
+    time_t autoDrainExpires;
 };
 
 }
