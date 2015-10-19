@@ -72,7 +72,7 @@ public:
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
-        updates.push_back(value_type(fileId, state, reason, jobId, retry));
+        updates.emplace_back(jobId, fileId, state, reason, retry);
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Update : " << fileId << "  " << state << "  " << reason << " " << jobId << " " << retry << commit;
     }
 

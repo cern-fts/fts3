@@ -337,17 +337,13 @@ public:
 
     void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
 
-
-    //NEW deletions and staging API
-    //deletions                      //file_id / state / reason
-    void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+    void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus);
 
     void getFilesForDeletion(std::vector<DeleteOperation>& delOps);
 
     void requeueStartedDeletes();
 
-    //staging                       //file_id / state / reason / token
-    void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+    void updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus);
 
     void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);
 

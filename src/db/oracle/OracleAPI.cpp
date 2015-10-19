@@ -9859,12 +9859,12 @@ int OracleAPI::getBufferOptimization()
 }
 
 
-void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void OracleAPI::updateDeletionsState(const std::vector<MinFileStatus>& deleteOpsStatus)
 {
     soci::session sql(*connectionPool);
     try
         {
-            updateDeletionsStateInternal(sql, files);
+            updateDeletionsStateInternal(sql, deleteOpsStatus);
         }
     catch (std::exception& e)
         {
@@ -9877,12 +9877,12 @@ void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string,
 }
 
 
-void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void OracleAPI::updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus)
 {
     soci::session sql(*connectionPool);
     try
         {
-            updateStagingStateInternal(sql, files);
+            updateStagingStateInternal(sql, stagingOpsStatus);
         }
     catch (std::exception& e)
         {
@@ -9937,35 +9937,17 @@ void OracleAPI::updateBringOnlineToken(std::map< std::string, std::map<std::stri
 }
 
 
-//NEW deletions and staging API
-//need to diffenetiate delete and staging cancelations so as to avoid clash with transfers
-//check job state for staging and deletions
-
-//deletions                      //file_id / state / reason / job_id
-void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void OracleAPI::updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus>& delOpsStatus)
 {
-    int file_id = 0;
-    std::string state;
-    std::string reason;
-    std::string job_id;
-    bool retry = false;
     std::vector<struct message_state> filesMsg;
 
     try
         {
             sql.begin();
 
-            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+            for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
                 {
-                    boost::tuple<int, std::string, std::string, std::string, bool >& tupleRecord = *itFind;
-                    file_id = boost::get<0>(tupleRecord);
-                    state = boost::get<1>(tupleRecord);
-                    reason = boost::get<2>(tupleRecord);
-                    job_id  = boost::get<3>(tupleRecord);
-                    retry = boost::get<4>(tupleRecord);
-
-                    if (state == "STARTED")
+                    if (i->state == "STARTED")
                         {
                             sql <<
                                 " UPDATE t_dm "
@@ -9974,12 +9956,12 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 "   file_id= :fileId "
                                 "   AND file_state='DELETE'",
                                 soci::use(hostname),
-                                soci::use(file_id)
+                                soci::use(i->fileId)
                                 ;
                         }
-                    else if(state == "FAILED")
+                    else if(i->state == "FAILED")
                         {
-                            bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
+                            bool shouldBeRetried = resetForRetryDelete(sql, i->fileId, i->jobId, i->retry);
                             if (!shouldBeRetried)
                                 {
                                     sql <<
@@ -9987,9 +9969,9 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                         " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "   file_id = :fileId ",
-                                        soci::use(reason),
-                                        soci::use(state),
-                                        soci::use(file_id)
+                                        soci::use(i->reason),
+                                        soci::use(i->state),
+                                        soci::use(i->fileId)
                                         ;
                                 }
                         }
@@ -10000,9 +9982,9 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                 " WHERE "
                                 "   file_id = :fileId ",
-                                soci::use(reason),
-                                soci::use(state),
-                                soci::use(file_id)
+                                soci::use(i->reason),
+                                soci::use(i->state),
+                                soci::use(i->fileId)
                                 ;
                         }
 
@@ -10012,16 +9994,8 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
 
             sql.begin();
 
-            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+            for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
                 {
-
-                    boost::tuple<int, std::string, std::string, std::string, bool >& tupleRecord = *itFind;
-                    file_id = boost::get<0>(tupleRecord);
-                    state = boost::get<1>(tupleRecord);
-                    reason = boost::get<2>(tupleRecord);
-                    job_id  = boost::get<3>(tupleRecord);
-                    retry = boost::get<4>(tupleRecord);
-                    //now update job state
                     long long numberOfFilesCanceled = 0;
                     long long numberOfFilesFinished = 0;
                     long long numberOfFilesFailed = 0;
@@ -10030,11 +10004,9 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                     long long totalNumOfFilesInJob= 0;
                     long long totalInTerminal = 0;
 
-                    soci::rowset<soci::row> rsReplica = (
-                                                            sql.prepare <<
-                                                            " select file_state, COUNT(file_state) from t_dm where job_id=:job_id group by file_state order by null ",
-                                                            soci::use(job_id)
-                                                        );
+                    soci::rowset<soci::row> rsReplica = (sql.prepare <<
+                        " select file_state, COUNT(file_state) from t_dm where job_id=:job_id group by file_state order by null ",
+                        soci::use(i->jobId));
 
                     soci::rowset<soci::row>::const_iterator iRep;
                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
@@ -10071,24 +10043,24 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'FINISHED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
-                                " WHERE job_id = :jobId ", soci::use(job_id);
+                                " WHERE job_id = :jobId ", soci::use(i->jobId);
                         }
                     else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
                         {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
-                                " WHERE job_id = :jobId ", soci::use(job_id);
+                                " WHERE job_id = :jobId ", soci::use(i->jobId);
                         }
                     else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
                         {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
-                                " WHERE job_id = :jobId ", soci::use(job_id);
+                                " WHERE job_id = :jobId ", soci::use(i->jobId);
                         }
                     else if (numberOfFilesStarted >= 1 &&  numberOfFilesDelete >= 1) //one file STARTED FILE/ JOB ACTIVE
                         {
                             std::string job_state;
-                            sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
+                            sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(i->jobId), soci::into(job_state);
                             if(job_state == "ACTIVE") //do not commit if already active
                                 {
                                     //do nothings
@@ -10097,20 +10069,20 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 {
                                     sql << " UPDATE t_job SET "
                                         " job_state = 'ACTIVE' "
-                                        " WHERE job_id = :jobId ", soci::use(job_id);
+                                        " WHERE job_id = :jobId ", soci::use(i->jobId);
                                 }
                         }
                     else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
                         {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'FINISHEDDIRTY', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
-                                " WHERE job_id = :jobId ", soci::use(job_id);
+                                " WHERE job_id = :jobId ", soci::use(i->jobId);
                         }
                     else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
                         {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job canceled, check files for more details' "
-                                " WHERE job_id = :jobId ", soci::use(job_id);
+                                " WHERE job_id = :jobId ", soci::use(i->jobId);
                         }
                     else
                         {
@@ -10119,14 +10091,10 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                 }
             sql.commit();
 
-            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+            for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
                 {
-                    boost::tuple<int, std::string, std::string, std::string, bool >& tupleRecord = *itFind;
-                    file_id = boost::get<0>(tupleRecord);
-                    job_id  = boost::get<3>(tupleRecord);
-
                     //send state message
-                    filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
+                    filesMsg = getStateOfDeleteInternal(sql, i->jobId, i->fileId);
                     if(!filesMsg.empty())
                         {
                             std::vector<struct message_state>::iterator it;
@@ -10157,7 +10125,7 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     soci::session sql(*connectionPool);
     std::vector<struct message_bringonline> messages;
-    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
+    std::vector<MinFileStatus> filesState;
 
     try
         {
@@ -10175,12 +10143,8 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                         {
                             if (iterUpdater->msg_errno == 0)
                                 {
-                                    //now restore messages : //file_id / state / reason / job_id / retry
-                                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
-                                                                           std::string((*iterUpdater).transfer_status),
-                                                                           std::string((*iterUpdater).transfer_message),
-                                                                           std::string((*iterUpdater).job_id),
-                                                                           0));
+                                    filesState.emplace_back(iterUpdater->job_id, iterUpdater->file_id,
+                                        iterUpdater->transfer_message, iterUpdater->transfer_message, false);
                                 }
                         }
                 }
@@ -10300,25 +10264,18 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                                     std::string cred_id = row.get<std::string>("CRED_ID");
 
                                     delOps.emplace_back(job_id, file_id, vo_name, user_dn, cred_id, source_url);
-
-                                    boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
-                                    filesState.push_back(recordState);
+                                    filesState.emplace_back(job_id, file_id, initState, reason, false);
                                 }
                         }
                 }
             //now update the initial state
             if(!filesState.empty())
                 {
-                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                         {
-                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                            int file_id = boost::get<0>(tupleRecord);
-                            std::string job_id = boost::get<3>(tupleRecord);
-
                             //send state message
                             std::vector<struct message_state> filesMsg;
-                            filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
+                            filesMsg = getStateOfDeleteInternal(sql, itFind->jobId, itFind->fileId);
                             if(!filesMsg.empty())
                                 {
                                     std::vector<struct message_state>::iterator it;
@@ -10341,22 +10298,15 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                             //save state and restore afterwards
                             if(!filesState.empty())
                                 {
-                                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
                                     struct message_bringonline msg;
-                                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
-                                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                                            int file_id = boost::get<0>(tupleRecord);
-                                            std::string transfer_status = boost::get<1>(tupleRecord);
-                                            std::string transfer_message = boost::get<2>(tupleRecord);
-                                            std::string job_id = boost::get<3>(tupleRecord);
-
-                                            msg.file_id = file_id;
-                                            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                            msg.file_id = itFind->fileId;
+                                            strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
                                             msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                                            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                            strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
                                             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                                            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                            strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
                                             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
                                             //store the states into fs to be restored in the next run of this function
@@ -10408,7 +10358,7 @@ void OracleAPI::requeueStartedDeletes()
 void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
-    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
+    std::vector<MinFileStatus> filesState;
     std::vector<struct message_bringonline> messages;
 
     try
@@ -10427,12 +10377,10 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                         {
                             if (iterUpdater->msg_errno == 0)
                                 {
-                                    //now restore messages : //file_id / state / reason / job_id / retry
-                                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
-                                                                           std::string((*iterUpdater).transfer_status),
-                                                                           std::string((*iterUpdater).transfer_message),
-                                                                           std::string((*iterUpdater).job_id),
-                                                                           0));
+                                    filesState.emplace_back(
+                                        iterUpdater->job_id, iterUpdater->file_id, iterUpdater->transfer_message,
+                                        iterUpdater->transfer_message, false
+                                    );
                                 }
                         }
                 }
@@ -10613,10 +10561,10 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                                         std::string()
                                     );
 
-                                    boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
+
                                     if(!job_id.empty() && file_id > 0)
                                         {
-                                            filesState.push_back(recordState);
+                                            filesState.emplace_back(job_id, file_id, initState, reason, false);
                                         }
                                 }
                         }
@@ -10625,20 +10573,15 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             //now update the initial state
             if(!filesState.empty())
                 {
-                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                         {
                             try
                                 {
-                                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                                    int file_id = boost::get<0>(tupleRecord);
-                                    std::string job_id = boost::get<3>(tupleRecord);
-
                                     //send state message
                                     std::vector<struct message_state> filesMsg;
-                                    if(!job_id.empty() && file_id > 0)
+                                    if(!itFind->jobId.empty() && itFind->fileId > 0)
                                         {
-                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                                            filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
                                             if(!filesMsg.empty())
                                                 {
                                                     std::vector<struct message_state>::iterator it;
@@ -10667,22 +10610,15 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                             //save state and restore afterwards
                             if(!filesState.empty())
                                 {
-                                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
                                     struct message_bringonline msg;
-                                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
-                                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                                            int file_id = boost::get<0>(tupleRecord);
-                                            std::string transfer_status = boost::get<1>(tupleRecord);
-                                            std::string transfer_message = boost::get<2>(tupleRecord);
-                                            std::string job_id = boost::get<3>(tupleRecord);
-
-                                            msg.file_id = file_id;
-                                            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                            msg.file_id = itFind->fileId;
+                                            strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
                                             msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                                            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                            strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
                                             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                                            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                            strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
                                             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
                                             //store the states into fs to be restored in the next run of this function
@@ -10781,14 +10717,8 @@ void OracleAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingO
 }
 
 
-//file_id / state / reason / job_id
-void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void OracleAPI::updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus>& stagingOpsStatus)
 {
-    int file_id = 0;
-    std::string state;
-    std::string reason;
-    std::string job_id;
-    bool retry = false;
     std::vector<struct message_state> filesMsg;
 
     try
@@ -10796,17 +10726,9 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
             sql.begin();
 
-            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+            for (auto i = stagingOpsStatus.begin(); i < stagingOpsStatus.end(); ++i)
                 {
-                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                    file_id = boost::get<0>(tupleRecord);
-                    state = boost::get<1>(tupleRecord);
-                    reason = boost::get<2>(tupleRecord);
-                    job_id = boost::get<3>(tupleRecord);
-                    retry = boost::get<4>(tupleRecord);
-
-                    if (state == "STARTED")
+                    if (i->state == "STARTED")
                         {
                             sql <<
                                 " UPDATE t_file "
@@ -10814,19 +10736,16 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 " WHERE  "
                                 "   file_id= :fileId "
                                 "   AND file_state='STAGING'",
-                                soci::use(hostname),
-                                soci::use(hostname),
-                                soci::use(file_id)
-                                ;
+                                soci::use(hostname), soci::use(hostname), soci::use(i->fileId);
                         }
-                    else if(state == "FAILED")
+                    else if(i->state == "FAILED")
                         {
-                            bool shouldBeRetried = retry;
+                            bool shouldBeRetried = i->retry;
 
-                            if(retry)
+                            if(i->retry)
                                 {
                                     int times = 0;
-                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
+                                    shouldBeRetried = resetForRetryStaging(sql, i->fileId, i->jobId, i->retry, times);
                                     if(shouldBeRetried)
                                         {
                                             if(times > 0)
@@ -10834,14 +10753,14 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                                     sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
                                                         "    (file_id, attempt, datetime, reason) "
                                                         "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
-                                                        soci::use(file_id), soci::use(times), soci::use(reason);
+                                                        soci::use(i->fileId), soci::use(times), soci::use(i->reason);
                                                 }
 
                                             continue;
                                         }
                                 }
 
-                            if (!retry || !shouldBeRetried)
+                            if (!i->retry || !shouldBeRetried)
                                 {
                                     sql <<
                                         " UPDATE t_file "
@@ -10849,9 +10768,9 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                         " WHERE "
                                         "   file_id = :fileId "
                                         "   AND file_state in ('STAGING','STARTED') ",
-                                        soci::use(reason),
-                                        soci::use(state),
-                                        soci::use(file_id)
+                                        soci::use(i->reason),
+                                        soci::use(i->state),
+                                        soci::use(i->fileId)
                                         ;
                                 }
                         }
@@ -10862,18 +10781,18 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                             int stage_in_only = 0;
 
                             sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
-                                soci::use(file_id),
+                                soci::use(i->fileId),
                                 soci::into(stage_in_only);
 
                             if(stage_in_only == 0)  //stage-in and transfer
                                 {
-                                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                    dbState = i->state == "FINISHED" ? "SUBMITTED" : i->state;
+                                    dbReason = i->state == "FINISHED" ? std::string() : i->reason;
                                 }
                             else //stage-in only
                                 {
-                                    dbState = state == "FINISHED" ? "FINISHED" : state;
-                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                    dbState = i->state == "FINISHED" ? "FINISHED" : i->state;
+                                    dbReason = i->state == "FINISHED" ? std::string() : i->reason;
                                 }
 
                             if(dbState == "SUBMITTED")
@@ -10888,7 +10807,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                         "   AND file_state in ('STAGING','STARTED')",
                                         soci::use(hashedId),
                                         soci::use(dbState),
-                                        soci::use(file_id)
+                                        soci::use(i->fileId)
                                         ;
                                 }
                             else if(dbState == "FINISHED")
@@ -10901,7 +10820,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                         "   AND file_state in ('STAGING','STARTED')",
                                         soci::use(dbReason),
                                         soci::use(dbState),
-                                        soci::use(file_id)
+                                        soci::use(i->fileId)
                                         ;
                                 }
                             else
@@ -10914,29 +10833,22 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                         "   AND file_state in ('STAGING','STARTED')",
                                         soci::use(dbReason),
                                         soci::use(dbState),
-                                        soci::use(file_id)
+                                        soci::use(i->fileId)
                                         ;
                                 }
                         }
                 }
             sql.commit();
 
-            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+            for (auto itFind = stagingOpsStatus.begin(); itFind < stagingOpsStatus.end(); ++itFind)
                 {
-                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                    file_id = boost::get<0>(tupleRecord);
-                    state = boost::get<1>(tupleRecord);
-                    reason = boost::get<2>(tupleRecord);
-                    job_id = boost::get<3>(tupleRecord);
-                    retry = boost::get<4>(tupleRecord);
-
-                    if(state == "SUBMITTED")
-                        updateJobTransferStatusInternal(sql, job_id, "ACTIVE",0);
+                    if(itFind->state == "SUBMITTED")
+                        updateJobTransferStatusInternal(sql, itFind->jobId, "ACTIVE",0);
                     else
-                        updateJobTransferStatusInternal(sql, job_id, state,0);
+                        updateJobTransferStatusInternal(sql, itFind->jobId, itFind->state,0);
 
                     //send state message
-                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
                     if(!filesMsg.empty())
                         {
                             std::vector<struct message_state>::iterator it;

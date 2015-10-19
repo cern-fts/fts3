@@ -47,6 +47,7 @@
 
 #include "DeleteOperation.h"
 #include "Job.h"
+#include "MinFileStatus.h"
 #include "OptimizerSample.h"
 #include "StagingOperation.h"
 #include "StorageElement.h"
@@ -610,9 +611,9 @@ public:
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queued) = 0;
 
 
-    //NEW deletions and staging API
-    //deletions                      //file_id / state / reason
-    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
+    /// Updates the status for delete operations
+    /// @param delOpsStatus  Update for files in delete or started
+    virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus) = 0;
 
     /// Gets a list of delete operations in the queue
     /// @params[out] delOps A list of namespace operations (deletion)
@@ -622,10 +623,11 @@ public:
     /// state, so they re-enter the queue
     virtual void requeueStartedDeletes() = 0;
 
-    //staging                       //file_id / state / reason / token
-    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
+    /// Updates the status for staging operations
+    /// @param stagingOpStatus  Update for files in staging or started
+    virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus) = 0;
 
-    //                                                          //  job_id / file_id / token
+    //  job_id / file_id / token
     virtual void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token) = 0;
 
     /// Get staging operations ready to be started

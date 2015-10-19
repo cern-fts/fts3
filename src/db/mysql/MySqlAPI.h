@@ -368,15 +368,13 @@ public:
 
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
 
-    //deletions                      //file_id / state / reason
-    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+    virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus);
 
     virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps);
 
     virtual void requeueStartedDeletes();
 
-    //staging                       //file_id / state / reason / token
-    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+    virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus);
 
     virtual void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);
 
@@ -404,9 +402,9 @@ private:
 
     bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 
-    void updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+    void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
 
-    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+    void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
 
     bool getDrainInternal(soci::session& sql);
 

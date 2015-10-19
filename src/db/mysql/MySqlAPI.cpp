@@ -10659,12 +10659,12 @@ int MySqlAPI::getBufferOptimization()
 }
 
 
-void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void MySqlAPI::updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus)
 {
     soci::session sql(*connectionPool);
     try
     {
-        updateDeletionsStateInternal(sql, files);
+        updateDeletionsStateInternal(sql, delOpsStatus);
     }
     catch (std::exception& e)
     {
@@ -10677,12 +10677,12 @@ void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, 
 }
 
 
-void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void MySqlAPI::updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus)
 {
     soci::session sql(*connectionPool);
     try
     {
-        updateStagingStateInternal(sql, files);
+        updateStagingStateInternal(sql, stagingOpsStatus);
     }
     catch (std::exception& e)
     {
@@ -10737,18 +10737,8 @@ void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::strin
 }
 
 
-//NEW deletions and staging API
-//need to diffenetiate delete and staging cancelations so as to avoid clash with transfers
-//check job state for staging and deletions
-
-//deletions                      //file_id / state / reason / job_id / retry
-void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus>& delOpsStatus)
 {
-    int file_id = 0;
-    std::string state;
-    std::string reason;
-    std::string job_id;
-    bool retry = false;
     std::vector<struct message_state> filesMsg;
     std::vector<std::string> distinctJobIds;
 
@@ -10756,17 +10746,9 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
     {
         sql.begin();
 
-        std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-        for (itFind = files.begin(); itFind < files.end(); ++itFind)
+        for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
         {
-            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-            file_id = boost::get<0>(tupleRecord);
-            state = boost::get<1>(tupleRecord);
-            reason = boost::get<2>(tupleRecord);
-            job_id  = boost::get<3>(tupleRecord);
-            retry = boost::get<4>(tupleRecord);
-
-            if (state == "STARTED")
+            if (i->state == "STARTED")
             {
                 sql <<
                     " UPDATE t_dm "
@@ -10774,12 +10756,12 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                     " WHERE  "
                     "   file_id= :fileId ",
                     soci::use(hostname),
-                    soci::use(file_id)
+                    soci::use(i->fileId)
                     ;
             }
-            else if(state == "FAILED")
+            else if(i->state == "FAILED")
             {
-                bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
+                bool shouldBeRetried = resetForRetryDelete(sql, i->fileId, i->jobId, i->retry);
                 if (!shouldBeRetried)
                 {
                     sql <<
@@ -10787,9 +10769,9 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                         " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                         " WHERE "
                         "   file_id = :fileId ",
-                        soci::use(reason),
-                        soci::use(state),
-                        soci::use(file_id)
+                        soci::use(i->reason),
+                        soci::use(i->state),
+                        soci::use(i->fileId)
                         ;
                 }
             }
@@ -10800,9 +10782,9 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                     " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                     " WHERE "
                     "   file_id = :fileId ",
-                    soci::use(reason),
-                    soci::use(state),
-                    soci::use(file_id)
+                    soci::use(i->reason),
+                    soci::use(i->state),
+                    soci::use(i->fileId)
                     ;
             }
         }
@@ -10811,23 +10793,16 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
 
         sql.begin();
 
-        for (itFind = files.begin(); itFind < files.end(); ++itFind)
+        for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
         {
-            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-            file_id = boost::get<0>(tupleRecord);
-            state = boost::get<1>(tupleRecord);
-            reason = boost::get<2>(tupleRecord);
-            job_id  = boost::get<3>(tupleRecord);
-            retry = boost::get<4>(tupleRecord);
-
             //prevent multiple times of updating the same job id
-            if (std::find(distinctJobIds.begin(), distinctJobIds.end(), job_id) != distinctJobIds.end())
+            if (std::find(distinctJobIds.begin(), distinctJobIds.end(), i->jobId) != distinctJobIds.end())
             {
                 continue;
             }
             else
             {
-                distinctJobIds.push_back(job_id);
+                distinctJobIds.push_back(i->jobId);
             }
 
             //now update job state
@@ -10840,10 +10815,10 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
             long long totalInTerminal = 0;
 
             soci::rowset<soci::row> rsReplica = (
-                                                    sql.prepare <<
-                                                    " select file_state, COUNT(file_state) from t_dm where job_id=:job_id group by file_state order by null ",
-                                                    soci::use(job_id)
-                                                );
+                sql.prepare <<
+                " select file_state, COUNT(file_state) from t_dm where job_id=:job_id group by file_state order by null ",
+                soci::use(i->jobId)
+            );
 
             soci::rowset<soci::row>::const_iterator iRep;
             for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
@@ -10880,24 +10855,24 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
             {
                 sql << " UPDATE t_job SET "
                     " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
-                    " WHERE job_id = :jobId ", soci::use(job_id);
+                    " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
             {
                 sql << " UPDATE t_job SET "
                     " job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
-                    " WHERE job_id = :jobId ", soci::use(job_id);
+                    " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
             {
                 sql << " UPDATE t_job SET "
                     " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
-                    " WHERE job_id = :jobId ", soci::use(job_id);
+                    " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if (numberOfFilesStarted >= 1 &&  numberOfFilesDelete >= 1) //one file STARTED FILE/ JOB ACTIVE
             {
                 std::string job_state;
-                sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
+                sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(i->jobId), soci::into(job_state);
                 if(job_state == "ACTIVE") //do not commit if already active
                 {
                     //do nothings
@@ -10906,20 +10881,20 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                 {
                     sql << " UPDATE t_job SET "
                         " job_state = 'ACTIVE' "
-                        " WHERE job_id = :jobId ", soci::use(job_id);
+                        " WHERE job_id = :jobId ", soci::use(i->jobId);
                 }
             }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
             {
                 sql << " UPDATE t_job SET "
                     " job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
-                    " WHERE job_id = :jobId ", soci::use(job_id);
+                    " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
             {
                 sql << " UPDATE t_job SET "
                     " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job canceled, check files for more details' "
-                    " WHERE job_id = :jobId ", soci::use(job_id);
+                    " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else
             {
@@ -10929,14 +10904,10 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
         sql.commit();
 
         //now send monitoring messages
-        for (itFind = files.begin(); itFind < files.end(); ++itFind)
+        for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
         {
-            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-            file_id = boost::get<0>(tupleRecord);
-            job_id  = boost::get<3>(tupleRecord);
-
             //send state message
-            filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
+            filesMsg = getStateOfDeleteInternal(sql, i->jobId, i->fileId);
             if(!filesMsg.empty())
             {
                 std::vector<struct message_state>::iterator it;
@@ -10966,7 +10937,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     soci::session sql(*connectionPool);
     std::vector<struct message_bringonline> messages;
-    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
+    std::vector<MinFileStatus> filesState;
 
 
     try
@@ -10980,17 +10951,15 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 
         if(!messages.empty())
         {
-            std::vector<struct message_bringonline>::iterator iterUpdater;
-            for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
+            for (auto iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
             {
                 if (iterUpdater->msg_errno == 0)
                 {
                     //now restore messages : //file_id / state / reason / job_id / retry
-                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
-                                                           std::string((*iterUpdater).transfer_status),
-                                                           std::string((*iterUpdater).transfer_message),
-                                                           std::string((*iterUpdater).job_id),
-                                                           0));
+                    filesState.emplace_back(
+                        iterUpdater->job_id, iterUpdater->file_id,
+                        iterUpdater->transfer_status, iterUpdater->transfer_message, false
+                    );
                 }
             }
         }
@@ -11112,9 +11081,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     std::string cred_id = row.get<std::string>("cred_id");
 
                     delOps.emplace_back(job_id, file_id, vo_name, user_dn, cred_id, source_url);
-
-                    boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
-                    filesState.push_back(recordState);
+                    filesState.emplace_back(job_id, file_id, initState, reason, false);
                 }
             }
         }
@@ -11122,16 +11089,11 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
         //now update the initial state
         if(!filesState.empty())
         {
-            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-            for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+            for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
             {
-                boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                int file_id = boost::get<0>(tupleRecord);
-                std::string job_id = boost::get<3>(tupleRecord);
-
                 //send state message
                 std::vector<struct message_state> filesMsg;
-                filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
+                filesMsg = getStateOfDeleteInternal(sql, itFind->jobId, itFind->fileId);
                 if(!filesMsg.empty())
                 {
                     std::vector<struct message_state>::iterator it;
@@ -11154,22 +11116,15 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                 //save state and restore afterwards
                 if(!filesState.empty())
                 {
-                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
                     struct message_bringonline msg;
-                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                     {
-                        boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                        int file_id = boost::get<0>(tupleRecord);
-                        std::string transfer_status = boost::get<1>(tupleRecord);
-                        std::string transfer_message = boost::get<2>(tupleRecord);
-                        std::string job_id = boost::get<3>(tupleRecord);
-
-                        msg.file_id = file_id;
-                        strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                        msg.file_id = itFind->fileId;
+                        strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
                         msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                        strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                        strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
                         msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                        strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                        strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
                         msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
                         //store the states into fs to be restored in the next run of this function
@@ -11222,7 +11177,7 @@ void MySqlAPI::requeueStartedDeletes()
 void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
-    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
+    std::vector<MinFileStatus> filesState;
     std::vector<struct message_bringonline> messages;
 
     try
@@ -11236,17 +11191,15 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
         if(!messages.empty())
         {
-            std::vector<struct message_bringonline>::iterator iterUpdater;
-            for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
+            for (auto iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
             {
                 if (iterUpdater->msg_errno == 0)
                 {
-                    //now restore messages : //file_id / state / reason / job_id / retry
-                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
-                                                           std::string((*iterUpdater).transfer_status),
-                                                           std::string((*iterUpdater).transfer_message),
-                                                           std::string((*iterUpdater).job_id),
-                                                           0));
+                    //now restore messages
+                    filesState.emplace_back(
+                        iterUpdater->job_id, iterUpdater->file_id,
+                        iterUpdater->transfer_status, iterUpdater->transfer_message, false
+                    );
                 }
             }
         }
@@ -11431,10 +11384,9 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                         std::string()
                     );
 
-                    boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                     if(!job_id.empty() && file_id > 0)
                     {
-                        filesState.push_back(recordState);
+                        filesState.emplace_back(job_id, file_id, initState, reason, false);
                     }
                 }
             }
@@ -11443,20 +11395,15 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
         //now update the initial state
         if(!filesState.empty())
         {
-            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-            for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+            for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
             {
                 try
                 {
-                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                    int file_id = boost::get<0>(tupleRecord);
-                    std::string job_id = boost::get<3>(tupleRecord);
-
                     //send state message
                     std::vector<struct message_state> filesMsg;
-                    if(!job_id.empty() && file_id > 0)
+                    if(!itFind->jobId.empty() && itFind->fileId > 0)
                     {
-                        filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                        filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
                         if(!filesMsg.empty())
                         {
                             std::vector<struct message_state>::iterator it;
@@ -11485,22 +11432,15 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 //save state and restore afterwards
                 if(!filesState.empty())
                 {
-                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
                     struct message_bringonline msg;
-                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                     {
-                        boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                        int file_id = boost::get<0>(tupleRecord);
-                        std::string transfer_status = boost::get<1>(tupleRecord);
-                        std::string transfer_message = boost::get<2>(tupleRecord);
-                        std::string job_id = boost::get<3>(tupleRecord);
-
-                        msg.file_id = file_id;
-                        strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                        msg.file_id = itFind->fileId;
+                        strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
                         msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                        strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                        strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
                         msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                        strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                        strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
                         msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
                         //store the states into fs to be restored in the next run of this function
@@ -11598,33 +11538,19 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
     }
 }
 
-//file_id / state / reason / job_id / retry
-void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
-{
-    int file_id = 0;
-    std::string state;
-    std::string reason;
-    std::string job_id;
-    bool retry = false;
-    std::vector<struct message_state> filesMsg;
 
+void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus>& stagingOpsStatus)
+{
+    std::vector<struct message_state> filesMsg;
 
     try
     {
 
         sql.begin();
 
-        std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-        for (itFind = files.begin(); itFind < files.end(); ++itFind)
+        for (auto i = stagingOpsStatus.begin(); i < stagingOpsStatus.end(); ++i)
         {
-            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-            file_id = boost::get<0>(tupleRecord);
-            state = boost::get<1>(tupleRecord);
-            reason = boost::get<2>(tupleRecord);
-            job_id = boost::get<3>(tupleRecord);
-            retry = boost::get<4>(tupleRecord);
-
-            if (state == "STARTED")
+            if (i->state == "STARTED")
             {
                 sql <<
                     " UPDATE t_file "
@@ -11634,18 +11560,17 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                     "   AND file_state='STAGING'",
                     soci::use(hostname),
                     soci::use(hostname),
-                    soci::use(file_id)
+                    soci::use(i->fileId)
                     ;
             }
-            else if(state == "FAILED")
+            else if(i->state == "FAILED")
             {
-                bool shouldBeRetried = retry;
+                bool shouldBeRetried = i->retry;
 
-                if(retry)
+                if(i->retry)
                 {
-
                     int times = 0;
-                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
+                    shouldBeRetried = resetForRetryStaging(sql, i->fileId, i->jobId, i->retry, times);
                     if(shouldBeRetried)
                     {
                         if(times > 0)
@@ -11653,14 +11578,14 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                             sql << "INSERT IGNORE INTO t_file_retry_errors "
                                 "    (file_id, attempt, datetime, reason) "
                                 "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
-                                soci::use(file_id), soci::use(times), soci::use(reason);
+                                soci::use(i->fileId), soci::use(times), soci::use(i->reason);
                         }
 
                         continue;
                     }
                 }
 
-                if (!retry || !shouldBeRetried)
+                if (!i->retry || !shouldBeRetried)
                 {
                     sql <<
                         " UPDATE t_file "
@@ -11668,9 +11593,9 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
-                        soci::use(reason),
-                        soci::use(state),
-                        soci::use(file_id)
+                        soci::use(i->reason),
+                        soci::use(i->state),
+                        soci::use(i->fileId)
                         ;
                 }
             }
@@ -11681,18 +11606,18 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                 int stage_in_only = 0;
 
                 sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
-                    soci::use(file_id),
+                    soci::use(i->fileId),
                     soci::into(stage_in_only);
 
                 if(stage_in_only == 0)  //stage-in and transfer
                 {
-                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                    dbReason = state == "FINISHED" ? std::string() : reason;
+                    dbState = i->state == "FINISHED" ? "SUBMITTED" : i->state;
+                    dbReason = i->state == "FINISHED" ? std::string() : i->reason;
                 }
                 else //stage-in only
                 {
-                    dbState = state == "FINISHED" ? "FINISHED" : state;
-                    dbReason = state == "FINISHED" ? std::string() : reason;
+                    dbState = i->state == "FINISHED" ? "FINISHED" : i->state;
+                    dbReason = i->state == "FINISHED" ? std::string() : i->reason;
                 }
 
                 if(dbState == "SUBMITTED")
@@ -11707,7 +11632,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         "   AND file_state in ('STAGING','STARTED')",
                         soci::use(hashedId),
                         soci::use(dbState),
-                        soci::use(file_id)
+                        soci::use(i->fileId)
                         ;
                 }
                 else if(dbState == "FINISHED")
@@ -11720,7 +11645,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         "   AND file_state in ('STAGING','STARTED')",
                         soci::use(dbReason),
                         soci::use(dbState),
-                        soci::use(file_id)
+                        soci::use(i->fileId)
                         ;
                 }
                 else
@@ -11733,33 +11658,25 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         "   AND file_state in ('STAGING','STARTED')",
                         soci::use(dbReason),
                         soci::use(dbState),
-                        soci::use(file_id)
+                        soci::use(i->fileId)
                         ;
                 }
             }
         }
         sql.commit();
 
-        for (itFind = files.begin(); itFind < files.end(); ++itFind)
+        for (auto i = stagingOpsStatus.begin(); i < stagingOpsStatus.end(); ++i)
         {
-            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-            file_id = boost::get<0>(tupleRecord);
-            state = boost::get<1>(tupleRecord);
-            reason = boost::get<2>(tupleRecord);
-            job_id = boost::get<3>(tupleRecord);
-            retry = boost::get<4>(tupleRecord);
-
-            if(state == "SUBMITTED")
-                updateJobTransferStatusInternal(sql, job_id, "ACTIVE", 0);
+            if(i->state == "SUBMITTED")
+                updateJobTransferStatusInternal(sql, i->jobId, "ACTIVE", 0);
             else
-                updateJobTransferStatusInternal(sql, job_id, state, 0);
+                updateJobTransferStatusInternal(sql, i->jobId, i->state, 0);
 
             //send state message
-            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+            filesMsg = getStateOfTransferInternal(sql, i->jobId, i->fileId);
             if(!filesMsg.empty())
             {
-                std::vector<struct message_state>::iterator it;
-                for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                for (auto it = filesMsg.begin(); it != filesMsg.end(); ++it)
                 {
                     struct message_state tmp = (*it);
                     constructJSONMsg(&tmp);

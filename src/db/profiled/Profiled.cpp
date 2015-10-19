@@ -856,13 +856,11 @@ void ProfiledDB::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
     PROFILE_PREFIXED("DB::", db->getQueuesWithSessionReusePending(queues));
 }
 
-//deletions
-void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void ProfiledDB::updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus)
 {
-    PROFILE_PREFIXED("DB::", db->updateDeletionsState(files));
+    PROFILE_PREFIXED("DB::", db->updateDeletionsState(delOpsStatus));
 }
 
-//file_id / surl / proxy
 void ProfiledDB::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForDeletion(delOps));
@@ -873,10 +871,9 @@ void ProfiledDB::requeueStartedDeletes()
     PROFILE_PREFIXED("DB::", return db->requeueStartedDeletes());
 }
 
-//staging                       //file_id / state / reason / token
-void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+void ProfiledDB::updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus)
 {
-    PROFILE_PREFIXED("DB::", db->updateStagingState(files));
+    PROFILE_PREFIXED("DB::", db->updateStagingState(stagingOpsStatus));
 }
 
 void ProfiledDB::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)

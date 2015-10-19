@@ -44,10 +44,8 @@ class StateUpdater
 {
 
 protected:
-    // typedef for convenience
-    typedef boost::tuple<int, std::string, std::string, std::string, bool> value_type;
     // pointer to GenericDbIfce member that updates state
-    typedef void (GenericDbIfce::* update_state_t)(std::vector<value_type> &);
+    typedef void (GenericDbIfce::* UpdateStateFunc)(const std::vector<MinFileStatus> &);
 
 public:
 
@@ -77,7 +75,7 @@ public:
             // iterate over files
             for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u) {
                 for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f) {
-                    updates.push_back(value_type(*it_f, state, reason, job_id, retry));
+                    updates.emplace_back(job_id, *it_f, state, reason, retry);
                 }
             }
         }
@@ -88,7 +86,7 @@ public:
      */
     void recover()
     {
-        std::vector<value_type> tmp;
+        std::vector<MinFileStatus> tmp;
         // critical section
         {
             boost::mutex::scoped_lock lock(m);
@@ -103,10 +101,10 @@ public:
 protected:
 
     /// this routine is executed in a separate thread
-    void runImpl(update_state_t update_state)
+    void runImpl(UpdateStateFunc update_state)
     {
         // temporary vector for DB update
-        std::vector<value_type> tmp;
+        std::vector<MinFileStatus> tmp;
 
         while (true) {
             try {
@@ -144,7 +142,7 @@ protected:
     /**
      *
      */
-    void recover(std::vector<value_type> const & recover)
+    void recover(const std::vector<MinFileStatus> &recover)
     {
         if (!recover.empty()) {
             // lock the vector
@@ -154,21 +152,14 @@ protected:
         }
 
         message_bringonline msg;
-        std::vector<value_type>::const_iterator itFind;
-        for (itFind = recover.begin(); itFind != recover.end(); ++itFind)
+        for (auto itFind = recover.begin(); itFind != recover.end(); ++itFind)
         {
-            value_type const & tupleRecord = *itFind;
-            int file_id = boost::get<0>(tupleRecord);
-            std::string const & transfer_status = boost::get<1>(tupleRecord);
-            std::string const & transfer_message = boost::get<2>(tupleRecord);
-            std::string const & job_id = boost::get<3>(tupleRecord);
-
-            msg.file_id = file_id;
-            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+            msg.file_id = itFind->fileId;
+            strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
             msg.job_id[sizeof(msg.job_id) -1] = '\0';
-            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+            strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+            strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
             //store the states into fs to be restored in the next run
@@ -177,13 +168,13 @@ protected:
     }
 
     /// a vector containing all the updates (to be send to DB)
-    std::vector<value_type> updates;
+    std::vector<MinFileStatus> updates;
     /// the mutex guarding the above vector
     boost::mutex m;
     /// DB interface
     GenericDbIfce& db;
     /// operation name ('_delete' or '_staging')
-    std::string const operation;
+    const std::string operation;
 };
 
 #endif // STATEUPDATER_H_
