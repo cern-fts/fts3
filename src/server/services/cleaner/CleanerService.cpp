@@ -34,8 +34,6 @@
 
 namespace fs = boost::filesystem;
 
-extern bool stopThreads;
-
 namespace fts3 {
 namespace server {
 
@@ -67,7 +65,9 @@ void CleanerService::removeOldFiles(const std::string& path)
 
 void CleanerService::operator () ()
 {
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting CleanerService" << fts3::common::commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         ++counter;
 
@@ -100,8 +100,10 @@ void CleanerService::operator () ()
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  fts3::common::commit;
         }
 
-        sleep(1);
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting CleanerService" << fts3::common::commit;
 }
 
 } // end namespace server

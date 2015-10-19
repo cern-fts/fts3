@@ -20,7 +20,7 @@
 
 #include "TransfersService.h"
 
-#include "../../../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "common/Logger.h"
 #include "common/ThreadPool.h"
 
@@ -36,8 +36,6 @@
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"
 
-
-extern bool stopThreads;
 
 using namespace fts3::common;
 
@@ -95,7 +93,9 @@ void TransfersService::operator () ()
 {
     static bool drainMode = false;
 
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting TransfersService" << commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         retrieveRecords = time(0);
 
@@ -107,7 +107,7 @@ void TransfersService::operator () ()
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more transfers for this instance!" << commit;
                     drainMode = true;
-                    sleep(15);
+                    boost::this_thread::sleep(boost::posix_time::seconds(15));
                     continue;
                 }
                 else
@@ -120,16 +120,16 @@ void TransfersService::operator () ()
         }
         catch (std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Exception in process_service_handler " << e.what() << commit;
-            sleep(2);
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Exception in TransfersService " << e.what() << commit;
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-            sleep(2);
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
         }
-        sleep(2);
+        boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting TransfersService" << commit;
 }
 
 
@@ -166,7 +166,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
             // iterate over all VOs
             for (auto it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
             {
-                if (stopThreads)
+                if (boost::this_thread::interruption_requested())
                 {
                     execPool.interrupt();
                     return;
@@ -235,7 +235,7 @@ void TransfersService::executeUrlcopy()
         catch (std::exception& e)
         {
             //try again if deadlocked
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
             try
             {
                 queues.clear();
@@ -255,7 +255,7 @@ void TransfersService::executeUrlcopy()
         catch (...)
         {
             //try again if deadlocked
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
             try
             {
                 queues.clear();

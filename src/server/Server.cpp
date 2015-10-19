@@ -20,7 +20,8 @@
 
 #include "Server.h"
 
-#include "../config/ServerConfig.h"
+#include "common/Logger.h"
+#include "config/ServerConfig.h"
 #include "services/cleaner/CleanerService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/MultihopTransfersService.h"
@@ -60,14 +61,14 @@ void Server::start()
 
     // Give cleaner and heartbeat some time ahead
     if (!config::ServerConfig::instance().get<bool> ("rush"))
-        sleep(8);
+        boost::this_thread::sleep(boost::posix_time::seconds(8));
 
     services.emplace_back(new CancelerService);
     systemThreads.create_thread(boost::ref(*services.back().get()));
 
     // Wait for status updates to be processed
     if (!config::ServerConfig::instance().get<bool> ("rush"))
-        sleep(12);
+        boost::this_thread::sleep(boost::posix_time::seconds(12));
 
     services.emplace_back(new OptimizerService);
     systemThreads.create_thread(boost::ref(*services.back().get()));
@@ -97,6 +98,7 @@ void Server::wait()
 
 void Server::stop()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Request to stop the server" << fts3::common::commit;
     systemThreads.interrupt_all();
 }
 

@@ -27,8 +27,6 @@
 #include "common/definitions.h"
 #include "../BaseService.h"
 
-extern bool stopThreads;
-
 
 namespace fts3 {
 namespace server {

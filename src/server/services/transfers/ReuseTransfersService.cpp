@@ -37,8 +37,6 @@
 #include "FileTransferScheduler.h"
 
 
-extern bool stopThreads;
-
 using namespace fts3::common;
 
 
@@ -52,7 +50,9 @@ void ReuseTransfersService::operator () ()
 {
     static bool drainMode = false;
 
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting ReuseTransfersService" << commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         retrieveRecords = time(0);
 
@@ -65,7 +65,7 @@ void ReuseTransfersService::operator () ()
                             << "Set to drain mode, no more transfers for this instance!"
                             << commit;
                 drainMode = true;
-                sleep(15);
+                boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
             else
@@ -80,16 +80,16 @@ void ReuseTransfersService::operator () ()
             FTS3_COMMON_LOGGER_NEWLOG(ERR)
                     << "Exception in process_service_handler " << e.what()
                     << commit;
-            sleep(2);
         }
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR)
                     << "Exception in process_service_handler!" << commit;
-            sleep(2);
         }
-        sleep(2);
+        boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting ReuseTransfersService" << commit;
 }
 
 
@@ -385,7 +385,7 @@ void ReuseTransfersService::executeUrlcopy()
         catch (std::exception& e)
         {
             //try again if deadlocked
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
             try
             {
                 queues.clear();
@@ -407,7 +407,7 @@ void ReuseTransfersService::executeUrlcopy()
         catch (...)
         {
             //try again if deadlocked
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
             try
             {
                 queues.clear();

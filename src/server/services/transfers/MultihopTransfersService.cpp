@@ -23,7 +23,6 @@
 #include "common/Logger.h"
 #include "server/DrainMode.h"
 
-extern bool stopThreads;
 
 using namespace fts3::common;
 
@@ -38,7 +37,9 @@ void MultihopTransfersService::operator () ()
 {
     static bool drainMode = false;
 
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting MultihopTransfersService" << commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         retrieveRecords = time(0);
 
@@ -50,7 +51,7 @@ void MultihopTransfersService::operator () ()
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more transfers for this instance!" << commit;
                     drainMode = true;
-                    sleep(15);
+                    boost::this_thread::sleep(boost::posix_time::seconds(15));
                     continue;
                 }
             }
@@ -64,15 +65,15 @@ void MultihopTransfersService::operator () ()
         catch (std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Exception in process_service_multihop_handler " << e.what() << commit;
-            sleep(2);
         }
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_multihop_handler!" << commit;
-            sleep(2);
         }
-        sleep(2);
+        boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting MultihopTransfersService" << commit;
 }
 
 

@@ -23,8 +23,6 @@
 #include "db/generic/SingleDbInstance.h"
 #include "common/Logger.h"
 
-extern bool stopThreads;
-
 
 namespace fts3 {
 namespace server {
@@ -32,24 +30,26 @@ namespace server {
 
 void OptimizerService::operator () ()
 {
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting OptimizerService" << fts3::common::commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         try
         {
             db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
-            sleep(60);
         }
         catch (std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<<"Process thread HeartBeatHandlerActive " << e.what() << fts3::common::commit;
-            sleep(60);
         }
         catch(...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" << fts3::common::commit;
-            sleep(60);
         }
+        boost::this_thread::sleep(boost::posix_time::seconds(15));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting OptimizerService" << fts3::common::commit;
 }
 
 

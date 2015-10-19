@@ -46,8 +46,6 @@ const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
 const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
 const char *CONFIG_FILE = "/etc/fts3/fts3config";
 
-extern bool stopThreads;
-
 
 /// Initialize the database backend
 /// @param test If set to true, do not use full pool size
@@ -70,7 +68,7 @@ static void shutdownCallback(int signum, void*)
                                     << " (" << strsignal(signum) << ")" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
-    stopThreads = true;
+    Server::instance().stop();
 
     // Some require traceback
     switch (signum)
@@ -89,7 +87,7 @@ static void shutdownCallback(int signum, void*)
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
 
     if (!ServerConfig::instance().get<bool> ("rush"))
-        sleep(15);
+        boost::this_thread::sleep(boost::posix_time::seconds(15));
 
     try {
         Server::instance().stop();

@@ -23,10 +23,9 @@
 #include "common/Logger.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/DrainMode.h"
-
+#include "server/Server.h"
 
 using namespace fts3::common;
-extern bool stopThreads;
 
 
 namespace fts3 {
@@ -39,7 +38,9 @@ time_t stallRecords = time(0);
 
 void HeartBeat::operator () ()
 {
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting HearBeat" << commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         try
         {
@@ -49,7 +50,7 @@ void HeartBeat::operator () ()
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)
                         << "Set to drain mode, no more transfers for this instance!"
                         << commit;
-                sleep(15);
+                boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
 
@@ -79,7 +80,7 @@ void HeartBeat::operator () ()
                 {
                     try
                     {
-                        sleep(5);
+                        boost::this_thread::sleep(boost::posix_time::seconds(5));
                         db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                                 &index, &count, &start, &end, serviceName);
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host "
@@ -103,7 +104,7 @@ void HeartBeat::operator () ()
                 {
                     try
                     {
-                        sleep(5);
+                        boost::this_thread::sleep(boost::posix_time::seconds(5));
                         db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                                 &index, &count, &start, &end, serviceName);
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host "
@@ -123,19 +124,19 @@ void HeartBeat::operator () ()
                     }
                 }
             }
-            sleep(60);
         }
         catch (const std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
-            sleep(60);
         }
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
-            sleep(60);
         }
+        boost::this_thread::sleep(boost::posix_time::seconds(60));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting HearBeat" << commit;
 }
 
 
@@ -177,8 +178,8 @@ void HeartBeat::orderedShutdown()
 {
     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stopping other threads..." << commit;
     // Give other threads a chance to finish gracefully
-    stopThreads = true;
-    sleep(30);
+    Server::instance().stop();
+    boost::this_thread::sleep(boost::posix_time::seconds(30));
 
     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exiting" << commit;
     _exit(1);

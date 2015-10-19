@@ -30,8 +30,6 @@
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
 
-extern bool stopThreads;
-
 using namespace fts3::common;
 
 
@@ -63,12 +61,14 @@ void CancelerService::operator () ()
 
     messages.reserve(500);
 
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting CancelerService" << commit;
+
     while (true)
     {
         stallRecords = time(0);
         try
         {
-            if (stopThreads && messages.empty() && requestIDs.empty())
+            if (boost::this_thread::interruption_requested() && messages.empty() && requestIDs.empty())
             {
                 break;
             }
@@ -78,7 +78,7 @@ void CancelerService::operator () ()
             {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking url_copy for this instance!" << commit;
                 messages.clear();
-                sleep(15);
+                boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
 
@@ -134,7 +134,7 @@ void CancelerService::operator () ()
                 messages.clear();
             }
 
-            if (stopThreads)
+            if (boost::this_thread::interruption_requested())
                 return;
 
             /*also get jobs which have been canceled by the client*/
@@ -155,7 +155,7 @@ void CancelerService::operator () ()
                 {
                     try
                     {
-                        sleep(1);
+                        boost::this_thread::sleep(boost::posix_time::seconds(1));
                         DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                         if (!requestIDs.empty()) /*if canceled jobs found and transfer already started, kill them*/
                         {
@@ -179,7 +179,7 @@ void CancelerService::operator () ()
                 {
                     try
                     {
-                        sleep(1);
+                        boost::this_thread::sleep(boost::posix_time::seconds(1));
                         DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                         if (!requestIDs.empty()) /*if canceled jobs found and transfer already started, kill them*/
                         {
@@ -203,7 +203,7 @@ void CancelerService::operator () ()
                 }
             }
 
-            if (stopThreads)
+            if (boost::this_thread::interruption_requested())
                 return;
 
             /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
@@ -214,7 +214,7 @@ void CancelerService::operator () ()
                 countReverted = 0;
             }
 
-            if (stopThreads)
+            if (boost::this_thread::interruption_requested())
                 return;
 
             /*this routine is called periodically every 300 seconds*/
@@ -240,7 +240,7 @@ void CancelerService::operator () ()
                 counterTimeoutWaiting = 0;
             }
 
-            if (stopThreads)
+            if (boost::this_thread::interruption_requested())
                 return;
 
             /*force-fail stalled ACTIVE transfers*/
@@ -263,7 +263,7 @@ void CancelerService::operator () ()
                 counter1 = 0;
             }
 
-            if (stopThreads)
+            if (boost::this_thread::interruption_requested())
                 return;
 
             /*set to fail all old queued jobs which have exceeded max queue time*/
@@ -290,7 +290,7 @@ void CancelerService::operator () ()
         catch (const std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Message updater thrown exception " << e.what() << commit;
-            sleep(10);
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
             counter1 = 0;
             counterFailAll = 0;
             countReverted = 0;
@@ -301,7 +301,7 @@ void CancelerService::operator () ()
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-            sleep(10);
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
             counter1 = 0;
             counterFailAll = 0;
             countReverted = 0;
@@ -309,8 +309,10 @@ void CancelerService::operator () ()
             counterCanceled = 0;
             messages.clear();
         }
-        sleep(1);
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting CancelerService" << commit;
 }
 
 

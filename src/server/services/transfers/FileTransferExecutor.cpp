@@ -37,8 +37,6 @@
 
 #include "UrlCopyCmd.h"
 
-extern bool stopThreads;
-
 
 namespace fts3
 {
@@ -74,7 +72,7 @@ void FileTransferExecutor::run(boost::any & ctx)
     int & scheduled = boost::any_cast<int &>(ctx);
 
     //stop forking when a signal is received to avoid deadlocks
-    if (tf.fileId == 0 || stopThreads) return;
+    if (tf.fileId == 0 || boost::this_thread::interruption_requested()) return;
 
     try
         {
@@ -229,7 +227,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     bool failed = false;
 
                     //check again here if the server has stopped - just in case
-                    if(stopThreads)
+                    if(boost::this_thread::interruption_requested())
                         return;
 
                     //send current state message

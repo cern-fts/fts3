@@ -34,9 +34,6 @@
 #include "../BaseService.h"
 
 
-extern bool  stopThreads;
-
-
 namespace fts3 {
 namespace server {
 
@@ -72,7 +69,8 @@ public:
     {
         GSoapAcceptor acceptor(port, ip);
 
-        while (stopThreads == false)
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting WebService" << fts3::common::commit;
+        while (!boost::this_thread::interruption_requested())
         {
             std::unique_ptr<GSoapRequestHandler> handler = acceptor.accept();
 
@@ -84,9 +82,11 @@ public:
             {
                 // if we were not able to accept the connection lets wait for a sec
                 // so we don't loop like crazy in case the system is out of descriptors
-                sleep(1);
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
             }
         }
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting WebService" << fts3::common::commit;
     }
 };
 

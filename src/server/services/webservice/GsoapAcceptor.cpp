@@ -27,10 +27,8 @@
 #include "common/Logger.h"
 #include "GsoapAcceptor.h"
 
-#include "../../../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "GsoapRequestHandler.h"
-
-bool  stopThreads;
 
 
 using namespace fts3::config;
@@ -175,7 +173,7 @@ soap* GSoapAcceptor::getSoapContext()
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx)
 {
-    if(stopThreads)
+    if(boost::this_thread::interruption_requested())
         return;
 
     boost::recursive_mutex::scoped_lock lock(_mutex);

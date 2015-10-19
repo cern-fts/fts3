@@ -22,16 +22,14 @@
 
 #include <boost/filesystem.hpp>
 
-#include "../../../common/Exceptions.h"
-#include "../../../config/ServerConfig.h"
+#include "common/Exceptions.h"
+#include "config/ServerConfig.h"
 #include "common/Logger.h"
 #include "common/producer_consumer_common.h"
 #include "common/ThreadSafeList.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
-
-extern bool stopThreads;
 
 using namespace fts3::common;
 
@@ -58,13 +56,15 @@ void MessageProcessingService::operator () ()
 {
     namespace fs = boost::filesystem;
 
-    while (!stopThreads)
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting MessageProcessingService" << commit;
+
+    while (!boost::this_thread::interruption_requested())
     {
         updateRecords = time(0);
 
         try
         {
-            if (stopThreads && messages.empty() && messagesLog.empty())
+            if (boost::this_thread::interruption_requested() && messages.empty() && messagesLog.empty())
             {
                 break;
             }
@@ -77,7 +77,7 @@ void MessageProcessingService::operator () ()
             }
             catch (...)
             {
-                sleep(10);
+                boost::this_thread::sleep(boost::posix_time::seconds(10));
                 continue;
             }
 
@@ -204,7 +204,7 @@ void MessageProcessingService::operator () ()
                     {
                         try
                         {
-                            sleep(1);
+                            boost::this_thread::sleep(boost::posix_time::seconds(1));
                             db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                         }
                         catch (std::exception& e)
@@ -220,7 +220,7 @@ void MessageProcessingService::operator () ()
                     {
                         try
                         {
-                            sleep(1);
+                            boost::this_thread::sleep(boost::posix_time::seconds(1));
                             db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                         }
                         catch (std::exception& e)
@@ -248,7 +248,7 @@ void MessageProcessingService::operator () ()
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
             }
 
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (const fs::filesystem_error& ex)
         {
@@ -268,7 +268,7 @@ void MessageProcessingService::operator () ()
                 runProducerLog( msgLogBreak );
             }
 
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (std::exception& ex2)
         {
@@ -288,7 +288,7 @@ void MessageProcessingService::operator () ()
                 runProducerLog( msgLogBreak );
             }
 
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (...)
         {
@@ -308,9 +308,11 @@ void MessageProcessingService::operator () ()
                 runProducerLog( msgLogBreak );
             }
 
-            sleep(1);
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting MessageProcessingService" << commit;
 }
 
 
@@ -417,7 +419,7 @@ void MessageProcessingService::executeUpdate(const std::vector<struct message>& 
     {
         try
         {
-            if(stopThreads)
+            if(boost::this_thread::interruption_requested())
             {
                 std::vector<struct message>::const_iterator iterBreak;
                 for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)

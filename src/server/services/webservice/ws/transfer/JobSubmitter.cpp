@@ -42,8 +42,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "../../../../../common/Exceptions.h"
-#include "../../../../../config/ServerConfig.h"
+#include "common/Exceptions.h"
+#include "config/ServerConfig.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
 #include "common/UuidGenerator.h"
@@ -369,7 +369,7 @@ std::string JobSubmitter::submit()
 
             try
                 {
-                    sleep(1);
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
 
                     // submit the transfer job (add it to the DB)
                     db->submitPhysical (
@@ -401,7 +401,7 @@ std::string JobSubmitter::submit()
         {
             try
                 {
-                    sleep(1);
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
                     // submit the transfer job (add it to the DB)
                     db->submitPhysical (
                         id,
