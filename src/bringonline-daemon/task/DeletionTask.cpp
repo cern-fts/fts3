@@ -18,24 +18,27 @@
  * limitations under the License.
  */
 
+#include <unordered_map>
+
 #include "DeletionTask.h"
 #include "WaitingRoom.h"
 
-#include <unordered_map>
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 
-#include "../../common/Exceptions.h"
-#include "../../common/Logger.h"
 
-DeletionTask::DeletionTask(DeletionContext const & ctx) : Gfal2Task("DELETION"), ctx(ctx)
+DeletionTask::DeletionTask(const DeletionContext &ctx) : Gfal2Task("DELETION"), ctx(ctx)
 {
     // set the proxy certificate
     setProxy(ctx);
 }
 
+
 void DeletionTask::run(boost::any const &)
 {
     run_impl();
 }
+
 
 void DeletionTask::run_impl()
 {
@@ -55,35 +58,30 @@ void DeletionTask::run_impl()
 
     int status = gfal2_unlink_list(gfal2_ctx, (int)urls.size(), urls.data(), error.data());
 
-    if (status < 0)
-        {
-            for (size_t i = 0; i < urls.size(); ++i)
-                {
-                    std::vector< std::pair<std::string, int> > const ids = ctx.getIDs(urls[i]);
+    if (status < 0) {
+        for (size_t i = 0; i < urls.size(); ++i) {
+            std::vector<std::pair<std::string, int> > const ids = ctx.getIDs(urls[i]);
 
-                    if (error[i])
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION FAILED " << urls[i] << ": "
-                                                           << error[i]->code << " " << error[i]->message
-                                                           << commit;
+            if (error[i]) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "DELETION FAILED " << urls[i] << ": "
+                << error[i]->code << " " << error[i]->message
+                << commit;
 
-                            bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FAILED", error[i]->message, retry);
-                        }
-                    else
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED for " << urls[i] << commit;
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
-                        }
-                    g_clear_error(&error[i]);
-                }
+                bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
+                for (auto it = ids.begin(); it != ids.end(); ++it)
+                ctx.updateState(it->first, it->second, "FAILED", error[i]->message, retry);
+            }
+            else {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED for " << urls[i] << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it)
+                ctx.updateState(it->first, it->second, "FINISHED", "", false);
+            }
+            g_clear_error(&error[i]);
         }
-    else
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED "
-                                            << ctx.getLogMsg() <<  commit;
-            ctx.updateState("FINISHED", "", false);
-        }
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO)
+            << "DELETION FINISHED " << ctx.getLogMsg() << commit;
+        ctx.updateState("FINISHED", "", false);
+    }
 }

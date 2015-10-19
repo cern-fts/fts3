@@ -18,12 +18,11 @@
  * limitations under the License.
  */
 
+#include "common/Exceptions.h"
+#include "common/Logger.h"
+
 #include "BringOnlineTask.h"
-
-#include "../../common/Exceptions.h"
-#include "../../common/Logger.h"
 #include "PollTask.h"
-
 #include "WaitingRoom.h"
 
 
@@ -32,7 +31,7 @@ boost::shared_mutex BringOnlineTask::mx;
 std::set<std::pair<std::string, std::string>> BringOnlineTask::active_urls;
 
 
-void BringOnlineTask::run(boost::any const &)
+void BringOnlineTask::run(const boost::any &)
 {
     char token[512] = {0};
     std::set<std::string> urlSet = ctx.getUrls();
@@ -63,84 +62,91 @@ void BringOnlineTask::run(boost::any const &)
                      errors.data()
                  );
 
-    if (status < 0)
-        {
-            for (size_t i = 0; i < urls.size(); ++i)
-                {
-                    auto ids = ctx.getIDs(urls[i]);
+    if (status < 0) {
+        for (size_t i = 0; i < urls.size(); ++i) {
+            auto ids = ctx.getIDs(urls[i]);
 
-                    if (errors[i] && errors[i]->code != EOPNOTSUPP)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
-                                                           << errors[i]->code << " " << errors[i]->message
-                                                           << commit;
+            if (errors[i] && errors[i]->code != EOPNOTSUPP) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) <<
+                    "BRINGONLINE FAILED for " << urls[i] << ": "
+                    << errors[i]->code << " " << errors[i]->message
+                    << commit;
 
-                            bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
-                        }
-                    else if (errors[i] && errors[i]->code == EOPNOTSUPP)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
-                                                            << urls[i]
-                                                            << ": not supported, keep going (" << errors[i]->message << ")" << commit;
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
-                        }
-                    else
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
-                                                            << ": returned -1 but error was not set ";
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
-                        }
+                bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                 }
-        }
-    else if (status == 0)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
-                                            << ctx.getLogMsg() << commit;
-
-            ctx.updateState(token);
-            WaitingRoom<PollTask>::instance().add(new PollTask(std::move(*this), token));
-        }
-    else
-        {
-            // No need to poll
-            for (size_t i = 0; i < urls.size(); ++i)
-                {
-                    auto ids = ctx.getIDs(urls[i]);
-
-                    if (errors[i] == NULL)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
-                                                            << urls[i] << " , got token " << token
-                                                            << commit;
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
-                        }
-                    else if (errors[i]->code == EOPNOTSUPP)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
-                                                            << urls[i]
-                                                            << ": not supported, keep going (" << errors[i]->message << ")" << commit;
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FINISHED", "", false);
-                            ctx.removeUrl(urls[i]);
-                        }
-                    else
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
-                                                           << errors[i]->code << " " << errors[i]->message
-                                                           << commit;
-
-                            bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
-                        }
+            }
+            else if (errors[i] && errors[i]->code == EOPNOTSUPP)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                    << "BRINGONLINE FINISHED for "
+                    << urls[i] << ": not supported, keep going (" << errors[i]->message << ")"
+                    << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
                 }
+            }
+            else
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                    << "BRINGONLINE FAILED for " << urls[i] << ": returned -1 but error was not set "
+                    << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                }
+            }
         }
+    }
+    else if (status == 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << " "
+        << ctx.getLogMsg() << commit;
 
-    for (size_t i = 0; i < urls.size(); ++i)
+        ctx.updateState(token);
+        WaitingRoom<PollTask>::instance().add(new PollTask(std::move(*this), token));
+    }
+    else {
+        // No need to poll
+        for (size_t i = 0; i < urls.size(); ++i)
+        {
+            auto ids = ctx.getIDs(urls[i]);
+
+            if (errors[i] == NULL) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                    << "BRINGONLINE FINISHED for "
+                    << urls[i] << " , got token " << token
+                    << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                }
+            }
+            else if (errors[i]->code == EOPNOTSUPP) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                    << "BRINGONLINE FINISHED for "
+                    << urls[i]
+                    << ": not supported, keep going (" << errors[i]->message << ")"
+                    << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                }
+                ctx.removeUrl(urls[i]);
+            }
+            else
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                    << "BRINGONLINE FAILED for " << urls[i] << ": "
+                    << errors[i]->code << " " << errors[i]->message
+                    << commit;
+
+                bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                }
+            }
+        }
+    }
+
+    for (size_t i = 0; i < urls.size(); ++i) {
         g_clear_error(&errors[i]);
+    }
 }

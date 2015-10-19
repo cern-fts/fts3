@@ -18,19 +18,19 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef WAITINGROOM_H_
 #define WAITINGROOM_H_
-
-#include "../task/Gfal2Task.h"
-
-#include "common/ThreadPool.h"
 
 #include <boost/ptr_container/ptr_list.hpp> // think about using a lockfree queue
 #include <boost/thread.hpp>
 
-using namespace fts3::common;
+#include "common/ThreadPool.h"
+
+#include "../task/Gfal2Task.h"
 
 extern bool stopThreads;
+
 
 /**
  * A waiting room for task that will be executed in a while
@@ -38,7 +38,6 @@ extern bool stopThreads;
 template<typename TASK, typename BASE = Gfal2Task>
 class WaitingRoom
 {
-
 public:
 
     /**
@@ -115,32 +114,32 @@ void WaitingRoom<TASK, BASE>::run()
 {
     WaitingRoom<TASK, BASE>& me = WaitingRoom<TASK, BASE>::instance();
 
-    while (true)
-        {
-            if(stopThreads) return;//either  gracefully or not
+    while (true) {
+        if (stopThreads)
+            return; //either  gracefully or not
 
-            {
-                // lock the mutex
-                boost::mutex::scoped_lock lock(me.m);
-                // get current time
-                time_t now = time(NULL);
-                // iterate over all all tasks
-                typename boost::ptr_list<TASK>::iterator it, next = me.tasks.begin();
-                while ((it = next) != me.tasks.end())
-                    {
-                        if(stopThreads)
-                            return;
-                        // next item to check
-                        ++next;
-                        // if the time has not yet come for the task simply continue
-                        if (it->waiting(now)) continue;
-                        // otherwise start the task
-                        me.pool->start(me.tasks.release(it).release());
-                    }
+        {
+            // lock the mutex
+            boost::mutex::scoped_lock lock(me.m);
+            // get current time
+            time_t now = time(NULL);
+            // iterate over all all tasks
+            typename boost::ptr_list<TASK>::iterator it, next = me.tasks.begin();
+            while ((it = next) != me.tasks.end()) {
+                if (stopThreads)
+                    return;
+                // next item to check
+                ++next;
+                // if the time has not yet come for the task simply continue
+                if (it->waiting(now))
+                    continue;
+                // otherwise start the task
+                me.pool->start(me.tasks.release(it).release());
             }
-            // wait a while before checking again
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         }
+        // wait a while before checking again
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    }
 }
 
-#endif /* WAITINGROOM_H_ */
+#endif // WAITINGROOM_H_

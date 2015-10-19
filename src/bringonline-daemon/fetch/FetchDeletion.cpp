@@ -36,7 +36,8 @@ extern bool stopThreads;
 /// At the beginning of the subsystem, revert
 /// started delete operations assigned to this host
 // back to started, so they re-enter the queue
-static void revertDeleteToStart() {
+static void revertDeleteToStart()
+{
     try {
         db::DBSingleton::instance().getDBObjectInstance()->requeueStartedDeletes();
     }

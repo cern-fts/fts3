@@ -19,7 +19,6 @@
  */
 
 #include "Gfal2Task.h"
-
 #include "../context/JobContext.h"
 
 using namespace fts3::common;
@@ -27,44 +26,45 @@ using namespace fts3::common;
 std::string Gfal2Task::infosys;
 
 
-void Gfal2Task::setProxy(JobContext const & ctx)
+void Gfal2Task::setProxy(const JobContext &ctx)
 {
     GError *error = NULL;
 
     //before any operation, check if the proxy is valid
     std::string message;
     bool isValid = ctx.checkValidProxy(message);
-    if(!isValid)
-        {
-//            state_update(ctx.jobs, "FAILED", message, false);
-            ctx.updateState("FAILED", message, false);
-            std::stringstream ss;
-            ss << gfal2_ctx.operation << " proxy certificate not valid: " << message;
-            throw UserError(ss.str());
-        }
+    if (!isValid) {
+        ctx.updateState("FAILED", message, false);
+        std::stringstream ss;
+        ss << gfal2_ctx.operation << " proxy certificate not valid: " << message;
+        throw UserError(ss.str());
+    }
 
     char* cert = const_cast<char*>(ctx.getProxy().c_str());
 
     int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
-    if (status < 0)
-        {
-            ctx.updateState("FAILED", error->message, false);
-            std::stringstream ss;
-            ss << gfal2_ctx.operation << " setting X509 CERT failed " << error->code << " " << error->message;
-            g_clear_error(&error);
-            throw UserError(ss.str());
-        }
+    if (status < 0) {
+        ctx.updateState("FAILED", error->message, false);
+        std::stringstream ss;
+        ss << gfal2_ctx.operation
+            << " setting X509 CERT failed " << error->code << " "
+            << error->message;
+        g_clear_error(&error);
+        throw UserError(ss.str());
+    }
 
     status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
-    if (status < 0)
-        {
-            ctx.updateState("FAILED", error->message, false);
-            std::stringstream ss;
-            ss << gfal2_ctx.operation << " setting X509 KEY failed " << error->code << " " << error->message;
-            g_clear_error(&error);
-            throw UserError(ss.str());
-        }
+    if (status < 0) {
+        ctx.updateState("FAILED", error->message, false);
+        std::stringstream ss;
+        ss << gfal2_ctx.operation
+            << " setting X509 KEY failed " << error->code << " "
+            << error->message;
+        g_clear_error(&error);
+        throw UserError(ss.str());
+    }
 }
+
 
 bool Gfal2Task::doRetry(int errorNo, const std::string& category, const std::string& message)
 {
@@ -85,26 +85,25 @@ bool Gfal2Task::doRetry(int errorNo, const std::string& category, const std::str
     if (found!=std::string::npos)
         return true;
 
-    if (category == "SOURCE")
+    if (category == "SOURCE") {
+        switch (errorNo)
         {
-            switch (errorNo)
-                {
-                case ENOENT:          // No such file or directory
-                case EPERM:           // Operation not permitted
-                case EACCES:          // Permission denied
-                case EISDIR:          // Is a directory
-                case ENAMETOOLONG:    // File name too long
-                case E2BIG:           // Argument list too long
-                case ENOTDIR:         // Part of the path is not a directory
-                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                case EINVAL:          // Invalid argument. i.e: invalid request token
-                    retry = false;
-                    break;
-                default:
-                    retry = true;
-                    break;
-                }
+        case ENOENT: // No such file or directory
+        case EPERM: // Operation not permitted
+        case EACCES: // Permission denied
+        case EISDIR: // Is a directory
+        case ENAMETOOLONG: // File name too long
+        case E2BIG: // Argument list too long
+        case ENOTDIR: // Part of the path is not a directory
+        case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
+        case EINVAL: // Invalid argument. i.e: invalid request token
+            retry = false;
+            break;
+        default:
+            retry = true;
+            break;
         }
+    }
 
     found = message.find("proxy expired");
     if (found!=std::string::npos)
@@ -160,15 +159,16 @@ void Gfal2Task::setSpaceToken(std::string const & spaceToken)
     // set up the gfal2 context
     GError *error = NULL;
 
-    if (!spaceToken.empty())
-        {
-            gfal2_set_opt_string(gfal2_ctx, "SRM PLUGIN", "SPACETOKENDESC", (char *) spaceToken.c_str(), &error);
-            if (error)
-                {
-                    std::stringstream ss;
-                    ss << gfal2_ctx.operation << " could not set the destination space token " << error->code << " " << error->message;
-                    g_clear_error(&error);
-                    throw UserError(ss.str());
-                }
+    if (!spaceToken.empty()) {
+        gfal2_set_opt_string(gfal2_ctx,
+            "SRM PLUGIN", "SPACETOKENDESC", (char *) spaceToken.c_str(),
+            &error);
+        if (error) {
+            std::stringstream ss;
+            ss << gfal2_ctx.operation << " could not set the destination space token "
+                << error->code << " " << error->message;
+            g_clear_error(&error);
+            throw UserError(ss.str());
         }
+    }
 }

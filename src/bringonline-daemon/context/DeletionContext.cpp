@@ -19,8 +19,6 @@
  */
 
 #include "DeletionContext.h"
-
-#include <sstream>
 #include "cred/CredUtility.h"
 
 

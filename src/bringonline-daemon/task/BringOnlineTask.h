@@ -18,18 +18,9 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef BRINGONLINETASK_H_
 #define BRINGONLINETASK_H_
-
-
-#include "Gfal2Task.h"
-#include "../context/StagingContext.h"
-
-#include "common/definitions.h"
-
-#include "db/generic/SingleDbInstance.h"
-
-#include "cred/DelegCred.h"
 
 #include <string>
 #include <utility>
@@ -37,6 +28,13 @@
 #include <boost/any.hpp>
 
 #include <gfal_api.h>
+
+#include "db/generic/SingleDbInstance.h"
+#include "cred/DelegCred.h"
+
+#include "Gfal2Task.h"
+#include "../context/StagingContext.h"
+
 
 /**
  * A bring-online task, when started using a thread pool issues a bring online operation
@@ -54,7 +52,7 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(StagingContext const & ctx) : Gfal2Task("BRINGONLINE"), ctx(ctx)
+    BringOnlineTask(const StagingContext &ctx) : Gfal2Task("BRINGONLINE"), ctx(ctx)
     {
         // set up the space token
         setSpaceToken(ctx.getSpaceToken());
@@ -78,7 +76,8 @@ public:
      */
     virtual ~BringOnlineTask()
     {
-        if (gfal2_ctx) cancel(ctx.getSurls());
+        if (gfal2_ctx)
+            cancel(ctx.getSurls());
     }
 
     /**
@@ -86,18 +85,17 @@ public:
      */
     virtual void run(boost::any const &);
 
-    static void cancel(std::set<std::pair<std::string, std::string> > const & urls)
+    static void cancel(const std::set<std::pair<std::string, std::string> > &urls)
     {
         if (urls.empty()) return;
 
         boost::unique_lock<boost::shared_mutex> lock(mx);
         auto begin = active_urls.lower_bound(*urls.begin());
         auto end   = active_urls.upper_bound(*urls.rbegin());
-        for (auto it = begin; it != end;)
+        for (auto it = begin; it != end; ++it) {
             if (urls.count(*it))
-                active_urls.erase(it++);
-            else
-                ++it;
+                active_urls.erase(it);
+        }
     }
 
 protected:
@@ -111,4 +109,4 @@ protected:
 };
 
 
-#endif /* BRINGONLINETASK_H_ */
+#endif // BRINGONLINETASK_H_

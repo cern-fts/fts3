@@ -18,20 +18,18 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef DELETIONTASK_H_
 #define DELETIONTASK_H_
 
+#include <string>
+#include <boost/any.hpp>
+#include <gfal_api.h>
 
 #include "Gfal2Task.h"
 
 #include "../context/DeletionContext.h"
 
-#include "common/definitions.h"
-
-#include <string>
-#include <boost/any.hpp>
-
-#include <gfal_api.h>
 
 /**
  * A deletion task, when started using a thread pool issues a delete operation
@@ -49,7 +47,7 @@ public:
      *
      * @param ctx : deletion task details
      */
-    DeletionTask(DeletionContext const & ctx);
+    DeletionTask(const DeletionContext &ctx);
 
     /**
      * Creates a new DeletionTask from another Gfal2Task
@@ -66,15 +64,15 @@ public:
     /**
      * The routine is executed by the thread pool
      */
-    virtual void run(boost::any const &);
+    virtual void run(const boost::any &);
 
 private:
     /// implementation of run routine for not SRM jobs
     void run_impl();
 
     /// deletion details
-    DeletionContext const ctx;
+    const DeletionContext ctx;
 };
 
 
-#endif /* DELETIONTASK_H_ */
+#endif // DELETIONTASK_H_

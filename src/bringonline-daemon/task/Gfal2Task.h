@@ -18,15 +18,15 @@
  * limitations under the License.
  */
 
-#ifndef DMTASK_H_
+#pragma once
+#ifndef GFAL2TASK_H_
 #define DMTASK_H_
 
 #include <sstream>
 #include <boost/any.hpp>
-
 #include <gfal_api.h>
 
-#include "../../common/Exceptions.h"
+#include "common/Exceptions.h"
 
 // forward declaration
 class JobContext;
@@ -98,43 +98,41 @@ protected:
             // Set up handle
             GError *error = NULL;
             gfal2_ctx = gfal2_context_new(&error);
-            if (!gfal2_ctx)
-                {
-                    std::stringstream ss;
-                    ss << operation << " bad initialisation " << error->code << " " << error->message;
-                    g_clear_error(&error);
-                    // the memory was not allocated so it is safe to throw
-                    throw fts3::common::UserError(ss.str());
-                }
+            if (!gfal2_ctx) {
+                std::stringstream ss;
+                ss << operation << " bad initialisation " << error->code << " " << error->message;
+                g_clear_error(&error);
+                // the memory was not allocated so it is safe to throw
+                throw fts3::common::UserError(ss.str());
+            }
 
-            if (infosys == "false")
-                {
-                    gfal2_set_opt_boolean(gfal2_ctx, "BDII", "ENABLED", false, NULL);
-                }
-            else
-                {
-                    gfal2_set_opt_string(gfal2_ctx, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
-                }
+            if (infosys == "false") {
+                gfal2_set_opt_boolean(gfal2_ctx, "BDII", "ENABLED", false, NULL);
+            }
+            else {
+                gfal2_set_opt_string(gfal2_ctx, "BDII", "LCG_GFAL_INFOSYS",
+                    (char *) infosys.c_str(), NULL);
+            }
 
             const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
 
             gfal2_set_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
-            if (error)
-                {
-                    std::stringstream ss;
-                    ss << operation << " could not set the protocol list " << error->code << " " << error->message;
-                    g_clear_error(&error);
-                    throw fts3::common::UserError(ss.str());
-                }
+            if (error) {
+                std::stringstream ss;
+                ss << operation << " could not set the protocol list " << error->code << " "
+                    << error->message;
+                g_clear_error(&error);
+                throw fts3::common::UserError(ss.str());
+            }
 
             gfal2_set_opt_boolean(gfal2_ctx, "GRIDFTP PLUGIN", "SESSION_REUSE", true, &error);
-            if (error)
-                {
-                    std::stringstream ss;
-                    ss << operation << " could not set the session reuse " << error->code << " " << error->message;
-                    g_clear_error(&error);
-                    throw fts3::common::UserError(ss.str());
-                }
+            if (error) {
+                std::stringstream ss;
+                ss << operation << " could not set the session reuse " << error->code << " "
+                    << error->message;
+                g_clear_error(&error);
+                throw fts3::common::UserError(ss.str());
+            }
         }
 
         /// Copy constructor, steals the pointer from the parameter!
@@ -168,4 +166,4 @@ protected:
     Gfal2CtxWrapper gfal2_ctx;
 };
 
-#endif /* DMTASK_H_ */
+#endif // GFAL2TASK_H_

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef JOBCONTEXT_H_
 #define JOBCONTEXT_H_
 
@@ -26,7 +27,6 @@
 #include <set>
 #include <unordered_map>
 #include <map>
-#include <boost/thread.hpp>
 
 /**
  * Most generic Job (Deletion, Bring-online, etc.) context
@@ -44,14 +44,16 @@ public:
      * @param delegationId : delegation ID
      * @param spaceToken : space token
      */
-    JobContext(std::string const & dn, std::string const & vo, std::string const & delegationId, std::string const & spaceToken = "");
+    JobContext(const std::string &dn, const std::string &vo, const std::string &delegationId,
+        const std::string &spaceToken = "");
 
     /**
      * Copy constructor
      *
      * @param jc : JobContext to be copied
      */
-    JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken), urlToIDs(jc.urlToIDs) {}
+    JobContext(const JobContext &jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken), urlToIDs(jc.urlToIDs)
+    {}
 
     /**
      * Move constructor
@@ -59,7 +61,8 @@ public:
      * @param jc : JobContext to be moved
      */
     JobContext(JobContext && jc) :
-        jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)), urlToIDs(std::move(jc.urlToIDs)) {}
+        jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)), urlToIDs(std::move(jc.urlToIDs))
+    {}
 
     /**
      * Destructor
@@ -73,7 +76,7 @@ public:
      * @param jobId : job ID
      * @param fileId : file ID
      */
-    void add(std::string const & surl, std::string const & jobId, int fileId);
+    void add(const std::string &surl, const std::string &jobId, int fileId);
 
     /**
      * Updates the state of the job (pure virtual)
@@ -82,7 +85,7 @@ public:
      * @param reason : reason for changing the state
      * @param retry : if true the job will be retried
      */
-    virtual void updateState(std::string const & state, std::string const & reason, bool retry) const = 0;
+    virtual void updateState(const std::string &state, const std::string &reason, bool retry) const = 0;
 
     /**
      * Checks if the proxy is valid
@@ -133,14 +136,13 @@ public:
     /**
      * Get job and file ID for the given SURL
      */
-    std::vector< std::pair<std::string, int> > getIDs(std::string const & surl) const
+    std::vector< std::pair<std::string, int> > getIDs(const std::string &surl) const
     {
         std::vector< std::pair<std::string, int> > ret;
         auto range = urlToIDs.equal_range(surl);
-        for (auto it = range.first; it != range.second; ++it)
-            {
-                ret.push_back(it->second);
-            }
+        for (auto it = range.first; it != range.second; ++it) {
+            ret.push_back(it->second);
+        }
         return ret;
     }
 
@@ -156,4 +158,4 @@ protected:
     std::unordered_multimap< std::string, std::pair<std::string, int> > urlToIDs;
 };
 
-#endif /* JOBCONTEXT_H_ */
+#endif // JOBCONTEXT_H_

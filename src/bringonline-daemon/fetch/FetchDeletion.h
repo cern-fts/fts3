@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef FETCHDELETION_H_
 #define FETCHDELETION_H_
 
@@ -33,7 +34,6 @@
 /**
  * Fetches the deletion tasks from DB in a separate thread and puts
  */
-
 class FetchDeletion
 {
 
@@ -50,4 +50,4 @@ private:
 
 };
 
-#endif /* FETCHDELETION_H_ */
+#endif // FETCHDELETION_H_

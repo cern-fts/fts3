@@ -18,23 +18,21 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef FETCHSTAGING_H_
 #define FETCHSTAGING_H_
 
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+
 #include "common/ThreadPool.h"
+#include "cred/DelegCred.h"
+
 #include "../task/Gfal2Task.h"
 #include "../context/StagingContext.h"
 
-#include "cred/DelegCred.h"
-
-#include <boost/tuple/tuple.hpp>
-
-#include <tuple>
-#include <vector>
-#include <string>
-#include <map>
-
-using namespace fts3::common;
 
 /**
  * Fetches the staging jobs from DB in a separate thread
@@ -43,15 +41,15 @@ class FetchStaging
 {
 
 public:
-    FetchStaging(ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
+    FetchStaging(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
     virtual ~FetchStaging() {}
 
     void fetch();
 
 private:
     void recoverStartedTasks();
-    ThreadPool<Gfal2Task> & threadpool;
+    fts3::common::ThreadPool<Gfal2Task> & threadpool;
 
 };
 
-#endif /* FETCHSTAGING_H_ */
+#endif // FETCHSTAGING_H_

@@ -18,25 +18,23 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef POLLTASK_H_
 #define POLLTASK_H_
 
-#include "BringOnlineTask.h"
-
-#include "common/definitions.h"
-
-#include "db/generic/SingleDbInstance.h"
-
-#include <string>
-#include <set>
-
 #include <algorithm>
 #include <iterator>
-
-#include <unordered_map>
 #include <set>
+#include <string>
+#include <unordered_map>
 
 #include <boost/thread.hpp>
+
+#include "common/definitions.h"
+#include "db/generic/SingleDbInstance.h"
+
+#include "BringOnlineTask.h"
+
 
 /**
  * A poll task: checks whether a given bring-online operation was successful
@@ -49,7 +47,6 @@
  */
 class PollTask : public BringOnlineTask
 {
-
 public:
     /**
      * Creates a PollTask from StagingContext (for recovery purposes only)
@@ -57,7 +54,8 @@ public:
      * @param ctx : staging context (recover from DB after crash)
      * @param token : token that is needed for polling
      */
-    PollTask(StagingContext const & ctx, std::string const & token) : BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
+    PollTask(const StagingContext &ctx, const std::string &token) :
+        BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
     {
         auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
@@ -69,13 +67,19 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(BringOnlineTask && copy, std::string const & token) :
-        BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until() {}
+    PollTask(BringOnlineTask && copy, const std::string &token) :
+        BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
+    {
+    }
 
     /**
      * Move constructor
      */
-    PollTask(PollTask && copy) : BringOnlineTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(copy.wait_until) {}
+    PollTask(PollTask && copy) :
+        BringOnlineTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(
+            copy.wait_until)
+    {
+    }
 
     /**
      * Destructor
@@ -85,7 +89,7 @@ public:
     /**
      * The routine is executed by the thread pool
      */
-    virtual void run(boost::any const &);
+    virtual void run(const boost::any &);
 
     /**
      * @return : true if the task is still waiting, false otherwise
@@ -128,4 +132,4 @@ private:
     time_t wait_until;
 };
 
-#endif /* POLLTASK_H_ */
+#endif // POLLTASK_H_

@@ -18,21 +18,22 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef STAGINGCONTEXT_H_
 #define STAGINGCONTEXT_H_
+
+
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "cred/DelegCred.h"
 
 #include "JobContext.h"
 #include "../state/StagingStateUpdater.h"
 
-#include "cred/DelegCred.h"
-
-#include <vector>
-#include <string>
-#include <map>
-#include <memory>
-#include <set>
-
-#include <boost/tuple/tuple.hpp>
 
 class StagingContext : public JobContext
 {
@@ -106,4 +107,4 @@ private:
     time_t startTime;
 };
 
-#endif /* STAGINGCONTEXT_H_ */
+#endif // STAGINGCONTEXT_H_

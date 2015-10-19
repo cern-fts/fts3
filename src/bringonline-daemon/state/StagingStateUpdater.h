@@ -18,21 +18,21 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef STAGINGSTATEUPDATER_H_
 #define STAGINGSTATEUPDATER_H_
 
-#include "StateUpdater.h"
-
-#include "db/generic/SingleDbInstance.h"
-
 #include <string>
 #include <vector>
-
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "../../common/Logger.h"
+#include "db/generic/SingleDbInstance.h"
+#include "common/Logger.h"
 #include "common/producer_consumer_common.h"
+
+#include "StateUpdater.h"
+
 
 using namespace fts3::common; 
 
@@ -64,31 +64,30 @@ public:
      * @param jobs : jobs with respective files
      * @param token : the token that will be stored in DB
      */
-    void operator()(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
+    void operator()(const std::map<std::string, std::map<std::string, std::vector<int> > > &jobs,
+        const std::string &token)
     {
-        try
-            {
-                db.updateBringOnlineToken(jobs, token);
-            }
-        catch(std::exception& ex)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            }
+        try {
+            db.updateBringOnlineToken(jobs, token);
+        }
+        catch (std::exception& ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< ex.what() << commit;
+        }
         catch(...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
-            }
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
+        }
     }
 
     /**
      * Updates status per file
      */
-    void operator()(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry)
+    void operator()(const std::string &jobId, int fileId, const std::string &state, const std::string &reason, bool retry)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
-        updates.push_back(value_type(file_id, state, reason, job_id, retry));
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "STAGING Update : " << file_id << "  " << state << "  " << reason << " " << job_id << " " << retry << commit;
+        updates.push_back(value_type(fileId, state, reason, jobId, retry));
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "STAGING Update : " << fileId << "  " << state << "  " << reason << " " << jobId << " " << retry << commit;
     }
 
     /// Destructor
@@ -107,11 +106,11 @@ private:
     static void run()
     {
         StagingStateUpdater & me = instance();
-        me.run_impl(&GenericDbIfce::updateStagingState);
+        me.runImpl(&GenericDbIfce::updateStagingState);
     }
 
     /// the worker thread
     boost::thread t;
 };
 
-#endif /* STAGINGSTATEUPDATER_H_ */
+#endif // STAGINGSTATEUPDATER_H_

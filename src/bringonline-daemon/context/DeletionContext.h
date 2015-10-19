@@ -18,21 +18,22 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef DELETIONCONTEXT_H_
 #define DELETIONCONTEXT_H_
+
+
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "cred/DelegCred.h"
 
 #include "JobContext.h"
 #include "../state/DeletionStateUpdater.h"
 
-#include "cred/DelegCred.h"
-
-#include <vector>
-#include <string>
-#include <map>
-#include <memory>
-#include <set>
-
-#include <boost/tuple/tuple.hpp>
 
 class DeletionContext : public JobContext
 {
@@ -93,4 +94,4 @@ public:
     void updateState(const std::string &state, const std::string &reason, bool retry) const;
 };
 
-#endif /* DELETIONCONTEXT_H_ */
+#endif // DELETIONCONTEXT_H_
