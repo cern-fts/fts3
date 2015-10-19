@@ -10404,14 +10404,8 @@ void OracleAPI::requeueStartedDeletes()
         }
 }
 
-//STAGING
-//need messaging, both for canceling and state transitions
 
-
-//WORKHORSE
-//alter table t_job add index t_staging_index(vo_name, source_se, dest_se, user_dn);
-//f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online  , j.user_dn, j.cred_id, j.source_space_token
-void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
+void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
@@ -10612,8 +10606,12 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
 
-                                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
-                                    files.push_back(record);
+                                    stagingOps.emplace_back(
+                                        job_id, file_id, vo_name,
+                                        user_dn, cred_id, source_url,
+                                        copy_pin_lifetime, bring_online, source_space_token,
+                                        std::string()
+                                    );
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     if(!job_id.empty() && file_id > 0)
@@ -10704,7 +10702,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
         }
 }
 
-void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files)
+void OracleAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
 
@@ -10762,8 +10760,12 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                     soci::indicator isNull = row.get_indicator("BRINGONLINE_TOKEN");
                     if (isNull == soci::i_ok) bringonline_token = row.get<std::string>("BRINGONLINE_TOKEN");
 
-                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, bringonline_token);
-                    files.push_back(record);
+                    stagingOps.emplace_back(
+                        job_id, file_id, vo_name,
+                        user_dn, cred_id, source_url,
+                        copy_pin_lifetime, bring_online, source_space_token,
+                        bringonline_token
+                    );
                 }
         }
     catch (std::exception& e)

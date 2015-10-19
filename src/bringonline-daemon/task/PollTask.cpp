@@ -161,14 +161,14 @@ void PollTask::handle_canceled()
     // check if there is something to do first
     if (remove.empty()) return;
     // get the urls for abortions
-    auto urls = ctx.for_abortion(remove);
+    auto urls = ctx.getSurlsToAbort(remove);
     abort(urls);
 }
 
 bool PollTask::timeout_occurred()
 {
     // first check if bring-online timeout was exceeded
-    if (!ctx.is_timeouted()) return false;
+    if (!ctx.hasTimeoutExpired()) return false;
     // get URLs
     auto urls = ctx.getUrls();
     // and abort the bring-online operation

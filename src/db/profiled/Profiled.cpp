@@ -885,14 +885,14 @@ void ProfiledDB::updateBringOnlineToken(std::map< std::string, std::map<std::str
 }
 
 //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+void ProfiledDB::getFilesForStaging(std::vector<StagingOperation>& stagingOps)
 {
-    PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
+    PROFILE_PREFIXED("DB::", db->getFilesForStaging(stagingOps));
 }
 
-void ProfiledDB::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files)
+void ProfiledDB::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps)
 {
-    PROFILE_PREFIXED("DB::", db->getAlreadyStartedStaging(files));
+    PROFILE_PREFIXED("DB::", db->getAlreadyStartedStaging(stagingOps));
 }
 
 //file_id / surl / token

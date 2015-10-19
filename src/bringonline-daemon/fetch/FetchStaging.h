@@ -49,29 +49,9 @@ public:
     void fetch();
 
 private:
-
     void recoverStartedTasks();
-
-    StagingContext::context_type get_context(boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> const & t)
-    {
-        return StagingContext::context_type(
-                   boost::get<0>(t),
-                   boost::get<1>(t),
-                   boost::get<2>(t),
-                   boost::get<3>(t),
-                   boost::get<4>(t),
-                   boost::get<5>(t),
-                   boost::get<6>(t),
-                   boost::get<7>(t),
-                   boost::get<8>(t)
-               );
-    }
-
-    // typedefs for convenience
-    // vo, dn ,se, source_space_token
-    typedef std::tuple<std::string, std::string, std::string, std::string> key_type;
-
     ThreadPool<Gfal2Task> & threadpool;
+
 };
 
 #endif /* FETCHSTAGING_H_ */

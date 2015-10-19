@@ -48,11 +48,13 @@
 #include "DeleteOperation.h"
 #include "Job.h"
 #include "OptimizerSample.h"
-#include "profiler/Profiler.h"
+#include "StagingOperation.h"
 #include "StorageElement.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
+
+#include "profiler/Profiler.h"
 
 
 /// Hold information about individual submitted transfers
@@ -626,10 +628,13 @@ public:
     //                                                          //  job_id / file_id / token
     virtual void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token) = 0;
 
-    //vo / file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
-    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
+    /// Get staging operations ready to be started
+    /// @params[out] stagingOps The list of staging operations will be put here
+    virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps) = 0;
 
-    virtual void getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files) = 0;
+    /// Get staging operations already started
+    /// @params[out] stagingOps The list of started staging operations will be put here
+    virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps) = 0;
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;

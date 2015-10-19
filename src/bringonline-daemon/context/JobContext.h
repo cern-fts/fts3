@@ -99,7 +99,7 @@ public:
     std::set<std::string> getUrls() const;
 
     /**
-     * @return : set of SURLs
+     * @return  Set of pairs <jobId, surl>
      */
     std::set<std::pair<std::string, std::string>> getSurls() const
     {

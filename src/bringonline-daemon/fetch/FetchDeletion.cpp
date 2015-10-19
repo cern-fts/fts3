@@ -75,11 +75,11 @@ void FetchDeletion::fetch()
             // Generate a list of deletion contexts, grouping urls belonging to the same
             // storage under the same context
             for (auto i = deletions.begin(); i != deletions.end() && !stopThreads; ++i) {
-                const std::string storage = Uri::parse(i->url).host;
+                const std::string storage = Uri::parse(i->surl).host;
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)
                     << "DELETION To be deleted: \""
-                    << i->userDn << "\"  \"" << i->voName << "\"  " << i->url
+                    << i->userDn << "\"  \"" << i->voName << "\"  " << i->surl
                     << commit;
 
                 Triplet key(i->voName, i->userDn, storage);

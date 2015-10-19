@@ -30,13 +30,16 @@
 
 #include <map>
 
-#include "../../common/Uri.h"
-#include "../../cred/CredUtility.h"
+#include "common/Uri.h"
+#include "cred/CredUtility.h"
 
 extern bool stopThreads;
 
 void FetchStaging::fetch()
 {
+    // VO, user dn, storage, space token
+    typedef std::tuple<std::string, std::string, std::string, std::string> GroupByType;
+
     WaitingRoom<PollTask>::instance().attach(threadpool);
 
     try  // we want to be sure that this won't break our fetching thread
@@ -64,33 +67,23 @@ void FetchStaging::fetch()
                             continue;
                         }
 
-                    std::map<key_type, StagingContext> tasks;
-                    std::map<key_type, StagingContext>::iterator it_t;
+                    std::map<GroupByType, StagingContext> tasks;
+                    std::vector<StagingOperation> files;
 
-                    std::vector<StagingContext::context_type> files;
                     db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
 
-                    std::vector<StagingContext::context_type>::iterator it_f;
-                    for (it_f = files.begin(); it_f != files.end(); ++it_f)
+                    for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
                         {
-                            // get the SE name
-                            std::string const & url = boost::get<StagingContext::surl>(*it_f);
-                            Uri uri = Uri::parse(url);
-                            std::string se = uri.host;
-                            // get the other values necessary for the key
-                            std::string const & dn = boost::get<StagingContext::dn>(*it_f);
-                            std::string const & vo = boost::get<StagingContext::vo>(*it_f);
-                            std::string const & space_token = boost::get<StagingContext::src_space_token>(*it_f);
-
-                            key_type key(vo, dn, se, space_token);
-                            it_t = tasks.find(key);
+                            std::string storage = Uri::parse(it_f->surl).host;
+                            GroupByType key(it_f->voName, it_f->userDn, storage, it_f->spaceToken);
+                            auto it_t = tasks.find(key);
                             if (it_t == tasks.end())
                                 tasks.insert(std::make_pair(key, StagingContext(*it_f)));
                             else
                                 it_t->second.add(*it_f);
                         }
 
-                    for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
+                    for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
                         {
                             try
                                 {
@@ -106,29 +99,28 @@ void FetchStaging::fetch()
                                 }
                         }
 
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(10000)); //10 secs interval
+
                 }
             catch (BaseException& e)
                 {
-                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
                 }
             catch (...)
                 {
-                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
                 }
+
+            boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
         }
 }
 
 void FetchStaging::recoverStartedTasks()
 {
-    std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> > files;
-    std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >::const_iterator it_f;
+    std::vector<StagingOperation> startedStagingOps;
 
     try
         {
-            db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(files);
+            db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(startedStagingOps);
         }
     catch(UserError const & ex)
         {
@@ -140,19 +132,17 @@ void FetchStaging::recoverStartedTasks()
         }
 
     std::map<std::string, StagingContext> tasks;
-    std::map<std::string, StagingContext>::iterator it_t;
 
-    for (it_f = files.begin(); it_f != files.end(); ++it_f)
+    for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f)
         {
-            std::string const & token = boost::get<9>(*it_f);
-            it_t = tasks.find(token);
+            auto it_t = tasks.find(it_f->token);
             if (it_t == tasks.end())
-                tasks.insert(std::make_pair(token, StagingContext(get_context(*it_f))));
+                tasks.insert(std::make_pair(it_f->token, StagingContext(*it_f)));
             else
-                it_t->second.add(get_context(*it_f));
+                it_t->second.add(*it_f);
         }
 
-    for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
+    for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
         {
             try
                 {

@@ -22,57 +22,52 @@
 
 #include <sstream>
 #include <unordered_set>
-#include "../../cred/CredUtility.h"
+#include "cred/CredUtility.h"
 
 
-void StagingContext::add(context_type const & ctx)
+void StagingContext::add(const StagingOperation &stagingOp)
 {
-    if(boost::get<copy_pin_lifetime>(ctx) > pinlifetime)
-        {
-            pinlifetime = boost::get<copy_pin_lifetime>(ctx);
-        }
+    if (stagingOp.pinLifetime > pinLifetime) {
+        pinLifetime = stagingOp.pinLifetime;
+    }
 
-    if(boost::get<bring_online_timeout>(ctx) > bringonlineTimeout)
-        {
-            bringonlineTimeout = boost::get<bring_online_timeout>(ctx);
-        }
+    if (stagingOp.timeout > bringonlineTimeout) {
+        bringonlineTimeout = stagingOp.timeout;
+    }
 
-    std::string url = boost::get<surl>(ctx);
-    std::string jobId = boost::get<job_id>(ctx);
-    int fileId =  boost::get<file_id>(ctx);
-    add(url, jobId, fileId);
+    add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
 }
 
-bool StagingContext::is_timeouted()
+
+bool StagingContext::hasTimeoutExpired()
 {
-    return difftime(time(0), start_time) > bringonlineTimeout;
+    return difftime(time(0), startTime) > bringonlineTimeout;
 }
 
-std::set<std::string> StagingContext::for_abortion(std::set<std::pair<std::string, std::string>> const & urls)
+
+std::set<std::string> StagingContext::getSurlsToAbort(
+    const std::set<std::pair<std::string, std::string>> &urls)
 {
     // remove respective URLs from the task
-    for (auto it = urls.begin(); it != urls.end(); ++it)
-        {
-            jobs[it->first].erase(it->second);
-        }
+    for (auto it = urls.begin(); it != urls.end(); ++it) {
+        jobs[it->first].erase(it->second);
+    }
 
     std::unordered_set<std::string> not_canceled, unique;
-    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-        {
-            auto const & urls = it_j->second;
-            for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
-                {
-                    std::string const & url = it_u->first;
-                    not_canceled.insert(url);
-                }
+    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j) {
+        auto const & urls = it_j->second;
+        for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {
+            std::string const & url = it_u->first;
+            not_canceled.insert(url);
         }
+    }
 
     std::set<std::string> ret;
-    for (auto it = urls.begin(); it != urls.end(); ++it)
-        {
-            std::string const & url = it->second;
-            if (not_canceled.count(url) || unique.count(url)) continue;
-            ret.insert(url.c_str());
-        }
+    for (auto it = urls.begin(); it != urls.end(); ++it) {
+        std::string const & url = it->second;
+        if (not_canceled.count(url) || unique.count(url))
+            continue;
+        ret.insert(url.c_str());
+    }
     return ret;
 }

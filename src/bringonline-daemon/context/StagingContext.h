@@ -41,62 +41,47 @@ public:
 
     using JobContext::add;
 
-    // typedef for convenience
-    typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
-
-    enum
+    StagingContext(const StagingOperation &stagingOp):
+        JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
+        pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
     {
-        vo,
-        surl,
-        job_id,
-        file_id,
-        copy_pin_lifetime,
-        bring_online_timeout,
-        dn,
-        dlg_id,
-        src_space_token,
-        timestamp
-    };
-
-    StagingContext(context_type const & ctx) :
-        JobContext(boost::get<dn>(ctx), boost::get<vo>(ctx), boost::get<dlg_id>(ctx), boost::get<src_space_token>(ctx)),
-        pinlifetime(boost::get<copy_pin_lifetime>(ctx)), bringonlineTimeout(boost::get<bring_online_timeout>(ctx))
-    {
-        add(ctx);
-        start_time = time(0);
+        add(stagingOp);
+        startTime = time(0);
     }
 
-    StagingContext(StagingContext const & copy) :
+    StagingContext(const StagingContext &copy) :
         JobContext(copy),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time) {}
+        pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
+    {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time) {}
+        pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
+    {}
 
     virtual ~StagingContext() {}
 
-    void add(context_type const & ctx);
+    void add(const StagingOperation &stagingOp);
 
     /**
      * Asynchronous update of a single transfer-file within a job
      */
-    void updateState(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry) const
+    void updateState(const std::string &jobId, int fileId, const std::string &state, const std::string &reason, bool retry) const
     {
-        static StagingStateUpdater & state_update = StagingStateUpdater::instance();
-        state_update(job_id, file_id, state, reason, retry);
+        static StagingStateUpdater & stateUpdater = StagingStateUpdater::instance();
+        stateUpdater(jobId, fileId, state, reason, retry);
     }
 
-    void updateState(std::string const & state, std::string const & reason, bool retry) const
+    void updateState(const std::string &state, const std::string &reason, bool retry) const
     {
-        static StagingStateUpdater & state_update = StagingStateUpdater::instance();
-        state_update(jobs, state, reason, retry);
+        static StagingStateUpdater & stateUpdater = StagingStateUpdater::instance();
+        stateUpdater(jobs, state, reason, retry);
     }
 
-    void updateState(std::string const & token)
+    void updateState(const std::string &token)
     {
-        static StagingStateUpdater & state_update = StagingStateUpdater::instance();
-        state_update(jobs, token);
+        static StagingStateUpdater & stateUpdater = StagingStateUpdater::instance();
+        stateUpdater(jobs, token);
     }
 
     int getBringonlineTimeout() const
@@ -106,19 +91,19 @@ public:
 
     int getPinlifetime() const
     {
-        return pinlifetime;
+        return pinLifetime;
     }
 
-    bool is_timeouted();
+    bool hasTimeoutExpired();
 
-    std::set<std::string> for_abortion(std::set<std::pair<std::string, std::string>> const &);
+    std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
 
 private:
 
-    int pinlifetime;
+    int pinLifetime;
     int bringonlineTimeout;
     /// (jobID, fileID) -> submission time
-    time_t start_time;
+    time_t startTime;
 };
 
 #endif /* STAGINGCONTEXT_H_ */

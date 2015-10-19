@@ -15,27 +15,34 @@
  */
 
 #pragma once
-#ifndef DELETEOPERATION_H_
-#define DELETEOPERATION_H_
+#ifndef STAGINGOPERATION_H_
+#define STAGINGOPERATION_H_
 
 #include <stdint.h>
 #include <string>
 
 
-struct DeleteOperation {
-    DeleteOperation(const std::string& jobId, uint64_t fileId, const std::string& voName,
-        const std::string& userDn, const std::string& credId, const std::string& url) :
-        jobId(jobId), fileId(fileId), voName(voName), userDn(userDn), credId(credId), surl(url)
+struct StagingOperation {
+    StagingOperation(const std::string& jobId, uint64_t fileId, const std::string& voName,
+        const std::string& userDn, const std::string& credId, const std::string& surl,
+        time_t pinLifetime, time_t timeout, const std::string& spaceToken,
+        const std::string& token):
+        jobId(jobId), fileId(fileId), voName(voName), userDn(userDn), credId(credId), surl(surl),
+        pinLifetime(pinLifetime), timeout(timeout), spaceToken(spaceToken), token(token)
     {
     }
 
     std::string jobId;
-    uint64_t    fileId;
+    uint64_t fileId;
     std::string voName;
     std::string userDn;
     std::string credId;
     std::string surl;
+    time_t pinLifetime;
+    time_t timeout;
+    std::string spaceToken;
+    std::string token; ///< Bring online operation token
 };
 
 
-#endif // DELETEOPERATION_H_
+#endif // STAGINGOPERATION_H_

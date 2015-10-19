@@ -352,9 +352,9 @@ public:
     void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);
 
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-    void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
+    void getFilesForStaging(std::vector<StagingOperation> &stagingOps);
 
-    void getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files);
+    void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);
 
     //file_id / surl / token
     void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
