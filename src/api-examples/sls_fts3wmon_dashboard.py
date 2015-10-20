@@ -34,7 +34,6 @@ class Fts3SlsPlus(object):
     Enriched Service Level Status
     """
 
-    INTERVAL = 60  # In minutes
     VOS = ['atlas', 'cms', 'lhcb']
 
     @staticmethod
@@ -58,7 +57,7 @@ class Fts3SlsPlus(object):
         self.curl.perform()
         return io.getvalue()
 
-    def __init__(self, fts3_name, sls_url, dashb_base):
+    def __init__(self, fts3_name, sls_url, dashb_base, interval):
         """
         Constructor
         :param fts3_name:  The FTS3 name as sent to the dashboard
@@ -69,6 +68,7 @@ class Fts3SlsPlus(object):
         self.fts3_name = fts3_name
         self.sls_url = sls_url
         self.dashb_base = dashb_base
+        self.interval = interval
 
     def generate_sls(self):
         """
@@ -82,7 +82,7 @@ class Fts3SlsPlus(object):
         for vo in self.VOS:
             dashb = json.loads(self._get(
                 self.dashb_base + '/transfer-matrix.json?vo=%s&server=%s&interval=%d' %
-                (vo, self.fts3_name, self.INTERVAL)
+                (vo, self.fts3_name, self.interval)
             ))
 
             bytes_key = dashb['transfers']['key']['bytes_xs']
@@ -94,7 +94,7 @@ class Fts3SlsPlus(object):
             n_transfers = row[transfers_key]
             n_errors = row[errors_key]
 
-            throughput = transferred / (self.INTERVAL * 60)
+            throughput = transferred / (self.interval * 60)
 
             _add_numeric(data_elm, '%s_finished' % vo, n_transfers)
             _add_numeric(data_elm, '%s_errors' % vo, n_errors)
@@ -123,7 +123,11 @@ if __name__ == '__main__':
         '--dashboard', help='FTS3 dashboard',
         default='http://dashb-fts-transfers.cern.ch/dashboard/request.py'
     )
+    parser.add_option(
+        '--interval', help='Interval in minutes', type=int,
+        default=60
+    )
     options, args = parser.parse_args()
 
-    sls = Fts3SlsPlus(options.fts, options.sls, options.dashboard)
+    sls = Fts3SlsPlus(options.fts, options.sls, options.dashboard, options.interval)
     print sls
