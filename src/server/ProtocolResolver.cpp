@@ -247,7 +247,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
         }
 
     ret.strict_copy = (src_prot.strict_copy || dst_prot.strict_copy);
-    ret.ipv6 = (src_prot.ipv6 || dst_prot.strict_copy);
+    ret.ipv6 = (src_prot.ipv6 || dst_prot.ipv6);
 
     return ret;
 }
