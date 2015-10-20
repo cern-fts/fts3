@@ -31,13 +31,13 @@
 #include "../task/PollTask.h"
 #include "../task/WaitingRoom.h"
 
-extern bool stopThreads;
-
 
 void FetchStaging::fetch()
 {
     // VO, user dn, storage, space token
     typedef std::tuple<std::string, std::string, std::string, std::string> GroupByType;
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting" << commit;
 
     WaitingRoom<PollTask>::instance().attach(threadpool);
 
@@ -47,15 +47,14 @@ void FetchStaging::fetch()
         recoverStartedTasks();
     }
     catch (BaseException& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "BRINGONLINE " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "FetchStaging " << e.what() << commit;
     }
     catch (...)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
     }
 
-    //this loop must never exit
-    while (!stopThreads) {
+    while (!boost::this_thread::interruption_requested()) {
         try {
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
@@ -63,6 +62,8 @@ void FetchStaging::fetch()
                 boost::this_thread::sleep(boost::posix_time::milliseconds(60000));
                 continue;
             }
+
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
 
             std::map<GroupByType, StagingContext> tasks;
             std::vector<StagingOperation> files;
@@ -99,15 +100,19 @@ void FetchStaging::fetch()
             }
 
         }
-        catch (BaseException& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
+        catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging " << e.what() << commit;
+        }
+        catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging interruption requested" << commit;
+            break;
         }
         catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
         }
-
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging exiting" << commit;
 }
 
 

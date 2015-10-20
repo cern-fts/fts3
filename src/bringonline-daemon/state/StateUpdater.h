@@ -34,7 +34,6 @@
 
 using namespace fts3::common; 
 
-extern bool stopThreads;
 
 /**
  * A base class for carrying out asynchronous state updates,
@@ -106,12 +105,10 @@ protected:
         // temporary vector for DB update
         std::vector<MinFileStatus> tmp;
 
-        while (true) {
+        while (!boost::this_thread::interruption_requested()) {
             try {
-                if (stopThreads)
-                    return; //either  gracefully or not
                 // wait 10 seconds before checking again
-                boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
+                boost::this_thread::sleep(boost::posix_time::seconds(10));
                 // critical section
                 {
                     // lock the vector

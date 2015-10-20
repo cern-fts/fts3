@@ -32,20 +32,20 @@
 #include "../task/BringOnlineTask.h"
 
 
-extern bool stopThreads;
-
-
 void FetchCancelStaging::fetch()
 {
-    while (!stopThreads) {
-        try //this loop must never exit
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchCancelStaging starting" << commit;
+    while (!boost::this_thread::interruption_requested()) {
+        try
         {
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(15000));
                 continue;
             }
+
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
 
             std::set<std::pair<std::string, std::string>> urls;
             db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(urls);
@@ -55,15 +55,18 @@ void FetchCancelStaging::fetch()
                 BringOnlineTask::cancel(urls);
             }
         }
-        catch (BaseException& e)
+        catch (const std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchCancelStaging Error " << e.what() << commit;
+        }
+        catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchCancelStaging interruption requested" << commit;
+            break;
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchCancelStaging Unknown error" << commit;
         }
-
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
     }
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchCancelStaging exiting" << commit;
 }

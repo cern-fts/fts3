@@ -33,10 +33,7 @@
 
 #include "StateUpdater.h"
 
-
 using namespace fts3::common; 
-
-extern bool stopThreads;
 
 
 /**

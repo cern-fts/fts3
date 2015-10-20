@@ -30,7 +30,6 @@
 
 #include "FetchDeletion.h"
 
-extern bool stopThreads;
 
 
 /// At the beginning of the subsystem, revert
@@ -54,19 +53,22 @@ void FetchDeletion::fetch()
 {
     typedef std::tuple<std::string, std::string, std::string> Triplet;
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchDeletion starting" << commit;
+
     revertDeleteToStart();
 
-    while (!stopThreads)
+    while (!boost::this_thread::interruption_requested())
     {
-        try //this loop must never exit
-        {
+        try {
             //if we drain a host, stop with deletions
             if (fts3::server::DrainMode::instance())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Set to drain mode, stopped deleting files with this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchDeletion Set to drain mode, stopped deleting files with this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(15000));
                 continue;
             }
+
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
 
             std::map<Triplet, DeletionContext> deletionContext;
             std::vector<DeleteOperation> deletions;
@@ -75,7 +77,7 @@ void FetchDeletion::fetch()
 
             // Generate a list of deletion contexts, grouping urls belonging to the same
             // storage under the same context
-            for (auto i = deletions.begin(); i != deletions.end() && !stopThreads; ++i) {
+            for (auto i = deletions.begin(); i != deletions.end() && !boost::this_thread::interruption_requested(); ++i) {
                 const std::string storage = Uri::parse(i->surl).host;
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)
@@ -94,7 +96,7 @@ void FetchDeletion::fetch()
             }
 
             // Trigger a task per populated context
-            for (auto i = deletionContext.begin(); i != deletionContext.end() && !stopThreads; ++i) {
+            for (auto i = deletionContext.begin(); i != deletionContext.end() && !boost::this_thread::interruption_requested(); ++i) {
                 try {
                     threadpool.start(new DeletionTask(i->second));
                 }
@@ -106,13 +108,17 @@ void FetchDeletion::fetch()
                 }
             }
         }
-        catch (BaseException& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
+        catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchDeletion " << e.what() << commit;
+        }
+        catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchDeletion interruption requested" << commit;
+            break;
         }
         catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchDeletion Fatal error (unknown origin)" << commit;
         }
-
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchDeletion exiting" << commit;
 }

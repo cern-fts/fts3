@@ -29,8 +29,6 @@
 
 #include "../task/Gfal2Task.h"
 
-extern bool stopThreads;
-
 
 /**
  * A waiting room for task that will be executed in a while
@@ -114,11 +112,12 @@ void WaitingRoom<TASK, BASE>::run()
 {
     WaitingRoom<TASK, BASE>& me = WaitingRoom<TASK, BASE>::instance();
 
-    while (true) {
-        if (stopThreads)
-            return; //either  gracefully or not
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "WaitingRoom starting" << commit;
 
-        {
+    while (!boost::this_thread::interruption_requested()) {
+        try {
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
+
             // lock the mutex
             boost::mutex::scoped_lock lock(me.m);
             // get current time
@@ -126,7 +125,7 @@ void WaitingRoom<TASK, BASE>::run()
             // iterate over all all tasks
             typename boost::ptr_list<TASK>::iterator it, next = me.tasks.begin();
             while ((it = next) != me.tasks.end()) {
-                if (stopThreads)
+                if (boost::this_thread::interruption_requested())
                     return;
                 // next item to check
                 ++next;
@@ -137,9 +136,19 @@ void WaitingRoom<TASK, BASE>::run()
                 me.pool->start(me.tasks.release(it).release());
             }
         }
-        // wait a while before checking again
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "WaitingRoom interruption requested" << commit;
+            break;
+        }
+        catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "WaitingRoom error: " << e.what() << commit;
+        }
+        catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "WaitingRoom unknown exception" << commit;
+        }
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "WaitingRoom exiting" << commit;
 }
 
 #endif // WAITINGROOM_H_

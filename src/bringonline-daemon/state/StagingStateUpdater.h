@@ -33,10 +33,7 @@
 
 #include "StateUpdater.h"
 
-
 using namespace fts3::common; 
-
-extern bool stopThreads;
 
 /**
  * A utility for carrying out asynchronous state updates,
@@ -102,7 +99,7 @@ private:
     /// Assignment operator (not implemented)
     StagingStateUpdater & operator=(StagingStateUpdater const &);
 
-    /// this rutine is executed in a separate thread
+    /// this routine is executed in a separate thread
     static void run()
     {
         StagingStateUpdater & me = instance();

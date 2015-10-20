@@ -25,16 +25,9 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/panic.h"
-#include "common/ThreadPool.h"
+#include "db/generic/SingleDbInstance.h"
 
-
-#include "task/Gfal2Task.h"
-#include "fetch/FetchStaging.h"
-#include "fetch/FetchCancelStaging.h"
-#include "fetch/FetchDeletion.h"
-#include "state/StagingStateUpdater.h"
-#include "state/DeletionStateUpdater.h"
-#include "server/DrainMode.h"
+#include "BringOnlineServer.h"
 
 
 using namespace fts3::common;
@@ -42,7 +35,6 @@ using namespace fts3::config;
 namespace fs = boost::filesystem;
 
 
-bool stopThreads = false;
 const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
 const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
 const char *CONFIG_FILE = "/etc/fts3/fts3config";
@@ -52,16 +44,14 @@ const char *USER_NAME = "fts3";
 /// Called by the signal handler
 static void shutdownCallback(int signum, void*)
 {
-    StagingStateUpdater::instance().recover();
-    DeletionStateUpdater::instance().recover();
-
-
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
                                     << " (" << strsignal(signum) << ")"
                                     << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
-    stopThreads = true;
+    BringOnlineServer::instance().stop();
+    if (!ServerConfig::instance().get<bool> ("rush"))
+        boost::this_thread::sleep(boost::posix_time::seconds(5));
 
     // Some require traceback
     switch (signum)
@@ -109,75 +99,6 @@ static void initializeDatabase()
     db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 8);
 }
 
-/// Run in the background updating the status of this server
-/// This is a thread! Do not let exceptions exit the scope
-static void heartBeat(void)
-{
-    unsigned myIndex=0, count=0;
-    unsigned hashStart=0, hashEnd=0;
-    const std::string service_name = "fts_bringonline";
-
-    while (!stopThreads) {
-        try {
-            //check if draining is on
-            if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-                sleep(15);
-                continue;
-            }
-
-            db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                &myIndex, &count, &hashStart, &hashEnd, service_name);
-
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
-            << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
-            << std::dec
-            << commit;
-
-            sleep(60);
-        }
-        catch (std::exception& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            sleep(2);
-        }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
-            sleep(2);
-        }
-    }
-}
-
-/// Main body of the bring online daemon
-/// The configuration should have been loaded already
-static void doServer(void)
-{
-    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting daemon..." << commit;
-
-    initializeDatabase();
-    fts3::ProfilingSubsystem::instance().start();
-
-    boost::thread heartBeatThread(heartBeat);
-
-    std::string infosys = ServerConfig::instance().get<std::string>("Infosys");
-    Gfal2Task::createPrototype (infosys);
-
-    fts3::common::ThreadPool<Gfal2Task> threadpool(10);
-    FetchStaging fs(threadpool);
-    FetchCancelStaging fcs(threadpool);
-    FetchDeletion fd(threadpool);
-
-    boost::thread_group gr;
-    gr.create_thread(boost::bind(&FetchStaging::fetch, fs));
-    gr.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
-    gr.create_thread(boost::bind(&FetchDeletion::fetch, fd));
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Daemon started..." << commit;
-
-    gr.join_all();
-}
 
 /// Check the environment is properly setup for FTS3 to run
 static void runEnvironmentChecks()
@@ -196,6 +117,31 @@ static void dropPrivileges()
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Process UID changed to " << pw_uid << commit;
 }
 
+/// Run the Bring Online server
+static void doServer()
+{
+    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
+    std::string logPath = ServerConfig::instance().get<std::string>("ServerLogDirectory");
+    if (isDaemon && !logPath.empty()) {
+        logPath += "/fts3bringonline.log";
+        if (theLogger().redirect(logPath, logPath) != 0) {
+            std::ostringstream msg;
+            msg << "fts3 bringonline failed to open log file " << logPath << " error is:" << strerror(errno);
+            throw SystemError(msg.str());
+        }
+    }
+
+    initializeDatabase();
+    fts3::ProfilingSubsystem::instance().start();
+    BringOnlineServer::instance().start();
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Daemon started" << commit;
+
+    BringOnlineServer::instance().wait();
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Daemon halt" << commit;
+}
+
 /// Prepare, fork and run bring online daemon
 static void spawnServer(int argc, char** argv)
 {
@@ -209,16 +155,6 @@ static void spawnServer(int argc, char** argv)
     bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
 
     if (isDaemon) {
-        std::string logPath = ServerConfig::instance().get<std::string>("ServerLogDirectory");
-        if (!logPath.empty()) {
-            logPath += "/fts3bringonline.log";
-            if (theLogger().redirect(logPath, logPath) != 0) {
-                std::ostringstream msg;
-                msg << "fts3 server failed to open log file " << logPath << " error is:" << strerror(errno);
-                throw SystemError(msg.str());
-            }
-        }
-
         int d = daemon(0, 0);
         if (d < 0) {
             throw SystemError("Can't fork the daemon");
