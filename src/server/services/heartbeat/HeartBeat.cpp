@@ -36,10 +36,14 @@ time_t updateRecords = time(0);
 time_t stallRecords = time(0);
 
 
-void HeartBeat::operator () ()
+std::string HeartBeat::getServiceName()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting HearBeat" << commit;
+    return std::string("HearBeat");
+}
 
+
+void HeartBeat::runService()
+{
     while (!boost::this_thread::interruption_requested())
     {
         try
@@ -135,8 +139,6 @@ void HeartBeat::operator () ()
         }
         boost::this_thread::sleep(boost::posix_time::seconds(60));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting HearBeat" << commit;
 }
 
 

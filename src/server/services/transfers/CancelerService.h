@@ -41,8 +41,8 @@ public:
     /// Destructor
     virtual ~CancelerService();
 
-    /// Run the service
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 
 private:
     void killRunningJob(const std::vector<int>& pids);

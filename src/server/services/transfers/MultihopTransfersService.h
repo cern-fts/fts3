@@ -32,8 +32,8 @@ namespace server {
 class MultihopTransfersService : public ReuseTransfersService
 {
 public:
-    /// Run service
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 
 protected:
     void executeUrlcopy();

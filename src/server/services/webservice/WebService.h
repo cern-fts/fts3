@@ -65,11 +65,15 @@ public:
         threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 
-    virtual void operator () ()
+    virtual std::string getServiceName()
+    {
+        return std::string("WebService");
+    }
+
+    virtual void runService()
     {
         GSoapAcceptor acceptor(port, ip);
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting WebService" << fts3::common::commit;
         while (!boost::this_thread::interruption_requested())
         {
             std::unique_ptr<GSoapRequestHandler> handler = acceptor.accept();
@@ -85,8 +89,6 @@ public:
                 boost::this_thread::sleep(boost::posix_time::seconds(1));
             }
         }
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting WebService" << fts3::common::commit;
     }
 };
 

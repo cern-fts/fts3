@@ -89,11 +89,15 @@ TransfersService::~TransfersService()
 }
 
 
-void TransfersService::operator () ()
+std::string TransfersService::getServiceName()
+{
+    return std::string("TransfersService");
+}
+
+
+void TransfersService::runService()
 {
     static bool drainMode = false;
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting TransfersService" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
@@ -128,8 +132,6 @@ void TransfersService::operator () ()
         }
         boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting TransfersService" << commit;
 }
 
 

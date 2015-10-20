@@ -33,8 +33,8 @@ namespace server {
 class ReuseTransfersService: public TransfersService
 {
 public:
-    /// Run service
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 
 protected:
     void writeJobFile(const std::string& jobId, const std::vector<std::string>& files);

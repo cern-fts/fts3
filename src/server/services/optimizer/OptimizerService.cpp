@@ -28,10 +28,14 @@ namespace fts3 {
 namespace server {
 
 
-void OptimizerService::operator () ()
+std::string OptimizerService::getServiceName()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting OptimizerService" << fts3::common::commit;
+    return std::string("OptimizerService");
+}
 
+
+void OptimizerService::runService()
+{
     while (!boost::this_thread::interruption_requested())
     {
         try
@@ -48,8 +52,6 @@ void OptimizerService::operator () ()
         }
         boost::this_thread::sleep(boost::posix_time::seconds(15));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting OptimizerService" << fts3::common::commit;
 }
 
 

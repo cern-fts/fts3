@@ -38,6 +38,12 @@ namespace fts3 {
 namespace server {
 
 
+std::string CleanerService::getServiceName()
+{
+    return std::string("CleanerService");
+}
+
+
 void CleanerService::removeOldFiles(const std::string& path)
 {
     fs::recursive_directory_iterator end;
@@ -63,10 +69,8 @@ void CleanerService::removeOldFiles(const std::string& path)
 }
 
 
-void CleanerService::operator () ()
+void CleanerService::runService()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting CleanerService" << fts3::common::commit;
-
     while (!boost::this_thread::interruption_requested())
     {
         ++counter;
@@ -102,8 +106,6 @@ void CleanerService::operator () ()
 
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting CleanerService" << fts3::common::commit;
 }
 
 } // end namespace server

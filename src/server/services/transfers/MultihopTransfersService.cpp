@@ -33,11 +33,15 @@ namespace server {
 extern time_t retrieveRecords;
 
 
-void MultihopTransfersService::operator () ()
+std::string MultihopTransfersService::getServiceName()
+{
+    return std::string("MultihopTransfersService");
+}
+
+
+void MultihopTransfersService::runService()
 {
     static bool drainMode = false;
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting MultihopTransfersService" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
@@ -72,8 +76,6 @@ void MultihopTransfersService::operator () ()
         }
         boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting MultihopTransfersService" << commit;
 }
 
 

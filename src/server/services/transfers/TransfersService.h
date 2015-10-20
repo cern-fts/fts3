@@ -43,8 +43,8 @@ public:
     /// Destructor
     virtual ~TransfersService();
 
-    /// Run the service
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 
 protected:
     std::string ftsHostName;

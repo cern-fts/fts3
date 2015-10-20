@@ -32,7 +32,8 @@ namespace server {
 class OptimizerService: public BaseService
 {
 public:
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 };
 
 } // end namespace server

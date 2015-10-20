@@ -46,11 +46,15 @@ namespace server {
 extern time_t retrieveRecords;
 
 
-void ReuseTransfersService::operator () ()
+std::string ReuseTransfersService::getServiceName()
+{
+    return std::string("ReuseTransfersService");
+}
+
+
+void ReuseTransfersService::runService()
 {
     static bool drainMode = false;
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting ReuseTransfersService" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
@@ -88,8 +92,6 @@ void ReuseTransfersService::operator () ()
         }
         boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting ReuseTransfersService" << commit;
 }
 
 

@@ -49,7 +49,13 @@ CancelerService::~CancelerService()
 }
 
 
-void CancelerService::operator () ()
+std::string CancelerService::getServiceName()
+{
+    return std::string("CancelerService");
+}
+
+
+void CancelerService::runService()
 {
     static unsigned int counter1 = 0;
     static unsigned int counterFailAll = 0;
@@ -60,8 +66,6 @@ void CancelerService::operator () ()
     std::vector<struct message_updater> messages;
 
     messages.reserve(500);
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting CancelerService" << commit;
 
     while (true)
     {
@@ -311,8 +315,6 @@ void CancelerService::operator () ()
         }
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting CancelerService" << commit;
 }
 
 

@@ -47,8 +47,8 @@ public:
     /// Destructor
     virtual ~MessageProcessingService();
 
-    /// Thread that process the messages comming from fts_url_copy
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 
 private:
     void updateDatabase(const struct message& msg);

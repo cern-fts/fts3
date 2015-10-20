@@ -36,7 +36,8 @@ private:
     void removeOldFiles(const std::string& path);
 
 public:
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 };
 
 } // end namespace server

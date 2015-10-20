@@ -36,7 +36,8 @@ extern time_t stallRecords;
 class HeartBeat: public BaseService
 {
 public:
-    virtual void operator () ();
+    virtual std::string getServiceName();
+    virtual void runService();
 
 private:
     bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords,

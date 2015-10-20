@@ -52,11 +52,15 @@ MessageProcessingService::~MessageProcessingService()
 }
 
 
-void MessageProcessingService::operator () ()
+std::string MessageProcessingService::getServiceName()
+{
+    return std::string("MessageProcessingService");
+}
+
+
+void MessageProcessingService::runService()
 {
     namespace fs = boost::filesystem;
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting MessageProcessingService" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
@@ -247,8 +251,6 @@ void MessageProcessingService::operator () ()
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
             }
-
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (const fs::filesystem_error& ex)
         {
@@ -267,8 +269,6 @@ void MessageProcessingService::operator () ()
                 struct message_log msgLogBreak = (*iterLogBreak).second;
                 runProducerLog( msgLogBreak );
             }
-
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (std::exception& ex2)
         {
@@ -287,8 +287,6 @@ void MessageProcessingService::operator () ()
                 struct message_log msgLogBreak = (*iterLogBreak).second;
                 runProducerLog( msgLogBreak );
             }
-
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (...)
         {
@@ -307,12 +305,9 @@ void MessageProcessingService::operator () ()
                 struct message_log msgLogBreak = (*iterLogBreak).second;
                 runProducerLog( msgLogBreak );
             }
-
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting MessageProcessingService" << commit;
 }
 
 
