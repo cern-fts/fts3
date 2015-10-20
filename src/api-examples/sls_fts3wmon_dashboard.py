@@ -35,6 +35,7 @@ class Fts3SlsPlus(object):
     """
 
     INTERVAL = 60  # In minutes
+    VOS = ['atlas', 'cms', 'lhcb']
 
     @staticmethod
     def _setup_curl():
@@ -74,23 +75,26 @@ class Fts3SlsPlus(object):
         Generate the enriched SLS
         """
         sls = ET.fromstring(self._get(self.sls_url))
-        dashb = json.loads(self._get(
-            self.dashb_base + '/transfer-ranking?interval=%d&vo=atlas&vo=cms&vo=lhcb&server=%s&grouping=vo' %
-            (self.INTERVAL, self.fts3_name)
-        ))
-
-        # Insert new data
         data_elm = sls.find('{%s}data' % SLS_NS)
         if data_elm is None:
             raise RuntimeError('Could not find the data node')
 
-        for entry in dashb['transfers-vo']:
-            vo = entry['name']
-            n_transfers = entry['bins'][0]['files_xs']
-            n_errors = entry['bins'][0]['errors_xs']
-            transefered_bytes = entry['bins'][0]['bytes_xs']
-            transfer_time = entry['bins'][0]['transfer_time']
-            throughput = transefered_bytes / float(transfer_time)
+        for vo in self.VOS:
+            dashb = json.loads(self._get(
+                self.dashb_base + '/transfer-matrix.json?vo=%s&server=%s&interval=%d' %
+                (vo, self.fts3_name, self.INTERVAL)
+            ))
+
+            bytes_key = dashb['transfers']['key']['bytes_xs']
+            transfers_key = dashb['transfers']['key']['files_xs']
+            errors_key = dashb['transfers']['key']['errors_xs']
+
+            row = dashb['transfers']['rows'][0]
+            transferred = row[bytes_key]
+            n_transfers = row[transfers_key]
+            n_errors = row[errors_key]
+
+            throughput = transferred / (self.INTERVAL * 60)
 
             _add_numeric(data_elm, '%s_finished' % vo, n_transfers)
             _add_numeric(data_elm, '%s_errors' % vo, n_errors)
