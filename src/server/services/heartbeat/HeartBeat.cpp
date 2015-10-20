@@ -66,68 +66,20 @@ void HeartBeat::runService()
                 // Note: Would be nice to get the pstack output in the log
                 orderedShutdown();
             }
-            else
-            {
-                unsigned index = 0, count = 0, start = 0, end = 0;
-                std::string serviceName = "fts_server";
 
-                try
-                {
+            unsigned index = 0, count = 0, start = 0, end = 0;
+            std::string serviceName = "fts_server";
 
-                    db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                            &index, &count, &start, &end, serviceName);
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host "
-                            << index << " out of " << count << " [" << start
-                            << ':' << end << ']' << commit;
-                }
-                catch (const std::exception& e)
-                {
-                    try
-                    {
-                        boost::this_thread::sleep(boost::posix_time::seconds(5));
-                        db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                                &index, &count, &start, &end, serviceName);
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host "
-                                << index << " out of " << count << " ["
-                                << start << ':' << end << ']' << commit;
-                    }
-                    catch (const std::exception& e)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                                << "Hearbeat failed: " << e.what()
-                                << commit;
+            db::DBSingleton::instance().getDBObjectInstance()
+                ->updateHeartBeat(&index, &count, &start, &end, serviceName);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                << "Systole: host " << index << " out of " << count
+                << " [" << start << ':' << end << ']'
+                << commit;
 
-                    }
-                    catch (...)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed "
-                                << commit;
-                    }
-                }
-                catch (...)
-                {
-                    try
-                    {
-                        boost::this_thread::sleep(boost::posix_time::seconds(5));
-                        db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                                &index, &count, &start, &end, serviceName);
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host "
-                                << index << " out of " << count << " ["
-                                << start << ':' << end << ']' << commit;
-                    }
-                    catch (const std::exception& e)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                                << "Hearbeat failed: " << e.what()
-                                << commit;
-
-                    }
-                    catch (...)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
-                    }
-                }
-            }
+            // It the update was successful, we sleep here
+            // If it wasn't, only one second will pass until the next retry
+            boost::this_thread::sleep(boost::posix_time::seconds(59));
         }
         catch (const std::exception& e)
         {
@@ -137,7 +89,7 @@ void HeartBeat::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(60));
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }
 
