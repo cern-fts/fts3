@@ -46,6 +46,11 @@ public:
 
 private:
     void killRunningJob(const std::vector<int>& pids);
+    void markAsStalled();
+    void killCanceledByUser();
+    void applyQueueTimeouts();
+    void applyActiveTimeouts();
+    void applyWaitingTimeouts();
 };
 
 } // end namespace server

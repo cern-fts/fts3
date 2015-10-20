@@ -55,88 +55,119 @@ std::string CancelerService::getServiceName()
 }
 
 
+void CancelerService::markAsStalled()
+{
+    std::vector<struct message_updater> messages;
+    messages.reserve(500);
+    ThreadSafeList::get_instance().checkExpiredMsg(messages);
+    if (!messages.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Reaping stalled transfers" << commit;
+
+        boost::filesystem::path p("/var/lib/fts3/");
+        boost::filesystem::space_info s = boost::filesystem::space(p);
+        bool diskFull = (s.free <= 0 || s.available <= 0);
+        bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
+        if (updated) {
+            ThreadSafeList::get_instance().deleteMsg(messages);
+            for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
+                if (iter->msg_errno == 0 && (*iter).file_id > 0
+                    && std::string((*iter).job_id).length() > 0) {
+                    SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+                }
+            }
+        }
+        messages.clear();
+    }
+}
+
+
+void CancelerService::killCanceledByUser()
+{
+    std::vector<int> requestIDs;
+    DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+    if (!requestIDs.empty())
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Killing transfers canceled by the user" << commit;
+        killRunningJob(requestIDs);
+    }
+}
+
+
+void CancelerService::applyQueueTimeouts()
+{
+    std::vector<std::string> jobs;
+    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
+    if (!jobs.empty())
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Applying queue timeouts" << commit;
+        std::vector<std::string>::const_iterator iter2;
+        for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
+        {
+            SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
+        }
+        jobs.clear();
+    }
+}
+
+
+void CancelerService::applyActiveTimeouts()
+{
+    std::map<int, std::string> collectJobs;
+    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
+    if (!collectJobs.empty())
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Applying ACTIVE timeouts" << commit;
+        std::map<int, std::string>::const_iterator iterCollectJobs;
+        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
+        {
+            SingleTrStateInstance::instance().sendStateMessage(
+                    (*iterCollectJobs).second,
+                    (*iterCollectJobs).first);
+        }
+        collectJobs.clear();
+    }
+}
+
+
+void CancelerService::applyWaitingTimeouts()
+{
+    std::set<std::string> canceled;
+    DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
+    if (!canceled.empty())
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Canceling expired waiting files" << commit;
+        for (auto iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
+        {
+            SingleTrStateInstance::instance().sendStateMessage((*iterCan), -1);
+        }
+        canceled.clear();
+    }
+}
+
+
 void CancelerService::runService()
 {
-    static unsigned int counter1 = 0;
-    static unsigned int counterFailAll = 0;
-    static unsigned int countReverted = 0;
-    static unsigned int counterTimeoutWaiting = 0;
-    static unsigned int counterCanceled = 0;
-    std::vector<int> requestIDs;
-    std::vector<struct message_updater> messages;
+    unsigned int counterActiveTimeouts = 0;
+    unsigned int counterQueueTimeouts = 0;
+    unsigned int countReverted = 0;
+    unsigned int counterWaitingTimeouts = 0;
+    unsigned int counterCanceled = 0;
 
-    messages.reserve(500);
 
-    while (true)
+    while (!boost::this_thread::interruption_requested())
     {
         stallRecords = time(0);
         try
         {
-            if (boost::this_thread::interruption_requested() && messages.empty() && requestIDs.empty())
-            {
-                break;
-            }
-
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (DrainMode::instance())
             {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking url_copy for this instance!" << commit;
-                messages.clear();
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
 
-            ThreadSafeList::get_instance().checkExpiredMsg(messages);
-
-            if (!messages.empty())
-            {
-                boost::filesystem::path p("/var/lib/fts3/");
-                boost::filesystem::space_info s = boost::filesystem::space(p);
-
-                if (s.free <= 0 || s.available <= 0)
-                {
-                    bool updated =
-                            DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, true);
-                    if (updated)
-                    {
-                        ThreadSafeList::get_instance().deleteMsg(messages);
-                        std::vector<struct message_updater>::const_iterator iter;
-                        for (iter = messages.begin();
-                                iter != messages.end(); ++iter)
-                        {
-                            if (iter->msg_errno == 0 && (*iter).file_id > 0
-                                    && std::string((*iter).job_id).length()
-                                            > 0)
-                            {
-                                SingleTrStateInstance::instance().sendStateMessage(
-                                        (*iter).job_id, (*iter).file_id);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    bool updated =
-                            DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, false);
-                    if (updated)
-                    {
-                        ThreadSafeList::get_instance().deleteMsg(messages);
-                        std::vector<struct message_updater>::const_iterator iter;
-                        for (iter = messages.begin();
-                                iter != messages.end(); ++iter)
-                        {
-                            if (iter->msg_errno == 0 && (*iter).file_id > 0
-                                    && std::string((*iter).job_id).length()
-                                            > 0)
-                            {
-                                SingleTrStateInstance::instance().sendStateMessage(
-                                        (*iter).job_id, (*iter).file_id);
-                            }
-                        }
-                    }
-                }
-                messages.clear();
-            }
+            markAsStalled();
 
             if (boost::this_thread::interruption_requested())
                 return;
@@ -145,66 +176,8 @@ void CancelerService::runService()
             counterCanceled++;
             if (counterCanceled == 10)
             {
-                try
-                {
-                    DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                    if (!requestIDs.empty()) /*if canceled jobs found and transfer already started, kill them*/
-                    {
-                        killRunningJob(requestIDs);
-                        requestIDs.clear(); /*clean the list*/
-                    }
-                    counterCanceled = 0;
-                }
-                catch (const std::exception& e)
-                {
-                    try
-                    {
-                        boost::this_thread::sleep(boost::posix_time::seconds(1));
-                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                        if (!requestIDs.empty()) /*if canceled jobs found and transfer already started, kill them*/
-                        {
-                            killRunningJob(requestIDs);
-                            requestIDs.clear(); /*clean the list*/
-                        }
-                        counterCanceled = 0;
-                    }
-                    catch (const std::exception& e)
-                    {
-                        counterCanceled = 0;
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Message updater thrown exception " << e.what() << commit;
-                    }
-                    catch (...)
-                    {
-                        counterCanceled = 0;
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                    }
-                }
-                catch (...)
-                {
-                    try
-                    {
-                        boost::this_thread::sleep(boost::posix_time::seconds(1));
-                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                        if (!requestIDs.empty()) /*if canceled jobs found and transfer already started, kill them*/
-                        {
-                            killRunningJob(requestIDs);
-                            requestIDs.clear(); /*clean the list*/
-                        }
-                        counterCanceled = 0;
-                    }
-                    catch (const std::exception& e)
-                    {
-                        counterCanceled = 0;
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
-                        << e.what()
-                        << commit;
-                    }
-                    catch (...)
-                    {
-                        counterCanceled = 0;
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                    }
-                }
+                killCanceledByUser();
+                counterCanceled = 0;
             }
 
             if (boost::this_thread::interruption_requested())
@@ -222,96 +195,54 @@ void CancelerService::runService()
                 return;
 
             /*this routine is called periodically every 300 seconds*/
-            counterTimeoutWaiting++;
-            if (counterTimeoutWaiting == 300)
+            counterWaitingTimeouts++;
+            if (counterWaitingTimeouts == 300)
             {
-                std::set<std::string> canceled;
-                DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
-                if (!canceled.empty())
-                {
-                    for (auto iterCan = canceled.begin();
-                            iterCan != canceled.end(); ++iterCan)
-                    {
-                        SingleTrStateInstance::instance().sendStateMessage(
-                                (*iterCan), -1);
-                    }
-                    canceled.clear();
-                }
-
-                // sanity check to make sure there are no files that have all replicas in not used state
-                //DBSingleton::instance().getDBObjectInstance()->revertNotUsedFiles();
-
-                counterTimeoutWaiting = 0;
+                applyWaitingTimeouts();
+                counterWaitingTimeouts = 0;
             }
 
             if (boost::this_thread::interruption_requested())
                 return;
 
             /*force-fail stalled ACTIVE transfers*/
-            counter1++;
-            if (counter1 == 300)
+            counterActiveTimeouts++;
+            if (counterActiveTimeouts == 300)
             {
-                std::map<int, std::string> collectJobs;
-                DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
-                if (!collectJobs.empty())
-                {
-                    std::map<int, std::string>::const_iterator iterCollectJobs;
-                    for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
-                    {
-                        SingleTrStateInstance::instance().sendStateMessage(
-                                (*iterCollectJobs).second,
-                                (*iterCollectJobs).first);
-                    }
-                    collectJobs.clear();
-                }
-                counter1 = 0;
+                applyActiveTimeouts();
+                counterActiveTimeouts = 0;
             }
 
             if (boost::this_thread::interruption_requested())
                 return;
 
             /*set to fail all old queued jobs which have exceeded max queue time*/
-            counterFailAll++;
-            if (counterFailAll == 300)
+            counterQueueTimeouts++;
+            if (counterQueueTimeouts == 300)
             {
-                std::vector<std::string> jobs;
-                DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(
-                        jobs);
-                if (!jobs.empty())
-                {
-                    std::vector<std::string>::const_iterator iter2;
-                    for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
-                    {
-                        SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
-                    }
-                    jobs.clear();
-                }
-                counterFailAll = 0;
+                applyQueueTimeouts();
+                counterQueueTimeouts = 0;
             }
-
-            messages.clear();
         }
         catch (const std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Message updater thrown exception " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "CancelerService caught exception " << e.what() << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
-            counter1 = 0;
-            counterFailAll = 0;
+            counterActiveTimeouts = 0;
+            counterQueueTimeouts = 0;
             countReverted = 0;
-            counterTimeoutWaiting = 0;
+            counterWaitingTimeouts = 0;
             counterCanceled = 0;
-            messages.clear();
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught uknown exception" << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
-            counter1 = 0;
-            counterFailAll = 0;
+            counterActiveTimeouts = 0;
+            counterQueueTimeouts = 0;
             countReverted = 0;
-            counterTimeoutWaiting = 0;
+            counterWaitingTimeouts = 0;
             counterCanceled = 0;
-            messages.clear();
         }
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
