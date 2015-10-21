@@ -191,7 +191,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
     close(pipefds[0]);
 
     // Sleep for awhile but do not block waiting for child
-    boost::this_thread::sleep(boost::posix_time::seconds(50));
+    boost::this_thread::sleep(boost::posix_time::microseconds(50000));
     if(waitpid(pid, NULL, WNOHANG) != 0)
         {
             forkMessage = "Waiting for child process failure " + std::string(strerror(errno));

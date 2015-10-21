@@ -182,17 +182,14 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                 TransferFile & tf = *opt_tf;
 
                 // just to be sure
-                if (tf.fileId == 0 || tf.userDn.empty()
-                        || tf.credId.empty())
+                if (tf.fileId == 0 || tf.userDn.empty() || tf.credId.empty())
                     continue;
 
-                std::pair<std::string, std::string> proxy_key(tf.credId,
-                        tf.userDn);
+                std::pair<std::string, std::string> proxy_key(tf.credId, tf.userDn);
 
                 if (proxies.find(proxy_key) == proxies.end())
                 {
-                    proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn,
-                            tf.credId);
+                    proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
                 }
 
                 FileTransferExecutor* exec = new FileTransferExecutor(tf,
