@@ -17,7 +17,7 @@
 import json
 import pycurl
 import optparse
-import StringIO
+import tempfile
 
 import xml.etree.ElementTree as ET
 
@@ -51,11 +51,12 @@ class Fts3SlsPlus(object):
         """
         Do an HTTP GET
         """
-        io = StringIO.StringIO()
+        io = tempfile.TemporaryFile()
         self.curl.setopt(pycurl.WRITEDATA, io)
         self.curl.setopt(pycurl.URL, url)
         self.curl.perform()
-        return io.getvalue()
+        io.seek(0)
+        return io.read()
 
     def __init__(self, fts3_name, sls_url, dashb_base, interval):
         """
