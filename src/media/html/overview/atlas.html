@@ -1,6 +1,6 @@
 <global-filter></global-filter>
 
-<h2>Overview</h2>
+<h2>Overview ATLAS</h2>
 <h3>
     Showing {{overview.overview.startIndex}} to {{overview.overview.endIndex}}
     out of {{overview.overview.count}} from the last {{globalFilter.time_window || '1' }}
@@ -24,9 +24,13 @@
                 <i class="icon-th-list" data-ng-click="filterBy({dest_se: ''})"></i>
                 Destination
             </th>
-            <th style="width: 4%">
+            <th style="width: 3.5%">
                 <i class="icon-th-list" data-ng-click="filterBy({vo: ''})"></i>
                 VO
+            </th>
+            <th  style="width: 7.5%">
+                <i class="icon-th-list" data-ng-click="filterBy({activity: ''})"></i>
+                Activities
             </th>
             <th style="width: 6%" class="numeric">
                 <span data-order-by="submitted">Submitted</span>
@@ -34,7 +38,7 @@
             <th style="width: 4%" class="numeric">
                 <span data-order-by="active">Active</span>
             </th>
-            <th style="width: 6%" class="numeric">
+            <th style="width: 4.5%" class="numeric">
                 <span data-order-by="staging">Staging</span>
             </th>
             <th style="width: 5%" class="numeric">
@@ -43,10 +47,10 @@
             <th style="width: 5%" class="numeric">
                 <span data-order-by="finished">Finished</span>
             </th>
-            <th style="width: 4%" class="numeric">
+            <th style="width: 3.5%" class="numeric">
                 <span data-order-by="failed">Failed</span>
             </th>
-            <th style="width: 4%" class="numeric">
+            <th style="width: 3.5%" class="numeric">
                 <span data-order-by="canceled">Cancel</span>
             </th>
 
@@ -89,7 +93,12 @@
                     {{ o.vo_name }}
                 </span>
             </td>
-			<td class="numeric">
+            <td>
+                <span class="filter-on-click" data-ng-click="filterBy({activity: o.activity})" title="Filter activity">
+                    {{ o.activity }}
+			    </span>
+            </td>
+            <td class="numeric">
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=SUBMITTED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.submitted}}"></span>
                 </a>
@@ -160,6 +169,7 @@
     </tbody>
     <tfoot>
         <tr>
+            <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>

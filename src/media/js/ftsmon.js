@@ -81,6 +81,10 @@ config(function($routeProvider) {
                                          controller:  SlowQueriesCtrl,
                                          resolve:     SlowQueriesCtrl.resolve}).
 
+        when('/overview/atlas',                 {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
+                                       controller:  OverviewAtlasCtrl,
+                                       resolve:     OverviewAtlasCtrl.resolve}).
+
         when('/500',                    {templateUrl: STATIC_ROOT + 'html/500.html'}).
 
         otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});

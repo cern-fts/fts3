@@ -23,7 +23,8 @@ except:
 urlpatterns = patterns('ftsmon.views',
     url(r'^$', 'index.index'),
 
-    url(r'^overview', 'overview.get_overview'),
+    url(r'^overview$', 'overview.get_overview'),
+    url(r'^overview/atlas$', 'atlas.get_overview'),
 
     url(r'^jobs/?$',                               'jobs.get_job_list'),
     url(r'^jobs/(?P<job_id>[a-fA-F0-9\-]+)$',       'jobs.get_job_details'),
