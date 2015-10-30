@@ -114,6 +114,9 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
             // add checksum if provided
             if (!it->checksums.empty())
                 element.put("checksum", *it->checksums.begin());
+            // add activity
+            if (it->activity)
+                element.put("activity", it->activity.get());
             // add the element to files array
             files.push_back(std::make_pair("", element));
         }
