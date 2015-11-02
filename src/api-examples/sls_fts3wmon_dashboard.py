@@ -102,7 +102,7 @@ class Fts3SlsPlus(object):
             _add_numeric(data_elm, '%s_throughput' % vo, throughput)
 
         ET._namespace_map[SLS_NS] = ''
-        return ET.tostring(sls)
+        return ET.tostring(sls).replace('<:', '<').replace('</:', '</').replace(':=', '=')
 
     def __str__(self):
         """
