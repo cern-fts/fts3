@@ -1,0 +1,17 @@
+[Unit]
+Description=File Transfer Service Messaging Daemon
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/sysconfig/fts-msg-bulk
+ExecStart=/usr/sbin/fts_msg_bulk
+KillMode=control-group
+TimeoutStopSec=5
+KillSignal=SIGTERM
+SendSIGHUP=no
+SendSIGKILL=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

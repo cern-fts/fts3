@@ -1,0 +1,12 @@
+[Unit]
+Description=File Transfer Service - BDII Updater
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/touch /var/lock/subsys/fts-bdii-cache-updater
+ExecStop=/usr/bin/rm /var/lock/subsys/fts-bdii-cache-updater
+RemainAfterExit=True
+
+[Install]
+WantedBy=multi-user.target
+

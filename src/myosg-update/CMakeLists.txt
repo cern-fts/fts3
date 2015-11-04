@@ -31,27 +31,34 @@ target_link_libraries(fts_myosg_updater
     ${Boost_SYSTEM_LIBRARIES}
 )
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_myosg_updater -lboost_unit_test_framework)
+    target_link_libraries(fts_myosg_updater -lboost_unit_test_framework)
 endif()
 
 
 # Artifacts
-install(TARGETS fts_myosg_updater 
+install(TARGETS fts_myosg_updater
     RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )
 
 install(FILES fts-myosg-updater
     DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-)			
-	
-install(FILES fts-myosg-updater.initd
-    DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-myosg-updater
+    PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 )
-	
+
+if (SYSTEMD_INSTALL_DIR)
+    install(FILES fts-myosg-updater.service
+        DESTINATION ${SYSTEMD_INSTALL_DIR}
+    )
+else ()
+    install(FILES fts-myosg-updater.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
+        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-myosg-updater
+    )
+endif ()
+
 install(FILES myosg.xml
-    DESTINATION /var/lib/fts3 
-	PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
+    DESTINATION /var/lib/fts3
+    PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
 )
+

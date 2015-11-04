@@ -36,21 +36,28 @@ target_link_libraries(fts_info_publisher
     ${Boost_LIBRARIES}
 )
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_info_publisher -lboost_unit_test_framework)
+    target_link_libraries(fts_info_publisher -lboost_unit_test_framework)
 endif()
 
 # Artifacts
-install(TARGETS fts_info_publisher 
-	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
+install(TARGETS fts_info_publisher
+    RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )
 
 install(FILES fts-info-publisher
     DESTINATION ${SYSCONF_INSTALL_DIR}/cron.hourly
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-)			
-	
-install(FILES fts-info-publisher.initd
-    DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-info-publisher
+    PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 )
+
+if (SYSTEMD_INSTALL_DIR)
+    install(FILES fts-info-publisher.service
+        DESTINATION ${SYSTEMD_INSTALL_DIR}
+    )
+else ()
+    install(FILES fts-info-publisher.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
+        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-info-publisher
+    )
+endif ()
+
