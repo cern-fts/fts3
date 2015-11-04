@@ -10,4 +10,8 @@ TimeoutStopSec=5
 KillSignal=SIGTERM
 SendSIGHUP=no
 SendSIGKILL=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
 

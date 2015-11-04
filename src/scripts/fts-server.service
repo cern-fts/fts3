@@ -4,10 +4,14 @@ Description=File Transfer Service
 [Service]
 Type=forking
 EnvironmentFile=-/etc/sysconfig/fts-server
-ExecStart=/usr/sbin/fts_server
+ExecStart=/usr/sbin/fts_server -t 25
 KillMode=control-group
 TimeoutStopSec=23
 KillSignal=SIGTERM
 SendSIGHUP=no
 SendSIGKILL=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
 

@@ -7,3 +7,6 @@ ExecStart=/usr/bin/touch /var/lock/subsys/fts-info-publisher
 ExecStop=/usr/bin/rm /var/lock/subsys/fts-info-publisher
 RemainAfterExit=True
 
+[Install]
+WantedBy=multi-user.target
+
