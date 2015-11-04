@@ -1,0 +1,9 @@
+[Unit]
+Description=File Transfer Service - MyOSG Updater
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/touch /var/lock/subsys/fts-myosg-updater
+ExecStop=/usr/bin/rm /var/lock/subsys/fts-myosg-updater
+RemainAfterExit=True
+

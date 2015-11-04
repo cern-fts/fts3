@@ -43,11 +43,16 @@ install(TARGETS         fts_bdii_cache_updater
 install(FILES         fts-bdii-cache-updater
         DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)			
-	
-install(FILES         fts-bdii-cache-updater.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-bdii-cache-updater )
+
+if (SYSTEMD_INSTALL_DIR)
+    install(FILES         fts-bdii-cache-updater.service
+            DESTINATION ${SYSTEMD_INSTALL_DIR})
+else ()
+    install(FILES         fts-bdii-cache-updater.initd
+            DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
+	    PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+	    RENAME fts-bdii-cache-updater )
+endif ()
 	
 install(FILES         bdii_cache.xml
         DESTINATION /var/lib/fts3 

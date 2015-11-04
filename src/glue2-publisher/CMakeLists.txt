@@ -47,8 +47,14 @@ install(TARGETS         fts_info_publisher
 install(FILES         fts-info-publisher
         DESTINATION ${SYSCONF_INSTALL_DIR}/cron.hourly
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)			
-	
-install(FILES         fts-info-publisher.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-info-publisher )
+
+if (SYSTEMD_INSTALL_DIR)
+    install(FILES         fts-info-publisher.service
+            DESTINATION ${SYSTEMD_INSTALL_DIR})
+else ()	
+    install(FILES         fts-info-publisher.initd
+            DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
+	        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+            RENAME fts-info-publisher )
+endif ()
+

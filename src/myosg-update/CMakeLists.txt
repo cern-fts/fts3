@@ -39,11 +39,16 @@ install(TARGETS         fts_myosg_updater
 install(FILES         fts-myosg-updater
         DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)			
-	
-install(FILES         fts-myosg-updater.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-myosg-updater )
+
+if (SYSTEMD_INSTALL_DIR)
+    install(FILES         fts-myosg-updater.service
+            DESTINATION ${SYSTEMD_INSTALL_DIR})
+else ()
+    install(FILES         fts-myosg-updater.initd
+            DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
+	    PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+	    RENAME fts-myosg-updater )
+endif ()
 	
 install(FILES         myosg.xml
         DESTINATION /var/lib/fts3 
