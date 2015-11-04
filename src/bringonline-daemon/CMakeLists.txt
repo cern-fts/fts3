@@ -50,14 +50,5 @@ target_link_libraries(fts_bringonline  -luuid -lssl -lgfal_transfer -lgfal2
                                        ${Boost_LIBRARIES})
 
 install(TARGETS         fts_bringonline 
-	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )		
-	
-install(FILES         fts-bringonline.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-bringonline )
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
 
-install(FILES         fts-bringonline.sysconfig
-        DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig 
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    RENAME fts-bringonline )
