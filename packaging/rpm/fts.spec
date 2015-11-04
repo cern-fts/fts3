@@ -218,18 +218,12 @@ cd build
         -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_INSTALL_PREFIX='' \
-%ifnarch x86_64 i386 i686
-        -DWITHOUT_GOOGLE_COREDUMPER=ON \
-%endif
         ..
 %else
     %cmake28 -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
         -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_INSTALL_PREFIX='' \
-%ifnarch x86_64 i386 i686
-        -DWITHOUT_GOOGLE_COREDUMPER=ON \
-%endif
         ..
 %endif
 
