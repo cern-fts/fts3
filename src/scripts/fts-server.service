@@ -1,0 +1,13 @@
+[Unit]
+Description=File Transfer Service
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/sysconfig/fts-server
+ExecStart=/usr/sbin/fts_server
+KillMode=control-group
+TimeoutStopSec=23
+KillSignal=SIGTERM
+SendSIGHUP=no
+SendSIGKILL=yes
+
