@@ -21,6 +21,7 @@ import json
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from decorator import decorator
+from django import VERSION as DJANGO_VERSION
 from django.db.models import Model
 from django.http import HttpResponse
 
@@ -58,19 +59,27 @@ class ClassEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
+def json_response(data):
+    if DJANGO_VERSION[:2] < (1, 7):
+        return HttpResponse(data, mimetype='application/json')
+    else:
+        return HttpResponse(data, content_type='application/json')
+
+
 def as_json(d):
     j = json.dumps(d, cls=ClassEncoder, indent=2, sort_keys=True)
-    return HttpResponse(j, mimetype='application/json')
+    return json_response(j)
+
 
 @decorator
 def jsonify(f, *args, **kwargs):
     d = f(*args, **kwargs)
     j = json.dumps(d, cls=ClassEncoder, indent=2, sort_keys=True)
-    return HttpResponse(j, mimetype='application/json')
+    return json_response(j)
 
 
 @decorator
 def jsonify_paged(f, *args, **kwargs):
     d = f(*args, **kwargs)
     j = json.dumps(paged(d, args[0]), cls=ClassEncoder, indent=2, sort_keys=False)
-    return HttpResponse(j, mimetype='application/json')
+    return json_response(j)
