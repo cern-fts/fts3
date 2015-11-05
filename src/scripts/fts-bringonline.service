@@ -1,8 +1,11 @@
 [Unit]
 Description=File Transfer Service - Staging
+Documentation=man:fts_bringonline
 
 [Service]
 Type=forking
+Environment="GLOBUS_THREAD_MODEL=pthread"
+Environment="CGSI_TRACE=1"
 EnvironmentFile=-/etc/sysconfig/fts-bringonline
 ExecStart=/usr/sbin/fts_bringonline -t 25
 KillMode=control-group

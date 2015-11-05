@@ -1,8 +1,12 @@
 [Unit]
 Description=File Transfer Service
+Documentation=man:fts-server
 
 [Service]
 Type=forking
+Environment="GLOBUS_THREAD_MODEL=pthread"
+Environment="X509_USER_CERT=/etc/grid-security/fts3hostcert.pem"
+Environment="X509_USER_KEY=/etc/grid-security/fts3hostkey.pem"
 EnvironmentFile=-/etc/sysconfig/fts-server
 ExecStart=/usr/sbin/fts_server -t 25
 KillMode=control-group

@@ -1,5 +1,6 @@
 [Unit]
 Description=File Transfer Service Messaging Daemon
+Documentation=man:fts_msg_bulk
 
 [Service]
 Type=forking

@@ -1,5 +1,6 @@
 [Unit]
 Description=File Transfer Service - Database Cleanup
+Documentation=man:fts_db_cleaner
 
 [Service]
 Type=oneshot
