@@ -35,7 +35,7 @@ BuildRequires:  activemq-cpp-devel
 BuildRequires:  boost-devel
 BuildRequires:  CGSI-gSOAP-devel
 
-%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:  cmake
 %else
 BuildRequires:  cmake28
@@ -235,7 +235,7 @@ fi
 # Build
 mkdir build
 cd build
-%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?rhel}%{!?rhel:0} >= 6
     %cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
         -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
