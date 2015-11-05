@@ -54,3 +54,6 @@ if os.path.exists('/etc/fts3/host_aliases'):
         if len(line) > 0 and not line.startswith('#'):
             original, alias = line.split()
             HOST_ALIASES[original] = alias
+
+ALLOWED_HOSTS=['*']
+
