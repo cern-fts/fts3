@@ -1,10 +1,6 @@
 <h2>Limit configuration</h2>
 
-<pagination rotate="false"
-    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
-    max-size="15" class="pagination" boundary-links="true"
-    on-select-page="pageChanged(page)"></pagination>
-
+<h3>Limits for transfers</h3>
 <table class="table">
     <thead>
         <tr>
@@ -22,7 +18,7 @@
             </th>
         </tr>
     </thead>
-    <tbody data-ng-repeat="limit in limits.items" data-ng-class-odd="'odd'">
+    <tbody data-ng-repeat="limit in limits.transfers" data-ng-class-odd="'odd'">
         <tr>
             <td>{{ limit.source_se }}</td>
             <td>{{ limit.dest_se }}</td>
@@ -32,7 +28,30 @@
     </tbody>
 </table>
 
-<pagination rotate="false"
-    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
-    max-size="15" class="pagination" boundary-links="true"
-    on-select-page="pageChanged(page)"></pagination>
+<h3>Limits for operations</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                VO
+            </th>
+            <th>
+                Host
+            </th>
+            <th>
+                Operation
+            </th>
+            <th>
+                Concurrent operations
+            </th>
+        </tr>
+    </thead>
+    <tbody data-ng-repeat="limit in limits.operations" data-ng-class-odd="'odd'">
+        <tr>
+            <td>{{ limit.vo }}</td>
+            <td>{{ limit.host }}</td>
+            <td>{{ limit.operation }}</td>
+            <td>{{ limit.concurrent_ops }}</td>
+        </tr>
+    </tbody>
+</table>

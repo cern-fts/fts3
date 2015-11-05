@@ -415,3 +415,20 @@ class ActivityShare(models.Model):
 
     class Meta:
         db_table = 't_activity_share_config'
+
+
+class OperationLimit(models.Model):
+    vo             = models.CharField(db_column='vo_name')
+    host           = models.CharField(primary_key=True)
+    operation      = models.CharField()
+    concurrent_ops = models.IntegerField()
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.vo == other.vo and \
+            self.host == other.host and \
+            self.operation == other.operation
+
+    class Meta:
+        db_table = 't_stage_req'

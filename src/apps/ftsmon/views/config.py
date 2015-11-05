@@ -24,7 +24,7 @@ from django.db.models import Q, Count
 from ftsweb.models import ConfigAudit
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize, OptimizeActive
-from ftsweb.models import ActivityShare, File
+from ftsweb.models import ActivityShare, File, OperationLimit
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import get_order_by, ordered_field
@@ -116,7 +116,7 @@ def get_debug_config(http_request):
 
 
 @require_certificate
-@jsonify_paged
+@jsonify
 def get_limit_config(http_request):
     max_cfg = Optimize.objects.filter(Q(active__isnull=False) | Q(bandwidth__isnull=False))
 
@@ -132,7 +132,10 @@ def get_limit_config(http_request):
     else:
         max_cfg = max_cfg.order_by('-active')
 
-    return max_cfg
+    return {
+        'transfers': max_cfg,
+        'operations': OperationLimit.objects.all()
+    }
 
 
 @require_certificate
