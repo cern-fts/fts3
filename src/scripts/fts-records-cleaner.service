@@ -7,7 +7,6 @@ Type=oneshot
 ExecStart=/usr/bin/touch /var/lock/subsys/fts-records-cleaner
 ExecStop=/usr/bin/rm /var/lock/subsys/fts-records-cleaner
 RemainAfterExit=True
-Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
