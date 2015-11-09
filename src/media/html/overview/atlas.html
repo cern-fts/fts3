@@ -99,7 +99,7 @@
 			    </span>
             </td>
             <td class="numeric">
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=SUBMITTED&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=SUBMITTED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.submitted}}"></span>
                 </a>
 			</td>
@@ -107,32 +107,32 @@
                 <span data-ng-show="o.active_fixed">
                     <i class="icon-magnet" title="Number of active fixed"></i>
                 </span>
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=ACTIVE&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=ACTIVE&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.active}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=STAGING&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=STAGING&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.staging}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=STARTED&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=STARTED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.started}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=FINISHED&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=FINISHED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.finished}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=FAILED&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=FAILED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.failed}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
-                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=CANCELED&time_window={{globalFilter.time_window}}">
+                <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&with_file=CANCELED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.canceled}}" data-decimals="0"></span>
                 </a>
             </td>
@@ -143,7 +143,7 @@
                 <span data-optional-number="{{o.current}}" data-suffix="MB/s" data-decimals="2"></span>
             </td>
             <td>
-                <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}&time_window={{globalFilter.time_window}}">
+                <a href="#/optimizer/detailed?source={{o.source_se|escape}}&destination={{o.dest_se|escape}}&time_window={{globalFilter.time_window}}">
                     <i class="icon-signal"></i>
                 </a>
             </td>
@@ -154,7 +154,7 @@
                     <!-- <dt>Jobs</dt>
                     <dd>
                         <span data-ng-repeat="(state, count) in o.job_states">
-                            <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state={{state|uppercase}}&time_window={{globalFilter.time_window}}">
+                            <a href="#/jobs?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}&state={{state|uppercase}}&time_window={{globalFilter.time_window}}">
                                 {{count}} {{state}}
                             </a>
                         </span>

@@ -23,7 +23,7 @@
     <tbody>
         <tr data-ng-repeat="(k, s) in servers" data-ng-class-odd="'odd'">
             <td>
-                <a href="#/statistics/overview?hostname={{k}}">{{k}}</a>
+                <a href="#/statistics/overview?hostname={{k|escape}}">{{k}}</a>
             </td>
             <td>
                 <span data-ng-repeat="(service, segment) in s.services" title="[{{segment.start}}, {{segment.end}}]" data-ng-class="'status-'+segment.status">

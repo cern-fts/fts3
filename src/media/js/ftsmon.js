@@ -90,7 +90,7 @@ config(function($routeProvider) {
         otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
 .filter('escape', function() {
-    return window.escape;
+    return window.encodeURIComponent;
 })
 .filter('hex', function() {
 	return function(value) {
