@@ -36,7 +36,7 @@ set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 # Generate include header with the version string
 file(
     WRITE ${CMAKE_BINARY_DIR}/src/common/version.h
-    "\#define VERSION \"@VERSION_STRING@\"\n"
+    "\#define VERSION \"${VERSION_STRING}\"\n"
 )
 include_directories("${CMAKE_BINARY_DIR}/src/common/")
 
