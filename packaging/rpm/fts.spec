@@ -52,7 +52,6 @@ BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
 BuildRequires:  gsoap-devel
-BuildRequires:  is-interface-devel
 BuildRequires:  json-c-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel

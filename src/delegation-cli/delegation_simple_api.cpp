@@ -18,10 +18,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <glib.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -31,8 +27,7 @@
 #include "delegation.nsmap"
 #include "delegation-simple.h"
 #include <sstream>
-#include "ServiceDiscoveryIfce.h"
-#include "util.h"
+
 
 struct _glite_delegation_ctx
 {
@@ -180,20 +175,8 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint, const char *pro
 
     if( (! is_http(endpoint)) && (! is_https(endpoint)) && (! is_httpg(endpoint)) )
         {
-            char *error;
-
-            char *sd_type = getenv(GLITE_DELEGATION_SD_ENV);
-            if(!sd_type)
-                sd_type = (char *) GLITE_DELEGATION_SD_TYPE;
-
-            ctx->endpoint = glite_discover_endpoint(sd_type, endpoint, &error);
-
-            if (!ctx->endpoint)
-                {
-                    glite_delegation_set_error(ctx, (char *) "glite_delegation: service discovery error %s", (char *) error);
-                    free(error);
-                    return ctx;
-                }
+            glite_delegation_set_error(ctx, (char *) "glite_delegation: bad endpoint %s", endpoint);
+            return ctx;
         }
     else
         {
