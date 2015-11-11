@@ -946,6 +946,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "VO:" << opts.vo << std::endl; //a
                 logger.INFO() << "Job id:" << opts.jobId << std::endl;
                 logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;
+                logger.INFO() << "Transfer number: " << (ii + 1) << "/" << numberOfFiles << std::endl;
                 logger.INFO() << "Source url:" << currentTransfer.sourceUrl << std::endl;
                 logger.INFO() << "Dest url:" << currentTransfer.destUrl << std::endl;
                 logger.INFO() << "Overwrite enabled:" << opts.overwrite << std::endl;
