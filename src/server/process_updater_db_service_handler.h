@@ -299,22 +299,23 @@ protected:
                             return;
 
                         /*force-fail stalled ACTIVE transfers*/
-                        counter1++;
-                        if (counter1 == 300)
-                            {
+                        if (theServerConfig().get<bool>("CheckStalledTransfers")) {
+                            counter1++;
+                            if (counter1 == 300) {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
-                                if(!collectJobs.empty())
-                                    {
-                                        std::map<int, std::string>::const_iterator iterCollectJobs;
-                                        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
-                                            {
-                                                SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second, (*iterCollectJobs).first);
-                                            }
-                                        collectJobs.clear();
+                                if (!collectJobs.empty()) {
+                                    std::map<int, std::string>::const_iterator iterCollectJobs;
+                                    for (iterCollectJobs = collectJobs.begin();
+                                         iterCollectJobs != collectJobs.end(); ++iterCollectJobs) {
+                                        SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second,
+                                                                                           (*iterCollectJobs).first);
                                     }
+                                    collectJobs.clear();
+                                }
                                 counter1 = 0;
                             }
+                        }
 
                         if (stopThreads)
                             return;

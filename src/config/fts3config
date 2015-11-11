@@ -46,6 +46,9 @@ Profiling=0
 TransferLogDirectory=/var/log/fts3/transfers
 ServerLogDirectory=/var/log/fts3
 
+# Check for fts_url_copy processes that do not give their progress back
+# CheckStalledTransfers = true
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
