@@ -206,11 +206,13 @@ void CancelerService::runService()
                 return;
 
             /*force-fail stalled ACTIVE transfers*/
-            counterActiveTimeouts++;
-            if (counterActiveTimeouts == 300)
-            {
-                applyActiveTimeouts();
-                counterActiveTimeouts = 0;
+            if (ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
+                counterActiveTimeouts++;
+                if (counterActiveTimeouts == 300)
+                {
+                    applyActiveTimeouts();
+                    counterActiveTimeouts = 0;
+                }
             }
 
             if (boost::this_thread::interruption_requested())

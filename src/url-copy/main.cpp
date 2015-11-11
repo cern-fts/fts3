@@ -937,6 +937,7 @@ int main(int argc, char **argv)
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO:" << opts.vo << commit; //a
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << opts.jobId << commit;
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id:" << currentTransfer.fileId << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer number: " << (ii + 1) << "/" << numberOfFiles << commit;
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source url:" << currentTransfer.sourceUrl << commit;
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest url:" << currentTransfer.destUrl << commit;
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled:" << opts.overwrite << commit;

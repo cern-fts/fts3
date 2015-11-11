@@ -208,6 +208,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["CleanBulkSize"]) )->default_value("5000"),
         "Set the bulk size, in number of jobs, used for cleaning the old records"
     )
+    (
+        "CheckStalledTransfers",
+        po::value<std::string>( &(_vars["CheckStalledTransfers"]) )->default_value("true"),
+        "Check for stalled transfers"
+    )
     ;
 
     return config;
