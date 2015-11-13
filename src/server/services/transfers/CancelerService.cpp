@@ -26,6 +26,7 @@
 
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
+#include "config/ServerConfig.h"
 #include "server/DrainMode.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
@@ -206,7 +207,7 @@ void CancelerService::runService()
                 return;
 
             /*force-fail stalled ACTIVE transfers*/
-            if (ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
+            if (config::ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
                 counterActiveTimeouts++;
                 if (counterActiveTimeouts == 300)
                 {
