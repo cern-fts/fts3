@@ -38,7 +38,6 @@ namespace fs = boost::filesystem;
 const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
 const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
 const char *CONFIG_FILE = "/etc/fts3/fts3config";
-const char *USER_NAME = "fts3";
 
 
 /// Called by the signal handler
@@ -108,16 +107,6 @@ static void runEnvironmentChecks()
     }
 }
 
-/// Change running UID
-static void dropPrivileges()
-{
-    uid_t pw_uid = getUserUid(USER_NAME);
-    if (setuid(pw_uid) < 0)
-        throw SystemError("Could not change the UID");
-    if (seteuid(pw_uid) < 0)
-        throw SystemError("Could not change the effective UID");
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Process UID changed to " << pw_uid << commit;
-}
 
 /// Run the Bring Online server
 static void doServer()
@@ -151,7 +140,13 @@ static void spawnServer(int argc, char** argv)
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
 
     ServerConfig::instance().read(argc, argv);
-    dropPrivileges();
+
+    std::string user = ServerConfig::instance().get<std::string>("User");
+    std::string group = ServerConfig::instance().get<std::string>("Group");
+
+    dropPrivileges(user, group);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
+
     runEnvironmentChecks();
 
     bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");

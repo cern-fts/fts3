@@ -218,6 +218,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["MinRequiredFreeRAM"]) )->default_value("50"),
         "Minimum amount of free RAM in MB required for FTS3 to not go into auto-drain mode"
     )
+    (
+        "User",
+        po::value<std::string>( &(_vars["User"]) )->default_value("fts3"),
+        "Use this user to run the service"
+    )
+    (
+        "Group",
+        po::value<std::string>( &(_vars["Group"]) )->default_value("fts3"),
+        "Use this group to run the service"
+    )
     ;
 
     return config;

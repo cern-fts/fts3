@@ -29,8 +29,12 @@ namespace fts3 {
 namespace common {
 
 /// Returns the user UID for the given name
-/// Throws exception if not found, or error
+/// Throws exception if not found, or on error
 uid_t getUserUid(const std::string& name);
+
+/// Returns the group GID for the given name
+/// Throws exception if not found, or on error
+gid_t getGroupGid(const std::string& name);
 
 /// Returns how many processes with the given name are running
 /// @return < 0 on error, number of processes with the given name otherwise
@@ -39,6 +43,12 @@ int countProcessesWithName(const std::string& name);
 /// Checks if there is a binary 'name' in the PATH, and it is executable
 /// @param fullPath Stores here the full path, if found.
 bool binaryExists(const std::string& name, std::string* fullPath);
+
+/// Change uid, gid, euid and egid
+/// Throws SystemError on error
+/// @param user  User name
+/// @param group Group name
+void dropPrivileges(const std::string& user, const std::string& group);
 
 } // namespace common
 } // namespace fts3

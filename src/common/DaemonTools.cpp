@@ -22,7 +22,7 @@
 #include "Exceptions.h"
 
 #include <cstring>
-#include <sys/resource.h>
+#include <grp.h>
 #include <pwd.h>
 #include <unistd.h>
 
@@ -56,6 +56,23 @@ uid_t getUserUid(const std::string& name)
         throw SystemError("Could not get the UID for " + name);
     }
     return pwbufp->pw_uid;
+}
+
+
+uid_t getGroupGid(const std::string& name)
+{
+    long buflen = sysconf(_SC_GETGR_R_SIZE_MAX);
+    if (buflen == -1) {
+        buflen = 64;
+    }
+
+    std::vector<char> buffer(buflen);
+    struct group grpbuf, *grpbufp;
+    getgrnam_r(name.c_str(), &grpbuf, buffer.data(), buffer.size(), &grpbufp);
+    if (grpbufp == NULL) {
+        throw SystemError("Could not get the GID for " + name);
+    }
+    return grpbufp->gr_gid;
 }
 
 
@@ -116,6 +133,22 @@ bool binaryExists(const std::string& name, std::string* fullPath)
     }
 
     return false;
+}
+
+
+void dropPrivileges(const std::string& user, const std::string& group)
+{
+    uid_t uid = getUserUid(user);
+    gid_t gid = getGroupGid(group);
+
+    if (setgid(gid) < 0)
+        throw SystemError("Could not change the GID");
+    if (setegid(gid) < 0)
+        throw SystemError("Could not change the effective GID");
+    if (setuid(uid) < 0)
+        throw SystemError("Could not change the UID");
+    if (seteuid(uid) < 0)
+        throw SystemError("Could not change the effective UID");
 }
 
 

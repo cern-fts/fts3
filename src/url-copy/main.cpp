@@ -632,20 +632,22 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
 }
 
 
-__attribute__((constructor)) void begin(void)
+static void validateRunningPrivileges()
 {
-    //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid = getUserUid("fts3");
-    if (setuid(pw_uid) < 0)
-        abort();
-    if (seteuid(pw_uid) < 0)
-        abort();
-    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
+    // Make sure we do not run as root
+    if (getuid() == 0 || geteuid() == 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Can not run as root" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Switching to fts3:fts3" << commit;
+        dropPrivileges("fts3", "fts3");
+    }
 }
 
 
 int main(int argc, char **argv)
 {
+    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
+    validateRunningPrivileges();
+
     UrlCopyOpts &opts = UrlCopyOpts::getInstance();
     if (opts.parse(argc, argv) < 0)
         {

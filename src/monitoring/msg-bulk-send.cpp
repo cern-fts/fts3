@@ -23,14 +23,14 @@
 #include "common/ConcurrentQueue.h"
 #include "common/DaemonTools.h"
 #include "common/Logger.h"
+#include "config/ServerConfig.h"
 
 #include "UtilityRoutines.h"
 #include "MsgPipe.h"
 #include "MsgProducer.h"
 
 using namespace fts3::common;
-
-const char *USER_NAME = "fts3";
+using namespace fts3::config;
 
 
 static void DoServer(bool isDaemon) throw()
@@ -90,18 +90,7 @@ static void DoServer(bool isDaemon) throw()
 }
 
 
-static void dropPrivileges()
-{
-    uid_t pw_uid = getUserUid(USER_NAME);
-    if (setuid(pw_uid) < 0)
-        throw SystemError("Could not change the UID");
-    if (seteuid(pw_uid) < 0)
-        throw SystemError("Could not change the effective UID");
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Process UID changed to " << pw_uid << commit;
-}
-
-
-int main(int argc, char** /*argv*/)
+int main(int argc, char **argv)
 {
     // Do not even try if already running
     int n_running = countProcessesWithName("fts_msg_bulk");
@@ -114,7 +103,12 @@ int main(int argc, char** /*argv*/)
         return EXIT_FAILURE;
     }
 
-    dropPrivileges();
+    ServerConfig::instance().read(argc, argv);
+    std::string user = ServerConfig::instance().get<std::string>("User");
+    std::string group = ServerConfig::instance().get<std::string>("Group");
+
+    dropPrivileges(user, group);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
 
     //if any param is provided stay attached to terminal
     if (argc <= 1) {
