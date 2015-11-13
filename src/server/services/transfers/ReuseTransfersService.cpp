@@ -279,8 +279,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         }
     }
 
-    std::string proxy_file = DelegCred::getProxyFile(representative.userDn,
-            representative.credId);
+    std::string proxy_file = DelegCred::getProxyFile(representative.userDn, representative.credId);
     if (!proxy_file.empty())
         cmd_builder.setProxy(proxy_file);
 

@@ -50,7 +50,6 @@ void get_proxy_lifetime(const std::string& filename, time_t *lifetime,
     // Check that the file Exists
     int result = access(filename.c_str(), R_OK);
     if (0 != result) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Requested Proxy doesn't exist. A new one should be created. Reason is " << strerror(errno) << commit;
         return;
     }
     // Check if it's valid

@@ -972,7 +972,16 @@ int main(int argc, char **argv)
                                              currentTransfer.fileSize);
                     }
 
-                if ( (access(opts.proxy.c_str(), F_OK) != 0) || (access(opts.proxy.c_str(), R_OK) != 0))
+                if (opts.proxy.empty() || access(opts.proxy.c_str(), F_OK) != 0)
+                    {
+                        errorMessage = "INIT Proxy error, valid proxy not found. Probably expired";
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(EINVAL);
+                        errorPhase = TRANSFER_PREPARATION;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
+                        goto stop;
+                    }
+                else if (access(opts.proxy.c_str(), R_OK) != 0)
                     {
                         errorMessage = "INIT Proxy error, check if user fts3 can read " + opts.proxy;
                         errorMessage += " (" +  mapErrnoToString(errno) + ")";

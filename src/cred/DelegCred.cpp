@@ -74,8 +74,6 @@ static std::string encodeName(const std::string& str)
 std::string DelegCred::getProxyFile(const std::string& userDn,
         const std::string& id)
 {
-    std::string filename;
-
     try {
         // Check Preconditions
         if (userDn.empty()) {
@@ -87,7 +85,7 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         }
 
         // Get the filename to be for the given DN
-        filename = generateProxyName(userDn, id);
+        std::string filename = generateProxyName(userDn, id);
 
         // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
         if(filename.length() > (FILENAME_MAX - 7))
@@ -107,7 +105,7 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         {
             // This looks crazy, but right now I don't know what can happen if I throw here
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
-            return filename;
+            return std::string();
         }
 
         // Create a Temporary File
@@ -118,6 +116,8 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
 
         // Rename the Temporary File
         tmp_proxy.rename(filename);
+
+        return filename;
     }
     catch(const std::exception& exc)
     {
@@ -128,7 +128,7 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user" << commit;
     }
 
-    return filename;
+    return std::string();
 }
 
 /*
@@ -151,7 +151,6 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
 
     if(lifetime < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;
             message = " Proxy Certificate ";
             message += filename;
             message += " expired, lifetime is ";
@@ -164,7 +163,6 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
         }
     else if (voms_lifetime < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate VO extensions expired" << commit;
             message = " Proxy Certificate ";
             message += filename;
             message += " lifetime is ";
@@ -179,7 +177,6 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
     // casting to unsigned long is safe, condition lifetime < 0 already checked
     if(minValidityTime() >= (unsigned long)lifetime)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate should be renewed" << commit;
             message = " Proxy Certificate ";
             message += filename;
             message += " should be renewed, lifetime is ";
