@@ -102,7 +102,7 @@ private:
 
     enum {
         MSG_IFCE_WAITING_START,
-        MSG_IFCE_WAITING_FINISH,
+        MSG_IFCE_WAITING_FINISH
     } state;
 
     static bool instanceFlag;

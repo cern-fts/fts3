@@ -164,13 +164,9 @@ public:
      * Gets the expiration time of respective proxy certificate
      * (identified by the delegation ID)
      *
-     * @param delegationId - NOT used (implemented in the same way as it is in gridsite)
-     *                      the delegationId is generated inside based on client DN and
-     *                      VOMS attributes
-     *
      * @return expiration time of the respective proxy certificate
      */
-    time_t getTerminationTime(std::string delegationId);
+    time_t getTerminationTime();
 
     /**
      * The WebServer getNewProxy request method.

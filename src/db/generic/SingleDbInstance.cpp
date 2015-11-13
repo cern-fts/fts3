@@ -59,7 +59,6 @@ DBSingleton::DBSingleton(): dbBackend(NULL)
             DynamicLibraryManager::Symbol symbolDestroy = dlm->findSymbol("destroy");
 
             *(void**)( &create_db ) =  symbolInstatiate;
-
             *(void**)( &destroy_db ) = symbolDestroy;
 
             // create an instance of the DB class

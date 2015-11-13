@@ -152,7 +152,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
             closeAllFilesExcept(pipefds[1]);
 
             // Redirect stderr (points to the log)
-            freopen("/dev/null", "a", stderr);
+            stderr = freopen("/dev/null", "a", stderr);
 
             // Get parameter array
             std::list<std::string> argsHolder;
@@ -164,7 +164,9 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
             execvp(m_app.c_str(), argv);
 
             // If we are here, execvp failed, so write the errno to the pipe
-            write(pipefds[1], &errno, sizeof(int));
+            if (write(pipefds[1], &errno, sizeof(int)) < 0) {
+                fprintf(stderr, "Failed to write to the pipe!");
+            }
             _exit(EXIT_FAILURE);
         }
 

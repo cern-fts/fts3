@@ -27,6 +27,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include "common/Exceptions.h"
 #include "common/Logger.h"
 
 #include "DrainMode.h"
@@ -39,7 +40,6 @@
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
-#include "../../../../../common/Exceptions.h"
 
 using namespace std;
 using namespace db;
@@ -51,8 +51,7 @@ using namespace fts3::ws;
 
 int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__setConfigurationResponse &response)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
+    (void) response;
 
     vector<string>& cfgs = _configuration->cfg;
     vector<string>::iterator it;
@@ -171,8 +170,7 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
 
 int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__delConfigurationResponse &_param_11)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delConfiguration' request" << commit;
+    (void) _param_11;
 
     vector<string>& cfgs = _configuration->cfg;
     vector<string>::iterator it;
@@ -222,6 +220,8 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 
 int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainResponse &_param_13)
 {
+    (void) _param_13;
+
     try
         {
             // authorize
@@ -265,6 +265,8 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
 
 int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // authorize
@@ -310,6 +312,7 @@ int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse&
 
 int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRetryResponse& _resp)
 {
+    (void) _resp;
 
     try
         {
@@ -359,6 +362,8 @@ int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRe
 
 int fts3::implcfg__setOptimizerMode(soap* ctx, int optimizer_mode, implcfg__setOptimizerModeResponse &resp)
 {
+    (void) resp;
+
     try
         {
             // authorize
@@ -407,6 +412,7 @@ int fts3::implcfg__setOptimizerMode(soap* ctx, int optimizer_mode, implcfg__setO
 
 int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__setQueueTimeoutResponse& resp)
 {
+    (void) resp;
 
     try
         {
@@ -454,6 +460,7 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
 
 int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, implcfg__setBringOnlineResponse &resp)
 {
+    (void) resp;
 
     try
         {
@@ -527,6 +534,8 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
 
 int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* limit, fts3::implcfg__setBandwidthLimitResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // authorize
@@ -626,6 +635,7 @@ int fts3::implcfg__getBandwidthLimit(soap* ctx, fts3::implcfg__getBandwidthLimit
 
 int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string state, implcfg__setSeProtocolResponse &resp)
 {
+    (void) resp;
 
     try
         {
@@ -661,6 +671,8 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
 
 int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int active, implcfg__maxSrcSeActiveResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // Authorise
@@ -705,6 +717,8 @@ int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int active, implcfg__max
 
 int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__maxDstSeActiveResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // Authorise
@@ -748,6 +762,8 @@ int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__max
 
 int fts3::implcfg__fixActivePerPair(soap* ctx, string source, string destination, int active, implcfg__fixActivePerPairResponse& resp)
 {
+    (void) resp;
+
     try
         {
             AuthorizationManager::instance().authorize(
@@ -791,6 +807,8 @@ int fts3::implcfg__fixActivePerPair(soap* ctx, string source, string destination
 
 int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // Authorise
@@ -831,6 +849,8 @@ int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResp
 
 int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTimeoutResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // Authorise
@@ -919,6 +939,8 @@ int fts3::implcfg__setGlobalLimits(soap* ctx, fts3::config__GlobalLimits* limits
 
 int fts3::implcfg__authorizeAction(soap* ctx, fts3::config__SetAuthz* authz, fts3::implcfg__authorizeActionResponse& resp)
 {
+    (void) resp;
+
     try
         {
             AuthorizationManager::instance().authorize(
@@ -966,6 +988,8 @@ int fts3::implcfg__authorizeAction(soap* ctx, fts3::config__SetAuthz* authz, fts
 
 int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CredentialResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // only Root is allowed to set S3 credentials
@@ -997,6 +1021,8 @@ int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string
 
 int fts3::implcfg__setDropboxCredential(soap* ctx, std::string appKey, std::string appSecret, std::string apiUrl, implcfg__setDropboxCredentialResponse& resp)
 {
+    (void) resp;
+
     try
         {
             // only Root is allowed to set S3 credentials
@@ -1025,7 +1051,8 @@ int fts3::implcfg__setDropboxCredential(soap* ctx, std::string appKey, std::stri
 
 int fts3::impltns__debugLevelSet(struct soap* soap, string source, string destination, int level, struct impltns__debugLevelSetResponse &_resp)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugLevelSet' request" << commit;
+    (void) _resp;
+
     try
         {
             CGsiAdapter cgsi(soap);
@@ -1064,6 +1091,7 @@ int fts3::impltns__debugLevelSet(struct soap* soap, string source, string destin
 
 int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool blk, struct impltns__blacklistSeResponse &resp)
 {
+    (void) resp;
 
     try
         {
@@ -1089,6 +1117,7 @@ int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string v
 
 int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string status, int timeout, impltns__blacklistDnResponse &resp)
 {
+    (void) resp;
 
     try
         {

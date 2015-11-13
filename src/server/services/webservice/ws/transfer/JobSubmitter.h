@@ -95,7 +95,7 @@ public:
     /**
      * extracts SE name from URL
      */
-    static std::string fileUrlToSeName(std::string url, bool source = false); // it is not the best place for it!
+    static std::string fileUrlToSeName(std::string url); // it is not the best place for it!
 
 private:
 

@@ -93,8 +93,10 @@ static void DoServer(bool isDaemon) throw()
 static void dropPrivileges()
 {
     uid_t pw_uid = getUserUid(USER_NAME);
-    setuid(pw_uid);
-    seteuid(pw_uid);
+    if (setuid(pw_uid) < 0)
+        throw SystemError("Could not change the UID");
+    if (seteuid(pw_uid) < 0)
+        throw SystemError("Could not change the effective UID");
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Process UID changed to " << pw_uid << commit;
 }
 

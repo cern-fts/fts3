@@ -293,8 +293,7 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
 int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string placeHolder, string _forDN, string _forVO, string src, string dst, struct impltns__listRequests2Response &_param_8)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
+    (void) placeHolder;
 
     try
         {
@@ -323,6 +322,8 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 
 int fts3::impltns__listDeletionRequests(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates, std::string placeHolder, std::string dn, std::string vo, std::string src, std::string dst, impltns__listDeletionRequestsResponse& resp)
 {
+    (void) placeHolder;
+
     try
         {
             AuthorizationManager::Level lvl = AuthorizationManager::instance().authorize(ctx, AuthorizationManager::TRANSFER);
@@ -604,7 +605,8 @@ int fts3::impltns__getTransferJobSummary3(soap *ctx, fts3::tns3__JobRequest *req
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_param_21)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
+    (void) soap;
+
     _param_21.getVersionReturn = "3.7.6-1";
     return SOAP_OK;
 }
@@ -612,7 +614,8 @@ int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_p
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersionResponse &_param_22)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
+    (void) soap;
+
     _param_22.getSchemaVersionReturn = "3.5.0";
     return SOAP_OK;
 }
@@ -620,7 +623,8 @@ int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersion
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceVersionResponse &_param_23)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
+    (void) soap;
+
     _param_23.getInterfaceVersionReturn = "3.7.0";
     return SOAP_OK;
 }
@@ -628,7 +632,9 @@ int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceV
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
 int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__getServiceMetadataResponse &_param_24)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
+    (void) soap;
+    (void) _key;
+
     _param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
     return SOAP_OK;
 }
@@ -637,6 +643,8 @@ int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__g
 /// Web service operation 'cancel' (returns error code or SOAP_OK)
 int fts3::impltns__cancel(soap *ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring * request, struct impltns__cancelResponse &_param_14)
 {
+    (void) _param_14;
+
     try
         {
             if (request)
@@ -759,6 +767,8 @@ int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllRe
 /// Web service operation 'setJobPriority' (returns error code or SOAP_OK)
 int fts3::impltns__setJobPriority(soap *ctx, string requestID, int priority, impltns__setJobPriorityResponse &resp)
 {
+    (void) resp;
+
     impltns__prioritySetResponse r;
     impltns__prioritySet(ctx, requestID, priority, r);
     return SOAP_OK;
@@ -767,20 +777,30 @@ int fts3::impltns__setJobPriority(soap *ctx, string requestID, int priority, imp
 /// Web service operation 'addVOManager' (returns error code or SOAP_OK)
 int fts3::impltns__addVOManager(soap *soap, string _VOName, string _principal, struct impltns__addVOManagerResponse &_param_16)
 {
+    (void) soap;
+    (void) _VOName;
+    (void) _principal;
+    (void) _param_16;
+
     return SOAP_OK;
 }
 
 /// Web service operation 'removeVOManager' (returns error code or SOAP_OK)
 int fts3::impltns__removeVOManager(soap *soap, string _VOName, string _principal, struct impltns__removeVOManagerResponse &_param_17)
 {
+    (void) soap;
+    (void) _VOName;
+    (void) _principal;
+    (void) _param_17;
+
     return SOAP_OK;
 }
 
 /// Web service operation 'listVOManagers' (returns error code or SOAP_OK)
 int fts3::impltns__listVOManagers(soap *soap, string _VOName, struct impltns__listVOManagersResponse &_param_18)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
+    (void) _VOName;
+    (void) _param_18;
 
     _param_18._listVOManagersReturn = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
     _param_18._listVOManagersReturn->item.push_back("default username");
@@ -791,9 +811,6 @@ int fts3::impltns__listVOManagers(soap *soap, string _VOName, struct impltns__li
 /// Web service operation 'getRoles' (returns error code or SOAP_OK)
 int fts3::impltns__getRoles(soap *soap, struct impltns__getRolesResponse &_param_19)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
-
     _param_19.getRolesReturn = soap_new_tns3__Roles(soap, -1);
 
     _param_19.getRolesReturn->clientDN = soap_new_std__string(soap, -1);
@@ -816,8 +833,8 @@ int fts3::impltns__getRoles(soap *soap, struct impltns__getRolesResponse &_param
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
 int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRolesOfResponse &_param_20)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
+    (void) _otherDN;
+    (void) _param_20;
 
     _param_20._getRolesOfReturn = soap_new_tns3__Roles(soap, -1);
 
@@ -841,7 +858,8 @@ int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRo
 /// Web service operation 'debugSet' (returns error code or SOAP_OK)
 int fts3::impltns__debugSet(struct soap* soap, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
+    (void) _param_16;    
+
     try
         {
             CGsiAdapter cgsi(soap);
@@ -881,6 +899,8 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 
 int fts3::impltns__prioritySet(soap* ctx, string jobId, int priority, impltns__prioritySetResponse &resp)
 {
+    (void) resp;
+
     try
         {
             CGsiAdapter cgsi(ctx);

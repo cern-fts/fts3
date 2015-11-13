@@ -559,7 +559,7 @@ std::string GSoapDelegationHandler::renewProxyReq(std::string delegationId)
     return req;
 }
 
-time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
+time_t GSoapDelegationHandler::getTerminationTime()
 {
 
     try

@@ -48,7 +48,7 @@ public:
 
 private:
 
-    std::string get_state(std::string const & job, std::string const & dn);
+    std::string get_state(std::string const & job);
     void send_msg(std::string const & job);
 
     soap *ctx;

@@ -256,7 +256,7 @@ SubmittedTransfer PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it, 
     // source and destination
     std::string src = *element(it).source, dest = *element(it).dest;
     // source and destination SEs
-    std::string sourceSe = JobSubmitter::fileUrlToSeName(src, true);
+    std::string sourceSe = JobSubmitter::fileUrlToSeName(src);
     std::string destinationSe = JobSubmitter::fileUrlToSeName(dest);
     // make blacklist inspection
     inspector.add(sourceSe);

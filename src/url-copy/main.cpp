@@ -636,8 +636,10 @@ __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = getUserUid("fts3");
-    setuid(pw_uid);
-    seteuid(pw_uid);
+    if (setuid(pw_uid) < 0)
+        abort();
+    if (seteuid(pw_uid) < 0)
+        abort();
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 }
 

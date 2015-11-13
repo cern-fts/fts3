@@ -54,7 +54,7 @@ void JobCancelHandler::cancel()
     for (it = jobs.begin(); it != jobs.end(); ++it)
         {
             std::string const & job = *it;
-            std::string status = get_state(job, dn);
+            std::string status = get_state(job);
             if (status == DOES_NOT_EXIST)
                 throw UserError("Transfer job: " + job + " does not exist!");
             else if (status != CANCELED)
@@ -101,7 +101,7 @@ void JobCancelHandler::cancel(impltns__cancel2Response & resp)
     for (it = jobs.begin(); it != jobs.end(); ++it)
         {
             std::string const & job = *it;
-            std::string status = get_state(job, dn);
+            std::string status = get_state(job);
             resp_jobs.push_back(job);
             resp_stat.push_back(status);
             if (status == CANCELED)
@@ -136,7 +136,7 @@ void JobCancelHandler::cancel(impltns__cancel2Response & resp)
 
 }
 
-std::string JobCancelHandler::get_state(std::string const & jobId, std::string const & dn)
+std::string JobCancelHandler::get_state(std::string const & jobId)
 {
     // get the transfer job object from DB
     boost::optional<Job> job (db.getJob(jobId, false));

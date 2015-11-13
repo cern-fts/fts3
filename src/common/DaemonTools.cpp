@@ -67,8 +67,9 @@ int countProcessesWithName(const std::string& name)
         fs::directory_iterator end_itr;
         for (fs::directory_iterator itr("/proc"); itr != end_itr; ++itr) {
             char *endptr;
-            strtol(itr->path().filename().c_str(), &endptr, 10);
-            if (*endptr != '\0')
+            errno = 0;
+            long pid = strtol(itr->path().filename().c_str(), &endptr, 10);
+            if (*endptr != '\0' || ((pid == LONG_MIN || pid == LONG_MAX) && errno == ERANGE))
                 continue;
 
             fs::path cmdline(itr->path());

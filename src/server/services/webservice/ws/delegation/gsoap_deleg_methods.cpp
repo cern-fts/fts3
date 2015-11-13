@@ -122,6 +122,8 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
 int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct delegation__putProxyResponse &_param_7)
 {
+    (void) _param_7;
+
     boost::mutex::scoped_lock lock(qm);
 
     try
@@ -148,6 +150,7 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
 int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct delegation__getTerminationTimeResponse &_param_8)
 {
+    (void) _delegationID;
 
     try
         {
@@ -158,7 +161,7 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
             );
 
             GSoapDelegationHandler handler(soap);
-            _param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
+            _param_8._getTerminationTimeReturn = handler.getTerminationTime();
 
         }
     catch (BaseException& ex)
@@ -174,6 +177,8 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 
 int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, struct delegation__destroyResponse &_param_9)
 {
+    (void) _param_9;
+
     try
         {
             AuthorizationManager::instance().authorize(
@@ -199,8 +204,8 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 
 int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersionResponse &_param_1)
 {
+    (void) soap;
 
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getVersion' request" << commit;
     _param_1.getVersionReturn = "3.7.6-1";
 
     return SOAP_OK;
@@ -208,8 +213,8 @@ int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersio
 
 int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__getInterfaceVersionResponse &_param_2)
 {
+    (void) soap;
 
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getInterfaceVersion' request" << commit;
     _param_2.getInterfaceVersionReturn = "3.7.0";
 
     return SOAP_OK;
@@ -217,8 +222,9 @@ int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__
 
 int fts3::delegation__getServiceMetadata(struct soap* soap, std::string _key, struct delegation__getServiceMetadataResponse &_param_3)
 {
+    (void) soap;
+    (void) _key;
 
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getServiceMetadata' request" << commit;
     _param_3._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 
     return SOAP_OK;

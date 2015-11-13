@@ -67,7 +67,9 @@ static void get_backtrace(int signum)
 static void delegate_to_default(int signum)
 {
     // Change working directory to a writeable directory!
-    chdir("/tmp");
+    if (chdir("/tmp") < 0) {
+        fprintf(stderr, "Failed to change working directory to /tmp (%d)", errno);
+    }
     // setxid clears this flag, so need to reset to get the dump
     prctl(PR_SET_DUMPABLE, 1);
     // re-issue and let the system do the work

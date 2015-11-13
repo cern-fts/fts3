@@ -180,7 +180,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             if (tuples.size() == 1)
                 {
                     // add the source and destination SE for the transfer job
-                    sourceSe = fileUrlToSeName(boost::get<0>(tuples.front()), true);
+                    sourceSe = fileUrlToSeName(boost::get<0>(tuples.front()));
                     destinationSe = fileUrlToSeName(boost::get<1>(tuples.front()));
                 }
 
@@ -200,7 +200,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     tupple.state = boost::get<2>(*it_p);
                     tupple.fileIndex = boost::get<3>(*it_p);
 
-                    std::string sourceSe = fileUrlToSeName(boost::get<0>(*it_p), true);
+                    std::string sourceSe = fileUrlToSeName(boost::get<0>(*it_p));
                     std::string destinationSe = fileUrlToSeName(boost::get<1>(*it_p));
                     inspector.add(sourceSe);
                     inspector.add(destinationSe);
@@ -460,7 +460,7 @@ void JobSubmitter::checkProtocol(std::string file, bool source)
         }
 }
 
-std::string JobSubmitter::fileUrlToSeName(std::string url, bool source)
+std::string JobSubmitter::fileUrlToSeName(std::string url)
 {
     Uri u0 = checkValidUrl(url);
     return u0.getSeName();

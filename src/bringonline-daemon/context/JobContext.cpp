@@ -30,7 +30,7 @@
 #include "JobContext.h"
 
 
-JobContext::JobContext(const std::string &dn, const std::string &vo,
+JobContext::JobContext(const std::string &dn,
     const std::string &delegationId, const std::string &spaceToken) :
     spaceToken(spaceToken)
 {

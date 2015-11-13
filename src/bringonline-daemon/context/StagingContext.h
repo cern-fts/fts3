@@ -43,7 +43,7 @@ public:
     using JobContext::add;
 
     StagingContext(const StagingOperation &stagingOp):
-        JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
+        JobContext(stagingOp.userDn, stagingOp.credId, stagingOp.spaceToken),
         pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
     {
         add(stagingOp);
