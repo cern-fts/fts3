@@ -26,6 +26,7 @@
 #define FTSDRAIN_H_
 
 #include "common/ThreadSafeInstanceHolder.h"
+#include "config/serverconfig.h"
 #include "SingleDbInstance.h"
 
 #include <sys/sysinfo.h>
@@ -37,7 +38,6 @@ namespace fts3
 namespace common
 {
 
-static const unsigned long REQUIRED_FREE_RAM = 150;
 static const time_t AUTO_DRAIN_TIME = 300;
 
 /**
@@ -54,7 +54,7 @@ class DrainMode : public ThreadSafeInstanceHolder<DrainMode>
 
     friend class ThreadSafeInstanceHolder<DrainMode>;
 
-    unsigned long getFreeRamInMb(void) const
+    size_t getFreeRamInMb(void) const
     {
         struct sysinfo info;
         sysinfo(&info);
@@ -92,13 +92,14 @@ public:
             return true;
         }
 
-        unsigned long availableRam = getFreeRamInMb();
+        size_t requiredRam = config::theServerConfig().get<size_t>("MinRequiredFreeRAM");
+        size_t availableRam = getFreeRamInMb();
         bool drain = DBSingleton::instance().getDBObjectInstance()->getDrain();
 
-        if (availableRam < REQUIRED_FREE_RAM) {
+        if (availableRam < requiredRam) {
             FTS3_COMMON_LOGGER_NEWLOG(CRIT)
                 << "Auto-drain mode: available RAM is not enough ("
-                << availableRam << " < " <<  REQUIRED_FREE_RAM
+                << availableRam << " < " <<  requiredRam
                 << ");" << commit;
 
             autoDrainExpires = time(NULL) + AUTO_DRAIN_TIME;
