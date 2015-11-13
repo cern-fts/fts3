@@ -213,6 +213,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["CheckStalledTransfers"]) )->default_value("true"),
         "Check for stalled transfers"
     )
+    (
+        "MinRequiredFreeRAM",
+        po::value<std::string>( &(_vars["MinRequiredFreeRAM"]) )->default_value("50"),
+        "Minimum amount of free RAM in MB required for FTS3 to not go into auto-drain mode"
+    )
     ;
 
     return config;

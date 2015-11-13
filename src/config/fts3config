@@ -49,6 +49,11 @@ ServerLogDirectory=/var/log/fts3
 # Check for fts_url_copy processes that do not give their progress back
 # CheckStalledTransfers = true
 
+# Minimum required free RAM (in MB) for FTS3 to work normally
+# If the amount of free RAM goes below the limit, FTS3 will enter auto-drain mode
+# This is intended to protect against system resource exhaustion
+MinRequiredFreeRAM = 50
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
