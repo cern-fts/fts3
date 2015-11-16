@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <glib.h>
 #include "common/Logger.h"
 
 #include "GsoapRequestHandler.h"
@@ -64,7 +65,7 @@ const char* peek_http_method(SOAP_SOCKET socket, char* method, size_t msize)
         {
             if (strcasecmp(*v, buffer) == 0)
                 {
-                    strncpy(method, buffer, msize);
+                    g_strlcpy(method, buffer, msize);
                     return method;
                 }
         }

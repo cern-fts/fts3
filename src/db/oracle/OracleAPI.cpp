@@ -28,9 +28,9 @@
 #include <unistd.h>
 #include "OracleAPI.h"
 
-#include "../../common/Exceptions.h"
-#include "../../common/Logger.h"
-#include "../../common/ThreadSafeList.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
+#include "common/ThreadSafeList.h"
 #include "sociConversions.h"
 #include "db/generic/DbUtils.h"
 
@@ -10280,12 +10280,9 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                                     for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
                                             msg.file_id = itFind->fileId;
-                                            strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-                                            msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                                            strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-                                            msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                                            strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
-                                            msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+                                            g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
+                                            g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
+                                            g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
                                             //store the states into fs to be restored in the next run of this function
                                             runProducerDeletions(msg);
@@ -10592,12 +10589,9 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                                     for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
                                             msg.file_id = itFind->fileId;
-                                            strncpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-                                            msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                                            strncpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-                                            msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                                            strncpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
-                                            msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+                                            g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
+                                            g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
+                                            g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
                                             //store the states into fs to be restored in the next run of this function
                                             runProducerStaging(msg);

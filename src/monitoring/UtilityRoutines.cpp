@@ -453,8 +453,7 @@ bool caseInsCompare(const std::string& s1, const std::string& s2)
 std::string restoreMessageToDisk(std::string & text)
 {
     struct message_monitoring message;
-    strncpy(message.msg, text.c_str(), sizeof(message.msg));
-    message.msg[sizeof(message.msg) - 1] = '\0';
+    g_strlcpy(message.msg, text.c_str(), sizeof(message.msg));
     message.timestamp = milliseconds_since_epoch();
     int returnValue = runProducerMonitoring(message);
 

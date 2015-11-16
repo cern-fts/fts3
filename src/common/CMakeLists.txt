@@ -34,6 +34,7 @@ add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common
     ${Boost_LIBRARIES}
     ${LIBUUID_LIBRARIES}
+    ${GLIB2_LIBRARIES}
     -lpthread
 )
 

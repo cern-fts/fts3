@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -355,8 +356,7 @@ inline std::string getFullHostname()
     // First is OK
     if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
         {
-            strncpy(hostname, info->ai_canonname, sizeof(hostname));
-            hostname[MAXHOSTNAMELEN - 1] = '\0';
+            g_strlcpy(hostname, info->ai_canonname, sizeof(hostname));
             freeaddrinfo(info);
         }
     return hostname;

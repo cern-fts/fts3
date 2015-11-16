@@ -282,8 +282,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     // Send current state
                     SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
                     struct message_updater msg;
-                    strncpy(msg.job_id, std::string(tf.jobId).c_str(), sizeof(msg.job_id));
-                    msg.job_id[sizeof(msg.job_id) - 1] = '\0';
+                    g_strlcpy(msg.job_id, std::string(tf.jobId).c_str(), sizeof(msg.job_id));
                     msg.file_id = tf.fileId;
                     msg.process_id = (int) pr.getPid();
                     msg.timestamp = milliseconds_since_epoch();

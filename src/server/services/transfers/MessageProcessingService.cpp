@@ -434,8 +434,7 @@ void MessageProcessingService::executeUpdate(const std::vector<struct message>& 
             }
 
             std::string jobId = std::string((*iter).job_id).substr(0, 36);
-            strncpy(msgUpdater.job_id, jobId.c_str(), sizeof(msgUpdater.job_id));
-            msgUpdater.job_id[sizeof(msgUpdater.job_id) - 1] = '\0';
+            g_strlcpy(msgUpdater.job_id, jobId.c_str(), sizeof(msgUpdater.job_id));
             msgUpdater.file_id = (*iter).file_id;
             msgUpdater.process_id = (*iter).process_id;
             msgUpdater.timestamp = (*iter).timestamp;
