@@ -86,8 +86,6 @@ public:
 
 private:
 
-    bool wrongChecksumFormat(std::string checksum);
-
     void add(const PyFile& file);
 
     ///

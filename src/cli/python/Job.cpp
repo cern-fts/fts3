@@ -249,14 +249,5 @@ void Job::add(const PyFile& file)
     elements.push_back(file.getFileCpp());
 }
 
-bool Job::wrongChecksumFormat(std::string checksum)
-{
-    // check if there is a colon
-    std::string::size_type colon = checksum.find(":");
-    if (colon == std::string::npos || colon == 0 || colon == checksum.size() - 1) return true;
-    // if yes the format is not wrong
-    return false;
-}
-
 } /* namespace cli */
 } /* namespace fts3 */
