@@ -42,7 +42,7 @@ using namespace fts3::common;
 using namespace db;
 
 
-int main(int argc, char **argv)
+static int DoPublisher(int argc, char **argv)
 {
     std::stringstream versionFTS;
     std::stringstream issuerCA;
@@ -103,10 +103,6 @@ int main(int argc, char **argv)
         }
 
         ServerConfig::instance().read(argc, argv);
-        /*
-        DO not connect to the db for now
-        fts3_initialize_db_backend();
-        */
 
         std::string alias = ServerConfig::instance().get<std::string>("Alias");
         int port = ServerConfig::instance().get<int>("Port");
@@ -164,4 +160,20 @@ int main(int argc, char **argv)
     }
 
     return EXIT_SUCCESS;
+}
+
+
+int main(int argc, char **argv)
+{
+    try {
+        return DoPublisher(argc, argv);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Publisher failed: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::cerr << "Publisher failed with an unknown exception" << std::endl;
+        return EXIT_FAILURE;
+    }
 }
