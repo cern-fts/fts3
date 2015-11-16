@@ -34,7 +34,8 @@ Infosys=lcg-bdii.cern.ch:2170
 #Query the info systems specified in the order given, e.g. glue1;myosg;glue2
 InfoProviders=glue1
 
-#Do not change this
+#List of authorized VOs, separated by ;
+#Leave * to authorize any VO
 AuthorizedVO=*
 
 # site name 
