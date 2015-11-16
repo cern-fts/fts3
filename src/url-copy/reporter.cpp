@@ -19,16 +19,9 @@
  */
 
 #include "reporter.h"
-#include <string>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include "boost/date_time/gregorian/gregorian.hpp"
-#include <boost/tokenizer.hpp>
 #include "common/producer_consumer_common.h"
-#include <algorithm>
-#include <ctime>
-#include <sys/param.h>
+
 
 using namespace std;
 
@@ -49,6 +42,7 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     hostname.assign(chname);
 }
 
+
 Reporter::~Reporter()
 {
     delete msg;
@@ -56,68 +50,63 @@ Reporter::~Reporter()
     delete msg_log;
 }
 
+
 std::string Reporter::ReplaceNonPrintableCharacters(string s)
 {
-    try
-        {
-            std::string result("");
-            for (size_t i = 0; i < s.length(); i++)
-                {
-                    char c = s[i];
-                    int AsciiValue = static_cast<int> (c);
-                    if (AsciiValue < 32 || AsciiValue > 127)
-                        {
-                            result.append(" ");
-                        }
-                    else
-                        {
-                            result += s.at(i);
-                        }
-                }
-            return result;
+    try {
+        std::string result("");
+        for (size_t i = 0; i < s.length(); i++) {
+            char c = s[i];
+            int AsciiValue = static_cast<int> (c);
+            if (AsciiValue < 32 || AsciiValue > 127) {
+                result.append(" ");
+            }
+            else {
+                result += s.at(i);
+            }
         }
-    catch (...)
-        {
-            return s;
-        }
+        return result;
+    }
+    catch (...) {
+        return s;
+    }
 }
 
+
 void Reporter::sendMessage(double throughput, bool retry,
-                           const string& job_id, unsigned file_id,
-                           const string& transfer_status, const string& transfer_message,
+                           const string &job_id, unsigned file_id,
+                           const string &transfer_status, const string &transfer_message,
                            double timeInSecs, off_t filesize)
 {
-    msg->file_id  = file_id;
+    msg->file_id = file_id;
     strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
-    msg->job_id[sizeof(msg->job_id) -1] = '\0';
+    msg->job_id[sizeof(msg->job_id) - 1] = '\0';
     strncpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
-    msg->transfer_status[sizeof(msg->transfer_status) -1] = '\0';
+    msg->transfer_status[sizeof(msg->transfer_status) - 1] = '\0';
 
-    if (transfer_message.length() > 0)
-        {
-            std::string trmsg(transfer_message);
-            if (trmsg.length() >= 1023) {
-                trmsg = trmsg.substr(0, 1023);
-            }
-            trmsg = ReplaceNonPrintableCharacters(trmsg);
-            strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
-            msg->transfer_message[sizeof(msg->transfer_message) -1] = '\0';
+    if (transfer_message.length() > 0) {
+        std::string trmsg(transfer_message);
+        if (trmsg.length() >= 1023) {
+            trmsg = trmsg.substr(0, 1023);
         }
-    else
-        {
-            msg->transfer_message[0] = '\0';
-        }
+        trmsg = ReplaceNonPrintableCharacters(trmsg);
+        strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
+        msg->transfer_message[sizeof(msg->transfer_message) - 1] = '\0';
+    }
+    else {
+        msg->transfer_message[0] = '\0';
+    }
 
     msg->process_id = (int) getpid();
     msg->timeInSecs = timeInSecs;
-    msg->filesize = (double)filesize;
+    msg->filesize = (double) filesize;
     msg->nostreams = nostreams;
     msg->timeout = timeout;
     msg->buffersize = buffersize;
     strncpy(msg->source_se, source_se.c_str(), sizeof(msg->source_se));
-    msg->source_se[sizeof(msg->source_se) -1] = '\0';
+    msg->source_se[sizeof(msg->source_se) - 1] = '\0';
     strncpy(msg->dest_se, dest_se.c_str(), sizeof(msg->dest_se));
-    msg->dest_se[sizeof(msg->dest_se) -1] = '\0';
+    msg->dest_se[sizeof(msg->dest_se) - 1] = '\0';
     msg->timestamp = milliseconds_since_epoch();
     msg->retry = retry;
     msg->throughput = throughput;
@@ -128,53 +117,54 @@ void Reporter::sendMessage(double throughput, bool retry,
     }
 }
 
+
 void Reporter::sendTerminal(double throughput, bool retry,
-                            const string& job_id, unsigned file_id,
-                            const string& transfer_status, const string& transfer_message,
-                            double timeInSecs, off_t filesize)
+    const string &job_id, unsigned file_id,
+    const string &transfer_status, const string &transfer_message,
+    double timeInSecs, off_t filesize)
 {
     // Did we send it already?
-    if (!multiple)
-        {
-            if (isTerminalSent) {
-                return;
-            }
-            isTerminalSent = true;
+    if (!multiple) {
+        if (isTerminalSent) {
+            return;
         }
+        isTerminalSent = true;
+    }
     // Not sent, so send it now and raise the flag
     sendMessage(throughput, retry, job_id, file_id,
-                transfer_status, transfer_message,
-                timeInSecs, filesize);
+        transfer_status, transfer_message,
+        timeInSecs, filesize);
 
 }
 
-void Reporter::sendPing(const std::string& job_id, unsigned file_id,
-                        double throughput, off_t transferred,
-                        std::string source_surl, std::string dest_surl,std::string source_turl,
-                        std::string dest_turl, const std::string& transfer_status)
+
+void Reporter::sendPing(const std::string &job_id, unsigned file_id,
+    double throughput, off_t transferred,
+    std::string source_surl, std::string dest_surl, std::string source_turl,
+    std::string dest_turl, const std::string &transfer_status)
 {
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
-    msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
+    msg_updater->job_id[sizeof(msg_updater->job_id) - 1] = '\0';
     msg_updater->file_id = file_id;
     msg_updater->process_id = (int) getpid();
     msg_updater->timestamp = milliseconds_since_epoch();
     msg_updater->throughput = throughput;
-    msg_updater->transferred = (double)transferred;
+    msg_updater->transferred = (double) transferred;
 
     strncpy(msg_updater->source_surl, source_surl.c_str(), sizeof(msg_updater->source_surl));
-    msg_updater->source_surl[sizeof(msg_updater->source_surl) -1] = '\0';
+    msg_updater->source_surl[sizeof(msg_updater->source_surl) - 1] = '\0';
 
     strncpy(msg_updater->dest_surl, dest_surl.c_str(), sizeof(msg_updater->dest_surl));
-    msg_updater->dest_surl[sizeof(msg_updater->dest_surl) -1] = '\0';
+    msg_updater->dest_surl[sizeof(msg_updater->dest_surl) - 1] = '\0';
 
     strncpy(msg_updater->source_turl, source_turl.c_str(), sizeof(msg_updater->source_turl));
-    msg_updater->source_turl[sizeof(msg_updater->source_turl) -1] = '\0';
+    msg_updater->source_turl[sizeof(msg_updater->source_turl) - 1] = '\0';
 
     strncpy(msg_updater->dest_turl, dest_turl.c_str(), sizeof(msg_updater->dest_turl));
-    msg_updater->dest_turl[sizeof(msg_updater->dest_turl) -1] = '\0';
+    msg_updater->dest_turl[sizeof(msg_updater->dest_turl) - 1] = '\0';
 
     strncpy(msg_updater->transfer_status, transfer_status.c_str(), sizeof(msg_updater->transfer_status));
-    msg_updater->transfer_status[sizeof(msg_updater->transfer_status) -1] = '\0';
+    msg_updater->transfer_status[sizeof(msg_updater->transfer_status) - 1] = '\0';
 
     // Try twice
     if (runProducerStall(*msg_updater) != 0) {
@@ -183,17 +173,16 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
 }
 
 
-
-void Reporter::sendLog(const std::string& job_id, unsigned file_id,
-                       const std::string& logFileName, bool debug)
+void Reporter::sendLog(const std::string &job_id, unsigned file_id,
+    const std::string &logFileName, bool debug)
 {
     msg_log->file_id = file_id;
     strncpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
-    msg_log->job_id[sizeof(msg_log->job_id) -1] = '\0';
+    msg_log->job_id[sizeof(msg_log->job_id) - 1] = '\0';
     strncpy(msg_log->filePath, logFileName.c_str(), sizeof(msg_log->filePath));
-    msg_log->filePath[sizeof(msg_log->filePath) -1] = '\0';
+    msg_log->filePath[sizeof(msg_log->filePath) - 1] = '\0';
     strncpy(msg_log->host, hostname.c_str(), sizeof(msg_log->host));
-    msg_log->host[sizeof(msg_log->host) -1] = '\0';
+    msg_log->host[sizeof(msg_log->host) - 1] = '\0';
     msg_log->debugFile = debug;
     msg_log->timestamp = milliseconds_since_epoch();
     // Try twice
