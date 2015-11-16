@@ -44,19 +44,16 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     msg_log = new struct message_log();
     memset(msg_log, 0, sizeof(message_log));
 
-    char chname[MAXHOSTNAMELEN]= {0};
+    char chname[MAXHOSTNAMELEN] = {0};
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
 }
 
 Reporter::~Reporter()
 {
-    if (msg)
-        delete msg;
-    if (msg_updater)
-        delete msg_updater;
-    if (msg_log)
-        delete msg_log;
+    delete msg;
+    delete msg_updater;
+    delete msg_log;
 }
 
 std::string Reporter::ReplaceNonPrintableCharacters(string s)
@@ -99,8 +96,9 @@ void Reporter::sendMessage(double throughput, bool retry,
     if (transfer_message.length() > 0)
         {
             std::string trmsg(transfer_message);
-            if (trmsg.length() >= 1023)
+            if (trmsg.length() >= 1023) {
                 trmsg = trmsg.substr(0, 1023);
+            }
             trmsg = ReplaceNonPrintableCharacters(trmsg);
             strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
             msg->transfer_message[sizeof(msg->transfer_message) -1] = '\0';
@@ -125,8 +123,9 @@ void Reporter::sendMessage(double throughput, bool retry,
     msg->throughput = throughput;
 
     // Try twice
-    if (runProducerStatus(*msg) != 0)
+    if (runProducerStatus(*msg) != 0) {
         runProducerStatus(*msg);
+    }
 }
 
 void Reporter::sendTerminal(double throughput, bool retry,
@@ -135,10 +134,11 @@ void Reporter::sendTerminal(double throughput, bool retry,
                             double timeInSecs, off_t filesize)
 {
     // Did we send it already?
-    if(!multiple)
+    if (!multiple)
         {
-            if (isTerminalSent)
+            if (isTerminalSent) {
                 return;
+            }
             isTerminalSent = true;
         }
     // Not sent, so send it now and raise the flag
@@ -150,7 +150,8 @@ void Reporter::sendTerminal(double throughput, bool retry,
 
 void Reporter::sendPing(const std::string& job_id, unsigned file_id,
                         double throughput, off_t transferred,
-                        std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl, const std::string& transfer_status)
+                        std::string source_surl, std::string dest_surl,std::string source_turl,
+                        std::string dest_turl, const std::string& transfer_status)
 {
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
     msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
@@ -176,8 +177,9 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
     msg_updater->transfer_status[sizeof(msg_updater->transfer_status) -1] = '\0';
 
     // Try twice
-    if (runProducerStall(*msg_updater) != 0)
+    if (runProducerStall(*msg_updater) != 0) {
         runProducerStall(*msg_updater);
+    }
 }
 
 
@@ -195,6 +197,7 @@ void Reporter::sendLog(const std::string& job_id, unsigned file_id,
     msg_log->debugFile = debug;
     msg_log->timestamp = milliseconds_since_epoch();
     // Try twice
-    if (runProducerLog(*msg_log) != 0)
+    if (runProducerLog(*msg_log) != 0) {
         runProducerLog(*msg_log);
+    }
 }
