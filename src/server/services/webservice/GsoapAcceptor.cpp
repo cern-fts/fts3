@@ -135,9 +135,9 @@ std::unique_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
                 new GSoapRequestHandler(*this)
             );
 
-            char ipbuffer [512] = {0};
-            sprintf(ipbuffer, "accepted connection from host=%s, socket=%d", ctx->host, sock);
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << ipbuffer << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                << "accepted connection from host=" << ctx->host << ", socket=" << sock
+                <<  commit;
         }
     else
         {
