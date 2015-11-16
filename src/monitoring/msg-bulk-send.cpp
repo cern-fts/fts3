@@ -90,6 +90,27 @@ static void DoServer(bool isDaemon) throw()
 }
 
 
+static void spawnServer(int argc, char **argv)
+{
+    ServerConfig::instance().read(argc, argv);
+    std::string user = ServerConfig::instance().get<std::string>("User");
+    std::string group = ServerConfig::instance().get<std::string>("Group");
+
+    dropPrivileges(user, group);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
+
+    //if any param is provided stay attached to terminal
+    if (argc <= 1) {
+        int d = daemon(0, 0);
+        if (d < 0) {
+            throw SystemError("Can't set daemon");
+        }
+    }
+
+    DoServer(argc <= 1);
+}
+
+
 int main(int argc, char **argv)
 {
     // Do not even try if already running
@@ -103,23 +124,16 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    ServerConfig::instance().read(argc, argv);
-    std::string user = ServerConfig::instance().get<std::string>("User");
-    std::string group = ServerConfig::instance().get<std::string>("Group");
-
-    dropPrivileges(user, group);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
-
-    //if any param is provided stay attached to terminal
-    if (argc <= 1) {
-        int d = daemon(0, 0);
-        if (d < 0) {
-            std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
-            return EXIT_FAILURE;
-        }
+    try {
+        spawnServer(argc, argv);
     }
-
-    DoServer(argc <= 1);
-
-    return 0;
+    catch (const std::exception& ex) {
+        std::cerr << "Failed to spawn the messaging server! " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::cerr << "Failed to spawn the messaging server! Unknown exception" << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
