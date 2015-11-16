@@ -51,8 +51,7 @@ uid_t getUserUid(const std::string& name)
 
     std::vector<char> buffer(buflen);
     struct passwd pwbuf, *pwbufp;
-    getpwnam_r(name.c_str(), &pwbuf, buffer.data(), buffer.size(), &pwbufp);
-    if (pwbufp == NULL) {
+    if (getpwnam_r(name.c_str(), &pwbuf, buffer.data(), buffer.size(), &pwbufp) < 0 || pwbufp == NULL) {
         throw SystemError("Could not get the UID for " + name);
     }
     return pwbufp->pw_uid;
@@ -68,8 +67,7 @@ uid_t getGroupGid(const std::string& name)
 
     std::vector<char> buffer(buflen);
     struct group grpbuf, *grpbufp;
-    getgrnam_r(name.c_str(), &grpbuf, buffer.data(), buffer.size(), &grpbufp);
-    if (grpbufp == NULL) {
+    if (getgrnam_r(name.c_str(), &grpbuf, buffer.data(), buffer.size(), &grpbufp) < 0 || grpbufp == NULL) {
         throw SystemError("Could not get the GID for " + name);
     }
     return grpbufp->gr_gid;
@@ -119,7 +117,12 @@ int countProcessesWithName(const std::string& name)
 
 bool binaryExists(const std::string& name, std::string* fullPath)
 {
-    std::string envPath(getenv("PATH"));
+    const char* envC = getenv("PATH");
+    if (envC == NULL) {
+        return false;
+    }
+
+    std::string envPath(envC);
     boost::char_separator<char> colon(":");
     boost::tokenizer<boost::char_separator<char>> tokenizer(envPath, colon);
 

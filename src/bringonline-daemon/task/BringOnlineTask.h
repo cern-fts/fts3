@@ -92,9 +92,13 @@ public:
         boost::unique_lock<boost::shared_mutex> lock(mx);
         auto begin = active_urls.lower_bound(*urls.begin());
         auto end   = active_urls.upper_bound(*urls.rbegin());
-        for (auto it = begin; it != end; ++it) {
-            if (urls.count(*it))
-                active_urls.erase(it);
+        for (auto it = begin; it != end;) {
+            if (urls.count(*it)) {
+                active_urls.erase(it++);
+            }
+            else {
+                ++it;
+            }
         }
     }
 
