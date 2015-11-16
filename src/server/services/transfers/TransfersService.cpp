@@ -54,29 +54,8 @@ TransfersService::TransfersService()
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
     ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
-    const std::vector<std::string> voNameList(
-            config::ServerConfig::instance().get<std::vector<std::string> >("AuthorizedVO"));
 
-    if (voNameList.size() > 0 && voNameList[0].compare("*") != 0)
-    {
-        allowedVOs += "(";
-        for (auto iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO)
-        {
-            allowedVOs += "'";
-            allowedVOs += (*iterVO);
-            allowedVOs += "',";
-        }
-        allowedVOs = allowedVOs.substr(0, allowedVOs.size() - 1);
-        allowedVOs += ")";
-        boost::algorithm::to_lower(allowedVOs);
-    }
-    else
-    {
-        allowedVOs = voNameList[0];
-    }
-
-    std::string monitoringMessagesStr = config::ServerConfig::instance().get<
-            std::string>("MonitoringMessaging");
+    std::string monitoringMessagesStr = config::ServerConfig::instance().get<std::string>("MonitoringMessaging");
     if (monitoringMessagesStr == "false")
         monitoringMessages = false;
     else

@@ -48,7 +48,6 @@ public:
 
 protected:
     std::string ftsHostName;
-    std::string allowedVOs;
     std::string infosys;
     bool monitoringMessages;
     int execPoolSize;
