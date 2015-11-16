@@ -62,7 +62,6 @@ protected:
 
     using ProcessServiceHandler<TRAITS>::siteResolver;
     using ProcessServiceHandler<TRAITS>::ftsHostName;
-    using ProcessServiceHandler<TRAITS>::allowedVOs;
     using ProcessServiceHandler<TRAITS>::infosys;
     using ProcessServiceHandler<TRAITS>::monitoringMessages;
     using ProcessServiceHandler<TRAITS>::execPoolSize;

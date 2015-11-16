@@ -109,30 +109,10 @@ public:
     {
         cmd = "fts_url_copy";
 
-	logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
+    	logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
         ftsHostName = theServerConfig().get<std::string > ("Alias");
-        allowedVOs = std::string("");
         infosys = theServerConfig().get<std::string > ("Infosys");
-        const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
-        if (voNameList.size() > 0 && std::string(voNameList[0]).compare("*") != 0)
-            {
-                std::vector<std::string>::const_iterator iterVO;
-                allowedVOs += "(";
-                for (iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO)
-                    {
-                        allowedVOs += "'";
-                        allowedVOs += (*iterVO);
-                        allowedVOs += "',";
-                    }
-                allowedVOs = allowedVOs.substr(0, allowedVOs.size() - 1);
-                allowedVOs += ")";
-                boost::algorithm::to_lower(allowedVOs);
-            }
-        else
-            {
-                allowedVOs = voNameList[0];
-            }
 
         std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
         if(monitoringMessagesStr == "false")
@@ -163,7 +143,6 @@ public:
 protected:
     SiteName siteResolver;
     std::string ftsHostName;
-    std::string allowedVOs;
     std::string infosys;
     bool monitoringMessages;
     int execPoolSize;
