@@ -71,6 +71,8 @@ void CleanerService::removeOldFiles(const std::string& path)
 
 void CleanerService::runService()
 {
+    int counter = 0;
+
     while (!boost::this_thread::interruption_requested())
     {
         ++counter;

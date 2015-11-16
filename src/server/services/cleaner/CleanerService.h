@@ -32,7 +32,6 @@ namespace server {
 class CleanerService: public BaseService
 {
 private:
-    int counter;
     void removeOldFiles(const std::string& path);
 
 public:
