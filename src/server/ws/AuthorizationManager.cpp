@@ -251,21 +251,20 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
         }
 
     // if the VO authorization list was specified and a wildcard was not used ...
-//	if (!vos.empty() && !vos.count("*")) {
-//
-//		string vo = cgsi.getClientVo();
-//		to_lower(vo);
-//
-//		if (!vos.count(vo)) {
-//
-//			string msg = "Authorization failed, access was not granted. ";
-//			msg += "(Please check if the fts3 configuration file contains the VO: '";
-//			msg += vo;
-//			msg += "' and if the right delimiter was used!)";
-//
-//			throw Err_Custom(msg);
-//		}
-//	}
+    if (!vos.empty() && !vos.count("*")) {
+
+        std::string vo = cgsi.getClientVo();
+        boost::algorithm::to_lower(vo);
+        if (!vos.count(vo)) {
+
+            std::string msg = "Authorization failed, access was not granted. ";
+            msg += "(Please check if the fts3 configuration file contains the VO: '";
+            msg += vo;
+            msg += "' and if the right delimiter was used!)";
+
+            throw Err_Custom(msg);
+        }
+    }
 
     // get operation string
     string op_str = operationToStr(op);
