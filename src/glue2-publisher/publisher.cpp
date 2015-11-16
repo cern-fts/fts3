@@ -42,7 +42,7 @@ using namespace fts3::common;
 using namespace db;
 
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     std::stringstream versionFTS;
     std::stringstream issuerCA;
@@ -51,37 +51,33 @@ int main(int argc, char** argv)
     FILE *in;
     char buff[512];
     in = popen("rpm -q --qf '%{VERSION}' fts-server", "r");
-    while (fgets(buff, sizeof (buff), in) != NULL)
-        {
-            versionFTS << buff;
-        }
+    while (fgets(buff, sizeof(buff), in) != NULL) {
+        versionFTS << buff;
+    }
     pclose(in);
 
 
     //get issuer CA
     char buff2[512];
     in = popen("openssl x509 -issuer -noout -in /etc/grid-security/hostcert.pem | sed 's/^[^/]*//'", "r");
-    while (fgets(buff, sizeof (buff2), in) != NULL)
-        {
-            issuerCA << buff;
-        }
+    while (fgets(buff, sizeof(buff2), in) != NULL) {
+        issuerCA << buff;
+    }
     pclose(in);
 
 
     //get emi-version
     std::string versionEMI;
-    if (fs::exists("/etc/emi-version"))
-        {
-            std::ifstream myfile("/etc/emi-version");
-            getline(myfile, versionEMI);
-        }
+    if (fs::exists("/etc/emi-version")) {
+        std::ifstream myfile("/etc/emi-version");
+        getline(myfile, versionEMI);
+    }
 
     //get fts server health state
     std::string serverStatus("");
-    if (fs::exists("/var/lock/subsys/fts-server"))
-        {
-            serverStatus = "ok";
-        }
+    if (fs::exists("/var/lock/subsys/fts-server")) {
+        serverStatus = "ok";
+    }
 
 
     //get timestamps
@@ -92,81 +88,80 @@ int main(int argc, char** argv)
 
     inTime = popen(getTimetamps.c_str(), "r");
 
-    while (fgets(buffTime, sizeof (buffTime), inTime) != NULL)
-        {
-            timestamp << buffTime;
-        }
+    while (fgets(buffTime, sizeof(buffTime), inTime) != NULL) {
+        timestamp << buffTime;
+    }
 
     pclose(inTime);
 
-    try
-        {
-            std::stringstream stream;
+    try {
+        std::stringstream stream;
 
-            if (!fs::exists("/etc/fts3/fts3config"))
-                {
-                    std::cerr << "fts3 server config file doesn't exist" << std::endl;
-                    exit(1);
-                }
-
-            ServerConfig::instance().read(argc, argv);
-            /*
-            DO not connect to the db for now
-            fts3_initialize_db_backend();
-            */
-
-            std::string alias = ServerConfig::instance().get<std::string > ("Alias");
-            int port = ServerConfig::instance().get<int>("Port");
-            std::string sitename = ServerConfig::instance().get<std::string > ("SiteName");
-
-            stream << "dn: GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
-            stream << "GLUE2ServiceID: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
-            stream << "objectClass: GLUE2Service" << "\n";
-            stream << "GLUE2ServiceType: org.glite.FileTransfer" << "\n";
-            stream << "GLUE2ServiceQualityLevel: production" << "\n";
-            stream << "GLUE2ServiceCapability: data.transfer" << "\n";
-            //stream << "GLUE2EndpointIssuerCA:" << issuerCA.str() << "\n";
-            stream << "GLUE2ServiceAdminDomainForeignKey: " << sitename << "\n";
-
-            stream << "dn: GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
-            stream << "objectClass: GLUE2Endpoint" << "\n";
-            stream << "GLUE2EndpointID: " << alias << "_org.glite.fts" << "\n";
-            stream << "GLUE2EndpointInterfaceVersion: " << versionFTS.str() << "\n";
-            stream << "GLUE2EndpointQualityLevel: production" << "\n";
-            stream << "GLUE2EndpointImplementationName: FTS" << "\n";
-            stream << "GLUE2EndpointImplementationVersion: " << versionFTS.str() << "\n";
-
-            //publish emi when it's EMI!
-            if (!versionEMI.empty())
-                {
-                    stream << "GLUE2EntityOtherInfo: MiddlewareName=EMI" << "\n";
-                    stream << "GLUE2EntityOtherInfo: MiddlewareVersion=" << versionEMI << "\n";
-                }
-
-            stream << "GLUE2EndpointInterfaceName: org.glite.FileTransfer" << "\n";
-            stream << "GLUE2EndpointURL: https://" << alias << ":" << port << "\n";
-            stream << "GLUE2EndpointSemantics: https://svnweb.cern.ch/trac/fts3" << "\n";
-            //stream << "GLUE2EndpointWSDL: https://fts2run.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer?wsdl
-            stream << "GLUE2EndpointStartTime: " << timestamp.str() << "\n"; //  1970-01-01T00:00:00Z
-            stream << "GLUE2EndpointHealthState: " << serverStatus << "\n";
-            stream << "GLUE2EndpointServingState: production" << "\n";
-            stream << "GLUE2EndpointServiceForeignKey: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
-
-            stream << "dn: GLUE2PolicyID=" << alias << "_fts3_policy" << ",GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
-            stream << "objectClass: GLUE2Policy" << "\n";
-            stream << "objectClass: GLUE2AccessPolicy" << "\n";
-            stream << "GLUE2PolicyID: " << alias << "_fts3_policy" << "\n";
-            stream << "GLUE2EntityCreationTime: " << timestamp.str() << "\n";
-            stream << "GLUE2PolicyScheme: org.glite.standard" << "\n";
-            stream << "GLUE2PolicyRule: ALL" << "\n";
-            stream << "GLUE2AccessPolicyEndpointForeignKey: " << alias << "_org.glite.fts" << "\n";
-
-            std::cout << stream.str() << std::endl;
+        if (!fs::exists("/etc/fts3/fts3config")) {
+            std::cerr << "fts3 server config file doesn't exist" << std::endl;
+            exit(1);
         }
-    catch (...)
-        {
-            return EXIT_FAILURE;
+
+        ServerConfig::instance().read(argc, argv);
+        /*
+        DO not connect to the db for now
+        fts3_initialize_db_backend();
+        */
+
+        std::string alias = ServerConfig::instance().get<std::string>("Alias");
+        int port = ServerConfig::instance().get<int>("Port");
+        std::string sitename = ServerConfig::instance().get<std::string>("SiteName");
+
+        stream << "dn: GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" <<
+        ",GLUE2GroupID=resource,o=glue" << "\n";
+        stream << "GLUE2ServiceID: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
+        stream << "objectClass: GLUE2Service" << "\n";
+        stream << "GLUE2ServiceType: org.glite.FileTransfer" << "\n";
+        stream << "GLUE2ServiceQualityLevel: production" << "\n";
+        stream << "GLUE2ServiceCapability: data.transfer" << "\n";
+        //stream << "GLUE2EndpointIssuerCA:" << issuerCA.str() << "\n";
+        stream << "GLUE2ServiceAdminDomainForeignKey: " << sitename << "\n";
+
+        stream << "dn: GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" <<
+        port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
+        stream << "objectClass: GLUE2Endpoint" << "\n";
+        stream << "GLUE2EndpointID: " << alias << "_org.glite.fts" << "\n";
+        stream << "GLUE2EndpointInterfaceVersion: " << versionFTS.str() << "\n";
+        stream << "GLUE2EndpointQualityLevel: production" << "\n";
+        stream << "GLUE2EndpointImplementationName: FTS" << "\n";
+        stream << "GLUE2EndpointImplementationVersion: " << versionFTS.str() << "\n";
+
+        //publish emi when it's EMI!
+        if (!versionEMI.empty()) {
+            stream << "GLUE2EntityOtherInfo: MiddlewareName=EMI" << "\n";
+            stream << "GLUE2EntityOtherInfo: MiddlewareVersion=" << versionEMI << "\n";
         }
+
+        stream << "GLUE2EndpointInterfaceName: org.glite.FileTransfer" << "\n";
+        stream << "GLUE2EndpointURL: https://" << alias << ":" << port << "\n";
+        stream << "GLUE2EndpointSemantics: https://svnweb.cern.ch/trac/fts3" << "\n";
+        //stream << "GLUE2EndpointWSDL: https://fts2run.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer?wsdl
+        stream << "GLUE2EndpointStartTime: " << timestamp.str() << "\n"; //  1970-01-01T00:00:00Z
+        stream << "GLUE2EndpointHealthState: " << serverStatus << "\n";
+        stream << "GLUE2EndpointServingState: production" << "\n";
+        stream << "GLUE2EndpointServiceForeignKey: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
+
+        stream << "dn: GLUE2PolicyID=" << alias << "_fts3_policy" << ",GLUE2EndpointID=" << alias << "_org.glite.fts" <<
+        ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" <<
+        "\n";
+        stream << "objectClass: GLUE2Policy" << "\n";
+        stream << "objectClass: GLUE2AccessPolicy" << "\n";
+        stream << "GLUE2PolicyID: " << alias << "_fts3_policy" << "\n";
+        stream << "GLUE2EntityCreationTime: " << timestamp.str() << "\n";
+        stream << "GLUE2PolicyScheme: org.glite.standard" << "\n";
+        stream << "GLUE2PolicyRule: ALL" << "\n";
+        stream << "GLUE2AccessPolicyEndpointForeignKey: " << alias << "_org.glite.fts" << "\n";
+
+        std::cout << stream.str() << std::endl;
+    }
+    catch (...) {
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
