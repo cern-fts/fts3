@@ -45,17 +45,19 @@ public:
         CRIT
     } LogLevel;
 
+    /// Get the corresponding log level for the given string
+    /// representation. Case insensitive. If repr is unknown, a SystemError
+    /// exception is thrown
+    static LogLevel getLogLevel(const std::string& repr);
+
     /// Constructor
     Logger();
 
     /// Destructor
-    virtual ~Logger ();
+    virtual ~Logger();
 
     /// Switch logging on. Log messages will be displayed.
-    Logger& setLogOn();
-
-    /// Switch log messages off. No log messages are displayed.
-    Logger& setLogOff();
+    Logger& setLogLevel(LogLevel level);
 
     /// Start a new log message. But this is not the recommended way,
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
@@ -75,7 +77,7 @@ public:
     template <typename T>
     Logger& operator << (const T& aSrc)
     {
-        if (_isLogOn)
+        if (_lastLogLevel >= _logLevel)
         {
             std::cout << aSrc;
         }
@@ -89,11 +91,9 @@ public:
     int redirect(const std::string& stdout, const std::string& stderr) throw();
 
 private:
-    /// true: log lines are written, false: no log is written.
-    bool _isLogOn;
-
-    /// Actual log level
-    LogLevel _actLogLevel;
+    /// Log level
+    LogLevel _logLevel;
+    LogLevel _lastLogLevel;
 
     /// Separator for the logging
     std::string _separator;

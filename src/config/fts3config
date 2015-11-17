@@ -51,6 +51,14 @@ Profiling=0
 TransferLogDirectory=/var/log/fts3/transfers
 ServerLogDirectory=/var/log/fts3
 
+# Log level. Enables logging for messages of level >= than configured
+# Possible values are
+#   TRACE (every detail), DEBUG (internal behaviour), INFO (normal behaviour),
+#   NOTICE (final states), WARNING (things worth checking), ERR (internal FTS3 errors, as database connectivity),
+#   CRIT (fatal errors, as segmentation fault)
+# It is recommended to use DEBUG or INFO
+LogLevel=DEBUG
+
 # Check for fts_url_copy processes that do not give their progress back
 # CheckStalledTransfers = true
 

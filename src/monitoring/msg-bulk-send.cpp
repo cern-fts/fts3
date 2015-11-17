@@ -47,6 +47,7 @@ static void DoServer(bool isDaemon) throw()
             return;
         }
     }
+    theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
     try {
         activemq::library::ActiveMQCPP::initializeLibrary();

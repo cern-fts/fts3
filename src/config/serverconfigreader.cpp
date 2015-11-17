@@ -228,6 +228,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["Group"]) )->default_value("fts3"),
         "Use this group to run the service"
     )
+    (
+        "LogLevel",
+        po::value<std::string>( &(_vars["LogLevel"]) )->default_value("DEBUG"),
+        "Logging level"
+    )
     ;
 
     return config;

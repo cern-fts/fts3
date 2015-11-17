@@ -131,6 +131,7 @@ static void doServer(void)
             throw SystemError(msg.str());
         }
     }
+    theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting server..." << commit;
 

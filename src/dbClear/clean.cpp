@@ -63,6 +63,7 @@ int main(int argc, char** argv)
                 throw SystemError("Database cleaner failed to open the log file");
             }
         }
+        theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
         initializeDbBackend();
 

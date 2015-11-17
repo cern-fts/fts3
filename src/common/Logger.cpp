@@ -21,18 +21,43 @@
 /** \file Logger.cpp Implementation/tests of Logger class. */
 
 #include "Logger.h"
+#include "Exceptions.h"
 
 #include <fcntl.h>
-#include <stdio.h>
 #include <unistd.h>
+#include <boost/algorithm/string.hpp>
 
 
 namespace fts3 {
 namespace common {
 
 
-Logger::Logger() :
-        _isLogOn(true), _actLogLevel(INFO), _separator("; "), _nCommits(0)
+Logger::LogLevel Logger::getLogLevel(const std::string& repr)
+{
+    struct LevelRepr {
+        const char *repr;
+        LogLevel level;
+    } ;
+    static const LevelRepr LEVEL_REPR[] = {
+        {"trace", TRACE}, {"debug", DEBUG},
+        {"info",  INFO}, {"notice", NOTICE},
+        {"warn", WARNING}, {"warning", WARNING},
+        {"err", ERR}, {"error", ERR},
+        {"crit", CRIT}, {"critical", CRIT}
+    };
+    static const int N_REPR = sizeof(LEVEL_REPR) / sizeof(LevelRepr);
+
+    for (int i = 0; i < N_REPR; ++i) {
+        if (boost::iequals(repr, LEVEL_REPR[i].repr)) {
+            return LEVEL_REPR[i].level;
+        }
+    }
+
+    throw SystemError(std::string("Unknown logging level ") + repr);
+}
+
+
+Logger::Logger(): _logLevel(DEBUG), _lastLogLevel(DEBUG), _separator("; "), _nCommits(0)
 {
 }
 
@@ -42,23 +67,19 @@ Logger::~Logger ()
 }
 
 
-Logger& Logger::setLogOn()
+Logger & Logger::setLogLevel(LogLevel level)
 {
-    _isLogOn = true;
-    return *this;
-}
-
-
-Logger& Logger::setLogOff()
-{
-    _isLogOn = false;
+    newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
+        << "Setting debug level to " << logLevelStringRepresentation(level)
+        << commit;
+    _logLevel = level;
     return *this;
 }
 
 
 void Logger::_commit()
 {
-    if (_isLogOn)
+    if (_lastLogLevel >= _logLevel)
     {
         std::cout << std::endl;
         ++_nCommits;
@@ -71,14 +92,17 @@ void Logger::_commit()
 }
 
 
-Logger& Logger::newLog(LogLevel logLevel, const char* aFile,
+Logger& Logger::newLog(LogLevel level, const char* aFile,
         const char* aFunc, const int aLineNo)
 {
-    (*this) << logLevelStringRepresentation(logLevel) << timestamp() << _separator;
+    _lastLogLevel = level;
 
-    if (logLevel >= ERR)
-    {
-        (*this) << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
+    if (level >= this->_logLevel) {
+        (*this) << logLevelStringRepresentation(level) << timestamp() << _separator;
+
+        if (level >= ERR && this->_logLevel <= DEBUG) {
+            (*this) << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
+        }
     }
 
     return *this;

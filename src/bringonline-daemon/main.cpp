@@ -121,6 +121,7 @@ static void doServer()
             throw SystemError(msg.str());
         }
     }
+    theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
     initializeDatabase();
     fts3::ProfilingSubsystem::instance().start();
