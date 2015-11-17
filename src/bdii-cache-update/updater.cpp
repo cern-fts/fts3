@@ -73,13 +73,13 @@ int main(int argc, char** argv)
     catch (BaseException& e)
         {
             std::string msg = "Fatal error, exiting...";
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
             return EXIT_FAILURE;
         }
     catch (...)
         {
             std::string msg = "Fatal error (unknown origin), exiting...";
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
             return EXIT_FAILURE;
         }
 
@@ -121,18 +121,18 @@ int main(int argc, char** argv)
                 }
 
             if (!doc.save_file(bdii_path.c_str()))
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BDII cache: it has not been possible to save the file." << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BDII cache: it has not been possible to save the file." << commit;
 
         }
     catch(std::exception& ex)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BDII cache: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BDII cache: " << ex.what() << commit;
             return EXIT_FAILURE;
         }
     catch (...)
         {
             std::string msg = "Fatal error (unknown origin), exiting...";
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
             return EXIT_FAILURE;
         }
     return ret;

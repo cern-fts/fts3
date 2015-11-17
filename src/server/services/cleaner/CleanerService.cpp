@@ -59,7 +59,7 @@ void CleanerService::removeOldFiles(const std::string& path)
             //clean files 15 days old
             if (x > 1296000)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< " Deleting file " << *dir
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir
                 << " because it was created " << std::ctime( &t )
                 << fts3::common::commit;
                 boost::filesystem::remove(*dir);

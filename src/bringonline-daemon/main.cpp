@@ -43,10 +43,10 @@ const char *CONFIG_FILE = "/etc/fts3/fts3config";
 /// Called by the signal handler
 static void shutdownCallback(int signum, void*)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Caught signal " << signum
                                     << " (" << strsignal(signum) << ")"
                                     << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Future signals will be ignored!" << commit;
 
     BringOnlineServer::instance().stop();
     if (!ServerConfig::instance().get<bool> ("rush"))
@@ -58,7 +58,7 @@ static void shutdownCallback(int signum, void*)
         case SIGABRT: case SIGSEGV: case SIGILL:
         case SIGFPE: case SIGBUS: case SIGTRAP:
         case SIGSYS:
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
             break;
         default:
             break;
@@ -70,10 +70,10 @@ static void shutdownCallback(int signum, void*)
         db::DBSingleton::destroy();
     }
     catch (const std::exception& ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Exception when forcing the database teardown: " << ex.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception when forcing the database teardown: " << ex.what() << commit;
     }
     catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Unexpected exception when forcing the database teardown" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon stopped" << commit;
@@ -137,7 +137,7 @@ static void doServer()
 static void spawnServer(int argc, char** argv)
 {
     panic::setup_signal_handlers(shutdownCallback, NULL);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
 
     ServerConfig::instance().read(argc, argv);
 
@@ -145,7 +145,7 @@ static void spawnServer(int argc, char** argv)
     std::string group = ServerConfig::instance().get<std::string>("Group");
 
     dropPrivileges(user, group);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
 
     runEnvironmentChecks();
 

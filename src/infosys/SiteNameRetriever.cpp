@@ -101,7 +101,7 @@ std::string SiteNameRetriever::getFromBdii(std::string se)
         {
             if (bdii.checkIfInUse(BdiiBrowser::GLUE2) || bdii.checkIfInUse(BdiiBrowser::GLUE1))
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "SE: " << se << " has not been found in the BDII" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "SE: " << se << " has not been found in the BDII" << commit;
                 }
             return std::string();
         }

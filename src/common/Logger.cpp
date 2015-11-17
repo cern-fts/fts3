@@ -76,7 +76,7 @@ Logger& Logger::newLog(LogLevel logLevel, const char* aFile,
 {
     (*this) << logLevelStringRepresentation(logLevel) << timestamp() << _separator;
 
-    if (logLevel == ERR || logLevel == CRIT)
+    if (logLevel >= ERR)
     {
         (*this) << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
     }
@@ -149,16 +149,14 @@ std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
 {
     switch (loglevel)
     {
-        case EMERG:
-            return std::string("EMERG   ");
+        case TRACE:
+            return std::string("TRACE   ");
         case DEBUG:
             return std::string("DEBUG   ");
         case WARNING:
             return std::string("WARNING ");
         case INFO:
             return std::string("INFO    ");
-        case ALERT:
-            return std::string("ALERT   ");
         case CRIT:
             return std::string("CRIT    ");
         case ERR:

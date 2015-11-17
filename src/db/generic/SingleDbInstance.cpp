@@ -21,8 +21,8 @@
 #include "SingleDbInstance.h"
 #include <fstream>
 
-#include "../../common/Exceptions.h"
-#include "../../config/ServerConfig.h"
+#include "common/Exceptions.h"
+#include "config/ServerConfig.h"
 #include "common/Logger.h"
 #include "version.h"
 #include "../profiled/Profiled.h"

@@ -125,7 +125,7 @@ protected:
                 (db.*update_state)(tmp);
             }
             catch (std::exception& ex) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)<< ex.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                 recover(tmp);
             }
             catch(...) //use catch-all, the state must be recovered no matter what

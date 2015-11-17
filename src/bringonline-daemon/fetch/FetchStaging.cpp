@@ -47,7 +47,7 @@ void FetchStaging::fetch()
         recoverStartedTasks();
     }
     catch (BaseException& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "FetchStaging " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging " << e.what() << commit;
     }
     catch (...)
     {
@@ -58,7 +58,7 @@ void FetchStaging::fetch()
         try {
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(60000));
                 continue;
             }
@@ -125,7 +125,7 @@ void FetchStaging::recoverStartedTasks()
             startedStagingOps);
     }
     catch (UserError const & ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< ex.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
     }
     catch(...)
     {
@@ -147,7 +147,7 @@ void FetchStaging::recoverStartedTasks()
             threadpool.start(new PollTask(it_t->second, it_t->first));
         }
         catch (UserError const & ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
         }
         catch(...)
         {

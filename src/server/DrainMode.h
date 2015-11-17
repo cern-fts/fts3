@@ -83,7 +83,7 @@ public:
     {
         if (autoDrainExpires >= time(NULL)) {
             time_t remaining = autoDrainExpires - time(NULL);
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
                 << "Auto-drain mode because hit memory limits. Retry in "
                 << remaining << " seconds" << fts3::common::commit;
             return true;
@@ -94,7 +94,7 @@ public:
         bool drain = DBSingleton::instance().getDBObjectInstance()->getDrain();
 
         if (availableRam < requiredRam) {
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                 << "Auto-drain mode: available RAM is not enough ("
                 << availableRam << " < " <<  requiredRam
                 << ");" << fts3::common::commit;

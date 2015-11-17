@@ -257,7 +257,7 @@ void abnormalTermination(std::string classification, std::string, std::string fi
     if(classification != "CANCELED")
         retry = true;
 
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << errorMessage << commit;
 
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -298,9 +298,9 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     if(UrlCopyOpts::getInstance().monitoringMessages)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring complete message" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
             std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Complete message content: " << msgReturnValue << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
         }
 
     reporter.timeout = UrlCopyOpts::getInstance().timeout;
@@ -435,9 +435,9 @@ void shutdown_callback(int signum, void*)
                 {
                     std::string stackTrace = fts3::common::panic::stack_dump(fts3::common::panic::stack_backtrace, fts3::common::panic::stack_backtrace_size);
                     propagated = true;
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "TRANSFER process died: " << currentTransfer.jobId << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Received signal: " << signum << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stacktrace: " << stackTrace << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "TRANSFER process died: " << currentTransfer.jobId << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Received signal: " << signum << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Stacktrace: " << stackTrace << commit;
 
                     errorMessage = "Transfer process died with: " + stackTrace;
                     abnormalTermination("FAILED", errorMessage, "Error", false);
@@ -536,7 +536,7 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 {
     if (message)
         {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << message << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << message << commit;
         }
 }
 
@@ -548,7 +548,7 @@ void myunexpected()
         currentTransfer.fileId = file_id;
 
     errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << errorMessage << commit;
 
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
@@ -561,7 +561,7 @@ void myterminate()
         currentTransfer.fileId = file_id;
 
     errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << errorMessage << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << errorMessage << commit;
 
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
@@ -913,16 +913,16 @@ int main(int argc, char **argv)
 
             if(opts.monitoringMessages)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring start message " << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring start message " << commit;
                     std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message content: " << msgReturnValue << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;
                 }
 
             //also reuse session when both url's are gsiftp
             if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
                 {
                     gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "GridFTP session reuse enabled since both uri's are gsiftp" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "GridFTP session reuse enabled since both uri's are gsiftp" << commit;
                 }
 
             // Scope
@@ -1264,7 +1264,7 @@ int main(int argc, char **argv)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) <<  std::string(tmp_err->message) << commit;
+                                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) <<  std::string(tmp_err->message) << commit;
                                 if (tmp_err->code == ETIMEDOUT)
                                     {
                                         errorMessage = std::string(tmp_err->message);
@@ -1298,7 +1298,7 @@ int main(int argc, char **argv)
                     }
                 else
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "Transfer completed successfully" << commit;
                     }
 
 
@@ -1453,7 +1453,7 @@ stop:
                     // all the remaining transfers
                     if (opts.multihop)
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Setting to fail the remaining transfers" << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Setting to fail the remaining transfers" << commit;
                             setRemainingTransfersToFailed(transferList, ii);
 
                             std::string archiveErr = fileManagement.archive();
@@ -1528,9 +1528,9 @@ stop:
 
             if(opts.monitoringMessages)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Send monitoring complete message" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
                     std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Complete message content: " << msgReturnValue << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
                 }
 
             inShutdown = true;

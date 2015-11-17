@@ -148,7 +148,7 @@ bool FileTransferScheduler::schedule(int &currentActive)
                                 file.jobId, JobStatusHandler::FTS3_STATUS_FAILED, 0
                             );
                             // log it
-                            FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << msg << commit;
                             // the file has been resolved as FAILED, it won't be scheduled
                             return false;
                         }

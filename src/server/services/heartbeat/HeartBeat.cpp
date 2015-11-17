@@ -60,7 +60,7 @@ void HeartBeat::runService()
 
             if (criticalThreadExpired(retrieveRecords, updateRecords, stallRecords))
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
                         << "One of the critical threads looks stalled"
                         << commit;
                 // Note: Would be nice to get the pstack output in the log
@@ -72,7 +72,7 @@ void HeartBeat::runService()
 
             db::DBSingleton::instance().getDBObjectInstance()
                 ->updateHeartBeat(&index, &count, &start, &end, serviceName);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO)
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
                 << "Systole: host " << index << " out of " << count
                 << " [" << start << ':' << end << ']'
                 << commit;
@@ -101,7 +101,7 @@ bool HeartBeat::criticalThreadExpired(time_t retrieveRecords, time_t updateRecor
     diffTime = std::difftime(std::time(NULL), retrieveRecords);
     if (diffTime > 7200)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
                 << "Wall time passed retrieve records: " << diffTime
                 << " secs " << commit;
         return true;
@@ -110,7 +110,7 @@ bool HeartBeat::criticalThreadExpired(time_t retrieveRecords, time_t updateRecor
     diffTime = std::difftime(std::time(NULL), updateRecords);
     if (diffTime > 7200)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
                 << "Wall time passed update records: " << diffTime
                 << " secs " << commit;
         return true;
@@ -119,7 +119,7 @@ bool HeartBeat::criticalThreadExpired(time_t retrieveRecords, time_t updateRecor
     diffTime = std::difftime(std::time(NULL), stallRecords);
     if (diffTime > 10000)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
                 << "Wall time passed stallRecords and cancelation thread exited: "
                 << diffTime << " secs " << commit;
         return true;
@@ -130,12 +130,12 @@ bool HeartBeat::criticalThreadExpired(time_t retrieveRecords, time_t updateRecor
 
 void HeartBeat::orderedShutdown()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stopping other threads..." << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Stopping other threads..." << commit;
     // Give other threads a chance to finish gracefully
     Server::instance().stop();
     boost::this_thread::sleep(boost::posix_time::seconds(30));
 
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exiting" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting" << commit;
     _exit(1);
 }
 

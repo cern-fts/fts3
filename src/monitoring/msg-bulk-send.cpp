@@ -97,7 +97,7 @@ static void spawnServer(int argc, char **argv)
     std::string group = ServerConfig::instance().get<std::string>("Group");
 
     dropPrivileges(user, group);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
 
     //if any param is provided stay attached to terminal
     if (argc <= 1) {

@@ -63,7 +63,7 @@ void DeletionTask::run_impl()
             std::vector<std::pair<std::string, int> > const ids = ctx.getIDs(urls[i]);
 
             if (error[i]) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "DELETION FAILED " << urls[i] << ": "
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)<< "DELETION FAILED " << urls[i] << ": "
                 << error[i]->code << " " << error[i]->message
                 << commit;
 
@@ -72,7 +72,7 @@ void DeletionTask::run_impl()
                 ctx.updateState(it->first, it->second, "FAILED", error[i]->message, retry);
             }
             else {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED for " << urls[i] << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "DELETION FINISHED for " << urls[i] << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it)
                 ctx.updateState(it->first, it->second, "FINISHED", "", false);
             }
@@ -80,7 +80,7 @@ void DeletionTask::run_impl()
         }
     }
     else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)
+        FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
             << "DELETION FINISHED " << ctx.getLogMsg() << commit;
         ctx.updateState("FINISHED", "", false);
     }

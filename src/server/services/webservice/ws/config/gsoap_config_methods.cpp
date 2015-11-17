@@ -87,7 +87,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
     catch(...)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: setConfiguration"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An unknonw exception has been caught: setConfiguration"  << commit;
             soap_receiver_fault(soap, "setConfiguration", "ConfigurationException");
             return SOAP_FAULT;
 
@@ -157,7 +157,7 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
     catch(...)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: getConfiguration"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An unknown exception has been caught: getConfiguration"  << commit;
             soap_receiver_fault(soap, "getConfiguration", "ConfigurationException");
             return SOAP_FAULT;
 
@@ -207,7 +207,7 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
     catch(...)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: delConfiguration" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An unknown exception has been caught: delConfiguration" << commit;
             soap_receiver_fault(soap, "delConfiguration", "ConfigurationException");
             return SOAP_FAULT;
 

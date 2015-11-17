@@ -46,7 +46,7 @@ static void heartBeat(void)
         try {
             //check if draining is on
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
@@ -56,7 +56,7 @@ static void heartBeat(void)
             db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                 &myIndex, &count, &hashStart, &hashEnd, service_name);
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Systole: host " << myIndex << " out of " << count
                 << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
                 << std::dec
                 << commit;

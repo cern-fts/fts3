@@ -36,23 +36,23 @@ public:
     virtual void runService() = 0;
 
     virtual void operator() () {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting " << getServiceName() << fts3::common::commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting " << getServiceName() << fts3::common::commit;
         try {
             runService();
         }
         catch (const boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Requested interruption of " << getServiceName()
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Requested interruption of " << getServiceName()
                 << fts3::common::commit;
         }
         catch (const std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Unhandled exception for " << getServiceName()
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception for " << getServiceName()
                 << ": " << e.what() << fts3::common::commit;
         }
         catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Unhandled unknown exception for "
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled unknown exception for "
                 << getServiceName() << fts3::common::commit;
         }
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Exiting " << getServiceName() << fts3::common::commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting " << getServiceName() << fts3::common::commit;
     }
 };
 

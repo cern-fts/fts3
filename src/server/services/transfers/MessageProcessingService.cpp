@@ -90,7 +90,7 @@ void MessageProcessingService::runService()
                 if (runConsumerStatus(messages) != 0)
                 {
                     char buffer[128] = {0};
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                 }
             }
 
@@ -110,9 +110,8 @@ void MessageProcessingService::runService()
             {
                 if (runConsumerLog(messagesLog) != 0)
                 {
-                    char buffer[128] =
-                    { 0 };
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                    char buffer[128] = { 0 };
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                 }
             }
 
@@ -126,7 +125,7 @@ void MessageProcessingService::runService()
             }
             catch (std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)<< e.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
 
                 //try again
                 try
@@ -173,8 +172,7 @@ void MessageProcessingService::runService()
                 {
                     if (runConsumerStall(messagesUpdater) != 0)
                     {
-                        char buffer[128] =
-                        { 0 };
+                        char buffer[128] = { 0 };
                         FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                     }
                 }
@@ -254,7 +252,7 @@ void MessageProcessingService::runService()
         }
         catch (const fs::filesystem_error& ex)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<<ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
 
             std::vector<struct message>::const_iterator iterBreak;
             for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)

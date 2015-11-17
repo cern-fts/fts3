@@ -2390,7 +2390,7 @@ void MySqlAPI::revertToSubmitted()
 
                 if (diff > 200 && reuseJob == "N")
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
                     readyStmt1.execute(true);
                 }
@@ -2408,7 +2408,7 @@ void MySqlAPI::revertToSubmitted()
 
                         if(diff > terminateTime)
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
 
                             readyStmt3.execute(true);
 
@@ -3898,7 +3898,7 @@ bool MySqlAPI::updateOptimizer()
         return false;
 
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run since hashSegment.start is equal to " << hashSegment.start << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run since hashSegment.start is equal to " << hashSegment.start << commit;
 
     soci::session sql(*connectionPool);
 
@@ -4797,7 +4797,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                 {
                     if(isNullPid != soci::i_null && pid > 0)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
                         kill(pid, SIGUSR1);
                     }
                     collectJobs.insert(std::make_pair(fileId, jobId));

@@ -67,7 +67,7 @@ void BringOnlineTask::run(const boost::any &)
             auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i] && errors[i]->code != EOPNOTSUPP) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) <<
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) <<
                     "BRINGONLINE FAILED for " << urls[i] << ": "
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
@@ -79,7 +79,7 @@ void BringOnlineTask::run(const boost::any &)
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FINISHED for "
                     << urls[i] << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
@@ -89,7 +89,7 @@ void BringOnlineTask::run(const boost::any &)
             }
             else
             {
-                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)
                     << "BRINGONLINE FAILED for " << urls[i] << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
@@ -112,7 +112,7 @@ void BringOnlineTask::run(const boost::any &)
             auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i] == NULL) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FINISHED for "
                     << urls[i] << " , got token " << token
                     << commit;
@@ -121,7 +121,7 @@ void BringOnlineTask::run(const boost::any &)
                 }
             }
             else if (errors[i]->code == EOPNOTSUPP) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FINISHED for "
                     << urls[i]
                     << ": not supported, keep going (" << errors[i]->message << ")"
@@ -133,7 +133,7 @@ void BringOnlineTask::run(const boost::any &)
             }
             else
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FAILED for " << urls[i] << ": "
                     << errors[i]->code << " " << errors[i]->message
                     << commit;

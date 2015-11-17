@@ -104,7 +104,7 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         if(!DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) )
         {
             // This looks crazy, but right now I don't know what can happen if I throw here
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
             return std::string();
         }
 
@@ -199,14 +199,14 @@ void DelegCred::getNewCertificate(const std::string& userDn,
         // Get the Cred Id
         boost::optional<UserCredential> cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Get the Cred Id " << cred_id << " " << userDn << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Get the Cred Id " << cred_id << " " << userDn << commit;
 
         // write the content of the certificate property into the file
         std::ofstream ofs(filename.c_str(), std::ios_base::binary);
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "write the content of the certificate property into the file " << filename << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "write the content of the certificate property into the file " << filename << commit;
         if (ofs.bad()) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Failed open file " << filename << " for writing" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed open file " << filename << " for writing" << commit;
             return;
         }
         // write the Content of the certificate
@@ -216,7 +216,7 @@ void DelegCred::getNewCertificate(const std::string& userDn,
         ofs.close();
     }
     catch (const std::exception& exc) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what() << commit;
     }
 }
 
@@ -239,11 +239,11 @@ std::string DelegCred::generateProxyName(const std::string& userDn, const std::s
     unsigned long filename_max = static_cast<unsigned long>(pathconf(TMP_DIRECTORY, _PC_NAME_MAX));
     size_t max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
     if (max_length == 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Cannot generate proxy file name: prefix too long" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: prefix too long" << commit;
         return std::string("");
     }
     if (h_str.length() > (std::string::size_type) max_length) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Cannot generate proxy file name: has too long" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: has too long" << commit;
         return std::string("");
     }
     // Generate the filename using the has

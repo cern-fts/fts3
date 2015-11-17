@@ -52,7 +52,7 @@ void PollTask::run(const boost::any&)
             auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i] && errors[i]->code != EOPNOTSUPP) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE polling FAILED for " << urls[i] << ": "
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
@@ -64,7 +64,7 @@ void PollTask::run(const boost::any&)
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FINISHED for " << urls[i]
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
@@ -74,7 +74,7 @@ void PollTask::run(const boost::any&)
             }
             else
             {
-                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)
                     << "BRINGONLINE FAILED for " << urls[i]
                     << ": returned -1 but error was not set "
                     << commit;
@@ -94,7 +94,7 @@ void PollTask::run(const boost::any&)
             auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i] == NULL) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FINISHED for "
                     << urls[i]
                     << commit;
@@ -105,14 +105,14 @@ void PollTask::run(const boost::any&)
             }
             else if (errors[i]->code == EAGAIN)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE NOT FINISHED for " << urls[i]
                     << ": " << errors[i]->message
                     << commit;
             }
             else if (errors[i]->code == EOPNOTSUPP)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FINISHED for "
                     << urls[i]
                     << ": not supported, keep going (" << errors[i]->message << ")"
@@ -124,7 +124,7 @@ void PollTask::run(const boost::any&)
             }
             else
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FAILED for " << urls[i] << ": "
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
@@ -213,7 +213,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
             auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i]) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "BRINGONLINE abort FAILED for " << urls[i] << ": "
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)<< "BRINGONLINE abort FAILED for " << urls[i] << ": "
                 << errors[i]->code << " " << errors[i]->message
                 << commit;
                 if (report)
@@ -226,7 +226,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
             }
             else
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE abort FAILED for "
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED for "
                 << urls[i] << ", returned -1, but error not set " << token
                 << commit;
                 if (report)

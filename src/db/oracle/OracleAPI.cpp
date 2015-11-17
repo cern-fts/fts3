@@ -511,7 +511,7 @@ void OracleAPI::revertToSubmitted()
 
                             if (diff > 200 && reuseJob != "Y")
                                 {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
+                                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
                                     sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
                                         "WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' ",
@@ -530,7 +530,7 @@ void OracleAPI::revertToSubmitted()
 
                                             if(diff > terminateTime)
                                                 {
-                                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
+                                                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
 
                                                     sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
 
@@ -4272,7 +4272,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                 {
                                     if(isNullPid != soci::i_null && pid > 0)
                                         {
-                                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
+                                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
                                             kill(boost::lexical_cast<__pid_t>(pid), SIGUSR1);
                                         }
                                     collectJobs.insert(std::make_pair(fileId, jobId));

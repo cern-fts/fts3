@@ -53,7 +53,7 @@ void MultihopTransfersService::runService()
             {
                 if (!drainMode)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more transfers for this instance!" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
                     drainMode = true;
                     boost::this_thread::sleep(boost::posix_time::seconds(15));
                     continue;
@@ -68,7 +68,7 @@ void MultihopTransfersService::runService()
         }
         catch (std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Exception in process_service_multihop_handler " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_multihop_handler " << e.what() << commit;
         }
         catch (...)
         {

@@ -142,9 +142,9 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
 {
     bool retry = retryTransferInternal(errorNo, category, message);
     if (retry)
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Recoverable error: [" << errorNo << "] " << message << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recoverable error: [" << errorNo << "] " << message << commit;
     else
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Non-recoverable error: [" << errorNo << "] " << message << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Non-recoverable error: [" << errorNo << "] " << message << commit;
     return retry;
 }
 

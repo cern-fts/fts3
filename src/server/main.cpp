@@ -63,9 +63,9 @@ static void intializeDatabase(bool test = false)
 /// Called by the signal handler
 static void shutdownCallback(int signum, void*)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signum
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Caught signal " << signum
                                     << " (" << strsignal(signum) << ")" << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Future signals will be ignored!" << commit;
 
     Server::instance().stop();
 
@@ -75,7 +75,7 @@ static void shutdownCallback(int signum, void*)
         case SIGABRT: case SIGSEGV: case SIGILL:
         case SIGFPE: case SIGBUS: case SIGTRAP:
         case SIGSYS:
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n"
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT)<< "Stack trace: \n"
                 << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size)
                 << commit;
             break;
@@ -235,14 +235,14 @@ static void spawnServer(int argc, char** argv)
 {
     // Register signal handlers
     panic::setup_signal_handlers(shutdownCallback, NULL);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Signal handlers installed" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
 
     ServerConfig::instance().read(argc, argv);
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
 
     dropPrivileges(user, group);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Changed running user and group to " << user << ":" << group << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Changed running user and group to " << user << ":" << group << commit;
 
     runEnvironmentChecks();
 

@@ -41,7 +41,7 @@ static void revertDeleteToStart()
         db::DBSingleton::instance().getDBObjectInstance()->requeueStartedDeletes();
     }
     catch (BaseException& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "DELETION " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
     }
     catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;

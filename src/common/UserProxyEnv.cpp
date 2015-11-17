@@ -94,6 +94,5 @@ UserProxyEnv::~UserProxyEnv()
                 {
                     setenv(CERT_ENV_VAR, m_cert.c_str(),1);
                 }
-            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Restored" << commit;
         }
 }

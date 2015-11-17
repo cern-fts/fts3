@@ -44,7 +44,7 @@ void OptimizerService::runService()
         }
         catch (std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<<"Process thread HeartBeatHandlerActive " << e.what() << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() << fts3::common::commit;
         }
         catch(...)
         {

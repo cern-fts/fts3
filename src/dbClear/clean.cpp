@@ -84,12 +84,12 @@ int main(int argc, char** argv)
 
     }
     catch (const std::exception& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Backup fatal error, exiting... " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT)<< "Backup fatal error, exiting... " << e.what() << commit;
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Backup fatal error (unknown origin), exiting..." << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Backup fatal error (unknown origin), exiting..." << commit;
         return EXIT_FAILURE;
     }
 

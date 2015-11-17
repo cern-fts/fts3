@@ -68,10 +68,9 @@ public:
             db.updateBringOnlineToken(jobs, token);
         }
         catch (std::exception& ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
         }
-        catch(...)
-        {
+        catch(...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
         }
     }

@@ -97,7 +97,7 @@ void Blacklister::handleSeBlacklisting()
                 name, *vo, status, timeout, std::string(), adminDn
             );
             // log it
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had blacklisted the SE: " << name << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User: " << adminDn << " blacklisted the SE: " << name << commit;
 
             handleJobsInTheQueue();
 
@@ -106,7 +106,7 @@ void Blacklister::handleSeBlacklisting()
         {
             db->unblacklistSe(name);
             // log it
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had unblacklisted the SE: " << name << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User: " << adminDn << " unblacklisted the SE: " << name << commit;
         }
 }
 
@@ -126,7 +126,7 @@ void Blacklister::handleDnBlacklisting()
 
             db->blacklistDn(name, std::string(), adminDn);
             // log it
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << name << " had blacklisted the DN: " << adminDn << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << name << " blacklisted the DN: " << adminDn << commit;
 
             handleJobsInTheQueue();
 
@@ -140,7 +140,7 @@ void Blacklister::handleDnBlacklisting()
 
             db->unblacklistDn(name);
             // log it
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had unblacklisted the DN: " << name << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " unblacklisted the DN: " << name << commit;
         }
 }
 

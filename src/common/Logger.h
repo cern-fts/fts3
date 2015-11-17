@@ -36,7 +36,13 @@ public:
 
     typedef enum
     {
-        EMERG, DEBUG, WARNING, INFO, ALERT, CRIT, ERR, NOTICE
+        TRACE,
+        DEBUG,
+        INFO,
+        NOTICE,
+        WARNING,
+        ERR,
+        CRIT
     } LogLevel;
 
     /// Constructor

@@ -23,13 +23,13 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include "common/Exceptions.h"
 #include "common/Logger.h"
 
 #include <stdlib.h>
 
 #include <boost/regex.hpp>
 #include <sstream>
-#include "../../../../../common/Exceptions.h"
 
 using namespace fts3::ws;
 using namespace db;
@@ -392,7 +392,6 @@ void GSoapDelegationHandler::putProxy(std::string delegationId, std::string prox
 {
     try
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " puts proxy certificate" << commit;
 
             delegationId = handleDelegationId(delegationId);

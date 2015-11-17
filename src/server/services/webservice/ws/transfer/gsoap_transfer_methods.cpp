@@ -60,6 +60,8 @@ using namespace std;
 
 int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__fileDeleteResponse& resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'fileDelete' request" << commit;
+
     try
         {
 
@@ -102,14 +104,12 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
         }
     catch(BaseException& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "DeleteException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught"  << commit;
             soap_receiver_fault(ctx, "fileDelete", "DeleteException");
             return SOAP_FAULT;
@@ -120,8 +120,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmitResponse &_param_3)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
     try
         {
@@ -138,14 +137,12 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
         }
     catch(BaseException& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: transferSubmit"  << commit;
             soap_receiver_fault(soap, "transferSubmit", "TransferException");
             return SOAP_FAULT;
@@ -157,8 +154,7 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 /// Web service operation 'transferSubmit2' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmit2Response &_param_4)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
     try
         {
@@ -193,8 +189,7 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 /// Web service operation 'transferSubmit3' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct impltns__transferSubmit3Response &_param_5)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
     try
         {
@@ -210,14 +205,12 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
         }
     catch(BaseException& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: transferSubmit3"  << commit;
             soap_receiver_fault(soap, "transferSubmit3", "TransferException");
             return SOAP_FAULT;
@@ -228,6 +221,7 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 
 int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, impltns__transferSubmit4Response &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit4' request" << commit;
 
     try
         {
@@ -243,14 +237,12 @@ int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, im
         }
     catch(BaseException& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: transferSubmit4"  << commit;
             soap_receiver_fault(ctx, "transferSubmit4", "TransferException");
             return SOAP_FAULT;
@@ -262,8 +254,7 @@ int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, im
 /// Web service operation 'listRequests' (returns error code or SOAP_OK)
 int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct impltns__listRequestsResponse &_param_7)
 {
-
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
 
     try
         {
@@ -295,6 +286,8 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 {
     (void) placeHolder;
 
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
+
     try
         {
             AuthorizationManager::Level lvl = AuthorizationManager::instance().authorize(soap, AuthorizationManager::TRANSFER);
@@ -304,14 +297,12 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
         }
     catch(BaseException& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: listRequests2"  << commit;
             soap_receiver_fault(soap, "listRequests2", "TransferException");
             return SOAP_FAULT;
@@ -324,6 +315,8 @@ int fts3::impltns__listDeletionRequests(soap* ctx, impltns__ArrayOf_USCOREsoapen
 {
     (void) placeHolder;
 
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listDeletionRequests' request" << commit;
+
     try
         {
             AuthorizationManager::Level lvl = AuthorizationManager::instance().authorize(ctx, AuthorizationManager::TRANSFER);
@@ -333,14 +326,12 @@ int fts3::impltns__listDeletionRequests(soap* ctx, impltns__ArrayOf_USCOREsoapen
         }
     catch(BaseException& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: listRequests2"  << commit;
             soap_receiver_fault(ctx, "listRequests2", "TransferException");
             return SOAP_FAULT;
@@ -352,6 +343,8 @@ int fts3::impltns__listDeletionRequests(soap* ctx, impltns__ArrayOf_USCOREsoapen
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus(soap *ctx, string jobId, int offset, int limit, impltns__getFileStatusResponse & resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus' request" << commit;
+
     try
         {
             boost::optional<Job> job (
@@ -385,6 +378,8 @@ int fts3::impltns__getFileStatus(soap *ctx, string jobId, int offset, int limit,
 /// Web service operation 'getFileStatus3' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus3(soap *ctx, fts3::tns3__FileRequest *req, fts3::impltns__getFileStatus3Response &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus3' request" << commit;
+
     try
         {
             boost::optional<Job> job (
@@ -418,7 +413,7 @@ int fts3::impltns__getFileStatus3(soap *ctx, fts3::tns3__FileRequest *req, fts3:
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus2(soap *ctx, string requestID, int offset, int limit, impltns__getFileStatus2Response &resp)
 {
-//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
 
     try
         {
@@ -454,6 +449,8 @@ int fts3::impltns__getFileStatus2(soap *ctx, string requestID, int offset, int l
 int fts3::impltns__getTransferJobStatus(soap *ctx, string jobId,
                                         struct impltns__getTransferJobStatusResponse &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
+
     try
         {
             boost::optional<Job> job (DBSingleton::instance().getDBObjectInstance()->getJob(jobId, false));
@@ -482,6 +479,8 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string jobId,
 /// Web service operation 'getTransferJobStatus2' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobStatus2(soap *ctx, fts3::tns3__JobRequest *req, fts3::impltns__getTransferJobStatus2Response &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus2' request" << commit;
+
     try
         {
             boost::optional<Job> job (
@@ -511,6 +510,8 @@ int fts3::impltns__getTransferJobStatus2(soap *ctx, fts3::tns3__JobRequest *req,
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobSummary(soap *ctx, string jobId, impltns__getTransferJobSummaryResponse &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobSummary' request" << commit;
+
     try
         {
             boost::optional<Job> job (
@@ -542,6 +543,8 @@ int fts3::impltns__getTransferJobSummary(soap *ctx, string jobId, impltns__getTr
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobSummary2(soap *ctx, string jobId, impltns__getTransferJobSummary2Response &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobSummary2' request" << commit;
+
     try
         {
             boost::optional<Job> job (
@@ -574,6 +577,8 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string jobId, impltns__getT
 int fts3::impltns__getTransferJobSummary3(soap *ctx, fts3::tns3__JobRequest *req,
         fts3::impltns__getTransferJobSummary3Response &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobSummary3' request" << commit;
+
     try
         {
             boost::optional<Job> job (
@@ -645,6 +650,8 @@ int fts3::impltns__cancel(soap *ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring
 {
     (void) _param_14;
 
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel' request" << commit;
+
     try
         {
             if (request)
@@ -689,6 +696,8 @@ int fts3::impltns__cancel(soap *ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring
 
 int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring *request, impltns__cancel2Response &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel2' request" << commit;
+
     try
         {
             if (request)
@@ -714,6 +723,8 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 
 int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllResponse &resp)
 {
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancelAll' request" << commit;
+
     try
         {
             CGsiAdapter cgsi(ctx);
@@ -768,6 +779,7 @@ int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllRe
 int fts3::impltns__setJobPriority(soap *ctx, string requestID, int priority, impltns__setJobPriorityResponse &resp)
 {
     (void) resp;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setJobPriority' request" << commit;
 
     impltns__prioritySetResponse r;
     impltns__prioritySet(ctx, requestID, priority, r);

@@ -62,7 +62,7 @@ void CancelerService::markAsStalled()
     messages.reserve(500);
     ThreadSafeList::get_instance().checkExpiredMsg(messages);
     if (!messages.empty()) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Reaping stalled transfers" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Reaping stalled transfers" << commit;
 
         boost::filesystem::path p("/var/lib/fts3/");
         boost::filesystem::space_info s = boost::filesystem::space(p);
@@ -88,7 +88,7 @@ void CancelerService::killCanceledByUser()
     DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
     if (!requestIDs.empty())
     {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Killing transfers canceled by the user" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Killing transfers canceled by the user" << commit;
         killRunningJob(requestIDs);
     }
 }
@@ -100,7 +100,7 @@ void CancelerService::applyQueueTimeouts()
     DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
     if (!jobs.empty())
     {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Applying queue timeouts" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Applying queue timeouts" << commit;
         std::vector<std::string>::const_iterator iter2;
         for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
         {
@@ -117,7 +117,7 @@ void CancelerService::applyActiveTimeouts()
     DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
     if (!collectJobs.empty())
     {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Applying ACTIVE timeouts" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Applying ACTIVE timeouts" << commit;
         std::map<int, std::string>::const_iterator iterCollectJobs;
         for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
         {
@@ -136,7 +136,7 @@ void CancelerService::applyWaitingTimeouts()
     DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
     if (!canceled.empty())
     {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Canceling expired waiting files" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Canceling expired waiting files" << commit;
         for (auto iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
         {
             SingleTrStateInstance::instance().sendStateMessage((*iterCan), -1);
@@ -163,7 +163,7 @@ void CancelerService::runService()
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (DrainMode::instance())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Set to drain mode, no more checking url_copy for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
@@ -229,7 +229,7 @@ void CancelerService::runService()
         }
         catch (const std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "CancelerService caught exception " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught exception " << e.what() << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
@@ -257,7 +257,7 @@ void CancelerService::killRunningJob(const std::vector<int>& pids)
     for (auto iter = pids.begin(); iter != pids.end(); ++iter)
     {
         int pid = *iter;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Canceling and killing running processes: " << pid << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
         kill(pid, SIGTERM);
     }
 }

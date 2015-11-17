@@ -20,7 +20,7 @@
 
 #include "RequestLister.h"
 
-#include "../../../../../common/Exceptions.h"
+#include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "GSoapJobStatus.h"
 
@@ -37,7 +37,6 @@ RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCORE
     cgsi(soap),
     db(*DBSingleton::instance().getDBObjectInstance())
 {
-
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
     checkGivenStates (inGivenStates);
 }

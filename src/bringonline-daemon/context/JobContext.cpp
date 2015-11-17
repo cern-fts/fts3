@@ -78,8 +78,8 @@ void JobContext::removeUrl(const std::string& url)
     urlToIDs.erase(url);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Removed " << url
-    << " from the watch list"
-    << fts3::common::commit;
+        << " from the watch list"
+        << fts3::common::commit;
 }
 
 

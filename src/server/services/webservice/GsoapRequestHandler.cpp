@@ -80,7 +80,7 @@ void GSoapRequestHandler::run(boost::any&)
             char method[16] = {0};
             if (peek_http_method(ctx->socket, method, sizeof(method)))
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "Someone sent a plain HTTP request ("
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Someone sent a plain HTTP request ("
                                                         << method
                                                         << ")"
                                                         << commit; 
@@ -102,7 +102,7 @@ void GSoapRequestHandler::run(boost::any&)
                     // -1 = skip \0
                     if (send(ctx->socket, msg, sizeof(msg) - 1, MSG_NOSIGNAL) < 0)
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Could not set the 400 error code: " << errno << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not set the 400 error code: " << errno << commit;
                         }
                 }
             else
@@ -113,7 +113,7 @@ void GSoapRequestHandler::run(boost::any&)
                             size_t len=2048;
 
                             soap_sprint_fault(ctx, buf, len);
-                            FTS3_COMMON_LOGGER_NEWLOG (ERR) << buf << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << buf << commit;
                             soap_send_fault(ctx);
                         }
                 }
