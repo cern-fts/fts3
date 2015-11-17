@@ -1,2 +1,0 @@
-gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/dteam//fts3tests.1376655990.688240 gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/dteam//fts3tests.1376655990.688256
-gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/dteam//fts3tests.1376655814.268155 gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/dteam//fts3tests.1376655814.268158

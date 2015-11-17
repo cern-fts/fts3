@@ -1,2 +1,0 @@
-JobTerminalStates = ['FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY']
-
