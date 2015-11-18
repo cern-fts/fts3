@@ -377,9 +377,6 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
     // For legacy configurations, point ServerLogDirectory to TransferLogDirectory if not configured
     if (_vars["ServerLogDirectory"].empty()) {
         _vars["ServerLogDirectory"] = _vars["TransferLogDirectory"];
-        std::cerr << "Setting ServerLogDirectory to the same value as TransferLogDirectory" << std::endl;
-        std::cerr << "\t" << _vars["ServerLogDirectory"] << std::endl;
-        std::cerr << "Add ServerLogDirectory to your configuration file to stop seeing this" << std::endl;
     }
 
     return _vars;
