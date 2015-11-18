@@ -18,22 +18,22 @@
  * limitations under the License.
  */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "ui/DnCli.h"
-#include "unittest/testsuite.h"
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-#include <memory>
+#include "cli/ui/DnCli.h"
 
-using namespace fts3::cli;
+using fts3::cli::DnCli;
 
-BOOST_AUTO_TEST_SUITE( cli )
+
+BOOST_AUTO_TEST_SUITE(cli)
 BOOST_AUTO_TEST_SUITE(DnCliTest)
 
-BOOST_AUTO_TEST_CASE (DnCli_short_options)
+
+BOOST_AUTO_TEST_CASE (DnCliShortOptions)
 {
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+    std::vector<const char*> argv {
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -41,23 +41,19 @@ BOOST_AUTO_TEST_CASE (DnCli_short_options)
         "userdn"
     };
 
-    // argument count
-    int ac = 5;
-
-    std::unique_ptr<DnCli> cli (new DnCli);
-    cli->parse(ac, av);
+    DnCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
 
     // all 5 parameters should be available in vm variable
-    BOOST_CHECK(!cli->getUserDn().empty());
+    BOOST_CHECK(!cli.getUserDn().empty());
     // the endpoint shouldn't be empty since it's starting with http
-    BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
+    BOOST_CHECK(cli.getUserDn().compare("userdn") == 0);
 }
 
-BOOST_AUTO_TEST_CASE (DnCli_long_options)
+
+BOOST_AUTO_TEST_CASE (DnCliLongOptions)
 {
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+    std::vector<const char*> argv {
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -65,18 +61,15 @@ BOOST_AUTO_TEST_CASE (DnCli_long_options)
         "userdn"
     };
 
-    int ac = 5;
-
-    std::unique_ptr<DnCli> cli (new DnCli);
-    cli->parse(ac, av);
+    DnCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
 
     // all 5 parameters should be available in vm variable
-    BOOST_CHECK(!cli->getUserDn().empty());
+    BOOST_CHECK(!cli.getUserDn().empty());
     // the endpoint shouldn't be empty since it's starting with http
-    BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
+    BOOST_CHECK(cli.getUserDn().compare("userdn") == 0);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

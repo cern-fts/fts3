@@ -70,8 +70,3 @@ if(CLIENTBUILD)
     add_subdirectory(cli)
     add_subdirectory(delegation-cli)
 endif()
-
-# Unit tests
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	add_subdirectory(unittest)
-endif()

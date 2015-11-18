@@ -39,10 +39,6 @@ target_link_libraries(fts_db_cleaner
     fts_common
     ${Boost_LIBRARIES}
 )
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_db_cleaner boost_unit_test_framework)
-endif()
-
 
 # Artifacts
 install(TARGETS fts_db_cleaner 

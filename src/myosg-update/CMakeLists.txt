@@ -30,10 +30,6 @@ target_link_libraries(fts_myosg_updater
     fts_common
     ${Boost_SYSTEM_LIBRARIES}
 )
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-    target_link_libraries(fts_myosg_updater -lboost_unit_test_framework)
-endif()
-
 
 # Artifacts
 install(TARGETS fts_myosg_updater

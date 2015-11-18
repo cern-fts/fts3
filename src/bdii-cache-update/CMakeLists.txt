@@ -34,10 +34,6 @@ target_link_libraries(fts_bdii_cache_updater
     pugixml
 )
 
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-    target_link_libraries(fts_bdii_cache_updater -lboost_unit_test_framework)
-endif()
-
 # Artifacts
 install(TARGETS fts_bdii_cache_updater 
 	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}

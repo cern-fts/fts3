@@ -18,15 +18,18 @@
  * limitations under the License.
  */
 
-#include "ThreadPool.h"
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-#include <functional>
+#include <boost/any.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+#include "common/ThreadPool.h"
 
-#include "unittest/testsuite.h"
+using fts3::common::ThreadPool;
 
-BOOST_AUTO_TEST_SUITE( common )
+
+BOOST_AUTO_TEST_SUITE(common)
 BOOST_AUTO_TEST_SUITE(ThreadPoolTest)
 
 struct EmptyTask
@@ -34,14 +37,14 @@ struct EmptyTask
     void run(boost::any const &) {}
 };
 
-BOOST_AUTO_TEST_CASE (ThreadPool_size)
-{
-    using namespace fts3::common;
 
+BOOST_AUTO_TEST_CASE (ThreadPoolSize)
+{
     ThreadPool<EmptyTask> tp(10);
     BOOST_CHECK_EQUAL(tp.size(), 10);
     tp.join();
 }
+
 
 struct IdTask
 {
@@ -49,18 +52,16 @@ struct IdTask
 
     void run(boost::any const &)
     {
-//      boost::this_thread::sleep_for(boost::chrono::seconds(1));
-        sleep(1);
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
         id = boost::this_thread::get_id();
     }
 
     boost::thread::id & id;
 };
 
-BOOST_AUTO_TEST_CASE (ThreadPool_start)
-{
-    using namespace fts3::common;
 
+BOOST_AUTO_TEST_CASE (ThreadPoolStart)
+{
     boost::thread::id ids[3];
 
     ThreadPool<IdTask> one_thread(1);
@@ -87,24 +88,23 @@ BOOST_AUTO_TEST_CASE (ThreadPool_start)
     BOOST_CHECK(ids[2] == ids[0] || ids[2] == ids[1]);
 }
 
+
 struct SleepyTask
 {
     SleepyTask(bool & done) : done(done) {}
 
     void run(boost::any const &)
     {
-//      boost::this_thread::sleep_for(boost::chrono::seconds(1));
-        sleep(1);
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
         done = true;
     }
 
     bool & done;
 };
 
-BOOST_AUTO_TEST_CASE (ThreadPool_join)
-{
-    using namespace fts3::common;
 
+BOOST_AUTO_TEST_CASE (ThreadPoolJoin)
+{
     bool done = false;
 
     ThreadPool<SleepyTask> tp(1);
@@ -113,23 +113,26 @@ BOOST_AUTO_TEST_CASE (ThreadPool_join)
     BOOST_CHECK(done);
 }
 
+
 struct InfiniteTask
 {
     void run(boost::any const &)
     {
-        while(true) boost::this_thread::interruption_point();
+        while(true) {
+            boost::this_thread::interruption_point();
+        }
     }
 };
 
-BOOST_AUTO_TEST_CASE (ThreadPool_interrupt)
-{
-    using namespace fts3::common;
 
+BOOST_AUTO_TEST_CASE (ThreadPoolInterrupt)
+{
     ThreadPool<InfiniteTask> tp(1);
     tp.start(new InfiniteTask());
     tp.interrupt();
     tp.join();
 }
+
 
 struct InitTask
 {
@@ -138,21 +141,21 @@ struct InitTask
     void run(boost::any const & data)
     {
         if (data.empty()) return;
-
         std::string d = boost::any_cast<std::string>(data);
-
         str += d;
     }
 
     std::string & str;
 };
 
-void init_func(boost::any & data)
+
+void init_func(boost::any &data)
 {
     data = std::string(".00$");
 }
 
-BOOST_AUTO_TEST_CASE (ThreadPool_init_func)
+
+BOOST_AUTO_TEST_CASE (ThreadPoolInitFunc)
 {
     using namespace fts3::common;
 
@@ -168,7 +171,8 @@ BOOST_AUTO_TEST_CASE (ThreadPool_init_func)
     BOOST_CHECK_EQUAL(ret[1], "100.00$");
 }
 
-struct init_obj
+
+struct InitCallableObject
 {
     void operator() (boost::any & data)
     {
@@ -176,15 +180,16 @@ struct init_obj
     }
 };
 
-BOOST_AUTO_TEST_CASE (ThreadPool_init_obj)
+
+BOOST_AUTO_TEST_CASE (ThreadPoolInitObj)
 {
     using namespace fts3::common;
 
     std::string ret[2] = {"10", "100"};
 
-    init_obj obj;
+    InitCallableObject obj;
 
-    ThreadPool<InitTask, init_obj> tp (2, obj);
+    ThreadPool<InitTask, InitCallableObject> tp (2, obj);
 
     tp.start(new InitTask(ret[0]));
     tp.start(new InitTask(ret[1]));
@@ -200,6 +205,7 @@ void zero_func(boost::any & data)
     data = 0;
 }
 
+
 struct IncTask
 {
     void run(boost::any & data)
@@ -211,7 +217,8 @@ struct IncTask
     }
 };
 
-BOOST_AUTO_TEST_CASE (ThreadPool_reduce)
+
+BOOST_AUTO_TEST_CASE (ThreadPoolReduce)
 {
     using namespace fts3::common;
 
@@ -235,8 +242,6 @@ BOOST_AUTO_TEST_CASE (ThreadPool_reduce)
     BOOST_CHECK_EQUAL(result, 1);
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif // FTS3_COMPILE_WITH_UNITTESTS
-

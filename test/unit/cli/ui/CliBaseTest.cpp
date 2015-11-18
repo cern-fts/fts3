@@ -18,17 +18,14 @@
  * limitations under the License.
  */
 
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "ui/CliBase.h"
-#include "unittest/testsuite.h"
+#include "cli/ui/CliBase.h"
 
-#include <memory>
-#include <sstream>
+using fts3::cli::CliBase;
 
-using namespace fts3::cli;
-
-std::stringstream out; //> use this instead of std::cout
 
 /*
  * Dummy class that inherits after abstract CliBase
@@ -48,15 +45,14 @@ public:
     };
 };
 
-BOOST_AUTO_TEST_SUITE( cli )
+
+BOOST_AUTO_TEST_SUITE(cli)
 BOOST_AUTO_TEST_SUITE(CliBaseTest)
 
-BOOST_AUTO_TEST_CASE (CliBase_short_options)
-{
 
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+BOOST_AUTO_TEST_CASE (CliBaseShortOptions)
+{
+    std::vector<const char*> argv {
         "prog_name",
         "-h",
         "-q",
@@ -66,26 +62,22 @@ BOOST_AUTO_TEST_CASE (CliBase_short_options)
         "-V"
     };
 
-    // argument count
-    int ac = 7;
-
-    std::unique_ptr<CliBaseTester> cli (new CliBaseTester);
-    cli->parse(ac, av);
+    CliBaseTester cli;
+    cli.parse(argv.size(), (char**)argv.data());
 
     // all 5 parameters should be available in vm variable
-    BOOST_CHECK(cli->printHelp());
-    BOOST_CHECK(cli->isQuite());
-    BOOST_CHECK(cli->isVerbose());
+    BOOST_CHECK(cli.printHelp());
+    BOOST_CHECK(cli.isQuiet());
+    BOOST_CHECK(cli.isVerbose());
     // the endpoint shouldn't be empty since it's starting with http
-    BOOST_CHECK(!cli->getService().empty());
+    BOOST_CHECK(!cli.getService().empty());
 }
 
-BOOST_AUTO_TEST_CASE (CliBase_long_options)
-{
 
+BOOST_AUTO_TEST_CASE (CliBaseLongOptions)
+{
     // has to be const otherwise is deprecated
-    char* av[] =
-    {
+    std::vector<const char*> argv {
         "prog_name",
         "--help",
         "--quite",
@@ -95,22 +87,17 @@ BOOST_AUTO_TEST_CASE (CliBase_long_options)
         "--version"
     };
 
-    // argument count
-    int ac = 7;
-
-    std::unique_ptr<CliBaseTester> cli (new CliBaseTester);
-    cli->parse(ac, av);
+    CliBaseTester cli;
+    cli.parse(argv.size(), (char**)argv.data());
 
     // all 5 parameters should be available in vm variable
-    BOOST_CHECK(cli->printHelp());
-    BOOST_CHECK(cli->isQuite());
-    BOOST_CHECK(cli->isVerbose());
+    BOOST_CHECK(cli.printHelp());
+    BOOST_CHECK(cli.isQuiet());
+    BOOST_CHECK(cli.isVerbose());
     // the endpoint should be empty since it's not starting with http, https, httpd
-    BOOST_CHECK(!cli->getService().empty());
+    BOOST_CHECK(!cli.getService().empty());
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
-
-
-#endif // FTS3_COMPILE_WITH_UNITTESTS

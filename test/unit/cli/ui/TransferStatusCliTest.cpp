@@ -18,10 +18,32 @@
  * limitations under the License.
  */
 
-/** \file testsuite.cpp FTS3 test suite runner. */
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-#define BOOST_TEST_MODULE FTS3_APPLICATION_LABEL
-#include "testsuite.h"
+#include "cli/ui/TransferStatusCli.h"
 
-/** Yes, it quite empty... BOOST magic! */
+using fts3::cli::TransferStatusCli;
 
+
+BOOST_AUTO_TEST_SUITE(cli)
+BOOST_AUTO_TEST_SUITE(TransferStatusCliTest)
+
+
+BOOST_AUTO_TEST_CASE (TransferStatusCliOptions)
+{
+    std::vector<const char*> argv {
+        "prog_name",
+        "-l"
+    };
+
+    TransferStatusCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
+
+    BOOST_CHECK(cli.list());
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

@@ -29,9 +29,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "unittest/testsuite.h"
-#endif
 
 namespace fts3
 {
@@ -39,61 +36,6 @@ namespace common
 {
 
 using namespace boost::assign;
-
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-
-// share only configuration
-const std::string share_only_cfg_str =
-    "{"
-    "   \"se\":\" srm://se.cern.ch\","
-    "   \"active\":true,"
-    "   \"in\":[{\"cms\":50},{\"atlas\":50}],"
-    "   \"out\":[{\"cms\":60},{\"atlas\":30},{\"public\":10}]"
-    "}"
-    ;
-// standalone SE configuration
-const std::string standalone_se_cfg_str =
-    "{"
-    "   \"se\" : \"srm://se.cernc.h\","
-    "   \"active\" : true,"
-    "   \"in\" : {"
-    "      \"share\" : [{\"public\" : 5}],"
-    "      \"protocol\" : [{\"nostreams\" : 10}]"
-    "   },"
-    "   \"out\" : {"
-    "      \"share\" : [{\"public\" : 4}],"
-    "      \"protocol\" : \"auto\""
-    "   }"
-    "}"
-    ;
-// SE pair configuration
-const std::string se_pair_cfg_str=
-    "{"
-    "   \"symbolic_name\" : \"se-link\","
-    "   \"source_se\" : \" srm://se1.cern.ch\","
-    "   \"destination_se\" : \" srm://se2.cern.ch\","
-    "   \"share\" : [{\"cms\" : 1}, {\"atlas\" : 2}, {\"public\" : 3}],"
-    "   \"protocol\" : [{\"nostreams\" : 12}, {\"urlcopy_tx_to\" : 3600}],"
-    "   \"active\":true"
-    "}"
-    ;
-
-const std::string standalone_gr_cfg_str =
-    "{"
-    "\"group\" : \"gr1\","
-    "\"members\" : [\" srm://se1.cern.ch\", \" srm://se2.cern.ch\"],"
-    "\"active\" : true,"
-    "\"in\" : {"
-    "\"share\" : [{\"cms\" : 12}, {\"atlas\" : 12}],"
-    "\"protocol\" : [{\"nostreams\" : 10}, {\"urlcopy_tx_to\" : 3600}]"
-    "},\"out\" : {"
-    "\"share\" : [{\"cms\" : 10}, {\"atlas\" : 10}],"
-    "\"protocol\" : [{\"nostreams\" : 10}, {\"urlcopy_tx_to\" : 3600}]"
-    "}"
-    "}"
-    ;
-
-#endif
 
 
 const std::map<std::string, std::set <std::string> > CfgParser::standaloneSeCfgTokens = CfgParser::initStandaloneSeCfgTokens();
@@ -315,35 +257,6 @@ CfgParser::CfgParser(std::string configuration)
     type = NOT_A_CFG;
 }
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-BOOST_AUTO_TEST_SUITE(common)
-BOOST_AUTO_TEST_SUITE(CfgParserTest)
-
-BOOST_AUTO_TEST_CASE (constructor)
-{
-    // the number of '{' and '}' must be equal
-    BOOST_CHECK_THROW(CfgParser p("{{{}}"), UserError);
-    // it must be in valid json format
-    BOOST_CHECK_THROW(CfgParser p("{lalala}"), UserError);
-    // it must not use invalid tokens
-    BOOST_CHECK_THROW(CfgParser p("{\"invalid token\" : 8}"), UserError);
-    // try parsing share only config
-    CfgParser share_only_cfg (share_only_cfg_str);
-    BOOST_CHECK_EQUAL(share_only_cfg.getCfgType(), CfgParser::SHARE_ONLY_CFG);
-    // try parsing standalone se config
-    CfgParser standalone_se_cfg(standalone_se_cfg_str);
-    BOOST_CHECK_EQUAL(standalone_se_cfg.getCfgType(), CfgParser::STANDALONE_SE_CFG);
-    // try parsing se pair config
-    CfgParser se_pair_cfg(se_pair_cfg_str);
-    BOOST_CHECK_EQUAL(se_pair_cfg.getCfgType(), CfgParser::SE_PAIR_CFG);
-    // try parsing standalone group configuration
-    CfgParser standalone_gr_cfg(standalone_gr_cfg_str);
-    BOOST_CHECK_EQUAL(standalone_gr_cfg.getCfgType(), CfgParser::STANDALONE_GR_CFG);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 CfgParser::~CfgParser()
 {
@@ -420,23 +333,6 @@ boost::optional<std::string> CfgParser::get_opt(std::string path)
     return v;
 }
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-BOOST_AUTO_TEST_SUITE( common )
-BOOST_AUTO_TEST_SUITE(CfgParserTest)
-
-BOOST_AUTO_TEST_CASE (CfgParser_get_opt)
-{
-    CfgParser parser(standalone_se_cfg_str);
-    optional<std::string> val = parser.get_opt("se");
-
-    BOOST_CHECK(val.is_initialized());
-    BOOST_CHECK_EQUAL(*val, "srm://se.cernc.h");
-    BOOST_CHECK(!parser.get_opt("nanana").is_initialized());
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 bool CfgParser::isAuto(std::string path)
 {
@@ -462,21 +358,6 @@ bool CfgParser::isAuto(std::string path)
     return v == auto_value;
 }
 
-
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-BOOST_AUTO_TEST_SUITE( common )
-BOOST_AUTO_TEST_SUITE(CfgParserTest)
-
-BOOST_AUTO_TEST_CASE (CfgParser_isAuto)
-{
-    CfgParser parser(standalone_se_cfg_str);
-    BOOST_CHECK(!parser.isAuto("in.protocol"));
-    BOOST_CHECK(parser.isAuto("out.protocol"));
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-#endif // FTS3_COMPILE_WITH_UNITTESTS
 }
 }
 

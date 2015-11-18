@@ -21,8 +21,8 @@
 #ifndef RESPONSEPARSER_H_
 #define RESPONSEPARSER_H_
 
-#include "JobStatus.h"
-#include "Snapshot.h"
+#include "../JobStatus.h"
+#include "../Snapshot.h"
 
 #include <istream>
 #include <string>

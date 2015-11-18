@@ -18,22 +18,22 @@
  * limitations under the License.
  */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "ui/ListTransferCli.h"
-#include "unittest/testsuite.h"
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-using namespace fts3::cli;
+#include "cli/ui/ListTransferCli.h"
+
+using fts3::cli::ListTransferCli;
 
 
-BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(cli)
 BOOST_AUTO_TEST_SUITE(ListTransferCliTest)
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_vo_short_option)
-{
 
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+BOOST_AUTO_TEST_CASE (ListTransferCliVoShortOption)
+{
+    std::vector<const char*> argv {
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -41,20 +41,15 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_vo_short_option)
         "vo"
     };
 
-    // argument count
-    int ac = 5;
-
-    std::unique_ptr<ListTransferCli> cli (new ListTransferCli);
-    cli->parse(ac, av);
-    BOOST_CHECK_EQUAL(cli->getVoName(), "vo");
+    ListTransferCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
+    BOOST_CHECK_EQUAL(cli.getVoName(), "vo");
 }
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_vo_long_option)
-{
 
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+BOOST_AUTO_TEST_CASE (ListTransferCliVoLongOption)
+{
+    std::vector<const char*> argv {
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -62,21 +57,16 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_vo_long_option)
         "vo"
     };
 
-    // argument count
-    int ac = 5;
+    ListTransferCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
 
-    std::unique_ptr<ListTransferCli> cli (new ListTransferCli);
-    cli->parse(ac, av);
-
-    BOOST_CHECK(cli->getVoName() == "vo");
+    BOOST_CHECK(cli.getVoName() == "vo");
 }
+
 
 BOOST_AUTO_TEST_CASE (ListTransferCli_Status)
 {
-
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+    std::vector<const char*> argv {
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -88,14 +78,11 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status)
         "status6"
     };
 
-    // argument count
-    int ac = 9;
+    ListTransferCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
+    cli.validate();
 
-    std::unique_ptr<ListTransferCli> cli (new ListTransferCli);
-    cli->parse(ac, av);
-    cli->validate();
-
-    const std::vector<std::string>& statuses = cli->getStatusArray();
+    const std::vector<std::string>& statuses = cli.getStatusArray();
     BOOST_CHECK(statuses.size() == 6);
     BOOST_CHECK(statuses[0] == "status1");
     BOOST_CHECK(statuses[1] == "status2");
@@ -105,7 +92,6 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status)
     BOOST_CHECK(statuses[5] == "status6");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

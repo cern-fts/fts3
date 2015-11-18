@@ -23,12 +23,8 @@
 #include <boost/program_options.hpp>
 
 #include "common/Exceptions.h"
-#include "serverconfigreader.h"
+#include "ServerConfigReader.h"
 #include "ServerConfig.h"
-
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "unittest/testsuite.h"
-#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 
 using namespace fts3::config;
@@ -66,75 +62,6 @@ const std::string& ServerConfig::_get_str(const std::string& aVariable)
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-
-BOOST_AUTO_TEST_SUITE( config )
-BOOST_AUTO_TEST_SUITE(ServerConfigSuite)
-
-bool Config_ServerConfig_get_str_CheckMessage (const UserError&)
-{
-    return true;
-}
-
-/* ---------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (ServerConfig_get_str, ServerConfig)
-{
-    const std::string f_key = "key";
-    const std::string f_val = "value";
-    _vars[f_key] = f_val;
-
-    // Test if key can be found
-    std::string val = _get_str (f_key);
-    BOOST_CHECK_EQUAL (val, f_val);
-
-    // Test if key not found.
-    BOOST_CHECK_EXCEPTION
-    (
-        val = _get_str ("notkey"),
-        UserError,
-        Config_ServerConfig_get_str_CheckMessage
-    );
-}
-
-/* ---------------------------------------------------------------------- */
-
-struct Mock_ServerConfigReader
-{
-    typedef std::map<std::string, std::string> type_vars;
-
-    type_vars operator () (int, char**)
-    {
-        type_vars ret;
-        ret["key"] = "val";
-        return ret;
-    }
-};
-
-/* ---------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (ServerConfig_read, ServerConfig)
-{
-    _read<Mock_ServerConfigReader> (0, NULL);
-    BOOST_CHECK_EQUAL (_vars["key"], "val");
-}
-
-/* ---------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (ServerConfig_get, ServerConfig)
-{
-    _vars["key"] = "10";
-    int val = get<int> ("key");
-    BOOST_CHECK_EQUAL (val, 10);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-
-#endif // FTS3_COMPILE_WITH_UNITTESTS
-
-/* ---------------------------------------------------------------------- */
-
 void ServerConfig::read(int argc, char** argv)
 {
     _read<ServerConfigReader> (argc, argv);
@@ -150,24 +77,6 @@ time_t ServerConfig::getReadTime()
     return readTime;
 }
 
-/* ---------------------------------------------------------------------- */
-
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-
-void ServerConfig::read
-(
-    const std::string& aFileName
-)
-{
-    static const int argc = 2;
-    char *argv[argc];
-    argv[0] = const_cast<char*> ("executable");
-    std::string confpar = std::string("--configfile=") + aFileName;
-    argv[1] = const_cast<char*> (confpar.c_str());
-    read (argc, argv);
-}
-
-#endif // FTS3_COMPILE_WITH_UNITTEST
 
 void ServerConfig::waitIfReading()
 {

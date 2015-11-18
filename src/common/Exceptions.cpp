@@ -20,13 +20,8 @@
 
 /** \file error.cpp Implementation of FTS3 error handling component. */
 
-#include <string.h>
 #include "Exceptions.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "unittest/testsuite.h"
-#include <boost/algorithm/string/find.hpp>
-#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 namespace fts3 {
 namespace common {

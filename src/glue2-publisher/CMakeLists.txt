@@ -35,9 +35,6 @@ target_link_libraries(fts_info_publisher
     fts_common
     ${Boost_LIBRARIES}
 )
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-    target_link_libraries(fts_info_publisher -lboost_unit_test_framework)
-endif()
 
 # Artifacts
 install(TARGETS fts_info_publisher

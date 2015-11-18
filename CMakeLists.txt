@@ -60,6 +60,10 @@ cmake_dependent_option(
     CLIENTBUILD "Build the client libraries, tools and bindings" OFF
     "NOT ALLBUILD" ON
 )
+cmake_dependent_option(
+    TESTBUILD "Build the tests" OFF
+    "NOT ALLBUILD" ON
+)
 
 # Definitions
 add_definitions(-D_LARGEFILE64_SOURCE)
@@ -112,5 +116,9 @@ link_directories (${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIR})
 
 # Subdirectories
-add_subdirectory(test)
 add_subdirectory(src)
+
+if (TESTBUILD)
+    include (CTest)
+    add_subdirectory (test)
+endif (TESTBUILD)

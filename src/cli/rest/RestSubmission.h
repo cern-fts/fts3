@@ -21,7 +21,7 @@
 #ifndef RESTSUBMISSION_H_
 #define RESTSUBMISSION_H_
 
-#include "File.h"
+#include "../File.h"
 
 #include <vector>
 #include <string>

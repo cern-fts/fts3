@@ -53,10 +53,6 @@ set(fts_msg_bulk_SOURCES
 )
 
 add_executable(fts_msg_bulk ${fts_msg_bulk_SOURCES})
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_msg_bulk boost_unit_test_framework)
-endif()
-
 target_link_libraries(fts_msg_bulk
     ${ACTIVEMQCPP_LIBRARIES}
     fts_common

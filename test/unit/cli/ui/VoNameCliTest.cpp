@@ -18,38 +18,32 @@
  * limitations under the License.
  */
 
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "ui/VoNameCli.h"
-#include "unittest/testsuite.h"
+#include "cli/ui/VoNameCli.h"
 
-#include <iostream>
-#include <memory>
+using fts3::cli::VoNameCli;
 
-using namespace fts3::cli;
 
 BOOST_AUTO_TEST_SUITE( cli )
 BOOST_AUTO_TEST_SUITE(VONameCliTest)
 
+
 BOOST_AUTO_TEST_CASE (VONameCli_options)
 {
-
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
+    std::vector<const char*> argv {
         "prog_name",
         "voname"
     };
 
-    int ac = 2;
+    VoNameCli cli;
+    cli.parse(argv.size(), (char**)argv.data());
 
-    std::unique_ptr<VoNameCli> cli(new VoNameCli);
-    cli->parse(ac, av);
-
-    BOOST_CHECK(cli->getVoName() == "voname");
+    BOOST_CHECK(cli.getVoName() == "voname");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

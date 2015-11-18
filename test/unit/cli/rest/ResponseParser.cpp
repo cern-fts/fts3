@@ -18,36 +18,31 @@
  * limitations under the License.
  */
 
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/included/unit_test.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
-#include "ui/TransferStatusCli.h"
-#include "unittest/testsuite.h"
-#include <memory>
+#include "cli/rest/ResponseParser.h"
 
-using namespace fts3::cli;
+#include <sstream>
 
-BOOST_AUTO_TEST_SUITE( cli )
-BOOST_AUTO_TEST_SUITE(TransferStatusCliTest)
+using fts3::cli::ResponseParser;
 
-BOOST_AUTO_TEST_CASE (TransferStatusCli_options)
+
+BOOST_AUTO_TEST_SUITE(cli)
+BOOST_AUTO_TEST_SUITE(ResponseParserTest)
+
+BOOST_AUTO_TEST_CASE (ResponseParserGet)
 {
+    std::stringstream resp;
 
-    // has to be const otherwise is deprecated
-    char* av[] =
-    {
-        "prog_name",
-        "-l"
-    };
+    resp << "{\"job_state\": \"FAILED\"}";
 
-    int ac = 2;
-
-    std::unique_ptr<TransferStatusCli> cli (new TransferStatusCli);
-    cli->parse(ac, av);
-
-    BOOST_CHECK(cli->list());
+    ResponseParser parser (resp);
+    BOOST_CHECK_EQUAL(parser.get("job_state"), "FAILED");
+    BOOST_CHECK_THROW(parser.get("job_stateeee"), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

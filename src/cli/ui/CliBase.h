@@ -21,8 +21,8 @@
 #ifndef CLIBASE_H_
 #define CLIBASE_H_
 
-#include "ServiceAdapter.h"
-#include "MsgPrinter.h"
+#include "../ServiceAdapter.h"
+#include "../MsgPrinter.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>

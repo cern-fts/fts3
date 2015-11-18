@@ -47,10 +47,6 @@ target_link_libraries(fts_bringonline
     fts_proxy
 )
 
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_bringonline boost_unit_test_framework)
-endif()
-
 # Install artifacts
 install(
     TARGETS    fts_bringonline 

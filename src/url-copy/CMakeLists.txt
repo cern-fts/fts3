@@ -47,10 +47,6 @@ target_link_libraries(fts_url_copy
     ${GLIB2_LIBRARIES}
     ${GFAL2_LIBRARIES}
 )
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_url_copy boost_unit_test_framework)
-endif()
-
 
 # Install artifacts
 install(TARGETS fts_url_copy 
