@@ -20,14 +20,5 @@ find_package (Boost COMPONENTS unit_test_framework)
 include_directories (${Boost_INCLUDE_DIRS})
 include_directories (${CMAKE_SOURCE_DIR}/src)
 
-# Shortcut to compile and declare a test in one shot
-# Usage: define_test (mytest common) => add a test with the source mytest.cpp linking against the common library
-#        define_test (mytest common helper.cpp) => similar, but compiling also helper.cpp
-function (define_test name link)
-    add_executable (${name} "${name}.cpp" ${ARGN})
-    target_link_libraries (${name} ${link} ${Boost_LIBRARIES})
-    add_test (${name} ${name})
-endfunction(define_test)
-
 # Tests
 add_subdirectory (unit)

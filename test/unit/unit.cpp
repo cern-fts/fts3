@@ -1,9 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
- *
- * Copyright (c) Members of the EMI Collaboration. 2010-2013
- *  See  http://www.eu-emi.eu/partners for details on the copyright
- *  holders.
+ * Copyright (c) CERN 2015
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,30 +14,5 @@
  * limitations under the License.
  */
 
+#define BOOST_TEST_MODULE "C++ Unit Tests for FTS3"
 #include <boost/test/included/unit_test.hpp>
-
-#include "cli/ui/VoNameCli.h"
-
-using fts3::cli::VoNameCli;
-
-
-BOOST_AUTO_TEST_SUITE( cli )
-BOOST_AUTO_TEST_SUITE(VONameCliTest)
-
-
-BOOST_AUTO_TEST_CASE (VONameCli_options)
-{
-    std::vector<const char*> argv {
-        "prog_name",
-        "voname"
-    };
-
-    VoNameCli cli;
-    cli.parse(argv.size(), (char**)argv.data());
-
-    BOOST_CHECK(cli.getVoName() == "voname");
-}
-
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()

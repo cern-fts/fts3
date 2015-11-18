@@ -16,6 +16,30 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+add_definitions ("-DBOOST_TEST_DYN_LINK")
+
+set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
+
+# Shortcut to compile and declare a test in one shot
+# Usage: define_test (mytest common) => add a test with the source mytest.cpp linking against the common library
+#        define_test (mytest common helper.cpp) => similar, but compiling also helper.cpp
+function (define_test name link)
+    add_library (${name} SHARED "${name}.cpp" ${ARGN})
+    target_link_libraries (${name} ${link})
+    list (APPEND UNIT_TEST_LIST ${name})
+    set (UNIT_TEST_LIST "${UNIT_TEST_LIST}" CACHE INTERNAL "Unit tests" FORCE)
+endfunction(define_test)
+
+# Build individual unit tests
 add_subdirectory (cli)
 add_subdirectory (common)
 add_subdirectory (config)
+
+# Build THE test binary
+message ("Found tests: ${UNIT_TEST_LIST}")
+add_executable (unit unit.cpp)
+target_link_libraries(unit
+    ${Boost_LIBRARIES}
+    ${UNIT_TEST_LIST}
+)
+add_test (unit unit)
