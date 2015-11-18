@@ -237,6 +237,7 @@ cd build
 %if %{?rhel}%{!?rhel:0} >= 6
     %cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
         -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
+        -DTESTBUILD=ON \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_INSTALL_PREFIX='' \
 %if %systemd
@@ -551,7 +552,15 @@ fi
 %{_datadir}/fts-oracle
 }
 
+%check
+export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
+./build/test/unit/unit --log_level=test_suite --report_format=xml --report_level=detailed 2> tests.xml
+
+
 %changelog
+* Wed Nov 18 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.5.0-1
+- Add check
+
 * Tue Sep 22 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-3
 - Supress -devel rpm
 

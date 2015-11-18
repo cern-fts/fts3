@@ -26,6 +26,10 @@ set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
 function (define_test name link)
     add_library (${name} SHARED "${name}.cpp" ${ARGN})
     target_link_libraries (${name} ${link})
+    set_target_properties(${name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test/unit
+    )
+
     list (APPEND UNIT_TEST_LIST ${name})
     set (UNIT_TEST_LIST "${UNIT_TEST_LIST}" CACHE INTERNAL "Unit tests" FORCE)
 endfunction(define_test)
