@@ -554,7 +554,7 @@ fi
 
 %check
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
-./build/test/unit/unit --log_level=test_suite --report_format=xml --report_level=detailed 2> /tmp/tests.xml
+./build/test/unit/unit --log_level=all --log_format=XML --report_level=no > /tmp/tests.xml
 
 
 %changelog
