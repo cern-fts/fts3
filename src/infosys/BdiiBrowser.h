@@ -222,29 +222,6 @@ private:
     /// the mutex preventing concurrent browsing and reconnecting
     boost::shared_mutex qm;
 
-    /// conditional variable preventing concurrent browsing and reconnecting
-//    condition_variable qv;
-
-    /**
-     * Blocks until all threads finish browsing
-     */
-//    void waitIfBrowsing();
-
-    /**
-     * Notify all threads that want to do browsing after reconnection happened
-     */
-//    void notifyBrowsers();
-
-    /**
-     * Blocks until the reconnection is finished
-     */
-//    void waitIfReconnecting();
-
-    /**
-     * Notify all threads that want to perform reconnection after all the browsing is finished
-     */
-//    void notifyReconnector();
-
     /// not used for now
     static const char* ATTR_STATUS;
     /// not used for now
@@ -266,10 +243,6 @@ private:
         memset(&timeout, 0, sizeof(timeout));
         memset(&search_timeout, 0, sizeof(search_timeout));
     };
-    /// not implemented
-    BdiiBrowser(BdiiBrowser const&);
-    /// not implemented
-    BdiiBrowser& operator=(BdiiBrowser const&);
 
     /// maximum number of reconnection tries
     static const int max_reconnect = 3;

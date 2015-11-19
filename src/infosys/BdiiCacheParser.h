@@ -54,12 +54,6 @@ private:
     /// Constructor
     BdiiCacheParser(std::string path = bdii_cache_path);
 
-    /// not implemented
-    BdiiCacheParser(BdiiCacheParser const&);
-
-    /// not implemented
-    BdiiCacheParser& operator=(BdiiCacheParser const&);
-
     static std::string xpath_entry(std::string se);
 
     /// the xml document that is being parsed

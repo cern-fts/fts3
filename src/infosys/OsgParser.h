@@ -67,12 +67,6 @@ private:
     /// Constructor
     OsgParser(std::string path = myosg_path);
 
-    /// not implemented
-    OsgParser(OsgParser const&);
-
-    /// not implemented
-    OsgParser& operator=(OsgParser const&);
-
     /// Gets a property for the given SE name
     /// @param fqdn - fully qualified name of the SE
     /// @param property - the property of interest
