@@ -30,10 +30,10 @@ BOOST_AUTO_TEST_SUITE(cli)
 BOOST_AUTO_TEST_SUITE(SetCfgCliTest)
 
 
-BOOST_AUTO_TEST_CASE (SetCfgCliBadLexicalCast)
+BOOST_AUTO_TEST_CASE (SetCfgCliOverflow)
 {
-    // test for integer overflow
-    std::vector<std::string> argv {
+    SetCfgCli cli;
+    std::vector<std::string> argv{
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -41,12 +41,13 @@ BOOST_AUTO_TEST_CASE (SetCfgCliBadLexicalCast)
         "srm://se",
         "11111111111111111111111111111111111111111111111111111111111111111111111111"
     };
-
-
-    SetCfgCli cli;
     BOOST_CHECK_THROW(cli.parse(argv.size(), (char**)argv.data()), bad_option);
+}
 
-    // test for non-numerical characters
+
+BOOST_AUTO_TEST_CASE (SetCfgCliBadLexicalCast)
+{
+    SetCfgCli cli;
     std::vector<std::string> argv2 {
         "prog_name",
         "-s",
@@ -55,7 +56,6 @@ BOOST_AUTO_TEST_CASE (SetCfgCliBadLexicalCast)
         "srm://se",
         "dadadad"
     };
-
     BOOST_CHECK_THROW(cli.parse(argv2.size(), (char**)argv2.data()), bad_option);
 }
 
