@@ -26,16 +26,11 @@
 using namespace std;
 
 Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
-    source_se(""), dest_se(""),
-    msg(NULL), msg_updater(NULL), msg_log(NULL),
     isTerminalSent(false), multiple(false)
 {
-    msg = new struct message();
-    memset(msg, 0, sizeof(message));
-    msg_updater = new struct message_updater();
-    memset(msg_updater, 0, sizeof(message_updater));
-    msg_log = new struct message_log();
-    memset(msg_log, 0, sizeof(message_log));
+    memset(&msg, 0, sizeof(message));
+    memset(&msg_updater, 0, sizeof(message_updater));
+    memset(&msg_log, 0, sizeof(message_log));
 
     char chname[MAXHOSTNAMELEN] = {0};
     gethostname(chname, sizeof(chname));
@@ -45,9 +40,6 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
 
 Reporter::~Reporter()
 {
-    delete msg;
-    delete msg_updater;
-    delete msg_log;
 }
 
 
@@ -78,9 +70,9 @@ void Reporter::sendMessage(double throughput, bool retry,
                            const string &transfer_status, const string &transfer_message,
                            double timeInSecs, off_t filesize)
 {
-    msg->file_id = file_id;
-    g_strlcpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
-    g_strlcpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
+    msg.file_id = file_id;
+    g_strlcpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+    g_strlcpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
 
     if (transfer_message.length() > 0) {
         std::string trmsg(transfer_message);
@@ -88,27 +80,27 @@ void Reporter::sendMessage(double throughput, bool retry,
             trmsg = trmsg.substr(0, 1023);
         }
         trmsg = ReplaceNonPrintableCharacters(trmsg);
-        g_strlcpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
+        g_strlcpy(msg.transfer_message, trmsg.c_str(), sizeof(msg.transfer_message));
     }
     else {
-        msg->transfer_message[0] = '\0';
+        msg.transfer_message[0] = '\0';
     }
 
-    msg->process_id = (int) getpid();
-    msg->timeInSecs = timeInSecs;
-    msg->filesize = (double) filesize;
-    msg->nostreams = nostreams;
-    msg->timeout = timeout;
-    msg->buffersize = buffersize;
-    g_strlcpy(msg->source_se, source_se.c_str(), sizeof(msg->source_se));
-    g_strlcpy(msg->dest_se, dest_se.c_str(), sizeof(msg->dest_se));
-    msg->timestamp = milliseconds_since_epoch();
-    msg->retry = retry;
-    msg->throughput = throughput;
+    msg.process_id = (int) getpid();
+    msg.timeInSecs = timeInSecs;
+    msg.filesize = (double) filesize;
+    msg.nostreams = nostreams;
+    msg.timeout = timeout;
+    msg.buffersize = buffersize;
+    g_strlcpy(msg.source_se, source_se.c_str(), sizeof(msg.source_se));
+    g_strlcpy(msg.dest_se, dest_se.c_str(), sizeof(msg.dest_se));
+    msg.timestamp = milliseconds_since_epoch();
+    msg.retry = retry;
+    msg.throughput = throughput;
 
     // Try twice
-    if (runProducerStatus(*msg) != 0) {
-        runProducerStatus(*msg);
+    if (runProducerStatus(msg) != 0) {
+        runProducerStatus(msg);
     }
 }
 
@@ -138,22 +130,22 @@ void Reporter::sendPing(const std::string &job_id, unsigned file_id,
     std::string source_surl, std::string dest_surl, std::string source_turl,
     std::string dest_turl, const std::string &transfer_status)
 {
-    g_strlcpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
-    msg_updater->file_id = file_id;
-    msg_updater->process_id = (int) getpid();
-    msg_updater->timestamp = milliseconds_since_epoch();
-    msg_updater->throughput = throughput;
-    msg_updater->transferred = (double) transferred;
+    g_strlcpy(msg_updater.job_id, job_id.c_str(), sizeof(msg_updater.job_id));
+    msg_updater.file_id = file_id;
+    msg_updater.process_id = (int) getpid();
+    msg_updater.timestamp = milliseconds_since_epoch();
+    msg_updater.throughput = throughput;
+    msg_updater.transferred = (double) transferred;
 
-    g_strlcpy(msg_updater->source_surl, source_surl.c_str(), sizeof(msg_updater->source_surl));
-    g_strlcpy(msg_updater->dest_surl, dest_surl.c_str(), sizeof(msg_updater->dest_surl));
-    g_strlcpy(msg_updater->source_turl, source_turl.c_str(), sizeof(msg_updater->source_turl));
-    g_strlcpy(msg_updater->dest_turl, dest_turl.c_str(), sizeof(msg_updater->dest_turl));
-    g_strlcpy(msg_updater->transfer_status, transfer_status.c_str(), sizeof(msg_updater->transfer_status));
+    g_strlcpy(msg_updater.source_surl, source_surl.c_str(), sizeof(msg_updater.source_surl));
+    g_strlcpy(msg_updater.dest_surl, dest_surl.c_str(), sizeof(msg_updater.dest_surl));
+    g_strlcpy(msg_updater.source_turl, source_turl.c_str(), sizeof(msg_updater.source_turl));
+    g_strlcpy(msg_updater.dest_turl, dest_turl.c_str(), sizeof(msg_updater.dest_turl));
+    g_strlcpy(msg_updater.transfer_status, transfer_status.c_str(), sizeof(msg_updater.transfer_status));
 
     // Try twice
-    if (runProducerStall(*msg_updater) != 0) {
-        runProducerStall(*msg_updater);
+    if (runProducerStall(msg_updater) != 0) {
+        runProducerStall(msg_updater);
     }
 }
 
@@ -161,14 +153,14 @@ void Reporter::sendPing(const std::string &job_id, unsigned file_id,
 void Reporter::sendLog(const std::string &job_id, unsigned file_id,
     const std::string &logFileName, bool debug)
 {
-    msg_log->file_id = file_id;
-    g_strlcpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
-    g_strlcpy(msg_log->filePath, logFileName.c_str(), sizeof(msg_log->filePath));
-    g_strlcpy(msg_log->host, hostname.c_str(), sizeof(msg_log->host));
-    msg_log->debugFile = debug;
-    msg_log->timestamp = milliseconds_since_epoch();
+    msg_log.file_id = file_id;
+    g_strlcpy(msg_log.job_id, job_id.c_str(), sizeof(msg_log.job_id));
+    g_strlcpy(msg_log.filePath, logFileName.c_str(), sizeof(msg_log.filePath));
+    g_strlcpy(msg_log.host, hostname.c_str(), sizeof(msg_log.host));
+    msg_log.debugFile = debug;
+    msg_log.timestamp = milliseconds_since_epoch();
     // Try twice
-    if (runProducerLog(*msg_log) != 0) {
-        runProducerLog(*msg_log);
+    if (runProducerLog(msg_log) != 0) {
+        runProducerLog(msg_log);
     }
 }
