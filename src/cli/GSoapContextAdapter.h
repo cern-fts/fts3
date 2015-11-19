@@ -423,10 +423,6 @@ private:
 
     void clean();
 
-    static void signalCallback(int signum);
-    static std::vector<Cleaner> cleaners;
-
-    ///
     soap* ctx;
 
     ///@{

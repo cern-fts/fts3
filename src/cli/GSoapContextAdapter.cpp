@@ -51,8 +51,6 @@ namespace fts3
 namespace cli
 {
 
-std::vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
-
 static std::string strFromStrPtr(const std::string* ptr)
 {
     if (ptr)
@@ -93,18 +91,6 @@ GSoapContextAdapter::GSoapContextAdapter(const std::string& endpoint, const std:
 
     // set the namespaces
     if (soap_set_namespaces(ctx, fts3_namespaces)) throw gsoap_error(ctx);
-
-    cleaners.push_back(Cleaner(this));
-    signal(SIGINT, signalCallback);
-    signal(SIGQUIT, signalCallback);
-    signal(SIGILL, signalCallback);
-    signal(SIGABRT, signalCallback);
-    signal(SIGBUS, signalCallback);
-    signal(SIGFPE, signalCallback);
-    signal(SIGSEGV, signalCallback);
-    signal(SIGPIPE, signalCallback);
-    signal(SIGTERM, signalCallback);
-    signal(SIGSTOP, signalCallback);
 }
 
 void GSoapContextAdapter::clean()
@@ -773,24 +759,6 @@ void GSoapContextAdapter::setInterfaceVersion(std::string interface)
 
     s = *it;
     patch = boost::lexical_cast<long>(s);
-}
-
-void GSoapContextAdapter::signalCallback(int signum)
-{
-    // check if it is the right signal
-    if (signum != SIGINT &&
-            signum != SIGQUIT &&
-            signum != SIGILL &&
-            signum != SIGABRT &&
-            signum != SIGBUS &&
-            signum != SIGFPE &&
-            signum != SIGSEGV &&
-            signum != SIGPIPE &&
-            signum != SIGTERM &&
-            signum != SIGSTOP) exit(signum);
-    // call all the cleaners
-    for_each(cleaners.begin(), cleaners.end(), boost::lambda::_1);
-    exit(signum);
 }
 
 }
