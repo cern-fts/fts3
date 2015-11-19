@@ -31,20 +31,21 @@ const std::string BdiiCacheParser::bdii_cache_path = "/var/lib/fts3/bdii_cache.x
 
 BdiiCacheParser::BdiiCacheParser(std::string path)
 {
-
     doc.load_file(path.c_str());
 }
 
+
 BdiiCacheParser::~BdiiCacheParser()
 {
-
 }
+
 
 std::string BdiiCacheParser::getSiteName(std::string se)
 {
     xpath_node node = doc.select_single_node(xpath_entry(se).c_str());
     return node.node().child_value("sitename");
 }
+
 
 std::string BdiiCacheParser::xpath_entry(std::string se)
 {

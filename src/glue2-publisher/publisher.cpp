@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     try {
         return DoPublisher(argc, argv);
     }
-    catch (const std::exception& e) {
+    catch (const std::exception &e) {
         std::cerr << "Publisher failed: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }

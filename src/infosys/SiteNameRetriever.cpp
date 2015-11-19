@@ -69,50 +69,45 @@ SiteNameRetriever::~SiteNameRetriever()
 
 }
 
+
 std::string SiteNameRetriever::getFromBdii(std::string se)
 {
-
-    BdiiBrowser& bdii = BdiiBrowser::instance();
+    BdiiBrowser &bdii = BdiiBrowser::instance();
 
     // first check glue2
-    std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
-                BdiiBrowser::GLUE2,
-                FIND_SE_SITE_GLUE2(se),
-                FIND_SE_SITE_ATTR_GLUE2
-            );
+    std::list<std::map<std::string, std::list<std::string> > > rs = bdii.browse<std::list<std::string> >(
+        BdiiBrowser::GLUE2,
+        FIND_SE_SITE_GLUE2(se),
+        FIND_SE_SITE_ATTR_GLUE2
+    );
 
-    if (!rs.empty())
-        {
-            if (!rs.front()[ATTR_GLUE2_SITE].empty())
-                {
-                    std::string str =  rs.front()[ATTR_GLUE2_SITE].front();
-                    return str;
-                }
+    if (!rs.empty()) {
+        if (!rs.front()[ATTR_GLUE2_SITE].empty()) {
+            std::string str = rs.front()[ATTR_GLUE2_SITE].front();
+            return str;
         }
+    }
 
     // then check glue1
-    rs = bdii.browse< std::list<std::string> >(
-             BdiiBrowser::GLUE1,
-             FIND_SE_SITE_GLUE1(se),
-             FIND_SE_SITE_ATTR_GLUE1
-         );
+    rs = bdii.browse<std::list<std::string> >(
+        BdiiBrowser::GLUE1,
+        FIND_SE_SITE_GLUE1(se),
+        FIND_SE_SITE_ATTR_GLUE1
+    );
 
-    if (rs.empty())
-        {
-            if (bdii.checkIfInUse(BdiiBrowser::GLUE2) || bdii.checkIfInUse(BdiiBrowser::GLUE1))
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "SE: " << se << " has not been found in the BDII" << commit;
-                }
-            return std::string();
+    if (rs.empty()) {
+        if (bdii.checkIfInUse(BdiiBrowser::GLUE2) || bdii.checkIfInUse(BdiiBrowser::GLUE1)) {
+            FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "SE: " << se << " has not been found in the BDII" << commit;
         }
+        return std::string();
+    }
 
     std::list<std::string> values = rs.front()[ATTR_GLUE1_LINK];
     std::string site = BdiiBrowser::parseForeingKey(values, ATTR_GLUE1_SITE);
 
-    if (site.empty() && !rs.front()[ATTR_GLUE1_HOSTINGORG].empty())
-        {
-            site = rs.front()[ATTR_GLUE1_HOSTINGORG].front();
-        }
+    if (site.empty() && !rs.front()[ATTR_GLUE1_HOSTINGORG].empty()) {
+        site = rs.front()[ATTR_GLUE1_HOSTINGORG].front();
+    }
 
     return site;
 }
@@ -128,49 +123,45 @@ std::string SiteNameRetriever::getSiteName(std::string se)
 
     // check if the se is in cache
     std::map<std::string, std::string>::iterator it = seToSite.find(se);
-    if (it != seToSite.end())
-        {
-            return it->second;
-        }
+    if (it != seToSite.end()) {
+        return it->second;
+    }
 
     std::string site;
 
 #ifndef WITHOUT_PUGI
     // check in BDII cache
     site = BdiiCacheParser::instance().getSiteName(se);
-    if (!site.empty())
-        {
-            // save it in cache
-            seToSite[se] = site;
-            // clear the cache if there too many entries
-            if(seToSite.size() > 5000) seToSite.clear();
-            return site;
-        }
+    if (!site.empty()) {
+        // save it in cache
+        seToSite[se] = site;
+        // clear the cache if there too many entries
+        if (seToSite.size() > 5000) seToSite.clear();
+        return site;
+    }
 #endif
 
     // check in BDII
     site = getFromBdii(se);
-    if (!site.empty())
-        {
-            // save it in cache
-            seToSite[se] = site;
-            // clear the cache if there too many entries
-            if(seToSite.size() > 5000) seToSite.clear();
-            return site;
-        }
+    if (!site.empty()) {
+        // save it in cache
+        seToSite[se] = site;
+        // clear the cache if there too many entries
+        if (seToSite.size() > 5000) seToSite.clear();
+        return site;
+    }
 
 #ifndef WITHOUT_PUGI
     // check in MyOSG
     site = OsgParser::instance().getSiteName(se);
 
     // update the cache
-    if (!site.empty())
-        {
-            // save in cache
-            seToSite[se] = site;
-            // clear the cache if there are too many entries
-            if(seToSite.size() > 5000) seToSite.clear();
-        }
+    if (!site.empty()) {
+        // save in cache
+        seToSite[se] = site;
+        // clear the cache if there are too many entries
+        if (seToSite.size() > 5000) seToSite.clear();
+    }
 #endif
 
     return site;

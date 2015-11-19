@@ -41,70 +41,77 @@ const std::string OsgParser::myosg_path = "/var/lib/fts3/osg.xml";
 
 OsgParser::OsgParser(std::string path)
 {
-
     doc.load_file(path.c_str());
 }
+
 
 OsgParser::~OsgParser()
 {
 
 }
 
+
 bool OsgParser::isInUse()
 {
-
     static const std::string myosg_str = "myosg";
 
-    std::vector<std::string> providers = ServerConfig::instance().get< std::vector<std::string> >("InfoProviders");
+    std::vector<std::string> providers = ServerConfig::instance().get<std::vector<std::string> >("InfoProviders");
     std::vector<std::string>::iterator it;
 
-    for (it = providers.begin(); it != providers.end(); ++it)
-        {
-            if (myosg_str == *it) return true;
-        }
+    for (it = providers.begin(); it != providers.end(); ++it) {
+        if (myosg_str == *it) return true;
+    }
 
     return false;
 }
 
+
 std::string OsgParser::get(std::string fqdn, std::string property)
 {
-
     // if not on the list containing info providers return an empty std::string
-    if (!isInUse()) return std::string();
+    if (!isInUse())
+        return std::string();
 
     // if the MyOSG was set to 'flase' return an empty std::string
-    if (!ServerConfig::instance().get<bool>("MyOSG")) return std::string();
+    if (!ServerConfig::instance().get<bool>("MyOSG"))
+        return std::string();
 
     // look for the resource name (assume that the user has provided a fqdn)
     xpath_node node = doc.select_single_node(xpath_fqdn(fqdn).c_str());
     std::string val = node.node().child_value(property.c_str());
 
-    if (!val.empty()) return val;
+    if (!val.empty())
+        return val;
 
     // if the name was empty, check if the user provided an fqdn alias
     node = doc.select_single_node(xpath_fqdn_alias(fqdn).c_str());
     return node.node().child_value(property.c_str());
 }
 
+
 std::string OsgParser::getSiteName(std::string fqdn)
 {
-
     return get(fqdn, NAME_PROPERTY);
 }
+
 
 boost::optional<bool> OsgParser::isActive(std::string fqdn)
 {
     std::string val = get(fqdn, ACTIVE_PROPERTY);
-    if (val.empty()) return boost::optional<bool>();
+    if (val.empty())
+        return boost::optional<bool>();
     return val == STR_TRUE;
 }
+
 
 boost::optional<bool> OsgParser::isDisabled(std::string fqdn)
 {
     std::string val = get(fqdn, DISABLE_PROPERTY);
-    if (val.empty()) return boost::optional<bool>();
+    if (val.empty())
+        return boost::optional<bool>();
     return val == STR_TRUE;
 }
+
 
 std::string OsgParser::xpath_fqdn(std::string fqdn)
 {
@@ -113,6 +120,7 @@ std::string OsgParser::xpath_fqdn(std::string fqdn)
 
     return xpath_fqdn + fqdn + xpath_end;
 }
+
 
 std::string OsgParser::xpath_fqdn_alias(std::string alias)
 {

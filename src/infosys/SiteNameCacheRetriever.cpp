@@ -97,6 +97,7 @@ SiteNameCacheRetriever::~SiteNameCacheRetriever()
 
 }
 
+
 void SiteNameCacheRetriever::get(std::map<std::string, EndpointInfo>& cache)
 {
     // get data from glue1
@@ -105,9 +106,9 @@ void SiteNameCacheRetriever::get(std::map<std::string, EndpointInfo>& cache)
     fromGlue2(cache);
 }
 
+
 void SiteNameCacheRetriever::fromGlue1(std::map<std::string, EndpointInfo>& cache)
 {
-
     static BdiiBrowser& bdii = BdiiBrowser::instance();
 
     // browse for se names and respective site names
@@ -122,80 +123,80 @@ void SiteNameCacheRetriever::fromGlue1(std::map<std::string, EndpointInfo>& cach
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 
     std::list< std::map<std::string, std::list<std::string> > >::iterator it;
-    for (it = rs.begin(); it != rs.end(); ++it)
-        {
-            std::map<std::string, std::list<std::string> >& item = *it;
+    for (it = rs.begin(); it != rs.end(); ++it) {
+        std::map<std::string, std::list<std::string> > &item = *it;
 
-            // make sure this entry is not empty
-            if (item[ATTR_GLUE1_ENDPOINT].empty() || item[ATTR_GLUE1_LINK].empty()) continue;
-            // get the se name
-            std::string se = item[ATTR_GLUE1_ENDPOINT].front();
-            // get the corresponding site name
-            std::string site = BdiiBrowser::parseForeingKey(item[ATTR_GLUE1_LINK], ATTR_GLUE1_SITE);
-            // if the site name is not specified in the foreign key skip it
-            if (site.empty()) continue;
-            // cache the values
-            cache[se].sitename = site;
+        // make sure this entry is not empty
+        if (item[ATTR_GLUE1_ENDPOINT].empty() || item[ATTR_GLUE1_LINK].empty())
+            continue;
+        // get the se name
+        std::string se = item[ATTR_GLUE1_ENDPOINT].front();
+        // get the corresponding site name
+        std::string site = BdiiBrowser::parseForeingKey(item[ATTR_GLUE1_LINK], ATTR_GLUE1_SITE);
+        // if the site name is not specified in the foreign key skip it
+        if (site.empty())
+            continue;
+        // cache the values
+        cache[se].sitename = site;
 
-            if (!item[ATTR_GLUE1_TYPE].empty())
-                cache[se].type     = item[ATTR_GLUE1_TYPE].front();
-            if (!item[ATTR_GLUE1_VERSION].empty())
-                cache[se].version  = item[ATTR_GLUE1_VERSION].front();
-        }
+        if (!item[ATTR_GLUE1_TYPE].empty())
+            cache[se].type = item[ATTR_GLUE1_TYPE].front();
+        if (!item[ATTR_GLUE1_VERSION].empty())
+            cache[se].version = item[ATTR_GLUE1_VERSION].front();
+    }
 }
+
 
 void SiteNameCacheRetriever::fromGlue2(std::map<std::string, EndpointInfo>& cache)
 {
-
-    static BdiiBrowser& bdii = BdiiBrowser::instance();
+    static BdiiBrowser &bdii = BdiiBrowser::instance();
 
     // browse for se names and foreign keys that are pointing to the site name
     time_t start = time(0);
-    std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
-                BdiiBrowser::GLUE2,
-                FIND_SE_FK_GLUE2,
-                FIND_SE_FK_ATTR_GLUE2
-            );
+    std::list<std::map<std::string, std::list<std::string> > > rs = bdii.browse<std::list<std::string> >(
+        BdiiBrowser::GLUE2,
+        FIND_SE_FK_GLUE2,
+        FIND_SE_FK_ATTR_GLUE2
+    );
     time_t stop = time(0);
     // log a warning if browsing BDII takes more than 30s
     if (stop - start > 30)
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 
-    std::list< std::map<std::string, std::list<std::string> > >::iterator it;
-    for (it = rs.begin(); it != rs.end(); ++it)
-        {
-            std::map<std::string, std::list<std::string> >& item = *it;
-            // make sure this entry is not empty
-            if (item[ATTR_GLUE2_ENDPOINT].empty() || item[ATTR_GLUE2_FK].empty()) continue;
-            // get the se name
-            std::string se = item[ATTR_GLUE2_ENDPOINT].front();
-            // if it is already in the cache continue
-            if (cache.find(se) == cache.end()) continue;
-            // get the foreign key
-            std::string fk = item[ATTR_GLUE2_FK].front();
-            // browse for the site name
-            start = time(0);
-            std::list< std::map<std::string, std::list<std::string> > > rs2 = bdii.browse< std::list<std::string> >(
-                        BdiiBrowser::GLUE2,
-                        FIND_FK_SITE_GLUE2(fk),
-                        FIND_FK_SITE_ATTR_GLUE2
-                    );
-            stop = time(0);
-            // log a warning if browsing BDII takes more than 30s
-            if (stop - start > 30)
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
-            // make sure the result set is not empty
-            if (rs2.empty() || rs2.front().empty() || rs2.front()[ATTR_GLUE2_SITE].empty()) continue;
-            // get the respective site name
-            std::string site = rs2.front()[ATTR_GLUE2_SITE].front();
-            // cache the values
-            cache[se].sitename = site;
+    std::list<std::map<std::string, std::list<std::string> > >::iterator it;
+    for (it = rs.begin(); it != rs.end(); ++it) {
+        std::map<std::string, std::list<std::string> > &item = *it;
+        // make sure this entry is not empty
+        if (item[ATTR_GLUE2_ENDPOINT].empty() || item[ATTR_GLUE2_FK].empty()) continue;
+        // get the se name
+        std::string se = item[ATTR_GLUE2_ENDPOINT].front();
+        // if it is already in the cache continue
+        if (cache.find(se) == cache.end()) continue;
+        // get the foreign key
+        std::string fk = item[ATTR_GLUE2_FK].front();
+        // browse for the site name
+        start = time(0);
+        std::list<std::map<std::string, std::list<std::string> > > rs2 = bdii.browse<std::list<std::string> >(
+            BdiiBrowser::GLUE2,
+            FIND_FK_SITE_GLUE2(fk),
+            FIND_FK_SITE_ATTR_GLUE2
+        );
+        stop = time(0);
+        // log a warning if browsing BDII takes more than 30s
+        if (stop - start > 30)
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
+        // make sure the result set is not empty
+        if (rs2.empty() || rs2.front().empty() || rs2.front()[ATTR_GLUE2_SITE].empty()) continue;
+        // get the respective site name
+        std::string site = rs2.front()[ATTR_GLUE2_SITE].front();
+        // cache the values
+        cache[se].sitename = site;
 
-            if (!item[ATTR_GLUE2_TYPE].empty())
-                cache[se].type    = item[ATTR_GLUE2_TYPE].front();
-            if (!item[ATTR_GLUE2_VERSION].empty())
-                cache[se].version = item[ATTR_GLUE2_VERSION].front();
-        }
+        if (!item[ATTR_GLUE2_TYPE].empty())
+            cache[se].type = item[ATTR_GLUE2_TYPE].front();
+        if (!item[ATTR_GLUE2_VERSION].empty())
+            cache[se].version = item[ATTR_GLUE2_VERSION].front();
+    }
 }
 
 } /* namespace infosys */

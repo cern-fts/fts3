@@ -43,9 +43,9 @@ const std::string BdiiBrowser::false_str = "false";
 
 // "(| (%sAccessControlBaseRule=VO:%s) (%sAccessControlBaseRule=%s) (%sAccessControlRule=%s)"
 
+
 const std::string BdiiBrowser::FIND_SE_STATUS(std::string se)
 {
-
     std::stringstream ss;
     ss << "(&(" << BdiiBrowser::ATTR_SE << "=*" << se << "*))";
     return ss.str();
@@ -55,13 +55,12 @@ const char* BdiiBrowser::FIND_SE_STATUS_ATTR[] = {BdiiBrowser::ATTR_STATUS, 0};
 
 BdiiBrowser::~BdiiBrowser()
 {
-
     disconnect();
 }
 
+
 bool BdiiBrowser::connect(std::string infosys, time_t sec)
 {
-
     // make sure that the infosys string is not 'false'
     if (infosys == false_str) return false;
 
@@ -77,74 +76,73 @@ bool BdiiBrowser::connect(std::string infosys, time_t sec)
 
     int ret = 0;
     ret = ldap_initialize(&ld, url.c_str());
-    if (ret != LDAP_SUCCESS)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error init: " << ldap_err2string(ret) << " " << infosys << commit;
-            disconnect();
-            return false;
-        }
+    if (ret != LDAP_SUCCESS) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error init: " << ldap_err2string(ret) << " " << infosys <<
+        commit;
+        disconnect();
+        return false;
+    }
 
-    if (ldap_set_option(ld, LDAP_OPT_TIMEOUT, &search_timeout) != LDAP_OPT_SUCCESS)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_TIMEOUT): " << ldap_err2string(ret) << " " << infosys << commit;
-        }
+    if (ldap_set_option(ld, LDAP_OPT_TIMEOUT, &search_timeout) != LDAP_OPT_SUCCESS) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_TIMEOUT): " <<
+        ldap_err2string(ret) << " " << infosys << commit;
+    }
 
-    if (ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout) != LDAP_OPT_SUCCESS)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_NETWORK_TIMEOUT): " << ldap_err2string(ret) << " " << infosys << commit;
-        }
+    if (ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout) != LDAP_OPT_SUCCESS) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_NETWORK_TIMEOUT): " <<
+        ldap_err2string(ret) << " " << infosys << commit;
+    }
 
     // set the keep alive if it has been set to 'true' in the fts3config file
-    if (config::ServerConfig::instance().get<bool>("BDIIKeepAlive"))
-        {
+    if (config::ServerConfig::instance().get<bool>("BDIIKeepAlive")) {
 
-            int val = keepalive_idle;
-            if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_IDLE,(void *) &val) != LDAP_OPT_SUCCESS)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_IDLE): " << ldap_err2string(ret) << " " << infosys << commit;
-                }
-
-            val = keepalive_probes;
-            if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_PROBES,(void *) &val) != LDAP_OPT_SUCCESS)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_PROBES): " << ldap_err2string(ret) << " " << infosys << commit;
-                }
-
-            val = keepalive_interval;
-            if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_INTERVAL, (void *) &val) != LDAP_OPT_SUCCESS)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_INTERVAL): " << ldap_err2string(ret) << " " << infosys << commit;
-                }
+        int val = keepalive_idle;
+        if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_IDLE, (void *) &val) != LDAP_OPT_SUCCESS) {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_IDLE): " <<
+            ldap_err2string(ret) << " " << infosys << commit;
         }
+
+        val = keepalive_probes;
+        if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_PROBES, (void *) &val) != LDAP_OPT_SUCCESS) {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_PROBES): " <<
+            ldap_err2string(ret) << " " << infosys << commit;
+        }
+
+        val = keepalive_interval;
+        if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_INTERVAL, (void *) &val) != LDAP_OPT_SUCCESS) {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_INTERVAL): " <<
+            ldap_err2string(ret) << " " << infosys << commit;
+        }
+    }
 
     berval cred;
     cred.bv_val = 0;
     cred.bv_len = 0;
 
     ret = ldap_sasl_bind_s(ld, 0, LDAP_SASL_SIMPLE, &cred, 0, 0, 0);
-    if (ret != LDAP_SUCCESS)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error bind: " << ldap_err2string(ret) << " " << infosys << commit;
-            disconnect();
-            return false;
-        }
+    if (ret != LDAP_SUCCESS) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error bind: " << ldap_err2string(ret) << " " << infosys <<
+        commit;
+        disconnect();
+        return false;
+    }
 
     connected = true;
 
     return true;
 }
 
+
 void BdiiBrowser::disconnect()
 {
-
-    if (ld)
-        {
-            ldap_unbind_ext_s(ld, 0, 0);
-            ld = 0;
-        }
+    if (ld) {
+        ldap_unbind_ext_s(ld, 0, 0);
+        ld = 0;
+    }
 
     connected = false;
 }
+
 
 bool BdiiBrowser::reconnect()
 {
@@ -159,9 +157,9 @@ bool BdiiBrowser::reconnect()
     return ret;
 }
 
+
 bool BdiiBrowser::isValid()
 {
-
     // if we are not connected the connection is not valid
     if (!connected) return false;
     // if the bdii host have changed it is also not valid
@@ -174,65 +172,64 @@ bool BdiiBrowser::isValid()
     // used shared lock - many concurrent reads are allowed
     {
         boost::shared_lock<boost::shared_mutex> lock(qm);
-        rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
+        rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0,
+            &result);
     }
 
-    if (rc == LDAP_SUCCESS)
-        {
+    if (rc == LDAP_SUCCESS) {
 
-            if (result) ldap_msgfree(result);
-            return true;
+        if (result) ldap_msgfree(result);
+        return true;
 
+    }
+    else if (rc == LDAP_SERVER_DOWN || rc == LDAP_CONNECT_ERROR) {
+
+        if (result) ldap_msgfree(result);
+
+    }
+    else {
+        // we only free the memory if rc > 0 because of a bug in thread-safe version of LDAP lib
+        if (result && rc > 0) {
+            ldap_msgfree(result);
         }
-    else if (rc == LDAP_SERVER_DOWN || rc == LDAP_CONNECT_ERROR)
-        {
 
-            if (result) ldap_msgfree(result);
-
-        }
-    else
-        {
-            // we only free the memory if rc > 0 because of a bug in thread-safe version of LDAP lib
-            if (result && rc > 0)
-                {
-                    ldap_msgfree(result);
-                }
-
-            return true;
-        }
+        return true;
+    }
 
     return false;
 }
 
+
 std::string BdiiBrowser::parseForeingKey(std::list<std::string> values, const char *attr)
 {
+    for (auto it = values.begin(); it != values.end(); ++it) {
 
-    std::list<std::string>::iterator it;
-    for (it = values.begin(); it != values.end(); ++it)
-        {
+        std::string entry = *it, attr_str = attr;
+        boost::to_lower(entry);
+        boost::to_lower(attr_str);
 
-            std::string entry = *it, attr_str = attr;
-            boost::to_lower(entry);
-            boost::to_lower(attr_str);
-
-            size_t pos = entry.find('=');
-            if (entry.substr(0, pos) == attr_str) return it->substr(pos + 1);
-        }
+        size_t pos = entry.find('=');
+        if (entry.substr(0, pos) == attr_str)
+            return it->substr(pos + 1);
+    }
 
     return std::string();
 }
 
+
 bool BdiiBrowser::getSeStatus(std::string se)
 {
+    std::list<std::map<std::string, std::string> > rs = browse<std::string>(GLUE1, FIND_SE_STATUS(se),
+        FIND_SE_STATUS_ATTR);
 
-    std::list< std::map<std::string, std::string> > rs = browse<std::string>(GLUE1, FIND_SE_STATUS(se), FIND_SE_STATUS_ATTR);
-
-    if (rs.empty()) return true;
+    if (rs.empty())
+        return true;
 
     std::string status = rs.front()[ATTR_STATUS];
 
     return status == "Production" || status == "Online";
 }
+
 
 bool BdiiBrowser::isVoAllowed(std::string se, std::string vo)
 {
@@ -241,27 +238,27 @@ bool BdiiBrowser::isVoAllowed(std::string se, std::string vo)
     return true;
 }
 
+
 std::string BdiiBrowser::baseToStr(const std::string& base)
 {
-
     if (base == GLUE1) return "glue1";
     if (base == GLUE2) return "glue2";
 
     return std::string();
 }
 
-bool BdiiBrowser::checkIfInUse(const std::string& base)
-{
 
+bool BdiiBrowser::checkIfInUse(const std::string &base)
+{
     std::string base_str = baseToStr(base);
 
-    std::vector<std::string> providers = config::ServerConfig::instance().get< std::vector<std::string> >("InfoProviders");
+    std::vector<std::string> providers = config::ServerConfig::instance()\
+        .get<std::vector<std::string>>("InfoProviders");
     std::vector<std::string>::iterator it;
 
-    for (it = providers.begin(); it != providers.end(); ++it)
-        {
-            if (base_str == *it) return true;
-        }
+    for (it = providers.begin(); it != providers.end(); ++it) {
+        if (base_str == *it) return true;
+    }
 
     return false;
 }

@@ -35,57 +35,36 @@ using namespace pugi;
 
 using namespace fts3::common;
 
-/**
- * OsgParser class is for parsing MyOSG XML files
- *
- * It has a singleton access.
- *
- * @see ThreadSafeInstanceHolder
- */
+/// OsgParser class is for parsing MyOSG XML files
+/// It has a singleton access.
+/// @see Singleton
 class OsgParser : public Singleton<OsgParser>
 {
-
     friend class Singleton<OsgParser>;
 
 public:
 
-    /**
-     * Destructor
-     */
+    /// Destructor
     virtual ~OsgParser();
 
-    /**
-     * Gets the site name for the given SE name
-     *
-     * @param fqdn - fully qualified name of the SE
-     *
-     * @return the site name
-     */
+    /// Gets the site name for the given SE name
+    /// @param fqdn - fully qualified name of the SE
+    /// @return the site name
     std::string getSiteName(std::string fqdn);
 
-    /**
-     * Checks is the given SE is active
-     *
-     * @param fqdn - fully qualified name of the SE
-     *
-     * @return true if the SE is active, false otherwise
-     */
+    /// Checks is the given SE is active
+    /// @param fqdn - fully qualified name of the SE
+    /// @return true if the SE is active, false otherwise
     boost::optional<bool> isActive(std::string fqdn);
 
-    /**
-     * Checks is the given SE is disabled
-     *
-     * @param fqdn - fully qualified name of the SE
-     *
-     * @return true if the SE is disabled, false otherwise
-     */
+    /// Checks is the given SE is disabled
+    /// @param fqdn - fully qualified name of the SE
+    /// @return true if the SE is disabled, false otherwise
     boost::optional<bool> isDisabled(std::string fqdn);
 
 private:
 
-    /**
-     * Constructor
-     */
+    /// Constructor
     OsgParser(std::string path = myosg_path);
 
     /// not implemented
@@ -94,21 +73,14 @@ private:
     /// not implemented
     OsgParser& operator=(OsgParser const&);
 
-    /**
-     * Gets a property for the given SE name
-     *
-     * @param fqdn - fully qualified name of the SE
-     * @param property - the property of interest
-     *
-     * @return the value of the property
-     */
+    /// Gets a property for the given SE name
+    /// @param fqdn - fully qualified name of the SE
+    /// @param property - the property of interest
+    /// @return the value of the property
     std::string get(std::string fqdn, std::string property);
 
-    /**
-     * Checks in fts3config if MyOSG is in use
-     *
-     * @return true if MyOSG is in use, false otherwise
-     */
+    /// Checks in fts3config if MyOSG is in use
+    /// @return true if MyOSG is in use, false otherwise
     bool isInUse();
 
     /// name property node

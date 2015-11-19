@@ -55,7 +55,6 @@ using namespace common;
  */
 class BdiiBrowser: public Singleton<BdiiBrowser>
 {
-
     friend class Singleton<BdiiBrowser>;
 
 public:
@@ -283,39 +282,38 @@ private:
     ///@}
 };
 
+
 template<typename R>
-std::list< std::map<std::string, R> > BdiiBrowser::browse(std::string base, std::string query, const char **attr)
+std::list<std::map<std::string, R> > BdiiBrowser::browse(std::string base, std::string query, const char **attr)
 {
     signal(SIGPIPE, SIG_IGN);
     // check in the fts3config file if the 'base' (glue1 or glue2) is in use, if no return an empty result set
     if (!checkIfInUse(base))
-        return std::list< std::map<std::string, R> >();
+        return std::list<std::map<std::string, R> >();
 
     // check in the fts3config if the host name for BDII was specified, if no return an empty result set
     if (!config::ServerConfig::instance().get<bool>("Infosys"))
-        return std::list< std::map<std::string, R> >();
+        return std::list<std::map<std::string, R> >();
 
     // check if the connection is valid
-    if (!isValid())
-        {
+    if (!isValid()) {
 
-            bool reconnected = false;
-            int reconnect_count = 0;
+        bool reconnected = false;
+        int reconnect_count = 0;
 
-            // try to reconnect 3 times
-            for (reconnect_count = 0; reconnect_count < max_reconnect; reconnect_count++)
-                {
-                    reconnected = reconnect();
-                    if (reconnected) break;
-                }
-
-            // if it has not been possible to reconnect return an empty result set
-            if (!reconnected)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: it has not been possible to reconnect to the BDII" << commit;
-                    return std::list< std::map<std::string, R> >();
-                }
+        // try to reconnect 3 times
+        for (reconnect_count = 0; reconnect_count < max_reconnect; reconnect_count++) {
+            reconnected = reconnect();
+            if (reconnected) break;
         }
+
+        // if it has not been possible to reconnect return an empty result set
+        if (!reconnected) {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: it has not been possible to reconnect to the BDII" <<
+            commit;
+            return std::list<std::map<std::string, R> >();
+        }
+    }
 
     int rc = 0;
     LDAPMessage *reply = 0;
@@ -323,83 +321,80 @@ std::list< std::map<std::string, R> > BdiiBrowser::browse(std::string base, std:
     // used shared lock - many concurrent reads are allowed
     {
         boost::shared_lock<boost::shared_mutex> lock(qm);
-        rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
+        rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char **>(attr), 0, 0,
+            0, &timeout, 0, &reply);
     }
 
-    if (rc != LDAP_SUCCESS)
-        {
-            if (reply && rc > 0) ldap_msgfree(reply);
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(rc) << commit;
-            return std::list< std::map<std::string, R> > ();
-        }
+    if (rc != LDAP_SUCCESS) {
+        if (reply && rc > 0) ldap_msgfree(reply);
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(rc) << commit;
+        return std::list<std::map<std::string, R> >();
+    }
 
-    std::list< std::map<std::string, R> > ret = parseBdiiResponse<R>(reply);
+    std::list<std::map<std::string, R> > ret = parseBdiiResponse<R>(reply);
     if (reply)
         ldap_msgfree(reply);
 
     return ret;
 }
 
-template<typename R>
-std::list< std::map<std::string, R> > BdiiBrowser::parseBdiiResponse(LDAPMessage *reply)
-{
-    std::list< std::map<std::string, R> > ret;
-    for (LDAPMessage *entry = ldap_first_entry(ld, reply); entry != 0; entry = ldap_next_entry(ld, entry))
-        {
 
-            ret.push_back(
-                parseBdiiSingleEntry<R>(entry)
-            );
-        }
+template<typename R>
+std::list<std::map<std::string, R> > BdiiBrowser::parseBdiiResponse(LDAPMessage *reply)
+{
+    std::list<std::map<std::string, R> > ret;
+    for (LDAPMessage *entry = ldap_first_entry(ld, reply); entry != 0; entry = ldap_next_entry(ld, entry)) {
+
+        ret.push_back(
+            parseBdiiSingleEntry<R>(entry)
+        );
+    }
 
     return ret;
 }
 
+
 template<typename R>
 std::map<std::string, R> BdiiBrowser::parseBdiiSingleEntry(LDAPMessage *entry)
 {
-
     BerElement *berptr = 0;
-    char* attr = 0;
+    char *attr = 0;
     std::map<std::string, R> m_entry;
 
-    for (attr = ldap_first_attribute(ld, entry, &berptr); attr != 0; attr = ldap_next_attribute(ld, entry, berptr))
-        {
+    for (attr = ldap_first_attribute(ld, entry, &berptr); attr != 0; attr = ldap_next_attribute(ld, entry, berptr)) {
 
-            berval **value = ldap_get_values_len(ld, entry, attr);
-            R val = parseBdiiEntryAttribute<R>(value);
-            ldap_value_free_len(value);
+        berval **value = ldap_get_values_len(ld, entry, attr);
+        R val = parseBdiiEntryAttribute<R>(value);
+        ldap_value_free_len(value);
 
-            if (!val.empty())
-                {
-                    m_entry[attr] = val;
-                }
-            ldap_memfree(attr);
+        if (!val.empty()) {
+            m_entry[attr] = val;
         }
+        ldap_memfree(attr);
+    }
 
     if (berptr) ber_free(berptr, 0);
 
     return m_entry;
 }
 
+
 template<>
 inline std::string BdiiBrowser::parseBdiiEntryAttribute<std::string>(berval **value)
 {
-
     if (value && value[0] && value[0]->bv_val)
         return value[0]->bv_val;
     return std::string();
 }
 
+
 template<>
 inline std::list<std::string> BdiiBrowser::parseBdiiEntryAttribute< std::list<std::string> >(berval **value)
 {
-
     std::list<std::string> ret;
-    for (int i = 0; value && value[i] && value[i]->bv_val; i++)
-        {
-            ret.push_back(value[i]->bv_val);
-        }
+    for (int i = 0; value && value[i] && value[i]->bv_val; i++) {
+        ret.push_back(value[i]->bv_val);
+    }
     return ret;
 }
 

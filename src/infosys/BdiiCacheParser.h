@@ -35,9 +35,6 @@ namespace fts3
 namespace infosys
 {
 
-/**
- *
- */
 class BdiiCacheParser : public Singleton<BdiiCacheParser>
 {
 
@@ -47,20 +44,14 @@ public:
 
     virtual ~BdiiCacheParser();
 
-    /**
-     * Gets the site name for the given SE name
-     *
-     * @param se - name of the SE
-     *
-     * @return the site name
-     */
+    /// Gets the site name for the given SE name
+    /// @param se - name of the SE
+    /// @return the site name
     std::string getSiteName(std::string se);
 
 private:
 
-    /**
-     * Constructor
-     */
+    /// Constructor
     BdiiCacheParser(std::string path = bdii_cache_path);
 
     /// not implemented
