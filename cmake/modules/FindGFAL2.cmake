@@ -43,6 +43,7 @@ else (GFAL2_PKG_FOUND AND GFAL2_TRANSFER_PKG_FOUND)
         NAMES gfal_api.h
         HINTS ${GFAL2_LOCATION}/include/*
               ${CMAKE_INSTALL_PREFIX}/Grid/gfal2/*/${PLATFORM}/include/*
+              /usr/include/*
         DOC "The gfal2 include directory"
     )
 
