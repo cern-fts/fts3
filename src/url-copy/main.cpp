@@ -1391,24 +1391,6 @@ stop:
                     "FINISHED");
             }
             turlVector.clear();
-
-            /*Do not remove it, just in case we need it in the future
-            if (opts.bringOnline > 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Token will be unpinned: " << currentTransfer.tokenBringOnline << commit;
-                    if(gfal2_release_file(handle, (currentTransfer.sourceUrl).c_str(), (currentTransfer.tokenBringOnline).c_str(), &tmp_err) < 0)
-                        {
-                            if (tmp_err && tmp_err->message)
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "SOURCE Failed unpinning the file: " << std::string(tmp_err->message) << commit;
-                                }
-                        }
-                    else
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Token unpinned: " << currentTransfer.tokenBringOnline << commit;
-                        }
-                }
-             */
         }
 
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
