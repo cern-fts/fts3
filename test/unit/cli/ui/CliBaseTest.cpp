@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE (CliBaseLongOptions)
     std::vector<const char*> argv {
         "prog_name",
         "--help",
-        "--quite",
+        "--quiet",
         "--verbose",
         "--service",
         "https://fts3-server:8080",

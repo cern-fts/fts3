@@ -42,7 +42,7 @@ CliBase::CliBase(): visible("Allowed options")
     // add basic command line options
     basic.add_options()
     ("help,h", "Print this help text and exit.")
-    ("quite,q", "Quiet operation.")
+    ("quiet,q", "Quiet operation.")
     ("verbose,v", "Be more verbose.")
     ("service,s", po::value<std::string>(), "Use the transfer service at the specified URL.")
     ("proxy", po::value<std::string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
@@ -216,7 +216,7 @@ bool CliBase::isVerbose() const
 
 bool CliBase::isQuiet() const
 {
-    return vm.count("quite");
+    return vm.count("quiet");
 }
 
 std::string CliBase::proxy() const

@@ -44,7 +44,7 @@ namespace po = boost::program_options;
  *
  * The class provides following functionalities:
  *      - help (-h)
- *      - quite (-q) and verbose (-v)
+ *      - quiet (-q) and verbose (-v)
  *      - version (-V)
  *      - service (-s)
  *
