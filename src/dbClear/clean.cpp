@@ -44,7 +44,7 @@ static void initializeDbBackend()
 }
 
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     try {
         const char *configfile = "/etc/fts3/fts3config";
@@ -69,27 +69,26 @@ int main(int argc, char** argv)
 
         long bulkSize = ServerConfig::instance().get<long>("CleanBulkSize");
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting with bulk size of " << bulkSize << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting with bulk size of " << bulkSize << commit;
 
         long nJobs = 0, nFiles = 0;
         db::DBSingleton::instance().getDBObjectInstance()->backup(bulkSize, &nJobs, &nFiles);
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup ending: "
-            << nJobs << " jobs and "
-            << nFiles << " files affected"
-            << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending: "
+        << nJobs << " jobs and "
+        << nFiles << " files affected"
+        << commit;
 
         // If profiling is configured, dump the timing
         db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(
             &fts3::ProfilingSubsystem::instance());
 
     }
-    catch (const std::exception& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(CRIT)<< "Backup fatal error, exiting... " << e.what() << commit;
+    catch (const std::exception &e) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Backup fatal error, exiting... " << e.what() << commit;
         return EXIT_FAILURE;
     }
-    catch (...)
-    {
+    catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Backup fatal error (unknown origin), exiting..." << commit;
         return EXIT_FAILURE;
     }
