@@ -27,7 +27,7 @@
 using namespace fts3::common;
 
 
-static bool findSubstring(const std::string& stack, const char* needles[])
+static bool findSubstring(const std::string &stack, const char *needles[])
 {
     for (size_t i = 0; needles[i] != NULL; ++i) {
         if (stack.find(needles[i]) != std::string::npos)
@@ -37,7 +37,7 @@ static bool findSubstring(const std::string& stack, const char* needles[])
 }
 
 
-static bool retryTransferInternal(int errorNo, const std::string& category, const std::string& message)
+static bool retryTransferInternal(int errorNo, const std::string &category, const std::string &message)
 {
     // ETIMEDOUT shortcuts the following
     if (errorNo == ETIMEDOUT)
@@ -48,7 +48,7 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
         return false;
 
     // If the following strings appear in the error message, assume retriable
-    const char* msg_imply_retry[] = {
+    const char *msg_imply_retry[] = {
         "performance marker",
         "Name or service not known",
         "Connection timed out",
@@ -64,7 +64,7 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
         return true;
 
     // If the following strings appear in the error message, assume non-retriable
-    const char* msg_imply_do_not_retry[] = {
+    const char *msg_imply_do_not_retry[] = {
         "proxy expired",
         "with an error 550 File not found",
         "File exists and overwrite",
@@ -90,55 +90,50 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
         return false;
 
     // Rely on the error codes otherwise
-    if (category == "SOURCE")
-        {
-            switch (errorNo)
-                {
-                case ENOENT:          // No such file or directory
-                case EPERM:           // Operation not permitted
-                case EACCES:          // Permission denied
-                case EISDIR:          // Is a directory
-                case ENAMETOOLONG:    // File name too long
-                case E2BIG:           // Argument list too long
-                case ENOTDIR:         // Part of the path is not a directory
-                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                    return false;
-                }
+    if (category == "SOURCE") {
+        switch (errorNo) {
+            case ENOENT:          // No such file or directory
+            case EPERM:           // Operation not permitted
+            case EACCES:          // Permission denied
+            case EISDIR:          // Is a directory
+            case ENAMETOOLONG:    // File name too long
+            case E2BIG:           // Argument list too long
+            case ENOTDIR:         // Part of the path is not a directory
+            case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
+                return false;
         }
-    else if (category == "DESTINATION")
-        {
-            switch (errorNo)
-                {
-                case EPERM:           // Operation not permitted
-                case EACCES:          // Permission denied
-                case EISDIR:          // Is a directory
-                case ENAMETOOLONG:    //  File name too long
-                case E2BIG:           //  Argument list too long
-                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                    return false;
-                }
+    }
+    else if (category == "DESTINATION") {
+        switch (errorNo) {
+            case EPERM:           // Operation not permitted
+            case EACCES:          // Permission denied
+            case EISDIR:          // Is a directory
+            case ENAMETOOLONG:    //  File name too long
+            case E2BIG:           //  Argument list too long
+            case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
+                return false;
         }
+    }
     else //TRANSFER
-        {
-            switch (errorNo)
-                {
-                case ENOSPC:          // No space left on device
-                case EPERM:           // Operation not permitted
-                case EACCES:          // Permission denied
-                case EEXIST:          // File exists
-                case EFBIG:           // File too big
-                case EROFS:           // Read-only file system
-                case ENAMETOOLONG:    // File name too long
-                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                    return false;
-                }
+    {
+        switch (errorNo) {
+            case ENOSPC:          // No space left on device
+            case EPERM:           // Operation not permitted
+            case EACCES:          // Permission denied
+            case EEXIST:          // File exists
+            case EFBIG:           // File too big
+            case EROFS:           // Read-only file system
+            case ENAMETOOLONG:    // File name too long
+            case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
+                return false;
         }
+    }
 
     return true;
 }
 
 
-bool retryTransfer(int errorNo, const std::string& category, const std::string& message)
+bool retryTransfer(int errorNo, const std::string &category, const std::string &message)
 {
     bool retry = retryTransferInternal(errorNo, category, message);
     if (retry)
@@ -177,9 +172,7 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int /*currentStrea
         return 14;
     else
         return 16;
-    return 6;
 }
-
 
 
 static unsigned adjustTimeout(off_t sizeInBytes)
@@ -192,7 +185,6 @@ static unsigned adjustTimeout(off_t sizeInBytes)
 }
 
 
-
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned timeoutPerMB, bool global_timeout)
 {
     static const unsigned long MB = 1 << 20;
@@ -200,14 +192,14 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
     double timeoutPerMBLocal = 0;
-    if(timeoutPerMB > 0 )
+    if (timeoutPerMB > 0)
         timeoutPerMBLocal = timeoutPerMB;
     else
         timeoutPerMBLocal = 2;
 
     // Reasonable time to wait for the transfer itself
     unsigned transferTimeout = 0;
-    if(global_timeout)
+    if (global_timeout)
         transferTimeout = timeout;
     else
         transferTimeout = adjustTimeout(sizeInBytes);
@@ -221,7 +213,7 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned 
     else
         timeout = static_cast<unsigned>(totalTimeout);
 
-    if(timeout > 30000)
+    if (timeout > 30000)
         timeout = 30000;
 
     return timeout;

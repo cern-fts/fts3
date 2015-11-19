@@ -47,32 +47,33 @@ FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/")
 {   
 }
 
+
 void FileManagement::init(std::string logDir)
 {
     logFileName = logDir;
 
-    try
-        {
-            if (logFileName.length() > 0)
-                directoryExists(logFileName.c_str());
+    try {
+        if (logFileName.length() > 0)
+            directoryExists(logFileName.c_str());
 
-            //generate arc based on date
-            std::string dateArch = logFileName + "/" + dateDir();
-            directoryExists(dateArch.c_str());
-            logFileName = dateArch;
-        }
+        //generate arc based on date
+        std::string dateArch = logFileName + "/" + dateDir();
+        directoryExists(dateArch.c_str());
+        logFileName = dateArch;
+    }
     catch (...)     //try again
-        {
-            if (logFileName.length() > 0)
-                directoryExists(logFileName.c_str());
+    {
+        if (logFileName.length() > 0)
+            directoryExists(logFileName.c_str());
 
-            //generate arc based on date
-            std::string dateArch = logFileName + "/" + dateDir();
-            directoryExists(dateArch.c_str());
-            logFileName = dateArch;
-        }
+        //generate arc based on date
+        std::string dateArch = logFileName + "/" + dateDir();
+        directoryExists(dateArch.c_str());
+        logFileName = dateArch;
+    }
 
 }
+
 
 FileManagement::~FileManagement()
 {
@@ -83,48 +84,49 @@ void FileManagement::generateLogFile()
     fname = generateLogFileName(source_url, dest_url, file_id, job_id);
 }
 
+
 std::string FileManagement::getLogFilePath()
 {
     return logFileName + "/" + fname;
 }
 
-void FileManagement::setSourceUrl(std::string& source_url)
+
+void FileManagement::setSourceUrl(std::string &source_url)
 {
     this->source_url = source_url;
     Uri uri = Uri::parse(source_url);
 
-    if(uri.protocol.length() && uri.host.length())
-        {
-            shost = uri.getSeName();
-            shostFile = uri.host;
-        }
-    else
-        {
-            shost = std::string("invalid") + "://" + std::string("invalid");
-            shostFile = std::string("invalid");
-        }
+    if (uri.protocol.length() && uri.host.length()) {
+        shost = uri.getSeName();
+        shostFile = uri.host;
+    }
+    else {
+        shost = std::string("invalid") + "://" + std::string("invalid");
+        shostFile = std::string("invalid");
+    }
 }
 
-void FileManagement::setDestUrl(std::string& dest_url)
+
+void FileManagement::setDestUrl(std::string &dest_url)
 {
     this->dest_url = dest_url;
     Uri uri = Uri::parse(dest_url);
-    if(uri.protocol.length() && uri.host.length())
-        {
-            dhost = uri.getSeName();
-            dhostFile = uri.host;
-        }
-    else
-        {
-            dhost = std::string("invalid") + "://" + std::string("invalid");
-            dhostFile = std::string("invalid");
-        }
+    if (uri.protocol.length() && uri.host.length()) {
+        dhost = uri.getSeName();
+        dhostFile = uri.host;
+    }
+    else {
+        dhost = std::string("invalid") + "://" + std::string("invalid");
+        dhostFile = std::string("invalid");
+    }
 }
+
 
 void FileManagement::setFileId(unsigned file_id)
 {
     this->file_id = file_id;
 }
+
 
 void FileManagement::setJobId(std::string& job_id)
 {
@@ -132,30 +134,29 @@ void FileManagement::setJobId(std::string& job_id)
 }
 
 
-bool FileManagement::directoryExists(const char* pzPath)
+bool FileManagement::directoryExists(const char *pzPath)
 {
     if (pzPath == NULL) return false;
 
-    DIR *pDir=NULL;
+    DIR *pDir = NULL;
     bool bExists = false;
 
     pDir = opendir(pzPath);
 
-    if (pDir != NULL)
-        {
-            bExists = true;
-            (void) closedir(pDir);
-        }
-    else
-        {
-            /* Directory does not exist */
-            umask(0);
-            if (mkdir(pzPath, 0755) != 0)
-                bExists = false;
-        }
+    if (pDir != NULL) {
+        bExists = true;
+        (void) closedir(pDir);
+    }
+    else {
+        /* Directory does not exist */
+        umask(0);
+        if (mkdir(pzPath, 0755) != 0)
+            bExists = false;
+    }
 
     return bExists;
 }
+
 
 std::string FileManagement::archive()
 {
@@ -166,41 +167,35 @@ std::string FileManagement::archive()
 
     // Move log
     int r = rename(getLogFilePath().c_str(), arcFileName.c_str());
-    if (r != 0)
-        {
-            char const * str = strerror_r(errno, buf, 256);
-            if (str)
-                {
-                    return std::string(str);
-                }
-            else
-                {
-                    return std::string("Unknown error when moving log file");
-                }
+    if (r != 0) {
+        char const *str = strerror_r(errno, buf, 256);
+        if (str) {
+            return std::string(str);
         }
+        else {
+            return std::string("Unknown error when moving log file");
+        }
+    }
 
     // Move debug file
-    std::string debugFile    = getLogFilePath() + ".debug";
+    std::string debugFile = getLogFilePath() + ".debug";
     std::string debugArchive = arcFileName + ".debug";
-    if (access(debugFile.c_str(), F_OK) == 0)
-        {
-            int r2 = rename(debugFile.c_str(), debugArchive.c_str());
-            if (r2 != 0)
-                {
-                    char const * str = strerror_r(errno, buf, 256);
-                    if (str)
-                        {
-                            return std::string(str);
-                        }
-                    else
-                        {
-                            return std::string("Unknown error when moving debug log file");
-                        }
-                }
+    if (access(debugFile.c_str(), F_OK) == 0) {
+        int r2 = rename(debugFile.c_str(), debugArchive.c_str());
+        if (r2 != 0) {
+            char const *str = strerror_r(errno, buf, 256);
+            if (str) {
+                return std::string(str);
+            }
+            else {
+                return std::string("Unknown error when moving debug log file");
+            }
         }
+    }
 
     return std::string("");
 }
+
 
 std::string FileManagement::dateDir()
 {
@@ -218,6 +213,7 @@ std::string FileManagement::dateDir()
 
     return ss.str();
 }
+
 
 std::string FileManagement::generateLogFileName(std::string, std::string, unsigned file_id, std::string & job_id)
 {
@@ -242,5 +238,3 @@ std::string FileManagement::generateLogFileName(std::string, std::string, unsign
     new_name += ss.str();
     return new_name;
 }
-
-

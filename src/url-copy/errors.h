@@ -59,16 +59,14 @@
  */
 inline std::string mapErrnoToString(int err)
 {
-    if (err != 0)
-        {
-            char buf[256] = {0};
-            char const *str = strerror_r(err, buf, sizeof(buf));
-            if (str)
-                {
-                    std::string rep(str);
-                    std::replace(rep.begin(), rep.end(), ' ', '_');
-                    return boost::to_upper_copy(rep);
-                }
+    if (err != 0) {
+        char buf[256] = {0};
+        char const *str = strerror_r(err, buf, sizeof(buf));
+        if (str) {
+            std::string rep(str);
+            std::replace(rep.begin(), rep.end(), ' ', '_');
+            return boost::to_upper_copy(rep);
         }
+    }
     return "GENERAL ERROR";
 }

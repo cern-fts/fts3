@@ -54,15 +54,18 @@ public:
     {
         return fname;
     }
+
     inline std::string getSePair()
     {
         std::string pair = shost + "__" + dhost;
         return pair;
     }
+
     inline std::string getSourceHostname()
     {
         return shost;
     }
+
     inline std::string getDestHostname()
     {
         return dhost;
@@ -72,6 +75,7 @@ public:
     {
         return shostFile;
     }
+
     inline std::string getDestHostnameFile()
     {
         return dhostFile;

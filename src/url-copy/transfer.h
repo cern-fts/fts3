@@ -58,19 +58,17 @@ public:
     {
     }
 
-    void setChecksum(const std::string& checksum)
+    void setChecksum(const std::string &checksum)
     {
         size_t colon = checksum.find(':');
-        if (colon == std::string::npos)
-            {
-                checksumAlgorithm.assign(checksum);
-                checksumValue.clear();
-            }
-        else
-            {
-                checksumAlgorithm.assign(checksum.substr(0, colon));
-                checksumValue.assign(checksum.substr(colon + 1));
-            }
+        if (colon == std::string::npos) {
+            checksumAlgorithm.assign(checksum);
+            checksumValue.clear();
+        }
+        else {
+            checksumAlgorithm.assign(checksum.substr(0, colon));
+            checksumValue.assign(checksum.substr(colon + 1));
+        }
 
         checksumMethod = UrlCopyOpts::getInstance().compareChecksum;
     }
@@ -124,18 +122,17 @@ public:
     }
 
     // Initialize a list from a file
-    static void initListFromFile(const std::string& jobId, const std::string& path,
-                                 std::vector<Transfer>* list)
+    static void initListFromFile(const std::string &jobId, const std::string &path,
+        std::vector<Transfer> *list)
     {
         std::string line;
         std::ifstream infile(path.c_str(), std::ios_base::in);
 
-        while (getline(infile, line, '\n'))
-            {
-                Transfer t = Transfer::createFromString(jobId, line);
-                t.job_m_replica = "false";
-                list->push_back(t);
-            }
+        while (getline(infile, line, '\n')) {
+            Transfer t = Transfer::createFromString(jobId, line);
+            t.job_m_replica = "false";
+            list->push_back(t);
+        }
 
         infile.close();
         unlink(path.c_str());

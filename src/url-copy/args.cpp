@@ -80,6 +80,7 @@ const option UrlCopyOpts::long_options[] =
 
 const char UrlCopyOpts::short_options[] = "?PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:0:6:y:";
 
+
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false),
     logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),
@@ -94,24 +95,21 @@ UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
 }
 
 
-
 UrlCopyOpts& UrlCopyOpts::getInstance()
 {
     return UrlCopyOpts::instance;
 }
 
 
-
-void UrlCopyOpts::usage(const std::string& bin)
+void UrlCopyOpts::usage(const std::string &bin)
 {
     std::cout << "Usage: " << bin << " [options]" << std::endl
-              << "Options: " << std::endl;
-    for (int i = 0; long_options[i].name; ++i)
-        {
-            std::cout << "\t--" << long_options[i].name
-                << ",-" << static_cast<char>(long_options[i].val)
-                << std::endl;
-        }
+    << "Options: " << std::endl;
+    for (int i = 0; long_options[i].name; ++i) {
+        std::cout << "\t--" << long_options[i].name
+        << ",-" << static_cast<char>(long_options[i].val)
+        << std::endl;
+    }
     exit(0);
 }
 
@@ -124,186 +122,178 @@ std::string UrlCopyOpts::getErrorMessage()
 
 int UrlCopyOpts::parse(int argc, char * const argv[])
 {
-
-
     int option_index;
     int opt;
 
-    try
-        {
-            while ((opt = getopt_long_only(argc, argv, short_options, long_options, &option_index)) > -1)
-                {
-                    switch (opt)
-                        {
-                        case 'P':
-                            monitoringMessages = true;
-                            break;
-                        case 'O':
-                            autoTunned = true;
-                            break;
-                        case 'N':
-                            manualConfig = true;
-                            break;
-                        case 'M':
-                            infosys = optarg;
-                            break;
-                        case 'L':
-                            tokenBringOnline = optarg;
-                            break;
-                        case 'K':
-                            fileMetadata = optarg;
-                            break;
-                        case 'J':
-                            jobMetadata = optarg;
-                            break;
-                        case 'I':
-                            userFileSize = boost::lexical_cast<long long>(optarg);
-                            break;
-                        case 'H':
-                            bringOnline = boost::lexical_cast<int>(optarg);
-                            break;
-                        case 'G':
-                            reuse = true;
-                            break;
-                        case 'R':
-                            multihop = true;
-                            break;
-                        case 'F':
-                            if (optarg)
-                                debugLevel = boost::lexical_cast<unsigned>(optarg);
-                            else
-                                debugLevel = 0;
-                            break;
-                        case 'D':
-                            sourceSiteName = optarg;
-                            break;
-                        case 'E':
-                            destSiteName = optarg;
-                            break;
-                        case 'C':
-                            vo = optarg;
-                            break;
-                        case 'U':
-                            enable_udt = true;
-                            break;
-                        case 'X':
-                            enable_ipv6 = true;
-                            break;
-                        case 'Z':
-                            global_timeout = true;
-                            break;
-                        case 'z':
-                            checksumValue = optarg;
-                            break;
-                        case 'A':
-                            if (strcmp("relaxed", optarg) == 0 || strcmp("r", optarg) == 0)
-                                compareChecksum = CHECKSUM_RELAXED;
-                            else
-                                compareChecksum = CHECKSUM_STRICT;
-                            break;
-                        case 't':
-                            copyPinLifetime = boost::lexical_cast<int>(optarg);
-                            break;
-                        case 'a':
-                            jobId = optarg;
-                            break;
-                        case 'b':
-                            sourceUrl = optarg;
-                            break;
-                        case 'c':
-                            destUrl = optarg;
-                            break;
-                        case 'd':
-                            overwrite = true;
-                            break;
-                        case 'e':
-                            nStreams = boost::lexical_cast<int>(optarg);
-                            break;
-                        case 'f':
-                            tcpBuffersize = boost::lexical_cast<unsigned>(optarg);
-                            break;
-                        case 'g':
-                            blockSize = boost::lexical_cast<unsigned>(optarg);
-                            break;
-                        case 'V':
-                            secPerMb = boost::lexical_cast<int>(optarg);
-                            break;
-                        case 'h':
-                            timeout = boost::lexical_cast<unsigned>(optarg);
-                            break;
-                        case 'j':
-                            destTokenDescription = optarg;
-                            break;
-                        case 'Y':
-                            user_dn = optarg;
-                            break;
-                        case '7':
-                            alias = optarg;
-                            break;
-                        case 'k':
-                            sourceTokenDescription = optarg;
-                            break;
-                        case 'B':
-                            fileId = boost::lexical_cast<unsigned>(optarg);
-                            break;
-                        case '5':
-                            proxy = optarg;
-                            break;
-                        case '1':
-                            logToStderr = true;
-                            break;
-                        case '@':
-                            oauthFile = optarg;
-                            break;
-                        case 'S':
-                            strictCopy = true;
-                            break;
-                        case '8':
-                            hide_user_dn = true;
-                            break;
-                        case '?':
-                            usage(argv[0]);
-                            break;
-                        case '9':
-                            level = boost::lexical_cast<int>(optarg);
-                            break;
-                        case '2':
-                            active = boost::lexical_cast<int>(optarg);
-                            break;
-                        case '3':
-                            retry = boost::lexical_cast<int>(optarg);
-                            break;
-                        case '4':
-                            retry_max = boost::lexical_cast<int>(optarg);
-                            break;
-                        case '0':
-                            job_m_replica = boost::lexical_cast<std::string>(optarg);
-                            break;
-                        case '6':
-                            last_replica = boost::lexical_cast<std::string>(optarg);
-                            break;
-                        case 'y':
-                            logDir = boost::lexical_cast<std::string>(optarg);
-                            break;
-                        }
-                }
+    try {
+        while ((opt = getopt_long_only(argc, argv, short_options, long_options, &option_index)) > -1) {
+            switch (opt) {
+                case 'P':
+                    monitoringMessages = true;
+                    break;
+                case 'O':
+                    autoTunned = true;
+                    break;
+                case 'N':
+                    manualConfig = true;
+                    break;
+                case 'M':
+                    infosys = optarg;
+                    break;
+                case 'L':
+                    tokenBringOnline = optarg;
+                    break;
+                case 'K':
+                    fileMetadata = optarg;
+                    break;
+                case 'J':
+                    jobMetadata = optarg;
+                    break;
+                case 'I':
+                    userFileSize = boost::lexical_cast<long long>(optarg);
+                    break;
+                case 'H':
+                    bringOnline = boost::lexical_cast<int>(optarg);
+                    break;
+                case 'G':
+                    reuse = true;
+                    break;
+                case 'R':
+                    multihop = true;
+                    break;
+                case 'F':
+                    if (optarg)
+                        debugLevel = boost::lexical_cast<unsigned>(optarg);
+                    else
+                        debugLevel = 0;
+                    break;
+                case 'D':
+                    sourceSiteName = optarg;
+                    break;
+                case 'E':
+                    destSiteName = optarg;
+                    break;
+                case 'C':
+                    vo = optarg;
+                    break;
+                case 'U':
+                    enable_udt = true;
+                    break;
+                case 'X':
+                    enable_ipv6 = true;
+                    break;
+                case 'Z':
+                    global_timeout = true;
+                    break;
+                case 'z':
+                    checksumValue = optarg;
+                    break;
+                case 'A':
+                    if (strcmp("relaxed", optarg) == 0 || strcmp("r", optarg) == 0)
+                        compareChecksum = CHECKSUM_RELAXED;
+                    else
+                        compareChecksum = CHECKSUM_STRICT;
+                    break;
+                case 't':
+                    copyPinLifetime = boost::lexical_cast<int>(optarg);
+                    break;
+                case 'a':
+                    jobId = optarg;
+                    break;
+                case 'b':
+                    sourceUrl = optarg;
+                    break;
+                case 'c':
+                    destUrl = optarg;
+                    break;
+                case 'd':
+                    overwrite = true;
+                    break;
+                case 'e':
+                    nStreams = boost::lexical_cast<int>(optarg);
+                    break;
+                case 'f':
+                    tcpBuffersize = boost::lexical_cast<unsigned>(optarg);
+                    break;
+                case 'g':
+                    blockSize = boost::lexical_cast<unsigned>(optarg);
+                    break;
+                case 'V':
+                    secPerMb = boost::lexical_cast<int>(optarg);
+                    break;
+                case 'h':
+                    timeout = boost::lexical_cast<unsigned>(optarg);
+                    break;
+                case 'j':
+                    destTokenDescription = optarg;
+                    break;
+                case 'Y':
+                    user_dn = optarg;
+                    break;
+                case '7':
+                    alias = optarg;
+                    break;
+                case 'k':
+                    sourceTokenDescription = optarg;
+                    break;
+                case 'B':
+                    fileId = boost::lexical_cast<unsigned>(optarg);
+                    break;
+                case '5':
+                    proxy = optarg;
+                    break;
+                case '1':
+                    logToStderr = true;
+                    break;
+                case '@':
+                    oauthFile = optarg;
+                    break;
+                case 'S':
+                    strictCopy = true;
+                    break;
+                case '8':
+                    hide_user_dn = true;
+                    break;
+                case '?':
+                    usage(argv[0]);
+                    break;
+                case '9':
+                    level = boost::lexical_cast<int>(optarg);
+                    break;
+                case '2':
+                    active = boost::lexical_cast<int>(optarg);
+                    break;
+                case '3':
+                    retry = boost::lexical_cast<int>(optarg);
+                    break;
+                case '4':
+                    retry_max = boost::lexical_cast<int>(optarg);
+                    break;
+                case '0':
+                    job_m_replica = boost::lexical_cast<std::string>(optarg);
+                    break;
+                case '6':
+                    last_replica = boost::lexical_cast<std::string>(optarg);
+                    break;
+                case 'y':
+                    logDir = boost::lexical_cast<std::string>(optarg);
+                    break;
+            }
         }
-    catch (boost::bad_lexical_cast &e)
-        {
-            errorMessage = "Expected a numeric value for option -";
-            errorMessage += static_cast<char>(opt);
-            return -1;
-        }
+    }
+    catch (boost::bad_lexical_cast &e) {
+        errorMessage = "Expected a numeric value for option -";
+        errorMessage += static_cast<char>(opt);
+        return -1;
+    }
 
     return 0;
 }
 
 
-
 std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum& c)
 {
-    switch (c)
-        {
+    switch (c) {
         case UrlCopyOpts::CHECKSUM_DONT_CHECK:
             out << "No checksum comparison";
             break;
@@ -315,6 +305,6 @@ std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum
             break;
         default:
             out << "Uknown value!";
-        }
+    }
     return out;
 }

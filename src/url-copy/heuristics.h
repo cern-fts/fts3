@@ -26,7 +26,7 @@
  * Return true if the error is considered recoverable
  * (i.e. ENOENT is not recoverable)
  */
-bool retryTransfer(int errorNo, const std::string& category, const std::string& message);
+bool retryTransfer(int errorNo, const std::string &category, const std::string &message);
 
 /**
  * Return the best number of streams for the given file size
