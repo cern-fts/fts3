@@ -42,15 +42,15 @@ using namespace fts3::infosys;
 using namespace boost::property_tree;
 using namespace pugi;
 
-static void setNodeOrAppend(xml_node& node, const std::string& key,
-                            const std::string& value)
+
+static void setNodeOrAppend(xml_node &node, const std::string &key,
+    const std::string &value)
 {
     xml_node child = node.child(key.c_str());
-    if (child.empty())
-        {
-            child = node.append_child();
-            child.set_name(key.c_str());
-        }
+    if (child.empty()) {
+        child = node.append_child();
+        child.set_name(key.c_str());
+    }
 
     xml_node vnode = child.last_child();
     if (vnode.empty())
@@ -59,81 +59,68 @@ static void setNodeOrAppend(xml_node& node, const std::string& key,
     vnode.set_value(value.c_str());
 }
 
-/* -------------------------------------------------------------------------- */
-int main(int argc, char** argv)
+
+int main(int argc, char **argv)
 {
-
-    // exit status
-    int ret = EXIT_SUCCESS;
-
-    try
-        {
-            ServerConfig::instance().read(argc, argv);
-        }
-    catch (BaseException& e)
-        {
-            std::string msg = "Fatal error, exiting...";
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
-            return EXIT_FAILURE;
-        }
-    catch (...)
-        {
-            std::string msg = "Fatal error (unknown origin), exiting...";
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
-            return EXIT_FAILURE;
-        }
+    try {
+        ServerConfig::instance().read(argc, argv);
+    }
+    catch (BaseException &e) {
+        std::string msg = "Fatal error, exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::string msg = "Fatal error (unknown origin), exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
+        return EXIT_FAILURE;
+    }
 
     // path to local BDII cache
     const string bdii_path = "/var/lib/fts3/bdii_cache.xml";
 
-    try
-        {
-            // instance of the site name cache retriever
-            SiteNameCacheRetriever& bdii_cache = SiteNameCacheRetriever::instance();
+    try {
+        // instance of the site name cache retriever
+        SiteNameCacheRetriever &bdii_cache = SiteNameCacheRetriever::instance();
 
-            xml_document doc;
-            doc.load_file(bdii_path.c_str());
+        xml_document doc;
+        doc.load_file(bdii_path.c_str());
 
-            map<string, EndpointInfo> cache;
-            bdii_cache.get(cache);
+        map<string, EndpointInfo> cache;
+        bdii_cache.get(cache);
 
-            map<string, EndpointInfo>::iterator it;
-            for (it = cache.begin(); it != cache.end(); ++it)
-                {
-                    string xpath = "/entry[endpoint='" + it->first + "']";
-                    xpath_node node = doc.select_single_node(xpath.c_str());
+        map<string, EndpointInfo>::iterator it;
+        for (it = cache.begin(); it != cache.end(); ++it) {
+            string xpath = "/entry[endpoint='" + it->first + "']";
+            xpath_node node = doc.select_single_node(xpath.c_str());
 
-                    xml_node entry;
-                    if (node)
-                        {
-                            entry = node.node();
-                        }
-                    else
-                        {
-                            entry = doc.append_child();
-                            entry.set_name("entry");
-                            setNodeOrAppend(entry, "endpoint", it->first);
-                        }
+            xml_node entry;
+            if (node) {
+                entry = node.node();
+            }
+            else {
+                entry = doc.append_child();
+                entry.set_name("entry");
+                setNodeOrAppend(entry, "endpoint", it->first);
+            }
 
-                    setNodeOrAppend(entry, "sitename", it->second.sitename);
-                    setNodeOrAppend(entry, "type", it->second.type);
-                    setNodeOrAppend(entry, "version", it->second.version);
-                }
-
-            if (!doc.save_file(bdii_path.c_str()))
-                FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BDII cache: it has not been possible to save the file." << commit;
-
+            setNodeOrAppend(entry, "sitename", it->second.sitename);
+            setNodeOrAppend(entry, "type", it->second.type);
+            setNodeOrAppend(entry, "version", it->second.version);
         }
-    catch(std::exception& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BDII cache: " << ex.what() << commit;
-            return EXIT_FAILURE;
-        }
-    catch (...)
-        {
-            std::string msg = "Fatal error (unknown origin), exiting...";
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
-            return EXIT_FAILURE;
-        }
-    return ret;
+
+        if (!doc.save_file(bdii_path.c_str()))
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BDII cache: it has not been possible to save the file." << commit;
+
+    }
+    catch (std::exception &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BDII cache: " << ex.what() << commit;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::string msg = "Fatal error (unknown origin), exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << msg << commit;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
