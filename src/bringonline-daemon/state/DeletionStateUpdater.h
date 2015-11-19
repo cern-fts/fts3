@@ -77,10 +77,10 @@ private:
 
     /// Default constructor
     DeletionStateUpdater() : StateUpdater("_delete"), t(run) {}
-    /// Copy constructor (not implemented)
-    DeletionStateUpdater(DeletionStateUpdater const &);
-    /// Assignment operator (not implemented)
-    DeletionStateUpdater & operator=(DeletionStateUpdater const &);
+    /// Copy constructor
+    DeletionStateUpdater(DeletionStateUpdater const &) = delete;
+    /// Assignment operator
+    DeletionStateUpdater & operator=(DeletionStateUpdater const &) = delete;
 
     /// this rutine is executed in a separate thread
     static void run()

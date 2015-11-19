@@ -55,12 +55,6 @@ public:
 
 private:
     /**
-     * Default Constructor. Not implemented
-     */
-    TempFile();
-
-private:
-    /**
      * The Name of the temporary file
      */
     std::string m_filename;

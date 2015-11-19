@@ -93,10 +93,10 @@ private:
 
     /// Default constructor
     StagingStateUpdater() : StateUpdater("_staging"), t(run) {}
-    /// Copy constructor (not implemented)
-    StagingStateUpdater(StagingStateUpdater const &);
-    /// Assignment operator (not implemented)
-    StagingStateUpdater & operator=(StagingStateUpdater const &);
+    /// Copy constructor
+    StagingStateUpdater(StagingStateUpdater const &) = delete;
+    /// Assignment operator
+    StagingStateUpdater & operator=(StagingStateUpdater const &) = delete;
 
     /// this routine is executed in a separate thread
     static void run()

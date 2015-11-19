@@ -43,11 +43,7 @@ public:
      * Destructor
      */
     ~UserProxyEnv();
-private:
-    /**
-     * Default Constructor. Not Implemented
-     */
-    UserProxyEnv();
+
 private:
     /**
      * Old value of the environment variable X509_USER_KEY

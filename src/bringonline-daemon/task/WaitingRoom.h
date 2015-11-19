@@ -88,14 +88,14 @@ private:
     WaitingRoom(): pool(NULL) {}
 
     /**
-     * Copy constructor (not implemented)
+     * Copy constructor
      */
-    WaitingRoom(WaitingRoom const &);
+    WaitingRoom(WaitingRoom const &) = delete;
 
     /**
-     * Assigment operator (not implemented)
+     * Assigment operator
      */
-    WaitingRoom& operator=(WaitingRoom const &);
+    WaitingRoom& operator=(WaitingRoom const &) = delete;
 
     /// the queue with tasks that are waiting
     boost::ptr_list<TASK> tasks;
