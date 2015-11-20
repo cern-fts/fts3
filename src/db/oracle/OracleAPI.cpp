@@ -61,8 +61,9 @@ static unsigned getHashedId(void)
 }
 
 
-
-bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int& throughputSamplesEqual, int& throughputSamplesStored)
+bool OracleAPI::getChangedFile(std::string source, std::string dest, double rate, double &rateStored, double thr,
+    double &thrStored, double retry, double &retryStored, int active, int &activeStored, int &throughputSamplesEqual,
+    int &throughputSamplesStored)
 {
     bool returnValue = false;
 
@@ -70,103 +71,88 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
         return returnValue;
 
     if(filesMemStore.empty())
-        {
-            boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
-            filesMemStore.push_back(record);
-            return returnValue;
-        }
+    {
+        filesMemStore.emplace_back(source, dest, rate, thr, retry, active, 0, 0);
+        return returnValue;
+    }
     else
+    {
+        bool found = false;
+        for (auto itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
         {
-            bool found = false;
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator itFind;
-            for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
-                {
-                    boost::tuple<std::string, std::string, double, double, double, int, int, int>& tupleRecord = *itFind;
-                    std::string sourceLocal = boost::get<0>(tupleRecord);
-                    std::string destLocal = boost::get<1>(tupleRecord);
-                    if(sourceLocal == source && destLocal == dest)
-                        {
-                            found = true;
-                            break;
-                        }
-                }
-            if (!found)
-                {
-                    boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
-                    filesMemStore.push_back(record);
-                    return found;
-                }
-
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator it =  filesMemStore.begin();
-            while (it != filesMemStore.end())
-                {
-                    boost::tuple<std::string, std::string, double, double, double, int, int, int>& tupleRecord = *it;
-                    std::string sourceLocal = boost::get<0>(tupleRecord);
-                    std::string destLocal = boost::get<1>(tupleRecord);
-                    double rateLocal = boost::get<2>(tupleRecord);
-                    double thrLocal = boost::get<3>(tupleRecord);
-                    double retryThr = boost::get<4>(tupleRecord);
-                    int activeLocal = boost::get<5>(tupleRecord);
-                    int throughputSamplesLocal = boost::get<6>(tupleRecord);
-                    int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
-
-                    if(sourceLocal == source && destLocal == dest)
-                        {
-                            retryStored = retryThr;
-                            thrStored = thrLocal;
-                            rateStored = rateLocal;
-                            activeStored = activeLocal;
-
-                            //if EMA is the same for 10min, spawn one more transfer to see how it goes!
-                            if(thr == thrLocal)
-                                {
-                                    throughputSamplesEqualLocal += 1;
-                                    throughputSamplesEqual = throughputSamplesEqualLocal;
-                                    if(throughputSamplesEqualLocal == 11)
-                                        throughputSamplesEqualLocal = 0;
-                                }
-                            else
-                                {
-                                    throughputSamplesEqualLocal = 0;
-                                    throughputSamplesEqual = 0;
-                                }
-
-                            if(thr < thrLocal)
-                                {
-                                    throughputSamplesLocal += 1;
-                                }
-                            else if(thr >= thrLocal && throughputSamplesLocal > 0)
-                                {
-                                    throughputSamplesLocal -= 1;
-                                }
-                            else
-                                {
-                                    throughputSamplesLocal = 0;
-                                }
-
-                            if(throughputSamplesLocal == 3)
-                                {
-                                    throughputSamplesStored = throughputSamplesLocal;
-                                    throughputSamplesLocal = 0;
-                                }
-
-
-                            if(rateLocal != rate || thrLocal != thr || retry != retryThr || throughputSamplesEqualLocal >= 0)
-                                {
-                                    it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, throughputSamplesLocal, throughputSamplesEqualLocal);
-                                    filesMemStore.push_back(record);
-                                    returnValue = true;
-                                    break;
-                                }
-                            break;
-                        }
-                    else
-                        {
-                            ++it;
-                        }
-                }
+            if(itFind->source == source && itFind->destination == dest)
+            {
+                found = true;
+                break;
+            }
         }
+        if (!found)
+        {
+            filesMemStore.emplace_back(source, dest, rate, thr, retry, active, 0, 0);
+            return found;
+        }
+
+        auto it =  filesMemStore.begin();
+        while (it != filesMemStore.end())
+        {
+            if(it->source == source && it->destination == dest)
+            {
+                retryStored = it->retryThroughput;
+                thrStored = it->throughput;
+                rateStored = it->successRate;
+                activeStored = it->active;
+
+                //if EMA is the same for 10min, spawn one more transfer to see how it goes!
+                if(thr == it->throughput)
+                {
+                    it->throughputSamplesEqual += 1;
+                    throughputSamplesEqual = it->throughputSamplesEqual;
+                    if(it->throughputSamplesEqual == 11)
+                        it->throughputSamplesEqual = 0;
+                }
+                else
+                {
+                    it->throughputSamplesEqual = 0;
+                    throughputSamplesEqual = 0;
+                }
+
+                if(thr < it->throughput)
+                {
+                    it->throughputSamples += 1;
+                }
+                else if(thr >= it->throughput && it->throughputSamples > 0)
+                {
+                    it->throughputSamples -= 1;
+                }
+                else
+                {
+                    it->throughputSamples = 0;
+                }
+
+                if(it->throughputSamples == 3)
+                {
+                    throughputSamplesStored = it->throughputSamples;
+                    it->throughputSamples = 0;
+                }
+
+                if(it->successRate != rate || it->throughput != thr ||
+                   retry != it->retryThroughput || it->throughputSamples >= 0)
+                {
+                    it = filesMemStore.erase(it);
+                    filesMemStore.emplace_back(source, dest, rate, thr, retry, active,
+                        it->throughputSamples,
+                        it->throughputSamplesEqual);
+                    returnValue = true;
+                    break;
+                }
+                break;
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
 
     return returnValue;
 }
