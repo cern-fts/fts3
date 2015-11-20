@@ -17,7 +17,7 @@ make -j2
 lcov --directory . --zerocounters
 
 # Run tests
-./test/unit/unit
+./test/unit/unit --log_level=all --log_format=XML --report_level=no > "../tests.xml"
 
 # Generate the coverage lcov data
 lcov --directory . --capture --output-file="coverage.info"
