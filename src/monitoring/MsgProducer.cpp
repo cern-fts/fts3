@@ -298,7 +298,7 @@ void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
     FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
     stopThreads = true;
-    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
+    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
     std::string ret;
     while(!myQueue.empty())
         {

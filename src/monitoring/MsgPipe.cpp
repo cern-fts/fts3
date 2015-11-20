@@ -49,7 +49,7 @@ void handler(int)
             signalReceived = true;
 
             stopThreads = true;
-            std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
+            std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
             std::string ret;
             while(!myQueue.empty())
                 {
@@ -131,7 +131,7 @@ void MsgPipe::run()
 
 void MsgPipe::cleanup()
 {
-    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
+    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
     std::string ret;
     while(!myQueue.empty())
         {

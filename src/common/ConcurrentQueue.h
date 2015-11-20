@@ -21,38 +21,42 @@
 #ifndef _TQUEUE_H_
 #define _TQUEUE_H_
 
-#include <pthread.h>
 #include <queue>
-#include <iostream>
-
-// Limit to the number of messages hold by the concurrent_queue
-#define MAX_NUM_MSGS_MON 20000
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
 
 
 class ConcurrentQueue
 {
 private:
-    static bool instanceFlag;
     static ConcurrentQueue *single;
-    pthread_mutex_t lock; // The queue lock
-    pthread_cond_t  cv;   // Lock conditional variable
-    int             blck; // should pop() block by default
+    boost::mutex mutex;
+    boost::condition_variable cv;
+
+    ConcurrentQueue();
 
 public:
+    static const size_t MaxElements =  20000;
     static ConcurrentQueue* getInstance();
-    std::queue<std::string> the_queue;  // The queue
-    void nonblock();
-    void block();
+
+    std::queue<std::string> theQueue;
+
+    /// Return true if the queue is empty
     bool empty();
-    unsigned int size();
-    void push( std::string value );
+
+    /// Return the size of the queue
+    size_t size();
+
+    /// Push a new element into the queue
+    void push(const std::string &value);
+
+    /// Pop an element off the queue
+    /// If wait is 0, return null if the queue is empty, otherwise wait until an item is placed in the queue
+    /// Potentially in the future:
+    ///  wait = -1 => block until an item is placed in the queue, and return it
+    ///  wait = 0  => don't block, return null if the queue is empty
+    /// wait > 0  => block for <block> seconds
     std::string pop(const int wait = -1);
-    ConcurrentQueue()
-    {
-        blck = 1;
-        pthread_mutex_init(&lock, NULL);
-        pthread_cond_init (&cv, NULL);
-    }
 };
 
 
