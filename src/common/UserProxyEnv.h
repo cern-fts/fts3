@@ -32,13 +32,13 @@
  * of scope.
  * Note: it doesn't work on a multithreaded environment
  */
-class UserProxyEnv : boost::noncopyable
-{
+class UserProxyEnv : boost::noncopyable {
 public:
     /**
      * Constructor
      */
-    explicit UserProxyEnv(const std::string& file_name);
+    explicit UserProxyEnv(const std::string &file_name);
+
     /**
      * Destructor
      */
@@ -63,8 +63,6 @@ private:
      * Flag the indicates that the environment variable has been set
      */
     bool m_isSet;
-
-
 };
 
 

@@ -51,6 +51,7 @@ void getUniqueTempFileName(const std::string& basename,
     tempname = strmName.str();
 }
 
+
 std::string getNewMessageFile(const char* BASE_DIR)
 {
     std::string basename(BASE_DIR);
@@ -58,6 +59,7 @@ std::string getNewMessageFile(const char* BASE_DIR)
     getUniqueTempFileName(basename, tempname);
     return tempname;
 }
+
 
 int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR, const std::string & extension)
 {

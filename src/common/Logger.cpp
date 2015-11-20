@@ -79,12 +79,10 @@ Logger & Logger::setLogLevel(LogLevel level)
 
 void Logger::_commit()
 {
-    if (_lastLogLevel >= _logLevel)
-    {
+    if (_lastLogLevel >= _logLevel) {
         std::cout << std::endl;
         ++_nCommits;
-        if (_nCommits >= NB_COMMITS_BEFORE_CHECK)
-        {
+        if (_nCommits >= NB_COMMITS_BEFORE_CHECK) {
             _nCommits = 0;
             checkFd();
         }
@@ -140,14 +138,12 @@ int Logger::redirect(const std::string& outPath, const std::string& errPath) thr
 
 void Logger::checkFd(void)
 {
-    if (std::cout.fail())
-    {
+    if (std::cout.fail()) {
         std::cout.clear();
         *this << logLevelStringRepresentation(WARNING) << timestamp() << _separator;
         *this << "std::cout fail bit cleared";
     }
-    else
-    {
+    else {
         *this << logLevelStringRepresentation(INFO) << timestamp() << _separator;
         *this << "std::cout clear!";
     }
@@ -171,8 +167,7 @@ std::string Logger::timestamp()
 
 std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
 {
-    switch (loglevel)
-    {
+    switch (loglevel) {
         case TRACE:
             return std::string("TRACE   ");
         case DEBUG:

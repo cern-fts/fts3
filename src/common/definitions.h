@@ -44,14 +44,13 @@
 
 inline double activePercentageQueue(double active, double submitted, double rate)
 {
-    if(submitted > 0 && active > 0 && rate >= 96)
-        {
-            double temp =  ((active / submitted) * 100) < 0.050? (0.080 / 100) * submitted: active;
-            if(temp > 0 && temp > active)
-                return ceil(temp);
-            else
-                return active;
-        }
+    if (submitted > 0 && active > 0 && rate >= 96) {
+        double temp = ((active / submitted) * 100) < 0.050 ? (0.080 / 100) * submitted : active;
+        if (temp > 0 && temp > active)
+            return ceil(temp);
+        else
+            return active;
+    }
     return active;
 }
 
@@ -136,10 +135,8 @@ public:
     boost::posix_time::time_duration::tick_type timestamp;
     bool retry;
     double throughput;
-
-
-
 };
+
 
 struct message_updater: public message_base
 {
@@ -170,6 +167,7 @@ public:
     char transfer_status[TRANFER_STATUS_LEN];
 };
 
+
 struct message_log: public message_base
 {
 public:
@@ -190,7 +188,6 @@ public:
     bool debugFile;
     boost::posix_time::time_duration::tick_type timestamp;
 };
-
 
 
 struct message_bringonline: public message_base
@@ -312,7 +309,7 @@ const int mode_3[] = {6,8,7,10};
 
 inline bool lanTransfer(const std::string source, const std::string dest)
 {
-    if(source == dest)
+    if (source == dest)
         return true;
 
     std::string sourceDomain;
@@ -321,17 +318,15 @@ inline bool lanTransfer(const std::string source, const std::string dest)
     std::size_t foundSource = source.find(".");
     std::size_t foundDestin = dest.find(".");
 
-    if (foundSource!=std::string::npos)
-        {
-            sourceDomain = source.substr (foundSource,source.length());
-        }
+    if (foundSource != std::string::npos) {
+        sourceDomain = source.substr(foundSource, source.length());
+    }
 
-    if (foundDestin!=std::string::npos)
-        {
-            destinDomain = dest.substr (foundDestin, dest.length());
-        }
+    if (foundDestin != std::string::npos) {
+        destinDomain = dest.substr(foundDestin, dest.length());
+    }
 
-    if(sourceDomain == destinDomain)
+    if (sourceDomain == destinDomain)
         return true;
 
     return false;
@@ -354,11 +349,9 @@ inline std::string getFullHostname()
     hints.ai_flags = AI_CANONNAME;
 
     // First is OK
-    if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
-        {
-            g_strlcpy(hostname, info->ai_canonname, sizeof(hostname));
-            freeaddrinfo(info);
-        }
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0) {
+        g_strlcpy(hostname, info->ai_canonname, sizeof(hostname));
+        freeaddrinfo(info);
+    }
     return hostname;
 }
-

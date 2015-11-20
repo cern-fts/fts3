@@ -44,14 +44,12 @@ class Singleton
 public:
 
     /// Gets a references to T, is thread safe.
-    static T& instance()
+    static T &instance()
     {
         // thread safe lazy loading
-        if (Singleton<T>::getInstancePtr().get() == NULL)
-        {
+        if (Singleton<T>::getInstancePtr().get() == NULL) {
             boost::mutex::scoped_lock lock(Singleton<T>::getMutex());
-            if (Singleton<T>::getInstancePtr().get() == 0)
-            {
+            if (Singleton<T>::getInstancePtr().get() == 0) {
                 Singleton<T>::getInstancePtr().reset(new T);
             }
         }

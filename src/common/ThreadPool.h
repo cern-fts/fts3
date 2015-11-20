@@ -53,27 +53,26 @@ class ThreadPool
         /// constructor
         ThreadPoolWorker(ThreadPool & pool, init_func init_context) : t_pool(pool)
         {
-            if (init_context.is_initialized()) (*init_context)(thread_context);
+            if (init_context.is_initialized()) {
+                (*init_context)(thread_context);
+            }
         }
 
         /// the run routine that retrieves subsequent tasks
         /// from the queue and then executes them
         void run()
         {
-            while(!t_pool.interrupt_flag)
-                {
-                    std::unique_ptr<TASK> task(t_pool.next());
-                    if (!task.get()) break;
-                    task->run(thread_context);
-                }
+            while (!t_pool.interrupt_flag) {
+                std::unique_ptr<TASK> task(t_pool.next());
+                if (!task.get()) break;
+                task->run(thread_context);
+            }
         }
 
-//    private:
         /// optional data, initialised by the 'init_context' parameter
         boost::any thread_context;
         /// reference to the thread pool object
         ThreadPool & t_pool;
-
     };
 
 public:
@@ -85,15 +84,14 @@ public:
      */
     ThreadPool(int size, init_func init_context = init_func()) : workers(size), interrupt_flag(false), join_flag(false)
     {
-        for (int i = 0; i < size; ++i)
-            {
-                // create new worker
-                ThreadPoolWorker* worker = new ThreadPoolWorker(*this, init_context);
-                // take ownership of the memory
-                workers.push_back(worker);
-                // create new thread belonging to the right group
-                group.create_thread(boost::bind(&ThreadPoolWorker::run, worker));
-            }
+        for (int i = 0; i < size; ++i) {
+            // create new worker
+            ThreadPoolWorker *worker = new ThreadPoolWorker(*this, init_context);
+            // take ownership of the memory
+            workers.push_back(worker);
+            // create new thread belonging to the right group
+            group.create_thread(boost::bind(&ThreadPoolWorker::run, worker));
+        }
     }
 
     /// destructor
@@ -109,7 +107,7 @@ public:
      *
      * @param t : task that will be executed
      */
-    void start(TASK* t)
+    void start(TASK *t)
     {
         {
             // lock the queue
@@ -163,11 +161,10 @@ public:
         typename boost::ptr_vector<ThreadPoolWorker>::iterator it;
         RET init = RET();
 
-        for (it = workers.begin(); it != workers.end(); ++it)
-            {
-                if (it->thread_context.empty()) continue;
-                init = op(init, boost::any_cast<RET>(it->thread_context));
-            }
+        for (it = workers.begin(); it != workers.end(); ++it) {
+            if (it->thread_context.empty()) continue;
+            init = op(init, boost::any_cast<RET>(it->thread_context));
+        }
 
         return init;
     }

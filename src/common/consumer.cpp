@@ -64,36 +64,34 @@ boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 }
 
 
-int getDir(const std::string& dir, std::vector<std::string> &files,
-    const std::string& extension, unsigned limit)
+int getDir(const std::string &dir, std::vector<std::string> &files,
+    const std::string &extension, unsigned limit)
 {
-    DIR *dp=NULL;
-    struct dirent *dirp=NULL;
+    DIR *dp = NULL;
+    struct dirent *dirp = NULL;
     struct stat st;
-    if((dp  = opendir(dir.c_str())) == NULL)
-        {
-            return errno;
-        }
+    if ((dp = opendir(dir.c_str())) == NULL) {
+        return errno;
+    }
 
-    while ((dirp = readdir(dp)) != NULL && files.size() < limit)
-        {
-            std::string fileName = std::string(dirp->d_name);
-            size_t found = fileName.find(extension);
-            if(found!=std::string::npos)
-                {
-                    std::string copyFilename = dir + fileName;
-                    int stCheck = stat(copyFilename.c_str(), &st);
-                    if(stCheck==0 && st.st_size > 0)
-                        files.push_back(copyFilename);
-                    else
-                        unlink(copyFilename.c_str());
-                }
+    while ((dirp = readdir(dp)) != NULL && files.size() < limit) {
+        std::string fileName = std::string(dirp->d_name);
+        size_t found = fileName.find(extension);
+        if (found != std::string::npos) {
+            std::string copyFilename = dir + fileName;
+            int stCheck = stat(copyFilename.c_str(), &st);
+            if (stCheck == 0 && st.st_size > 0)
+                files.push_back(copyFilename);
+            else
+                unlink(copyFilename.c_str());
         }
+    }
     closedir(dp);
     return 0;
 }
 
-int runConsumerMonitoring(std::vector<struct message_monitoring>& messages, unsigned limit)
+
+int runConsumerMonitoring(std::vector<struct message_monitoring> &messages, unsigned limit)
 {
     std::string dir = MONITORING_DIR;
     std::vector<std::string> files;
@@ -102,105 +100,96 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages, unsi
     if (getDir(dir, files, "ready", limit) != 0)
         return errno;
 
-    for (unsigned int i = 0; i < files.size(); i++)
-        {
-            FILE *fp = NULL;
-            struct message_monitoring msg;
-            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
-                {
-                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
-                    if(readElements == 0)
-                        readElements = fread(&msg, sizeof(msg), 1, fp);
+    for (unsigned int i = 0; i < files.size(); i++) {
+        FILE *fp = NULL;
+        struct message_monitoring msg;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
+            size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+            if (readElements == 0)
+                readElements = fread(&msg, sizeof(msg), 1, fp);
 
-                    if (readElements == 1)
-                        messages.push_back(msg);
-                    else
-                        msg.set_error(EBADMSG);
-
-                    unlink(files[i].c_str());
-                    fclose(fp);
-                    fp = NULL;
-                }
+            if (readElements == 1)
+                messages.push_back(msg);
             else
-                {
-                    msg.set_error(errno);
-                }
+                msg.set_error(EBADMSG);
+
+            unlink(files[i].c_str());
+            fclose(fp);
+            fp = NULL;
         }
+        else {
+            msg.set_error(errno);
+        }
+    }
     files.clear();
     return 0;
 }
 
 
-int runConsumerStatus(std::vector<struct message>& messages, unsigned limit)
+int runConsumerStatus(std::vector<struct message> &messages, unsigned limit)
 {
     std::string dir = STATUS_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "ready", limit) != 0)
+    if (getDir(dir, files, "ready", limit) != 0)
         return errno;
 
-    for (unsigned int i = 0; i < files.size(); i++)
-        {
-            FILE *fp = NULL;
-            struct message msg;
-            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
-                {
-                    size_t readElements = fread(&msg, sizeof(message), 1, fp);
-                    if(readElements == 0)
-                        readElements = fread(&msg, sizeof(message), 1, fp);
+    for (unsigned int i = 0; i < files.size(); i++) {
+        FILE *fp = NULL;
+        struct message msg;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
+            size_t readElements = fread(&msg, sizeof(message), 1, fp);
+            if (readElements == 0)
+                readElements = fread(&msg, sizeof(message), 1, fp);
 
-                    if (readElements == 1)
-                        messages.push_back(msg);
-                    else
-                        msg.set_error(EBADMSG);
-
-                    unlink(files[i].c_str());
-                    fclose(fp);
-                }
+            if (readElements == 1)
+                messages.push_back(msg);
             else
-                {
-                    msg.set_error(errno);
-                }
+                msg.set_error(EBADMSG);
+
+            unlink(files[i].c_str());
+            fclose(fp);
         }
+        else {
+            msg.set_error(errno);
+        }
+    }
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_status());
     return 0;
 }
 
 
-int runConsumerStall(std::vector<struct message_updater>& messages, unsigned limit)
+int runConsumerStall(std::vector<struct message_updater> &messages, unsigned limit)
 {
     std::string dir = STALLED_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "ready", limit) != 0)
+    if (getDir(dir, files, "ready", limit) != 0)
         return errno;
 
-    for (unsigned int i = 0; i < files.size(); i++)
-        {
-            FILE *fp = NULL;
-            struct message_updater msg_local;
-            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
-                {
-                    size_t readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
-                    if(readElements == 0)
-                        readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
+    for (unsigned int i = 0; i < files.size(); i++) {
+        FILE *fp = NULL;
+        struct message_updater msg_local;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
+            size_t readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
+            if (readElements == 0)
+                readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
 
-                    if (readElements == 1)
-                        messages.push_back(msg_local);
-                    else
-                        msg_local.set_error(EBADMSG);
-
-                    unlink(files[i].c_str());
-                    fclose(fp);
-                }
+            if (readElements == 1)
+                messages.push_back(msg_local);
             else
-                {
-                    msg_local.set_error(errno);
-                }
+                msg_local.set_error(EBADMSG);
+
+            unlink(files[i].c_str());
+            fclose(fp);
         }
+        else {
+            msg_local.set_error(errno);
+        }
+    }
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_updater());
 
@@ -208,116 +197,106 @@ int runConsumerStall(std::vector<struct message_updater>& messages, unsigned lim
 }
 
 
-int runConsumerLog(std::map<int, struct message_log>& messages, unsigned limit)
+int runConsumerLog(std::map<int, struct message_log> &messages, unsigned limit)
 {
     std::string dir = LOG_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "ready", limit) != 0)
+    if (getDir(dir, files, "ready", limit) != 0)
         return errno;
 
-    for (unsigned int i = 0; i < files.size(); i++)
-        {
-            FILE *fp = NULL;
-            struct message_log msg;
-            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
-                {
-                    size_t readElements = fread(&msg, sizeof(message_log), 1, fp);
-                    if(readElements == 0)
-                        readElements = fread(&msg, sizeof(message_log), 1, fp);
+    for (unsigned int i = 0; i < files.size(); i++) {
+        FILE *fp = NULL;
+        struct message_log msg;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
+            size_t readElements = fread(&msg, sizeof(message_log), 1, fp);
+            if (readElements == 0)
+                readElements = fread(&msg, sizeof(message_log), 1, fp);
 
-                    if (readElements == 1)
-                        messages[msg.file_id] = msg;
-                    else
-                        msg.set_error(EBADMSG);
-
-                    unlink(files[i].c_str());
-                    fclose(fp);
-                }
+            if (readElements == 1)
+                messages[msg.file_id] = msg;
             else
-                {
-                    msg.set_error(errno);
-                }
+                msg.set_error(EBADMSG);
+
+            unlink(files[i].c_str());
+            fclose(fp);
         }
+        else {
+            msg.set_error(errno);
+        }
+    }
     files.clear();
 
     return 0;
 }
 
 
-int runConsumerDeletions(std::vector<struct message_bringonline>& messages, unsigned limit)
+int runConsumerDeletions(std::vector<struct message_bringonline> &messages, unsigned limit)
 {
     std::string dir = STATUS_DM_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "delete", limit) != 0)
+    if (getDir(dir, files, "delete", limit) != 0)
         return errno;
 
-    for (unsigned int i = 0; i < files.size(); i++)
-        {
-            FILE *fp = NULL;
-            struct message_bringonline msg;
-            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
-                {
-                    size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
-                    if(readElements == 0)
-                        readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+    for (unsigned int i = 0; i < files.size(); i++) {
+        FILE *fp = NULL;
+        struct message_bringonline msg;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
+            size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+            if (readElements == 0)
+                readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
 
-                    if (readElements == 1)
-                        messages.push_back(msg);
-                    else
-                        msg.set_error(EBADMSG);
-
-                    unlink(files[i].c_str());
-                    fclose(fp);
-                }
+            if (readElements == 1)
+                messages.push_back(msg);
             else
-                {
-                    msg.set_error(errno);
-                }
+                msg.set_error(EBADMSG);
+
+            unlink(files[i].c_str());
+            fclose(fp);
         }
+        else {
+            msg.set_error(errno);
+        }
+    }
     files.clear();
 
     return 0;
 }
 
-int runConsumerStaging(std::vector<struct message_bringonline>& messages, unsigned limit)
+
+int runConsumerStaging(std::vector<struct message_bringonline> &messages, unsigned limit)
 {
     std::string dir = STATUS_DM_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir,files, "staging", limit) != 0)
+    if (getDir(dir, files, "staging", limit) != 0)
         return errno;
 
-    for (unsigned int i = 0; i < files.size(); i++)
-        {
-            FILE *fp = NULL;
-            struct message_bringonline msg;
-            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
-                {
-                    size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
-                    if(readElements == 0)
-                        readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+    for (unsigned int i = 0; i < files.size(); i++) {
+        FILE *fp = NULL;
+        struct message_bringonline msg;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
+            size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+            if (readElements == 0)
+                readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
 
-                    if (readElements == 1)
-                        messages.push_back(msg);
-                    else
-                        msg.set_error(EBADMSG);
-
-                    unlink(files[i].c_str());
-                    fclose(fp);
-                }
+            if (readElements == 1)
+                messages.push_back(msg);
             else
-                {
-                    msg.set_error(errno);
-                }
+                msg.set_error(EBADMSG);
+
+            unlink(files[i].c_str());
+            fclose(fp);
         }
+        else {
+            msg.set_error(errno);
+        }
+    }
     files.clear();
 
     return 0;
 }
-
-

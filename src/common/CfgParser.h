@@ -167,221 +167,194 @@ private:
     static const std::map<std::string, std::set <std::string> > initActivityShareCfgTokens();
 };
 
-template <typename T>
+
+template<typename T>
 T CfgParser::get(std::string path)
 {
-
     T v;
-    try
-        {
-
-            v = pt.get<T>(path);
-
-        }
-    catch (boost::property_tree::ptree_bad_path& ex)
-        {
-            throw UserError("The " + path + " has to be specified!");
-
-        }
-    catch (boost::property_tree::ptree_bad_data& ex)
-        {
-            // if the type of the value is wrong throw an exception
-            throw UserError("Wrong value type of " + path);
-        }
-
+    try {
+        v = pt.get<T>(path);
+    }
+    catch (boost::property_tree::ptree_bad_path &ex) {
+        throw UserError("The " + path + " has to be specified!");
+    }
+    catch (boost::property_tree::ptree_bad_data &ex) {
+        // if the type of the value is wrong throw an exception
+        throw UserError("Wrong value type of " + path);
+    }
     return v;
 }
 
-template <>
-inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::string path)
-{
 
+template<>
+inline std::vector<std::string> CfgParser::get<std::vector<std::string> >(std::string path)
+{
     std::vector<std::string> ret;
 
-    boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
-    if (!value.is_initialized())
-        {
-            // the vector member was not specified in the configuration
-            throw UserError("The " + path + " has to be specified!");
-        }
-    boost::property_tree::ptree& array = value.get();
+    boost::optional<boost::property_tree::ptree &> value = pt.get_child_optional(path);
+    if (!value.is_initialized()) {
+        // the vector member was not specified in the configuration
+        throw UserError("The " + path + " has to be specified!");
+    }
+    boost::property_tree::ptree &array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
-    if (!wrong.empty())
-        {
-            throw UserError("Wrong value: '" + wrong + "'");
+    if (!wrong.empty()) {
+        throw UserError("Wrong value: '" + wrong + "'");
+    }
+
+    for (auto it = array.begin(); it != array.end(); ++it) {
+        std::pair<std::string, boost::property_tree::ptree> v = *it;
+
+        // check if the node has a name,
+        // accordingly to boost it should be empty if object weren't
+        // members of the array (our case)
+        if (!v.first.empty()) {
+            throw UserError(
+                "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
         }
 
-    for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            std::pair<std::string, boost::property_tree::ptree> v = *it;
-
-            // check if the node has a name,
-            // accordingly to boost it should be empty if object weren't
-            // members of the array (our case)
-            if (!v.first.empty())
-                {
-                    throw UserError("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
-                }
-
-            // check if the node has children, it should only have a value!
-            if (!v.second.empty())
-                {
-                    throw UserError("Unexpected object in array '" + path + "' (only a list of values was expected)");
-                }
-
-            ret.push_back(v.second.get_value<std::string>());
+        // check if the node has children, it should only have a value!
+        if (!v.second.empty()) {
+            throw UserError("Unexpected object in array '" + path + "' (only a list of values was expected)");
         }
+
+        ret.push_back(v.second.get_value<std::string>());
+    }
 
     return ret;
 }
 
-template <>
-inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(std::string path)
-{
 
+template<>
+inline std::map<std::string, int> CfgParser::get<std::map<std::string, int> >(std::string path)
+{
     std::map<std::string, int> ret;
 
-    boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
+    boost::optional<boost::property_tree::ptree &> value = pt.get_child_optional(path);
     if (!value.is_initialized())
         throw UserError("The " + path + " has to be specified!");
-    boost::property_tree::ptree& array = value.get();
+    boost::property_tree::ptree &array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
-    if (!wrong.empty())
-        {
-            throw UserError("Wrong value: '" + wrong + "'");
+    if (!wrong.empty()) {
+        throw UserError("Wrong value: '" + wrong + "'");
+    }
+
+    for (auto it = array.begin(); it != array.end(); ++it) {
+        std::pair<std::string, boost::property_tree::ptree> v = *it;
+
+        // check if the node has a name,
+        // accordingly to boost it should be empty if object weren't
+        // members of the array (our case)
+        if (!v.first.empty()) {
+            throw UserError(
+                "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
         }
 
-    for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            std::pair<std::string, boost::property_tree::ptree> v = *it;
-
-            // check if the node has a name,
-            // accordingly to boost it should be empty if object weren't
-            // members of the array (our case)
-            if (!v.first.empty())
-                {
-                    throw UserError("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
-                }
-
-            // check if there is a value,
-            // the value should be empty because only a 'key:value' object should be specified
-            if (!v.second.get_value<std::string>().empty())
-                {
-                    throw UserError("'{key:value}' object was expected, not just the value");
-                }
-
-            // there should be only one child the 'key:value' object
-            if (v.second.size() != 1)
-                {
-                    throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
-                }
-
-            std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
-            try
-                {
-                    // get the std::string value
-                    std::string str_value = kv.second.get_value<std::string>();
-                    // check if it's auto-value
-                    if (str_value == auto_value)
-                        {
-                            ret[kv.first] = -1;
-                        }
-                    else
-                        {
-                            // get the integer value
-                            int value = kv.second.get_value<int>();
-                            // make sure it's not negative
-                            if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
-                            // std::set the value
-                            ret[kv.first] = value;
-                        }
-
-                }
-            catch(boost::property_tree::ptree_bad_data& ex)
-                {
-                    throw UserError("Wrong value type of " + kv.first);
-                }
+        // check if there is a value,
+        // the value should be empty because only a 'key:value' object should be specified
+        if (!v.second.get_value<std::string>().empty()) {
+            throw UserError("'{key:value}' object was expected, not just the value");
         }
+
+        // there should be only one child the 'key:value' object
+        if (v.second.size() != 1) {
+            throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
+        }
+
+        std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
+        try {
+            // get the std::string value
+            std::string str_value = kv.second.get_value<std::string>();
+            // check if it's auto-value
+            if (str_value == auto_value) {
+                ret[kv.first] = -1;
+            }
+            else {
+                // get the integer value
+                int value = kv.second.get_value<int>();
+                // make sure it's not negative
+                if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
+                // std::set the value
+                ret[kv.first] = value;
+            }
+
+        }
+        catch (boost::property_tree::ptree_bad_data &ex) {
+            throw UserError("Wrong value type of " + kv.first);
+        }
+    }
 
     return ret;
 }
 
-template <>
-inline std::map <std::string, double> CfgParser::get< std::map<std::string, double> >(std::string path)
-{
 
+template <>
+inline std::map<std::string, double> CfgParser::get<std::map<std::string, double> >(std::string path)
+{
     std::map<std::string, double> ret;
 
-    boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
+    boost::optional<boost::property_tree::ptree &> value = pt.get_child_optional(path);
     if (!value.is_initialized())
         throw UserError("The " + path + " has to be specified!");
-    boost::property_tree::ptree& array = value.get();
+    boost::property_tree::ptree &array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
-    if (!wrong.empty())
-        {
-            throw UserError("Wrong value: '" + wrong + "'");
+    if (!wrong.empty()) {
+        throw UserError("Wrong value: '" + wrong + "'");
+    }
+
+    for (auto it = array.begin(); it != array.end(); ++it) {
+        std::pair<std::string, boost::property_tree::ptree> v = *it;
+
+        // check if the node has a name,
+        // accordingly to boost it should be empty if object weren't
+        // members of the array (our case)
+        if (!v.first.empty()) {
+            throw UserError(
+                "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
         }
 
-    for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            std::pair<std::string, boost::property_tree::ptree> v = *it;
-
-            // check if the node has a name,
-            // accordingly to boost it should be empty if object weren't
-            // members of the array (our case)
-            if (!v.first.empty())
-                {
-                    throw UserError("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
-                }
-
-            // check if there is a value,
-            // the value should be empty because only a 'key:value' object should be specified
-            if (!v.second.get_value<std::string>().empty())
-                {
-                    throw UserError("'{key:value}' object was expected, not just the value");
-                }
-
-            // there should be only one child the 'key:value' object
-            if (v.second.size() != 1)
-                {
-                    throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
-                }
-
-            std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
-            try
-                {
-                    // get the std::string value
-                    std::string str_value = kv.second.get_value<std::string>();
-                    // check if it's auto-value
-                    if (str_value == auto_value)
-                        {
-                            ret[kv.first] = -1;
-                        }
-                    else
-                        {
-                            // get the integer value
-                            double value = kv.second.get_value<double>();
-                            // make sure it's not negative
-                            if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
-                            // Set the value
-                            ret[kv.first] = value;
-                        }
-
-                }
-            catch(boost::property_tree::ptree_bad_data& ex)
-                {
-                    throw UserError("Wrong value type of " + kv.first);
-                }
+        // check if there is a value,
+        // the value should be empty because only a 'key:value' object should be specified
+        if (!v.second.get_value<std::string>().empty()) {
+            throw UserError("'{key:value}' object was expected, not just the value");
         }
+
+        // there should be only one child the 'key:value' object
+        if (v.second.size() != 1) {
+            throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
+        }
+
+        std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
+        try {
+            // get the std::string value
+            std::string str_value = kv.second.get_value<std::string>();
+            // check if it's auto-value
+            if (str_value == auto_value) {
+                ret[kv.first] = -1;
+            }
+            else {
+                // get the integer value
+                double value = kv.second.get_value<double>();
+                // make sure it's not negative
+                if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
+                // Set the value
+                ret[kv.first] = value;
+            }
+
+        }
+        catch (boost::property_tree::ptree_bad_data &ex) {
+            throw UserError("Wrong value type of " + kv.first);
+        }
+    }
 
     return ret;
 }

@@ -23,18 +23,17 @@
 bool ConcurrentQueue::instanceFlag = false;
 ConcurrentQueue* ConcurrentQueue::single = NULL;
 
-ConcurrentQueue* ConcurrentQueue::getInstance()
+
+ConcurrentQueue *ConcurrentQueue::getInstance()
 {
-    if (!instanceFlag)
-        {
-            single = new ConcurrentQueue();
-            instanceFlag = true;
-            return single;
-        }
-    else
-        {
-            return single;
-        }
+    if (!instanceFlag) {
+        single = new ConcurrentQueue();
+        instanceFlag = true;
+        return single;
+    }
+    else {
+        return single;
+    }
 }
 
 
@@ -59,16 +58,14 @@ std::string ConcurrentQueue::pop(int wait)
      *     the value gets returned, or the queue is changed into non-blocking mode and returns
      **/
 
-    while(the_queue.empty())
-        {
-            if(wait == 0 || blck == 0)
-                {
-                    pthread_mutex_unlock(&lock);
-                    return NULL;
-                }
-
-            pthread_cond_wait(&cv, &lock);
+    while (the_queue.empty()) {
+        if (wait == 0 || blck == 0) {
+            pthread_mutex_unlock(&lock);
+            return NULL;
         }
+
+        pthread_cond_wait(&cv, &lock);
+    }
 
     //we know there is at least one item, so dequeue one and return
     ret = the_queue.front();
@@ -79,23 +76,22 @@ std::string ConcurrentQueue::pop(int wait)
     return ret;
 }
 
-//push on the queue
-void ConcurrentQueue::push( std::string  val )
+
+void ConcurrentQueue::push(std::string val)
 {
     pthread_mutex_lock(&lock);
-    if( the_queue.size() < MAX_NUM_MSGS_MON)
+    if (the_queue.size() < MAX_NUM_MSGS_MON)
         the_queue.push(val);
     pthread_mutex_unlock(&lock);
     pthread_cond_signal(&cv);
 }
 
+
 unsigned int ConcurrentQueue::size()
 {
-    //pthread_mutex_lock(&lock);
-    unsigned int ret = (unsigned int)the_queue.size();
-    //pthread_mutex_unlock(&lock);
-    return ret;
+    return static_cast<unsigned int>(the_queue.size());
 }
+
 
 bool ConcurrentQueue::empty()
 {
@@ -105,6 +101,7 @@ bool ConcurrentQueue::empty()
     return ret;
 }
 
+
 //set in blocking mode, so a call to pop without args waits until something is added to the queue
 void ConcurrentQueue::block()
 {
@@ -113,6 +110,8 @@ void ConcurrentQueue::block()
     pthread_mutex_unlock(&lock);
     pthread_cond_broadcast(&cv);
 }
+
+
 
 //set in non-blocking mode, so a call to pop returns immediately, returning NULL if the queue is empty
 //also tells all currently blocking pop calls to return immediately

@@ -50,13 +50,12 @@ static void extractPort(Uri& u0)
 }
 
 
-Uri Uri::parse(const std::string &uri)
-{
-    Uri u0;
+    Uri Uri::parse(const std::string &uri)
+    {
+        Uri u0;
 
-    boost::smatch matches;
-    if (boost::regex_match(uri, matches, uri_regex, boost::match_posix))
-        {
+        boost::smatch matches;
+        if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {
             u0.protocol = matches[2];
             u0.host = matches[4];
             u0.path = matches[5];
@@ -67,8 +66,8 @@ Uri Uri::parse(const std::string &uri)
             extractPort(u0);
         }
 
-    return u0;
-}
+        return u0;
+    }
 
 } // namespace common
 } // namespace fts3

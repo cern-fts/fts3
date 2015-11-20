@@ -24,7 +24,6 @@
 
 std::string UuidGenerator::generateUUID()
 {
-
     uuid_t id;
     char c_str[37]= {0};
 

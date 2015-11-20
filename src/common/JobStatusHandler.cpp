@@ -58,42 +58,38 @@ JobStatusHandler::JobStatusHandler():
                    (FTS3_STATUS_DELETE, FTS3_STATUS_DELETE_ID)
                    (FTS3_STATUS_STARTED, FTS3_STATUS_STARTED_ID).to_container(statusNameToId))
 {
-
     // the constant map is initialised in initialiser list
 }
+
 
 bool JobStatusHandler::isTransferFinished(std::string status)
 {
     to_upper(status);
     std::map<std::string, JobStatusEnum>::const_iterator it = statusNameToId.find(status);
 
-    if (it == statusNameToId.end())
-        {
-            return FTS3_STATUS_UNKNOWN_ID <= 0;
-        }
+    if (it == statusNameToId.end()) {
+        return FTS3_STATUS_UNKNOWN_ID <= 0;
+    }
     return it->second <= 0;
 }
 
 
 bool JobStatusHandler::isStatusValid(std::string status)
 {
-
     to_upper(status);
     return statusNameToId.find(status) != statusNameToId.end();
 }
 
 
-size_t JobStatusHandler::countInState(const std::string& status, const std::vector<FileTransferStatus>& statuses)
+size_t JobStatusHandler::countInState(const std::string &status, const std::vector<FileTransferStatus> &statuses)
 {
     std::set<int> files;
 
-    for (auto it = statuses.begin(); it < statuses.end(); it++)
-        {
-            if (status == it->fileState)
-                {
-                    files.insert(it->fileIndex);
-                }
+    for (auto it = statuses.begin(); it < statuses.end(); it++) {
+        if (status == it->fileState) {
+            files.insert(it->fileIndex);
         }
+    }
 
     return files.size();
 }
