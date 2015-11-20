@@ -27,7 +27,7 @@ rm -fv lcov_cobertura.py
 wget "https://raw.github.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py"
 
 # Generate the xml
-python lcov_cobertura.py "coverage.info" -b "${SOURCE_DIR}/.." -e ".+usr.include." -o "../coverage.xml"
+python lcov_cobertura.py "coverage.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "../coverage.xml"
 
 # Done!
 popd
