@@ -20,6 +20,7 @@
 
 #include "ConcurrentQueue.h"
 
+
 namespace fts3 {
 namespace common {
 
@@ -48,11 +49,13 @@ std::string ConcurrentQueue::pop(int wait)
 {
     boost::unique_lock<boost::mutex> lock(mutex);
 
-    while (theQueue.empty()) {
+    if (theQueue.empty()) {
         if (wait == 0) {
             return std::string();
         }
-        cv.timed_wait(lock, boost::posix_time::seconds(wait));
+        if (!cv.timed_wait(lock, boost::posix_time::seconds(wait))) {
+            return std::string();
+        }
     }
 
     std::string ret = theQueue.front();

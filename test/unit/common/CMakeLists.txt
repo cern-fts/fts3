@@ -17,5 +17,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 define_test (CfgParser fts_common)
+define_test (ConcurrentQueue fts_common)
 define_test (JobStatusHandler fts_common)
 define_test (ThreadPool fts_common)
