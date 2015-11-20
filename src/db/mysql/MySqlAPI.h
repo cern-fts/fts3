@@ -22,6 +22,7 @@
 
 #include <soci/soci.h>
 #include "db/generic/GenericDbIfce.h"
+#include "db/generic/StoragePairState.h"
 
 
 class MySqlAPI : public GenericDbIfce
@@ -53,6 +54,15 @@ public:
         struct message_sanity &msg;
         bool returnValue;
     };
+
+    struct HashSegment
+    {
+        unsigned start;
+        unsigned end;
+
+        HashSegment(): start(0), end(0xFFFF) {}
+    } hashSegment;
+    std::vector<StoragePairState> filesMemStore;
 
     virtual void init(const std::string& username, const std::string& password,
             const std::string& connectString, int pooledConn);
@@ -419,16 +429,6 @@ private:
     int getOptimizerDefaultMode(soci::session& sql);
 
     bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int& throughputSamples, int& throughputSamplesStored);
-
-    struct HashSegment
-    {
-        unsigned start;
-        unsigned end;
-
-        HashSegment(): start(0), end(0xFFFF) {}
-    } hashSegment;
-
-    std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> > filesMemStore;
 
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
                                           std::string transfer_message, int process_id, double filesize, double duration, bool retry);

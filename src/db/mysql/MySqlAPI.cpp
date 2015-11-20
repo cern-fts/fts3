@@ -86,7 +86,9 @@ static unsigned int get_affected_rows(soci::session& sql)
 }
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int& throughputSamplesEqual, int& throughputSamplesStored)
+bool MySqlAPI::getChangedFile(std::string source, std::string dest, double rate, double &rateStored, double thr,
+    double &thrStored, double retry, double &retryStored, int active, int &activeStored, int &throughputSamplesEqual,
+    int &throughputSamplesStored)
 {
     bool returnValue = false;
 
@@ -95,20 +97,15 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
 
     if(filesMemStore.empty())
     {
-        boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
-        filesMemStore.push_back(record);
+        filesMemStore.emplace_back(source, dest, rate, thr, retry, active, 0, 0);
         return returnValue;
     }
     else
     {
         bool found = false;
-        std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator itFind;
-        for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
+        for (auto itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
         {
-            boost::tuple<std::string, std::string, double, double, double, int, int, int>& tupleRecord = *itFind;
-            std::string sourceLocal = boost::get<0>(tupleRecord);
-            std::string destLocal = boost::get<1>(tupleRecord);
-            if(sourceLocal == source && destLocal == dest)
+            if(itFind->source == source && itFind->destination == dest)
             {
                 found = true;
                 break;
@@ -116,69 +113,60 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
         }
         if (!found)
         {
-            boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
-            filesMemStore.push_back(record);
+            filesMemStore.emplace_back(source, dest, rate, thr, retry, active, 0, 0);
             return found;
         }
 
-        std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator it =  filesMemStore.begin();
+        auto it =  filesMemStore.begin();
         while (it != filesMemStore.end())
         {
-            boost::tuple<std::string, std::string, double, double, double, int, int, int>& tupleRecord = *it;
-            std::string sourceLocal = boost::get<0>(tupleRecord);
-            std::string destLocal = boost::get<1>(tupleRecord);
-            double rateLocal = boost::get<2>(tupleRecord);
-            double thrLocal = boost::get<3>(tupleRecord);
-            double retryThr = boost::get<4>(tupleRecord);
-            int activeLocal = boost::get<5>(tupleRecord);
-            int throughputSamplesLocal = boost::get<6>(tupleRecord);
-            int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
-
-            if(sourceLocal == source && destLocal == dest)
+            if(it->source == source && it->destination == dest)
             {
-                retryStored = retryThr;
-                thrStored = thrLocal;
-                rateStored = rateLocal;
-                activeStored = activeLocal;
+                retryStored = it->retryThroughput;
+                thrStored = it->throughput;
+                rateStored = it->successRate;
+                activeStored = it->active;
 
                 //if EMA is the same for 10min, spawn one more transfer to see how it goes!
-                if(thr == thrLocal)
+                if(thr == it->throughput)
                 {
-                    throughputSamplesEqualLocal += 1;
-                    throughputSamplesEqual = throughputSamplesEqualLocal;
-                    if(throughputSamplesEqualLocal == 11)
-                        throughputSamplesEqualLocal = 0;
+                    it->throughputSamplesEqual += 1;
+                    throughputSamplesEqual = it->throughputSamplesEqual;
+                    if(it->throughputSamplesEqual == 11)
+                        it->throughputSamplesEqual = 0;
                 }
                 else
                 {
-                    throughputSamplesEqualLocal = 0;
+                    it->throughputSamplesEqual = 0;
                     throughputSamplesEqual = 0;
                 }
 
-                if(thr < thrLocal)
+                if(thr < it->throughput)
                 {
-                    throughputSamplesLocal += 1;
+                    it->throughputSamples += 1;
                 }
-                else if(thr >= thrLocal && throughputSamplesLocal > 0)
+                else if(thr >= it->throughput && it->throughputSamples > 0)
                 {
-                    throughputSamplesLocal -= 1;
+                    it->throughputSamples -= 1;
                 }
                 else
                 {
-                    throughputSamplesLocal = 0;
+                    it->throughputSamples = 0;
                 }
 
-                if(throughputSamplesLocal == 3)
+                if(it->throughputSamples == 3)
                 {
-                    throughputSamplesStored = throughputSamplesLocal;
-                    throughputSamplesLocal = 0;
+                    throughputSamplesStored = it->throughputSamples;
+                    it->throughputSamples = 0;
                 }
 
-                if(rateLocal != rate || thrLocal != thr || retry != retryThr || throughputSamplesEqualLocal >= 0)
+                if(it->successRate != rate || it->throughput != thr ||
+                    retry != it->retryThroughput || it->throughputSamples >= 0)
                 {
                     it = filesMemStore.erase(it);
-                    boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, throughputSamplesLocal, throughputSamplesEqualLocal);
-                    filesMemStore.push_back(record);
+                    filesMemStore.emplace_back(source, dest, rate, thr, retry, active,
+                                               it->throughputSamples,
+                                               it->throughputSamplesEqual);
                     returnValue = true;
                     break;
                 }
@@ -4406,7 +4394,9 @@ bool MySqlAPI::updateOptimizer()
             double throughputEMA = ceil(exponentialMovingAverage( throughput, EMA, ema));
 
             //only apply the logic below if any of these values changes
-            bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
+            bool changed = getChangedFile(source_hostname, destin_hostname, ratioSuccessFailure, rateStored,
+                throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples,
+                thrSamplesStored);
             if(!changed && retry > 0)
                 changed = true;
             else if(ratioSuccessFailure == 0)
