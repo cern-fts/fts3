@@ -18,8 +18,6 @@
  * limitations under the License.
  */
 
-#ifndef MSG_IFCE_C
-
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -45,18 +43,16 @@
 bool msg_ifce::instanceFlag = false;
 msg_ifce* msg_ifce::single = NULL;
 
-msg_ifce* msg_ifce::getInstance()
+msg_ifce *msg_ifce::getInstance()
 {
-    if (!instanceFlag)
-        {
-            single = new msg_ifce();
-            instanceFlag = true;
-            return single;
-        }
-    else
-        {
-            return single;
-        }
+    if (!instanceFlag) {
+        single = new msg_ifce();
+        instanceFlag = true;
+        return single;
+    }
+    else {
+        return single;
+    }
 }
 
 /*private constructor*/
@@ -86,128 +82,121 @@ std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
         return message;
 
     std::string text("");
-    try
-        {
+    try {
 
-            // Create a messages
-            text = "ST {";
-            text.append("\"$a$\":\"");
-            text.append(tr_started->agent_fqdn);
-            text += "\"";
+        // Create a messages
+        text = "ST {";
+        text.append("\"$a$\":\"");
+        text.append(tr_started->agent_fqdn);
+        text += "\"";
 
-            text.append(",\"$b$\":\"");
-            text.append(tr_started->transfer_id);
-            text.append("\"");
+        text.append(",\"$b$\":\"");
+        text.append(tr_started->transfer_id);
+        text.append("\"");
 
-            text.append(",\"$c$\":\"");
-            text.append(tr_started->endpoint);
-            text.append("\"");
+        text.append(",\"$c$\":\"");
+        text.append(tr_started->endpoint);
+        text.append("\"");
 
-            text.append(",\"$d$\":\"");
-            text.append(getTimestamp());
-            text.append("\"");
+        text.append(",\"$d$\":\"");
+        text.append(getTimestamp());
+        text.append("\"");
 
-            text.append(",\"$e$\":\"");
-            text.append(tr_started->source_srm_version);
-            text.append("\"");
+        text.append(",\"$e$\":\"");
+        text.append(tr_started->source_srm_version);
+        text.append("\"");
 
-            text.append(",\"$f$\":\"");
-            text.append(tr_started->destination_srm_version);
-            text.append("\"");
+        text.append(",\"$f$\":\"");
+        text.append(tr_started->destination_srm_version);
+        text.append("\"");
 
-            text.append(",\"$g$\":\"");
-            text.append(tr_started->vo);
-            text.append("\"");
+        text.append(",\"$g$\":\"");
+        text.append(tr_started->vo);
+        text.append("\"");
 
-            text.append(",\"$h$\":\"");
-            text.append(tr_started->source_url);
-            text.append("\"");
+        text.append(",\"$h$\":\"");
+        text.append(tr_started->source_url);
+        text.append("\"");
 
-            text.append(",\"$i$\":\"");
-            text.append(tr_started->dest_url);
-            text.append("\"");
+        text.append(",\"$i$\":\"");
+        text.append(tr_started->dest_url);
+        text.append("\"");
 
-            text.append(",\"$j$\":\"");
-            text.append(tr_started->source_hostname);
-            text.append("\"");
+        text.append(",\"$j$\":\"");
+        text.append(tr_started->source_hostname);
+        text.append("\"");
 
-            text.append(",\"$k$\":\"");
-            text.append(tr_started->dest_hostname);
-            text.append("\"");
+        text.append(",\"$k$\":\"");
+        text.append(tr_started->dest_hostname);
+        text.append("\"");
 
-            text.append(",\"$l$\":\"");
-            text.append(tr_started->source_site_name);
-            text.append("\"");
+        text.append(",\"$l$\":\"");
+        text.append(tr_started->source_site_name);
+        text.append("\"");
 
-            text.append(",\"$m$\":\"");
-            text.append(tr_started->dest_site_name);
-            text.append("\"");
+        text.append(",\"$m$\":\"");
+        text.append(tr_started->dest_site_name);
+        text.append("\"");
 
-            text.append(",\"$n$\":\"");
-            text.append(tr_started->t_channel);
-            text.append("\"");
+        text.append(",\"$n$\":\"");
+        text.append(tr_started->t_channel);
+        text.append("\"");
 
-            text.append(",\"$o$\":\"");
-            text.append(tr_started->srm_space_token_source);
-            text.append("\"");
+        text.append(",\"$o$\":\"");
+        text.append(tr_started->srm_space_token_source);
+        text.append("\"");
 
-            text.append(",\"$p$\":\"");
-            text.append(tr_started->srm_space_token_dest);
-            text.append("\"");
-
-
-            text.append(",\"$q$\":\"");
-            text.append(tr_started->user_dn);
-            text.append("\"");
-
-            if(tr_started->file_metadata.length() > 0)
-                {
-                    if(tr_started->file_metadata == "x")
-                        {
-                            text.append(",\"$r$\":\"\"");
-                        }
-                    else
-                        {
-                            text.append(",\"$r$\":");
-                            text.append(tr_started->file_metadata);
-                            text.append("");
-                        }
-                }
-            else
-                {
-                    text.append(",\"$r$\":\"\"");
-                }
-
-            if(tr_started->job_metadata.length() > 0)
-                {
-                    text.append(",\"$s$\":");
-                    text.append(tr_started->job_metadata);
-                    text.append("");
-                }
-            else
-                {
-                    text.append(",\"$s$\":\"\"");
-                }
+        text.append(",\"$p$\":\"");
+        text.append(tr_started->srm_space_token_dest);
+        text.append("\"");
 
 
-            text.append("}");
+        text.append(",\"$q$\":\"");
+        text.append(tr_started->user_dn);
+        text.append("\"");
 
-            message = restoreMessageToDisk(text);
-        if(message.empty())
+        if (tr_started->file_metadata.length() > 0) {
+            if (tr_started->file_metadata == "x") {
+                text.append(",\"$r$\":\"\"");
+            }
+            else {
+                text.append(",\"$r$\":");
+                text.append(tr_started->file_metadata);
+                text.append("");
+            }
+        }
+        else {
+            text.append(",\"$r$\":\"\"");
+        }
+
+        if (tr_started->job_metadata.length() > 0) {
+            text.append(",\"$s$\":");
+            text.append(tr_started->job_metadata);
+            text.append("");
+        }
+        else {
+            text.append(",\"$s$\":\"\"");
+        }
+
+
+        text.append("}");
+
+        message = restoreMessageToDisk(text);
+        if (message.empty())
             return text;
         else
-            return message;     
-        }
-    catch (...)
-        {
+            return message;
+    }
+    catch (...) {
         //try again
         message = restoreMessageToDisk(text);
-        if(message.empty())
+        if (message.empty())
             return text;
         else
-            return message;            
-        }
+            return message;
+    }
 }
+
 
 std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed, bool force)
 {
@@ -224,606 +213,626 @@ std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed
         return message;
 
     std::string text("");
-    try
-        {
+    try {
+        // Create a messages
+        text = std::string("CO {");
+        text.append("\"$a$\":\"");
+        text.append(tr_completed->transfer_id);
+        text.append("\"");
 
-            // Create a messages
-            text = std::string("CO {");
-            text.append("\"$a$\":\"");
-            text.append(tr_completed->transfer_id);
+        text.append(",\"$b$\":\"");
+        text.append(tr_completed->endpoint);
+        text.append("\"");
+
+        text.append(",\"$c$\":\"");
+        text.append(tr_completed->source_srm_version);
+        text.append("\"");
+
+        text.append(",\"$d$\":\"");
+        text.append(tr_completed->destination_srm_version);
+        text.append("\"");
+
+        text.append(",\"$e$\":\"");
+        text.append(tr_completed->vo);
+        text.append("\"");
+
+        text.append(",\"$f$\":\"");
+        text.append(tr_completed->source_url);
+        text.append("\"");
+
+        text.append(",\"$g$\":\"");
+        text.append(tr_completed->dest_url);
+        text.append("\"");
+
+        text.append(",\"$h$\":\"");
+        text.append(tr_completed->source_hostname);
+        text.append("\"");
+
+        text.append(",\"$i$\":\"");
+        text.append(tr_completed->dest_hostname);
+        text.append("\"");
+
+        text.append(",\"$j$\":\"");
+        text.append(tr_completed->source_site_name);
+        text.append("\"");
+
+        text.append(",\"$k$\":\"");
+        text.append(tr_completed->dest_site_name);
+        text.append("\"");
+
+        text.append(",\"$l$\":\"");
+        text.append(tr_completed->t_channel);
+        text.append("\"");
+
+        text.append(",\"$m$\":\"");
+        text.append(tr_completed->timestamp_transfer_started);
+        text.append("\"");
+
+        text.append(",\"$n$\":\"");
+        text.append(tr_completed->timestamp_transfer_completed);
+        text.append("\"");
+
+        text.append(",\"$o$\":\"");
+        text.append(tr_completed->timestamp_checksum_source_started);
+        text.append("\"");
+
+        text.append(",\"$p$\":\"");
+        text.append(tr_completed->timestamp_checksum_source_ended);
+        text.append("\"");
+
+        text.append(",\"$q$\":\"");
+        text.append(tr_completed->timestamp_checksum_dest_started);
+        text.append("\"");
+
+        text.append(",\"$r$\":\"");
+        text.append(tr_completed->timestamp_checksum_dest_ended);
+        text.append("\"");
+
+        text.append(",\"$s$\":\"");
+        text.append(tr_completed->transfer_timeout);
+        text.append("\"");
+
+        text.append(",\"$t$\":\"");
+        text.append(tr_completed->checksum_timeout);
+        text.append("\"");
+
+        text.append(",\"$u$\":\"");
+        text.append(tr_completed->transfer_error_code);
+        text.append("\"");
+
+        text.append(",\"$v$\":\"");
+        text.append(tr_completed->transfer_error_scope);
+        text.append("\"");
+
+        text.append(",\"$w$\":\"");
+        text.append(tr_completed->failure_phase);
+        text.append("\"");
+
+        text.append(",\"$x$\":\"");
+        text.append(tr_completed->transfer_error_category);
+        text.append("\"");
+
+        text.append(",\"$y$\":\"");
+        text.append(tr_completed->final_transfer_state);
+        text.append("\"");
+
+        text.append(",\"$z$\":\"");
+        text.append(tr_completed->total_bytes_transfered);
+        text.append("\"");
+
+        text.append(",\"$0$\":\"");
+        text.append(tr_completed->number_of_streams);
+        text.append("\"");
+
+        text.append(",\"$1$\":\"");
+        text.append(tr_completed->tcp_buffer_size);
+        text.append("\"");
+
+        text.append(",\"$2$\":\"");
+        text.append(tr_completed->tcp_buffer_size);
+        text.append("\"");
+
+        text.append(",\"$3$\":\"");
+        text.append(tr_completed->block_size);
+        text.append("\"");
+
+        text.append(",\"$4$\":\"");
+        text.append(tr_completed->file_size);
+        text.append("\"");
+
+        text.append(",\"$5$\":\"");
+        text.append(tr_completed->time_spent_in_srm_preparation_start);
+        text.append("\"");
+
+        text.append(",\"$6$\":\"");
+        text.append(tr_completed->time_spent_in_srm_preparation_end);
+        text.append("\"");
+
+        text.append(",\"$7$\":\"");
+        text.append(tr_completed->time_spent_in_srm_finalization_start);
+        text.append("\"");
+
+        text.append(",\"$8$\":\"");
+        text.append(tr_completed->time_spent_in_srm_finalization_end);
+        text.append("\"");
+
+        text.append(",\"$9$\":\"");
+        text.append(tr_completed->srm_space_token_source);
+        text.append("\"");
+
+        text.append(",\"$10$\":\"");
+        text.append(tr_completed->srm_space_token_dest);
+        text.append("\"");
+
+        text.append(",\"$11$\":\"");
+        std::string temp = ReplaceNonPrintableCharacters(tr_completed->transfer_error_message);
+        temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
+        temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
+        temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());
+
+        if (temp.length() > 1024)
+            temp.erase(1024);
+
+        text.append(temp);
+
+        text.append("\"");
+
+        text.append(",\"$12$\":\"");
+        text.append(tr_completed->tr_timestamp_start);
+        text.append("\"");
+
+        if (tr_completed->tr_timestamp_complete.empty() || tr_completed->tr_timestamp_complete.length() == 0) {
+            text.append(",\"$13$\":\"");
+            text.append(_getTimestamp());
             text.append("\"");
-
-            text.append(",\"$b$\":\"");
-            text.append(tr_completed->endpoint);
+        }
+        else {
+            text.append(",\"$13$\":\"");
+            text.append(tr_completed->tr_timestamp_complete);
             text.append("\"");
+        }
 
-            text.append(",\"$c$\":\"");
-            text.append(tr_completed->source_srm_version);
-            text.append("\"");
+        text.append(",\"$14$\":\"");
+        text.append(tr_completed->channel_type);
+        text.append("\"");
 
-            text.append(",\"$d$\":\"");
-            text.append(tr_completed->destination_srm_version);
-            text.append("\"");
+        text.append(",\"$15$\":\"");
+        text.append(tr_completed->user_dn);
+        text.append("\"");
 
-            text.append(",\"$e$\":\"");
-            text.append(tr_completed->vo);
-            text.append("\"");
+        if (tr_completed->file_metadata.length() > 0) {
+            if (tr_completed->file_metadata == "x") {
+                text.append(",\"$16$\":\"\"");
+            }
+            else {
+                text.append(",\"$16$\":");
+                text.append(tr_completed->file_metadata);
+                text.append("");
+            }
+        }
+        else {
+            text.append(",\"$16$\":\"\"");
+        }
 
-            text.append(",\"$f$\":\"");
-            text.append(tr_completed->source_url);
-            text.append("\"");
+        if (tr_completed->job_metadata.length() > 0) {
+            text.append(",\"$17$\":");
+            text.append(tr_completed->job_metadata);
+            text.append("");
+        }
+        else {
+            text.append(",\"$17$\":\"\"");
+        }
 
-            text.append(",\"$g$\":\"");
-            text.append(tr_completed->dest_url);
-            text.append("\"");
+        text.append(",\"$18$\":\"");
+        text.append(tr_completed->retry);
+        text.append("\"");
 
-            text.append(",\"$h$\":\"");
-            text.append(tr_completed->source_hostname);
-            text.append("\"");
+        text.append(",\"$19$\":\"");
+        text.append(tr_completed->retry_max);
+        text.append("\"");
 
-            text.append(",\"$i$\":\"");
-            text.append(tr_completed->dest_hostname);
-            text.append("\"");
+        text.append(",\"$20$\":\"");
+        text.append(tr_completed->job_m_replica);
+        text.append("\"");
 
-            text.append(",\"$j$\":\"");
-            text.append(tr_completed->source_site_name);
-            text.append("\"");
+        text.append(",\"$21$\":\"");
+        text.append(tr_completed->job_state);
+        text.append("\"");
 
-            text.append(",\"$k$\":\"");
-            text.append(tr_completed->dest_site_name);
-            text.append("\"");
+        text.append(",\"$22$\":\"");
+        text.append(tr_completed->is_recoverable);
+        text.append("\"");
 
-            text.append(",\"$l$\":\"");
-            text.append(tr_completed->t_channel);
-            text.append("\"");
+        text.append("}");
 
-            text.append(",\"$m$\":\"");
-            text.append(tr_completed->timestamp_transfer_started);
-            text.append("\"");
-
-            text.append(",\"$n$\":\"");
-            text.append(tr_completed->timestamp_transfer_completed);
-            text.append("\"");
-
-            text.append(",\"$o$\":\"");
-            text.append(tr_completed->timestamp_checksum_source_started);
-            text.append("\"");
-
-            text.append(",\"$p$\":\"");
-            text.append(tr_completed->timestamp_checksum_source_ended);
-            text.append("\"");
-
-            text.append(",\"$q$\":\"");
-            text.append(tr_completed->timestamp_checksum_dest_started);
-            text.append("\"");
-
-            text.append(",\"$r$\":\"");
-            text.append(tr_completed->timestamp_checksum_dest_ended);
-            text.append("\"");
-
-            text.append(",\"$s$\":\"");
-            text.append(tr_completed->transfer_timeout);
-            text.append("\"");
-
-            text.append(",\"$t$\":\"");
-            text.append(tr_completed->checksum_timeout);
-            text.append("\"");
-
-            text.append(",\"$u$\":\"");
-            text.append(tr_completed->transfer_error_code);
-            text.append("\"");
-
-            text.append(",\"$v$\":\"");
-            text.append(tr_completed->transfer_error_scope);
-            text.append("\"");
-
-            text.append(",\"$w$\":\"");
-            text.append(tr_completed->failure_phase);
-            text.append("\"");
-
-            text.append(",\"$x$\":\"");
-            text.append(tr_completed->transfer_error_category);
-            text.append("\"");
-
-            text.append(",\"$y$\":\"");
-            text.append(tr_completed->final_transfer_state);
-            text.append("\"");
-
-            text.append(",\"$z$\":\"");
-            text.append(tr_completed->total_bytes_transfered);
-            text.append("\"");
-
-            text.append(",\"$0$\":\"");
-            text.append(tr_completed->number_of_streams);
-            text.append("\"");
-
-            text.append(",\"$1$\":\"");
-            text.append(tr_completed->tcp_buffer_size);
-            text.append("\"");
-
-            text.append(",\"$2$\":\"");
-            text.append(tr_completed->tcp_buffer_size);
-            text.append("\"");
-
-            text.append(",\"$3$\":\"");
-            text.append(tr_completed->block_size);
-            text.append("\"");
-
-            text.append(",\"$4$\":\"");
-            text.append(tr_completed->file_size);
-            text.append("\"");
-
-            text.append(",\"$5$\":\"");
-            text.append(tr_completed->time_spent_in_srm_preparation_start);
-            text.append("\"");
-
-            text.append(",\"$6$\":\"");
-            text.append(tr_completed->time_spent_in_srm_preparation_end);
-            text.append("\"");
-
-            text.append(",\"$7$\":\"");
-            text.append(tr_completed->time_spent_in_srm_finalization_start);
-            text.append("\"");
-
-            text.append(",\"$8$\":\"");
-            text.append(tr_completed->time_spent_in_srm_finalization_end);
-            text.append("\"");
-
-            text.append(",\"$9$\":\"");
-            text.append(tr_completed->srm_space_token_source);
-            text.append("\"");
-
-            text.append(",\"$10$\":\"");
-            text.append(tr_completed->srm_space_token_dest);
-            text.append("\"");
-
-            text.append(",\"$11$\":\"");
-            std::string temp = ReplaceNonPrintableCharacters(tr_completed->transfer_error_message);
-            temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
-            temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
-            temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());
-
-            if(temp.length() > 1024)
-                temp.erase(1024);
-
-            text.append(temp);
-
-            text.append("\"");
-
-            text.append(",\"$12$\":\"");
-            text.append(tr_completed->tr_timestamp_start);
-            text.append("\"");
-
-            if(tr_completed->tr_timestamp_complete.empty() || tr_completed->tr_timestamp_complete.length() == 0)
-                {
-                    text.append(",\"$13$\":\"");
-                    text.append(_getTimestamp());
-                    text.append("\"");
-                }
-            else
-                {
-                    text.append(",\"$13$\":\"");
-                    text.append(tr_completed->tr_timestamp_complete);
-                    text.append("\"");
-                }
-
-            text.append(",\"$14$\":\"");
-            text.append(tr_completed->channel_type);
-            text.append("\"");
-
-            text.append(",\"$15$\":\"");
-            text.append(tr_completed->user_dn);
-            text.append("\"");
-
-            if(tr_completed->file_metadata.length() > 0)
-                {
-                    if(tr_completed->file_metadata == "x")
-                        {
-                            text.append(",\"$16$\":\"\"");
-                        }
-                    else
-                        {
-                            text.append(",\"$16$\":");
-                            text.append(tr_completed->file_metadata);
-                            text.append("");
-                        }
-                }
-            else
-                {
-                    text.append(",\"$16$\":\"\"");
-                }
-
-            if(tr_completed->job_metadata.length() > 0)
-                {
-                    text.append(",\"$17$\":");
-                    text.append(tr_completed->job_metadata);
-                    text.append("");
-                }
-            else
-                {
-                    text.append(",\"$17$\":\"\"");
-                }
-
-            text.append(",\"$18$\":\"");
-            text.append(tr_completed->retry);
-            text.append("\"");
-
-            text.append(",\"$19$\":\"");
-            text.append(tr_completed->retry_max);
-            text.append("\"");
-
-            text.append(",\"$20$\":\"");
-            text.append(tr_completed->job_m_replica);
-            text.append("\"");
-
-            text.append(",\"$21$\":\"");
-            text.append(tr_completed->job_state);
-            text.append("\"");
-
-            text.append(",\"$22$\":\"");
-            text.append(tr_completed->is_recoverable);
-            text.append("\"");
-
-            text.append("}");
-
-            message = restoreMessageToDisk(text);
-        if(message.empty())
+        message = restoreMessageToDisk(text);
+        if (message.empty())
             return text;
         else
-            return message;  
-        
-        }
-    catch (...)
-        {
+            return message;
+
+    }
+    catch (...) {
         //try again
-            message = restoreMessageToDisk(text);
-        if(message.empty())
+        message = restoreMessageToDisk(text);
+        if (message.empty())
             return text;
         else
-            return message;  
-        }
+            return message;
+    }
 }
 
 
 bool msg_ifce::read_initial_config()
 {
-    try
-        {
-            bool fileIsOk = get_mon_cfg_file();
-            if(!fileIsOk)
-                {
-                    FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
-                    return false;
-                }
-        }
-    catch(...)
-        {
+    try {
+        bool fileIsOk = get_mon_cfg_file();
+        if (!fileIsOk) {
             FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
             return false;
         }
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
+        return false;
+    }
 
     return true;
 }
 
 
-/*setter and getter for the message itself
-  transfer_completed setters
-*/
-
-void msg_ifce::set_agent_fqdn(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_agent_fqdn(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->agent_fqdn = value;
 }
 
-void msg_ifce::set_transfer_id(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_transfer_id(transfer_completed *tr_completed, const std::string &value)
 {
-    if (tr_completed)
-        {
-            if (value.length() > 0)
-                tr_completed->transfer_id = value;
-            else
-                tr_completed->transfer_id = "";
-        }
+    if (tr_completed) {
+        if (value.length() > 0)
+            tr_completed->transfer_id = value;
+        else
+            tr_completed->transfer_id = "";
+    }
 }
 
-void msg_ifce::set_endpoint(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_endpoint(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->endpoint = value;
 }
 
-void msg_ifce::set_source_srm_version(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_source_srm_version(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->source_srm_version = value;
 }
 
-void msg_ifce::set_destination_srm_version(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_destination_srm_version(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->destination_srm_version = value;
 }
 
-void msg_ifce::set_vo(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_vo(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->vo = value;
 }
 
-void msg_ifce::set_source_site_name(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_source_site_name(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->source_site_name = value;
 }
 
-void msg_ifce::set_dest_site_name(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_dest_site_name(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->dest_site_name = value;
 }
 
 
-void msg_ifce::set_source_url(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_source_url(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->source_url = value;
 }
 
-void msg_ifce::set_dest_url(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_dest_url(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->dest_url = value;
 }
 
-void msg_ifce::set_source_hostname(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_source_hostname(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->source_hostname = value;
 }
 
-void msg_ifce::set_dest_hostname(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_dest_hostname(transfer_completed *tr_completed, const std::string &value)
 {
-    if (tr_completed)
-        {
-            tr_completed->dest_hostname = value;
-        }
+    if (tr_completed) {
+        tr_completed->dest_hostname = value;
+    }
 }
 
 
-void msg_ifce::set_t_channel(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_t_channel(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->t_channel = value;
 }
 
-void msg_ifce::set_timestamp_transfer_started(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_timestamp_transfer_started(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->timestamp_transfer_started = value;
 }
 
-void msg_ifce::set_timestamp_transfer_completed(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_timestamp_transfer_completed(transfer_completed *tr_completed, const std::string &value)
 {
-    if (tr_completed)
-        {
-            tr_completed->timestamp_transfer_completed = value;
-        }
+    if (tr_completed) {
+        tr_completed->timestamp_transfer_completed = value;
+    }
 }
 
-void msg_ifce::set_timestamp_checksum_source_started(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_timestamp_checksum_source_started(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->timestamp_checksum_source_started = value;
 }
 
-void msg_ifce::set_timestamp_checksum_source_ended(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_timestamp_checksum_source_ended(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->timestamp_checksum_source_ended = value;
 }
 
-void msg_ifce::set_timestamp_checksum_dest_started(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_timestamp_checksum_dest_started(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->timestamp_checksum_dest_started = value;
 }
 
-void msg_ifce::set_timestamp_checksum_dest_ended(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_timestamp_checksum_dest_ended(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->timestamp_checksum_dest_ended = value;
 }
 
-void msg_ifce::set_transfer_timeout(transfer_completed* tr_completed, unsigned value)
+
+void msg_ifce::set_transfer_timeout(transfer_completed *tr_completed, unsigned value)
 {
     if (tr_completed)
         tr_completed->transfer_timeout = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_checksum_timeout(transfer_completed* tr_completed, int value)
+
+void msg_ifce::set_checksum_timeout(transfer_completed *tr_completed, int value)
 {
     if (tr_completed)
         tr_completed->checksum_timeout = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_transfer_error_code(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_transfer_error_code(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->transfer_error_code = value;
 }
 
-void msg_ifce::set_transfer_error_scope(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_transfer_error_scope(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed && tr_completed->transfer_error_scope.length() == 0)
         tr_completed->transfer_error_scope = value;
 }
 
-void msg_ifce::set_transfer_error_category(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_transfer_error_category(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed && tr_completed->transfer_error_category.length() == 0)
         tr_completed->transfer_error_category = value;
 }
 
-void msg_ifce::set_transfer_error_message(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_transfer_error_message(transfer_completed *tr_completed, const std::string &value)
 {
 
-    if (tr_completed && tr_completed->transfer_error_message.length() == 0)
-        {
-            tr_completed->transfer_error_message = value;
-            set_transfer_error_code(tr_completed, extractNumber(value));
-        }
+    if (tr_completed && tr_completed->transfer_error_message.length() == 0) {
+        tr_completed->transfer_error_message = value;
+        set_transfer_error_code(tr_completed, extractNumber(value));
+    }
 }
 
-void msg_ifce::set_failure_phase(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_failure_phase(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed && tr_completed->failure_phase.length() == 0)
         tr_completed->failure_phase = value;
 }
 
-void msg_ifce::set_final_transfer_state(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_final_transfer_state(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->final_transfer_state = value;
 }
 
-void msg_ifce::set_total_bytes_transfered(transfer_completed* tr_completed, off_t value)
+
+void msg_ifce::set_total_bytes_transfered(transfer_completed *tr_completed, off_t value)
 {
     if (tr_completed)
         tr_completed->total_bytes_transfered = to_string<off_t>(value, std::dec);
 }
 
-void msg_ifce::set_number_of_streams(transfer_completed* tr_completed, unsigned value)
+
+void msg_ifce::set_number_of_streams(transfer_completed *tr_completed, unsigned value)
 {
     if (tr_completed)
         tr_completed->number_of_streams = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_tcp_buffer_size(transfer_completed* tr_completed, unsigned value)
+
+void msg_ifce::set_tcp_buffer_size(transfer_completed *tr_completed, unsigned value)
 {
     if (tr_completed)
         tr_completed->tcp_buffer_size = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_block_size(transfer_completed* tr_completed, unsigned value)
+
+void msg_ifce::set_block_size(transfer_completed *tr_completed, unsigned value)
 {
     if (tr_completed)
         tr_completed->block_size = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_file_size(transfer_completed* tr_completed, off_t value)
+
+void msg_ifce::set_file_size(transfer_completed *tr_completed, off_t value)
 {
     if (tr_completed)
         tr_completed->file_size = to_string<off_t>(value, std::dec);
 }
 
-void msg_ifce::set_time_spent_in_srm_preparation_start(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_time_spent_in_srm_preparation_start(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->time_spent_in_srm_preparation_start = value;
 }
 
-void msg_ifce::set_time_spent_in_srm_preparation_end(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_time_spent_in_srm_preparation_end(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->time_spent_in_srm_preparation_end = value;
 }
 
-void msg_ifce::set_time_spent_in_srm_finalization_start(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_time_spent_in_srm_finalization_start(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->time_spent_in_srm_finalization_start = value;
 }
 
-void msg_ifce::set_time_spent_in_srm_finalization_end(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_time_spent_in_srm_finalization_end(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->time_spent_in_srm_finalization_end = value;
 }
 
-void msg_ifce::set_srm_space_token_source(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_srm_space_token_source(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->srm_space_token_source = value;
 }
 
-void msg_ifce::set_srm_space_token_dest(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_srm_space_token_dest(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->srm_space_token_dest = value;
 }
 
-void msg_ifce::set_tr_timestamp_start(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_tr_timestamp_start(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->tr_timestamp_start = value;
 }
-void msg_ifce::set_tr_timestamp_complete(transfer_completed* tr_completed, const std::string & value)
+
+
+void msg_ifce::set_tr_timestamp_complete(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->tr_timestamp_complete = value;
 }
 
-void msg_ifce::set_channel_type(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_channel_type(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->channel_type = value;
 }
 
-void msg_ifce::set_user_dn(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_user_dn(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->user_dn = value;
 }
 
-void msg_ifce::set_file_metadata(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_file_metadata(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->file_metadata = value;
 }
 
 
-void msg_ifce::set_job_metadata(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_job_metadata(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->job_metadata = value;
 }
 
 
-void msg_ifce::set_retry(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_retry(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->retry = value;
 }
 
 
-void msg_ifce::set_retry_max(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_retry_max(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->retry_max = value;
 }
+
 
 std::string msg_ifce::getTimestamp()
 {
     return _getTimestamp();
 }
 
-void msg_ifce::set_job_state(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_job_state(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->job_state = value;
 }
 
-void msg_ifce::set_job_m_replica(transfer_completed* tr_completed, const std::string & value)
+
+void msg_ifce::set_job_m_replica(transfer_completed *tr_completed, const std::string &value)
 {
     if (tr_completed)
         tr_completed->job_m_replica = value;
 }
 
-void msg_ifce::set_is_recoverable(transfer_completed* tr_completed, bool recoverable)
+
+void msg_ifce::set_is_recoverable(transfer_completed *tr_completed, bool recoverable)
 {
     if (tr_completed)
         tr_completed->is_recoverable = to_string<int>(recoverable, std::dec);
 }
-
-#endif

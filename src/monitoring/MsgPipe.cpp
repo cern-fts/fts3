@@ -44,23 +44,22 @@ namespace fs = boost::filesystem;
 
 void handler(int)
 {
-    if(!signalReceived)
-        {
-            signalReceived = true;
+    if (!signalReceived) {
+        signalReceived = true;
 
-            stopThreads = true;
-            std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-            std::string ret;
-            while(!myQueue.empty())
-                {
-                    ret = myQueue.front();
-                    myQueue.pop();
-                    restoreMessageToDisk(ret);
-                }
-            sleep(5);
-            exit(0);
+        stopThreads = true;
+        std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
+        std::string ret;
+        while (!myQueue.empty()) {
+            ret = myQueue.front();
+            myQueue.pop();
+            restoreMessageToDisk(ret);
         }
+        sleep(5);
+        exit(0);
+    }
 }
+
 
 MsgPipe::MsgPipe()
 {
@@ -75,6 +74,7 @@ MsgPipe::MsgPipe()
     signal(SIGQUIT, handler);
 }
 
+
 MsgPipe::~MsgPipe()
 {
 }
@@ -85,58 +85,50 @@ void MsgPipe::run()
     std::vector<struct message_monitoring> messages;
     std::vector<struct message_monitoring>::const_iterator iter;
 
-    while (stopThreads==false)
-        {
-            try
-                {
+    while (stopThreads == false) {
+        try {
 
-                    if(fs::is_empty(fs::path(MONITORING_DIR)))
-                        {
-                            sleep(1);
-                            continue;
-                        }
+            if (fs::is_empty(fs::path(MONITORING_DIR))) {
+                sleep(1);
+                continue;
+            }
 
-                    int returnValue = runConsumerMonitoring(messages);
-                    if(returnValue != 0)
-                    {
-                        std::ostringstream errorMessage;
-                        errorMessage << "runConsumerMonitoring returned " << returnValue;
-                        FTS3_COMMON_LOGGER_LOG(ERR, errorMessage.str());
-                    }
+            int returnValue = runConsumerMonitoring(messages);
+            if (returnValue != 0) {
+                std::ostringstream errorMessage;
+                errorMessage << "runConsumerMonitoring returned " << returnValue;
+                FTS3_COMMON_LOGGER_LOG(ERR, errorMessage.str());
+            }
 
-                    if(!messages.empty())
-                        {
-                            for (iter = messages.begin(); iter != messages.end(); ++iter)
-                                {
-                                    ConcurrentQueue::getInstance()->push( (*iter).msg );
-                                }
-                            messages.clear();
-                        }
-                    sleep(1);
+            if (!messages.empty()) {
+                for (iter = messages.begin(); iter != messages.end(); ++iter) {
+                    ConcurrentQueue::getInstance()->push((*iter).msg);
                 }
-            catch (const fs::filesystem_error& ex)
-                {
-                    FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
-                    cleanup();
-                    sleep(1);
-                }
-            catch (...)
-                {
-                    FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
-                    cleanup();
-                    sleep(1);
+                messages.clear();
+            }
+            sleep(1);
+        }
+        catch (const fs::filesystem_error &ex) {
+            FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
+            cleanup();
+            sleep(1);
+        }
+        catch (...) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
+            cleanup();
+            sleep(1);
                 }
         }
 }
 
+
 void MsgPipe::cleanup()
 {
-    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
+    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
     std::string ret;
-    while(!myQueue.empty())
-        {
-            ret = myQueue.front();
-            myQueue.pop();
-            restoreMessageToDisk(ret);
-        }
+    while (!myQueue.empty()) {
+        ret = myQueue.front();
+        myQueue.pop();
+        restoreMessageToDisk(ret);
+    }
 }
