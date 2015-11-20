@@ -1,4 +1,6 @@
 #!/bin/bash
+# Run QA tools: cppcheck, vera++ and rats
+
 SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # CPPCheck
