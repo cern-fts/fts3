@@ -20,7 +20,11 @@
 
 #include "ConcurrentQueue.h"
 
-ConcurrentQueue* ConcurrentQueue::single = NULL;
+namespace fts3 {
+namespace common {
+
+
+ConcurrentQueue *ConcurrentQueue::single = NULL;
 
 
 ConcurrentQueue *ConcurrentQueue::getInstance()
@@ -77,4 +81,7 @@ bool ConcurrentQueue::empty()
 {
     boost::lock_guard<boost::mutex> lock(mutex);
     return theQueue.empty();
+}
+
+}
 }

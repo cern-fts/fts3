@@ -18,16 +18,18 @@
  * limitations under the License.
  */
 
-#ifndef _TQUEUE_H_
-#define _TQUEUE_H_
+#ifndef CONCURRENT_QUEUE_H
+#define CONCURRENT_QUEUE_H
 
 #include <queue>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 
+namespace fts3 {
+namespace common {
 
-class ConcurrentQueue
-{
+
+class ConcurrentQueue {
 private:
     static ConcurrentQueue *single;
     boost::mutex mutex;
@@ -36,8 +38,9 @@ private:
     ConcurrentQueue();
 
 public:
-    static const size_t MaxElements =  20000;
-    static ConcurrentQueue* getInstance();
+    static const size_t MaxElements = 20000;
+
+    static ConcurrentQueue *getInstance();
 
     std::queue<std::string> theQueue;
 
@@ -59,5 +62,8 @@ public:
     std::string pop(const int wait = -1);
 };
 
+
+}
+}
 
 #endif
