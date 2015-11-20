@@ -249,8 +249,7 @@ void JobSubmitter::init(soap* ctx, JOB* job)
 
     if (job->jobParams)
         {
-            params(job->jobParams->keys, job->jobParams->values);
-            //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter map has been created" << commit;
+            params.set(job->jobParams->keys, job->jobParams->values);
         }
 
     bool use_bring_online =

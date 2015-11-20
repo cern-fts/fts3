@@ -40,14 +40,6 @@ namespace common
  */
 class JobParameterHandler
 {
-    struct zipper
-    {
-        std::pair<std::string, std::string> operator()(const boost::tuple<const std::string&, const std::string&>& t) const
-        {
-            return make_pair(t.get<0>(), t.get<1>());
-        }
-    };
-
 public:
 
     /**
@@ -71,7 +63,7 @@ public:
      * @param keys - vector with keys (e.g. keys[0] corresponds to values[0], and so on)
      * @param values - vector with values (e.g. keys[0] corresponds to values[0], and so on)
      */
-    void operator() (std::vector<std::string>& keys, std::vector<std::string>& values);
+    void set(const std::vector<std::string>& keys, const std::vector<std::string>& values);
 
     ///@{
     /**

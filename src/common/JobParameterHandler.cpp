@@ -19,12 +19,7 @@
  */
 
 #include "JobParameterHandler.h"
-
-#include <algorithm>
-#include <iterator>
-
-#include <boost/iterator/zip_iterator.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <cassert>
 
 using namespace fts3::common;
 
@@ -49,6 +44,7 @@ const std::string JobParameterHandler::TIMEOUT = "timeout";
 const std::string JobParameterHandler::STRICT_COPY = "strict_copy";
 const std::string JobParameterHandler::CREDENTIALS = "credentials";
 
+
 JobParameterHandler::JobParameterHandler()
 {
 
@@ -60,13 +56,12 @@ JobParameterHandler::~JobParameterHandler()
 
 }
 
-void JobParameterHandler::operator() (std::vector<std::string>& keys, std::vector<std::string>& values)
-{
-    std::transform(
-        boost::make_zip_iterator(boost::make_tuple(keys.begin(), values.begin())),
-        boost::make_zip_iterator(boost::make_tuple(keys.end(), values.end())),
-        std::inserter(parameters, parameters.begin()),
-        zipper()
-    );
-}
 
+void JobParameterHandler::set(const std::vector<std::string>& keys, const std::vector<std::string>& values)
+{
+    assert(keys.size() == values.size());
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+        parameters[keys[i]] = values[i];
+    }
+}
