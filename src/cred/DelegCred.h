@@ -37,14 +37,14 @@ public:
      *        credentials (may be a passoword or an identifier, depending on the
      *        implementation)
      */
-    static std::string getProxyFile(const std::string& userDn, const std::string& id);
+    static std::string getProxyFile(const std::string &userDn, const std::string &id);
 
     /**
      * Returns true if the certificate in the given file name is still valid
      * @param filename [IN] trhe name of the file containing the proxy certificate
      * @return true if the certificate in the given file name is still valid
      */
-    static bool isValidProxy(const std::string& filename, std::string& message);
+    static bool isValidProxy(const std::string &filename, std::string &message);
 
 private:
     /**
@@ -54,7 +54,7 @@ private:
      * @param id [IN] the credential id passed to the get method
      * @return the generated file name
      */
-    static std::string generateProxyName(const std::string& userDn, const std::string& id);
+    static std::string generateProxyName(const std::string &userDn, const std::string &id);
 
     /**
      * Get a new Certificate and store in into a file
@@ -63,7 +63,7 @@ private:
      * @param fname [IN] the name of a temporary file where the new proxy
      * certificate should be stored
      */
-    static void getNewCertificate(const std::string& userDn, const std::string& id, const std::string& fname);
+    static void getNewCertificate(const std::string &userDn, const std::string &credId, const std::string &fname);
 
     /**
      * Returns the validity time that the cached copy of the certificate should

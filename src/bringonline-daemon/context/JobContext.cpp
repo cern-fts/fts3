@@ -30,10 +30,11 @@
 #include "JobContext.h"
 
 
-JobContext::JobContext(const std::string &dn,
+JobContext::JobContext(const std::string &dn, const std::string &vo,
     const std::string &delegationId, const std::string &spaceToken) :
     spaceToken(spaceToken)
 {
+    (void) vo;
     proxy = DelegCred::getProxyFile(dn, delegationId);
 }
 

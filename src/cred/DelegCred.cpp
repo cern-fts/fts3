@@ -101,7 +101,7 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         }
 
         // Check if the database contains a valid proxy for this dlg id and DN
-        if(!DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) )
+        if(!DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn))
         {
             // This looks crazy, but right now I don't know what can happen if I throw here
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
@@ -191,27 +191,32 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
 }
 
 
-void DelegCred::getNewCertificate(const std::string& userDn,
-        const std::string& cred_id, const std::string& filename) /*throw (LogicError, DelegCredException)*/
+void DelegCred::getNewCertificate(const std::string &userDn,
+    const std::string &credId, const std::string &filename)
 {
 
     try {
         // Get the Cred Id
-        boost::optional<UserCredential> cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
+        boost::optional<UserCredential> cred = DBSingleton::instance().getDBObjectInstance()->findCredential(credId, userDn);
+        if (!cred) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Didn't get any credentials from the database!" << commit;
+        }
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Get the Cred Id " << cred_id << " " << userDn << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Get the Cred Id " << credId << " " << userDn << commit;
 
         // write the content of the certificate property into the file
         std::ofstream ofs(filename.c_str(), std::ios_base::binary);
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "write the content of the certificate property into the file " << filename << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+            << "Write the content of the certificate property into the file " << filename << commit;
         if (ofs.bad()) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed open file " << filename << " for writing" << commit;
             return;
         }
         // write the Content of the certificate
-        if (cred)
-            ofs << cred->proxy.c_str();
+        if (cred) {
+            ofs << cred->proxy;
+        }
         // Close the file
         ofs.close();
     }
