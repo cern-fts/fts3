@@ -2956,7 +2956,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-    return !expired;
+    return expired;
 }
 
 

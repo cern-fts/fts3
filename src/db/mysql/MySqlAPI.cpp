@@ -3664,7 +3664,7 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
     {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-    return !expired;
+    return expired;
 }
 
 
