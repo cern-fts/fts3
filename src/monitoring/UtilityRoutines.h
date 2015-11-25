@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+#pragma once
+#ifndef UTILITYROUTINES_H
+#define UTILITYROUTINES_H
+
 #include <chrono>
 #include <iostream>
 #include <fstream>
@@ -30,19 +34,9 @@
 #include <string>
 #include <map>
 
+#include <boost/lexical_cast.hpp>
 
-/*
-convert a number to string, given the base
- */
-template <class T>
-static std::string _to_string(T t)
-{
-    std::ostringstream oss;
-    oss << std::fixed << t;
-    return oss.str();
-}
-
-inline std::string _getTimestamp()
+inline std::string getTimestampStr()
 {
     std::chrono::milliseconds timestamp =
             std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -50,7 +44,7 @@ inline std::string _getTimestamp()
             );
 
     long double timestamp_double = static_cast<long double>(timestamp.count());
-    std::string transfer_started_to_string = _to_string<long double>(timestamp_double);
+    std::string transfer_started_to_string = boost::lexical_cast<std::string>(timestamp_double);
     return transfer_started_to_string;
 }
 
@@ -59,12 +53,6 @@ extract a number from a given string
 used for retrieving the error code of a failed transfer
  */
 std::string extractNumber(const std::string & value);
-
-
-/*
-get timestamp in epoc-millisecconds
- */
-std::string _getTimestamp();
 
 
 /*
@@ -115,3 +103,5 @@ inline std::string  timestamp()
     ltime=time(NULL); /* get current cal time */
     return asctime( localtime(&ltime));
 }
+
+#endif // UTILITYROUTINES_H

@@ -59,7 +59,7 @@ using namespace fts3::common;
 
 static FileManagement fileManagement;
 static Reporter reporter;
-static transfer_completed tr_completed;
+static transfer_completed transferCompletedMessage;
 static bool retry = true;
 static std::string errorScope("");
 static std::string errorPhase("");
@@ -253,31 +253,30 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     FTS3_COMMON_LOGGER_NEWLOG(CRIT) << errorMessage << commit;
 
-    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-    msg_ifce::getInstance()->set_is_recoverable(&tr_completed, retry);
-    msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
-    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
-    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, currentTransfer.job_m_replica);
+    transferCompletedMessage.transfer_error_scope = getDefaultScope();
+    transferCompletedMessage.transfer_error_category = getDefaultReasonClass();
+    transferCompletedMessage.is_recoverable = boost::lexical_cast<std::string>(retry);
+    transferCompletedMessage.failure_phase = getDefaultErrorPhase();
+    transferCompletedMessage.transfer_error_message = errorMessage;
+    transferCompletedMessage.final_transfer_state = finalState;
+    transferCompletedMessage.tr_timestamp_complete = getTimestampStr();
+    transferCompletedMessage.job_m_replica = currentTransfer.job_m_replica;
 
     if (currentTransfer.job_m_replica == "true") {
         if (classification == "CANCELED") {
-            msg_ifce::getInstance()->set_job_state(&tr_completed, "CANCELED");
+            transferCompletedMessage.job_state = "CANCELED";
         }
         else {
             if (currentTransfer.last_replica == "true") {
-                msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
+                transferCompletedMessage.job_state = "FAILED";
             }
             else {
-                msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
+                transferCompletedMessage.job_state = "ACTIVE";
             }
         }
     }
     else {
-        msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+        transferCompletedMessage.job_state = "UNKNOWN";
     }
 
 
@@ -286,7 +285,7 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     if (UrlCopyOpts::getInstance().monitoringMessages) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
-        std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+        std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(transferCompletedMessage);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
     }
 
@@ -456,7 +455,6 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     static const char *sideStr[] = {"SRC", "DST", "BTH"};
     static const GQuark SRM_DOMAIN = g_quark_from_static_string("SRM");
 
-    msg_ifce *msg = msg_ifce::getInstance();
     std::string timestampStr = boost::lexical_cast<std::string>(e->timestamp);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << '[' << timestampStr << "] "
@@ -474,33 +472,37 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     }
 
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER) {
-        msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
+        transferCompletedMessage.timestamp_transfer_started = timestampStr;
         currentTransfer.startTime = e->timestamp;
     }
     else if (e->stage == GFAL_EVENT_TRANSFER_EXIT) {
-        msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);
+        transferCompletedMessage.timestamp_transfer_completed = timestampStr;
         currentTransfer.finishTime = e->timestamp;
     }
-
-    else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
-        msg->set_timestamp_checksum_source_started(&tr_completed, timestampStr);
-    else if (e->stage == GFAL_EVENT_CHECKSUM_EXIT && e->side == GFAL_EVENT_SOURCE)
-        msg->set_timestamp_checksum_source_ended(&tr_completed, timestampStr);
-
-    else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_DESTINATION)
-        msg->set_timestamp_checksum_dest_started(&tr_completed, timestampStr);
-    else if (e->stage == GFAL_EVENT_CHECKSUM_EXIT && e->side == GFAL_EVENT_DESTINATION)
-        msg->set_timestamp_checksum_dest_ended(&tr_completed, timestampStr);
-
-    else if (e->stage == GFAL_EVENT_PREPARE_ENTER && e->domain == SRM_DOMAIN)
-        msg->set_time_spent_in_srm_preparation_start(&tr_completed, timestampStr);
-    else if (e->stage == GFAL_EVENT_PREPARE_EXIT && e->domain == SRM_DOMAIN)
-        msg->set_time_spent_in_srm_preparation_end(&tr_completed, timestampStr);
-
-    else if (e->stage == GFAL_EVENT_CLOSE_ENTER && e->domain == SRM_DOMAIN)
-        msg->set_time_spent_in_srm_finalization_start(&tr_completed, timestampStr);
-    else if (e->stage == GFAL_EVENT_CLOSE_EXIT && e->domain == SRM_DOMAIN)
-        msg->set_time_spent_in_srm_finalization_end(&tr_completed, timestampStr);
+    else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE) {
+        transferCompletedMessage.timestamp_checksum_source_started = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_CHECKSUM_EXIT && e->side == GFAL_EVENT_SOURCE) {
+        transferCompletedMessage.timestamp_checksum_source_ended = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_DESTINATION) {
+        transferCompletedMessage.timestamp_checksum_dest_started = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_CHECKSUM_EXIT && e->side == GFAL_EVENT_DESTINATION) {
+        transferCompletedMessage.timestamp_checksum_dest_ended = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_PREPARE_ENTER && e->domain == SRM_DOMAIN) {
+        transferCompletedMessage.time_spent_in_srm_preparation_start = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_PREPARE_EXIT && e->domain == SRM_DOMAIN) {
+        transferCompletedMessage.time_spent_in_srm_preparation_end = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_CLOSE_ENTER && e->domain == SRM_DOMAIN) {
+        transferCompletedMessage.time_spent_in_srm_finalization_start = timestampStr;
+    }
+    else if (e->stage == GFAL_EVENT_CLOSE_EXIT && e->domain == SRM_DOMAIN) {
+        transferCompletedMessage.time_spent_in_srm_finalization_end = timestampStr;
+    }
 }
 
 
@@ -582,20 +584,20 @@ void setRemainingTransfersToFailed(std::vector<Transfer> &transferList, unsigned
         Transfer &t = transferList[i];
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report FAILED back to the server for " << t.fileId << commit;
 
-        msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(t.sourceUrl));
-        msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(t.destUrl));
-        msg_ifce::getInstance()->set_source_url(&tr_completed, t.sourceUrl);
-        msg_ifce::getInstance()->set_dest_url(&tr_completed, t.destUrl);
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, TRANSFER);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, GENERAL_FAILURE);
-        msg_ifce::getInstance()->set_is_recoverable(&tr_completed, retry);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, TRANSFER);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed,
-            "Not executed because a previous hop failed");
-        msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+        transferCompletedMessage.source_srm_version = srmVersion(t.sourceUrl);
+        transferCompletedMessage.destination_srm_version = srmVersion(t.destUrl);
+        transferCompletedMessage.source_url = t.sourceUrl;
+        transferCompletedMessage.dest_url = t.destUrl;
+        transferCompletedMessage.transfer_error_scope = TRANSFER;
+        transferCompletedMessage.transfer_error_category = GENERAL_FAILURE;
+        transferCompletedMessage.is_recoverable = boost::lexical_cast<std::string>(retry);
+        transferCompletedMessage.failure_phase = TRANSFER;
+        transferCompletedMessage.transfer_error_message = "Not executed because a previous hop failed";
+        transferCompletedMessage.job_state = "UNKNOWN";
 
-        if (UrlCopyOpts::getInstance().monitoringMessages)
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed, true);
+        if (UrlCopyOpts::getInstance().monitoringMessages) {
+            msg_ifce::getInstance()->SendTransferFinishMessage(transferCompletedMessage, true);
+        }
 
         reporter.sendTerminal(0, false, t.jobId, t.fileId,
             "FAILED", "Not executed because a previous hop failed",
@@ -780,7 +782,7 @@ int main(int argc, char **argv)
 
     for (register unsigned int ii = 0; ii < numberOfFiles; ii++) {
         // New transfer, new message
-        tr_completed = transfer_completed();
+        transferCompletedMessage = transfer_completed();
 
         errorScope = std::string("");
         reasonClass = std::string("");
@@ -810,37 +812,37 @@ int main(int argc, char **argv)
         fileManagement.generateLogFile();
 
 
-        msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, opts.alias);
-        msg_ifce::getInstance()->set_endpoint(&tr_completed, opts.alias);
-        msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
-        msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
-        msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(currentTransfer.sourceUrl));
-        msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(currentTransfer.destUrl));
-        msg_ifce::getInstance()->set_source_url(&tr_completed, currentTransfer.sourceUrl);
-        msg_ifce::getInstance()->set_dest_url(&tr_completed, currentTransfer.destUrl);
-        msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement.getSourceHostnameFile());
-        msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement.getDestHostnameFile());
-        msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
-        msg_ifce::getInstance()->set_vo(&tr_completed, opts.vo);
-        msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts.sourceSiteName);
-        msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts.destSiteName);
-        msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
-        msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
-        msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
+        transferCompletedMessage.tr_timestamp_start = getTimestampStr();
+        transferCompletedMessage.agent_fqdn = opts.alias;
+        transferCompletedMessage.endpoint = opts.alias;
+        transferCompletedMessage.t_channel = fileManagement.getSePair();
+        transferCompletedMessage.transfer_id = fileManagement.getLogFileName();
+        transferCompletedMessage.source_srm_version = srmVersion(currentTransfer.sourceUrl);
+        transferCompletedMessage.destination_srm_version = srmVersion(currentTransfer.destUrl);
+        transferCompletedMessage.source_url = currentTransfer.sourceUrl;
+        transferCompletedMessage.dest_url = currentTransfer.destUrl;
+        transferCompletedMessage.source_hostname = fileManagement.getSourceHostnameFile();
+        transferCompletedMessage.dest_hostname = fileManagement.getDestHostnameFile();
+        transferCompletedMessage.channel_type = "urlcopy";
+        transferCompletedMessage.vo = opts.vo;
+        transferCompletedMessage.source_site_name = opts.sourceSiteName;
+        transferCompletedMessage.dest_site_name = opts.destSiteName;
+        transferCompletedMessage.block_size = boost::lexical_cast<std::string>(opts.blockSize);
+        transferCompletedMessage.srm_space_token_dest = opts.destTokenDescription;
+        transferCompletedMessage.srm_space_token_source = opts.sourceTokenDescription;
 
-        msg_ifce::getInstance()->set_retry(&tr_completed, boost::lexical_cast<std::string>(opts.retry));
-        msg_ifce::getInstance()->set_retry_max(&tr_completed, boost::lexical_cast<std::string>(opts.retry_max));
+        transferCompletedMessage.retry = boost::lexical_cast<std::string>(opts.retry);
+        transferCompletedMessage.retry_max = boost::lexical_cast<std::string>(opts.retry_max);
 
         if (opts.hide_user_dn) {
-            msg_ifce::getInstance()->set_user_dn(&tr_completed, std::string(""));
+            transferCompletedMessage.user_dn = std::string();
         }
         else {
-            msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
+            transferCompletedMessage.user_dn = opts.user_dn;
         }
 
-        msg_ifce::getInstance()->set_file_metadata(&tr_completed, replaceMetadataString(currentTransfer.fileMetadata));
-        msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata));
+        transferCompletedMessage.file_metadata = replaceMetadataString(currentTransfer.fileMetadata);
+        transferCompletedMessage.job_metadata = replaceMetadataString(opts.jobMetadata);
 
         if (!opts.logToStderr) {
             std::string debugOutput = "/dev/null";
@@ -856,7 +858,7 @@ int main(int argc, char **argv)
 
         if (opts.monitoringMessages) {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring start message " << commit;
-            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(transferCompletedMessage);
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;
         }
 
@@ -957,7 +959,7 @@ int main(int argc, char **argv)
             //get checksum timeout from gfal2
             int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum timeout " << checksumTimeout << commit;
-            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, checksumTimeout);
+            transferCompletedMessage.checksum_timeout = boost::lexical_cast<std::string>(checksumTimeout);
 
             // Checksums
             if (currentTransfer.checksumMethod) {
@@ -1041,7 +1043,7 @@ int main(int argc, char **argv)
             }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source file size: " << currentTransfer.fileSize << commit;
-            msg_ifce::getInstance()->set_file_size(&tr_completed, currentTransfer.fileSize);
+            transferCompletedMessage.file_size = boost::lexical_cast<std::string>(currentTransfer.fileSize);
 
             //overwrite dest file if exists
             if (opts.overwrite) {
@@ -1088,7 +1090,7 @@ int main(int argc, char **argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Add " << opts.secPerMb << " seconds per MB transfer timeout " << commit;
 
             gfalt_set_timeout(params, opts.timeout, NULL);
-            msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
+            transferCompletedMessage.transfer_timeout = boost::lexical_cast<std::string>(opts.timeout);
             globalTimeout = experimentalTimeout + 3600;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Resetting global timeout thread to " << globalTimeout << " seconds" <<
             commit;
@@ -1141,8 +1143,8 @@ int main(int argc, char **argv)
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
             }
 
-            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
-            msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, opts.tcpBuffersize);
+            transferCompletedMessage.number_of_streams = boost::lexical_cast<std::string>(opts.nStreams);
+            transferCompletedMessage.tcp_buffer_size = boost::lexical_cast<std::string>(opts.tcpBuffersize);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << opts.nStreams << commit;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
 
@@ -1208,9 +1210,8 @@ int main(int argc, char **argv)
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "Transfer completed successfully" << commit;
             }
 
-
             currentTransfer.transferredBytes = currentTransfer.fileSize;
-            msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
+            transferCompletedMessage.total_bytes_transfered = boost::lexical_cast<std::string>(currentTransfer.fileSize);
 
             if (!opts.strictCopy) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Stat the dest surl start" << commit;
@@ -1276,11 +1277,11 @@ int main(int argc, char **argv)
             }
         } //logStream
 stop:
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_is_recoverable(&tr_completed, retry);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
+        transferCompletedMessage.transfer_error_scope = errorScope;
+        transferCompletedMessage.transfer_error_category = reasonClass;
+        transferCompletedMessage.is_recoverable = boost::lexical_cast<std::string>(retry);
+        transferCompletedMessage.failure_phase = errorPhase;
+        transferCompletedMessage.transfer_error_message = errorMessage;
 
         double throughputTurl = 0.0;
 
@@ -1302,19 +1303,21 @@ stop:
         }
 
         if (errorMessage.length() > 0) {
-            msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
+            transferCompletedMessage.job_m_replica = opts.job_m_replica;
 
             if (opts.job_m_replica == "true") {
-                if (opts.last_replica == "true")
-                    msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
-                else
-                    msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
+                if (opts.last_replica == "true") {
+                    transferCompletedMessage.job_state = "FAILED";
+                }
+                else {
+                    transferCompletedMessage.job_state = "ACTIVE";
+                }
             }
             else {
-                msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+                transferCompletedMessage.job_state = "UNKNOWN";
             }
 
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
+            transferCompletedMessage.final_transfer_state = "Error";
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
             reporter.buffersize = opts.tcpBuffersize;
@@ -1357,15 +1360,15 @@ stop:
             }
         }
         else {
-            msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
+            transferCompletedMessage.job_m_replica = opts.job_m_replica;
             if (opts.job_m_replica == "true") {
-                msg_ifce::getInstance()->set_job_state(&tr_completed, "FINISHED");
+                transferCompletedMessage.job_state = "FINISHED";
             }
             else {
-                msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+                transferCompletedMessage.job_state = "UNKNOWN";
             }
 
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
+            transferCompletedMessage.final_transfer_state = "Ok";
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
             reporter.buffersize = opts.tcpBuffersize;
@@ -1393,11 +1396,11 @@ stop:
             turlVector.clear();
         }
 
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+        transferCompletedMessage.tr_timestamp_complete = getTimestampStr();
 
         if (opts.monitoringMessages) {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
-            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(transferCompletedMessage);
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
         }
 
