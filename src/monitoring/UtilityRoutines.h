@@ -49,13 +49,6 @@ inline std::string getTimestampStr()
 }
 
 /*
-extract a number from a given string
-used for retrieving the error code of a failed transfer
- */
-std::string extractNumber(const std::string & value);
-
-
-/*
 message broker config file, retrieve info and store in STL map
  */
 bool get_mon_cfg_file();
@@ -86,22 +79,7 @@ int GetIntVal(std::string strConvert);
 /*remove any non-ascii characters from a string*/
 std::string ReplaceNonPrintableCharacters(std::string s);
 
-inline bool caseInsCharCompareN(char a, char b)
-{
-    return(toupper(a) == toupper(b));
-}
-
-bool caseInsCompare(const std::string& s1, const std::string& s2);
-
 std::string restoreMessageToDisk(std::string & text);
 
-
-//get timestamp in calendar time
-inline std::string  timestamp()
-{
-    time_t ltime; /* calendar time */
-    ltime=time(NULL); /* get current cal time */
-    return asctime( localtime(&ltime));
-}
 
 #endif // UTILITYROUTINES_H

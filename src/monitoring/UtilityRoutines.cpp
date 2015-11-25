@@ -91,28 +91,6 @@ bool isDigits(std::string word)
 }
 
 
-std::string extractNumber(const std::string &value)
-{
-    std::string sentence = value;
-    std::stringstream extract; // extract words by words;
-
-    extract << sentence; //enter the sentence that we want to extract word by word
-
-    std::string word = "";
-
-    //while there are words to extract
-    while (!extract.fail()) {
-        extract >> word; //extract the word
-
-        if (isDigits(word)) {
-            if (atoi(word.c_str()) > 399 && atoi(word.c_str()) < 554) //report only gridftp error codes
-                return word;
-        }
-    }
-    return "";
-}
-
-
 std::string strip_space(const std::string &s)
 {
     std::string ret(s);
@@ -425,13 +403,6 @@ std::string ReplaceNonPrintableCharacters(std::string s)
     catch (...) {
         return s;
     }
-}
-
-
-bool caseInsCompare(const std::string &s1, const std::string &s2)
-{
-    return ((s1.size() == s2.size()) &&
-            equal(s1.begin(), s1.end(), s2.begin(), caseInsCharCompareN));
 }
 
 
