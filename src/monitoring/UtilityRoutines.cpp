@@ -57,25 +57,16 @@
 
 const std::string CFG_FILE_NAME = "fts-msg-monitoring.conf";
 const std::string CFG_FILE_PATH = "/etc/fts3/";
-const std::string DATABASE_FILE_NAME = ".properties.xml";
-const std::string DATABASE_FILE_PATH = "/etc/glite-data-transfer-agents.d/";
-const std::string TEMPLOG = "/var/log/fts3/msg.log";
-
 
 std::string BROKER;
 std::string START;
 std::string COMPLETE;
 std::string STATE;
-std::string CRON;
 std::string TTL;
 bool TOPIC;
 bool ACTIVE;
-bool ENABLELOG;
 std::string LOGFILEDIR;
 std::string LOGFILENAME;
-std::string CRONFQDN;
-bool ENABLEMSGLOG;
-
 std::string USERNAME;
 std::string PASSWORD;
 bool USE_BROKER_CREDENTIALS;
@@ -136,12 +127,6 @@ std::string getSTATE()
 }
 
 
-std::string getCRON()
-{
-    return CRON;
-}
-
-
 std::string getTTL()
 {
     return TTL;
@@ -160,18 +145,6 @@ bool getACTIVE()
 }
 
 
-bool getENABLELOG()
-{
-    return ENABLELOG;
-}
-
-
-std::string getCRONFQDN()
-{
-    return CRONFQDN;
-}
-
-
 std::string getLOGFILEDIR()
 {
     return LOGFILEDIR;
@@ -181,12 +154,6 @@ std::string getLOGFILEDIR()
 std::string getLOGFILENAME()
 {
     return LOGFILENAME;
-}
-
-
-bool getENABLEMSGLOG()
-{
-    return ENABLEMSGLOG;
 }
 
 
@@ -250,15 +217,12 @@ bool get_mon_cfg_file()
         auto iter1 = cfg.find("BROKER");
         auto iter2 = cfg.find("START");
         auto iter3 = cfg.find("COMPLETE");
-        auto iter4 = cfg.find("CRON");
         auto iter6 = cfg.find("TTL");
         auto iter5 = cfg.find("TOPIC");
         auto iter7 = cfg.find("ACTIVE");
-        auto iter8 = cfg.find("ENABLELOG");
         auto iter9 = cfg.find("LOGFILEDIR");
         auto iter10 = cfg.find("LOGFILENAME");
         auto iter11 = cfg.find("FQDN");
-        auto iter12 = cfg.find("ENABLEMSGLOG");
         auto iter13 = cfg.find("USERNAME");
         auto iter14 = cfg.find("PASSWORD");
         auto iter15 = cfg.find("USE_BROKER_CREDENTIALS");
@@ -292,20 +256,6 @@ bool get_mon_cfg_file()
                 USE_BROKER_CREDENTIALS = false;
         }
 
-        if (iter12 != cfg.end()) {
-            boolENABLEMSGLOG = cfg.find("ENABLEMSGLOG")->second;
-            if (boolENABLEMSGLOG.compare("true") == 0)
-                ENABLEMSGLOG = true;
-            else
-                ENABLEMSGLOG = false;
-        }
-
-        if (iter11 != cfg.end()) {
-            CRONFQDN = cfg.find("FQDN")->second;
-            if (CRONFQDN.length() == 0)
-                CRONFQDN = "";
-        }
-
         if (iter9 != cfg.end()) {
             LOGFILEDIR = cfg.find("LOGFILEDIR")->second;
             if (LOGFILEDIR[LOGFILEDIR.length() - 1] != '/')
@@ -326,8 +276,6 @@ bool get_mon_cfg_file()
             START = cfg.find("START")->second;
         if (iter3 != cfg.end())
             COMPLETE = cfg.find("COMPLETE")->second;
-        if (iter4 != cfg.end())
-            CRON = cfg.find("CRON")->second;
         if (iter6 != cfg.end())
             TTL = cfg.find("TTL")->second;
 
@@ -345,15 +293,8 @@ bool get_mon_cfg_file()
             else
                 ACTIVE = false;
         }
-        if (iter8 != cfg.end()) {
-            boolENABLELOG = cfg.find("ENABLELOG")->second;
-            if (boolENABLELOG.compare("true") == 0)
-                ENABLELOG = true;
-            else
-                ENABLELOG = false;
-        }
 
-        if (USERNAME == "replacethis" || PASSWORD == "replacethis" || CRONFQDN == "replacethis")
+        if (USERNAME == "replacethis" || PASSWORD == "replacethis")
             throw fts3::common::UserError("Can not start with the default configuration");
 
         return true;
