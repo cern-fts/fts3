@@ -67,106 +67,106 @@ std::string msg_ifce::SendTransferStartMessage(const transfer_completed &tr_star
     if(false == getACTIVE())
         return message;
 
-    std::string text("");
+    std::string text;
     try {
+        std::ostringstream msg;
+        
+        msg << "ST {";
+        msg << "\"$a$\":\"";
+        msg << tr_started.agent_fqdn;
+        msg << "\"";
 
-        // Create a messages
-        text = "ST {";
-        text.append("\"$a$\":\"");
-        text.append(tr_started.agent_fqdn);
-        text += "\"";
+        msg << ",\"$b$\":\"";
+        msg << tr_started.transfer_id;
+        msg << "\"";
 
-        text.append(",\"$b$\":\"");
-        text.append(tr_started.transfer_id);
-        text.append("\"");
+        msg << ",\"$c$\":\"";
+        msg << tr_started.endpoint;
+        msg << "\"";
 
-        text.append(",\"$c$\":\"");
-        text.append(tr_started.endpoint);
-        text.append("\"");
+        msg << ",\"$d$\":\"";
+        msg << getTimestampStr();
+        msg << "\"";
 
-        text.append(",\"$d$\":\"");
-        text.append(getTimestampStr());
-        text.append("\"");
+        msg << ",\"$e$\":\"";
+        msg << tr_started.source_srm_version;
+        msg << "\"";
 
-        text.append(",\"$e$\":\"");
-        text.append(tr_started.source_srm_version);
-        text.append("\"");
+        msg << ",\"$f$\":\"";
+        msg << tr_started.destination_srm_version;
+        msg << "\"";
 
-        text.append(",\"$f$\":\"");
-        text.append(tr_started.destination_srm_version);
-        text.append("\"");
+        msg << ",\"$g$\":\"";
+        msg << tr_started.vo;
+        msg << "\"";
 
-        text.append(",\"$g$\":\"");
-        text.append(tr_started.vo);
-        text.append("\"");
+        msg << ",\"$h$\":\"";
+        msg << tr_started.source_url;
+        msg << "\"";
 
-        text.append(",\"$h$\":\"");
-        text.append(tr_started.source_url);
-        text.append("\"");
+        msg << ",\"$i$\":\"";
+        msg << tr_started.dest_url;
+        msg << "\"";
 
-        text.append(",\"$i$\":\"");
-        text.append(tr_started.dest_url);
-        text.append("\"");
+        msg << ",\"$j$\":\"";
+        msg << tr_started.source_hostname;
+        msg << "\"";
 
-        text.append(",\"$j$\":\"");
-        text.append(tr_started.source_hostname);
-        text.append("\"");
+        msg << ",\"$k$\":\"";
+        msg << tr_started.dest_hostname;
+        msg << "\"";
 
-        text.append(",\"$k$\":\"");
-        text.append(tr_started.dest_hostname);
-        text.append("\"");
+        msg << ",\"$l$\":\"";
+        msg << tr_started.source_site_name;
+        msg << "\"";
 
-        text.append(",\"$l$\":\"");
-        text.append(tr_started.source_site_name);
-        text.append("\"");
+        msg << ",\"$m$\":\"";
+        msg << tr_started.dest_site_name;
+        msg << "\"";
 
-        text.append(",\"$m$\":\"");
-        text.append(tr_started.dest_site_name);
-        text.append("\"");
+        msg << ",\"$n$\":\"";
+        msg << tr_started.t_channel;
+        msg << "\"";
 
-        text.append(",\"$n$\":\"");
-        text.append(tr_started.t_channel);
-        text.append("\"");
+        msg << ",\"$o$\":\"";
+        msg << tr_started.srm_space_token_source;
+        msg << "\"";
 
-        text.append(",\"$o$\":\"");
-        text.append(tr_started.srm_space_token_source);
-        text.append("\"");
-
-        text.append(",\"$p$\":\"");
-        text.append(tr_started.srm_space_token_dest);
-        text.append("\"");
+        msg << ",\"$p$\":\"";
+        msg << tr_started.srm_space_token_dest;
+        msg << "\"";
 
 
-        text.append(",\"$q$\":\"");
-        text.append(tr_started.user_dn);
-        text.append("\"");
+        msg << ",\"$q$\":\"";
+        msg << tr_started.user_dn;
+        msg << "\"";
 
         if (tr_started.file_metadata.length() > 0) {
             if (tr_started.file_metadata == "x") {
-                text.append(",\"$r$\":\"\"");
+                msg << ",\"$r$\":\"\"";
             }
             else {
-                text.append(",\"$r$\":");
-                text.append(tr_started.file_metadata);
-                text.append("");
+                msg << ",\"$r$\":";
+                msg << tr_started.file_metadata;
+                msg << "";
             }
         }
         else {
-            text.append(",\"$r$\":\"\"");
+            msg << ",\"$r$\":\"\"";
         }
 
         if (tr_started.job_metadata.length() > 0) {
-            text.append(",\"$s$\":");
-            text.append(tr_started.job_metadata);
-            text.append("");
+            msg << ",\"$s$\":";
+            msg << tr_started.job_metadata;
+            msg << "";
         }
         else {
-            text.append(",\"$s$\":\"\"");
+            msg << ",\"$s$\":\"\"";
         }
 
+        msg << "}";
 
-        text.append("}");
-
+        text = msg.str();
         message = restoreMessageToDisk(text);
         if (message.empty())
             return text;
@@ -199,238 +199,244 @@ std::string msg_ifce::SendTransferFinishMessage(const transfer_completed &tr_com
         return message;
 
     std::string text("");
+
     try {
-        // Create a messages
-        text = std::string("CO {");
-        text.append("\"$a$\":\"");
-        text.append(tr_completed.transfer_id);
-        text.append("\"");
+        std::ostringstream msg;
 
-        text.append(",\"$b$\":\"");
-        text.append(tr_completed.endpoint);
-        text.append("\"");
+        msg << "CO {";
 
-        text.append(",\"$c$\":\"");
-        text.append(tr_completed.source_srm_version);
-        text.append("\"");
+        msg << "\"$a$\":\"";
+        msg << tr_completed.transfer_id;
+        msg << "\"";
 
-        text.append(",\"$d$\":\"");
-        text.append(tr_completed.destination_srm_version);
-        text.append("\"");
+        msg << ",\"$b$\":\"";
+        msg << tr_completed.endpoint;
+        msg << "\"";
 
-        text.append(",\"$e$\":\"");
-        text.append(tr_completed.vo);
-        text.append("\"");
+        msg << ",\"$c$\":\"";
+        msg << tr_completed.source_srm_version;
+        msg << "\"";
 
-        text.append(",\"$f$\":\"");
-        text.append(tr_completed.source_url);
-        text.append("\"");
+        msg << ",\"$d$\":\"";
+        msg << tr_completed.destination_srm_version;
+        msg << "\"";
 
-        text.append(",\"$g$\":\"");
-        text.append(tr_completed.dest_url);
-        text.append("\"");
+        msg << ",\"$e$\":\"";
+        msg << tr_completed.vo;
+        msg << "\"";
 
-        text.append(",\"$h$\":\"");
-        text.append(tr_completed.source_hostname);
-        text.append("\"");
+        msg << ",\"$f$\":\"";
+        msg << tr_completed.source_url;
+        msg << "\"";
 
-        text.append(",\"$i$\":\"");
-        text.append(tr_completed.dest_hostname);
-        text.append("\"");
+        msg << ",\"$g$\":\"";
+        msg << tr_completed.dest_url;
+        msg << "\"";
 
-        text.append(",\"$j$\":\"");
-        text.append(tr_completed.source_site_name);
-        text.append("\"");
+        msg << ",\"$h$\":\"";
+        msg << tr_completed.source_hostname;
+        msg << "\"";
 
-        text.append(",\"$k$\":\"");
-        text.append(tr_completed.dest_site_name);
-        text.append("\"");
+        msg << ",\"$i$\":\"";
+        msg << tr_completed.dest_hostname;
+        msg << "\"";
 
-        text.append(",\"$l$\":\"");
-        text.append(tr_completed.t_channel);
-        text.append("\"");
+        msg << ",\"$j$\":\"";
+        msg << tr_completed.source_site_name;
+        msg << "\"";
 
-        text.append(",\"$m$\":\"");
-        text.append(tr_completed.timestamp_transfer_started);
-        text.append("\"");
+        msg << ",\"$k$\":\"";
+        msg << tr_completed.dest_site_name;
+        msg << "\"";
 
-        text.append(",\"$n$\":\"");
-        text.append(tr_completed.timestamp_transfer_completed);
-        text.append("\"");
+        msg << ",\"$l$\":\"";
+        msg << tr_completed.t_channel;
+        msg << "\"";
 
-        text.append(",\"$o$\":\"");
-        text.append(tr_completed.timestamp_checksum_source_started);
-        text.append("\"");
+        msg << ",\"$m$\":\"";
+        msg << tr_completed.timestamp_transfer_started;
+        msg << "\"";
 
-        text.append(",\"$p$\":\"");
-        text.append(tr_completed.timestamp_checksum_source_ended);
-        text.append("\"");
+        msg << ",\"$n$\":\"";
+        msg << tr_completed.timestamp_transfer_completed;
+        msg << "\"";
 
-        text.append(",\"$q$\":\"");
-        text.append(tr_completed.timestamp_checksum_dest_started);
-        text.append("\"");
+        msg << ",\"$o$\":\"";
+        msg << tr_completed.timestamp_checksum_source_started;
+        msg << "\"";
 
-        text.append(",\"$r$\":\"");
-        text.append(tr_completed.timestamp_checksum_dest_ended);
-        text.append("\"");
+        msg << ",\"$p$\":\"";
+        msg << tr_completed.timestamp_checksum_source_ended;
+        msg << "\"";
 
-        text.append(",\"$s$\":\"");
-        text.append(tr_completed.transfer_timeout);
-        text.append("\"");
+        msg << ",\"$q$\":\"";
+        msg << tr_completed.timestamp_checksum_dest_started;
+        msg << "\"";
 
-        text.append(",\"$t$\":\"");
-        text.append(tr_completed.checksum_timeout);
-        text.append("\"");
+        msg << ",\"$r$\":\"";
+        msg << tr_completed.timestamp_checksum_dest_ended;
+        msg << "\"";
 
-        text.append(",\"$u$\":\"");
-        text.append(tr_completed.transfer_error_code);
-        text.append("\"");
+        msg << ",\"$s$\":\"";
+        msg << tr_completed.transfer_timeout;
+        msg << "\"";
 
-        text.append(",\"$v$\":\"");
-        text.append(tr_completed.transfer_error_scope);
-        text.append("\"");
+        msg << ",\"$t$\":\"";
+        msg << tr_completed.checksum_timeout;
+        msg << "\"";
 
-        text.append(",\"$w$\":\"");
-        text.append(tr_completed.failure_phase);
-        text.append("\"");
+        msg << ",\"$u$\":\"";
+        msg << tr_completed.transfer_error_code;
+        msg << "\"";
 
-        text.append(",\"$x$\":\"");
-        text.append(tr_completed.transfer_error_category);
-        text.append("\"");
+        msg << ",\"$v$\":\"";
+        msg << tr_completed.transfer_error_scope;
+        msg << "\"";
 
-        text.append(",\"$y$\":\"");
-        text.append(tr_completed.final_transfer_state);
-        text.append("\"");
+        msg << ",\"$w$\":\"";
+        msg << tr_completed.failure_phase;
+        msg << "\"";
 
-        text.append(",\"$z$\":\"");
-        text.append(tr_completed.total_bytes_transfered);
-        text.append("\"");
+        msg << ",\"$x$\":\"";
+        msg << tr_completed.transfer_error_category;
+        msg << "\"";
 
-        text.append(",\"$0$\":\"");
-        text.append(tr_completed.number_of_streams);
-        text.append("\"");
+        msg << ",\"$y$\":\"";
+        msg << tr_completed.final_transfer_state;
+        msg << "\"";
 
-        text.append(",\"$1$\":\"");
-        text.append(tr_completed.tcp_buffer_size);
-        text.append("\"");
+        msg << ",\"$z$\":\"";
+        msg << tr_completed.total_bytes_transfered;
+        msg << "\"";
 
-        text.append(",\"$2$\":\"");
-        text.append(tr_completed.tcp_buffer_size);
-        text.append("\"");
+        msg << ",\"$0$\":\"";
+        msg << tr_completed.number_of_streams;
+        msg << "\"";
 
-        text.append(",\"$3$\":\"");
-        text.append(tr_completed.block_size);
-        text.append("\"");
+        msg << ",\"$1$\":\"";
+        msg << tr_completed.tcp_buffer_size;
+        msg << "\"";
 
-        text.append(",\"$4$\":\"");
-        text.append(tr_completed.file_size);
-        text.append("\"");
+        msg << ",\"$2$\":\"";
+        msg << tr_completed.tcp_buffer_size;
+        msg << "\"";
 
-        text.append(",\"$5$\":\"");
-        text.append(tr_completed.time_spent_in_srm_preparation_start);
-        text.append("\"");
+        msg << ",\"$3$\":\"";
+        msg << tr_completed.block_size;
+        msg << "\"";
 
-        text.append(",\"$6$\":\"");
-        text.append(tr_completed.time_spent_in_srm_preparation_end);
-        text.append("\"");
+        msg << ",\"$4$\":\"";
+        msg << tr_completed.file_size;
+        msg << "\"";
 
-        text.append(",\"$7$\":\"");
-        text.append(tr_completed.time_spent_in_srm_finalization_start);
-        text.append("\"");
+        msg << ",\"$5$\":\"";
+        msg << tr_completed.time_spent_in_srm_preparation_start;
+        msg << "\"";
 
-        text.append(",\"$8$\":\"");
-        text.append(tr_completed.time_spent_in_srm_finalization_end);
-        text.append("\"");
+        msg << ",\"$6$\":\"";
+        msg << tr_completed.time_spent_in_srm_preparation_end;
+        msg << "\"";
 
-        text.append(",\"$9$\":\"");
-        text.append(tr_completed.srm_space_token_source);
-        text.append("\"");
+        msg << ",\"$7$\":\"";
+        msg << tr_completed.time_spent_in_srm_finalization_start;
+        msg << "\"";
 
-        text.append(",\"$10$\":\"");
-        text.append(tr_completed.srm_space_token_dest);
-        text.append("\"");
+        msg << ",\"$8$\":\"";
+        msg << tr_completed.time_spent_in_srm_finalization_end;
+        msg << "\"";
 
-        text.append(",\"$11$\":\"");
+        msg << ",\"$9$\":\"";
+        msg << tr_completed.srm_space_token_source;
+        msg << "\"";
+
+        msg << ",\"$10$\":\"";
+        msg << tr_completed.srm_space_token_dest;
+        msg << "\"";
+
+        msg << ",\"$11$\":\"";
+
         std::string temp = ReplaceNonPrintableCharacters(tr_completed.transfer_error_message);
         temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
         temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
         temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());
 
-        if (temp.length() > 1024)
+        if (temp.length() > 1024) {
             temp.erase(1024);
+        }
 
-        text.append(temp);
+        msg << temp;
 
-        text.append("\"");
+        msg << "\"";
 
-        text.append(",\"$12$\":\"");
-        text.append(tr_completed.tr_timestamp_start);
-        text.append("\"");
+        msg << ",\"$12$\":\"";
+        msg << tr_completed.tr_timestamp_start;
+        msg << "\"";
 
         if (tr_completed.tr_timestamp_complete.empty() || tr_completed.tr_timestamp_complete.length() == 0) {
-            text.append(",\"$13$\":\"");
-            text.append(getTimestampStr());
-            text.append("\"");
+            msg << ",\"$13$\":\"";
+            msg << getTimestampStr();
+            msg << "\"";
         }
         else {
-            text.append(",\"$13$\":\"");
-            text.append(tr_completed.tr_timestamp_complete);
-            text.append("\"");
+            msg << ",\"$13$\":\"";
+            msg << tr_completed.tr_timestamp_complete;
+            msg << "\"";
         }
 
-        text.append(",\"$14$\":\"");
-        text.append(tr_completed.channel_type);
-        text.append("\"");
+        msg << ",\"$14$\":\"";
+        msg << tr_completed.channel_type;
+        msg << "\"";
 
-        text.append(",\"$15$\":\"");
-        text.append(tr_completed.user_dn);
-        text.append("\"");
+        msg << ",\"$15$\":\"";
+        msg << tr_completed.user_dn;
+        msg << "\"";
 
         if (tr_completed.file_metadata.length() > 0) {
             if (tr_completed.file_metadata == "x") {
-                text.append(",\"$16$\":\"\"");
+                msg << ",\"$16$\":\"\"";
             }
             else {
-                text.append(",\"$16$\":");
-                text.append(tr_completed.file_metadata);
-                text.append("");
+                msg << ",\"$16$\":";
+                msg << tr_completed.file_metadata;
+                msg << "";
             }
         }
         else {
-            text.append(",\"$16$\":\"\"");
+            msg << ",\"$16$\":\"\"";
         }
 
         if (tr_completed.job_metadata.length() > 0) {
-            text.append(",\"$17$\":");
-            text.append(tr_completed.job_metadata);
-            text.append("");
+            msg << ",\"$17$\":";
+            msg << tr_completed.job_metadata;
+            msg << "";
         }
         else {
-            text.append(",\"$17$\":\"\"");
+            msg << ",\"$17$\":\"\"";
         }
 
-        text.append(",\"$18$\":\"");
-        text.append(tr_completed.retry);
-        text.append("\"");
+        msg << ",\"$18$\":\"";
+        msg << tr_completed.retry;
+        msg << "\"";
 
-        text.append(",\"$19$\":\"");
-        text.append(tr_completed.retry_max);
-        text.append("\"");
+        msg << ",\"$19$\":\"";
+        msg << tr_completed.retry_max;
+        msg << "\"";
 
-        text.append(",\"$20$\":\"");
-        text.append(tr_completed.job_m_replica);
-        text.append("\"");
+        msg << ",\"$20$\":\"";
+        msg << tr_completed.job_m_replica;
+        msg << "\"";
 
-        text.append(",\"$21$\":\"");
-        text.append(tr_completed.job_state);
-        text.append("\"");
+        msg << ",\"$21$\":\"";
+        msg << tr_completed.job_state;
+        msg << "\"";
 
-        text.append(",\"$22$\":\"");
-        text.append(tr_completed.is_recoverable);
-        text.append("\"");
+        msg << ",\"$22$\":\"";
+        msg << tr_completed.is_recoverable;
+        msg << "\"";
 
-        text.append("}");
+        msg << "}";
 
+        text = msg.str();
         message = restoreMessageToDisk(text);
         if (message.empty())
             return text;

@@ -40,7 +40,7 @@
 /**
  * Return MegaBytes per second from the given transferred bytes and duration
  */
-inline double convertBtoM( double byte,  double duration)
+inline double convertBtoM(double byte,  double duration)
 {
     return ((((byte / duration) / 1024) / 1024) * 100) / 100;
 }

@@ -56,23 +56,23 @@ public:
     std::string timestamp_checksum_source_ended; //epoch-seconds
     std::string timestamp_checksum_dest_started; //epoch-seconds
     std::string timestamp_checksum_dest_ended; //epoch-seconds
-    std::string transfer_timeout;
-    std::string checksum_timeout;
+    unsigned    transfer_timeout;
+    int         checksum_timeout;
     std::string transfer_error_code;
     std::string transfer_error_scope; //source/destination
     std::string transfer_error_message; //text error message
     std::string failure_phase; // (preparation, transfer, checksum, etc)
     std::string transfer_error_category; //persmission, etc
     std::string final_transfer_state; //OK/Error/Aborted
-    std::string total_bytes_transfered; // (this will include the info retrieved from the performance markers)
-    std::string number_of_streams;
-    std::string tcp_buffer_size;
-    std::string block_size;
-    std::string file_size;
-    std::string time_spent_in_srm_preparation_start; //epoc
-    std::string time_spent_in_srm_preparation_end; //epoc
-    std::string time_spent_in_srm_finalization_start; //epoc
-    std::string time_spent_in_srm_finalization_end; //epoc
+    off_t       total_bytes_transfered; // (this will include the info retrieved from the performance markers)
+    int         number_of_streams;
+    unsigned    tcp_buffer_size;
+    unsigned    block_size;
+    off_t       file_size;
+    std::string time_spent_in_srm_preparation_start; //epoch
+    std::string time_spent_in_srm_preparation_end; //epoch
+    std::string time_spent_in_srm_finalization_start; //epoch
+    std::string time_spent_in_srm_finalization_end; //epoch
     std::string srm_space_token_source;
     std::string srm_space_token_dest;
     std::string tr_timestamp_start;
@@ -81,11 +81,11 @@ public:
     std::string user_dn;
     std::string file_metadata;
     std::string job_metadata;
-    std::string retry;
-    std::string retry_max;
+    unsigned    retry;
+    unsigned    retry_max;
     std::string job_m_replica;
     std::string job_state;
-    std::string is_recoverable;
+    bool        is_recoverable;
 };
 
 class msg_ifce

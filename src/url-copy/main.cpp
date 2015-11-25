@@ -255,7 +255,7 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     transferCompletedMessage.transfer_error_scope = getDefaultScope();
     transferCompletedMessage.transfer_error_category = getDefaultReasonClass();
-    transferCompletedMessage.is_recoverable = boost::lexical_cast<std::string>(retry);
+    transferCompletedMessage.is_recoverable = retry;
     transferCompletedMessage.failure_phase = getDefaultErrorPhase();
     transferCompletedMessage.transfer_error_message = errorMessage;
     transferCompletedMessage.final_transfer_state = finalState;
@@ -590,7 +590,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer> &transferList, unsigned
         transferCompletedMessage.dest_url = t.destUrl;
         transferCompletedMessage.transfer_error_scope = TRANSFER;
         transferCompletedMessage.transfer_error_category = GENERAL_FAILURE;
-        transferCompletedMessage.is_recoverable = boost::lexical_cast<std::string>(retry);
+        transferCompletedMessage.is_recoverable = retry;
         transferCompletedMessage.failure_phase = TRANSFER;
         transferCompletedMessage.transfer_error_message = "Not executed because a previous hop failed";
         transferCompletedMessage.job_state = "UNKNOWN";
@@ -827,12 +827,12 @@ int main(int argc, char **argv)
         transferCompletedMessage.vo = opts.vo;
         transferCompletedMessage.source_site_name = opts.sourceSiteName;
         transferCompletedMessage.dest_site_name = opts.destSiteName;
-        transferCompletedMessage.block_size = boost::lexical_cast<std::string>(opts.blockSize);
+        transferCompletedMessage.block_size = opts.blockSize;
         transferCompletedMessage.srm_space_token_dest = opts.destTokenDescription;
         transferCompletedMessage.srm_space_token_source = opts.sourceTokenDescription;
 
-        transferCompletedMessage.retry = boost::lexical_cast<std::string>(opts.retry);
-        transferCompletedMessage.retry_max = boost::lexical_cast<std::string>(opts.retry_max);
+        transferCompletedMessage.retry = opts.retry;
+        transferCompletedMessage.retry_max = opts.retry_max;
 
         if (opts.hide_user_dn) {
             transferCompletedMessage.user_dn = std::string();
@@ -959,7 +959,7 @@ int main(int argc, char **argv)
             //get checksum timeout from gfal2
             int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum timeout " << checksumTimeout << commit;
-            transferCompletedMessage.checksum_timeout = boost::lexical_cast<std::string>(checksumTimeout);
+            transferCompletedMessage.checksum_timeout = checksumTimeout;
 
             // Checksums
             if (currentTransfer.checksumMethod) {
@@ -1043,7 +1043,7 @@ int main(int argc, char **argv)
             }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source file size: " << currentTransfer.fileSize << commit;
-            transferCompletedMessage.file_size = boost::lexical_cast<std::string>(currentTransfer.fileSize);
+            transferCompletedMessage.file_size = currentTransfer.fileSize;
 
             //overwrite dest file if exists
             if (opts.overwrite) {
@@ -1090,7 +1090,7 @@ int main(int argc, char **argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Add " << opts.secPerMb << " seconds per MB transfer timeout " << commit;
 
             gfalt_set_timeout(params, opts.timeout, NULL);
-            transferCompletedMessage.transfer_timeout = boost::lexical_cast<std::string>(opts.timeout);
+            transferCompletedMessage.transfer_timeout = opts.timeout;
             globalTimeout = experimentalTimeout + 3600;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Resetting global timeout thread to " << globalTimeout << " seconds" <<
             commit;
@@ -1143,8 +1143,8 @@ int main(int argc, char **argv)
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
             }
 
-            transferCompletedMessage.number_of_streams = boost::lexical_cast<std::string>(opts.nStreams);
-            transferCompletedMessage.tcp_buffer_size = boost::lexical_cast<std::string>(opts.tcpBuffersize);
+            transferCompletedMessage.number_of_streams = opts.nStreams;
+            transferCompletedMessage.tcp_buffer_size = opts.tcpBuffersize;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << opts.nStreams << commit;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
 
@@ -1211,7 +1211,7 @@ int main(int argc, char **argv)
             }
 
             currentTransfer.transferredBytes = currentTransfer.fileSize;
-            transferCompletedMessage.total_bytes_transfered = boost::lexical_cast<std::string>(currentTransfer.fileSize);
+            transferCompletedMessage.total_bytes_transfered = currentTransfer.fileSize;
 
             if (!opts.strictCopy) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Stat the dest surl start" << commit;
@@ -1279,7 +1279,7 @@ int main(int argc, char **argv)
 stop:
         transferCompletedMessage.transfer_error_scope = errorScope;
         transferCompletedMessage.transfer_error_category = reasonClass;
-        transferCompletedMessage.is_recoverable = boost::lexical_cast<std::string>(retry);
+        transferCompletedMessage.is_recoverable = retry;
         transferCompletedMessage.failure_phase = errorPhase;
         transferCompletedMessage.transfer_error_message = errorMessage;
 
@@ -1294,11 +1294,10 @@ stop:
                 if (totalTimeInSecs <= 1)
                     totalTimeInSecs = 1;
 
-                throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize),
-                    boost::lexical_cast<int>(totalTimeInSecs));
+                throughputTurl = convertBtoM(currentTransfer.fileSize, totalTimeInSecs);
             }
             else {
-                throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), 1);
+                throughputTurl = convertBtoM(currentTransfer.fileSize, 1);
             }
         }
 
