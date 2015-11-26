@@ -21,9 +21,10 @@
 #include "reporter.h"
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include "common/producer_consumer_common.h"
-
+#include "common/Uri.h"
 
 using namespace std;
+
 
 Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     isTerminalSent(false), multiple(false)
@@ -32,9 +33,7 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     memset(&msg_updater, 0, sizeof(message_updater));
     memset(&msg_log, 0, sizeof(message_log));
 
-    char chname[MAXHOSTNAMELEN] = {0};
-    gethostname(chname, sizeof(chname));
-    hostname.assign(chname);
+    hostname = fts3::common::getFullHostname();
 }
 
 

@@ -27,6 +27,7 @@
 namespace fts3 {
 namespace common {
 
+/// Hold a Uri, splitted in relevant parts
 class Uri
 {
 public:
@@ -42,6 +43,14 @@ public:
 
     static Uri parse(const std::string &uri);
 };
+
+/// Returns true if source and destination hosts are considered to belong
+/// to the same LAN
+bool isLanTransfer(const std::string &source, const std::string &dest);
+
+/// Return the full qualified hostname for this host
+std::string getFullHostname();
+
 
 } // namespace common
 } // namespace fts3

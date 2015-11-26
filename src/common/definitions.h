@@ -26,11 +26,6 @@
 #include <time.h>
 #include <ctime>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/param.h>
-#include <unistd.h>
 #include <math.h>
 
 #define JOB_ID_LEN 36+1
@@ -293,52 +288,3 @@ const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
 const int mode_1[] = {2,4,3,5};
 const int mode_2[] = {4,6,5,8};
 const int mode_3[] = {6,8,7,10};
-
-inline bool lanTransfer(const std::string source, const std::string dest)
-{
-    if (source == dest)
-        return true;
-
-    std::string sourceDomain;
-    std::string destinDomain;
-
-    std::size_t foundSource = source.find(".");
-    std::size_t foundDestin = dest.find(".");
-
-    if (foundSource != std::string::npos) {
-        sourceDomain = source.substr(foundSource, source.length());
-    }
-
-    if (foundDestin != std::string::npos) {
-        destinDomain = dest.substr(foundDestin, dest.length());
-    }
-
-    if (sourceDomain == destinDomain)
-        return true;
-
-    return false;
-}
-
-
-/**
- * Return the full qualified hostname
- */
-inline std::string getFullHostname()
-{
-    char hostname[MAXHOSTNAMELEN] = {0};
-    gethostname(hostname, sizeof(hostname));
-
-    struct addrinfo hints, *info;
-    memset(&hints, 0, sizeof(hints));
-
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_CANONNAME;
-
-    // First is OK
-    if (getaddrinfo(hostname, NULL, &hints, &info) == 0) {
-        g_strlcpy(hostname, info->ai_canonname, sizeof(hostname));
-        freeaddrinfo(info);
-    }
-    return hostname;
-}

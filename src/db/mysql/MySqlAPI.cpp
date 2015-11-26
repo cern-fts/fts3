@@ -37,9 +37,10 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include "../../common/Exceptions.h"
-#include "../../common/Logger.h"
+#include "common/Exceptions.h"
+#include "common/Logger.h"
 #include "common/JobStatusHandler.h"
+#include "common/Uri.h"
 
 using namespace fts3::common;
 using namespace db;
@@ -4278,7 +4279,7 @@ bool MySqlAPI::updateOptimizer()
             }
 
 
-            lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+            lanTransferBool = isLanTransfer(source_hostname, destin_hostname);
             if(lanTransferBool)
             {
                 highDefault = LAN_ACTIVE;

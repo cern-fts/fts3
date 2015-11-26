@@ -18,8 +18,14 @@
  * limitations under the License.
  */
 
-#include <boost/regex.hpp>
 #include "Uri.h"
+
+#include <glib.h>
+#include <netdb.h>
+#include <sys/param.h>
+#include <unistd.h>
+#include <boost/regex.hpp>
+
 
 namespace fts3 {
 namespace common {
@@ -30,6 +36,7 @@ namespace common {
 #define URI_REGEX "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
 
 static boost::regex uri_regex(URI_REGEX);
+
 
 static void extractPort(Uri& u0)
 {
@@ -50,24 +57,72 @@ static void extractPort(Uri& u0)
 }
 
 
-    Uri Uri::parse(const std::string &uri)
-    {
-        Uri u0;
+Uri Uri::parse(const std::string &uri)
+{
+    Uri u0;
 
-        boost::smatch matches;
-        if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {
-            u0.protocol = matches[2];
-            u0.host = matches[4];
-            u0.path = matches[5];
-            u0.queryString = matches[7];
+    boost::smatch matches;
+    if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {
+        u0.protocol = matches[2];
+        u0.host = matches[4];
+        u0.path = matches[5];
+        u0.queryString = matches[7];
 
-            // port is put into host, so extract it
-            u0.port = 0;
-            extractPort(u0);
-        }
-
-        return u0;
+        // port is put into host, so extract it
+        u0.port = 0;
+        extractPort(u0);
     }
+
+    return u0;
+}
+
+
+bool isLanTransfer(const std::string &source, const std::string &dest)
+{
+    if (source == dest)
+        return true;
+
+    std::string sourceDomain;
+    std::string destinDomain;
+
+    std::size_t foundSource = source.find(".");
+    std::size_t foundDestin = dest.find(".");
+
+    if (foundSource != std::string::npos) {
+        sourceDomain = source.substr(foundSource, source.length());
+    }
+
+    if (foundDestin != std::string::npos) {
+        destinDomain = dest.substr(foundDestin, dest.length());
+    }
+
+    if (sourceDomain == destinDomain)
+        return true;
+
+    return false;
+}
+
+
+std::string getFullHostname()
+{
+    char hostname[MAXHOSTNAMELEN] = {0};
+    gethostname(hostname, sizeof(hostname));
+
+    struct addrinfo hints, *info;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    // First is OK
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0) {
+        g_strlcpy(hostname, info->ai_canonname, sizeof(hostname));
+        freeaddrinfo(info);
+    }
+    return hostname;
+}
+
 
 } // namespace common
 } // namespace fts3

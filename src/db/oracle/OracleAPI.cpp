@@ -31,6 +31,7 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
+#include "common/Uri.h"
 #include "sociConversions.h"
 #include "db/generic/DbUtils.h"
 
@@ -3450,7 +3451,7 @@ bool OracleAPI::updateOptimizer()
                 }
             }
 
-            lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+            lanTransferBool = isLanTransfer(source_hostname, destin_hostname);
             if(lanTransferBool)
                 highDefault = LAN_ACTIVE;
 
