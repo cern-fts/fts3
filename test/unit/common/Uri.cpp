@@ -18,7 +18,7 @@
 
 #include "common/Uri.h"
 
-using fts3::common::Uri;
+using namespace fts3::common;
 
 
 BOOST_AUTO_TEST_SUITE(common)
@@ -52,6 +52,27 @@ BOOST_AUTO_TEST_CASE(simpleHost)
     BOOST_CHECK_EQUAL(uri.protocol, "gsiftp");
     BOOST_CHECK_EQUAL(uri.host, "hostname");
     BOOST_CHECK_EQUAL(uri.port, 2121);
+}
+
+
+BOOST_AUTO_TEST_CASE(lanTransfer)
+{
+    BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain.domain.com"), true);
+    BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain2.domain.com"), true);
+    BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain.somewhere.com"), false);
+    BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain.domain.es"), false);
+}
+
+
+BOOST_AUTO_TEST_CASE(hostname)
+{
+    char hostname[512];
+    FILE *hostnameFile = popen("/bin/hostname -f", "r");
+    fgets(hostname, sizeof(hostname), hostnameFile);
+    pclose(hostnameFile);
+    hostname[strlen(hostname) - 1] = '\0';
+
+    BOOST_CHECK_EQUAL(getFullHostname(), hostname);
 }
 
 
