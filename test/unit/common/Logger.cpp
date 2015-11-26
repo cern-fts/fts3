@@ -21,7 +21,7 @@
 
 
 BOOST_AUTO_TEST_SUITE(common)
-BOOST_AUTO_TEST_SUITE(Logger)
+BOOST_AUTO_TEST_SUITE(LoggerTest)
 
 
 struct LoggerTestHelper
