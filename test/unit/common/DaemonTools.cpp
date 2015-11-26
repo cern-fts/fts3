@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(getIdsTest)
 
 BOOST_AUTO_TEST_CASE(countProcessesWithNameTest)
 {
-    BOOST_CHECK_EQUAL(countProcessesWithName("/sbin/init"), 1);
+    BOOST_CHECK_EQUAL(countProcessesWithName("init"), 1);
     BOOST_CHECK_EQUAL(countProcessesWithName("/fake/path/really/unlikely"), 0);
 }
 
