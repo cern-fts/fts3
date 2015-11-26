@@ -24,8 +24,6 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <iostream>
-#include <stdio.h>
-#include <string>
 #include <boost/thread.hpp>
 #include <sys/prctl.h>
 
@@ -38,28 +36,28 @@
  * happen in a separate thread, outside the signal handling logic.
  */
 
-using namespace fts3::common; 
+namespace fts3 {
+namespace common {
+namespace panic {
+
 
 static sem_t semaphore;
 static sig_atomic_t raised_signal = 0;
 
-void *panic::stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
-int panic::stack_backtrace_size = 0;
+void *stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
+int stack_backtrace_size = 0;
 
 
-static void get_backtrace(int signum)
+void get_backtrace(int signum)
 {
-        panic::stack_backtrace_size = backtrace(panic::stack_backtrace, STACK_BACKTRACE_SIZE);
+    stack_backtrace_size = backtrace(stack_backtrace, STACK_BACKTRACE_SIZE);
 
-        // print out all the frames to stderr
-        fprintf(stderr, "Caught signal: %d\n", signum);
-        fprintf(stderr, "Stack trace: \n");
-        backtrace_symbols_fd(panic::stack_backtrace, panic::stack_backtrace_size, STDERR_FILENO);
-        // and then print out all the frames to stdout
-        fprintf(stdout, "Caught signal: %d\n", signum);
-        fprintf(stdout, "Stack trace: \n");
-        backtrace_symbols_fd(panic::stack_backtrace, panic::stack_backtrace_size, STDOUT_FILENO);
+    // print out all the frames to stderr
+    fprintf(stderr, "Caught signal: %d\n", signum);
+    fprintf(stderr, "Stack trace: \n");
+    backtrace_symbols_fd(stack_backtrace, stack_backtrace_size, STDERR_FILENO);
 }
+
 
 // Reset handler and re-raise, so the system handles it
 // If ulimit -c is unlimited, a coredump will be generated for
@@ -75,7 +73,8 @@ static void delegate_to_default(int signum)
     // re-issue and let the system do the work
     signal(signum, SIG_DFL);
     raise(signum);
-}
+    }
+
 
 // Minimalistic logic inside a signal!
 static void signal_handler(int signum)
@@ -108,6 +107,7 @@ static void signal_handler(int signum)
     }
 }
 
+
 // Thread that logs, waits and kills
 static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
 {
@@ -119,6 +119,7 @@ static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
     while (r < 0);   // Semaphore may return spuriously with errno = EINTR
     shutdown_callback(raised_signal, udata);
 }
+
 
 // Set up the callbacks, and launch the watchdog thread
 static void (*_arg_shutdown_callback)(int, void*);
@@ -155,8 +156,9 @@ static void set_handlers(void)
     boost::thread watchdog(signal_watchdog, _arg_shutdown_callback, _arg_udata);
 }
 
+
 // Wrap set_handlers, so it is called only once
-void panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata)
+void setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata)
 {
     // First thing, wait for a signal to be caught
     static boost::once_flag set_handlers_flag = BOOST_ONCE_INIT;
@@ -166,7 +168,7 @@ void panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* u
 }
 
 
-std::string panic::stack_dump(void *array[], int stack_size)
+std::string stack_dump(void *array[], int stack_size)
 {
     std::string stackTrace;
 
@@ -182,3 +184,7 @@ std::string panic::stack_dump(void *array[], int stack_size)
 
     return stackTrace;
 }
+
+} // end namespace panic
+} // end namespace common
+} // end namespace fts3

@@ -72,8 +72,14 @@ UserProxyEnv::~UserProxyEnv()
         if (!m_key.empty()) {
             setenv(KEY_ENV_VAR, m_key.c_str(), 1);
         }
+        else {
+            unsetenv(KEY_ENV_VAR);
+        }
         if (!m_cert.empty()) {
             setenv(CERT_ENV_VAR, m_cert.c_str(), 1);
+        }
+        else {
+            unsetenv(CERT_ENV_VAR);
         }
     }
 }
