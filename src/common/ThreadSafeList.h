@@ -48,7 +48,6 @@ public:
     void checkExpiredMsg(std::vector<struct message_updater>& messages);
     void deleteMsg(std::vector<struct message_updater>& messages);
     void removeFinishedTr(std::string job_id, int file_id);
-    bool isAlive(int fileID);
 
 private:
     std::list<struct message_updater> m_list;
