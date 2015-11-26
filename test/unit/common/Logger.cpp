@@ -74,6 +74,11 @@ BOOST_AUTO_TEST_CASE(redirect)
         // Ignore
     }
 
+    // Save current stdout and stderr
+    int oldOut = dup(STDOUT_FILENO);
+    int oldErr = dup(STDERR_FILENO);
+
+    // Do the test
     fts3::common::Logger &logger = fts3::common::theLogger();
     logger.redirect(logPath, logPath);
 
@@ -100,6 +105,14 @@ BOOST_AUTO_TEST_CASE(redirect)
     BOOST_CHECK(appear);
     BOOST_CHECK(!doesNot);
 
+    // Recover stdout and stderr
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    dup2(oldOut, STDOUT_FILENO);
+    dup2(oldErr, STDERR_FILENO);
+
+    // Clean
     BOOST_CHECK_NO_THROW(boost::filesystem::remove(logPath));
 }
 
