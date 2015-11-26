@@ -25,7 +25,7 @@
 #ifndef SRCDESTCLI_H_
 #define SRCDESTCLI_H_
 
-#include "CliBase.h"
+#include "RestCli.h"
 
 
 namespace fts3
@@ -36,11 +36,11 @@ namespace cli
 /**
  * SrcDestCli provides the CLI for specifying source and destination SE
  *
- * In addition to the functionalities inherited from CliBase, the class provides:
+ * In addition to the functionalities inherited from RestCli, the class provides:
  *  	- source (positional)
  *  	- destination (positional)
  */
-class SrcDestCli : virtual public CliBase
+class SrcDestCli : virtual public RestCli
 {
 
 public:

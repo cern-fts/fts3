@@ -25,7 +25,7 @@
 #ifndef PRIORITYCLI_H_
 #define PRIORITYCLI_H_
 
-#include "CliBase.h"
+#include "RestCli.h"
 
 #include <boost/optional.hpp>
 #include <string>
@@ -35,7 +35,7 @@ namespace fts3
 namespace cli
 {
 
-class PriorityCli : public CliBase
+class PriorityCli : public RestCli
 {
 
 public:

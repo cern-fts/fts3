@@ -25,7 +25,7 @@
 #ifndef DEBUGSETCLI_H_
 #define DEBUGSETCLI_H_
 
-#include "CliBase.h"
+#include "RestCli.h"
 
 #include <string>
 #include <vector>
@@ -38,7 +38,7 @@ namespace cli
 /**
  *
  */
-class DebugSetCli : public CliBase
+class DebugSetCli : public RestCli
 {
 
 public:

@@ -8,6 +8,9 @@
 #ifndef SERVICEADAPTER_H_
 #define SERVICEADAPTER_H_
 
+#include <boost/optional.hpp>
+#include <boost/tuple/tuple.hpp>
+
 #include "JobStatus.h"
 #include "File.h"
 #include "Snapshot.h"
@@ -15,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <tuple>
 
 namespace fts3
 {
@@ -23,12 +27,90 @@ namespace cli
 
 class ServiceAdapter
 {
+    friend class ServiceAdapterFallbackFacade;
 
 public:
     ServiceAdapter(std::string const & endpoint) : endpoint(endpoint) {}
     virtual ~ServiceAdapter() {}
 
-    void printServiceDetails();
+    /**
+     * Handle static authorization/revocation
+     */
+    virtual void authorize(const std::string& op, const std::string& dn) = 0;
+
+    /**
+     * Remote call to blacklistDn
+     *
+     * @param subject - the DN that will be added/removed from blacklist
+     * @param status  - either CANCEL, WAIT or WAIT_AS
+     * @param timeout - the timeout for the jobs already in queue
+     * @param mode    - set or unset the blacklisting
+     */
+    virtual void blacklistDn(std::string subject, std::string status, int timeout, bool mode) = 0;
+
+    /**
+     * Remote call to blacklistSe
+     *
+     * @param name    - name of the SE
+     * @param vo      - name of the VO for whom the SE should be blacklisted (optional)
+     * @param status  - either CANCEL, WAIT or WAIT_AS
+     * @param timeout - the timeout for the jobs already in queue
+     * @param mode    - set or unset the blacklisting
+     */
+    virtual void blacklistSe(std::string name, std::string vo, std::string status, int timeout, bool mode) = 0;
+
+    /**
+     * Remote call to cancel
+     *
+     * @param jobIds : list of job IDs
+     */
+    virtual std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds) = 0;
+
+    /**
+     * Remote call to cancelAll
+     */
+    virtual boost::tuple<int, int> cancelAll(const std::string& vo) = 0;
+
+    /**
+     * Remote call to debugSet
+     * 
+     * set the debug mode to on/off for
+     * a given pair of SEs or a single SE
+     *
+     * @param source - source se (or the single SE
+     * @param destination - destination se (might be empty)
+     * @param level - debug level
+     */
+    virtual void debugSet(std::string source, std::string destination, unsigned level) = 0;
+
+    /**
+     * Remote call to delConfiguration
+     *
+     * @param cfgs - vector of configurations to delete
+     */
+    virtual void delConfiguration(std::vector<std::string> const &cfgs) = 0;
+
+    /**
+     * Delegates a proxy certificate
+     *
+     * @param delegationId : delegation ID
+     * @param expirationTime : user defined expiration time
+     */
+    virtual void delegate(std::string const & delegationId, long expirationTime) = 0;
+
+    /**
+     * Remote call for the removal of files
+     */
+    virtual std::string deleteFile (const std::vector<std::string>& filesForDelete) = 0;
+
+    /**
+     * Remote call to doDrain
+     * 
+     * switches the drain mode
+     *
+     * @param  drain - on/off
+     */
+    virtual void doDrain(bool drain) = 0;
 
     /**
      * Remote call to listRequests
@@ -52,33 +134,45 @@ public:
     virtual std::vector<JobStatus> listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination) = 0;
 
     /**
-     * Remote call to cancel
-     *
-     * @param jobIds : list of job IDs
+     * Remote call to getBandwidthLimit
      */
-    virtual std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds) = 0;
+    virtual std::string getBandwidthLimit() = 0;
 
     /**
-     * Remote call to cancelAll
+     * Remote call to getConfiguration
+     * 
+     * @param vo - vo name that will be used to filter the response
+     * @param name - SE or SE group name that will be used to filter the response
      */
-    virtual boost::tuple<int, int> cancelAll(const std::string& vo) = 0;
+    virtual std::vector<std::string> getConfiguration (std::string src, std::string dest, std::string all, std::string name) = 0;
 
     /**
-     * Remote call that will be transferSubmit2 or transferSubmit3
-     *
-     * @param elements - job elements to be executed
-     * @param parameters - parameters for the job that is being submitted
-     * @param checksum - flag indicating whether the checksum should be used
-     *  (if false transferSubmit2 is used, otherwise transferSubmit3 is used)
-     *
-     * @return the job ID
+     * @param jobId : job ID
+     * @return : vector containing detailed information about files in the given job (including file ID)
      */
-    virtual std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters) = 0;
+    virtual std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId) = 0;
 
     /**
-     * Remote call for the removal of files
+     * Remote call to getFileStatus
+     *
+     * @param jobId   id of the job
+     * @param archive if true, the archive will be queried
+     * @param offset  query starting from this offset (i.e. files 100 in advance)
+     * @param limit   query a limited number of files (i.e. only 50 results)
+     * @param retries get file retries
+     * @param resp server response
+     * @return The number of files returned
      */
-    virtual std::string deleteFile (const std::vector<std::string>& filesForDelete) = 0;
+    virtual std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries) = 0;
+
+    /**
+     * @param vo : user VO name
+     * @param src : source SE
+     * @param dst : destination SE
+     *
+     * @return the snapshot
+     */
+    virtual std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst) = 0;
 
     /**
      * Remote call to getTransferJobStatus
@@ -101,41 +195,148 @@ public:
      */
     virtual JobStatus getTransferJobSummary (std::string const & jobId, bool archive) = 0;
 
-    /**
-     * Remote call to getFileStatus
-     *
-     * @param jobId   id of the job
-     * @param archive if true, the archive will be queried
-     * @param offset  query starting from this offset (i.e. files 100 in advance)
-     * @param limit   query a limited number of files (i.e. only 50 results)
-     * @param retries get file retries
-     * @param resp server response
-     * @return The number of files returned
-     */
-    virtual std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries) = 0;
+    virtual const std::string &getVersion() const { return version; }
 
     /**
-     * Delegates a proxy certificate
-     *
-     * @param delegationId : delegation ID
-     * @param expirationTime : user defined expiration time
+     * Checks the expiration date of the local proxy certificate
+     * @return expiration date of the proxy certificate
      */
-    virtual void delegate(std::string const & delegationId, long expirationTime) = 0;
+    virtual long isCertValid() = 0;
 
     /**
-     * @param jobId : job ID
-     * @return : vector containing detailed information about files in the given job (including file ID)
+     * Remote call to optimizerModeSet
+     *
+     * @param mode - optimizer mode
      */
-    virtual std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId) = 0;
+    virtual void optimizerModeSet(int mode) = 0;
+
+    void printServiceDetails();
 
     /**
-     * @param vo : user VO name
-     * @param src : source SE
-     * @param dst : destination SE
+     * Remote call to prioritySet
      *
-     * @return the snapshot
+     * Sets priority for the given job
+     *
+     * @param jobId - the id of the job
+     * @param priority - the priority to be set
      */
-    virtual std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst) = 0;
+    virtual void prioritySet(std::string jobId, int priority) = 0;
+
+    /**
+     * Remote call to queueTimeoutSet
+     */
+    virtual void queueTimeoutSet(unsigned timeout) = 0;
+
+    /**
+     * Remote call to retrySet
+     *
+     * @param retry - number of retries to be set
+     */
+    virtual void retrySet(std::string vo, int retry) = 0;
+
+    /**
+     * Handle static authorization/revocation
+     */
+    virtual void revoke(const std::string& op, const std::string& dn) = 0;
+
+    /**
+     * Remote call to setBandwidthLimit
+     */
+    virtual void setBandwidthLimit(const std::string& source_se, const std::string& dest_se, int limit) = 0;
+
+    /**
+     * Remote call to setConfiguration
+     *
+     * @param cfgs - vector of configurations to be set
+     */
+    virtual void setConfiguration (std::vector<std::string> const &cfgs) = 0;
+
+    /**
+     * Remote call to setDropboxCeredential
+     *
+     * @param appKey    : S3 app key
+     * @param appSecret : S3 app secret
+     * @param apiUrl    : service API URL (usually https://www.dropbox.com/1)
+     */
+    virtual void setDropboxCredential(std::string const & appKey, std::string const & appSecret, std::string const & apiUrl) = 0;
+
+    /**
+     * Remote call to fixActivePerPair
+     */
+    virtual void setFixActivePerPair(std::string source, std::string destination, int active) = 0;
+
+    /**
+     * Remote call to setGlobalLimits
+     */
+    virtual void setGlobalLimits(boost::optional<int> maxActivePerLink, boost::optional<int> maxActivePerSe) = 0;
+
+    /**
+     * Remote call to setGlobalTimeout
+     */
+    virtual void setGlobalTimeout(int timeout) = 0;
+
+    /**
+     * Remote call to setMaxDstSeActive
+     */
+    virtual void setMaxDstSeActive(std::string se, int active) = 0;
+
+    /**
+     * Remote call to setBringOnline
+     *
+     * @param triplet - se name, max number staging files, vo name
+     * @param operation - 'staging' or 'delete'
+     */
+    virtual void setMaxOpt(std::tuple<std::string, int, std::string> const &triplet, std::string const &opt) = 0;
+
+    /**
+     * Remote call to setMaxSrcSeActive
+     */
+    virtual void setMaxSrcSeActive(std::string se, int active) = 0;
+
+    /**
+     * Remote call to setS3Ceredential
+     *
+     * @param accessKey : S3 access key
+     * @param secretKey : S3 secret key
+     * @param vo        : VO name
+     * @param storage   : storage name (e.g. s3://hostname.com)
+     */
+    virtual void setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage) = 0;
+
+    /**
+     * Remote call to setSecPerMb
+     */
+    virtual void setSecPerMb(int secPerMb) = 0;
+
+    /**
+     * Sets the protocol (UDT) for given SE
+     *
+     * @param protocol - for now only 'udt' is supported
+     * @param se - the name of the SE in question
+     * @param state - either 'on' or 'off'
+     */
+    virtual void setSeProtocol(std::string protocol, std::string se, std::string state) = 0;
+
+    /**
+     * Remote call to showUserDn
+     *
+     * switches the show-user-DN mode
+     *
+     * @param  show - on/off
+     */
+    virtual void showUserDn(bool show) = 0;
+
+    /**
+     * Remote call that will be transferSubmit2 or transferSubmit3
+     *
+     * @param elements - job elements to be executed
+     * @param parameters - parameters for the job that is being submitted
+     * @param checksum - flag indicating whether the checksum should be used
+     *  (if false transferSubmit2 is used, otherwise transferSubmit3 is used)
+     *
+     * @return the job ID
+     */
+    virtual std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters) = 0;
 
 protected:
 

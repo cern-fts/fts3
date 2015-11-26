@@ -22,7 +22,6 @@
  *      Author: Michał Simon
  */
 
-#include "GSoapContextAdapter.h"
 #include "python/PythonApi.h"
 #include "python/Job.h"
 #include "python/PyFile.h"

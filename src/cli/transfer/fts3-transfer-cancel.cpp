@@ -22,7 +22,7 @@
  *      Author: Michał Simon
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 #include "MsgPrinter.h"
 #include "ui/CancelCli.h"
@@ -59,10 +59,10 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
 
             // print API details if verbose
-            cli.printApiDetails(*ctx.get());
+            cli.printApiDetails(ctx);
 
             if (!cli.cancelAll())
                 {
@@ -70,7 +70,7 @@ int main(int ac, char* av[])
 
                     if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
-                    std::vector< std::pair<std::string, std::string> > ret = ctx->cancel(jobs);
+                    std::vector< std::pair<std::string, std::string> > ret = ctx.cancel(jobs);
                     MsgPrinter::instance().print(ret);
                 }
             else
@@ -83,7 +83,7 @@ int main(int ac, char* av[])
 
                     if (answer == "yes")
                         {
-                            boost::tuple<int, int> cancelCount = ctx->cancelAll(cli.getVoName());
+                            boost::tuple<int, int> cancelCount = ctx.cancelAll(cli.getVoName());
                             std::vector<std::pair<std::string, int> > result;
                             int canceledJobs = boost::get<0>(cancelCount);
                             int canceledFiles = boost::get<1>(cancelCount);

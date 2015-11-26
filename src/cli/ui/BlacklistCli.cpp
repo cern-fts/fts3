@@ -72,6 +72,7 @@ BlacklistCli::~BlacklistCli()
 
 void BlacklistCli::validate()
 {
+    RestCli::validate();
     boost::algorithm::to_lower(mode);
 
     if (mode != ON && mode != OFF)

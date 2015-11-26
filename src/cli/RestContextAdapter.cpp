@@ -9,15 +9,23 @@
 
 #include "rest/RestSubmission.h"
 #include "rest/RestDeletion.h"
+#include "rest/RestBanning.h"
+#include "rest/RestModifyJob.h"
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
 #include "delegation/RestDelegator.h"
 
+#include "exception/rest_invalid.h"
+#include "exception/rest_failure.h"
+#include "exception/cli_exception.h"
+
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/tuple/tuple_io.hpp>
 
 namespace fts3
 {
@@ -28,20 +36,147 @@ void RestContextAdapter::getInterfaceDetails()
 {
     std::stringstream ss;
     HttpRequest http (endpoint, capath, proxy, ss);
-    http.get();
 
-    ResponseParser parser(ss);
+    try {
+        http.get();
+        ResponseParser parser(ss);
 
-    version += parser.get("api.major");
-    version += "." + parser.get("api.minor");
-    version += "." + parser.get("api.patch");
+        version += parser.get("api.major");
+        version += "." + parser.get("api.minor");
+        version += "." + parser.get("api.patch");
 
-    interface = version;
-    metadata  = "fts3-rest-" + version;
+        interface = version;
+        metadata  = "fts3-rest-" + version;
 
-    schema += parser.get("schema.major");
-    schema += "." + parser.get("schema.minor");
-    schema += "." + parser.get("schema.patch");
+        schema += parser.get("schema.major");
+        schema += "." + parser.get("schema.minor");
+        schema += "." + parser.get("schema.patch");
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error while fetching interface details: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply while fetching "
+                          "interface details: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
+}
+
+void RestContextAdapter::blacklistDn(std::string subject, std::string status, int timeout, bool mode)
+{
+    std::stringstream ss;
+    RestBanning ban(subject, "", status, timeout, mode, true);
+    
+    ss << ban.body();
+
+    std::string url = endpoint + ban.resource();
+    HttpRequest http (url, capath, proxy, ss, "affected");
+
+    try {
+        ban.do_http_action(http);
+        // for the banning case response should include affected job ids
+        // no response data for unbanning
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error while blacklisting the DN: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply while DN "
+                          "blacklisting: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
+}
+
+void RestContextAdapter::blacklistSe(std::string name, std::string vo, std::string status, int timeout, bool mode)
+{
+    std::stringstream ss;
+    RestBanning ban(name, vo, status, timeout, mode, false);
+    
+    ss << ban.body();
+
+    std::string url = endpoint + ban.resource();
+    HttpRequest http (url, capath, proxy, ss, "affected");
+
+    try {
+        ban.do_http_action(http);
+        // for the banning case response should include affected job ids
+        // no response data for unbanning
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error while blacklisting the SE: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply while SE "
+                          "blacklisting: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
+}
+
+void RestContextAdapter::debugSet(std::string source, std::string destination, unsigned level)
+{
+    std::string url = endpoint + "/config/debug";
+    char prefix = '?';
+
+    if (!source.empty()) {
+        url += prefix;
+        url += "source_se=";
+        url += HttpRequest::urlencode(source);
+        prefix = '&';
+    }
+    if (!destination.empty()) {
+        url += prefix;
+        url += "dest_se=";
+        url += HttpRequest::urlencode(destination);
+        prefix = '&';
+    }
+    std::stringstream ss;
+    ss << level;
+    url += prefix;
+    url += "debug_level=" + ss.str();
+
+    ss.clear();
+    ss.str(std::string());
+
+    HttpRequest http (url, capath, proxy, ss);
+
+    try {
+        http.post();
+        ResponseParser response(ss);
+        // response is the input dictionary
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error while doing debugSet: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply while doing "
+                          "debugSet: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
+}
+
+void RestContextAdapter::prioritySet(std::string jobId, int priority)
+{
+    std::stringstream ss;
+    RestModifyJob modify(jobId, priority);
+    
+    ss << modify.body();
+
+    std::string url = endpoint + modify.resource();
+    HttpRequest http (url, capath, proxy, ss);
+
+    try {
+        modify.do_http_action(http);
+        ResponseParser response(ss);
+        // response is the modified job
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error while modifying the job: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply while modifying "
+                          "job: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & /*source*/, std::string const & /*destination*/)
@@ -54,7 +189,7 @@ std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string
         {
             url += prefix;
             url += "user_dn=";
-            url += dn;
+            url += HttpRequest::urlencode(dn);
             prefix = '&';
         }
 
@@ -62,31 +197,70 @@ std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string
         {
             url += prefix;
             url += "vo_name=";
-            url += vo;
+            url += HttpRequest::urlencode(vo);
             prefix = '&';
         }
 
     if (!statuses.empty())
         {
+            std::stringstream ss;
+            std::string urlwhoami = endpoint + "/whoami";
+            HttpRequest http (urlwhoami, capath, proxy, ss);
+
+            try {
+                http.get();
+                ResponseParser parser(ss);
+                std::string delid = parser.get("delegation_id");
+                url += prefix;
+                url += "limit=0&dlg_id=" + HttpRequest::urlencode(delid);
+                prefix = '&';
+            } catch(rest_failure const &ex) {
+                std::string msg = "Error while preparing the job list query; "
+                                  "fetching the delegation id: "
+                                  + std::string(ex.what());
+                throw cli_exception(msg);
+            } catch(rest_invalid const &ex) {
+                std::string msg = "Error reading the server's reply while "
+                                  "preparing the job list query; on fetching "
+                                  "the delegation id: " + std::string(ex.what());
+                throw cli_exception(msg);
+            }
+
+            ss.str(std::string());
+            ss.clear();
+
             url += prefix;
-            url += "job_state=";
-            url += *statuses.begin();
+            url += "state_in=";
+            std::copy(statuses.begin(),statuses.end()-1,std::ostream_iterator<std::string>(ss,","));
+            ss << statuses.back();
+            url += HttpRequest::urlencode(ss.str());
             prefix = '&';
         }
 
     std::stringstream ss;
-    ss << "{\"jobs\":";
-    HttpRequest http (url, capath, proxy, ss);
-    http.get();
-    ss << '}';
+    HttpRequest http (url, capath, proxy, ss, "jobs");
 
-    ResponseParser parser(ss);
-    return parser.getJobs("jobs");
+    try {
+        http.get();
+        ResponseParser parser(ss);
+        return parser.getJobs("jobs");
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error listing the matching requests: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply containing the "
+                          "list of matching requests: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 std::vector<JobStatus> RestContextAdapter::listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
 {
-    return std::vector<JobStatus>(); // TODO
+    // for now call the usual listRequests method. The cli may have setup the statuses with a deletion specific
+    // state. Otherwise this list may return jobs for non-deletion requests. (depends on FTS-355).
+    // Also see comment in command line option help text, in ListTransferCli.cpp
+    return listRequests(statuses, dn, vo, source, destination);
 }
 
 std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(std::vector<std::string> const & jobIds)
@@ -100,10 +274,31 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
             std::stringstream ss;
             std::string url = endpoint + "/jobs/" + *itr;
             HttpRequest http (url, capath, proxy, ss);
-            http.del();
+            bool isLast = (itr+1 == jobIds.end());
 
-            ResponseParser response(ss);
-            ret.push_back(std::make_pair(response.get("job_id"), response.get("job_state")));
+            try {
+                http.del();
+                ResponseParser response(ss);
+                ret.push_back(std::make_pair(response.get("job_id"), response.get("job_state")));
+            } catch(rest_failure const &ex) {
+                if (ex.getCode() == 404) {
+                    ret.push_back(std::make_pair(*itr,std::string("DOES_NOT_EXIST")));
+                } else {
+                    std::string msg = "Error canceling job " + *itr + ": "
+                                      + std::string(ex.what()) + ".";
+                    if (!isLast) { 
+                        msg += " Not proceeding with remaining jobs.";
+                    }
+                    throw cli_exception(msg);
+                }
+            } catch(rest_invalid const &ex) {
+                std::string msg = "Error reading the server's reply when "
+                                  "canceling job " + *itr + ": " + ex.what() + ".";
+                if (!isLast) {
+                    msg += " Not proceeding with remaining jobs.";
+                }
+                throw cli_exception(msg);
+            }
         }
 
     return ret;
@@ -112,7 +307,34 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
 
 boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string& vo)
 {
-    throw cli_exception("Not implemented");
+    std::string url = endpoint;
+    if (!vo.empty()) {
+        url += "/jobs/vo/" + vo;
+    } else {
+        url += "/jobs/all";
+    }
+
+    std::stringstream ss;
+    HttpRequest http (url, capath, proxy, ss);
+
+    boost::tuple<int, int> result;
+
+    try {
+        http.del();
+        // ResponseParser response(ss);
+        // should populate result with data from response.
+        // but no meaningful response sent at the moment
+        result = boost::make_tuple(-1,-1);
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error while doing vo wide cancel: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply while doing "
+                          "vo wide cancel: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
+    return result;
 }
 
 
@@ -123,10 +345,20 @@ std::string RestContextAdapter::transferSubmit (std::vector<File> const & files,
 
     std::string url = endpoint + "/jobs";
     HttpRequest http (url, capath, proxy, ss);
-    http.put();
 
-    ResponseParser response(ss);
-    return response.get("job_id");
+    try {
+        http.put();
+        ResponseParser response(ss);
+        return response.get("job_id");
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error submitting the job: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply for the jobid of "
+                          "the submitted job: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 
@@ -137,95 +369,199 @@ std::string RestContextAdapter::deleteFile (const std::vector<std::string>& file
 
     std::string url = endpoint + "/jobs";
     HttpRequest http (url, capath, proxy, ss);
-    http.put();
 
-    ResponseParser response(ss);
-    return response.get("job_id");
+    try {
+        http.put();
+        ResponseParser response(ss);
+        return response.get("job_id");
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error submitting the delete job: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply for the jobid of "
+                          "the submitted delete job: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 
 JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
 {
-    std::string url = endpoint + "/jobs/" + jobId;
+    std::string url = endpoint;
+
+    if (archive) {
+        url += "/archive/";
+    } else {
+        url += "/jobs/";
+    }
+    url += jobId;
 
     std::stringstream ss;
     HttpRequest http (url, capath, proxy, ss);
-    http.get();
 
-    ResponseParser response(ss);
+    try {
+        http.get();
+        ResponseParser response(ss);
 
-    return JobStatus(
-               response.get("job_id"),
-               response.get("job_state"),
-               response.get("user_dn"),
-               response.get("reason"),
-               response.get("vo_name"),
-               response.get("submit_time"),
-               -1, // this is never shown so we don't care
-               boost::lexical_cast<int>(response.get("priority"))
-           );
+        return JobStatus(
+                   response.get("job_id"),
+                   response.get("job_state"),
+                   response.get("user_dn"),
+                   response.get("reason"),
+                   response.get("vo_name"),
+                   response.get("submit_time"),
+                   -1, // this is never shown so we don't care
+                   boost::lexical_cast<int>(response.get("priority"))
+               );
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error getting the job status: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply with the status "
+                          "of the job: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 
 JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
 {
     // first get the files
-    std::string url_files = endpoint + "/jobs/" + jobId + "/files";
+    std::string url_files = endpoint;
 
+    if (archive) {
+        url_files += "/archive/" + jobId;
+    } else {
+        url_files += "/jobs/" + jobId + "/files";
+    }
+
+    // for non-archive jobs this will return an array at top level containing
+    // information for each file. archive jobs will return the job info plus
+    // a "files" entry containing the array
     std::stringstream ss_files;
-    ss_files << "{\"files\" :";
-    HttpRequest http_files (url_files, capath, proxy, ss_files);
-    http_files.get();
-    ss_files << '}';
+    HttpRequest http_files (url_files, capath, proxy, ss_files, "files");
 
-    ResponseParser response_files(ss_files);
+    std::stringstream ss(ss_files.str());
 
-    JobStatus::JobSummary summary (
-        response_files.getNb("files", "ACTIVE"),
-        response_files.getNb("files", "READY"),
-        response_files.getNb("files", "CANCELED"),
-        response_files.getNb("files", "FINISHED"),
-        response_files.getNb("files", "SUBMITTED"),
-        response_files.getNb("files", "FAILED"),
-        response_files.getNb("files", "STAGING"),
-        response_files.getNb("files", "STARTED"),
-        response_files.getNb("files", "DELETE")
-    );
+    try {
+        http_files.get();
+        ResponseParser response_files(ss_files);
 
-    // than get the job itself
-    std::string url = endpoint + "/jobs/" + jobId;
+        JobStatus::JobSummary summary (
+            response_files.getNb("files", "ACTIVE"),
+            response_files.getNb("files", "READY"),
+            response_files.getNb("files", "CANCELED"),
+            response_files.getNb("files", "FINISHED"),
+            response_files.getNb("files", "SUBMITTED"),
+            response_files.getNb("files", "FAILED"),
+            response_files.getNb("files", "STAGING"),
+            response_files.getNb("files", "STARTED"),
+            response_files.getNb("files", "DELETE")
+        );
 
-    std::stringstream ss;
-    HttpRequest http (url, capath, proxy, ss);
-    http.get();
+        if (!archive) {
+            // get the job itself
+            ss.clear();
+            ss.str(std::string());
+            std::string url = endpoint + "/jobs/" + jobId;
+            HttpRequest http (url, capath, proxy, ss);
+            http.get();
+        }
 
-    ResponseParser response(ss);
-
-    return JobStatus(
-               response.get("job_id"),
-               response.get("job_state"),
-               response.get("user_dn"),
-               response.get("reason"),
-               response.get("vo_name"),
-               response.get("submit_time"),
-               (int)response_files.getFiles("files").size(),
-               boost::lexical_cast<int>(response.get("priority")),
-               summary
-           );
+        ResponseParser response(ss);
+        return JobStatus(
+                   response.get("job_id"),
+                   response.get("job_state"),
+                   response.get("user_dn"),
+                   response.get("reason"),
+                   response.get("vo_name"),
+                   response.get("submit_time"),
+                   (int)response_files.getFiles("files").size(),
+                   boost::lexical_cast<int>(response.get("priority")),
+                   summary
+               );
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error getting the job summary: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error while fetching the job summary: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
 {
-    std::string url = endpoint + "/jobs/" + jobId + "/files";
+    std::vector<FileInfo> results;
+    std::string url = endpoint;
 
-    std::stringstream ss;
-    ss << "{\"files\" :";
-    HttpRequest http (url, capath, proxy, ss);
-    http.get();
-    ss << '}';
+    if (archive) {
+        url += "/archive/" + jobId;
+    } else {
+        url += "/jobs/" + jobId + "/files";
+    }
 
-    ResponseParser response(ss);
-    return response.getFiles("files");
+    try {
+        std::stringstream ss;
+        // for non-archive jobs this will return an array at top level containing
+        // information for each file. archive jobs will return the job info plus
+        // a "files" entry containing the array
+        HttpRequest http (url, capath, proxy, ss, "files");
+        http.get();
+        ResponseParser response(ss);
+        results = response.getFiles("files");
+
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error getting the file status: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply with the status of "
+                          "the job's files: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
+
+    std::vector<FileInfo>::iterator itr = results.end();
+    if (offset>0) {
+        if (static_cast<std::vector<FileInfo>::size_type>(offset) < results.size()) {
+            itr = results.begin() + offset;
+        }
+        results.erase(results.begin(), itr);
+    }
+    if (limit>=0 && results.size() > static_cast<std::vector<FileInfo>::size_type>(limit)) {
+        itr = results.begin() +	limit;
+        results.erase(itr, results.end());
+    }
+
+    if (retries && !archive) {
+        for(itr=results.begin(); itr != results.end(); ++itr) {
+            int fileId = itr->getFileId();
+            std::stringstream ss;
+            ss << fileId;
+            url = endpoint + "/jobs/" + jobId + "/files/" + ss.str() + "/retries";
+            ss.clear();
+            ss.str(std::string());
+            try {
+                HttpRequest http (url, capath, proxy, ss, "retries");
+                http.get();
+                ResponseParser response(ss);
+                response.setRetries("retries",*itr);
+            } catch(rest_failure const &ex) {
+                std::string msg = "Error getting file retry information: "
+                                  + std::string(ex.what());
+                throw cli_exception(msg);
+            } catch(rest_invalid const &ex) {
+                std::string msg = "Error reading the server's reply containing the "
+                                  "file retry information: " + std::string(ex.what());
+                throw cli_exception(msg);
+            }
+        }
+    }
+
+    return results;
 }
 
 std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, std::string const & src, std::string const & dst)
@@ -237,7 +573,7 @@ std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, st
         {
             url += prefix;
             url += "vo_name=";
-            url += vo;
+            url += HttpRequest::urlencode(vo);
             prefix = '&';
         }
 
@@ -245,7 +581,7 @@ std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, st
         {
             url += prefix;
             url += "dest_se=";
-            url += dst;
+            url += HttpRequest::urlencode(dst);
             prefix = '&';
         }
 
@@ -253,16 +589,24 @@ std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, st
         {
             url += prefix;
             url += "source_se=";
-            url += src;
+            url += HttpRequest::urlencode(src);
         }
 
     std::stringstream ss;
-    ss << "{\"snapshot\":";
-    HttpRequest http (url, capath, proxy, ss);
-    http.get();
-    ss << '}';
+    HttpRequest http (url, capath, proxy, ss, "snapshot");
 
-    return ResponseParser(ss).getSnapshot();
+    try {
+        http.get();
+        return ResponseParser(ss).getSnapshot();
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error getting the snapshot: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading server's reply with the snapshot: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
@@ -272,18 +616,31 @@ void RestContextAdapter::delegate(std::string const & delegationId, long expirat
     delegator.delegate();
 }
 
+long RestContextAdapter::isCertValid()
+{
+    RestDelegator delegator(endpoint, std::string(), 0, capath, proxy);
+    return delegator.isCertValid();
+}
+
 std::vector<DetailedFileStatus> RestContextAdapter::getDetailedJobStatus(std::string const & jobId)
 {
     std::string url = endpoint + "/jobs/" + jobId + "/files";
 
     std::stringstream ss;
-    ss << "{\"files\" :";
-    HttpRequest http (url, capath, proxy, ss);
-    http.get();
-    ss << '}';
+    HttpRequest http (url, capath, proxy, ss, "files");
 
-    return ResponseParser(ss).getDetailedFiles("files");
-
+    try {
+        http.get();
+        return ResponseParser(ss).getDetailedFiles("files");
+    } catch(rest_failure const &ex) {
+        std::string msg = "Error getting the detailed job status: "
+                          + std::string(ex.what());
+        throw cli_exception(msg);
+    } catch(rest_invalid const &ex) {
+        std::string msg = "Error reading the server's reply for the detailed "
+                          "job status: " + std::string(ex.what());
+        throw cli_exception(msg);
+    }
 }
 
 } /* namespace cli */

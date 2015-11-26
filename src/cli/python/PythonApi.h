@@ -25,7 +25,7 @@
 #ifndef PYTHONCLIWRAPPER_H_
 #define PYTHONCLIWRAPPER_H_
 
-#include "GSoapContextAdapter.h"
+#include "ServiceAdapterFallbackFacade.h"
 #include "python/Job.h"
 
 #include <boost/python.hpp>
@@ -55,7 +55,7 @@ public:
     py::str getVersion(void);
 
 private:
-    GSoapContextAdapter ctx;
+    ServiceAdapterFallbackFacade ctx;
 };
 
 }

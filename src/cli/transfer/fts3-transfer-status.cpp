@@ -17,7 +17,7 @@
  *	limitations under the License.
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 #include "JobStatus.h"
 #include "ui/TransferStatusCli.h"
@@ -60,9 +60,9 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
 
-            cli.printApiDetails(*ctx.get());
+            cli.printApiDetails(ctx);
 
             // archived content?
             bool archive = cli.queryArchived();
@@ -85,9 +85,9 @@ int main(int ac, char* av[])
                         }
 
                     JobStatus status = cli.isVerbose() ?
-                                       ctx->getTransferJobSummary(jobId, archive)
+                                       ctx.getTransferJobSummary(jobId, archive)
                                        :
-                                       ctx->getTransferJobStatus(jobId, archive)
+                                       ctx.getTransferJobStatus(jobId, archive)
                                        ;
 
                     // If a list is requested, or dumping the failed transfers,
@@ -101,7 +101,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     std::vector<FileInfo> const vect =
-                                        ctx->getFileStatus(jobId, archive, (int)offset, (int)DEFAULT_LIMIT, cli.detailed());
+                                        ctx.getFileStatus(jobId, archive, (int)offset, (int)DEFAULT_LIMIT, cli.detailed());
 
                                     cnt = vect.size();
 

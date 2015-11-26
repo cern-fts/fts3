@@ -23,7 +23,7 @@
  */
 
 
-#include "GSoapContextAdapter.h"
+#include "ServiceAdapterFallbackFacade.h"
 #include "ui/GetCfgCli.h"
 #include "exception/cli_exception.h"
 #include "exception/bad_option.h"
@@ -50,8 +50,8 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
+            // validate command line options, and return service context
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
             cli.printApiDetails(ctx);
 
             std::string source = cli.getSource();
@@ -59,10 +59,8 @@ int main(int ac, char* av[])
 
             if (cli.getBandwidth())
                 {
-                    implcfg__getBandwidthLimitResponse resp;
-                    ctx.getBandwidthLimit(resp);
-
-                    std::cout << resp.limit << std::endl;
+                    std::string limit = ctx.getBandwidthLimit();
+                    std::cout << limit << std::endl;
                 }
             else
                 {
@@ -75,10 +73,9 @@ int main(int ac, char* av[])
 
                     if (cli.vo()) all = "vo";
 
-                    implcfg__getConfigurationResponse resp;
-                    ctx.getConfiguration(source, destination, all, cli.getName(), resp);
+                    std::vector<std::string> cfgs = 
+                        ctx.getConfiguration(source, destination, all, cli.getName());
 
-                    std::vector<std::string> &cfgs = resp.configuration->cfg;
                     std::ostream_iterator<std::string> it(std::cout, "\n");
                     std::copy(cfgs.begin(), cfgs.end(), it);
 

@@ -199,11 +199,17 @@ public:
     std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
 
     /**
+     * Checks the expiration date of the local proxy certificate
+     * @return expiration date of the proxy certificate
+     */
+    long isCertValid();
+
+    /**
      * Remote call to setConfiguration
      *
-     * @param config th configuration to be set
-     * @param resp server response
+     * @param cfgs - vector of configurations to be set
      */
+    void setConfiguration (std::vector<std::string> const &cfgs);
     void setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp);
 
     /**
@@ -211,16 +217,16 @@ public:
      *
      * @param vo - vo name that will be used to filter the response
      * @param name - SE or SE group name that will be used to filter the response
-     * @param resp - server response
      */
+    std::vector<std::string> getConfiguration (std::string src, std::string dest, std::string all, std::string name);
     void getConfiguration (std::string src, std::string dest, std::string all, std::string name, implcfg__getConfigurationResponse& resp);
 
     /**
      * Remote call to delConfiguration
      *
-     * @param cfg - the configuration that will be deleted
-     * @param resp - server response
+     * @param cfgs - vector of configurations to delete
      */
+    void delConfiguration(std::vector<std::string> const &cfgs);
     void delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse &resp);
 
     /**
@@ -229,7 +235,7 @@ public:
      * @param triplet - se name, max number staging files, vo name
      * @param operation - 'staging' or 'delete'
      */
-    void setMaxOpt(std::tuple<std::string, int, std::string> const &, std::string const&);
+    void setMaxOpt(std::tuple<std::string, int, std::string> const &triplet, std::string const &opt);
 
     std::string deleteFile (const std::vector<std::string>& filesForDelete);
 
@@ -241,6 +247,7 @@ public:
     /**
      * Remote call to getBandwidthLimit
      */
+    std::string getBandwidthLimit();
     void getBandwidthLimit(implcfg__getBandwidthLimitResponse& resp);
 
     /**
@@ -412,11 +419,6 @@ public:
      * @return : vector containing detailed information about files in the given job (including file ID)
      */
     std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
-
-    std::string getVersion()
-    {
-        return version;
-    }
 
 private:
 

@@ -61,6 +61,8 @@ DebugSetCli::~DebugSetCli()
 
 void DebugSetCli::validate()
 {
+    RestCli::validate();
+
     if (vm.count("source"))
         {
             source = vm["source"].as<std::string>();

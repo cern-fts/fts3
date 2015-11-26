@@ -39,11 +39,6 @@ public:
     virtual ~RestCli();
 
     /**
-     * @return true if the rest interface has been selected, false otherwise
-     */
-    bool rest() const;
-
-    /**
      * @return the path to the CA certificates
      */
     std::string capath() const;

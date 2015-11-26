@@ -31,6 +31,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #include "MsgPrinter.h"
 
@@ -44,7 +45,8 @@ class HttpRequest
 
 public:
 
-    HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, std::iostream& stream);
+    HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy,
+                std::iostream& stream, std::string const &topname = std::string());
     virtual ~HttpRequest();
 
     void get();
@@ -53,20 +55,42 @@ public:
 
     void put();
 
+    void post();
+
+    static std::string urlencode(std::string const &value);
+
 private:
 
     void request();
-
-    static size_t write_data(void *ptr, size_t size, size_t nmemb, std::ostream* ostr);
-
-    static size_t read_data(void *ptr, size_t size, size_t nmemb, std::istream* istr);
-
+    static size_t write_data(void *ptr, size_t size, size_t nmemb, void *userdata);
+    static size_t read_data(void *ptr, size_t size, size_t nmemb, void *userdata);
+    static size_t keep_header(char *buffer, size_t size, size_t nitems, void *userdata);
     static const std::string PORT;
 
     // input/output stream for interactions with rest service
-    std::istream& stream;
+    std::iostream& stream;
+
     // curl context
     CURL *curl;
+
+    // optional top level object name to add to json output
+    std::string topname;
+
+    // indicates first write during result fetching
+    bool firstWrite;
+
+    // indicates if a top level object name has been added to the request
+    // result during result fetching. Required if the result is an array.
+    bool addedTopLevel;
+    
+    // list of headers received
+    std::vector<std::string> headlines;
+
+    // curl error buffer
+    char curlerrbuf[CURL_ERROR_SIZE];
+
+    // curl list of headers to send
+    struct curl_slist *headerslist;
 };
 
 } /* namespace cli  */

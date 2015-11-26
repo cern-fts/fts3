@@ -10,6 +10,8 @@
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
+#include "exception/cli_exception.h"
+
 #include <time.h>
 
 #include <tuple>
@@ -38,7 +40,7 @@ class FileInfo
 public:
 
     FileInfo(tns3__FileTransferStatus const * f) :
-        src(*f->sourceSURL), dst (*f->destSURL), state(*f->transferFileState),
+        src(*f->sourceSURL), dst (*f->destSURL), fileIdAvail(false), state(*f->transferFileState),
         reason(*f->reason), duration (f->duration), nbFailures(f->numFailures),
         staging_duration(-1)
     {
@@ -54,27 +56,28 @@ public:
     }
 
     FileInfo(pt::ptree const & t) :
-        src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), state(t.get<std::string>("file_state")),
-        reason(t.get<std::string>("reason")), duration(0), nbFailures(t.get<int>("retry")),
-        staging_duration(0)
+        src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), fileId(t.get<int>("file_id")),
+        fileIdAvail(true), state(t.get<std::string>("file_state")), reason(t.get<std::string>("reason")), duration(0),
+        nbFailures(t.get<int>("retry")), staging_duration(0)
     {
-        pt::ptree const & r = t.get_child("retries");
-
-        pt::ptree::const_iterator it;
-        for (it = r.begin(); it != r.end(); ++it)
-            {
-                retries.push_back(it->first);
-            }
+        try {
+            pt::ptree const & r = t.get_child("retries");
+            setRetries(r);
+        } catch(const pt::ptree_bad_path &) {
+            // retries path may not be available
+        }
 
         std::string finish_time = t.get<std::string>("finish_time");
         std::string start_time = t.get<std::string>("start_time");
 
         tm time;
+        memset(&time, 0, sizeof(time));
+
         strptime(finish_time.c_str(), "%Y-%m-%dT%H:%M:%S", &time);
-        time_t finish = mktime(&time);
+        time_t finish = timegm(&time);
 
         strptime(start_time.c_str(), "%Y-%m-%dT%H:%M:%S", &time);
-        time_t start = mktime(&time);
+        time_t start = timegm(&time);
 
         duration = (long)difftime(finish, start);
 
@@ -83,13 +86,25 @@ public:
 
         if (strptime(staging_start.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
             {
-                time_t staging_start_time = mktime(&time);
+                time_t staging_start_time = timegm(&time);
                 time_t staging_finished_time = ::time(NULL);
 
                 if (strptime(staging_finished.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
-                    staging_finished_time = mktime(&time);
+                    staging_finished_time = timegm(&time);
 
                 staging_duration = staging_finished_time - staging_start_time;
+            }
+    }
+
+    void setRetries(pt::ptree const & r)
+    {
+        pt::ptree::const_iterator itr;
+
+        retries.clear();
+        for (itr = r.begin(); itr != r.end(); ++itr)
+            {
+                std::string reason(itr->second.get<std::string>("reason"));
+                retries.push_back(reason);
             }
     }
 
@@ -108,9 +123,19 @@ public:
         return dst;
     }
 
+    int getFileId() const
+    {
+        if (!fileIdAvail) {
+            throw cli_exception("The file id is not available");
+        }
+        return fileId;
+    }
+
 private:
     std::string src;
     std::string dst;
+    int fileId;
+    bool fileIdAvail;
     std::string state;
     std::string reason;
     long duration;

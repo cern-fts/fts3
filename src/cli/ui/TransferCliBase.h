@@ -32,7 +32,7 @@ namespace fts3
 namespace cli
 {
 
-class TransferCliBase : public RestCli
+class TransferCliBase : public virtual RestCli
 {
 public:
     TransferCliBase();
