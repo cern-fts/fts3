@@ -1,6 +1,5 @@
 #!/bin/bash
 # Extract coverage data out of the unit tests
-set -e
 set -x
 
 SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
