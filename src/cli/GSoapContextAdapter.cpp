@@ -254,6 +254,11 @@ void GSoapContextAdapter::delegate(std::string const & delegationId, long expira
     delegator.delegate();
 }
 
+long GSoapContextAdapter::isCertValid()
+{
+    SoapDelegator delegator(endpoint, std::string(), 0, proxy);
+    return delegator.isCertValid();
+}
 
 std::string GSoapContextAdapter::deleteFile (const std::vector<std::string>& filesForDelete)
 {
@@ -507,16 +512,48 @@ void GSoapContextAdapter::setConfiguration (config__Configuration *config, implc
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::setConfiguration (std::vector<std::string> const &cfgs)
+{
+    config__Configuration *config = soap_new_config__Configuration(ctx, -1);
+    config->cfg = cfgs;
+    implcfg__setConfigurationResponse resp;
+    if (soap_call_implcfg__setConfiguration(ctx, endpoint.c_str(), 0, config, resp))
+        throw gsoap_error(ctx);
+    soap_delete_implcfg__setConfigurationResponse(ctx, &resp);
+    soap_delete_config__Configuration(ctx, config);
+}
+
 void GSoapContextAdapter::getConfiguration (std::string src, std::string dest, std::string all, std::string name, implcfg__getConfigurationResponse& resp)
 {
     if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, all, name, src, dest, resp))
         throw gsoap_error(ctx);
 }
 
+std::vector<std::string> GSoapContextAdapter::getConfiguration (std::string src, std::string dest, std::string all, std::string name)
+{
+    implcfg__getConfigurationResponse resp;
+    if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, all, name, src, dest, resp))
+        throw gsoap_error(ctx);
+    std::vector<std::string> cfg = resp.configuration->cfg;
+    soap_delete_implcfg__getConfigurationResponse(ctx, &resp);
+    return cfg;
+}
+
 void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse& resp)
 {
     if (soap_call_implcfg__delConfiguration(ctx, endpoint.c_str(), 0, config, resp))
         throw gsoap_error(ctx);
+}
+
+void GSoapContextAdapter::delConfiguration(std::vector<std::string> const &cfgs)
+{
+    config__Configuration *config = soap_new_config__Configuration(ctx, -1);
+    config->cfg = cfgs;
+    implcfg__delConfigurationResponse resp;
+    if (soap_call_implcfg__delConfiguration(ctx, endpoint.c_str(), 0, config, resp))
+        throw gsoap_error(ctx);
+    soap_delete_implcfg__delConfigurationResponse(ctx,&resp);
+    soap_delete_config__Configuration(ctx,config);
 }
 
 void GSoapContextAdapter::setMaxOpt(std::tuple<std::string, int, std::string> const & triplet, std::string const & opt)
@@ -551,6 +588,16 @@ void GSoapContextAdapter::getBandwidthLimit(implcfg__getBandwidthLimitResponse& 
 {
     if (soap_call_implcfg__getBandwidthLimit(ctx, endpoint.c_str(), 0, resp))
         throw gsoap_error(ctx);
+}
+
+std::string GSoapContextAdapter::getBandwidthLimit()
+{
+    implcfg__getBandwidthLimitResponse resp;
+    if (soap_call_implcfg__getBandwidthLimit(ctx, endpoint.c_str(), 0, resp))
+        throw gsoap_error(ctx);
+    std::string limit = resp.limit;
+    soap_delete_implcfg__getBandwidthLimitResponse(ctx, &resp);
+    return limit;
 }
 
 void GSoapContextAdapter::debugSet(std::string source, std::string destination, unsigned level)

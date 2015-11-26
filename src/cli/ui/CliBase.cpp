@@ -111,7 +111,7 @@ void CliBase::parse(int ac, char* av[])
 
             if (useSrvConfig())
                 {
-                    std::fstream  cfg ("/etc/fts3/fts3config");
+                    std::fstream  cfg ("/etc/fts3/fts3config",std::fstream::in);
                     if (cfg.is_open())
                         {
 

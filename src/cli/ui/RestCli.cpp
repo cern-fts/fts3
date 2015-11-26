@@ -28,8 +28,12 @@ RestCli::RestCli()
 {
     // add fts3-transfer-status specific options
     specific.add_options()
-    ("rest", "Use the RESTful interface.")
     ("capath", po::value<std::string>(),  "Path to the GRID security certificates (e.g. /etc/grid-security/certificates).")
+    ;
+
+    // hidden option. Now replaced with non-hidden option with opposite sense.
+    hidden.add_options()
+    ("rest", "Use the RESTful interface.")
     ;
 }
 
@@ -38,18 +42,14 @@ RestCli::~RestCli()
 
 }
 
-bool RestCli::rest() const
-{
-    // return true if rest is in the map
-    return vm.count("rest");
-}
-
 std::string RestCli::capath() const
 {
     if (vm.count("capath"))
-        {
-            return vm["capath"].as<std::string>();
-        }
+    {
+        return vm["capath"].as<std::string>();
+    }
 
-    return "/etc/grid-security/certificates";
+    // if there is no value specified RestContextAdapter will check the
+    // environment or apply a default
+    return std::string();
 }

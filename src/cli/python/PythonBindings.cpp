@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-#include "GSoapContextAdapter.h"
 #include "python/PythonApi.h"
 #include "python/Job.h"
 #include "python/PyFile.h"

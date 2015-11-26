@@ -254,7 +254,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
         }
     }
 
-    // get operation std::string
+    // get operation string
     std::string op_str = operationToStr(op);
 
     // check if the access is public

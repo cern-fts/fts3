@@ -20,7 +20,7 @@
 
 #include "PythonProxyDelegator.h"
 
-#include "delegation/SoapDelegator.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 namespace fts3
 {
@@ -28,7 +28,8 @@ namespace cli
 {
 
 PythonProxyDelegator::PythonProxyDelegator(py::str endpoint, py::str delegationId, long expTime) :
-    delegator(new SoapDelegator(py::extract<std::string>(endpoint), py::extract<std::string>(delegationId), expTime, std::string()))
+    delegator(new ServiceAdapterFallbackFacade(py::extract<std::string>(endpoint))),
+    delegationId(py::extract<std::string>(delegationId)), expTime(expTime)
 {
 
 }
@@ -40,7 +41,7 @@ PythonProxyDelegator::~PythonProxyDelegator()
 
 void PythonProxyDelegator::delegate()
 {
-    delegator->delegate();
+    delegator->delegate(delegationId, expTime);
 }
 
 long PythonProxyDelegator::isCertValid(void)

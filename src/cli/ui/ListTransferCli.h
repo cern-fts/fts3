@@ -55,6 +55,12 @@ public:
     virtual ~ListTransferCli();
 
     /**
+     * Validates command line options.
+     *  Call the validate methods of the base clases
+     */
+    virtual void validate();
+
+    /**
      * Gives the instruction how to use the command line tool.
      *
      * @return a string with instruction on how to use the tool

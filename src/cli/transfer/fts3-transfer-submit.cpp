@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 #include "File.h"
 
@@ -44,18 +44,18 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
 
-            cli.printApiDetails(*ctx.get());
+            cli.printApiDetails(ctx);
 
             // delegate the credential if necessary
-            ctx->delegate(cli.getDelegationId(), cli.getExpirationTime());
+            ctx.delegate(cli.getDelegationId(), cli.getExpirationTime());
 
             std::string jobId;
             std::vector<File> files = cli.getFiles();
             std::map<std::string, std::string> params = cli.getParams();
             // submit the job
-            jobId = ctx->transferSubmit (
+            jobId = ctx.transferSubmit (
                         files,
                         params
                     );
@@ -70,7 +70,7 @@ int main(int ac, char* av[])
                     do
                         {
                             sleep(2);
-                            status = ctx->getTransferJobStatus(jobId, false).getStatus();
+                            status = ctx.getTransferJobStatus(jobId, false).getStatus();
                         }
                     while (!JobStatusHandler::instance().isTransferFinished(status));
                 }

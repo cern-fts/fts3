@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 #include "ui/DelegationCli.h"
 
 #include "JsonOutput.h"
@@ -40,9 +40,9 @@ int main(int ac, char* av[])
             cli.validate();
 
             // delegate Proxy Certificate
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
 
-            ctx->delegate(cli.getDelegationId(), cli.getExpirationTime());
+            ctx.delegate(cli.getDelegationId(), cli.getExpirationTime());
 
         }
     catch(cli_exception const & ex)

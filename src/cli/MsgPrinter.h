@@ -46,6 +46,10 @@ class MsgPrinter
 
 public:
 
+    bool getVerbose() const {
+        return this->verbose;
+    }
+
     static MsgPrinter & instance()
     {
         static MsgPrinter printer;

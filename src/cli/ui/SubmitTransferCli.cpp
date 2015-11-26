@@ -109,6 +109,9 @@ void SubmitTransferCli::parse(int ac, char* av[])
 
 void SubmitTransferCli::validate()
 {
+    SrcDestCli::validate();
+    DelegationCli::validate();
+
     // perform standard checks in order to determine if the job was well specified
     performChecks();
     // prepare job elements

@@ -43,10 +43,14 @@ class ResponseParser
 
 public:
 
+    ResponseParser() {}
     ResponseParser(std::istream& stream);
     ResponseParser(std::string const & json);
 
     virtual ~ResponseParser();
+
+    void parse(std::istream &stream);
+    void parse(std::string const &json);
 
     std::string get(std::string const & path) const;
 
@@ -60,7 +64,11 @@ public:
 
     std::vector<DetailedFileStatus> getDetailedFiles(std::string const & path) const;
 
+    void setRetries(std::string const &path, FileInfo &fi);
+
 private:
+
+    static std::string restGmtToLocal(std::string gmt);
 
     std::vector<Snapshot> get_snapshot_for_rest() const;
     std::vector<Snapshot> get_snapshot_for_soap() const;

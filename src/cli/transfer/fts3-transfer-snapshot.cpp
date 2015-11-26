@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 #include "MsgPrinter.h"
 #include "ui/SnapshotCli.h"
@@ -47,13 +47,13 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
 
-            cli.printApiDetails(*ctx.get());
+            cli.printApiDetails(ctx);
 
             std::string src = cli.getSource(), dst = cli.getDestination(), vo = cli.getVo();
 
-            std::vector<Snapshot> resp = ctx->getSnapShot(vo, src, dst);
+            std::vector<Snapshot> resp = ctx.getSnapShot(vo, src, dst);
 
             MsgPrinter::instance().print(resp);
         }

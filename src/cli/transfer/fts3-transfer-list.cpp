@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 #include "ui/ListTransferCli.h"
 #include "rest/HttpRequest.h"
@@ -47,18 +47,18 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
 
             // print API details if verbose
-            cli.printApiDetails(*ctx.get());
+            cli.printApiDetails(ctx);
 
             std::vector<std::string> array = cli.getStatusArray();
 
             std::vector<fts3::cli::JobStatus> statuses;
             if (cli.deletion())
-                statuses = ctx->listDeletionRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
+                statuses = ctx.listDeletionRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
             else
-                statuses = ctx->listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
+                statuses = ctx.listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
 
             MsgPrinter::instance().print(statuses);
         }

@@ -46,6 +46,7 @@ PriorityCli::~PriorityCli()
 
 void PriorityCli::validate()
 {
+    RestCli::validate();
 
     if (priority < 1 || priority > 5)
         {

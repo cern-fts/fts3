@@ -46,6 +46,8 @@ CancelCli::~CancelCli()
 
 void CancelCli::validate()
 {
+    JobIdCli::validate();
+
     if (!vm.count("file") && !vm.count("jobid") && !vm.count("cancel-all"))
         {
             throw bad_option("file", "Either the bulk file, the job ID list or --cancel-all may be used");

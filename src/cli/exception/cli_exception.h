@@ -83,6 +83,14 @@ public:
         return "error";
     }
 
+   /**
+    * should a cli try falling back to another protocol after getting this exception
+    */
+    virtual bool tryFallback() const
+    {
+        return false;
+    }
+
 protected:
     /// the exception message
     std::string msg;

@@ -57,8 +57,9 @@ boost::optional<time_t> RestDelegator::getExpirationTime()
     std::string resp = parser.get("termination_time");
 
     tm time;
+    memset(&time, 0, sizeof(time));
     strptime(resp.c_str(), "%Y-%m-%dT%H:%M:%S", &time);
-    return mktime(&time);
+    return timegm(&time);
 }
 
 void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool /*renew*/) const

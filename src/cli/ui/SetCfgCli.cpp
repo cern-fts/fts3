@@ -211,26 +211,26 @@ void SetCfgCli::parse(int ac, char* av[])
 
 void SetCfgCli::validate()
 {
+    RestCli::validate();
+    std::vector<std::string> singleOpts;
 
     if (vm.count("s3"))
         {
-            if (vm.size() != 1) throw bad_option("s3", "should be used only as a single option");
-            return;
+            singleOpts.push_back("s3");
         }
 
     if (vm.count("dropbox"))
         {
-            if (vm.size() != 1) throw bad_option("dropbox", "should be used only as a single option");
-            return;
+            singleOpts.push_back("dropbox");
         }
 
     if (vm.count("authorize") || vm.count("revoke"))
         {
-            if (vm.size() != 1) throw bad_option("authorize/revoke", "should be used only as a single option");
-            return;
+            singleOpts.push_back("authorize/revoke");
         }
 
-    if (getConfigurations().empty()
+    bool hasNoOtherOpts = 
+        getConfigurations().empty()
             && !vm.count("drain")
             && !vm.count("retry")
             && !vm.count("queue-timeout")
@@ -246,8 +246,18 @@ void SetCfgCli::validate()
             && !vm.count("max-per-se")
             && !vm.count("sec-per-mb")
             && !vm.count("active-fixed")
-            && !vm.count("show-user-dn")
-       )
+            && !vm.count("show-user-dn");
+
+    if (singleOpts.size()>0)
+        {
+            if (singleOpts.size()>1 || !hasNoOtherOpts)
+                {
+                    throw bad_option(singleOpts[0], "should be used only as a single option");
+                }
+            return;
+        }
+
+    if (hasNoOtherOpts)
         {
             throw cli_exception("No parameters have been specified.");
         }

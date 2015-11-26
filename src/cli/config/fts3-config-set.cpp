@@ -19,7 +19,7 @@
  */
 
 
-#include "GSoapContextAdapter.h"
+#include "ServiceAdapterFallbackFacade.h"
 #include "ui/SetCfgCli.h"
 #include "exception/cli_exception.h"
 
@@ -44,8 +44,8 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
+            // validate command line options, and return service context
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
             cli.printApiDetails(ctx);
 
             boost::optional<std::tuple<std::string, std::string, std::string, std::string> > s3 = cli.s3();
@@ -198,12 +198,10 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            config__Configuration *config = soap_new_config__Configuration(ctx, -1);
-            config->cfg = cli.getConfigurations();
-            if (config->cfg.empty()) return 0;
+            std::vector<std::string> cfg = cli.getConfigurations();
+            if (cfg.empty()) return 0;
 
-            implcfg__setConfigurationResponse resp;
-            ctx.setConfiguration(config, resp);
+            ctx.setConfiguration(cfg);
 
             std::cout << "Done" << std::endl;
 

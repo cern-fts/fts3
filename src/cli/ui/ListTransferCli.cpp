@@ -35,7 +35,7 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
     specific.add_options()
     ("source_se", po::value<std::string>(), "Restrict to specific source SE.")
     ("dest_se", po::value<std::string>(), "Restrict to specific destination SE.")
-    ("deletion", "Query for deletion jobs.")
+    ("deletion", "Query for deletion jobs. (Has no effect when using REST)")
     ;
 
     // all positional parameters go to state
@@ -44,6 +44,14 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
 
 ListTransferCli::~ListTransferCli()
 {
+}
+
+void ListTransferCli::validate()
+{
+    // check for invalid options according to the base clases
+    DnCli::validate();
+    VoNameCli::validate();
+    TransferCliBase::validate();
 }
 
 std::string ListTransferCli::getUsageString(std::string tool) const

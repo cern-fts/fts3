@@ -21,7 +21,7 @@
 #ifndef BLACKLISTCLI_H_
 #define BLACKLISTCLI_H_
 
-#include "CliBase.h"
+#include "RestCli.h"
 
 #include <string>
 
@@ -30,7 +30,7 @@ namespace fts3
 namespace cli
 {
 
-class BlacklistCli : public CliBase
+class BlacklistCli : public RestCli
 {
 
 public:

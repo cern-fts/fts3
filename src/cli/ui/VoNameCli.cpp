@@ -53,6 +53,8 @@ VoNameCli::~VoNameCli()
 
 void VoNameCli::validate()
 {
+    CliBase::validate();
+
     if (pos)
         {
             if (getVoName().empty())

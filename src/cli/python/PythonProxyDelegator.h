@@ -21,7 +21,7 @@
 #ifndef PYTHONPROXYDELEGATOR_H_
 #define PYTHONPROXYDELEGATOR_H_
 
-#include "delegation/ProxyCertificateDelegator.h"
+#include "ServiceAdapterFallbackFacade.h"
 #include "MsgPrinter.h"
 
 #include <sstream>
@@ -47,7 +47,9 @@ public:
 
 private:
     std::stringstream out;
-    std::unique_ptr<ProxyCertificateDelegator> delegator;
+    std::unique_ptr<ServiceAdapterFallbackFacade> delegator;
+    std::string delegationId;
+    long expTime;
 };
 
 }

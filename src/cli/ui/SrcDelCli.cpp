@@ -59,6 +59,8 @@ SrcDelCli::~SrcDelCli()
 
 void SrcDelCli::validate(bool /*init*/)
 {
+    DelegationCli::validate();
+
     // do the validation
     // In case of a user types an invalid expression...
     if (vm.count("file") && vm.count("Filename"))

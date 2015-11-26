@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "GSoapContextAdapter.h"
+#include "ServiceAdapterFallbackFacade.h"
 #include "ui/DebugSetCli.h"
 #include "exception/cli_exception.h"
 
@@ -38,8 +38,8 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
+            // validate command line options, and return service context
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
             cli.printApiDetails(ctx);
 
             // submit the job

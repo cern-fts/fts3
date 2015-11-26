@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ui/ServiceAdapterFactory.h"
+#include "ServiceAdapterFallbackFacade.h"
 
 #include "MsgPrinter.h"
 #include "ui/SrcDelCli.h"
@@ -56,13 +56,13 @@ int main(int ac, char* av[])
                     return 1;
                 }
 
-            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
-            cli.printApiDetails(*ctx.get());
+            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
+            cli.printApiDetails(ctx);
 
             // delegate Proxy Certificate
-            ctx->delegate(cli.getDelegationId(), 0);
+            ctx.delegate(cli.getDelegationId(), 0);
 
-            std::string resjobid = ctx->deleteFile(vect);
+            std::string resjobid = ctx.deleteFile(vect);
             std::cout << resjobid << std::endl;
 
 

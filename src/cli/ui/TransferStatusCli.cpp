@@ -45,6 +45,8 @@ TransferStatusCli::~TransferStatusCli()
 
 void TransferStatusCli::validate()
 {
+    JobIdCli::validate();
+
     if (getJobIds().empty()) throw bad_option("jobid", "missing parameter");
 
     if (vm.count("p") && vm.size() > 3)

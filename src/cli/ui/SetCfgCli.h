@@ -21,7 +21,7 @@
 #ifndef NAMEVALUECLI_H_
 #define NAMEVALUECLI_H_
 
-#include "CliBase.h"
+#include "RestCli.h"
 
 #include <vector>
 #include <tuple>
@@ -48,7 +48,7 @@ using namespace fts3::common;
  *          multiple SEs)
  *
  */
-class SetCfgCli: public CliBase
+class SetCfgCli: public RestCli
 {
 
 public:
