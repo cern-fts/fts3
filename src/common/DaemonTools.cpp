@@ -109,8 +109,6 @@ int countProcessesWithName(const std::string& name)
         return -1;
     }
 
-    // At least, self must be counted!
-    assert(count > 0);
     return count;
 }
 
