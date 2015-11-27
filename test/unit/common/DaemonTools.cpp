@@ -52,9 +52,19 @@ BOOST_AUTO_TEST_CASE(getIdsTest)
 }
 
 
+static std::string getCurrentProcName(void)
+{
+    std::ifstream cmdline("/proc/self/cmdline");
+    char cmd[512];
+    cmdline.getline(cmd, sizeof(cmd), '\0');
+    return cmd;
+}
+
+
 BOOST_AUTO_TEST_CASE(countProcessesWithNameTest)
 {
-    BOOST_CHECK_EQUAL(countProcessesWithName("init"), 1);
+    std::string self = getCurrentProcName();
+    BOOST_CHECK_EQUAL(countProcessesWithName(self), 1);
     BOOST_CHECK_EQUAL(countProcessesWithName("/fake/path/really/unlikely"), 0);
 }
 
