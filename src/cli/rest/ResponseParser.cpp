@@ -221,9 +221,15 @@ std::vector<Snapshot> ResponseParser::get_snapshot_for_rest() const
             snapshot._60 = value == null ? 0.0 : boost::lexical_cast<double>(value);
 
 
-            value = it->second.get<std::string>("frequent_error.count");
-            snapshot.frequent_error.first = value == null ? 0 : boost::lexical_cast<int>(value);
-            snapshot.frequent_error.second = it->second.get<std::string>("frequent_error.reason");
+            value = it->second.get<std::string>("frequent_error.count", std::string());
+            if (value != null && !value.empty()) {
+                snapshot.frequent_error.first = boost::lexical_cast<int>(value);
+                snapshot.frequent_error.second = it->second.get<std::string>("frequent_error.reason");
+            }
+            else {
+                snapshot.frequent_error.first = 0;
+                snapshot.frequent_error.second = std::string();
+            }
 
             snapshot.dst_se = it->second.get<std::string>("dest_se");
             snapshot.src_se = it->second.get<std::string>("source_se");
