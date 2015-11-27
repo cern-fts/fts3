@@ -47,9 +47,6 @@ namespace pt = boost::property_tree;
 
 class FileInfo
 {
-    friend class MsgPrinter;
-    friend class JsonOutput;
-
 public:
 
     FileInfo(tns3__FileTransferStatus const * f) :
@@ -144,7 +141,6 @@ public:
         return fileId;
     }
 
-private:
     std::string src;
     std::string dst;
     int fileId;
@@ -159,9 +155,6 @@ private:
 
 class DetailedFileStatus
 {
-    friend class MsgPrinter;
-    friend class JsonOutput;
-
 public:
     DetailedFileStatus(tns3__DetailedFileStatus const * df) :
         jobId(df->jobId), src(df->sourceSurl), dst(df->destSurl), fileId(df->fileId), state(df->fileState)
@@ -176,7 +169,6 @@ public:
 
     }
 
-private:
     std::string jobId;
     std::string src;
     std::string dst;
@@ -186,9 +178,6 @@ private:
 
 class JobStatus
 {
-    friend class MsgPrinter;
-    friend class JsonOutput;
-
 public:
 
     typedef std::tuple<int, int, int, int, int , int, int, int, int> JobSummary;
@@ -213,8 +202,6 @@ public:
     {
         return status;
     }
-
-private:
 
     std::string jobId;
     std::string status;

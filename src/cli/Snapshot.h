@@ -36,8 +36,6 @@ namespace pt = boost::property_tree;
 
 class Snapshot
 {
-    friend class ResponseParser;
-
 public:
     Snapshot() :
         vo(), src_se(), dst_se(), active(0), max_active(0), failed(0), finished(0), submitted(0),
@@ -49,8 +47,6 @@ public:
     virtual ~Snapshot() {}
 
     void print(pt::ptree & out) const;
-
-protected:
 
     std::string vo;
 
