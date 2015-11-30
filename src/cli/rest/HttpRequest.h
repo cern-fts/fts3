@@ -29,7 +29,6 @@
 #include <iostream>
 #include <vector>
 
-#include "MsgPrinter.h"
 
 namespace fts3
 {
@@ -55,7 +54,11 @@ public:
 
     static std::string urlencode(std::string const &value);
 
-private:
+protected:
+
+    /// These indirections are used so tests can mock the actual request
+    virtual CURLcode perform(void);
+    virtual CURLcode get_info(CURLINFO info, long *data);
 
     void request();
     static size_t write_data(void *ptr, size_t size, size_t nmemb, void *userdata);

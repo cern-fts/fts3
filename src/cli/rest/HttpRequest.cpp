@@ -123,6 +123,19 @@ size_t HttpRequest::keep_header(char *buffer, size_t size, size_t nitems, void *
     return nb;
 }
 
+
+CURLcode HttpRequest::perform(void)
+{
+    return curl_easy_perform(curl);
+}
+
+
+CURLcode HttpRequest::get_info(CURLINFO info, long *data)
+{
+    return curl_easy_getinfo(curl, info, data);
+}
+
+
 void HttpRequest::request()
 {
     headlines.clear();
@@ -130,7 +143,7 @@ void HttpRequest::request()
     addedTopLevel = false;
     firstWrite = true;
     /* Perform the request, res will get the return code */
-    CURLcode res = curl_easy_perform(curl);
+    CURLcode res = perform();
     /* Check for errors */
     if(res != CURLE_OK) {
        std::string msg = "Communication problem: ";
@@ -145,7 +158,7 @@ void HttpRequest::request()
        throw cli_exception(msg);
     }
 
-    // add termining brance if top level object name was added
+    // add termining brace if top level object name was added
     if (addedTopLevel) {
         std::string s = "}";
         stream.write(s.c_str(),s.length());
@@ -163,7 +176,7 @@ void HttpRequest::request()
     }
 
     long http_code = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+    get_info(CURLINFO_RESPONSE_CODE, &http_code);
 
     bool responseOk = true;
     // code 207 indicates partial success, but don't treat it as error here
@@ -186,9 +199,8 @@ void HttpRequest::request()
         try {
             ResponseParser r(stream);
             m = r.get("message");
-            ResponseParser r2(m);
+            httpm = r.get("status");
             hasRepData = true;
-            httpm = r2.get("http_message");
         } catch(...) {
             // nothing
         }
