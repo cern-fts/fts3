@@ -44,13 +44,12 @@ public:
      */
     bad_option(std::string const & opt, std::string const & msg) : cli_exception(msg), opt(opt), full_msg(opt + ": " + msg) {}
 
+    virtual ~bad_option() throw () {}
+
     /**
      * returns the error message
      */
-    virtual char const * what() const
-#if __cplusplus >= 199711L
-    noexcept (true)
-#endif
+    virtual char const * what() const throw()
     {
         return full_msg.c_str();
     }

@@ -37,7 +37,7 @@ namespace cli
 /**
  * Generic CLI exception
  */
-class cli_exception
+class cli_exception: public std::exception
 {
 
 public:
@@ -51,15 +51,12 @@ public:
     /**
      * Destructor
      */
-    virtual ~cli_exception() {};
+    virtual ~cli_exception() throw() {};
 
     /**
      * returns the error message
      */
-    virtual char const * what() const
-#if __cplusplus >= 199711L
-    noexcept (true)
-#endif
+    virtual char const * what() const throw()
     {
         return msg.c_str();
     }

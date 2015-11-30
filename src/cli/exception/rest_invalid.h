@@ -36,15 +36,12 @@ public:
     /**
      * Destructor
      */
-    virtual ~rest_invalid() {};
+    virtual ~rest_invalid() throw () {};
 
     /**
      * returns the error message
      */
-    virtual char const * what() const
-#if __cplusplus >= 199711L
-    noexcept (true)
-#endif
+    virtual char const * what() const throw()
     {
         return msg.c_str();
     }
