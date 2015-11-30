@@ -44,13 +44,13 @@ public:
                 std::iostream& stream, std::string const &topname = std::string());
     virtual ~HttpRequest();
 
-    void get();
+    virtual void get();
 
-    void del();
+    virtual void del();
 
-    void put();
+    virtual void put();
 
-    void post();
+    virtual void post();
 
     static std::string urlencode(std::string const &value);
 

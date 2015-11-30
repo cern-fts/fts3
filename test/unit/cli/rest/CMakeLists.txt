@@ -18,4 +18,7 @@ cmake_minimum_required(VERSION 2.8)
 
 define_test (HttpRequest fts_cli_common)
 define_test (ResponseParser fts_cli_common)
+define_test (RestBanning fts_cli_common)
+define_test (RestDeletion fts_cli_common)
+define_test (RestModifyJob fts_cli_common)
 define_test (RestSubmission fts_cli_common)
