@@ -128,9 +128,6 @@ static void doServer()
 /// Prepare, fork and run bring online daemon
 static void spawnServer(int argc, char** argv)
 {
-    panic::setup_signal_handlers(shutdownCallback, NULL);
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
-
     ServerConfig::instance().read(argc, argv);
 
     std::string user = ServerConfig::instance().get<std::string>("User");
@@ -148,6 +145,9 @@ static void spawnServer(int argc, char** argv)
             throw SystemError("Can't fork the daemon");
         }
     }
+
+    panic::setup_signal_handlers(shutdownCallback, NULL);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
 
     doServer();
 }

@@ -229,10 +229,6 @@ static void runEnvironmentChecks()
 /// Prepare, fork and run FTS3
 static void spawnServer(int argc, char** argv)
 {
-    // Register signal handlers
-    panic::setup_signal_handlers(shutdownCallback, NULL);
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
-
     ServerConfig::instance().read(argc, argv);
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
@@ -251,6 +247,10 @@ static void spawnServer(int argc, char** argv)
             throw SystemError("Can't fork the daemon");
         }
     }
+
+    // Register signal handlers
+    panic::setup_signal_handlers(shutdownCallback, NULL);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
 
     doServer();
 }
