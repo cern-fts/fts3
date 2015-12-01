@@ -168,14 +168,20 @@ static std::string requiredToString(int mode)
 static void checkPath(const std::string& path, int mode, fs::file_type type)
 {
     if (type == fs::directory_file) {
-        if (!fs::is_directory(path)) {
-            throw SystemError(path + " expected to exist and be a directory. Please, create it.");
+        if (!fs::exists(path)) {
+            try {
+                fs::create_directories(path);
+            }
+            catch (...) {
+                throw SystemError(path + " does not exist and could not be created");
+            }
+        }
+        else if (!fs::is_directory(path)) {
+            throw SystemError(path + " expected to exist and be a directory, but it is not");
         }
     }
-    else {
-        if (!fs::exists(path)) {
-            throw SystemError(path + " does not exist");
-        }
+    else if (!fs::exists(path)) {
+        throw SystemError(path + " does not exist");
     }
 
     if (access(path.c_str(), mode) != 0) {
@@ -208,7 +214,8 @@ static void runEnvironmentChecks()
         throw SystemError("Check if hostcert/key are installed");
     }
 
-    std::string logsDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
+    std::string logsDir = ServerConfig::instance().get<std::string> ("ServerLogDirectory");
+    std::string monDir = ServerConfig::instance().get<std::string> ("MessagingDirectory");
 
     if (!ServerConfig::instance().get<bool>("WithoutSoap")) {
         checkPath(HOST_CERT, R_OK, fs::regular_file);
@@ -216,11 +223,11 @@ static void runEnvironmentChecks()
     }
 
     checkPath(logsDir, R_OK, fs::directory_file);
-    checkPath("/var/lib/fts3", R_OK | W_OK, fs::directory_file);
-    checkPath("/var/lib/fts3/monitoring", R_OK | W_OK, fs::directory_file);
-    checkPath("/var/lib/fts3/status", R_OK | W_OK, fs::directory_file);
-    checkPath("/var/lib/fts3/stalled", R_OK | W_OK, fs::directory_file);
-    checkPath("/var/lib/fts3/logs", R_OK | W_OK, fs::directory_file);
+    checkPath(monDir, R_OK | W_OK, fs::directory_file);
+    checkPath(monDir + "/monitoring", R_OK | W_OK, fs::directory_file);
+    checkPath(monDir + "/status", R_OK | W_OK, fs::directory_file);
+    checkPath(monDir + "/stalled", R_OK | W_OK, fs::directory_file);
+    checkPath(monDir + "/logs", R_OK | W_OK, fs::directory_file);
 
     checkDbSchema();
 }

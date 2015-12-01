@@ -35,7 +35,8 @@ using namespace fts3::config;
 #define FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT "localhost"
 #define FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT 10
 #define FTS3_CONFIG_SERVERCONFIG_SERVERLOGDIRECTOTY_DEFAULT ""
-#define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTOTY_DEFAULT "/var/log/fts3"
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTORY_DEFAULT "/var/log/fts3"
+#define FTS3_CONFIG_SERVERCONFIG_MESSAGINGDIRECTORY_DEFAULT "/var/lib/fts3"
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/fts3/fts3config"
 #define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
 #define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
@@ -164,8 +165,14 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "TransferLogDirectory,l",
-        po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTOTY_DEFAULT),
+        po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(
+            FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTORY_DEFAULT),
         "Directory where the transfer logs are written"
+    )
+    (
+        "MessagingDirectory",
+        po::value<std::string>( &(_vars["MessagingDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MESSAGINGDIRECTORY_DEFAULT),
+        "Directory where the internal FTS3 messages are written"
     )
     (
         "AuthorizedVO,v",
