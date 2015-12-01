@@ -37,7 +37,6 @@ namespace fs = boost::filesystem;
 
 const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
 const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
-const char *CONFIG_FILE = "/etc/fts3/fts3config";
 
 
 /// Called by the signal handler
@@ -49,8 +48,9 @@ static void shutdownCallback(int signum, void*)
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Future signals will be ignored!" << commit;
 
     BringOnlineServer::instance().stop();
-    if (!ServerConfig::instance().get<bool> ("rush"))
+    if (!ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(5));
+    }
 
     // Some require traceback
     switch (signum)
@@ -99,15 +99,6 @@ static void initializeDatabase()
 }
 
 
-/// Check the environment is properly setup for FTS3 to run
-static void runEnvironmentChecks()
-{
-    if (!fs::exists(CONFIG_FILE)) {
-        throw SystemError(std::string("fts3 server config file ") + CONFIG_FILE + " doesn't exist");
-    }
-}
-
-
 /// Run the Bring Online server
 static void doServer()
 {
@@ -148,8 +139,6 @@ static void spawnServer(int argc, char** argv)
     if (dropPrivileges(user, group)) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
     }
-
-    runEnvironmentChecks();
 
     bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
 

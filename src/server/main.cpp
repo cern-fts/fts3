@@ -43,7 +43,6 @@ using namespace fts3::server;
 
 const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
 const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
-const char *CONFIG_FILE = "/etc/fts3/fts3config";
 
 
 /// Initialize the database backend
@@ -197,11 +196,6 @@ void checkDbSchema()
 /// Check the environment is properly setup for FTS3 to run
 static void runEnvironmentChecks()
 {
-    if (!fs::exists(CONFIG_FILE))
-    {
-        throw SystemError(std::string("fts3 server config file ") + CONFIG_FILE + " doesn't exist");
-    }
-
     std::string urlCopyPath;
     if (!binaryExists("fts_url_copy", &urlCopyPath))
     {
@@ -216,14 +210,11 @@ static void runEnvironmentChecks()
 
     std::string logsDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
 
-    checkPath("/etc/fts3", R_OK, fs::directory_file);
-
-    if (!fts3::config::ServerConfig::instance().get<bool>("WithoutSoap")) {
+    if (!ServerConfig::instance().get<bool>("WithoutSoap")) {
         checkPath(HOST_CERT, R_OK, fs::regular_file);
         checkPath(HOST_KEY, R_OK, fs::regular_file);
     }
 
-    checkPath(CONFIG_FILE, R_OK, fs::regular_file);
     checkPath(logsDir, R_OK, fs::directory_file);
     checkPath("/var/lib/fts3", R_OK | W_OK, fs::directory_file);
     checkPath("/var/lib/fts3/monitoring", R_OK | W_OK, fs::directory_file);
