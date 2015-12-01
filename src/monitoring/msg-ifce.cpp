@@ -46,7 +46,6 @@ msg_ifce *msg_ifce::getInstance()
 
 msg_ifce::msg_ifce(): state(MSG_IFCE_WAITING_START)
 {
-    read_initial_config();
 }
 
 
@@ -56,7 +55,7 @@ msg_ifce::~msg_ifce()
 }
 
 
-std::string msg_ifce::SendTransferStartMessage(const transfer_completed &tr_started)
+std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfer_completed &tr_started)
 {
     if (state != MSG_IFCE_WAITING_START) {
         FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a start message, but the internal state is not MSG_IFCE_WAITING_START");
@@ -64,10 +63,6 @@ std::string msg_ifce::SendTransferStartMessage(const transfer_completed &tr_star
     }
 
     state = MSG_IFCE_WAITING_FINISH;
-
-    if(!getACTIVE()) {
-        return std::string();
-    }
 
     std::ostringstream msg;
         
@@ -167,17 +162,18 @@ std::string msg_ifce::SendTransferStartMessage(const transfer_completed &tr_star
     msg << "}";
 
     std::string msgStr = msg.str();
-    std::string errMessage = restoreMessageToDisk(msgStr);
-    if (errMessage.empty()) {
+    int errCode = restoreMessageToDisk(producer, msgStr);
+    if (errCode == 0) {
         return msgStr;
     }
     else {
-        return errMessage;
+        char buffer[512];
+        return strerror_r(errCode, buffer, sizeof(buffer));
     }
 }
 
 
-std::string msg_ifce::SendTransferFinishMessage(const transfer_completed &tr_completed, bool force)
+std::string msg_ifce::SendTransferFinishMessage(Producer &producer, const transfer_completed &tr_completed, bool force)
 {
     if (!force && state != MSG_IFCE_WAITING_FINISH) {
         FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
@@ -185,10 +181,6 @@ std::string msg_ifce::SendTransferFinishMessage(const transfer_completed &tr_com
     }
 
     state = MSG_IFCE_WAITING_START;
-
-    if(!getACTIVE()) {
-        return std::string();
-    }
 
     std::ostringstream msg;
 
@@ -426,28 +418,12 @@ std::string msg_ifce::SendTransferFinishMessage(const transfer_completed &tr_com
     msg << "}";
 
     std::string msgStr = msg.str();
-    std::string errMessage = restoreMessageToDisk(msgStr);
-    if (errMessage.empty()) {
+    int errCode = restoreMessageToDisk(producer, msgStr);
+    if (errCode == 0) {
         return msgStr;
     }
     else {
-        return errMessage;
+        char buffer[512];
+        return strerror_r(errCode, buffer, sizeof(buffer));
     }
-}
-
-
-bool msg_ifce::read_initial_config()
-{
-    try {
-        bool fileIsOk = get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
-        if (!fileIsOk) {
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
-            return false;
-        }
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
-        return false;
-    }
-    return true;
 }

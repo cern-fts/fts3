@@ -23,14 +23,12 @@
 #include <fstream>
 
 #include "common/definitions.h"
-#include "common/Logger.h"
 #include "common/ThreadSafeList.h"
+#include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
-#include "profiler/Profiler.h"
 #include "profiler/Macros.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
-#include "msg-bus/producer_consumer_common.h"
 #include "server/DrainMode.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
@@ -39,6 +37,7 @@
 
 
 using namespace fts3::common;
+using fts3::config::ServerConfig;
 
 
 namespace fts3 {
@@ -102,7 +101,7 @@ void ReuseTransfersService::writeJobFile(const std::string& jobId, const std::ve
     try
     {
         std::vector<std::string>::const_iterator iter;
-        std::string filename = "/var/lib/fts3/" + jobId;
+        std::string filename = ServerConfig::instance().get<std::string>("MessagingDirectory") + "/" + jobId;
         fout.open(filename.c_str(), std::ios::out);
         for (iter = files.begin(); iter != files.end(); ++iter)
         {

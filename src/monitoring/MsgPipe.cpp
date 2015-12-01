@@ -34,7 +34,6 @@
 
 #include "common/Logger.h"
 #include "common/ConcurrentQueue.h"
-#include "msg-bus/producer_consumer_common.h"
 #include "UtilityRoutines.h"
 
 extern bool stopThreads;
@@ -54,7 +53,7 @@ void handler(int)
         while (!myQueue.empty()) {
             ret = myQueue.front();
             myQueue.pop();
-            restoreMessageToDisk(ret);
+            //restoreMessageToDisk(ret);
         }
         sleep(5);
         exit(0);
@@ -62,7 +61,8 @@ void handler(int)
 }
 
 
-MsgPipe::MsgPipe()
+MsgPipe::MsgPipe(const std::string &baseDir):
+    consumer(baseDir), producer(baseDir)
 {
     //register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
@@ -88,7 +88,7 @@ void MsgPipe::run()
 
     while (stopThreads == false) {
         try {
-            int returnValue = runConsumerMonitoring(messages);
+            int returnValue = consumer.runConsumerMonitoring(messages);
             if (returnValue != 0) {
                 std::ostringstream errorMessage;
                 errorMessage << "runConsumerMonitoring returned " << returnValue;
@@ -122,6 +122,6 @@ void MsgPipe::cleanup()
     while (!myQueue.empty()) {
         ret = myQueue.front();
         myQueue.pop();
-        restoreMessageToDisk(ret);
+        restoreMessageToDisk(producer, ret);
     }
 }

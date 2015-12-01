@@ -19,25 +19,36 @@
  */
 
 #pragma once
-#ifndef MSGPIPE_H
-#define MSGPIPE_H
+#ifndef PRODUCER_H
+#define PRODUCER_H
 
-#include <decaf/lang/Runnable.h>
-#include "msg-bus/consumer.h"
-#include "msg-bus/producer.h"
+#include <string>
+#include "messages.h"
 
 
-class MsgPipe : public decaf::lang::Runnable
-{
+class Producer {
 private:
-    Consumer consumer;
-    Producer producer;
+    std::string baseDir;
 
 public:
-    MsgPipe(const std::string &baseDir);
-    virtual ~MsgPipe();
-    virtual void run();
-    void cleanup();
+    Producer(const std::string &baseDir);
+
+    ~Producer();
+
+    int runProducerMonitoring(const struct MessageMonitoring &msg);
+
+    int runProducerStatus(const struct Message &msg);
+
+    int runProducerStall(const struct MessageUpdater &msg);
+
+    int runProducerLog(const struct MessageLog &msg);
+
+    int runProducerDeletions(const struct MessageBringonline &msg);
+
+    int runProducerStaging(const struct MessageBringonline &msg);
+
+    int runProducer(const struct MessageBringonline &msg, std::string const & operation);
 };
 
-#endif // MSGPIPE_H
+
+#endif // PRODUCER_H

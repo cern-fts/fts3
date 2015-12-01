@@ -33,12 +33,14 @@
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 #include "common/Uri.h"
+#include "config/ServerConfig.h"
 #include "sociConversions.h"
 #include "db/generic/DbUtils.h"
 
 
 using namespace fts3::common;
 using namespace db;
+using fts3::config::ServerConfig;
 
 
 static unsigned getHashedId(void)
@@ -158,7 +160,9 @@ bool OracleAPI::getChangedFile(std::string source, std::string dest, double rate
 }
 
 
-OracleAPI::OracleAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname())
+OracleAPI::OracleAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname()),
+    producer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
+    consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
     // Pass
 }
@@ -9279,7 +9283,7 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
     std::vector<MinFileStatus> filesState;
 
     try {
-        int exitCode = runConsumerDeletions(messages);
+        int exitCode = consumer.runConsumerDeletions(messages);
         if(exitCode != 0)
         {
             char buffer[128]= {0};
@@ -9437,7 +9441,7 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                         g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
                         //store the states into fs to be restored in the next run of this function
-                        runProducerDeletions(msg);
+                        producer.runProducerDeletions(msg);
                     }
                 }
             }
@@ -9483,7 +9487,7 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
     std::vector<struct MessageBringonline> messages;
 
     try {
-        int exitCode = runConsumerStaging(messages);
+        int exitCode = consumer.runConsumerStaging(messages);
         if(exitCode != 0) {
             char buffer[128]= {0};
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
@@ -9709,7 +9713,7 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                         g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
                         //store the states into fs to be restored in the next run of this function
-                        runProducerStaging(msg);
+                        producer.runProducerStaging(msg);
                     }
                 }
             }

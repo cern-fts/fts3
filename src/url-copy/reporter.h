@@ -36,14 +36,14 @@
 
 #include <boost/thread/recursive_mutex.hpp>
 
-#include "msg-bus/messages.h"
+#include "msg-bus/producer.h"
 
 
 class Reporter
 {
 
 public:
-    Reporter();
+    Reporter(const std::string &msgDir);
     ~Reporter();
 
     // Send to the server a message with the current status
@@ -78,13 +78,13 @@ public:
         multiple = state;
     }
 
+    Producer producer;
+
 private:
     struct Message         msg;
     struct MessageUpdater msg_updater;
     struct MessageLog     msg_log;
     std::string            hostname;
-
-
 
 #ifdef __STDC_NO_ATOMICS__
     std::atomic<bool> isTerminalSent;

@@ -24,12 +24,19 @@
 
 #include "UrlCopyCmd.h"
 #include "common/definitions.h"
+#include "config/ServerConfig.h"
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace fts3::server;
-
+using fts3::config::ServerConfig;
 
 const std::string UrlCopyCmd::Program("fts_url_copy");
+
+
+UrlCopyCmd::UrlCopyCmd(): IPv6Explicit(false)
+{
+    setOption("msgDir", ServerConfig::instance().get<std::string>("MessagingDirectory"));
+}
 
 
 std::string UrlCopyCmd::prepareMetadataString(const std::string& text)

@@ -22,13 +22,12 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include "common/definitions.h"
 #include "common/Uri.h"
-#include "msg-bus/producer_consumer_common.h"
 
 using namespace std;
 
 
-Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
-    isTerminalSent(false), multiple(false)
+Reporter::Reporter(const std::string &msgDir): nostreams(4), timeout(3600), buffersize(0),
+    producer(msgDir), isTerminalSent(false), multiple(false)
 {
     memset(&msg, 0, sizeof(Message));
     memset(&msg_updater, 0, sizeof(MessageUpdater));
@@ -99,8 +98,8 @@ void Reporter::sendMessage(double throughput, bool retry,
     msg.throughput = throughput;
 
     // Try twice
-    if (runProducerStatus(msg) != 0) {
-        runProducerStatus(msg);
+    if (producer.runProducerStatus(msg) != 0) {
+        producer.runProducerStatus(msg);
     }
 }
 
@@ -144,8 +143,8 @@ void Reporter::sendPing(const std::string &job_id, unsigned file_id,
     g_strlcpy(msg_updater.transfer_status, transfer_status.c_str(), sizeof(msg_updater.transfer_status));
 
     // Try twice
-    if (runProducerStall(msg_updater) != 0) {
-        runProducerStall(msg_updater);
+    if (producer.runProducerStall(msg_updater) != 0) {
+        producer.runProducerStall(msg_updater);
     }
 }
 
@@ -160,7 +159,7 @@ void Reporter::sendLog(const std::string &job_id, unsigned file_id,
     msg_log.debugFile = debug;
     msg_log.timestamp = milliseconds_since_epoch();
     // Try twice
-    if (runProducerLog(msg_log) != 0) {
-        runProducerLog(msg_log);
+    if (producer.runProducerLog(msg_log) != 0) {
+        producer.runProducerLog(msg_log);
     }
 }

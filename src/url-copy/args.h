@@ -89,6 +89,7 @@ public:
     std::string job_m_replica;
     std::string last_replica;
     std::string logDir;
+    std::string msgDir;
 
     bool areTransfersOnFile() const
     {

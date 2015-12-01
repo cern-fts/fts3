@@ -23,6 +23,8 @@
 #include <soci/soci.h>
 #include "db/generic/GenericDbIfce.h"
 #include "db/generic/StoragePairState.h"
+#include "msg-bus/consumer.h"
+#include "msg-bus/producer.h"
 
 
 class MySqlAPI : public GenericDbIfce
@@ -403,6 +405,9 @@ private:
     std::string           hostname;
     std::string username_;
     std::map<std::string, int> queuedStagingFiles;
+
+    Producer           producer;
+    Consumer           consumer;
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 

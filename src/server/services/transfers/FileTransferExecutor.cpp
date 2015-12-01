@@ -27,7 +27,6 @@
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
 #include "db/generic/OptimizerSample.h"
-#include "msg-bus/producer_consumer_common.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"

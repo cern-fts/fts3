@@ -29,12 +29,11 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
-#include <cctype> //for isdigit
 #include <sstream> //to phrase string
 #include <string>
 #include <map>
-
 #include <boost/lexical_cast.hpp>
+#include "msg-bus/producer.h"
 
 inline std::string getTimestampStr()
 {
@@ -75,7 +74,7 @@ int GetIntVal(std::string strConvert);
 /*remove any non-ascii characters from a string*/
 std::string ReplaceNonPrintableCharacters(std::string s);
 
-std::string restoreMessageToDisk(std::string & text);
+int restoreMessageToDisk(Producer &producer, const std::string &text);
 
 
 #endif // UTILITYROUTINES_H

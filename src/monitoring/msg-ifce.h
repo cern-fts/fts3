@@ -24,6 +24,7 @@
 #include <vector>
 #include <sstream>
 #include "UtilityRoutines.h"
+#include "msg-bus/producer.h"
 
 /**
  * This is the external interface of the FTS messaging library.
@@ -99,12 +100,11 @@ private:
 
     static bool instanceFlag;
     static msg_ifce *single;
-    bool read_initial_config();
     msg_ifce(); /*private constructor*/
 
 public:
-    std::string SendTransferStartMessage(const transfer_completed &tr_started);
-    std::string SendTransferFinishMessage(const transfer_completed &tr_completed, bool force=false);
+    std::string SendTransferStartMessage(Producer &producer, const transfer_completed &tr_started);
+    std::string SendTransferFinishMessage(Producer &producer, const transfer_completed &tr_completed, bool force=false);
 
     static msg_ifce* getInstance();
     ~msg_ifce();

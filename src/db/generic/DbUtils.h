@@ -29,7 +29,7 @@
 #include <time.h>
 
 #include "config/ServerConfig.h"
-#include "msg-bus/producer_consumer_common.h"
+#include "msg-bus/producer.h"
 #include "GenericDbIfce.h"
 
 using namespace fts3::config;
@@ -204,7 +204,7 @@ static inline void constructJSONMsg(struct MessageState* state)
     if(json_message.str().length() < 3000)
         {
             g_strlcpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
-            runProducerMonitoring(message);
+            Producer(ServerConfig::instance().get<std::string >("MessagingDirectory")).runProducerMonitoring(message);
         }
 }
 

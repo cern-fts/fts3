@@ -32,6 +32,7 @@
 
 
 using namespace fts3::common;
+using fts3::config::ServerConfig;
 
 
 namespace fts3 {
@@ -64,7 +65,7 @@ void CancelerService::markAsStalled()
     if (!messages.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Reaping stalled transfers" << commit;
 
-        boost::filesystem::path p("/var/lib/fts3/");
+        boost::filesystem::path p(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         boost::filesystem::space_info s = boost::filesystem::space(p);
         bool diskFull = (s.free <= 0 || s.available <= 0);
         bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
@@ -207,7 +208,7 @@ void CancelerService::runService()
                 return;
 
             /*force-fail stalled ACTIVE transfers*/
-            if (config::ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
+            if (ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
                 counterActiveTimeouts++;
                 if (counterActiveTimeouts == 300)
                 {

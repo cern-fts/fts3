@@ -24,7 +24,8 @@
 
 #include <vector>
 
-#include "msg-bus/messages.h"
+#include "msg-bus/consumer.h"
+#include "msg-bus/producer.h"
 #include "../BaseService.h"
 
 namespace fts3 {
@@ -38,6 +39,9 @@ private:
     std::string enableOptimization;
     std::map<int, struct MessageLog> messagesLog;
     std::vector<struct MessageUpdater> messagesUpdater;
+
+    Consumer consumer;
+    Producer producer;
 
 public:
 

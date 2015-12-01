@@ -22,11 +22,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/tokenizer.hpp>
-#include <execinfo.h>
 #include <gfal_api.h>
-#include <string>
-#include <transfer/gfal_transfer.h>
-#include <cstring>
 
 #include "args.h"
 #include "common/definitions.h"
@@ -40,13 +36,6 @@
 #include "common/UserProxyEnv.h"
 #include "cred/DelegCred.h"
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/lexical_cast.hpp>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
-#include <vector>
 #include <boost/algorithm/string.hpp>
 
 #include "common/DaemonTools.h"
@@ -58,7 +47,6 @@ using namespace boost::algorithm;
 using namespace fts3::common;
 
 static FileManagement fileManagement;
-static Reporter reporter;
 static transfer_completed transferCompletedMessage;
 static bool retry = true;
 static std::string errorScope("");
@@ -237,7 +225,8 @@ void taskTimerCanceler()
 }
 
 
-void abnormalTermination(std::string classification, std::string, std::string finalState, bool exit=true)
+void abnormalTermination(Reporter &reporter, std::string classification, const std::string &finalState,
+    bool exit=true)
 {
     terminalState = true;
 
@@ -285,7 +274,8 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     if (UrlCopyOpts::getInstance().monitoringMessages) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
-        std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(transferCompletedMessage);
+        std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(reporter.producer,
+            transferCompletedMessage);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
     }
 
@@ -351,28 +341,27 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 }
 
 
-void canceler()
+void canceler(Reporter &reporter)
 {
     errorMessage = "INIT Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
-
-    abnormalTermination("FAILED", errorMessage, "Abort");
+    abnormalTermination(reporter, "FAILED", errorMessage, "Abort");
 }
 
 /// This thread reduces one by one the value pointed by timeout,
 /// until it reaches 0.
 /// Using a pointer allow us to reset the timeout if we happen to hit
 /// a file bigger than initially expected.
-void taskTimer(time_t* timeout)
+void taskTimer(time_t* timeout, Reporter *reporter)
 {
     while (*timeout) {
         boost::this_thread::sleep(boost::posix_time::seconds(1));
         *timeout -= 1;
     }
-    canceler();
+    canceler(*reporter);
 }
 
 
-void taskStatusUpdater(int time)
+void taskStatusUpdater(int time, Reporter *reporter)
 {
     // Do not send url_copy heartbeat right after thread creation, wait a bit
     sleep(30);
@@ -384,12 +373,12 @@ void taskStatusUpdater(int time)
             throughputTurl = convertKbToMb(currentTransfer.throughput);
         }
 
-        reporter.sendPing(currentTransfer.jobId,
+        reporter->sendPing(currentTransfer.jobId,
             currentTransfer.fileId,
             throughputTurl,
             currentTransfer.transferredBytes,
-            reporter.source_se,
-            reporter.dest_se,
+            reporter->source_se,
+            reporter->dest_se,
             "gsiftp:://fake",
             "gsiftp:://fake",
             "ACTIVE");
@@ -399,8 +388,9 @@ void taskStatusUpdater(int time)
 }
 
 
-void shutdown_callback(int signum, void*)
+void shutdown_callback(int signum, void *reporterPtr)
 {
+    Reporter *reporter = (Reporter*)reporterPtr;
     //stop reporting progress to the server if a signal is received
     inShutdown = true;
 
@@ -418,7 +408,7 @@ void shutdown_callback(int signum, void*)
             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Stacktrace: " << stackTrace << commit;
 
             errorMessage = "Transfer process died with: " + stackTrace;
-            abnormalTermination("FAILED", errorMessage, "Error", false);
+            abnormalTermination(*reporter, "FAILED", errorMessage, false);
         }
     }
     else if (signum == SIGINT || signum == SIGTERM) {
@@ -426,7 +416,7 @@ void shutdown_callback(int signum, void*)
             propagated = true;
             errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
-            abnormalTermination("CANCELED", errorMessage, "Abort", true);
+            abnormalTermination(*reporter, "CANCELED", errorMessage, true);
         }
     }
     else if (signum == SIGUSR1) {
@@ -434,7 +424,7 @@ void shutdown_callback(int signum, void*)
             propagated = true;
             errorMessage = "TRANSFER " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
-            abnormalTermination("FAILED", errorMessage, "Abort", true);
+            abnormalTermination(*reporter, "FAILED", errorMessage, true);
         }
     }
     else {
@@ -444,7 +434,7 @@ void shutdown_callback(int signum, void*)
                 "TRANSFER " + currentTransfer.jobId + " aborted, check log file for details, received signum " +
                 boost::lexical_cast<std::string>(signum);
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
-            abnormalTermination("FAILED", errorMessage, "Abort", false);
+            abnormalTermination(*reporter, "FAILED", errorMessage, false);
         }
     }
 }
@@ -514,34 +504,6 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 }
 
 
-void myunexpected()
-{
-    if(currentTransfer.jobId.empty())
-        currentTransfer.jobId = job_id;
-    if(currentTransfer.fileId == 0)
-        currentTransfer.fileId = file_id;
-
-    errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;
-    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << errorMessage << commit;
-
-    abnormalTermination("FAILED", errorMessage, "Abort");
-}
-
-
-void myterminate()
-{
-    if(currentTransfer.jobId.empty())
-        currentTransfer.jobId = job_id;
-    if(currentTransfer.fileId == 0)
-        currentTransfer.fileId = file_id;
-
-    errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;
-    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << errorMessage << commit;
-
-    abnormalTermination("FAILED", errorMessage, "Abort");
-}
-
-
 int statWithRetries(gfal2_context_t handle, const std::string &category, const std::string &url, off_t *size,
     std::string *errMsg)
 {
@@ -578,10 +540,10 @@ int statWithRetries(gfal2_context_t handle, const std::string &category, const s
 }
 
 
-void setRemainingTransfersToFailed(std::vector<Transfer> &transferList, unsigned currentIndex)
+void setRemainingTransfersToFailed(Reporter &reporter, const std::vector<Transfer> &transferList, unsigned currentIndex)
 {
     for (unsigned i = currentIndex; i < transferList.size(); ++i) {
-        Transfer &t = transferList[i];
+        const Transfer &t = transferList[i];
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report FAILED back to the server for " << t.fileId << commit;
 
         transferCompletedMessage.source_srm_version = srmVersion(t.sourceUrl);
@@ -596,7 +558,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer> &transferList, unsigned
         transferCompletedMessage.job_state = "UNKNOWN";
 
         if (UrlCopyOpts::getInstance().monitoringMessages) {
-            msg_ifce::getInstance()->SendTransferFinishMessage(transferCompletedMessage, true);
+            msg_ifce::getInstance()->SendTransferFinishMessage(reporter.producer, transferCompletedMessage, true);
         }
 
         reporter.sendTerminal(0, false, t.jobId, t.fileId,
@@ -626,9 +588,11 @@ int main(int argc, char **argv)
     if (opts.parse(argc, argv) < 0) {
         std::cerr << opts.getErrorMessage() << std::endl;
         errorMessage = "TRANSFER process died with: " + opts.getErrorMessage();
-        abnormalTermination("FAILED", errorMessage, "Error");
         return 1;
     }
+
+    // Create reporter
+    Reporter reporter(opts.msgDir);
 
     //make sure to skip file_id for multi-hop and reuse jobs
     if (opts.multihop || opts.reuse)
@@ -647,12 +611,12 @@ int main(int argc, char **argv)
 
     if (argc < 4) {
         errorMessage = "INIT Failed to read url-copy process arguments";
-        abnormalTermination("FAILED", errorMessage, "Abort");
+        abnormalTermination(reporter, "FAILED", errorMessage);
     }
 
     try {
         // Send an update message back to the server to indicate it's alive
-        boost::thread btUpdater(taskStatusUpdater, 60);
+        boost::thread btUpdater(taskStatusUpdater, 60, &reporter);
     }
     catch (std::exception &e) {
         globalErrorMessage = "INIT " + std::string(e.what());
@@ -672,7 +636,7 @@ int main(int argc, char **argv)
     std::vector<Transfer> transferList;
 
     if (opts.areTransfersOnFile()) {
-        readFile = "/var/lib/fts3/" + opts.jobId;
+        readFile = opts.msgDir + "/" + opts.jobId;
         Transfer::initListFromFile(opts.jobId, readFile, &transferList);
     }
     else {
@@ -684,15 +648,13 @@ int main(int argc, char **argv)
     globalTimeout = numberOfFiles * 6000;
 
     try {
-        boost::thread bt(taskTimer, &globalTimeout);
+        boost::thread bt(taskTimer, &globalTimeout, &reporter);
     }
     catch (std::exception &e) {
-        globalErrorMessage = e.what();
-        throw;
+        abnormalTermination(reporter, "FAILED", e.what());
     }
     catch (...) {
-        globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
-        throw;
+        abnormalTermination(reporter, "FAILED", "INIT Failed to create boost thread, boost::thread_resource_error");
     }
 
     if (opts.areTransfersOnFile() && transferList.empty() == true) {
@@ -701,7 +663,7 @@ int main(int argc, char **argv)
 
         retry = false;
 
-        abnormalTermination("FAILED", errorMessage, "Error");
+        abnormalTermination(reporter, "FAILED", errorMessage);
     }
 
     // gfal2 debug logging
@@ -749,7 +711,7 @@ int main(int argc, char **argv)
         errorMessage = "Failed to create the gfal2 handle: ";
         if (handleError && handleError->message) {
             errorMessage += "INIT " + std::string(handleError->message);
-            abnormalTermination("FAILED", errorMessage, "Error");
+            abnormalTermination(reporter, "FAILED", errorMessage);
         }
     }
 
@@ -772,7 +734,7 @@ int main(int argc, char **argv)
     if (!opts.oauthFile.empty()) {
         if (gfal2_load_opts_from_file(handle, opts.oauthFile.c_str(), &handleError) < 0) {
             errorMessage = "OAUTH " + std::string(handleError->message);
-            abnormalTermination("FAILED", errorMessage, "Error");
+            abnormalTermination(reporter, "FAILED", errorMessage);
         }
         unlink(opts.oauthFile.c_str());
     }
@@ -858,7 +820,8 @@ int main(int argc, char **argv)
 
         if (opts.monitoringMessages) {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring start message " << commit;
-            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(transferCompletedMessage);
+            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(reporter.producer,
+                transferCompletedMessage);
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;
         }
 
@@ -1348,7 +1311,7 @@ stop:
             // all the remaining transfers
             if (opts.multihop) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Setting to fail the remaining transfers" << commit;
-                setRemainingTransfersToFailed(transferList, ii);
+                setRemainingTransfersToFailed(reporter, transferList, ii);
 
                 std::string archiveErr = fileManagement.archive();
                 if (!archiveErr.empty())
@@ -1399,7 +1362,8 @@ stop:
 
         if (opts.monitoringMessages) {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
-            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(transferCompletedMessage);
+            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(reporter.producer,
+                transferCompletedMessage);
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
         }
 

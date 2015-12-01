@@ -75,6 +75,7 @@ const option UrlCopyOpts::long_options[] =
     {"job_m_replica",     required_argument, 0, '0'},
     {"last_replica",      required_argument, 0, '6'},
     {"logDir",            required_argument, 0, 'y'},
+    {"msgDir",            required_argument, 0, '#'},
     {"help",              no_argument,       0, '?'},
     {0, 0, 0, 0}
 };
@@ -278,6 +279,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 'y':
                     logDir = boost::lexical_cast<std::string>(optarg);
+                    break;
+                case '#':
+                    msgDir = boost::lexical_cast<std::string>(optarg);
                     break;
             }
         }

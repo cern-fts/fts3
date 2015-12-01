@@ -53,7 +53,7 @@
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "msg-bus/producer_consumer_common.h"
+#include "msg-bus/producer.h"
 #include "UtilityRoutines.h"
 
 #define MILLI 36000000
@@ -338,15 +338,10 @@ std::string ReplaceNonPrintableCharacters(std::string s)
 }
 
 
-std::string restoreMessageToDisk(std::string & text)
+int restoreMessageToDisk(Producer &producer, const std::string &text)
 {
     struct MessageMonitoring message;
     g_strlcpy(message.msg, text.c_str(), sizeof(message.msg));
     message.timestamp = milliseconds_since_epoch();
-    int returnValue = runProducerMonitoring(message);
-
-    if (returnValue == 0)
-        return std::string();
-    else
-        return boost::lexical_cast<std::string>(returnValue);
+    return producer.runProducerMonitoring(message);
 }

@@ -19,25 +19,41 @@
  */
 
 #pragma once
-#ifndef MSGPIPE_H
-#define MSGPIPE_H
+#ifndef CONSUMER_H
+#define CONSUMER_H
 
-#include <decaf/lang/Runnable.h>
-#include "msg-bus/consumer.h"
-#include "msg-bus/producer.h"
+#include <string>
+#include <vector>
+#include "messages.h"
 
 
-class MsgPipe : public decaf::lang::Runnable
+#define DEFAULT_LIMIT 10000
+
+
+class Consumer
 {
 private:
-    Consumer consumer;
-    Producer producer;
+    std::string baseDir;
+    unsigned limit;
 
 public:
-    MsgPipe(const std::string &baseDir);
-    virtual ~MsgPipe();
-    virtual void run();
-    void cleanup();
+
+    Consumer(const std::string &baseDir, unsigned limit = 10000);
+
+    ~Consumer();
+
+    int runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages);
+
+    int runConsumerStatus(std::vector<struct Message> &messages);
+
+    int runConsumerStall(std::vector<struct MessageUpdater> &messages);
+
+    int runConsumerLog(std::map<int, struct MessageLog> &messages);
+
+    int runConsumerDeletions(std::vector<struct MessageBringonline> &messages);
+
+    int runConsumerStaging(std::vector<struct MessageBringonline> &messages);
 };
 
-#endif // MSGPIPE_H
+
+#endif // CONSUMER_H

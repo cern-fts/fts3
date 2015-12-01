@@ -27,10 +27,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
-#include "producer_consumer_common.h"
-#include "config/ServerConfig.h"
-
-using fts3::config::ServerConfig;
+#include "consumer.h"
 
 
 struct sort_functor_updater
@@ -50,19 +47,28 @@ struct sort_functor_status
 };
 
 
-int getDir(const std::string &dir, std::vector<std::string> &files,
+Consumer::Consumer(const std::string &baseDir, unsigned limit):
+    baseDir(baseDir), limit(limit)
+{
+}
+
+
+Consumer::~Consumer()
+{
+}
+
+
+static int getDirContent(const std::string &dir, std::vector<std::string> &files,
     const std::string &extension, unsigned limit)
 {
-    std::string fullPath = ServerConfig::instance().get<std::string>("MessagingDirectory") + dir;
-
-    if (boost::filesystem::is_empty(fullPath)) {
+    if (boost::filesystem::is_empty(dir)) {
         return 0;
     }
 
     DIR *dp = NULL;
     struct dirent *dirp = NULL;
     struct stat st;
-    if ((dp = opendir(fullPath.c_str())) == NULL) {
+    if ((dp = opendir(dir.c_str())) == NULL) {
         return errno;
     }
 
@@ -70,7 +76,7 @@ int getDir(const std::string &dir, std::vector<std::string> &files,
         std::string fileName = std::string(dirp->d_name);
         size_t found = fileName.find(extension);
         if (found != std::string::npos) {
-            std::string copyFilename = dir + fileName;
+            std::string copyFilename = dir + "/" + fileName;
             int stCheck = stat(copyFilename.c_str(), &st);
             if (stCheck == 0 && st.st_size > 0)
                 files.push_back(copyFilename);
@@ -83,13 +89,14 @@ int getDir(const std::string &dir, std::vector<std::string> &files,
 }
 
 
-int runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages, unsigned limit)
+int Consumer::runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages)
 {
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir("monitoring", files, "ready", limit) != 0)
+    if (getDirContent(baseDir + "/monitoring", files, "ready", limit) != 0) {
         return errno;
+    }
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
@@ -117,13 +124,14 @@ int runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages, unsig
 }
 
 
-int runConsumerStatus(std::vector<struct Message> &messages, unsigned limit)
+int Consumer::runConsumerStatus(std::vector<struct Message> &messages)
 {
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir("status", files, "ready", limit) != 0)
+    if (getDirContent(baseDir + "/status", files, "ready", limit) != 0) {
         return errno;
+    }
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
@@ -151,13 +159,14 @@ int runConsumerStatus(std::vector<struct Message> &messages, unsigned limit)
 }
 
 
-int runConsumerStall(std::vector<struct MessageUpdater> &messages, unsigned limit)
+int Consumer::runConsumerStall(std::vector<struct MessageUpdater> &messages)
 {
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir("stalled", files, "ready", limit) != 0)
+    if (getDirContent(baseDir + "/stalled", files, "ready", limit) != 0) {
         return errno;
+    }
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
@@ -186,13 +195,14 @@ int runConsumerStall(std::vector<struct MessageUpdater> &messages, unsigned limi
 }
 
 
-int runConsumerLog(std::map<int, struct MessageLog> &messages, unsigned limit)
+int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
 {
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir("logs", files, "ready", limit) != 0)
+    if (getDirContent(baseDir + "/logs", files, "ready", limit) != 0) {
         return errno;
+    }
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
@@ -220,12 +230,12 @@ int runConsumerLog(std::map<int, struct MessageLog> &messages, unsigned limit)
 }
 
 
-int runConsumerDeletions(std::vector<struct MessageBringonline> &messages, unsigned limit)
+int Consumer::runConsumerDeletions(std::vector<struct MessageBringonline> &messages)
 {
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir("status", files, "delete", limit) != 0)
+    if (getDirContent(baseDir + "/status", files, "delete", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
@@ -254,13 +264,14 @@ int runConsumerDeletions(std::vector<struct MessageBringonline> &messages, unsig
 }
 
 
-int runConsumerStaging(std::vector<struct MessageBringonline> &messages, unsigned limit)
+int Consumer::runConsumerStaging(std::vector<struct MessageBringonline> &messages)
 {
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir("status", files, "staging", limit) != 0)
+    if (getDirContent(baseDir + "/status", files, "staging", limit) != 0) {
         return errno;
+    }
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;

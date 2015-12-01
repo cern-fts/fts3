@@ -36,27 +36,20 @@
 #include <cms/MessageListener.h>
 #include <cms/ExceptionListener.h>
 #include <cms/MessageListener.h>
+#include "msg-bus/producer.h"
 
-using namespace activemq;
-using namespace activemq::core;
-using namespace decaf;
-using namespace decaf::lang;
-using namespace decaf::util;
-using namespace decaf::util::concurrent;
-using namespace cms;
-
-class MsgProducer : public Runnable, public ExceptionListener
+class MsgProducer : public decaf::lang::Runnable, public cms::ExceptionListener
 {
 private:
 
-    Connection* connection;
-    Session* session;
-    Destination* destination_transfer_started;
-    Destination* destination_transfer_completed;
-    MessageProducer* producer_transfer_started;
-    MessageProducer* producer_transfer_completed;
-    MessageProducer* producer_transfer_state;
-    Destination* destination_transfer_state;
+    cms::Connection* connection;
+    cms::Session* session;
+    cms::Destination* destination_transfer_started;
+    cms::Destination* destination_transfer_completed;
+    cms::MessageProducer* producer_transfer_started;
+    cms::MessageProducer* producer_transfer_completed;
+    cms::MessageProducer* producer_transfer_state;
+    cms::Destination* destination_transfer_state;
 
     std::string brokerURI;
     std::string broker;
@@ -71,11 +64,13 @@ private:
     void readConfig();
 
 public:
-    MsgProducer();
+    MsgProducer(const std::string &localBaseDir);
     virtual ~MsgProducer();
     void sendMessage(std::string &text);
     virtual void run();
     void cleanup();
-    virtual void onException( const CMSException& ex AMQCPP_UNUSED);
+    virtual void onException(const cms::CMSException& ex AMQCPP_UNUSED);
     bool connected;
+
+    Producer localProducer;
 };

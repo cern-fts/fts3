@@ -56,15 +56,15 @@ static void DoServer(bool isDaemon) throw()
         //initialize here to avoid race conditions
         ConcurrentQueue::getInstance();
 
-        MsgPipe pipeMsg1;
-        MsgProducer producer;
+        MsgPipe pipeMsg1(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+        MsgProducer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
 
         // Start the pipe thread.
-        Thread pipeThread(&pipeMsg1);
+        decaf::lang::Thread pipeThread(&pipeMsg1);
         pipeThread.start();
 
         // Start the producer thread.
-        Thread producerThread(&producer);
+        decaf::lang::Thread producerThread(&producer);
         producerThread.start();
 
         FTS3_COMMON_LOGGER_LOG(INFO, "Threads started");
@@ -78,7 +78,7 @@ static void DoServer(bool isDaemon) throw()
 
         activemq::library::ActiveMQCPP::shutdownLibrary();
     }
-    catch (CMSException& e) {
+    catch (cms::CMSException& e) {
         std::string errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
         FTS3_COMMON_LOGGER_LOG(ERR, errorMessage);
     }

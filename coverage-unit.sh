@@ -2,32 +2,38 @@
 # Extract coverage data out of the unit tests
 set -x
 
-SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+if [ "$#" -eq 1 ]; then
+    BUILD_DIR=$1
+else
+    BUILD_DIR="build"
+fi
 
-# Need to build, the source, of course
-mkdir -p build
-pushd build
-CFLAGS=--coverage CXXFLAGS=--coverage cmake "${SOURCE_DIR}" \
-    -DMAINBUILD=ON -DSERVERBUILD=ON -DCLIENTBUILD=ON \
-    -DTESTBUILD=ON
-make -j2
+SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+RUNNING_DIR=`pwd`
+
+mkdir -p "${BUILD_DIR}"
+pushd "${BUILD_DIR}"
+
+# Build sources
+${SOURCE_DIR}/coverage-build.sh "${SOURCE_DIR}"
 
 # Clean coverage data
 lcov --directory . --zerocounters
 
 # Run tests
-./test/unit/unit --log_level=all --log_format=XML --report_level=no > "../tests.xml"
+./test/unit/unit --log_level=all --log_format=XML --report_level=detailed > "${RUNNING_DIR}/tests.xml"
 
 # Generate the coverage lcov data
-lcov --directory . --capture --output-file="coverage.info"
+lcov --directory . --capture --output-file="${RUNNING_DIR}/coverage-unit.info"
 
 # Download the converter
-rm -fv lcov_cobertura.py
-wget "https://raw.github.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py"
+if [ ! -f "lcov_cobertura.py" ]; then
+    wget "https://raw.github.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py"
+fi
 
 # Generate the xml
-python lcov_cobertura.py "coverage.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "../coverage.xml"
+python lcov_cobertura.py "${RUNNING_DIR}/coverage-unit.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "${RUNNING_DIR}/coverage-unit.xml"
 
 # Done!
 popd
-echo "Done. Coverage info in coverage.xml"
+echo "Done. Unit test coverage in coverage-unit.xml"

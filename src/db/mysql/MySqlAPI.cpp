@@ -185,7 +185,9 @@ bool MySqlAPI::getChangedFile(std::string source, std::string dest, double rate,
 }
 
 
-MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname())
+MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname()),
+    producer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
+    consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
     // Pass
 }
@@ -10931,7 +10933,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 
     try
     {
-        int exitCode = runConsumerDeletions(messages);
+        int exitCode = consumer.runConsumerDeletions(messages);
         if(exitCode != 0)
         {
             char buffer[128]= {0};
@@ -11114,7 +11116,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                         g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
                         //store the states into fs to be restored in the next run of this function
-                        runProducerDeletions(msg);
+                        producer.runProducerDeletions(msg);
                     }
                 }
             }
@@ -11168,7 +11170,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
     try
     {
-        int exitCode = runConsumerStaging(messages);
+        int exitCode = consumer.runConsumerStaging(messages);
         if(exitCode != 0)
         {
             char buffer[128]= {0};
@@ -11427,7 +11429,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                         g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
                         //store the states into fs to be restored in the next run of this function
-                        runProducerStaging(msg);
+                        producer.runProducerStaging(msg);
                     }
                 }
             }

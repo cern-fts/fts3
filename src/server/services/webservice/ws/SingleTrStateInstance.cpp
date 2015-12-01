@@ -25,7 +25,7 @@
 #include "common/Exceptions.h"
 #include "config/ServerConfig.h"
 #include "common/Logger.h"
-#include "msg-bus/producer_consumer_common.h"
+#include "msg-bus/producer.h"
 
 using namespace db;
 using namespace fts3::common;
@@ -143,7 +143,8 @@ void SingleTrStateInstance::constructJSONMsg(const struct MessageState* state)
     if(json_message.str().length() < 3000)
         {
             g_strlcpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
-            runProducerMonitoring( message );
+            Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+            producer.runProducerMonitoring( message );
         }
     else
         {

@@ -50,7 +50,7 @@ public:
     static const std::string Program;
     static std::string prepareMetadataString(const std::string& text);
 
-    UrlCopyCmd(): IPv6Explicit(false) {}
+    UrlCopyCmd();
 
     std::string generateParameters(void);
 

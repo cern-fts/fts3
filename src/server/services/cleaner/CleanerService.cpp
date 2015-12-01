@@ -20,19 +20,13 @@
 
 #include "CleanerService.h"
 
-#include <ctime>
-
-#include <iostream>
-#include <utility>
-
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-
-#include "common/Logger.h"
-#include "CleanerService.h"
+#include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
 
 namespace fs = boost::filesystem;
+using fts3::config::ServerConfig;
+
 
 namespace fts3 {
 namespace server {
@@ -73,6 +67,8 @@ void CleanerService::runService()
 {
     int counter = 0;
 
+    std::string msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+
     while (!boost::this_thread::interruption_requested())
     {
         ++counter;
@@ -82,10 +78,10 @@ void CleanerService::runService()
             // Once a day remove left over spool files
             if(counter == 86400)
             {
-                removeOldFiles("/var/lib/fts3/monitoring/");
-                removeOldFiles("/var/lib/fts3/stalled/");
-                removeOldFiles("/var/lib/fts3/status/");
-                removeOldFiles("/var/lib/fts3/logs/");
+                removeOldFiles(msgDir + "/monitoring/");
+                removeOldFiles(msgDir + "/stalled/");
+                removeOldFiles(msgDir + "/status/");
+                removeOldFiles(msgDir + "/logs/");
 
                 // Reset
                 counter = 0;

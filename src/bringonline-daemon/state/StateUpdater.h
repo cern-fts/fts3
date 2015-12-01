@@ -31,9 +31,8 @@
 
 #include "db/generic/SingleDbInstance.h"
 #include "common/Logger.h"
-#include "msg-bus/producer_consumer_common.h"
-
-using namespace fts3::common; 
+#include "config/ServerConfig.h"
+#include "msg-bus/producer.h"
 
 
 /**
@@ -51,7 +50,8 @@ public:
 
     /// Constructor
     StateUpdater(const std::string &operation) :
-        db(*db::DBSingleton::instance().getDBObjectInstance()), operation(operation)
+        db(*db::DBSingleton::instance().getDBObjectInstance()), operation(operation),
+        producer(fts3::config::ServerConfig::instance().get<std::string>("MessagingDirectory"))
     {
     }
 
@@ -125,21 +125,18 @@ protected:
                 (db.*update_state)(tmp);
             }
             catch (std::exception& ex) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << fts3::common::commit;
                 recover(tmp);
             }
             catch(...) //use catch-all, the state must be recovered no matter what
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something went really bad, trying to recover!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something went really bad, trying to recover!" << fts3::common::commit;
                 recover(tmp);
             }
             tmp.clear();
         }
     }
 
-    /**
-     *
-     */
     void recover(const std::vector<MinFileStatus> &recover)
     {
         if (!recover.empty()) {
@@ -158,7 +155,7 @@ protected:
             g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
             //store the states into fs to be restored in the next run
-            runProducer(msg, operation);
+            producer.runProducer(msg, operation);
         }
     }
 
@@ -170,6 +167,8 @@ protected:
     GenericDbIfce& db;
     /// operation name ('_delete' or '_staging')
     const std::string operation;
+
+    Producer producer;
 };
 
 #endif // STATEUPDATER_H_
