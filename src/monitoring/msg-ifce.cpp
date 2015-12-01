@@ -23,7 +23,9 @@
 #include <fstream>
 #include "msg-ifce.h"
 #include "common/Logger.h"
+#include "config/ServerConfig.h"
 
+using fts3::config::ServerConfig;
 
 bool msg_ifce::instanceFlag = false;
 msg_ifce* msg_ifce::single = NULL;
@@ -437,7 +439,7 @@ std::string msg_ifce::SendTransferFinishMessage(const transfer_completed &tr_com
 bool msg_ifce::read_initial_config()
 {
     try {
-        bool fileIsOk = get_mon_cfg_file();
+        bool fileIsOk = get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
         if (!fileIsOk) {
             FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg cfg file, check file name and path");
             return false;

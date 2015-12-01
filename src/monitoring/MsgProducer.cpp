@@ -25,10 +25,13 @@
 #include "common/Logger.h"
 #include <sstream>
 
-#include "../config/ServerConfig.h"
+#include "config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
 #include "UtilityRoutines.h"
+
+using namespace fts3::config;
+
 
 // End-Of-Transmission character
 static const char EOT = 0x04;
@@ -90,7 +93,6 @@ MsgProducer::MsgProducer()
     producer_transfer_started = NULL;
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
-    fts3::config::ServerConfig::instance().read(0, NULL);
     FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
     readConfig();
     connected = false;
@@ -257,7 +259,7 @@ bool MsgProducer::getConnection()
 
 void MsgProducer::readConfig()
 {
-    bool fileExists = get_mon_cfg_file();
+    bool fileExists = get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
 
     if ((fileExists == false) || (false == getACTIVE())) {
         FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false");

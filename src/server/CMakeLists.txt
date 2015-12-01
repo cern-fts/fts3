@@ -62,7 +62,8 @@ list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
 
 add_library(fts_server_lib SHARED ${fts_server_lib_sources})
 target_link_libraries(fts_server_lib 
-	fts_server_gsoap_transfer 
+	fts_server_gsoap_transfer
+	fts_msg_bus
 	${GLIB2_LIBRARIES} 
 	gridsite
 	cgsi_plugin_voms_cpp

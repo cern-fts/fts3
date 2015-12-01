@@ -19,51 +19,41 @@
  */
 
 #include <sys/types.h>
-#include <dirent.h>
 #include <errno.h>
 #include <vector>
 #include <string>
 #include <iostream>
-#include <time.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <cstdlib>
-#include <string>
 #include <sstream>
-#include <iostream>
 #include <boost/lexical_cast.hpp>
+#include "common/UuidGenerator.h"
+#include "config/ServerConfig.h"
+
 #include "producer_consumer_common.h"
-#include "UuidGenerator.h"
-using namespace std;
 
 
+using fts3::config::ServerConfig;
 
-void getUniqueTempFileName(const std::string& basename,
-                           std::string& tempname)
+
+static std::string getUniqueTempFileName(const std::string &basedir)
 {
     std::string uuidGen = UuidGenerator::generateUUID();
     time_t tmCurrent = time(NULL);
     std::stringstream strmName;
-    strmName << basename << uuidGen << "_" << tmCurrent;
-    tempname = strmName.str();
+    strmName << basedir << uuidGen << "_" << tmCurrent;
+    return strmName.str();
 }
 
 
-std::string getNewMessageFile(const char* BASE_DIR)
+static std::string getNewMessageFile(const std::string &basedir)
 {
-    std::string basename(BASE_DIR);
-    std::string tempname;
-    getUniqueTempFileName(basename, tempname);
-    return tempname;
+    return getUniqueTempFileName(basedir);
 }
 
 
-int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR, const std::string & extension)
+static int writeMessage(const void *buffer, size_t bufsize, const std::string &basedir, const std::string &extension)
 {
-    std::string tempname = getNewMessageFile(BASE_DIR);
+    std::string tempname = getNewMessageFile(ServerConfig::instance().get<std::string>("MessagingDirectory") + basedir);
     if(tempname.length() <= 0)
         return -1;
     // Open
@@ -93,41 +83,41 @@ int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR, const
 }
 
 
-int runProducerMonitoring(message_monitoring &msg)
+int runProducerMonitoring(const MessageMonitoring &msg)
 {
-    return writeMessage(&msg, sizeof(message_monitoring), MONITORING_DIR, "_ready");
+    return writeMessage(&msg, sizeof(MessageMonitoring), "monitoring", "_ready");
 }
 
 
-int runProducerStatus(message &msg)
+int runProducerStatus(const Message &msg)
 {
-    return writeMessage(&msg, sizeof(message), STATUS_DIR, "_ready");
+    return writeMessage(&msg, sizeof(Message), "status", "_ready");
 }
 
 
-int runProducerStall(message_updater &msg)
+int runProducerStall(const MessageUpdater &msg)
 {
-    return writeMessage(&msg, sizeof(message_updater), STALLED_DIR, "_ready");
+    return writeMessage(&msg, sizeof(MessageUpdater), "stalled", "_ready");
 }
 
 
-int runProducerLog(message_log &msg)
+int runProducerLog(const MessageLog &msg)
 {
-    return writeMessage(&msg, sizeof(msg), LOG_DIR, "_ready");
+    return writeMessage(&msg, sizeof(msg), "logs", "_ready");
 }
 
-int runProducerDeletions(struct message_bringonline &msg)
+int runProducerDeletions(const struct MessageBringonline &msg)
 {
-    return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, "_delete");
+    return writeMessage(&msg, sizeof(msg), "status", "_delete");
 }
 
 
-int runProducerStaging(struct message_bringonline &msg)
+int runProducerStaging(const struct MessageBringonline &msg)
 {
-    return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, "_staging");
+    return writeMessage(&msg, sizeof(msg), "status", "_staging");
 }
 
-int runProducer(struct message_bringonline &msg, std::string const & operation)
+int runProducer(const struct MessageBringonline &msg, std::string const & operation)
 {
-    return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, operation);
+    return writeMessage(&msg, sizeof(msg), "status", operation);
 }

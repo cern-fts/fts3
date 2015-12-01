@@ -29,8 +29,6 @@
 #include <string>
 #include <vector>
 
-#include "common/definitions.h"
-
 #include "JobStatus.h"
 #include "common/JobParameterHandler.h"
 #include "FileTransferStatus.h"
@@ -55,6 +53,7 @@
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
 
+#include "msg-bus/messages.h"
 #include "profiler/Profiler.h"
 
 
@@ -408,7 +407,7 @@ public:
     /// Mark the files contained in 'messages' as stalled (FAILED)
     /// @param messages Only file_id, job_id and process_id from this is used
     /// @param diskFull Set to true if there are no messages because the disk is full
-    virtual bool markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull) = 0;
+    virtual bool markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull) = 0;
 
 
     /// Checks if the files that belong to jobId are in 'READY'
@@ -517,13 +516,13 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt) = 0;
 
-    virtual void updateProtocol(std::vector<struct message>& tempProtocol) = 0;
+    virtual void updateProtocol(std::vector<Message>& tempProtocol) = 0;
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs) = 0;
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) = 0;
 
-    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
+    virtual std::vector<struct MessageState> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
 
@@ -549,9 +548,9 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries) = 0;
 
-    virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages) = 0;
+    virtual void updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages) = 0;
 
-    virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog) = 0;
+    virtual void transferLogFileVector(std::map<int, struct MessageLog>& messagesLog) = 0;
 
     /**
      * Signals that the server is alive

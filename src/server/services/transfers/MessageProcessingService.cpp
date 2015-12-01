@@ -25,9 +25,9 @@
 #include "common/Exceptions.h"
 #include "config/ServerConfig.h"
 #include "common/Logger.h"
-#include "common/producer_consumer_common.h"
 #include "common/ThreadSafeList.h"
 #include "db/generic/SingleDbInstance.h"
+#include "msg-bus/producer_consumer_common.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
 
@@ -85,13 +85,10 @@ void MessageProcessingService::runService()
                 continue;
             }
 
-            if (!fs::is_empty(fs::path(STATUS_DIR)))
+            if (runConsumerStatus(messages) != 0)
             {
-                if (runConsumerStatus(messages) != 0)
-                {
-                    char buffer[128] = {0};
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                }
+                char buffer[128] = {0};
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
             }
 
             if (!messages.empty())
@@ -106,13 +103,10 @@ void MessageProcessingService::runService()
             }
 
             //update log file path
-            if (!fs::is_empty(fs::path(LOG_DIR)))
+            if (runConsumerLog(messagesLog) != 0)
             {
-                if (runConsumerLog(messagesLog) != 0)
-                {
-                    char buffer[128] = { 0 };
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                }
+                char buffer[128] = { 0 };
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
             }
 
             try
@@ -136,10 +130,10 @@ void MessageProcessingService::runService()
                 catch(...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 1" << commit;
-                    std::map<int, struct message_log>::const_iterator iterLogBreak;
+                    std::map<int, struct MessageLog>::const_iterator iterLogBreak;
                     for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                     {
-                        struct message_log msgLogBreak = (*iterLogBreak).second;
+                        struct MessageLog msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
                 }
@@ -156,10 +150,10 @@ void MessageProcessingService::runService()
                 catch(...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 3" << commit;
-                    std::map<int, struct message_log>::const_iterator iterLogBreak;
+                    std::map<int, struct MessageLog>::const_iterator iterLogBreak;
                     for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                     {
-                        struct message_log msgLogBreak = (*iterLogBreak).second;
+                        struct MessageLog msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
                 }
@@ -168,18 +162,15 @@ void MessageProcessingService::runService()
             //update heartbeat and progress vector
             try
             {
-                if (!fs::is_empty(fs::path(STALLED_DIR)))
+                if (runConsumerStall(messagesUpdater) != 0)
                 {
-                    if (runConsumerStall(messagesUpdater) != 0)
-                    {
-                        char buffer[128] = { 0 };
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                    }
+                    char buffer[128] = { 0 };
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                 }
 
                 if(!messagesUpdater.empty())
                 {
-                    std::vector<struct message_updater>::iterator iterUpdater;
+                    std::vector<struct MessageUpdater>::iterator iterUpdater;
                     for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
                     {
                         if (iterUpdater->msg_errno == 0)
@@ -254,17 +245,14 @@ void MessageProcessingService::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
 
-            std::vector<struct message>::const_iterator iterBreak;
-            for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+            for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
             {
-                struct message msgBreak = (*iterBreak);
-                runProducerStatus( msgBreak);
+                runProducerStatus(*iterBreak);
             }
 
-            std::map<int, struct message_log>::const_iterator iterLogBreak;
-            for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+            for (auto iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
             {
-                struct message_log msgLogBreak = (*iterLogBreak).second;
+                struct MessageLog msgLogBreak = (*iterLogBreak).second;
                 runProducerLog( msgLogBreak );
             }
         }
@@ -272,17 +260,15 @@ void MessageProcessingService::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << commit;
 
-            std::vector<struct message>::const_iterator iterBreak;
-            for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+            for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
             {
-                struct message msgBreak = (*iterBreak);
-                runProducerStatus( msgBreak);
+                runProducerStatus(*iterBreak);
             }
 
-            std::map<int, struct message_log>::const_iterator iterLogBreak;
+            std::map<int, struct MessageLog>::const_iterator iterLogBreak;
             for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
             {
-                struct message_log msgLogBreak = (*iterLogBreak).second;
+                struct MessageLog msgLogBreak = (*iterLogBreak).second;
                 runProducerLog( msgLogBreak );
             }
         }
@@ -290,17 +276,15 @@ void MessageProcessingService::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
 
-            std::vector<struct message>::const_iterator iterBreak;
-            for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+            for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
             {
-                struct message msgBreak = (*iterBreak);
-                runProducerStatus( msgBreak);
+                runProducerStatus(*iterBreak);
             }
 
-            std::map<int, struct message_log>::const_iterator iterLogBreak;
+            std::map<int, struct MessageLog>::const_iterator iterLogBreak;
             for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
             {
-                struct message_log msgLogBreak = (*iterLogBreak).second;
+                struct MessageLog msgLogBreak = (*iterLogBreak).second;
                 runProducerLog( msgLogBreak );
             }
         }
@@ -309,7 +293,7 @@ void MessageProcessingService::runService()
 }
 
 
-void MessageProcessingService::updateDatabase(const struct message& msg)
+void MessageProcessingService::updateDatabase(const struct Message& msg)
 {
     try
     {
@@ -392,39 +376,34 @@ void MessageProcessingService::updateDatabase(const struct message& msg)
     catch (std::exception& e)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-        struct message msgTemp = msg;
-        runProducerStatus( msgTemp);
+        runProducerStatus(msg);
     }
     catch (...)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-        struct message msgTemp = msg;
-        runProducerStatus( msgTemp);
+        runProducerStatus(msg);
     }
 }
 
 
-void MessageProcessingService::executeUpdate(const std::vector<struct message>& messages)
+void MessageProcessingService::executeUpdate(const std::vector<Message>& messages)
 {
-    std::vector<struct message>::const_iterator iter;
-    struct message_updater msgUpdater;
-    for (iter = messages.begin(); iter != messages.end(); ++iter)
+    struct MessageUpdater msgUpdater;
+    for (auto iter = messages.begin(); iter != messages.end(); ++iter)
     {
         try
         {
             if(boost::this_thread::interruption_requested())
             {
-                std::vector<struct message>::const_iterator iterBreak;
-                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
                 {
-                    struct message msgBreak = (*iterBreak);
-                    runProducerStatus( msgBreak);
+                    runProducerStatus(*iterBreak);
                 }
 
-                std::map<int, struct message_log>::const_iterator iterLogBreak;
+                std::map<int, struct MessageLog>::const_iterator iterLogBreak;
                 for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                 {
-                    struct message_log msgLogBreak = (*iterLogBreak).second;
+                    struct MessageLog msgLogBreak = (*iterLogBreak).second;
                     runProducerLog( msgLogBreak );
                 }
 

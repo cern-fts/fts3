@@ -20,13 +20,14 @@
 
 #include "FileTransferExecutor.h"
 
+#include "common/definitions.h"
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"
 #include "common/Uri.h"
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
 #include "db/generic/OptimizerSample.h"
-#include "common/producer_consumer_common.h"
+#include "msg-bus/producer_consumer_common.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"
@@ -281,7 +282,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     // Send current state
                     SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
-                    struct message_updater msg;
+                    struct MessageUpdater msg;
                     g_strlcpy(msg.job_id, std::string(tf.jobId).c_str(), sizeof(msg.job_id));
                     msg.file_id = tf.fileId;
                     msg.process_id = (int) pr.getPid();

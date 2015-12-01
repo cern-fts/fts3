@@ -58,7 +58,7 @@ std::string CancelerService::getServiceName()
 
 void CancelerService::markAsStalled()
 {
-    std::vector<struct message_updater> messages;
+    std::vector<struct MessageUpdater> messages;
     messages.reserve(500);
     ThreadSafeList::get_instance().checkExpiredMsg(messages);
     if (!messages.empty()) {

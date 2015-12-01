@@ -22,6 +22,7 @@
 
 #include "common/ConcurrentQueue.h"
 #include "common/DaemonTools.h"
+#include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 
@@ -35,7 +36,7 @@ using namespace fts3::config;
 
 static void DoServer(bool isDaemon) throw()
 {
-    if (!get_mon_cfg_file()) {
+    if (!get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"))) {
         FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the monitoring configuration file");
         return;
     }

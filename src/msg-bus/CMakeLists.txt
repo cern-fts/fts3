@@ -20,52 +20,32 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-# Find libuuid
-find_package(LibUuid REQUIRED)
+# Find boost
+find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package (GLIB2 REQUIRED)
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
-# Find boost
-find_package(Boost COMPONENTS regex iostreams system thread filesystem REQUIRED)
-
 # Sources
-file(GLOB fts_common_sources "*.cpp")
+file(GLOB msg_bus_sources "*.cpp")
 
-add_library(fts_common SHARED ${fts_common_sources})
-target_link_libraries(fts_common
+add_library(fts_msg_bus SHARED ${msg_bus_sources})
+target_link_libraries(fts_msg_bus
     ${Boost_LIBRARIES}
-    ${LIBUUID_LIBRARIES}
     ${GLIB2_LIBRARIES}
     -lpthread
 )
 
-set_target_properties(fts_common PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/common
+set_target_properties(fts_msg_bus PROPERTIES
     VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
     SOVERSION ${VERSION_MAJOR}
     CLEAN_DIRECT_OUTPUT 1
 )
 
-# Compile minimalistic static library to be used by url_copy
-# and the messaging library, to reduce the memory footprint of those
-add_library(fts_common_min STATIC
-    Logger.cpp
-    UserProxyEnv.cpp
-    DaemonTools.cpp
-)
-set_target_properties(fts_common_min PROPERTIES
-    COMPILE_FLAGS "-fPIC"
-)
-
-# Unit tests
-if(FTS3_COMPILE_WITH_UNITTEST)
-    find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-	target_link_libraries(fts_common ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
-endif()
 
 # Install only if we are building the server or the client
 # (Do not install if only building a database backend, for instance)
-if(SERVERBUILD OR CLIENTBUILD)
-    install(TARGETS fts_common
+if(SERVERBUILD)
+    install(TARGETS fts_msg_bus
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
     )

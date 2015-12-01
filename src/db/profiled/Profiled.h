@@ -89,7 +89,7 @@ public:
 
     bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
 
-    void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
+    void updateFileTransferProgressVector(std::vector<MessageUpdater>& messages);
 
     void cancelJob(const std::vector<std::string>& requestIDs);
 
@@ -146,7 +146,7 @@ public:
 
     void forkFailed(const std::string& jobId);
 
-    bool markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull);
+    bool markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull);
 
     void blacklistSe(const std::string& storage, const std::string& voName,
             const std::string& status, int timeout,
@@ -259,15 +259,15 @@ public:
 
     void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
 
-    void updateProtocol(std::vector<struct message>& tempProtocol);
+    void updateProtocol(std::vector<Message>& tempProtocol);
 
     void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 
     void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
+    void transferLogFileVector(std::map<int, struct MessageLog>& messagesLog);
 
-    std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
+    std::vector<struct MessageState> getStateOfTransfer(const std::string& jobId, int file_id);
 
     void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 

@@ -59,6 +59,7 @@ if(SERVERBUILD)
     add_subdirectory(dbClear)
     add_subdirectory(glue2-publisher)
     add_subdirectory(myosg-update)
+    add_subdirectory(msg-bus)
 
     if(PUGIXML_FOUND)
         add_subdirectory(bdii-cache-update)

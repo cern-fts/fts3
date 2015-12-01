@@ -24,21 +24,18 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <time.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <boost/filesystem.hpp>
 #include "producer_consumer_common.h"
-#include "definitions.h"
-#include <algorithm>
-#include <ctime>
+#include "config/ServerConfig.h"
 
-#include "Logger.h"
+using fts3::config::ServerConfig;
 
 
 struct sort_functor_updater
 {
-    bool operator()(const message_updater & a, const message_updater & b) const
+    bool operator()(const MessageUpdater & a, const MessageUpdater & b) const
     {
         return a.timestamp < b.timestamp;
     }
@@ -46,31 +43,26 @@ struct sort_functor_updater
 
 struct sort_functor_status
 {
-    bool operator()(const message & a, const message & b) const
+    bool operator()(const Message & a, const Message & b) const
     {
         return a.timestamp < b.timestamp;
     }
 };
 
 
-boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
-{
-    using boost::gregorian::date;
-    using boost::posix_time::ptime;
-    using boost::posix_time::microsec_clock;
-
-    static ptime const epoch(date(1970, 1, 1));
-    return (microsec_clock::universal_time() - epoch).total_milliseconds();
-}
-
-
 int getDir(const std::string &dir, std::vector<std::string> &files,
     const std::string &extension, unsigned limit)
 {
+    std::string fullPath = ServerConfig::instance().get<std::string>("MessagingDirectory") + dir;
+
+    if (boost::filesystem::is_empty(fullPath)) {
+        return 0;
+    }
+
     DIR *dp = NULL;
     struct dirent *dirp = NULL;
     struct stat st;
-    if ((dp = opendir(dir.c_str())) == NULL) {
+    if ((dp = opendir(fullPath.c_str())) == NULL) {
         return errno;
     }
 
@@ -91,18 +83,17 @@ int getDir(const std::string &dir, std::vector<std::string> &files,
 }
 
 
-int runConsumerMonitoring(std::vector<struct message_monitoring> &messages, unsigned limit)
+int runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages, unsigned limit)
 {
-    std::string dir = MONITORING_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "ready", limit) != 0)
+    if (getDir("monitoring", files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
-        struct message_monitoring msg;
+        struct MessageMonitoring msg;
         if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
             size_t readElements = fread(&msg, sizeof(msg), 1, fp);
             if (readElements == 0)
@@ -126,22 +117,21 @@ int runConsumerMonitoring(std::vector<struct message_monitoring> &messages, unsi
 }
 
 
-int runConsumerStatus(std::vector<struct message> &messages, unsigned limit)
+int runConsumerStatus(std::vector<struct Message> &messages, unsigned limit)
 {
-    std::string dir = STATUS_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "ready", limit) != 0)
+    if (getDir("status", files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
-        struct message msg;
+        struct Message msg;
         if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(message), 1, fp);
+            size_t readElements = fread(&msg, sizeof(Message), 1, fp);
             if (readElements == 0)
-                readElements = fread(&msg, sizeof(message), 1, fp);
+                readElements = fread(&msg, sizeof(Message), 1, fp);
 
             if (readElements == 1)
                 messages.push_back(msg);
@@ -161,22 +151,21 @@ int runConsumerStatus(std::vector<struct message> &messages, unsigned limit)
 }
 
 
-int runConsumerStall(std::vector<struct message_updater> &messages, unsigned limit)
+int runConsumerStall(std::vector<struct MessageUpdater> &messages, unsigned limit)
 {
-    std::string dir = STALLED_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "ready", limit) != 0)
+    if (getDir("stalled", files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
-        struct message_updater msg_local;
+        struct MessageUpdater msg_local;
         if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
+            size_t readElements = fread(&msg_local, sizeof(MessageUpdater), 1, fp);
             if (readElements == 0)
-                readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
+                readElements = fread(&msg_local, sizeof(MessageUpdater), 1, fp);
 
             if (readElements == 1)
                 messages.push_back(msg_local);
@@ -197,22 +186,21 @@ int runConsumerStall(std::vector<struct message_updater> &messages, unsigned lim
 }
 
 
-int runConsumerLog(std::map<int, struct message_log> &messages, unsigned limit)
+int runConsumerLog(std::map<int, struct MessageLog> &messages, unsigned limit)
 {
-    std::string dir = LOG_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "ready", limit) != 0)
+    if (getDir("logs", files, "ready", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
-        struct message_log msg;
+        struct MessageLog msg;
         if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(message_log), 1, fp);
+            size_t readElements = fread(&msg, sizeof(MessageLog), 1, fp);
             if (readElements == 0)
-                readElements = fread(&msg, sizeof(message_log), 1, fp);
+                readElements = fread(&msg, sizeof(MessageLog), 1, fp);
 
             if (readElements == 1)
                 messages[msg.file_id] = msg;
@@ -232,22 +220,21 @@ int runConsumerLog(std::map<int, struct message_log> &messages, unsigned limit)
 }
 
 
-int runConsumerDeletions(std::vector<struct message_bringonline> &messages, unsigned limit)
+int runConsumerDeletions(std::vector<struct MessageBringonline> &messages, unsigned limit)
 {
-    std::string dir = STATUS_DM_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "delete", limit) != 0)
+    if (getDir("status", files, "delete", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
-        struct message_bringonline msg;
+        struct MessageBringonline msg;
         if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+            size_t readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
             if (readElements == 0)
-                readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+                readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
 
             if (readElements == 1)
                 messages.push_back(msg);
@@ -267,22 +254,21 @@ int runConsumerDeletions(std::vector<struct message_bringonline> &messages, unsi
 }
 
 
-int runConsumerStaging(std::vector<struct message_bringonline> &messages, unsigned limit)
+int runConsumerStaging(std::vector<struct MessageBringonline> &messages, unsigned limit)
 {
-    std::string dir = STATUS_DM_DIR;
     std::vector<std::string> files;
     files.reserve(300);
 
-    if (getDir(dir, files, "staging", limit) != 0)
+    if (getDir("status", files, "staging", limit) != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++) {
         FILE *fp = NULL;
-        struct message_bringonline msg;
+        struct MessageBringonline msg;
         if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+            size_t readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
             if (readElements == 0)
-                readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+                readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
 
             if (readElements == 1)
                 messages.push_back(msg);

@@ -23,8 +23,6 @@
 #include <errno.h>
 #include <cctype> //for isdigit
 #include <sstream> //to phrase std::string
-#include <string>
-#include "common/Logger.h"
 #include <sys/stat.h>
 #include <algorithm>
 #include <string.h>
@@ -46,17 +44,22 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include "common/producer_consumer_common.h"
 #include <boost/lexical_cast.hpp>
 
+#include <string>
+#include <vector>
+
+#include "common/definitions.h"
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
+#include "common/Logger.h"
+#include "msg-bus/producer_consumer_common.h"
 #include "UtilityRoutines.h"
 
 #define MILLI 36000000
 
-const std::string CFG_FILE_NAME = "fts-msg-monitoring.conf";
-const std::string CFG_FILE_PATH = "/etc/fts3/";
+const std::string DATABASE_FILE_NAME = ".properties.xml";
+const std::string DATABASE_FILE_PATH = "/etc/glite-data-transfer-agents.d/";
 
 std::string BROKER;
 std::string START;
@@ -90,16 +93,6 @@ std::string strip_space(const std::string &s)
     while (ret.length() && (ret[ret.length() - 1] == ' ' || ret[ret.length() - 1] == '\t'))
         ret = ret.substr(0, ret.length() - 1);
     return ret;
-}
-
-
-std::string getMsgConfigFile()
-{
-    std::string filename = CFG_FILE_PATH + CFG_FILE_NAME;
-
-    if (access(filename.c_str(), F_OK) == 0)
-        return filename;
-    return std::string();
 }
 
 
@@ -176,7 +169,7 @@ bool getUSE_BROKER_CREDENTIALS()
 
 
 /// message broker config file
-bool get_mon_cfg_file()
+bool get_mon_cfg_file(const std::string &configFile)
 {
     std::map<std::string, std::string> cfg;
 
@@ -188,12 +181,10 @@ bool get_mon_cfg_file()
     std::string filename;
 
     try {
-        filename = getMsgConfigFile();
-        if (filename.length() == 0)
+        if (configFile.length() == 0)
             return false;
 
-        std::string ifname(filename);
-        std::ifstream in(ifname.c_str());
+        std::ifstream in(configFile);
         if (!in) {
             FTS3_COMMON_LOGGER_LOG(CRIT, "msg config file cannot be read, check location and permissions");
             return false;
@@ -349,7 +340,7 @@ std::string ReplaceNonPrintableCharacters(std::string s)
 
 std::string restoreMessageToDisk(std::string & text)
 {
-    struct message_monitoring message;
+    struct MessageMonitoring message;
     g_strlcpy(message.msg, text.c_str(), sizeof(message.msg));
     message.timestamp = milliseconds_since_epoch();
     int returnValue = runProducerMonitoring(message);

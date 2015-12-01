@@ -29,7 +29,7 @@
 #include <time.h>
 
 #include "config/ServerConfig.h"
-#include "common/producer_consumer_common.h"
+#include "msg-bus/producer_consumer_common.h"
 #include "GenericDbIfce.h"
 
 using namespace fts3::config;
@@ -160,7 +160,7 @@ inline int extractTimeout(std::string & str)
 }
 
 
-static inline void constructJSONMsg(struct message_state* state)
+static inline void constructJSONMsg(struct MessageState* state)
 {
     bool monitoringMessages = true;
     std::string monitoringMessagesStr = ServerConfig::instance().get<std::string > ("MonitoringMessaging");
@@ -199,12 +199,12 @@ static inline void constructJSONMsg(struct message_state* state)
     json_message << "\"timestamp\":" << "\"" << state->timestamp << "\"";
     json_message << "}";
 
-    struct message_monitoring message;
+    struct MessageMonitoring message;
 
     if(json_message.str().length() < 3000)
         {
             g_strlcpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
-            runProducerMonitoring( message );
+            runProducerMonitoring(message);
         }
 }
 

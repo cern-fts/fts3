@@ -746,12 +746,12 @@ int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllRe
             std::vector<std::string>::const_iterator i;
             for (i = canceledJobs.begin(); i != canceledJobs.end(); ++i)
                 {
-                    std::vector<struct message_state> states;
+                    std::vector<struct MessageState> states;
                     states = DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(*i, -1);
 
                     resp._fileCount += states.size();
 
-                    std::vector<struct message_state>::const_iterator j;
+                    std::vector<struct MessageState>::const_iterator j;
                     for (j = states.begin(); j != states.end(); ++j)
                         {
                             fts3::server::SingleTrStateInstance::instance().constructJSONMsg(&(*j));

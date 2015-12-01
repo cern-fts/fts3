@@ -36,7 +36,7 @@
 
 #include <boost/thread/recursive_mutex.hpp>
 
-#include "common/definitions.h"
+#include "msg-bus/messages.h"
 
 
 class Reporter
@@ -79,9 +79,9 @@ public:
     }
 
 private:
-    struct message         msg;
-    struct message_updater msg_updater;
-    struct message_log     msg_log;
+    struct Message         msg;
+    struct MessageUpdater msg_updater;
+    struct MessageLog     msg_log;
     std::string            hostname;
 
 

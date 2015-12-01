@@ -57,6 +57,7 @@ target_link_libraries(fts_msg_bulk
     ${ACTIVEMQCPP_LIBRARIES}
     fts_common
     fts_config
+	fts_msg_bus
     rt
     ${Boost_LIBRARIES}
     ${JSONC_LIBRARIES}

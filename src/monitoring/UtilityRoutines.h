@@ -51,7 +51,7 @@ inline std::string getTimestampStr()
 /*
 message broker config file, retrieve info and store in STL map
  */
-bool get_mon_cfg_file();
+bool get_mon_cfg_file(const std::string &configFile);
 
 /*get the values from the config file to getter functions*/
 std::string getBROKER();

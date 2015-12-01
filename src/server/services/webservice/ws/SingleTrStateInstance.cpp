@@ -19,14 +19,13 @@
  */
 
 #include "SingleTrStateInstance.h"
-#include "common/producer_consumer_common.h"
 #include "db/generic/SingleDbInstance.h"
 #include <sstream>
 
 #include "common/Exceptions.h"
 #include "config/ServerConfig.h"
 #include "common/Logger.h"
-
+#include "msg-bus/producer_consumer_common.h"
 
 using namespace db;
 using namespace fts3::common;
@@ -60,18 +59,18 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
     if(!monitoringMessages)
         return;
 
-    std::vector<struct message_state> files;
+    std::vector<struct MessageState> files;
     try
         {
             if(fileId != -1)  //both job_id and file_id are provided
                 {
-                    files  = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
+                    files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
                     if(!files.empty())
                         {
-                            std::vector<struct message_state>::iterator it;
+                            std::vector<struct MessageState>::iterator it;
                             for (it = files.begin(); it != files.end(); ++it)
                                 {
-                                    struct message_state tmp = (*it);
+                                    struct MessageState tmp = (*it);
                                     constructJSONMsg(&tmp);
                                 }
                         }
@@ -81,10 +80,10 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
                     files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, -1);
                     if(!files.empty())
                         {
-                            std::vector<struct message_state>::iterator it;
+                            std::vector<struct MessageState>::iterator it;
                             for (it = files.begin(); it != files.end(); ++it)
                                 {
-                                    struct message_state tmp = (*it);
+                                    struct MessageState tmp = (*it);
                                     constructJSONMsg(&tmp);
                                 }
                         }
@@ -105,7 +104,7 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
 }
 
 
-void SingleTrStateInstance::constructJSONMsg(const struct message_state* state)
+void SingleTrStateInstance::constructJSONMsg(const struct MessageState* state)
 {
 
     if(!monitoringMessages)
@@ -139,7 +138,7 @@ void SingleTrStateInstance::constructJSONMsg(const struct message_state* state)
     json_message << "\"timestamp\":" << "\"" << state->timestamp << "\"";
     json_message << "}";
 
-    struct message_monitoring message;
+    struct MessageMonitoring message;
 
     if(json_message.str().length() < 3000)
         {

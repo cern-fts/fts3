@@ -21,6 +21,7 @@
 #pragma once
 
 #include <sys/types.h>
+#include <string>
 
 /**
  * Return true if the error is considered recoverable

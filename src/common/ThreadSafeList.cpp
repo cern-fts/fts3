@@ -22,6 +22,7 @@
 #include <time.h>
 #include <ctime>
 
+#include "definitions.h"
 #include "ThreadSafeList.h"
 
 
@@ -35,15 +36,15 @@ ThreadSafeList::~ThreadSafeList()
 }
 
 
-std::list<struct message_updater> ThreadSafeList::getList()
+std::list<struct MessageUpdater> ThreadSafeList::getList()
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<struct message_updater> tempList = m_list;
+    std::list<struct MessageUpdater> tempList = m_list;
     return tempList;
 }
 
 
-void ThreadSafeList::push_back(message_updater &msg)
+void ThreadSafeList::push_back(MessageUpdater &msg)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
     m_list.push_back(msg);
@@ -57,10 +58,10 @@ void ThreadSafeList::clear()
 }
 
 
-void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater> &messages)
+void ThreadSafeList::checkExpiredMsg(std::vector<struct MessageUpdater> &messages)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<struct message_updater>::iterator iter;
+    std::list<struct MessageUpdater>::iterator iter;
     boost::posix_time::time_duration::tick_type timestamp1;
     boost::posix_time::time_duration::tick_type timestamp2;
     boost::posix_time::time_duration::tick_type n_seconds = 0;
@@ -76,10 +77,10 @@ void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater> &messag
 }
 
 
-void ThreadSafeList::updateMsg(message_updater &msg)
+void ThreadSafeList::updateMsg(MessageUpdater &msg)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<struct message_updater>::iterator iter;
+    std::list<struct MessageUpdater>::iterator iter;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
         if (msg.file_id == iter->file_id &&
             std::string(msg.job_id).compare(std::string(iter->job_id)) == 0 &&
@@ -91,11 +92,11 @@ void ThreadSafeList::updateMsg(message_updater &msg)
 }
 
 
-void ThreadSafeList::deleteMsg(std::vector<struct message_updater> &messages)
+void ThreadSafeList::deleteMsg(std::vector<struct MessageUpdater> &messages)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<struct message_updater>::iterator i = m_list.begin();
-    for (std::vector<struct message_updater>::iterator iter = messages.begin(); iter != messages.end(); ++iter) {
+    std::list<struct MessageUpdater>::iterator i = m_list.begin();
+    for (std::vector<struct MessageUpdater>::iterator iter = messages.begin(); iter != messages.end(); ++iter) {
         i = m_list.begin();
         while (i != m_list.end()) {
             if ((*iter).file_id == i->file_id && std::string((*iter).job_id).compare(std::string(i->job_id)) == 0) {
@@ -112,7 +113,7 @@ void ThreadSafeList::deleteMsg(std::vector<struct message_updater> &messages)
 void ThreadSafeList::removeFinishedTr(std::string job_id, int file_id)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<struct message_updater>::iterator i = m_list.begin();
+    std::list<struct MessageUpdater>::iterator i = m_list.begin();
     while (i != m_list.end()) {
         if (file_id == i->file_id &&
             job_id.compare(std::string(i->job_id)) == 0) {

@@ -22,14 +22,15 @@
 
 #include <fstream>
 
+#include "common/definitions.h"
 #include "common/Logger.h"
-#include "common/producer_consumer_common.h"
 #include "common/ThreadSafeList.h"
 #include "cred/DelegCred.h"
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
+#include "msg-bus/producer_consumer_common.h"
 #include "server/DrainMode.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
@@ -354,7 +355,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     std::map<int, std::string>::const_iterator iterFileIds;
     for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
     {
-        struct message_updater msg2;
+        struct MessageUpdater msg2;
         if (std::string(job_id).length() <= 37)
         {
             g_strlcpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));

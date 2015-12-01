@@ -24,7 +24,7 @@
 
 #include <vector>
 
-#include "common/definitions.h"
+#include "msg-bus/messages.h"
 #include "../BaseService.h"
 
 namespace fts3 {
@@ -34,10 +34,10 @@ namespace server {
 class MessageProcessingService: public BaseService
 {
 private:
-    std::vector<struct message> messages;
+    std::vector<struct Message> messages;
     std::string enableOptimization;
-    std::map<int, struct message_log> messagesLog;
-    std::vector<struct message_updater> messagesUpdater;
+    std::map<int, struct MessageLog> messagesLog;
+    std::vector<struct MessageUpdater> messagesUpdater;
 
 public:
 
@@ -51,8 +51,8 @@ public:
     virtual void runService();
 
 private:
-    void updateDatabase(const struct message& msg);
-    void executeUpdate(const std::vector<struct message>& messages);
+    void updateDatabase(const struct Message& msg);
+    void executeUpdate(const std::vector<struct Message>& messages);
 };
 
 } // end namespace server

@@ -20,8 +20,9 @@
 
 #include "reporter.h"
 #include "boost/date_time/gregorian/gregorian.hpp"
-#include "common/producer_consumer_common.h"
+#include "common/definitions.h"
 #include "common/Uri.h"
+#include "msg-bus/producer_consumer_common.h"
 
 using namespace std;
 
@@ -29,9 +30,9 @@ using namespace std;
 Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     isTerminalSent(false), multiple(false)
 {
-    memset(&msg, 0, sizeof(message));
-    memset(&msg_updater, 0, sizeof(message_updater));
-    memset(&msg_log, 0, sizeof(message_log));
+    memset(&msg, 0, sizeof(Message));
+    memset(&msg_updater, 0, sizeof(MessageUpdater));
+    memset(&msg_log, 0, sizeof(MessageLog));
 
     hostname = fts3::common::getFullHostname();
 }

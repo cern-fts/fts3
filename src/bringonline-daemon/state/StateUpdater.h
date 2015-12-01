@@ -31,7 +31,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 #include "common/Logger.h"
-#include "common/producer_consumer_common.h"
+#include "msg-bus/producer_consumer_common.h"
 
 using namespace fts3::common; 
 
@@ -149,7 +149,7 @@ protected:
             updates.insert(updates.end(), recover.begin(), recover.end());
         }
 
-        message_bringonline msg;
+        MessageBringonline msg;
         for (auto itFind = recover.begin(); itFind != recover.end(); ++itFind)
         {
             msg.file_id = itFind->fileId;

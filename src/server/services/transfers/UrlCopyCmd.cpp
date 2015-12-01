@@ -23,6 +23,7 @@
  */
 
 #include "UrlCopyCmd.h"
+#include "common/definitions.h"
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace fts3::server;

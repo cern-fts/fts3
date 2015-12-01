@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <cstring>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
 #include "common/definitions.h"
@@ -189,7 +190,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                     checksumValue = optarg;
                     break;
                 case 'A':
-                    if (strcmp("relaxed", optarg) == 0 || strcmp("r", optarg) == 0)
+                    if (strncmp("relaxed", optarg, 7) == 0 || strncmp("r", optarg, 1) == 0)
                         compareChecksum = CHECKSUM_RELAXED;
                     else
                         compareChecksum = CHECKSUM_STRICT;

@@ -19,30 +19,12 @@
  */
 
 #pragma once
+#ifndef PRODUCERCONSUMERCOMMON_H
+#define PRODUCERCONSUMERCOMMON_H
 
-#include <iostream>
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-#include <vector>
-#include <map>
-#include <string>
-#include <iostream>
-#include <time.h>
-#include <stdio.h>
-#include <string>
-#include <sys/stat.h>
-#include "definitions.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/types.h>
+#include "messages.h"
 
-#define STALLED_DIR "/var/lib/fts3/stalled/"
-#define MONITORING_DIR "/var/lib/fts3/monitoring/"
-#define STATUS_DIR "/var/lib/fts3/status/"
-#define LOG_DIR "/var/lib/fts3/logs/"
-#define STATUS_DM_DIR "/var/lib/fts3/status/"
+
 #define DEFAULT_LIMIT 10000
 
 int getDir(const std::string& dir, std::vector<std::string> &files,
@@ -53,42 +35,42 @@ void getUniqueTempFileName(const std::string& basename, std::string& tempname);
 void mktempfile(const std::string& basename, std::string& tempname);
 
 //for monitoring
-int runConsumerMonitoring(std::vector<struct message_monitoring>& messages,
+int runConsumerMonitoring(std::vector<struct MessageMonitoring>& messages,
         unsigned limit=DEFAULT_LIMIT);
 
-int runProducerMonitoring(struct message_monitoring &msg);
+int runProducerMonitoring(const struct MessageMonitoring &msg);
 
 
 //for receiving the status from url_copy
-int runConsumerStatus(std::vector<struct message>& messages,
+int runConsumerStatus(std::vector<struct Message>& messages,
         unsigned limit=DEFAULT_LIMIT);
 
-int runProducerStatus(struct message &msg);
+int runProducerStatus(const struct Message &msg);
 
 
 //for checking is the process is stalled
-int runConsumerStall(std::vector<struct message_updater>& messages,
+int runConsumerStall(std::vector<struct MessageUpdater>& messages,
         unsigned limit = DEFAULT_LIMIT);
 
-int runProducerStall(struct message_updater &msg);
+int runProducerStall(const struct MessageUpdater &msg);
 
 
 //for checking the log file path
-int runConsumerLog(std::map<int, struct message_log>& messages, unsigned limit =
+int runConsumerLog(std::map<int, struct MessageLog>& messages, unsigned limit =
         DEFAULT_LIMIT);
 
-int runProducerLog(struct message_log &msg);
+int runProducerLog(const struct MessageLog &msg);
 
 //for staging and deletion recovery
-int runConsumerDeletions(std::vector<struct message_bringonline>& messages,
+int runConsumerDeletions(std::vector<struct MessageBringonline>& messages,
         unsigned limit = DEFAULT_LIMIT);
-int runProducerDeletions(struct message_bringonline &msg);
+int runProducerDeletions(const struct MessageBringonline &msg);
 
-int runConsumerStaging(std::vector<struct message_bringonline>& messages,
+int runConsumerStaging(std::vector<struct MessageBringonline>& messages,
         unsigned limit = DEFAULT_LIMIT);
-int runProducerStaging(struct message_bringonline &msg);
+int runProducerStaging(const struct MessageBringonline &msg);
 
-int runProducer(struct message_bringonline &msg, std::string const & operation);
+int runProducer(const struct MessageBringonline &msg, std::string const & operation);
 
 
-boost::posix_time::time_duration::tick_type milliseconds_since_epoch();
+#endif // PRODUCERCONSUMERCOMMON_H

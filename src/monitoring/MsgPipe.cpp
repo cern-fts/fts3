@@ -32,9 +32,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "common/definitions.h"
 #include "common/Logger.h"
 #include "common/ConcurrentQueue.h"
+#include "msg-bus/producer_consumer_common.h"
 #include "UtilityRoutines.h"
 
 extern bool stopThreads;
@@ -83,17 +83,11 @@ MsgPipe::~MsgPipe()
 
 void MsgPipe::run()
 {
-    std::vector<struct message_monitoring> messages;
-    std::vector<struct message_monitoring>::const_iterator iter;
+    std::vector<struct MessageMonitoring> messages;
+    std::vector<struct MessageMonitoring>::const_iterator iter;
 
     while (stopThreads == false) {
         try {
-
-            if (fs::is_empty(fs::path(MONITORING_DIR))) {
-                sleep(1);
-                continue;
-            }
-
             int returnValue = runConsumerMonitoring(messages);
             if (returnValue != 0) {
                 std::ostringstream errorMessage;
@@ -107,19 +101,17 @@ void MsgPipe::run()
                 }
                 messages.clear();
             }
-            sleep(1);
         }
         catch (const fs::filesystem_error &ex) {
             FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
             cleanup();
-            sleep(1);
         }
         catch (...) {
             FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
             cleanup();
-            sleep(1);
-                }
         }
+        sleep(1);
+    }
 }
 
 

@@ -25,8 +25,7 @@
 #include <vector>
 #include <string>
 #include <boost/thread.hpp>
-#include "definitions.h"
-#include "producer_consumer_common.h"
+#include "msg-bus/messages.h"
 
 
 class ThreadSafeList
@@ -41,16 +40,16 @@ public:
     ThreadSafeList();
     ~ThreadSafeList();
 
-    std::list<struct message_updater> getList();
-    void push_back(message_updater &msg);
+    std::list<struct MessageUpdater> getList();
+    void push_back(MessageUpdater &msg);
     void clear();
-    void updateMsg(message_updater &msg);
-    void checkExpiredMsg(std::vector<struct message_updater>& messages);
-    void deleteMsg(std::vector<struct message_updater>& messages);
+    void updateMsg(MessageUpdater &msg);
+    void checkExpiredMsg(std::vector<struct MessageUpdater>& messages);
+    void deleteMsg(std::vector<struct MessageUpdater>& messages);
     void removeFinishedTr(std::string job_id, int file_id);
 
 private:
-    std::list<struct message_updater> m_list;
+    std::list<struct MessageUpdater> m_list;
     mutable boost::recursive_mutex _mutex;
 };
 

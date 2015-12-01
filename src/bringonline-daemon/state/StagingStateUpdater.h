@@ -29,7 +29,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 #include "common/Logger.h"
-#include "common/producer_consumer_common.h"
 
 #include "StateUpdater.h"
 

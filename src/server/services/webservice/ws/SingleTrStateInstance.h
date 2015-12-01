@@ -20,10 +20,11 @@
 
 #pragma once
 
-#include "common/definitions.h"
-
 #include <string>
 #include <boost/thread/mutex.hpp>
+
+#include "msg-bus/messages.h"
+
 
 namespace fts3 {
 namespace server {
@@ -54,7 +55,7 @@ public:
 
     void sendStateMessage(const std::string& jobId, int fileId);
 
-    void constructJSONMsg(const struct message_state* state);
+    void constructJSONMsg(const struct MessageState* state);
 
 private:
     SingleTrStateInstance(); // Private so that it can  not be called

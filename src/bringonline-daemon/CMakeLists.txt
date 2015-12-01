@@ -44,6 +44,7 @@ target_link_libraries(fts_bringonline
     fts_db_generic
     fts_config
     fts_common
+	fts_msg_bus
     fts_proxy
 )
 

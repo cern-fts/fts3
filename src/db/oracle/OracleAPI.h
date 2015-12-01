@@ -34,7 +34,7 @@ public:
     class CleanUpSanityChecks
     {
     public:
-        CleanUpSanityChecks(OracleAPI* instanceLocal, soci::session& sql, struct message_sanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
+        CleanUpSanityChecks(OracleAPI* instanceLocal, soci::session& sql, struct MessageSanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
         {
             returnValue = instanceLocal->assignSanityRuns(sql, msg);
         }
@@ -51,7 +51,7 @@ public:
 
         OracleAPI* instanceLocal;
         soci::session& sql;
-        struct message_sanity &msg;
+        struct MessageSanity &msg;
         bool returnValue;
     };
 
@@ -177,7 +177,7 @@ public:
 
     virtual void forkFailed(const std::string& jobId);
 
-    virtual bool markAsStalled(const std::vector<struct message_updater>& messages, bool diskFull);
+    virtual bool markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull);
 
     virtual void blacklistSe(const std::string& storage, const std::string& voName,
             const std::string& status, int timeout, const std::string& msg, const std::string& adminDn);
@@ -288,13 +288,13 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
 
-    virtual void updateProtocol(std::vector<struct message>& tempProtocol);
+    virtual void updateProtocol(std::vector<Message>& tempProtocol);
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
+    virtual std::vector<struct MessageState> getStateOfTransfer(const std::string& jobId, int file_id);
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 
@@ -320,9 +320,9 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
 
-    bool assignSanityRuns(soci::session& sql, struct message_sanity &msg);
+    bool assignSanityRuns(soci::session& sql, struct MessageSanity &msg);
 
-    void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
+    void resetSanityRuns(soci::session& sql, struct MessageSanity &msg);
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
@@ -334,9 +334,9 @@ public:
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities);
 
-    virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
+    virtual void updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages);
 
-    virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
+    virtual void transferLogFileVector(std::map<int, struct MessageLog>& messagesLog);
 
     unsigned int updateFileStatusReuse(TransferFile const & file, const std::string status);
 
@@ -445,14 +445,14 @@ private:
 
     void getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname);
 
-    std::vector<struct message_state> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
+    std::vector<struct MessageState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
                                          const struct message_bringonline& msg);
 
     int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
 
-    std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
+    std::vector<struct MessageState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
     bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
                              const std::string& cloud_name, OAuth& oauth);
