@@ -137,8 +137,12 @@ bool binaryExists(const std::string& name, std::string* fullPath)
 }
 
 
-void dropPrivileges(const std::string& user, const std::string& group)
+bool dropPrivileges(const std::string& user, const std::string& group)
 {
+    if (geteuid() != 0 || getegid() != 0) {
+        return false;
+    }
+
     uid_t uid = getUserUid(user);
     gid_t gid = getGroupGid(group);
 
@@ -150,6 +154,8 @@ void dropPrivileges(const std::string& user, const std::string& group)
         throw SystemError("Could not change the UID");
     if (seteuid(uid) < 0)
         throw SystemError("Could not change the effective UID");
+
+    return true;
 }
 
 

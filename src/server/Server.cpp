@@ -60,8 +60,9 @@ void Server::start()
     }
 
     // Give cleaner and heartbeat some time ahead
-    if (!config::ServerConfig::instance().get<bool> ("rush"))
+    if (!config::ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(8));
+    }
 
     services.emplace_back(new CancelerService);
     systemThreads.create_thread(boost::ref(*services.back().get()));
@@ -82,11 +83,17 @@ void Server::start()
     services.emplace_back(new MultihopTransfersService);
     systemThreads.create_thread(boost::ref(*services.back().get()));
 
-    unsigned int port = config::ServerConfig::instance().get<unsigned int>("Port");
-    const std::string& ip = config::ServerConfig::instance().get<std::string>("IP");
+    if (!config::ServerConfig::instance().get<bool>("WithoutSoap")) {
+        unsigned int port = config::ServerConfig::instance().get < unsigned
+        int > ("Port");
+        const std::string &ip = config::ServerConfig::instance().get<std::string>("IP");
 
-    services.emplace_back(new WebService(port, ip));
-    systemThreads.create_thread(boost::ref(*services.back().get()));
+        services.emplace_back(new WebService(port, ip));
+        systemThreads.create_thread(boost::ref(*services.back().get()));
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SOAP interface disabled" << fts3::common::commit;
+    }
 }
 
 

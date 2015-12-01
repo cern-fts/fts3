@@ -145,8 +145,9 @@ static void spawnServer(int argc, char** argv)
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
 
-    dropPrivileges(user, group);
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
+    if (dropPrivileges(user, group)) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
+    }
 
     runEnvironmentChecks();
 

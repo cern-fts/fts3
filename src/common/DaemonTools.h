@@ -48,7 +48,8 @@ bool binaryExists(const std::string& name, std::string* fullPath);
 /// Throws SystemError on error
 /// @param user  User name
 /// @param group Group name
-void dropPrivileges(const std::string& user, const std::string& group);
+/// @return true if the uid and gid were changed. false if already running as unprivileged (non root)
+bool dropPrivileges(const std::string& user, const std::string& group);
 
 } // namespace common
 } // namespace fts3

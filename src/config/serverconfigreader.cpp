@@ -227,6 +227,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["LogLevel"]) )->default_value("DEBUG"),
         "Logging level"
     )
+    (
+        "WithoutSoap",
+        po::value<std::string>( &(_vars["WithoutSoap"]) )->default_value("false"),
+        "Disable SOAP interface"
+    )
     ;
 
     return config;

@@ -217,8 +217,12 @@ static void runEnvironmentChecks()
     std::string logsDir = ServerConfig::instance().get<std::string > ("ServerLogDirectory");
 
     checkPath("/etc/fts3", R_OK, fs::directory_file);
-    checkPath(HOST_CERT, R_OK, fs::regular_file);
-    checkPath(HOST_KEY, R_OK, fs::regular_file);
+
+    if (!fts3::config::ServerConfig::instance().get<bool>("WithoutSoap")) {
+        checkPath(HOST_CERT, R_OK, fs::regular_file);
+        checkPath(HOST_KEY, R_OK, fs::regular_file);
+    }
+
     checkPath(CONFIG_FILE, R_OK, fs::regular_file);
     checkPath(logsDir, R_OK, fs::directory_file);
     checkPath("/var/lib/fts3", R_OK | W_OK, fs::directory_file);
@@ -242,8 +246,9 @@ static void spawnServer(int argc, char** argv)
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
 
-    dropPrivileges(user, group);
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)<< "Changed running user and group to " << user << ":" << group << commit;
+    if (dropPrivileges(user, group)) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
+    }
 
     runEnvironmentChecks();
 
