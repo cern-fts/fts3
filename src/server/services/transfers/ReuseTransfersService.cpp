@@ -192,6 +192,10 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     GenericDbIfce *db = DBSingleton::instance().getDBObjectInstance();
     UrlCopyCmd cmd_builder;
 
+    // Set log directory
+    std::string logsDir = ServerConfig::instance().get<std::string>("TransferLogDirectory");;
+    cmd_builder.setLogDir(logsDir);
+
     // Set parameters from the "representative", without using the source and destination url, and other data
     // that is per transfer
     TransferFile const & representative = files.front();
