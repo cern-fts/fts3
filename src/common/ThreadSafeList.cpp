@@ -115,8 +115,7 @@ void ThreadSafeList::removeFinishedTr(std::string job_id, int file_id)
     boost::recursive_mutex::scoped_lock lock(_mutex);
     std::list<struct MessageUpdater>::iterator i = m_list.begin();
     while (i != m_list.end()) {
-        if (file_id == i->file_id &&
-            job_id.compare(std::string(i->job_id)) == 0) {
+        if (file_id == i->file_id && job_id == std::string(i->job_id)) {
             m_list.erase(i++);
         }
         else {
