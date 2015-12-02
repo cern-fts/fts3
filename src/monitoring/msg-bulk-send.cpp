@@ -102,8 +102,8 @@ static void spawnServer(int argc, char **argv)
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
     }
 
-    //if any param is provided stay attached to terminal
-    if (argc <= 1) {
+    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
+    if (isDaemon) {
         int d = daemon(0, 0);
         if (d < 0) {
             throw SystemError("Can't set daemon");
