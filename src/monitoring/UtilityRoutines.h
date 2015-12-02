@@ -72,7 +72,7 @@ int GetIntVal(std::string strConvert);
 
 
 /*remove any non-ascii characters from a string*/
-std::string ReplaceNonPrintableCharacters(std::string s);
+std::string ReplaceNonPrintableCharacters(const std::string &s);
 
 int restoreMessageToDisk(Producer &producer, const std::string &text);
 

@@ -316,25 +316,20 @@ int GetIntVal(std::string strConvert)
 }
 
 
-std::string ReplaceNonPrintableCharacters(std::string s)
+std::string ReplaceNonPrintableCharacters(const std::string &s)
 {
-    try {
-        std::string result;
-        for (size_t i = 0; i < s.length(); i++) {
-            char c = s[i];
-            int AsciiValue = static_cast<int> (c);
-            if (AsciiValue < 32 || AsciiValue > 127) {
-                result.append(" ");
-            }
-            else {
-                result += s.at(i);
-            }
+    std::string result;
+    for (size_t i = 0; i < s.length(); i++) {
+        char c = s[i];
+        int AsciiValue = static_cast<int> (c);
+        if (AsciiValue < 32 || AsciiValue > 127) {
+            result.append(" ");
         }
-        return result;
+        else {
+            result += s.at(i);
+        }
     }
-    catch (...) {
-        return s;
-    }
+    return result;
 }
 
 

@@ -225,8 +225,8 @@ void taskTimerCanceler()
 }
 
 
-void abnormalTermination(Reporter &reporter, std::string classification, const std::string &finalState,
-    bool exit=true)
+void abnormalTermination(Reporter &reporter, std::string classification, const std::string&,
+    const std::string &finalState, bool exit=true)
 {
     terminalState = true;
 
@@ -408,7 +408,7 @@ void shutdown_callback(int signum, void *reporterPtr)
             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Stacktrace: " << stackTrace << commit;
 
             errorMessage = "Transfer process died with: " + stackTrace;
-            abnormalTermination(*reporter, "FAILED", errorMessage, false);
+            abnormalTermination(*reporter, "FAILED", errorMessage, "Error", false);
         }
     }
     else if (signum == SIGINT || signum == SIGTERM) {
@@ -416,7 +416,7 @@ void shutdown_callback(int signum, void *reporterPtr)
             propagated = true;
             errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
-            abnormalTermination(*reporter, "CANCELED", errorMessage, true);
+            abnormalTermination(*reporter, "CANCELED", errorMessage, "Abort", true);
         }
     }
     else if (signum == SIGUSR1) {
@@ -424,7 +424,7 @@ void shutdown_callback(int signum, void *reporterPtr)
             propagated = true;
             errorMessage = "TRANSFER " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
-            abnormalTermination(*reporter, "FAILED", errorMessage, true);
+            abnormalTermination(*reporter, "FAILED", errorMessage, "Abort", true);
         }
     }
     else {
@@ -434,7 +434,7 @@ void shutdown_callback(int signum, void *reporterPtr)
                 "TRANSFER " + currentTransfer.jobId + " aborted, check log file for details, received signum " +
                 boost::lexical_cast<std::string>(signum);
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << errorMessage << commit;
-            abnormalTermination(*reporter, "FAILED", errorMessage, false);
+            abnormalTermination(*reporter, "FAILED", errorMessage, "Abort", false);
         }
     }
 }
@@ -601,7 +601,7 @@ int main(int argc, char **argv)
         file_id = opts.fileId;
 
     // register signals handler
-    fts3::common::panic::setup_signal_handlers(shutdown_callback, NULL);
+    fts3::common::panic::setup_signal_handlers(shutdown_callback, &reporter);
 
     fileManagement.init(opts.logDir);
 
@@ -611,7 +611,7 @@ int main(int argc, char **argv)
 
     if (argc < 4) {
         errorMessage = "INIT Failed to read url-copy process arguments";
-        abnormalTermination(reporter, "FAILED", errorMessage);
+        abnormalTermination(reporter, "FAILED", errorMessage, "Error");
     }
 
     try {
@@ -651,10 +651,12 @@ int main(int argc, char **argv)
         boost::thread bt(taskTimer, &globalTimeout, &reporter);
     }
     catch (std::exception &e) {
-        abnormalTermination(reporter, "FAILED", e.what());
+        errorMessage = e.what();
+        abnormalTermination(reporter, "FAILED", errorMessage, "Abort");
     }
     catch (...) {
-        abnormalTermination(reporter, "FAILED", "INIT Failed to create boost thread, boost::thread_resource_error");
+        errorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
+        abnormalTermination(reporter, "FAILED", errorMessage, "Abort");
     }
 
     if (opts.areTransfersOnFile() && transferList.empty() == true) {
@@ -663,7 +665,7 @@ int main(int argc, char **argv)
 
         retry = false;
 
-        abnormalTermination(reporter, "FAILED", errorMessage);
+        abnormalTermination(reporter, "FAILED", errorMessage, "Error");
     }
 
     // gfal2 debug logging
@@ -711,7 +713,7 @@ int main(int argc, char **argv)
         errorMessage = "Failed to create the gfal2 handle: ";
         if (handleError && handleError->message) {
             errorMessage += "INIT " + std::string(handleError->message);
-            abnormalTermination(reporter, "FAILED", errorMessage);
+            abnormalTermination(reporter, "FAILED", errorMessage, "Error");
         }
     }
 
@@ -734,7 +736,7 @@ int main(int argc, char **argv)
     if (!opts.oauthFile.empty()) {
         if (gfal2_load_opts_from_file(handle, opts.oauthFile.c_str(), &handleError) < 0) {
             errorMessage = "OAUTH " + std::string(handleError->message);
-            abnormalTermination(reporter, "FAILED", errorMessage);
+            abnormalTermination(reporter, "FAILED", errorMessage, "Error");
         }
         unlink(opts.oauthFile.c_str());
     }

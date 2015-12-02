@@ -73,7 +73,7 @@ static void delegate_to_default(int signum)
     // re-issue and let the system do the work
     signal(signum, SIG_DFL);
     raise(signum);
-    }
+}
 
 
 // Minimalistic logic inside a signal!
