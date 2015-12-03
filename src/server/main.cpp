@@ -209,11 +209,6 @@ static void runEnvironmentChecks()
     }
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "fts_url_copy full path " << urlCopyPath << commit;
 
-    if (!fs::exists(HOST_CERT))
-    {
-        throw SystemError("Check if hostcert/key are installed");
-    }
-
     std::string logsDir = ServerConfig::instance().get<std::string> ("ServerLogDirectory");
     std::string monDir = ServerConfig::instance().get<std::string> ("MessagingDirectory");
 
