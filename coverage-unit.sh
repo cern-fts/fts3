@@ -1,30 +1,26 @@
 #!/bin/bash
 # Extract coverage data out of the unit tests
-set -x
-
-if [ "$#" -eq 1 ]; then
-    BUILD_DIR=$1
-else
-    BUILD_DIR="build"
+if [ "$#" -ne 3 ]; then
+    echo "Wrong number of arguments"
+    exit 1
 fi
 
-SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-RUNNING_DIR=`pwd`
+SOURCE_DIR=$1
+BUILD_DIR=$2
+OUTPUT_DIR=$3
 
-mkdir -p "${BUILD_DIR}"
+set -x
+
 pushd "${BUILD_DIR}"
-
-# Build sources
-${SOURCE_DIR}/coverage-build.sh "${SOURCE_DIR}"
 
 # Clean coverage data
 lcov --directory . --zerocounters
 
 # Run tests
-./test/unit/unit --log_level=all --log_format=XML --report_level=detailed > "${RUNNING_DIR}/tests.xml"
+./test/unit/unit --log_level=all --log_format=XML --report_level=detailed > "${OUTPUT_DIR}/tests.xml"
 
 # Generate the coverage lcov data
-lcov --directory . --capture --output-file="${RUNNING_DIR}/coverage-unit.info"
+lcov --directory . --capture --output-file="${OUTPUT_DIR}/coverage-unit.info"
 
 # Download the converter
 if [ ! -f "lcov_cobertura.py" ]; then
@@ -32,7 +28,7 @@ if [ ! -f "lcov_cobertura.py" ]; then
 fi
 
 # Generate the xml
-python lcov_cobertura.py "${RUNNING_DIR}/coverage-unit.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "${RUNNING_DIR}/coverage-unit.xml"
+python lcov_cobertura.py "${OUTPUT_DIR}/coverage-unit.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "${OUTPUT_DIR}/coverage-unit.xml"
 
 # Done!
 popd

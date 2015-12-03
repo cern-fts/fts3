@@ -5,3 +5,6 @@
 *.rpm
 *.tar.gz
 *.pyc
+*.xml
+*.info
+*.conf
