@@ -9486,6 +9486,10 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
     std::vector<MinFileStatus> filesState;
     std::vector<struct MessageBringonline> messages;
 
+    int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
+    int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
+    int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
+
     try {
         int exitCode = consumer.runConsumerStaging(messages);
         if(exitCode != 0) {
@@ -9550,12 +9554,12 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     continue;
             }
             else {
-                limit = MAX_STAGING_BULK_SIZE; // Use a sensible default
+                limit = maxStagingBulkSize; // Use a sensible default
             }
 
             // Make sure we do not grab more than the limit for a bulk
-            if (limit > MAX_STAGING_BULK_SIZE)
-                limit = MAX_STAGING_BULK_SIZE;
+            if (limit > maxStagingBulkSize)
+                limit = maxStagingBulkSize;
 
             //now check for max concurrent active requests, must no exceed 200
             long long countActiveRequests = 0;
@@ -9563,7 +9567,7 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
 
-            if(countActiveRequests > MAX_STAGING_CONCURRENT_REQUESTS)
+            if(countActiveRequests > maxStagingConcurrentRequests)
                 continue;
 
             //now make sure there are enough files to put in a single request
@@ -9573,12 +9577,12 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
             // If we haven't got enough for a bulk request, give some time for more
             // requests to arrive
-            if (countQueuedFiles < MAX_STAGING_BULK_SIZE) {
+            if (countQueuedFiles < maxStagingBulkSize) {
                 std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
                 if (itQueue != queuedStagingFiles.end()) {
                     int counter = itQueue->second;
 
-                    if (counter < 30) {
+                    if (counter < stagingWaitingFactor) {
                         queuedStagingFiles[source_se] = counter + 1;
                         continue;
                     }

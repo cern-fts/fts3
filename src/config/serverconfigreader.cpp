@@ -245,6 +245,21 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["MonitoringConfigFile"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MONFILE_DEFAULT),
         "Monitoring configuration file"
     )
+    (
+        "StagingBulkSize",
+        po::value<std::string>( &(_vars["StagingBulkSize"]) )->default_value("1000"),
+        "Staging bulk size"
+    )
+    (
+        "StagingConcurrentRequests",
+        po::value<std::string>( &(_vars["StagingConcurrentRequests"]) )->default_value("200"),
+        "Maximum number of staging concurrent requests"
+    )
+    (
+        "StagingWaitingFactor",
+        po::value<std::string>( &(_vars["StagingWaitingFactor"]) )->default_value("30"),
+        "The lower the value, the less time FTS3 waits to fill a bulk request"
+    )
     ;
 
     return config;
