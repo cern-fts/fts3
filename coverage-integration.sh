@@ -20,8 +20,8 @@ pushd "${BUILD_DIR}"
 lcov --directory . --zerocounters
 
 # Spawn fts_server, fts_bringonline and msg-bulk
-export LD_LIBRARY_PATH="${BUILD_DIR}/src/db/mysql"
-export PATH="$PATH:${BUILD_DIR}/src/url-copy"
+export LD_LIBRARY_PATH="src/db/mysql"
+export PATH="$PATH:src/url-copy"
 
 ./src/server/fts_server -r -f "${FTS3CONFIG}"
 ./src/bringonline-daemon/fts_bringonline -r -f "${FTS3CONFIG}"
