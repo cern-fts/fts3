@@ -63,7 +63,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG (CRIT) << "Unable to bind socket." << commit;
                     fclose (stderr);
-                    _exit(1);
+                    exit(1);
                 }
 
         }
@@ -89,7 +89,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG (CRIT) << "Unable to bind socket." << commit;
                     fclose (stderr);
-                    _exit(1);
+                    exit(1);
                 }
         }
 }

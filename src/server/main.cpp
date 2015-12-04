@@ -107,7 +107,7 @@ static void shutdownCallback(int signum, void*)
     switch (signum)
     {
         case SIGINT: case SIGTERM: case SIGUSR1:
-            _exit(-signum);
+            exit(-signum);
     }
 }
 

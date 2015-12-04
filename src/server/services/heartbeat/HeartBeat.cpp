@@ -136,7 +136,7 @@ void HeartBeat::orderedShutdown()
     boost::this_thread::sleep(boost::posix_time::seconds(30));
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting" << commit;
-    _exit(1);
+    exit(1);
 }
 
 } // end namespace server

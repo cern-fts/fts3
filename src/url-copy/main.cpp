@@ -226,7 +226,7 @@ void taskTimerCanceler()
 
 
 void abnormalTermination(Reporter &reporter, std::string classification, const std::string&,
-    const std::string &finalState, bool exit=true)
+    const std::string &finalState, bool exitProc=true)
 {
     terminalState = true;
 
@@ -336,8 +336,8 @@ void abnormalTermination(Reporter &reporter, std::string classification, const s
 
     cancelTransfer();
     sleep(1);
-    if (exit)
-        _exit(1);
+    if (exitProc)
+        exit(1);
 }
 
 
