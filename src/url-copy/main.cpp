@@ -572,9 +572,7 @@ static void validateRunningPrivileges()
 {
     // Make sure we do not run as root
     if (getuid() == 0 || geteuid() == 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Can not run as root" << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Switching to fts3:fts3" << commit;
-        dropPrivileges("fts3", "fts3");
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Running as root! This is not recommended." << commit;
     }
 }
 
