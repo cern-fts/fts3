@@ -63,12 +63,12 @@ kill -9 "${MSG_PID}"
 lcov --directory . --capture --output-file="${OUTPUT_DIR}/coverage-integration.info"
 
 # Download the converter
-if [ ! -f "lcov_cobertura.py" ]; then
-    wget "https://raw.github.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py"
+if [ ! -f "/tmp/lcov_cobertura.py" ]; then
+    wget "https://raw.github.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py" -O "/tmp/lcov_cobertura.py"
 fi
 
 # Generate the xml
-python lcov_cobertura.py "${OUTPUT_DIR}/coverage-integration.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "${OUTPUT_DIR}/coverage-integration.xml"
+python /tmp/lcov_cobertura.py "${OUTPUT_DIR}/coverage-integration.info" -b "${SOURCE_DIR}" -e ".+usr.include." -o "${OUTPUT_DIR}/coverage-integration.xml"
 
 # Done
 popd
