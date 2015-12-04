@@ -42,6 +42,8 @@ const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
 /// Called by the signal handler
 static void shutdownCallback(int signum, void*)
 {
+    static int quitCount = 0;
+
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Caught signal " << signum
                                     << " (" << strsignal(signum) << ")"
                                     << commit;

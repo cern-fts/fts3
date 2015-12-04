@@ -44,12 +44,6 @@ class DeletionStateUpdater : public StateUpdater
 
 public:
 
-    static DeletionStateUpdater & instance()
-    {
-        static DeletionStateUpdater instance;
-        return instance;
-    }
-
     virtual ~DeletionStateUpdater() {}
 
     // make sure it is not hidden by the next one
@@ -73,23 +67,20 @@ public:
     }
 
 private:
+    friend class BringOnlineServer;
 
     /// Default constructor
-    DeletionStateUpdater() : StateUpdater("_delete"), t(run) {}
+    DeletionStateUpdater() : StateUpdater("_delete") {}
     /// Copy constructor
     DeletionStateUpdater(DeletionStateUpdater const &) = delete;
     /// Assignment operator
     DeletionStateUpdater & operator=(DeletionStateUpdater const &) = delete;
 
     /// this rutine is executed in a separate thread
-    static void run()
+    void run()
     {
-        DeletionStateUpdater & me = instance();
-        me.runImpl(&GenericDbIfce::updateDeletionsState);
+        runImpl(&GenericDbIfce::updateDeletionsState);
     }
-
-    /// the worker thread
-    boost::thread t;
 };
 
 #endif // DELETIONSTATEUPDATER_H_

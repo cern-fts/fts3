@@ -24,6 +24,8 @@
 #include "common/Singleton.h"
 #include "common/ThreadPool.h"
 
+#include "state/DeletionStateUpdater.h"
+#include "state/StagingStateUpdater.h"
 #include "task/Gfal2Task.h"
 
 
@@ -37,9 +39,20 @@ public:
     void stop();
     void wait();
 
+    DeletionStateUpdater& getDeletionStateUpdater() {
+        return deletionStateUpdater;
+    }
+
+    StagingStateUpdater& getStagingStateUpdater() {
+        return stagingStateUpdater;
+    }
+
 private:
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
+
+    DeletionStateUpdater deletionStateUpdater;
+    StagingStateUpdater stagingStateUpdater;
 };
 
 

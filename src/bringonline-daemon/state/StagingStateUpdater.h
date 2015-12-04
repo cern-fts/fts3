@@ -42,15 +42,6 @@ class StagingStateUpdater : public StateUpdater
 {
 public:
 
-    /**
-     * @return : reference to the singleton instance
-     */
-    static StagingStateUpdater & instance()
-    {
-        static StagingStateUpdater instance;
-        return instance;
-    }
-
     // this is necessary because otherwise the operator would be hidden by the following one
     using StateUpdater::operator();
 
@@ -89,23 +80,20 @@ public:
     virtual ~StagingStateUpdater() {}
 
 private:
+    friend class BringOnlineServer;
 
     /// Default constructor
-    StagingStateUpdater() : StateUpdater("_staging"), t(run) {}
+    StagingStateUpdater() : StateUpdater("_staging") {}
+
     /// Copy constructor
     StagingStateUpdater(StagingStateUpdater const &) = delete;
     /// Assignment operator
     StagingStateUpdater & operator=(StagingStateUpdater const &) = delete;
 
-    /// this routine is executed in a separate thread
-    static void run()
+    void run()
     {
-        StagingStateUpdater & me = instance();
-        me.runImpl(&GenericDbIfce::updateStagingState);
+        runImpl(&GenericDbIfce::updateStagingState);
     }
-
-    /// the worker thread
-    boost::thread t;
 };
 
 #endif // STAGINGSTATEUPDATER_H_

@@ -27,6 +27,7 @@
 
 #include "../task/DeletionTask.h"
 #include "../context/DeletionContext.h"
+#include "../BringOnlineServer.h"
 
 #include "FetchDeletion.h"
 
@@ -88,7 +89,11 @@ void FetchDeletion::fetch()
                 Triplet key(i->voName, i->userDn, storage);
                 auto itContext = deletionContext.find(key);
                 if (itContext == deletionContext.end()) {
-                    deletionContext.insert(std::make_pair(key, DeletionContext(*i)));
+                    deletionContext.insert(
+                        std::make_pair(key, DeletionContext(
+                            BringOnlineServer::instance(), *i
+                        ))
+                    );
                 }
                 else {
                     itContext->second.add(*i);

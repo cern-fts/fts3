@@ -124,6 +124,11 @@ protected:
                 // run the DB query
                 (db.*update_state)(tmp);
             }
+            catch (boost::thread_interrupted& ex) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Requested interruption of " << operation << fts3::common::commit;
+                recover(tmp);
+                return;
+            }
             catch (std::exception& ex) {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << fts3::common::commit;
                 recover(tmp);

@@ -32,7 +32,7 @@
 #include "cred/DelegCred.h"
 
 #include "JobContext.h"
-#include "../state/DeletionStateUpdater.h"
+#include "../BringOnlineServer.h"
 
 
 class DeletionContext : public JobContext
@@ -46,8 +46,9 @@ public:
      *
      * @param ctx : the tuple with data necessary to initialise an instance
      */
-    DeletionContext(const DeleteOperation &nsOp):
-        JobContext(nsOp.userDn, nsOp.voName, nsOp.credId)
+    DeletionContext(BringOnlineServer &bringOnlineServer, const DeleteOperation &nsOp):
+        JobContext(nsOp.userDn, nsOp.voName, nsOp.credId),
+        stateUpdater(bringOnlineServer.getDeletionStateUpdater())
     {
         add(nsOp);
     }
@@ -57,7 +58,7 @@ public:
      *
      * @param copy : other DeletionContext instance
      */
-    DeletionContext(const DeletionContext &copy): JobContext(copy)
+    DeletionContext(const DeletionContext &copy): JobContext(copy), stateUpdater(copy.stateUpdater)
     {}
 
 
@@ -66,8 +67,7 @@ public:
      *
      * @param copy : the context to be moved
      */
-    DeletionContext(DeletionContext && copy):
-        JobContext(std::move(copy))
+    DeletionContext(DeletionContext && copy): JobContext(std::move(copy)), stateUpdater(copy.stateUpdater)
     {}
 
     /**
@@ -92,6 +92,9 @@ public:
      * Bulk state update implementation for srm endpoints
      */
     void updateState(const std::string &state, const std::string &reason, bool retry) const;
+
+private:
+    DeletionStateUpdater &stateUpdater;
 };
 
 #endif // DELETIONCONTEXT_H_

@@ -68,6 +68,7 @@ static void heartBeat(void)
         }
         catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Hearbeat interruption requested" << commit;
+            return;
         }
         catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
@@ -102,6 +103,8 @@ void BringOnlineServer::start(void)
     systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
+    systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
+    systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
     systemThreads.create_thread(heartBeat);
 }
 
@@ -114,8 +117,8 @@ void BringOnlineServer::wait(void)
 
 void BringOnlineServer::stop(void)
 {
-    StagingStateUpdater::instance().recover();
-    DeletionStateUpdater::instance().recover();
+    stagingStateUpdater.recover();
+    deletionStateUpdater.recover();
     threadpool.interrupt();
     systemThreads.interrupt_all();
 }

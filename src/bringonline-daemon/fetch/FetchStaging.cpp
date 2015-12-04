@@ -27,6 +27,7 @@
 #include "server/DrainMode.h"
 
 #include "FetchStaging.h"
+#include "../BringOnlineServer.h"
 #include "../task/BringOnlineTask.h"
 #include "../task/PollTask.h"
 #include "../task/WaitingRoom.h"
@@ -76,7 +77,11 @@ void FetchStaging::fetch()
                 GroupByType key(it_f->voName, it_f->userDn, storage, it_f->spaceToken);
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
-                    tasks.insert(std::make_pair(key, StagingContext(*it_f)));
+                    tasks.insert(std::make_pair(
+                        key, StagingContext(
+                            BringOnlineServer::instance(), *it_f
+                        ))
+                    );
                 }
                 else {
                     it_t->second.add(*it_f);
@@ -137,7 +142,11 @@ void FetchStaging::recoverStartedTasks()
     for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f) {
         auto it_t = tasks.find(it_f->token);
         if (it_t == tasks.end())
-            tasks.insert(std::make_pair(it_f->token, StagingContext(*it_f)));
+            tasks.insert(std::make_pair(
+                it_f->token, StagingContext(
+                    BringOnlineServer::instance(), *it_f
+                ))
+            );
         else
             it_t->second.add(*it_f);
     }

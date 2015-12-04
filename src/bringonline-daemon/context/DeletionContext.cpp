@@ -31,7 +31,6 @@ void DeletionContext::add(const DeleteOperation &nsOp)
 void DeletionContext::updateState(const std::string &jobId, int fileId, const std::string &state,
     const std::string &reason, bool retry) const
 {
-    static DeletionStateUpdater & stateUpdater = DeletionStateUpdater::instance();
     stateUpdater(jobId, fileId, state, reason, retry);
 }
 
@@ -39,6 +38,5 @@ void DeletionContext::updateState(const std::string &jobId, int fileId, const st
 void DeletionContext::updateState(const std::string &state, const std::string &reason,
     bool retry) const
 {
-    static DeletionStateUpdater & stateUpdater = DeletionStateUpdater::instance();
     stateUpdater(jobs, state, reason, retry);
 }

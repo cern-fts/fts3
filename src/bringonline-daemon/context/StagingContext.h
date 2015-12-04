@@ -32,7 +32,7 @@
 #include "cred/DelegCred.h"
 
 #include "JobContext.h"
-#include "../state/StagingStateUpdater.h"
+#include "../BringOnlineServer.h"
 
 
 class StagingContext : public JobContext
@@ -42,8 +42,9 @@ public:
 
     using JobContext::add;
 
-    StagingContext(const StagingOperation &stagingOp):
+    StagingContext(BringOnlineServer &bringOnlineServer, const StagingOperation &stagingOp):
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
+        stateUpdater(bringOnlineServer.getStagingStateUpdater()),
         pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
     {
         add(stagingOp);
@@ -51,12 +52,12 @@ public:
     }
 
     StagingContext(const StagingContext &copy) :
-        JobContext(copy),
+        JobContext(copy), stateUpdater(copy.stateUpdater),
         pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
     {}
 
     StagingContext(StagingContext && copy) :
-        JobContext(std::move(copy)),
+        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater),
         pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
     {}
 
@@ -69,19 +70,16 @@ public:
      */
     void updateState(const std::string &jobId, int fileId, const std::string &state, const std::string &reason, bool retry) const
     {
-        static StagingStateUpdater & stateUpdater = StagingStateUpdater::instance();
         stateUpdater(jobId, fileId, state, reason, retry);
     }
 
     void updateState(const std::string &state, const std::string &reason, bool retry) const
     {
-        static StagingStateUpdater & stateUpdater = StagingStateUpdater::instance();
         stateUpdater(jobs, state, reason, retry);
     }
 
     void updateState(const std::string &token)
     {
-        static StagingStateUpdater & stateUpdater = StagingStateUpdater::instance();
         stateUpdater(jobs, token);
     }
 
@@ -100,10 +98,9 @@ public:
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
 
 private:
-
+    StagingStateUpdater &stateUpdater;
     int pinLifetime;
     int bringonlineTimeout;
-    /// (jobID, fileID) -> submission time
     time_t startTime;
 };
 
