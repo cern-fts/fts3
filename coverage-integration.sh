@@ -23,8 +23,8 @@ lcov --directory . --zerocounters
 export LD_LIBRARY_PATH="src/db/mysql"
 export PATH="$PATH:src/url-copy"
 
-./src/server/fts_server -r -f "${FTS3CONFIG}"
-./src/bringonline-daemon/fts_bringonline -r -f "${FTS3CONFIG}"
+./src/server/fts_server -f "${FTS3CONFIG}"
+./src/bringonline-daemon/fts_bringonline -f "${FTS3CONFIG}"
 ./src/monitoring/fts_msg_bulk -f "${FTS3CONFIG}"  "--MonitoringConfigFile=${MSGCONFIG}"
 
 sleep 2
