@@ -52,7 +52,8 @@ echo "Stop services..."
 kill "${FTS_PID}"
 kill "${BRINGONLINE_PID}"
 kill "${MSG_PID}"
-sleep 5
+
+sleep 30
 
 kill -9 "${FTS_PID}"
 kill -9 "${BRINGONLINE_PID}"
