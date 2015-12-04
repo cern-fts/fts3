@@ -6,11 +6,11 @@ if [ "$#" -ne 5 ]; then
     exit 1
 fi
 
-SOURCE_DIR=$1
-BUILD_DIR=$2
-OUTPUT_DIR=$3
-FTS3CONFIG=$4
-MSGCONFIG=$5
+SOURCE_DIR=`readlink -f $1`
+BUILD_DIR=`readlink -f $2`
+OUTPUT_DIR=`readlink -f $3`
+FTS3CONFIG=`readlink -f $4`
+MSGCONFIG=`readlink -f $5`
 
 
 set -x
@@ -20,8 +20,8 @@ pushd "${BUILD_DIR}"
 lcov --directory . --zerocounters
 
 # Spawn fts_server, fts_bringonline and msg-bulk
-export LD_LIBRARY_PATH="src/db/mysql"
-export PATH="$PATH:src/url-copy"
+export LD_LIBRARY_PATH="${BUILD_DIR}/src/db/mysql"
+export PATH="$PATH:${BUILD_DIR}/src/url-copy"
 
 ./src/server/fts_server -f "${FTS3CONFIG}"
 ./src/bringonline-daemon/fts_bringonline -f "${FTS3CONFIG}"
