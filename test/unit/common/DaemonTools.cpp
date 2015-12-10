@@ -91,8 +91,6 @@ BOOST_AUTO_TEST_CASE(dropPrivilegesTest)
     std::string user, group;
     getCurrentUserAndGroup(user, group);
     BOOST_CHECK_NO_THROW(dropPrivileges(user, group));
-
-    BOOST_CHECK_THROW(dropPrivileges("//***//", "//****//"), SystemError);
 }
 
 
