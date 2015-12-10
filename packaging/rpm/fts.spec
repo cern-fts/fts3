@@ -532,6 +532,7 @@ fi
 %{_libdir}/libfts_delegation_api_simple.so*
 %{_libdir}/libfts_delegation_api_cpp.so*
 %{_libdir}/libfts_profiler.so*
+%{_libdir}/libfts_msg_bus.so*
 %doc README
 %doc LICENSE
 
