@@ -38,130 +38,100 @@ using namespace fts3::server;
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
 {
+    bool keepAlive = ServerConfig::instance().get<bool>("HttpKeepAlive");
+    int cgsi_options = CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING;
 
-    bool keepAlive = ServerConfig::instance().get<std::string>("HttpKeepAlive")=="true" ? true : false;
-    if (keepAlive)
-        {
-            ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+    if (keepAlive) {
+        ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+        cgsi_options |= CGSI_OPT_KEEP_ALIVE;
+    }
+    else {
+        ctx = soap_new();
+    }
 
-            ctx->bind_flags |= SO_REUSEADDR;
-            ctx->accept_timeout = 180;
-            ctx->recv_timeout = 110; // Timeout after 2 minutes stall on recv
-            ctx->send_timeout = 110; // Timeout after 2 minute stall on send
+    ctx->bind_flags |= SO_REUSEADDR;
+    ctx->accept_timeout = 180;
+    ctx->recv_timeout = 120;
+    ctx->send_timeout = 120;
 
-            soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
-            soap_set_namespaces(ctx, fts3_namespaces);
-
-
-            SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
-            if (sock >= 0)
-                {
-                    ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
-                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
-                }
-            else
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (CRIT) << "Unable to bind socket." << commit;
-                    fclose (stderr);
-                    exit(1);
-                }
-
-        }
-    else
-        {
-            ctx = soap_new();
-            ctx->recv_timeout = 110; // Timeout after 2 minutes stall on recv
-            ctx->send_timeout = 110; // Timeout after 2 minute stall on send
-            ctx->accept_timeout = 180;
-            ctx->bind_flags |= SO_REUSEADDR;
-            soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
-            soap_set_namespaces(ctx, fts3_namespaces);
+    soap_cgsi_init(ctx,  cgsi_options);
+    soap_set_namespaces(ctx, fts3_namespaces);
 
 
-            SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
+    SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
 
-            if (sock >= 0)
-                {
-                    ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
-                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
-                }
-            else
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (CRIT) << "Unable to bind socket." << commit;
-                    fclose (stderr);
-                    exit(1);
-                }
-        }
+    if (sock >= 0) {
+        ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
+        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
+    }
+    else {
+        throw SystemError("Unable to bind socket.");
+    }
 }
 
 GSoapAcceptor::~GSoapAcceptor()
 {
-    soap* tmp=NULL;
-    while (!recycle.empty())
-        {
-            tmp = recycle.front();
-            if(tmp)
-                {
-                    recycle.pop();
-                    soap_clr_omode(tmp, SOAP_IO_KEEPALIVE);
-                    shutdown(tmp->socket,2);
-                    shutdown(tmp->master,2);
-                    soap_destroy(tmp);
-                    soap_end(tmp);
-                    soap_done(tmp);
-                    soap_free(tmp);
-                }
+    soap *tmp = NULL;
+    while (!recycle.empty()) {
+        tmp = recycle.front();
+        if (tmp) {
+            recycle.pop();
+            soap_clr_omode(tmp, SOAP_IO_KEEPALIVE);
+            shutdown(tmp->socket, 2);
+            shutdown(tmp->master, 2);
+            soap_destroy(tmp);
+            soap_end(tmp);
+            soap_done(tmp);
+            soap_free(tmp);
         }
-    if(ctx)
-        {
-            soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
-            shutdown(ctx->master,2);
-            shutdown(ctx->socket,2);
-            soap_destroy(ctx);
-            soap_end(ctx);
-            soap_done(ctx);
-            soap_free(ctx);
-        }
+    }
+    if (ctx) {
+        soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
+        shutdown(ctx->master, 2);
+        shutdown(ctx->socket, 2);
+        soap_destroy(ctx);
+        soap_end(ctx);
+        soap_done(ctx);
+        soap_free(ctx);
+    }
 }
+
 
 std::unique_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
 {
     SOAP_SOCKET sock = soap_accept(ctx);
     std::unique_ptr<GSoapRequestHandler> handler;
 
-    if (sock >= 0)
-        {
-            handler.reset (
-                new GSoapRequestHandler(*this)
-            );
+    if (sock >= 0) {
+        handler.reset(
+            new GSoapRequestHandler(*this)
+        );
 
-            FTS3_COMMON_LOGGER_NEWLOG (INFO)
-                << "accepted connection from host=" << ctx->host << ", socket=" << sock
-                <<  commit;
-        }
-    else
-        {
-            throw SystemError ("Unable to accept connection request.");
-        }
+        FTS3_COMMON_LOGGER_NEWLOG (INFO)
+        << "accepted connection from host=" << ctx->host << ", socket=" << sock
+        << commit;
+    }
+    else {
+        throw SystemError("Unable to accept connection request.");
+    }
 
     return handler;
 }
 
-soap* GSoapAcceptor::getSoapContext()
+
+soap *GSoapAcceptor::getSoapContext()
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    if (!recycle.empty())
-        {
-            soap* ctx = recycle.front();
-            recycle.pop();
-            if(ctx)
-                {
-                    ctx->socket = this->ctx->socket;
-                    return ctx;
-                }
+    if (!recycle.empty()) {
+        soap *ctx = recycle.front();
+        recycle.pop();
+        if (ctx) {
+            ctx->socket = this->ctx->socket;
+            return ctx;
         }
+    }
 
-    soap* temp = soap_copy(ctx);
+    soap *temp = soap_copy(ctx);
     temp->bind_flags |= SO_REUSEADDR;
     temp->accept_timeout = 180;
     temp->recv_timeout = 110; // Timeout after 2 minutes stall on recv
@@ -171,24 +141,24 @@ soap* GSoapAcceptor::getSoapContext()
     return temp;
 }
 
-void GSoapAcceptor::recycleSoapContext(soap* ctx)
+
+void GSoapAcceptor::recycleSoapContext(soap *ctx)
 {
-    if(boost::this_thread::interruption_requested())
+    if (boost::this_thread::interruption_requested()) {
         return;
+    }
 
     boost::recursive_mutex::scoped_lock lock(_mutex);
 
-    if(ctx)
-        {
-            soap_destroy(ctx);
-            soap_end(ctx);
+    if (ctx) {
+        soap_destroy(ctx);
+        soap_end(ctx);
 
-            ctx->bind_flags |= SO_REUSEADDR;
-            ctx->accept_timeout = 180;
-            ctx->recv_timeout = 110; // Timeout after 2 minutes stall on recv
-            ctx->send_timeout = 110; // Timeout after 2 minute stall on send
-            ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
-            recycle.push(ctx);
-        }
+        ctx->bind_flags |= SO_REUSEADDR;
+        ctx->accept_timeout = 180;
+        ctx->recv_timeout = 110; // Timeout after 2 minutes stall on recv
+        ctx->send_timeout = 110; // Timeout after 2 minute stall on send
+        ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
+        recycle.push(ctx);
+    }
 }
-

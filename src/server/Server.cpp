@@ -91,8 +91,7 @@ void Server::start()
     systemThreads.create_thread(boost::ref(*services.back().get()));
 
     if (!config::ServerConfig::instance().get<bool>("WithoutSoap")) {
-        unsigned int port = config::ServerConfig::instance().get < unsigned
-        int > ("Port");
+        unsigned int port = config::ServerConfig::instance().get <unsigned int> ("Port");
         const std::string &ip = config::ServerConfig::instance().get<std::string>("IP");
 
         services.emplace_back(new WebService(port, ip));
