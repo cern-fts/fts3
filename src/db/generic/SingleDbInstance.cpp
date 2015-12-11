@@ -88,6 +88,8 @@ DBSingleton::DBSingleton(): dbBackend(NULL)
                     throw SystemError("Can't load " + libraryFileName + " plugin" );
                 }
         }
+
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "DBSingleton created" << fts3::common::commit;
 }
 
 DBSingleton::~DBSingleton()
@@ -96,5 +98,7 @@ DBSingleton::~DBSingleton()
         destroy_db(dbBackend);
     if (dlm)
         delete dlm;
+
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "DBSingleton destroyed" << fts3::common::commit;
 }
 }

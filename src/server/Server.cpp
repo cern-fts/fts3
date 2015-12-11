@@ -37,6 +37,12 @@ namespace fts3 {
 namespace server {
 
 
+Server::Server()
+{
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server created" << fts3::common::commit;
+}
+
+
 Server::~Server()
 {
     try {
@@ -46,6 +52,7 @@ Server::~Server()
     catch (...) {
         // pass
     }
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server destroyed" << fts3::common::commit;
 }
 
 

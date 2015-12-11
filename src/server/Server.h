@@ -36,6 +36,8 @@ namespace server {
 class Server: public fts3::common::Singleton<Server>
 {
 public:
+    Server();
+
     ~Server();
 
     /// Start the services
