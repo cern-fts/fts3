@@ -61,6 +61,10 @@ public:
     {
     }
 
+    ~WebService()
+    {
+    }
+
     virtual void runService()
     {
         std::unique_ptr<GSoapAcceptor> acceptor;

@@ -98,6 +98,7 @@ public:
     virtual ~ThreadPool()
     {
         interrupt();
+        join();
     }
 
     /**
@@ -182,11 +183,15 @@ private:
         boost::mutex::scoped_lock lock(mx);
         // if the queue is empty wait until someone puts something inside
         // (unless the join flag is raised)
-        while (tasks.empty() && !join_flag) cvar.wait(lock);
+        while (tasks.empty() && !join_flag) {
+            cvar.wait(lock);
+        }
         // take the first element from the queue
         typename boost::ptr_deque<TASK>::iterator it = tasks.begin();
         // if the queue is empty return null
-        if (it == tasks.end()) return 0;
+        if (it == tasks.end()) {
+            return 0;
+        }
         // otherwise give up ownership of the object and return it
         return tasks.release(it).release();
     }
