@@ -81,6 +81,10 @@ void HeartBeat::runService()
             // If it wasn't, only one second will pass until the next retry
             boost::this_thread::sleep(boost::posix_time::seconds(59));
         }
+        catch (const boost::thread_interrupted&)
+        {
+            throw;
+        }
         catch (const std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;

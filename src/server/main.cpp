@@ -67,6 +67,7 @@ static void shutdownCallback(int signum, void*)
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Future signals will be ignored!" << commit;
 
     Server::instance().stop();
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
 
     // Some require traceback
     switch (signum)
@@ -80,34 +81,6 @@ static void shutdownCallback(int signum, void*)
             break;
         default:
             break;
-    }
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-
-    if (!ServerConfig::instance().get<bool> ("rush"))
-        boost::this_thread::sleep(boost::posix_time::seconds(15));
-
-    try {
-        Server::instance().stop();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
-        db::DBSingleton::destroy();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
-    }
-    catch (const std::exception& ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception when forcing the database teardown: " << ex.what() << commit;
-    }
-    catch(...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-    }
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-
-    // Handle termination for signals that do not imply errors
-    // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
-    switch (signum)
-    {
-        case SIGINT: case SIGTERM: case SIGUSR1:
-            exit(-signum);
     }
 }
 
@@ -142,7 +115,9 @@ static void doServer(void)
 
     Server::instance().wait();
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server halt" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server stopped" << commit;
+
+    exit(0);
 }
 
 
