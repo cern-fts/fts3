@@ -52,6 +52,8 @@ public:
 private:
     boost::thread_group systemThreads;
     std::vector<std::shared_ptr<BaseService>> services;
+
+    void addService(BaseService *service);
 };
 
 } // end namespace server

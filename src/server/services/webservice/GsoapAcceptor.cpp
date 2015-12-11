@@ -49,14 +49,13 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
         ctx = soap_new();
     }
 
-    ctx->bind_flags |= SO_REUSEADDR;
-    ctx->accept_timeout = 180;
-    ctx->recv_timeout = 120;
-    ctx->send_timeout = 120;
-
     soap_cgsi_init(ctx,  cgsi_options);
     soap_set_namespaces(ctx, fts3_namespaces);
 
+    ctx->bind_flags |= SO_REUSEADDR;
+    ctx->accept_timeout = 10;
+    ctx->recv_timeout = 120;
+    ctx->send_timeout = 120;
 
     SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
 
@@ -99,23 +98,23 @@ GSoapAcceptor::~GSoapAcceptor()
 
 std::unique_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
 {
-    SOAP_SOCKET sock = soap_accept(ctx);
-    std::unique_ptr<GSoapRequestHandler> handler;
+    SOAP_SOCKET socket;
 
-    if (sock >= 0) {
-        handler.reset(
-            new GSoapRequestHandler(*this)
-        );
+    do {
+        socket = soap_accept(ctx);
+    } while (socket < 0 && !boost::this_thread::interruption_requested());
 
+    if (socket >= 0) {
         FTS3_COMMON_LOGGER_NEWLOG (INFO)
-        << "accepted connection from host=" << ctx->host << ", socket=" << sock
-        << commit;
+            << "Accepted connection from host=" << ctx->host << ", socket=" << socket
+            << commit;
+        return std::unique_ptr<GSoapRequestHandler>(new GSoapRequestHandler(*this));
     }
-    else {
-        throw SystemError("Unable to accept connection request.");
+    else if (boost::this_thread::interruption_requested()) {
+        throw boost::thread_interrupted();
     }
 
-    return handler;
+    throw SystemError("Unable to accept connection request.");
 }
 
 
@@ -131,14 +130,7 @@ soap *GSoapAcceptor::getSoapContext()
         }
     }
 
-    soap *temp = soap_copy(ctx);
-    temp->bind_flags |= SO_REUSEADDR;
-    temp->accept_timeout = 180;
-    temp->recv_timeout = 110; // Timeout after 2 minutes stall on recv
-    temp->send_timeout = 110; // Timeout after 2 minute stall on send
-    temp->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
-
-    return temp;
+    return soap_copy(ctx);
 }
 
 
@@ -153,12 +145,6 @@ void GSoapAcceptor::recycleSoapContext(soap *ctx)
     if (ctx) {
         soap_destroy(ctx);
         soap_end(ctx);
-
-        ctx->bind_flags |= SO_REUSEADDR;
-        ctx->accept_timeout = 180;
-        ctx->recv_timeout = 110; // Timeout after 2 minutes stall on recv
-        ctx->send_timeout = 110; // Timeout after 2 minute stall on send
-        ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
         recycle.push(ctx);
     }
 }

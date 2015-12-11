@@ -57,47 +57,55 @@ Server::~Server()
 }
 
 
+void serviceRunnerHelper(std::shared_ptr<BaseService> service)
+{
+    (*service)();
+}
+
+
+void Server::addService(BaseService *service)
+{
+    services.emplace_back(service);
+    systemThreads.add_thread(new boost::thread(serviceRunnerHelper, services.back()));
+}
+
+
 void Server::start()
 {
-    services.emplace_back(new CleanerService);
-    services.emplace_back(new MessageProcessingService);
-    services.emplace_back(new HeartBeat);
-
-    for (auto i = services.begin(); i != services.end(); ++i) {
-        systemThreads.create_thread(boost::ref(*(i->get())));
-    }
+    addService(new CleanerService);
+    addService(new MessageProcessingService);
+    addService(new HeartBeat);
 
     // Give cleaner and heartbeat some time ahead
     if (!config::ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(8));
     }
 
-    services.emplace_back(new CancelerService);
-    systemThreads.create_thread(boost::ref(*services.back().get()));
+    addService(new CancelerService);
 
     // Wait for status updates to be processed
     if (!config::ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(12));
     }
 
-    services.emplace_back(new OptimizerService);
-    systemThreads.create_thread(boost::ref(*services.back().get()));
-
-    services.emplace_back(new TransfersService);
-    systemThreads.create_thread(boost::ref(*services.back().get()));
-
-    services.emplace_back(new ReuseTransfersService);
-    systemThreads.create_thread(boost::ref(*services.back().get()));
-
-    services.emplace_back(new MultihopTransfersService);
-    systemThreads.create_thread(boost::ref(*services.back().get()));
+    addService(new OptimizerService);
+    addService(new TransfersService);
+    addService(new ReuseTransfersService);
+    addService(new MultihopTransfersService);
 
     if (!config::ServerConfig::instance().get<bool>("WithoutSoap")) {
         unsigned int port = config::ServerConfig::instance().get <unsigned int> ("Port");
         const std::string &ip = config::ServerConfig::instance().get<std::string>("IP");
+        int threadPoolSize = fts3::config::ServerConfig::instance().get<int>("ThreadNum");
 
-        services.emplace_back(new WebService(port, ip));
-        systemThreads.create_thread(boost::ref(*services.back().get()));
+        if (threadPoolSize > 100) {
+            threadPoolSize = 100;
+        }
+        else if (threadPoolSize < 0) {
+            threadPoolSize = 2;
+        }
+
+        addService(new WebService(port, ip, threadPoolSize));
     }
     else {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SOAP interface disabled" << fts3::common::commit;

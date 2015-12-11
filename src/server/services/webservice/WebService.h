@@ -52,20 +52,13 @@ class WebService: public BaseService
 private:
     int port;
     std::string ip;
-    std::shared_ptr<common::ThreadPool<GSoapRequestHandler>> threadPool;
+    fts3::common::ThreadPool<GSoapRequestHandler> threadPool;
 
 public:
 
-    WebService(int port, const std::string& ip): BaseService("WebService"), port(port), ip(ip)
+    WebService(int port, const std::string& ip, int poolSize):
+        BaseService("WebService"), port(port), ip(ip), threadPool(poolSize)
     {
-        int threadPoolSize = fts3::config::ServerConfig::instance().get<int>("ThreadNum");
-        if (threadPoolSize > 100) {
-            threadPoolSize = 100;
-        }
-        else if (threadPoolSize < 0) {
-            threadPoolSize = 2;
-        }
-        threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 
     virtual void runService()
@@ -77,7 +70,7 @@ public:
         catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not start the SOAP acceptor: " << e.what() <<
                 fts3::common::commit;
-            exit(1);
+            return;
         }
 
         while (!boost::this_thread::interruption_requested())
@@ -86,7 +79,7 @@ public:
 
             if (handler.get())
             {
-                threadPool->start(handler.release());
+                threadPool.start(handler.release());
             }
             else
             {
