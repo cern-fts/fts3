@@ -28,9 +28,8 @@ namespace fts3 {
 namespace server {
 
 
-std::string OptimizerService::getServiceName()
+OptimizerService::OptimizerService(): BaseService("OptimizerService")
 {
-    return std::string("OptimizerService");
 }
 
 

@@ -36,14 +36,12 @@ namespace server {
 class TransfersService: public BaseService
 {
 public:
-
     /// Constructor
     TransfersService();
 
     /// Destructor
     virtual ~TransfersService();
 
-    virtual std::string getServiceName();
     virtual void runService();
 
 protected:

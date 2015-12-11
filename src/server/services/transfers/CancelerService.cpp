@@ -41,19 +41,13 @@ namespace server {
 extern time_t stallRecords;
 
 
-CancelerService::CancelerService()
+CancelerService::CancelerService(): BaseService("CancelerService")
 {
 }
 
 
 CancelerService::~CancelerService()
 {
-}
-
-
-std::string CancelerService::getServiceName()
-{
-    return std::string("CancelerService");
 }
 
 

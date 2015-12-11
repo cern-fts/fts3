@@ -46,12 +46,13 @@ Server::Server()
 Server::~Server()
 {
     try {
-        this->stop();
-        this->wait();
+        stop();
+        wait();
     }
     catch (...) {
         // pass
     }
+    services.clear();
     FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server destroyed" << fts3::common::commit;
 }
 
@@ -75,8 +76,9 @@ void Server::start()
     systemThreads.create_thread(boost::ref(*services.back().get()));
 
     // Wait for status updates to be processed
-    if (!config::ServerConfig::instance().get<bool> ("rush"))
+    if (!config::ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(12));
+    }
 
     services.emplace_back(new OptimizerService);
     systemThreads.create_thread(boost::ref(*services.back().get()));

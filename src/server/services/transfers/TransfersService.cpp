@@ -46,7 +46,7 @@ namespace server {
 extern time_t retrieveRecords;
 
 
-TransfersService::TransfersService()
+TransfersService::TransfersService(): BaseService("TransfersService")
 {
     cmd = "fts_url_copy";
 
@@ -65,12 +65,6 @@ TransfersService::TransfersService()
 
 TransfersService::~TransfersService()
 {
-}
-
-
-std::string TransfersService::getServiceName()
-{
-    return std::string("TransfersService");
 }
 
 

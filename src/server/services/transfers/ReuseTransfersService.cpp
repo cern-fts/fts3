@@ -46,9 +46,9 @@ namespace server {
 extern time_t retrieveRecords;
 
 
-std::string ReuseTransfersService::getServiceName()
+ReuseTransfersService::ReuseTransfersService()
 {
-    return std::string("ReuseTransfersService");
+    setServiceName("ReuseTransfersService");
 }
 
 

@@ -33,7 +33,7 @@ namespace server {
 class ReuseTransfersService: public TransfersService
 {
 public:
-    virtual std::string getServiceName();
+    ReuseTransfersService();
     virtual void runService();
 
 protected:

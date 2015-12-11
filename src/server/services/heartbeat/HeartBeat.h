@@ -36,7 +36,7 @@ extern time_t stallRecords;
 class HeartBeat: public BaseService
 {
 public:
-    virtual std::string getServiceName();
+    HeartBeat();
     virtual void runService();
 
 private:

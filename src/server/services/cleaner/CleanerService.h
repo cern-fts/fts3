@@ -35,7 +35,7 @@ private:
     void removeOldFiles(const std::string& path);
 
 public:
-    virtual std::string getServiceName();
+    CleanerService();
     virtual void runService();
 };
 

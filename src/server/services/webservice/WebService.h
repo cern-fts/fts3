@@ -32,6 +32,7 @@
 #include "GsoapAcceptor.h"
 #include "GsoapRequestHandler.h"
 #include "../BaseService.h"
+#include "server/Server.h"
 
 
 namespace fts3 {
@@ -55,7 +56,7 @@ private:
 
 public:
 
-    WebService(int port, const std::string& ip): port(port), ip(ip)
+    WebService(int port, const std::string& ip): BaseService("WebService"), port(port), ip(ip)
     {
         int threadPoolSize = fts3::config::ServerConfig::instance().get<int>("ThreadNum");
         if (threadPoolSize > 100) {
@@ -67,18 +68,21 @@ public:
         threadPool.reset(new common::ThreadPool<GSoapRequestHandler>(threadPoolSize));
     }
 
-    virtual std::string getServiceName()
-    {
-        return std::string("WebService");
-    }
-
     virtual void runService()
     {
-        GSoapAcceptor acceptor(port, ip);
+        std::unique_ptr<GSoapAcceptor> acceptor;
+        try {
+            acceptor.reset(new GSoapAcceptor(port, ip));
+        }
+        catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not start the SOAP acceptor: " << e.what() <<
+                fts3::common::commit;
+            exit(1);
+        }
 
         while (!boost::this_thread::interruption_requested())
         {
-            std::unique_ptr<GSoapRequestHandler> handler = acceptor.accept();
+            std::unique_ptr<GSoapRequestHandler> handler = acceptor->accept();
 
             if (handler.get())
             {

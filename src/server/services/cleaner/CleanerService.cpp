@@ -32,9 +32,8 @@ namespace fts3 {
 namespace server {
 
 
-std::string CleanerService::getServiceName()
+CleanerService::CleanerService(): BaseService("CleanerService")
 {
-    return std::string("CleanerService");
 }
 
 

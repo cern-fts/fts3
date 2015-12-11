@@ -32,7 +32,7 @@ namespace server {
 class MultihopTransfersService : public ReuseTransfersService
 {
 public:
-    virtual std::string getServiceName();
+    MultihopTransfersService();
     virtual void runService();
 
 protected:

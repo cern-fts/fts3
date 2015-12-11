@@ -41,7 +41,6 @@ public:
     /// Destructor
     virtual ~CancelerService();
 
-    virtual std::string getServiceName();
     virtual void runService();
 
 private:

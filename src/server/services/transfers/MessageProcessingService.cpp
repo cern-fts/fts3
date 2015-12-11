@@ -40,7 +40,7 @@ namespace server {
 extern time_t updateRecords;
 
 
-MessageProcessingService::MessageProcessingService():
+MessageProcessingService::MessageProcessingService(): BaseService("MessageProcessingService"),
     consumer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
     producer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
@@ -51,12 +51,6 @@ MessageProcessingService::MessageProcessingService():
 
 MessageProcessingService::~MessageProcessingService()
 {
-}
-
-
-std::string MessageProcessingService::getServiceName()
-{
-    return std::string("MessageProcessingService");
 }
 
 

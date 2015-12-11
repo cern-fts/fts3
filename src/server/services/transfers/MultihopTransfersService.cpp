@@ -33,9 +33,9 @@ namespace server {
 extern time_t retrieveRecords;
 
 
-std::string MultihopTransfersService::getServiceName()
+MultihopTransfersService::MultihopTransfersService()
 {
-    return std::string("MultihopTransfersService");
+    setServiceName("MultihopTransfersService");
 }
 
 

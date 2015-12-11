@@ -51,7 +51,6 @@ public:
     /// Destructor
     virtual ~MessageProcessingService();
 
-    virtual std::string getServiceName();
     virtual void runService();
 
 private:

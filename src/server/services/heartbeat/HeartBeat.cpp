@@ -36,9 +36,8 @@ time_t updateRecords = time(0);
 time_t stallRecords = time(0);
 
 
-std::string HeartBeat::getServiceName()
+HeartBeat::HeartBeat(): BaseService("HeartBeat")
 {
-    return std::string("HearBeat");
 }
 
 

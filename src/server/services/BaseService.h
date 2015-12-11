@@ -29,10 +29,28 @@ namespace server {
 /// Base class for all services
 /// Intented to be able to treat all of them with the same API
 class BaseService: public boost::noncopyable {
-public:
-    virtual ~BaseService() {};
+private:
+    std::string serviceName;
 
-    virtual std::string getServiceName() = 0;
+protected:
+    BaseService(const std::string &serviceName): serviceName(serviceName)
+    {
+    }
+
+    void setServiceName(const std::string &newServiceName)
+    {
+        serviceName = newServiceName;
+    }
+
+public:
+    virtual ~BaseService() {
+        FTS3_COMMON_LOGGER_NEWLOG(TRACE)  << getServiceName()  << " destroyed" << fts3::common::commit;
+    };
+
+    std::string getServiceName() {
+        return serviceName;
+    }
+
     virtual void runService() = 0;
 
     virtual void operator() () {
