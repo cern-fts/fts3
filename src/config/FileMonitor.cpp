@@ -39,6 +39,7 @@ FileMonitor::~FileMonitor()
     if (monitor_thread.get()) {
         running = false;
         monitor_thread->interrupt();
+        monitor_thread->join();
     }
     FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "FileMonitor destroyed" << commit;
 }
@@ -74,27 +75,23 @@ void FileMonitor::stop()
 }
 
 
-void FileMonitor::run (FileMonitor* const me)
+void FileMonitor::run(FileMonitor *const me)
 {
     struct stat st;
 
     // monitor the file
-    while (me->running)
-        {
-            // we will check the timestamp periodically every minute
-            sleep(60);
-            // check the timestamp
-            if (stat (me->path.c_str(), &st) == 0)
-                {
-                    time_t new_timestamp = st.st_mtime;
-                    // compare with the old one
-                    if (new_timestamp != me->timestamp)
-                        {
-                            // if the file has been changed reload the configuration
-                            me->timestamp = new_timestamp;
-                            me->sc->read(0, 0);
-                        }
-                }
+    while (me->running) {
+        // we will check the timestamp periodically every minute
+        boost::this_thread::sleep(boost::posix_time::seconds(60));
+        // check the timestamp
+        if (stat(me->path.c_str(), &st) == 0) {
+            time_t new_timestamp = st.st_mtime;
+            // compare with the old one
+            if (new_timestamp != me->timestamp) {
+                // if the file has been changed reload the configuration
+                me->timestamp = new_timestamp;
+                me->sc->read(0, 0);
+            }
         }
+    }
 }
-
