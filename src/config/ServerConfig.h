@@ -56,6 +56,10 @@ public:
     /// @param argv     The command line arguments
     void read(int argc, char** argv);
 
+    /// Start the thread that watches for changes on the configuration file
+    /// @note Beware of forks! Remember threads are gone after a fork
+    void startMonitor(void);
+
     /// Read the configurations from config file only
     void read(const std::string& aFileName);
 

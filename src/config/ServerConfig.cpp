@@ -60,7 +60,11 @@ const std::string &ServerConfig::_get_str(const std::string &aVariable)
 void ServerConfig::read(int argc, char** argv)
 {
     _read<ServerConfigReader> (argc, argv);
+}
 
+
+void ServerConfig::startMonitor(void)
+{
     cfgmonitor.start(
         get<std::string>("configfile")
     );

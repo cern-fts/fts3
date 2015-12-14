@@ -48,12 +48,8 @@ public:
 
 private:
     ServerConfig* sc;
-
     std::string path;
-    bool running;
-
     std::unique_ptr<boost::thread> monitor_thread;
-
     time_t timestamp;
 };
 
