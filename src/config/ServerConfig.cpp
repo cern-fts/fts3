@@ -30,7 +30,6 @@
 using namespace fts3::config;
 using namespace fts3::common;
 
-/* ---------------------------------------------------------------------- */
 
 ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0),
     readTime(0)
@@ -38,29 +37,25 @@ ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0),
     FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "ServerConfig created" << commit;
 }
 
-/* ---------------------------------------------------------------------- */
 
 ServerConfig::~ServerConfig()
 {
     FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "ServerConfig destroyed" << commit;
 }
 
-/* ========================================================================== */
 
-const std::string& ServerConfig::_get_str(const std::string& aVariable)
+const std::string &ServerConfig::_get_str(const std::string &aVariable)
 {
     _t_vars::iterator itr = _vars.find(aVariable);
 
-    if (itr == _vars.end())
-        {
-            throw UserError("Server config variable " + aVariable + " not defined.");
-        }
+    if (itr == _vars.end()) {
+        throw UserError("Server config variable " + aVariable + " not defined.");
+    }
 
     // No worry, it will not be 0 pointer due to the exception
     return itr->second;
 }
 
-/* ---------------------------------------------------------------------- */
 
 void ServerConfig::read(int argc, char** argv)
 {
@@ -81,9 +76,12 @@ time_t ServerConfig::getReadTime()
 void ServerConfig::waitIfReading()
 {
     boost::mutex::scoped_lock lock(qm);
-    while (reading) qv.wait(lock);
+    while (reading) {
+        qv.wait(lock);
+    }
     getting++;
 }
+
 
 void ServerConfig::notifyReaders()
 {
@@ -92,12 +90,14 @@ void ServerConfig::notifyReaders()
     qv.notify_all(); // there is anyway only one thread to be notified
 }
 
+
 void ServerConfig::waitIfGetting()
 {
     boost::mutex::scoped_lock lock(qm);
     while (getting > 0) qv.wait(lock);
     reading = true;
 }
+
 
 void ServerConfig::notifyGetters()
 {
