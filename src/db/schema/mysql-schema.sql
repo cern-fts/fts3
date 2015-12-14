@@ -901,7 +901,7 @@ CREATE TABLE t_authz_dn (
 -- Tables for cloud support
 --
 CREATE TABLE t_cloudStorage (
-    cloudStorage_name VARCHAR(50) NOT NULL PRIMARY KEY,
+    cloudStorage_name VARCHAR(128) NOT NULL PRIMARY KEY,
     app_key           VARCHAR(255),
     app_secret        VARCHAR(255),
     service_api_url   VARCHAR(1024)
@@ -910,7 +910,7 @@ CREATE TABLE t_cloudStorage (
 CREATE TABLE t_cloudStorageUser (
     user_dn              VARCHAR(700) NULL,
     vo_name              VARCHAR(100) NULL,
-    cloudStorage_name    VARCHAR(36) NOT NULL,
+    cloudStorage_name    VARCHAR(128) NOT NULL,
     access_token         VARCHAR(255),
     access_token_secret  VARCHAR(255),
     request_token        VARCHAR(255),
