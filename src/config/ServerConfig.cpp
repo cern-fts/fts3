@@ -35,14 +35,14 @@ using namespace fts3::common;
 ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0),
     readTime(0)
 {
-    // EMPTY
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "ServerConfig created" << commit;
 }
 
 /* ---------------------------------------------------------------------- */
 
 ServerConfig::~ServerConfig()
 {
-    // EMPTY
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "ServerConfig destroyed" << commit;
 }
 
 /* ========================================================================== */

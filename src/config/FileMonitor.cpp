@@ -23,22 +23,24 @@
 #include "common/Logger.h"
 #include "ServerConfig.h"
 
+using namespace fts3::common;
 using namespace fts3::config;
 
 
 FileMonitor::FileMonitor(ServerConfig* sc) : sc(sc), running(false), timestamp(0)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "FileMonitor created" << commit;
 }
 
 
 FileMonitor::~FileMonitor()
 {
     // stop the monitoring thread
-    if (monitor_thread.get())
-        {
-            running = false;
-            monitor_thread->interrupt();
-        }
+    if (monitor_thread.get()) {
+        running = false;
+        monitor_thread->interrupt();
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "FileMonitor destroyed" << commit;
 }
 
 
