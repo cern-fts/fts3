@@ -206,6 +206,27 @@ def get_servers(http_request):
 
 @require_certificate
 @jsonify
+def get_database(http_request):
+    cursor = connection.cursor()
+    cursor.execute("""
+      SELECT Id, Host, Command, Time, State, Info
+      FROM INFORMATION_SCHEMA.PROCESSLIST
+      WHERE State != ''
+      ORDER BY State ASC, TIME DESC
+    """)
+    for row in cursor:
+        query = str(row[5])
+        # Try not to show user dn on the query
+        if query:
+            where_index = query.lower().find('where')
+            user_dn_index = query[where_index:].find('user_dn')
+            if user_dn_index > -1:
+                query = query[0:where_index + user_dn_index + 7] + ' ....'
+        yield row[0], row[1], row[2], row[3], row[4], query
+
+
+@require_certificate
+@jsonify
 def get_pervo(http_request):
     try:
         time_window = timedelta(hours=int(http_request.GET['time_window']))

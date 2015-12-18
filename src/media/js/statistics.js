@@ -207,6 +207,44 @@ StatsServersCtrl.resolve = {
     }
 }
 
+// Database
+function StatsDatabaseCtrl($rootScope, $location, $scope, database, Database)
+{
+    $scope.database = database;
+
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        var filter = $location.$$search;
+        loading($rootScope);
+        Database.query(filter,
+            function(updatedStats) {
+                $scope.database = updatedStats;
+                stopLoading($rootScope);
+            },
+            genericFailureMethod(null, $rootScope, $location)
+        );
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
+}
+
+
+StatsDatabaseCtrl.resolve = {
+    database: function($rootScope, $location, $q, Database) {
+        loading($rootScope);
+
+        var deferred = $q.defer();
+
+        Database.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
+
+        return deferred.promise;
+    }
+}
+
+
 // Per VO
 function _generatePerVoPlots(vos)
 {

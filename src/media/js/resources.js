@@ -66,6 +66,11 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('Database', function($resource) {
+	return $resource('stats/database', {}, {
+		query: {method: 'GET', isArray: true}
+	})
+})
 .factory('TransferVolume', function($resource) {
     return $resource('stats/volume', {}, {
         query: {method: 'GET', isArray: false}
