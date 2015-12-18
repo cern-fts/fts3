@@ -204,6 +204,41 @@ def get_servers(http_request):
             return as_json(dict(exception=str(e)))
 
 
+def _query_worrying_level(time_elapsed, state):
+    """
+    Gives a "worriness" level to a query
+    For instance, long times waiting for something to happen is bad
+    Very long times sending is bad too
+    Return a value between 0 and 1 rating the "worrying level"
+    See http://dev.mysql.com/doc/refman/5.7/en/general-thread-states.html
+    """
+    state_lower = state.lower()
+
+    if state in ('creating sort index', 'sorting result'):
+        max_time = 60
+    elif state in ('creating table', 'creating tmp table', 'removing tmp table'):
+        max_time = 180
+    elif state == 'copying to tmp table on disk':
+        max_time = 60
+    elif state in ('executing', 'preparing'):
+        max_time = 300
+    elif state == 'logging slow query':
+        return 0.5
+    elif state_lower == 'sending data':
+        max_time = 600
+    elif state_lower in ('sorting for group', 'sorting for order'):
+        max_time = 60
+    elif state_lower.startswith('waiting'):
+        max_time = 600
+    else:
+        return 0
+
+    if time_elapsed > max_time:
+        return 1
+    else:
+        return float(time_elapsed) / max_time
+
+
 @require_certificate
 @jsonify
 def get_database(http_request):
@@ -214,7 +249,7 @@ def get_database(http_request):
       WHERE State != ''
       ORDER BY State ASC, TIME DESC
     """)
-    for row in cursor:
+    for row in cursor.fetchall():
         query = str(row[5])
         # Try not to show user dn on the query
         if query:
@@ -222,7 +257,8 @@ def get_database(http_request):
             user_dn_index = query[where_index:].find('user_dn')
             if user_dn_index > -1:
                 query = query[0:where_index + user_dn_index + 7] + ' ....'
-        yield row[0], row[1], row[2], row[3], row[4], query
+        yield row[0], row[1], row[2], row[3], row[4],\
+              query, _query_worrying_level(row[3], row[4])
 
 
 @require_certificate

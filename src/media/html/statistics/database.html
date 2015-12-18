@@ -12,7 +12,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr data-ng-repeat="query in database" data-ng-class-odd="'odd'">
+        <tr data-ng-repeat="query in database" data-ng-class-odd="'odd'" data-ng-style="worryColor({{query[6]}})">
             <td>{{ query[0] }}</td>
             <td>{{ query[1] }}</td>
             <td>{{ query[2] }}</td>

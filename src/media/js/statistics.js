@@ -212,6 +212,13 @@ function StatsDatabaseCtrl($rootScope, $location, $scope, database, Database)
 {
     $scope.database = database;
 
+    $scope.worryColor = function(worryValue) {
+        var h = 0.33 * (1 - worryValue);
+        var rgb = hsvToRgb(h, 1, 0.8);
+        var color = 'rgba(' + Math.ceil(rgb[0]) + ',' + Math.ceil(rgb[1]) + ',' + Math.ceil(rgb[2]) + ', 0.8)'
+        return {'border-left': 'solid 10px ' + color};
+    }
+
     // Set timer to trigger autorefresh
     $scope.autoRefresh = setInterval(function() {
         var filter = $location.$$search;
@@ -231,14 +238,14 @@ function StatsDatabaseCtrl($rootScope, $location, $scope, database, Database)
 
 
 StatsDatabaseCtrl.resolve = {
-    database: function($rootScope, $location, $q, Database) {
+    database: function ($rootScope, $location, $q, Database) {
         loading($rootScope);
 
         var deferred = $q.defer();
 
         Database.query($location.$$search,
-              genericSuccessMethod(deferred, $rootScope),
-              genericFailureMethod(deferred, $rootScope, $location));
+            genericSuccessMethod(deferred, $rootScope),
+            genericFailureMethod(deferred, $rootScope, $location));
 
         return deferred.promise;
     }
