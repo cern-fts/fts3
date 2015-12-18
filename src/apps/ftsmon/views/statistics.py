@@ -169,41 +169,6 @@ def _get_host_service_and_segment():
     return host_map
 
 
-# This one does not require certificate, so the Service Level can be still queried
-def get_servers(http_request):
-    try:
-        time_window = timedelta(hours=int(http_request.GET['time_window']))
-    except:
-        time_window = timedelta(hours=1)
-
-    format = http_request.GET.get('format', None)
-    try:
-        segments = _get_host_service_and_segment()
-        transfers = _get_transfer_and_submission_per_host(time_window, segments)
-
-        hosts = segments.keys()
-
-        servers = dict()
-        for host in hosts:
-            servers[host] = dict()
-            if host in transfers:
-                servers[host].update(transfers[host])
-            else:
-                servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
-
-            servers[host]['services'] = segments[host]
-
-        if format == 'sls':
-            return  slsfy(servers, id_tail='Server Info')
-        else:
-            return as_json(servers)
-    except Exception, e:
-        if format == 'sls':
-            return slsfy_error(str(e), id_tail='Server Info')
-        else:
-            return as_json(dict(exception=str(e)))
-
-
 def _query_worrying_level(time_elapsed, state):
     """
     Gives a "worriness" level to a query
@@ -239,9 +204,7 @@ def _query_worrying_level(time_elapsed, state):
         return float(time_elapsed) / max_time
 
 
-@require_certificate
-@jsonify
-def get_database(http_request):
+def _get_database():
     cursor = connection.cursor()
     cursor.execute("""
       SELECT Id, Host, Command, Time, State, Info
@@ -259,6 +222,66 @@ def get_database(http_request):
                 query = query[0:where_index + user_dn_index + 7] + ' ....'
         yield row[0], row[1], row[2], row[3], row[4],\
               query, _query_worrying_level(row[3], row[4])
+
+
+def _get_server(time_window):
+    segments = _get_host_service_and_segment()
+    transfers = _get_transfer_and_submission_per_host(time_window, segments)
+
+    hosts = segments.keys()
+
+    servers = dict()
+    for host in hosts:
+        servers[host] = dict()
+        if host in transfers:
+            servers[host].update(transfers[host])
+        else:
+            servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
+
+        servers[host]['services'] = segments[host]
+    return servers
+
+
+# This one does not require certificate, so the Service Level can be still queried
+def get_servers(http_request):
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(hours=1)
+
+    format = http_request.GET.get('format', None)
+    try:
+        if format == 'sls':
+            # For SLS, poll the DB load first. If it is way too high, do not bother querying for the servers
+            database = _get_database()
+            waiting_times = map(
+                lambda d: d[3],
+                filter(lambda d: d[4].lower().startswith('waiting'), database)
+            )
+            if len(waiting_times):
+                avg_waiting_time = reduce(int.__add__, waiting_times, 0) / len(waiting_times)
+            else:
+                avg_waiting_time = 0
+
+            if avg_waiting_time > 120 and len(waiting_times) > 5:
+                servers = dict()
+            else:
+                servers = _get_server(time_window)
+
+            return  slsfy(servers, id_tail='Server Info')
+        else:
+            return as_json(_get_server(time_window))
+    except Exception, e:
+        if format == 'sls':
+            return slsfy_error(str(e), id_tail='Server Info')
+        else:
+            return as_json(dict(exception=str(e)))
+
+
+@require_certificate
+@jsonify
+def get_database(http_request):
+    return _get_database()
 
 
 @require_certificate
