@@ -92,6 +92,7 @@ std::string generateCloudStorageNames(const TransferFile& tf)
 std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
     std::string cs_name;
+    char err_descr[128];
 
     if (!tf.userCredentials.empty())
         cs_name = tf.userCredentials;
@@ -108,11 +109,16 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
     umask(oldMask);
     if (fd < 0)
         {
-            char err_descr[128];
             strerror_r(errno, err_descr, sizeof(err_descr));
             throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + err_descr);
         }
     FILE* f = fdopen(fd, "w");
+    if (f == NULL)
+        {
+            close(fd);
+            strerror_r(errno, err_descr, sizeof(err_descr));
+            throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + err_descr);
+        }
 
     // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
     std::vector<std::string> cs_vector;
@@ -135,6 +141,5 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
         }
 
     fclose(f);
-    close(fd);
     return oauth_path;
 }
