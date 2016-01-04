@@ -131,7 +131,7 @@ make install DESTDIR=%{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so*
 %{_libdir}/libfts_delegation_api_simple.so*
 %{_libdir}/libfts_delegation_api_cpp.so*
-%doc README
+%doc README.md
 %doc LICENSE
 
 %files -n fts-python
