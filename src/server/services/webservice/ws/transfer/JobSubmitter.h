@@ -148,6 +148,8 @@ private:
     static const boost::regex fileUrlRegex;
     /// srm protocol prefix
     static const std::string srm_protocol;
+    // mock protocol prefix
+    static const std::string mock_protocol;
     /// true if at least one file was using srm
     bool srm_source;
 

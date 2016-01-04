@@ -57,6 +57,7 @@ using namespace boost::assign;
 
 
 const std::string JobSubmitter::srm_protocol = "srm";
+const std::string JobSubmitter::mock_protocol = "mock";
 
 static Uri checkValidUrl(const std::string &uri)
 {
@@ -206,7 +207,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     inspector.add(destinationSe);
 
                     // check if all the sources use SRM protocol
-                    srm_source &= sourceSe.find(srm_protocol) == 0;
+                    srm_source &= ((sourceSe.find(srm_protocol) == 0) || (sourceSe.find(mock_protocol) == 0));
 
                     tupple.sourceSe = sourceSe;
                     tupple.destSe = destinationSe;
