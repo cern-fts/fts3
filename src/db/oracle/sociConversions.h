@@ -139,8 +139,8 @@ struct type_conversion<Job>
         job.voName        = v.get<std::string>("VO_NAME");
         job.priority       = static_cast<int>(v.get<long long>("PRIORITY"));
         job.submitHost    = v.get<std::string>("SUBMIT_HOST", "");
-        job.source         = v.get<std::string>("SOURCE_SE", "");
-        job.destination           = v.get<std::string>("DEST_SE", "");
+        job.source        = v.get<std::string>("SOURCE_SE", "");
+        job.destination   = v.get<std::string>("DEST_SE", "");
         job.agentDn       = v.get<std::string>("AGENT_DN", "");
         job.submitHost    = v.get<std::string>("SUBMIT_HOST");
         job.userDn        = v.get<std::string>("USER_DN");
@@ -149,12 +149,12 @@ struct type_conversion<Job>
         job.spaceToken    = v.get<std::string>("SPACE_TOKEN", "");
         job.storageClass  = v.get<std::string>("STORAGE_CLASS", "");
         job.internalJobParams = v.get<std::string>("JOB_PARAMS", "");
-        job.overwriteFlag = v.get<std::string>("OVERWRITE_FLAG", "");
+        job.overwriteFlag = v.get<std::string>("OVERWRITE_FLAG", "N");
         job.sourceSpaceToken = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
         job.sourceSpaceTokenDescription = v.get<std::string>("SOURCE_TOKEN_DESCRIPTION", "");
-        job.copyPinLifetime  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"));
-        job.bringOnline     = static_cast<int>(v.get<double>("BRING_ONLINE"));
-        job.checksumMethod = v.get<std::string>("CHECKSUM_METHOD", "");
+        job.copyPinLifetime = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME", -1));
+        job.bringOnline     = static_cast<int>(v.get<double>("BRING_ONLINE", -1));
+        job.checksumMethod  = v.get<std::string>("CHECKSUM_METHOD", "");
         job.submitTime     = getTimeT(v, "SUBMIT_TIME");
 
         try
