@@ -44,6 +44,7 @@ if [ ! -d "fts-tests" ]; then
     git clone https://gitlab.cern.ch/fts/fts-tests.git
 fi
 pushd fts-tests
+    export CLIENT_IMPL=lib.cli
     ./run-helper.sh
 popd
 
