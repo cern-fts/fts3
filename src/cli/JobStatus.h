@@ -91,8 +91,8 @@ public:
 
         duration = (long)difftime(finish, start);
 
-        std::string staging_start = t.get<std::string>("staging_start");
-        std::string staging_finished = t.get<std::string>("staging_finished");
+        std::string staging_start = t.get<std::string>("staging_start", std::string());
+        std::string staging_finished = t.get<std::string>("staging_finished", std::string());
 
         if (strptime(staging_start.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
             {

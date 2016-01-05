@@ -80,7 +80,9 @@ size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, void *userd
 {
     HttpRequest *req = static_cast<HttpRequest*>(userdata);
     // clear the stream if it reached EOF beforehand
-    if (!req->stream) req->stream.clear();
+    if (!req->stream) {
+        req->stream.clear();
+    }
     size_t realsize = size * nmemb;
     if (realsize == 0) return realsize;
     char *cdata = static_cast<char*>(ptr);

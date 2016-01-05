@@ -537,6 +537,17 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
         ResponseParser response(ss);
         results = response.getFiles("files");
 
+        // If files is empty, fallback to data management (i.e. deletion)
+        if (results.empty()) {
+            url = endpoint + "/jobs/" + jobId + "/dm";
+            ss.str(std::string());
+            ss.clear();
+            HttpRequest httpDm (url, capath, proxy, ss, "files");
+            httpDm.get();
+            ResponseParser responseDm(ss);
+            results = responseDm.getFiles("files");
+        }
+
     } catch(rest_failure const &ex) {
         std::string msg = "Error getting the file status: "
                           + std::string(ex.what());
