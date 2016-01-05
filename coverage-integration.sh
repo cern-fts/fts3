@@ -45,6 +45,7 @@ if [ ! -d "fts-tests" ]; then
 fi
 pushd fts-tests
     export CLIENT_IMPL=lib.cli
+    export PATH=$PATH:${BUILD_DIR}/src/cli
     ./run-helper.sh
 popd
 
