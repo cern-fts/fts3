@@ -198,6 +198,12 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
         {
             params.put("retry", param_itr->second);
         }
+    param_itr = me.parameters.find(JobParameterHandler::STRICT_COPY);
+    if (param_itr != me.parameters.end())
+        {
+            params.put("strict_copy", true);
+        }
+
 
     // add params to root
     if (!params.empty())
