@@ -113,11 +113,11 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
                 pt::ptree file_metadata;
                 try {
                     pt::read_json(iostr, file_metadata);
+                    element.push_back(std::make_pair("metadata", file_metadata));
                 }
                 catch (const pt::json_parser::json_parser_error&) {
-                    throw cli_exception("Invalid json in file metadata");
+                    element.put("metadata", *it->metadata);
                 }
-                params.push_back(std::make_pair("metadata", file_metadata));
             }
             // add file size if provided
             if (it->file_size)
@@ -167,11 +167,11 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
             pt::ptree job_metadata;
             try {
                 pt::read_json(iostr, job_metadata);
+                params.push_back(std::make_pair("job_metadata", job_metadata));
             }
             catch (const pt::json_parser::json_parser_error&) {
-                throw cli_exception("Invalid json in job metadata");
+                params.put("job_metadata", param_itr->second);
             }
-            params.push_back(std::make_pair("job_metadata", job_metadata));
         }
     param_itr = me.parameters.find(JobParameterHandler::SPACETOKEN_SOURCE);
     if (param_itr != me.parameters.end())
