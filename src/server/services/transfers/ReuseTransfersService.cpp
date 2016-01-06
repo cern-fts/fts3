@@ -81,14 +81,11 @@ void ReuseTransfersService::runService()
         }
         catch (std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                    << "Exception in process_service_handler " << e.what()
-                    << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService " << e.what() << commit;
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                    << "Exception in process_service_handler!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
         }
         boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
@@ -107,11 +104,10 @@ void ReuseTransfersService::writeJobFile(const std::string& jobId, const std::ve
         {
             fout << *iter << std::endl;
         }
-        fout.close();
     }
     catch (...)
     {
-        fout.close();
+        // pass
     }
 }
 
@@ -332,7 +328,8 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " "
             << params << commit;
     ExecuteProcess pr(cmd, params);
-    /*check if fork failed , check if execvp failed, */
+
+    // Check if fork failed , check if execvp failed
     std::string forkMessage;
     if (-1 == pr.executeProcessShell(forkMessage))
     {
@@ -354,6 +351,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     {
         db->setPidForJob(job_id, pr.getPid());
     }
+
     std::map<int, std::string>::const_iterator iterFileIds;
     for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
     {
@@ -368,8 +366,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         }
         else
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun"
-                    << std::string(job_id).length() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
         }
     }
 }
@@ -380,68 +377,21 @@ void ReuseTransfersService::executeUrlcopy()
     try
     {
         std::vector<QueueId> queues;
+        DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
 
-        try
-        {
-            DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
-        }
-        catch (std::exception& e)
-        {
-            //try again if deadlocked
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
-            try
-            {
-                queues.clear();
-                DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
-            }
-            catch (std::exception& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                        << "Exception in process_service_handler "
-                        << e.what() << commit;
-            }
-            catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                        << "Exception in process_service_handler!"
-                        << commit;
-            }
-        }
-        catch (...)
-        {
-            //try again if deadlocked
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
-            try
-            {
-                queues.clear();
-                DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
-            }
-            catch (std::exception& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                        << "Exception in process_service_handler "
-                        << e.what() << commit;
-            }
-            catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                        << "Exception in process_service_handler!"
-                        << commit;
-            }
-        }
-
-        if (queues.empty())
+        if (queues.empty()) {
             return;
+        }
 
         getFiles(queues);
     }
     catch (std::exception& e)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService " << e.what() << commit;
     }
     catch (...)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
     }
 }
 
