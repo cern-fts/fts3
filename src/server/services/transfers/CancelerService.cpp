@@ -64,7 +64,6 @@ void CancelerService::markAsStalled()
         bool diskFull = (s.free <= 0 || s.available <= 0);
         bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
         if (updated) {
-            ThreadSafeList::get_instance().deleteMsg(messages);
             for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
                 if (iter->msg_errno == 0 && (*iter).file_id > 0
                     && std::string((*iter).job_id).length() > 0) {
@@ -72,6 +71,11 @@ void CancelerService::markAsStalled()
                 }
             }
         }
+        else {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
+                << messages.size() << " messages affected" << commit;
+        }
+        ThreadSafeList::get_instance().deleteMsg(messages);
         messages.clear();
     }
 }
