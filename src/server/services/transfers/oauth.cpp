@@ -97,17 +97,17 @@ std::string generateCloudStorageNames(const TransferFile &tf)
 
 std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
-    std::string cs_name;
-    char err_descr[128];
+    std::string csName;
+    char errDescr[128];
 
     if (!tf.userCredentials.empty()) {
-        cs_name = tf.userCredentials;
+        csName = tf.userCredentials;
     }
     else {
-        cs_name = generateCloudStorageNames(tf);
+        csName = generateCloudStorageNames(tf);
     }
 
-    if (cs_name.empty()) {
+    if (csName.empty()) {
         return "";
     }
 
@@ -117,31 +117,39 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
     int fd = mkstemp(oauth_path);
     umask(oldMask);
     if (fd < 0) {
-        strerror_r(errno, err_descr, sizeof(err_descr));
-        throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + err_descr);
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
     }
     FILE *f = fdopen(fd, "w");
     if (f == NULL) {
         close(fd);
-        strerror_r(errno, err_descr, sizeof(err_descr));
-        throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + err_descr);
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
-    // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
-    std::vector<std::string> cs_vector;
-    boost::split(cs_vector, cs_name, boost::is_any_of(";"));
-    std::vector<std::string>::const_iterator i;
-    for (i = cs_vector.begin(); i != cs_vector.end(); ++i) {
-        std::string upper_cs_name = *i;
-        boost::to_upper(upper_cs_name);
+    // For each different VO role, group, ...
+    std::vector<std::string> vomsAttrs;
+    vomsAttrs.push_back(tf.voName);
+    boost::split(vomsAttrs, tf.vomsAttrs, boost::is_any_of(" "), boost::token_compress_on);
 
-        OAuth oauth;
-        if (db->getOauthCredentials(tf.userDn, tf.voName, upper_cs_name, oauth)) {
-            fprintf(f, "[%s]\n", upper_cs_name.c_str());
-            fprintf(f, "APP_KEY=%s\n", oauth.appKey.c_str());
-            fprintf(f, "APP_SECRET=%s\n", oauth.appSecret.c_str());
-            fprintf(f, "ACCESS_TOKEN=%s\n", oauth.accessToken.c_str());
-            fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.accessTokenSecret.c_str());
+    // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
+    std::vector<std::string> csVector;
+    boost::split(csVector, csName, boost::is_any_of(";"), boost::token_compress_on);
+
+    for (auto i = csVector.begin(); i != csVector.end(); ++i) {
+        std::string upperCsName = *i;
+        boost::to_upper(upperCsName);
+
+        for (auto voI = vomsAttrs.begin(); voI != vomsAttrs.end(); ++voI) {
+            OAuth oauth;
+            if (db->getOauthCredentials(tf.userDn, *voI, upperCsName, oauth)) {
+                fprintf(f, "[%s]\n", upperCsName.c_str());
+                fprintf(f, "APP_KEY=%s\n", oauth.appKey.c_str());
+                fprintf(f, "APP_SECRET=%s\n", oauth.appSecret.c_str());
+                fprintf(f, "ACCESS_TOKEN=%s\n", oauth.accessToken.c_str());
+                fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.accessTokenSecret.c_str());
+                break;
+            }
         }
     }
 

@@ -866,7 +866,7 @@ void OracleAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     sql.prepare <<
                         " SELECT * FROM (SELECT "
                         "       rownum as rn, f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
                         "       f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
@@ -932,7 +932,7 @@ void OracleAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     std::string select =
                             " SELECT * FROM ("
                             "       SELECT rownum as rn, f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                            "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                            "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
                             "       f.checksum, j.checksum_method, j.source_space_token, "
                             "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                             "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
@@ -1084,7 +1084,7 @@ void OracleAPI::getMultihopJobs(
                     sql.prepare <<
                         " SELECT "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
                         "       f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
@@ -1377,7 +1377,7 @@ void OracleAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues
                         sql.prepare <<
                         " SELECT  "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
                         "       f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "

@@ -154,6 +154,8 @@ struct type_conversion<TransferFile>
         file.selectionStrategy = v.get<std::string>("selection_strategy", "");
         file.internalFileParams = v.get<std::string>("internal_job_params", "");
         file.userCredentials = v.get<std::string>("user_cred", "");
+        file.vomsAttrs = v.get<std::string>("voms_cred", "");
+
         try
             {
                 file.reuseJob = v.get<std::string>("reuse_job", "");

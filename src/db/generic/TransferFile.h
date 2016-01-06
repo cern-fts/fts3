@@ -59,6 +59,7 @@ public:
     std::string internalFileParams;
     time_t jobFinished;
     std::string voName;
+    std::string vomsAttrs;
     std::string overwriteFlag;
     std::string userDn;
     std::string credId;

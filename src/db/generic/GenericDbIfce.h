@@ -643,7 +643,8 @@ public:
     /// Retrieve the credentials for a storage endpoint for the given user/VO
     /// @note   It is called OAuth, but can actually store S3 credentials as well
     virtual bool getOauthCredentials(const std::string& userDn,
-                                     const std::string& voName, const std::string& cloudName,
+                                     const std::string& voName,
+                                     const std::string& cloudName,
                                      OAuth& oauth) = 0;
 
     /// Set the storage credentials for a given user or VO
