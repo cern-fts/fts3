@@ -254,34 +254,29 @@ void FileTransferExecutor::run(boost::any & ctx)
             bool failed = false;
             std::string forkMessage;
             if (-1 == pr.executeProcessShell(forkMessage)) {
+                failed = true;
+                fileUpdated = db->updateTransferStatus(
+                    tf.jobId, tf.fileId, 0.0, "FAILED",
+                    "Transfer failed to fork, check fts3server.log for more details",
+                    (int) pr.getPid(), 0, 0, false
+                );
+                db->updateJobStatus(tf.jobId, "FAILED", 0);
+
                 if (forkMessage.empty()) {
-                    failed = true;
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork "
                         << tf.jobId << "  " << tf.fileId << commit;
-                    fileUpdated = db->updateTransferStatus(
-                        tf.jobId, tf.fileId, 0.0, "FAILED",
-                        "Transfer failed to fork, check fts3server.log for more details",
-                        (int) pr.getPid(), 0, 0, false
-                    );
-                    db->updateJobStatus(tf.jobId, "FAILED", 0);
                 }
                 else {
-                    failed = true;
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " << forkMessage << "   " << tf.jobId <<
                         "  " << tf.fileId << commit;
-                    fileUpdated = db->updateTransferStatus(
-                        tf.jobId, tf.fileId, 0.0, "FAILED",
-                        "Transfer failed to fork, check fts3server.log for more details",
-                        (int) pr.getPid(), 0, 0, false
-                    );
-                    db->updateJobStatus(tf.jobId, "FAILED", 0);
                 }
             }
-
-            db->updateTransferStatus(
-                tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
-                (int) pr.getPid(), 0, 0, false
-            );
+            else {
+                db->updateTransferStatus(
+                    tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
+                    (int) pr.getPid(), 0, 0, false
+                );
+            }
 
             // Send current state
             SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
