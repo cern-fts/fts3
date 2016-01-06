@@ -287,8 +287,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     if (!proxy_file.empty())
         cmd_builder.setProxy(proxy_file);
 
-    std::string oauth_file = fts3::generateOauthConfigFile(db,
-            representative);
+    std::string oauth_file = fts3::generateOauthConfigFile(db, representative);
     if (!oauth_file.empty())
         cmd_builder.setOAuthFile(oauth_file);
 
