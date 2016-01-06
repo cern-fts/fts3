@@ -199,57 +199,13 @@ void TransfersService::executeUrlcopy()
     try
     {
         boost::thread_group g;
+        DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
 
-        try
-        {
-            DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
-        }
-        catch (std::exception& e)
-        {
-            //try again if deadlocked
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
-            try
-            {
-                queues.clear();
-                DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
-            }
-            catch (std::exception& e)
-            {
-                queues.clear();
-
-            }
-            catch (...)
-            {
-                queues.clear();
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-            }
-        }
-        catch (...)
-        {
-            //try again if deadlocked
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
-            try
-            {
-                queues.clear();
-                DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
-            }
-            catch (std::exception& e)
-            {
-                queues.clear();
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
-            }
-            catch (...)
-            {
-                queues.clear();
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-            }
-        }
-
-        if(queues.empty())
+        if (queues.empty())
         {
             return;
         }
-        else if(1 == queues.size())
+        else if (1 == queues.size())
         {
             getFiles(queues);
         }
@@ -267,31 +223,27 @@ void TransfersService::executeUrlcopy()
             std::vector<QueueId> split_12(split_2.begin(), split_2.begin() + half_size3);
             std::vector<QueueId> split_22(split_2.begin() + half_size3, split_2.end());
 
-            //create threads only when needed
+            // create threads only when needed
             if(!split_11.empty())
-            g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_11)));
+               g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_11)));
             if(!split_21.empty())
-            g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_21)));
+                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_21)));
             if(!split_12.empty())
-            g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_12)));
+                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_12)));
             if(!split_22.empty())
-            g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_22)));
+                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_22)));
 
             // wait for them
             g.join_all();
         }
-
-        queues.clear();
     }
     catch (std::exception& e)
     {
-        queues.clear();
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService " << e.what() << commit;
     }
     catch (...)
     {
-        queues.clear();
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
     }
 }
 
