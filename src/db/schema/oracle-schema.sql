@@ -995,7 +995,7 @@ CREATE TABLE t_cloudStorageUser (
     cloudStorage_name    VARCHAR2(128) NOT NULL,
     access_token         VARCHAR2(255),
     access_token_secret  VARCHAR2(255),
-    request_token        VARCHAR2(255),
+    request_token        VARCHAR2(512),
     request_token_secret VARCHAR2(255),
     FOREIGN KEY (cloudStorage_name) REFERENCES t_cloudStorage(cloudStorage_name),
     PRIMARY KEY (user_dn, vo_name, cloudStorage_name)

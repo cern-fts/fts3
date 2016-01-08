@@ -24,9 +24,10 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include "../../../common/Exceptions.h"
+#include "common/Exceptions.h"
 #include "common/Uri.h"
 
 
@@ -95,6 +96,25 @@ std::string generateCloudStorageNames(const TransferFile &tf)
 }
 
 
+static void writeDropboxCreds(FILE *f, const std::string& csName, const OAuth& oauth)
+{
+    fprintf(f, "[%s]\n", csName.c_str());
+    fprintf(f, "APP_KEY=%s\n", oauth.appKey.c_str());
+    fprintf(f, "APP_SECRET=%s\n", oauth.appSecret.c_str());
+    fprintf(f, "ACCESS_TOKEN=%s\n", oauth.accessToken.c_str());
+    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.accessTokenSecret.c_str());
+}
+
+
+static void writeS3Creds(FILE *f, const std::string& csName, const OAuth& oauth)
+{
+    fprintf(f, "[%s]\n", csName.c_str());
+    fprintf(f, "SECRET_KEY=%s\n", oauth.accessTokenSecret.c_str());
+    fprintf(f, "ACCESS_KEY=%s\n", oauth.accessToken.c_str());
+    fprintf(f, "TOKEN=%s\n", oauth.requestToken.c_str());
+}
+
+
 std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
     std::string csName;
@@ -143,11 +163,12 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
         for (auto voI = vomsAttrs.begin(); voI != vomsAttrs.end(); ++voI) {
             OAuth oauth;
             if (db->getOauthCredentials(tf.userDn, *voI, upperCsName, oauth)) {
-                fprintf(f, "[%s]\n", upperCsName.c_str());
-                fprintf(f, "APP_KEY=%s\n", oauth.appKey.c_str());
-                fprintf(f, "APP_SECRET=%s\n", oauth.appSecret.c_str());
-                fprintf(f, "ACCESS_TOKEN=%s\n", oauth.accessToken.c_str());
-                fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.accessTokenSecret.c_str());
+                if (boost::starts_with(upperCsName, "DROPBOX")) {
+                    writeDropboxCreds(f, upperCsName, oauth);
+                }
+                else {
+                    writeS3Creds(f, upperCsName, oauth);
+                }
                 break;
             }
         }

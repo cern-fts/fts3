@@ -407,6 +407,7 @@ struct type_conversion<OAuth>
         oauth.appSecret   = v.get<std::string>("app_secret", "");
         oauth.accessToken = v.get<std::string>("access_token", "");
         oauth.accessTokenSecret = v.get<std::string>("access_token_secret", "");
+        oauth.requestToken = v.get<std::string>("request_token", "");
     }
 };
 

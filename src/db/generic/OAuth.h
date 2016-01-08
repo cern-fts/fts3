@@ -30,6 +30,7 @@ struct OAuth
     std::string appSecret;
     std::string accessToken;       ///< Access key for S3
     std::string accessTokenSecret; ///< Secret key for S3
+    std::string requestToken;      ///< Session token for S3 (short term credentials)
 };
 
 #endif // OAUTH_H_

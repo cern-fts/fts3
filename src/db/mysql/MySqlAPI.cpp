@@ -11985,7 +11985,7 @@ bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
 
     try
     {
-        sql << "SELECT app_key, app_secret, access_token, access_token_secret "
+        sql << "SELECT * "
             "FROM t_cloudStorage cs, t_cloudStorageUser cu "
             "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
             soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
