@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "oauth.h"
+#include "CloudStorageConfig.h"
 
 #include <sys/stat.h>
 
@@ -96,26 +96,26 @@ std::string generateCloudStorageNames(const TransferFile &tf)
 }
 
 
-static void writeDropboxCreds(FILE *f, const std::string& csName, const OAuth& oauth)
+static void writeDropboxCreds(FILE *f, const std::string& csName, const CloudStorageAuth& auth)
 {
     fprintf(f, "[%s]\n", csName.c_str());
-    fprintf(f, "APP_KEY=%s\n", oauth.appKey.c_str());
-    fprintf(f, "APP_SECRET=%s\n", oauth.appSecret.c_str());
-    fprintf(f, "ACCESS_TOKEN=%s\n", oauth.accessToken.c_str());
-    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.accessTokenSecret.c_str());
+    fprintf(f, "APP_KEY=%s\n", auth.appKey.c_str());
+    fprintf(f, "APP_SECRET=%s\n", auth.appSecret.c_str());
+    fprintf(f, "ACCESS_TOKEN=%s\n", auth.accessToken.c_str());
+    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", auth.accessTokenSecret.c_str());
 }
 
 
-static void writeS3Creds(FILE *f, const std::string& csName, const OAuth& oauth)
+static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageAuth& auth)
 {
     fprintf(f, "[%s]\n", csName.c_str());
-    fprintf(f, "SECRET_KEY=%s\n", oauth.accessTokenSecret.c_str());
-    fprintf(f, "ACCESS_KEY=%s\n", oauth.accessToken.c_str());
-    fprintf(f, "TOKEN=%s\n", oauth.requestToken.c_str());
+    fprintf(f, "SECRET_KEY=%s\n", auth.accessTokenSecret.c_str());
+    fprintf(f, "ACCESS_KEY=%s\n", auth.accessToken.c_str());
+    fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
 }
 
 
-std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile& tf)
+std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
     std::string csName;
     char errDescr[128];
@@ -161,13 +161,13 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFile&
         boost::to_upper(upperCsName);
 
         for (auto voI = vomsAttrs.begin(); voI != vomsAttrs.end(); ++voI) {
-            OAuth oauth;
-            if (db->getOauthCredentials(tf.userDn, *voI, upperCsName, oauth)) {
+            CloudStorageAuth auth;
+            if (db->getCloudStorageCredentials(tf.userDn, *voI, upperCsName, auth)) {
                 if (boost::starts_with(upperCsName, "DROPBOX")) {
-                    writeDropboxCreds(f, upperCsName, oauth);
+                    writeDropboxCreds(f, upperCsName, auth);
                 }
                 else {
-                    writeS3Creds(f, upperCsName, oauth);
+                    writeS3Creds(f, upperCsName, auth);
                 }
                 break;
             }

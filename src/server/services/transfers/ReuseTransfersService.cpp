@@ -32,7 +32,7 @@
 #include "server/DrainMode.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
 
-#include "oauth.h"
+#include "CloudStorageConfig.h"
 #include "FileTransferScheduler.h"
 
 
@@ -283,9 +283,10 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     if (!proxy_file.empty())
         cmd_builder.setProxy(proxy_file);
 
-    std::string oauth_file = fts3::generateOauthConfigFile(db, representative);
-    if (!oauth_file.empty())
-        cmd_builder.setOAuthFile(oauth_file);
+    std::string cloudConfigFile = fts3::generateCloudStorageConfigFile(db, representative);
+    if (!cloudConfigFile.empty()) {
+        cmd_builder.setOAuthFile(cloudConfigFile);
+    }
 
     // Send initial message
     SingleTrStateInstance::instance().sendStateMessage(job_id, -1);

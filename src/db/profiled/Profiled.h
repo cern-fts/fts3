@@ -358,10 +358,11 @@ public:
     void submitDelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                       const std::string & DN, const std::string & voName, const std::string & credID);
 
-    bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
-                             const std::string& cloud_name, OAuth& oauth);
+    bool getCloudStorageCredentials(const std::string& user_dn, const std::string& vo,
+                             const std::string& cloud_name, CloudStorageAuth& auth);
 
-    void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey);
+    void setCloudStorageCredentials(std::string const &dn, std::string const &vo, std::string const &storage,
+        std::string const &accessKey, std::string const &secretKey);
 
     void setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl);
 

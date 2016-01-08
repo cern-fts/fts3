@@ -11978,8 +11978,8 @@ bool MySqlAPI::isDmJob(std::string const & job)
 }
 
 
-bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
-                                   const std::string& vo, const std::string& cloud_name, OAuth& oauth)
+bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
+    const std::string& vo, const std::string& cloud_name, CloudStorageAuth& auth)
 {
     soci::session sql(*connectionPool);
 
@@ -11988,7 +11988,7 @@ bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
         sql << "SELECT * "
             "FROM t_cloudStorage cs, t_cloudStorageUser cu "
             "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-            soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
+            soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(auth);
         if (!sql.got_data())
             return false;
     }
@@ -12003,7 +12003,9 @@ bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
     return true;
 }
 
-void MySqlAPI::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
+
+void MySqlAPI::setCloudStorageCredentials(std::string const &dn, std::string const &vo, std::string const &storage,
+    std::string const &accessKey, std::string const &secretKey)
 {
     soci::session sql(*connectionPool);
 

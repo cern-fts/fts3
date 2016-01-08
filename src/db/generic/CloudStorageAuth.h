@@ -18,12 +18,12 @@
  * limitations under the License.
  */
 
-#ifndef OAUTH_H_
-#define OAUTH_H_
+#ifndef CLOUDSTORAGEAUTH_H_
+#define CLOUDSTORAGEAUTH_H_
 
 #include <string>
 
-struct OAuth
+struct CloudStorageAuth
 {
     std::string cloudName;
     std::string appKey;
@@ -33,4 +33,4 @@ struct OAuth
     std::string requestToken;      ///< Session token for S3 (short term credentials)
 };
 
-#endif // OAUTH_H_
+#endif // CLOUDSTORAGEAUTH_H_

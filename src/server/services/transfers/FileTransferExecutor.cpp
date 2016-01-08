@@ -33,7 +33,7 @@
 #include "ProtocolResolver.h"
 #include "services/webservice/ws/SingleTrStateInstance.h"
 
-#include "oauth.h"
+#include "CloudStorageConfig.h"
 
 #include "UrlCopyCmd.h"
 
@@ -173,9 +173,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmd_builder.setFromTransfer(tf);
 
             // OAuth credentials
-            std::string oauth_file = generateOauthConfigFile(db, tf);
-            if (!oauth_file.empty()) {
-                cmd_builder.setOAuthFile(oauth_file);
+            std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);
+            if (!cloudConfigFile.empty()) {
+                cmd_builder.setOAuthFile(cloudConfigFile);
             }
 
             // Debug level

@@ -906,15 +906,16 @@ void ProfiledDB::submitDelete(const std::string & jobId, const std::map<std::str
 }
 
 
-bool ProfiledDB::getOauthCredentials(const std::string& user_dn,
-                                     const std::string& vo, const std::string& cloud_name, OAuth& oauth)
+bool ProfiledDB::getCloudStorageCredentials(const std::string& user_dn,
+                                     const std::string& vo, const std::string& cloud_name, CloudStorageAuth& auth)
 {
-    PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, vo, cloud_name, oauth));
+    PROFILE_PREFIXED("DB::", return db->getCloudStorageCredentials(user_dn, vo, cloud_name, auth));
 }
 
-void ProfiledDB::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
+void ProfiledDB::setCloudStorageCredentials(std::string const &dn, std::string const &vo, std::string const &storage,
+    std::string const &accessKey, std::string const &secretKey)
 {
-    PROFILE_PREFIXED("DB::", return db->setCloudStorageCredential(dn, vo, storage, accessKey, secretKey));
+    PROFILE_PREFIXED("DB::", return db->setCloudStorageCredentials(dn, vo, storage, accessKey, secretKey));
 }
 
 void ProfiledDB::setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)

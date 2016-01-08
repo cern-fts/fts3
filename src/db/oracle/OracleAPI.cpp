@@ -10211,9 +10211,9 @@ bool OracleAPI::resetForRetryDelete(soci::session &sql, int file_id, const std::
 }
 
 
-bool OracleAPI::getOauthCredentials(const std::string &user_dn,
+bool OracleAPI::getCloudStorageCredentials(const std::string &user_dn,
     const std::string &vo, const std::string &cloud_name,
-    OAuth &oauth)
+    CloudStorageAuth& auth)
 {
     soci::session sql(*connectionPool);
 
@@ -10222,7 +10222,7 @@ bool OracleAPI::getOauthCredentials(const std::string &user_dn,
         sql << "SELECT * "
             "FROM t_cloudStorage cs, t_cloudStorageUser cu "
             "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-            soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
+            soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(auth);
         if (!sql.got_data())
             return false;
     }
@@ -10236,7 +10236,7 @@ bool OracleAPI::getOauthCredentials(const std::string &user_dn,
 }
 
 
-void OracleAPI::setCloudStorageCredential(std::string const &dn, std::string const &vo, std::string const &storage,
+void OracleAPI::setCloudStorageCredentials(std::string const &dn, std::string const &vo, std::string const &storage,
     std::string const &accessKey, std::string const &secretKey)
 {
     soci::session sql(*connectionPool);

@@ -998,7 +998,7 @@ int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string
 
             // make sure the host name is upper case
             boost::to_upper(storage);
-            DBSingleton::instance().getDBObjectInstance()->setCloudStorageCredential(
+            DBSingleton::instance().getDBObjectInstance()->setCloudStorageCredentials(
                 cgsi.getClientDn(), vo, storage, accessKey, secretKey
             );
         }

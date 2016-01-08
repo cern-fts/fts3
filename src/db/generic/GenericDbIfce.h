@@ -38,7 +38,7 @@
 #include "QueueId.h"
 #include "LinkConfig.h"
 #include "ShareConfig.h"
-#include "OAuth.h"
+#include "CloudStorageAuth.h"
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
@@ -640,18 +640,17 @@ public:
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
-    /// Retrieve the credentials for a storage endpoint for the given user/VO
-    /// @note   It is called OAuth, but can actually store S3 credentials as well
-    virtual bool getOauthCredentials(const std::string& userDn,
+    /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
+    virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,
                                      const std::string& cloudName,
-                                     OAuth& oauth) = 0;
+                                     CloudStorageAuth& auth) = 0;
 
     /// Set the storage credentials for a given user or VO
     /// For S3, accessKey is the access key, and secret key the secret key
     /// For Dropbox, this step would be normally done by WebFTS, although it can be set manually as well
     /// In any case, accessKey come from this OAuth authentication
-    virtual void setCloudStorageCredential(const std::string& userDn,
+    virtual void setCloudStorageCredentials(const std::string& userDn,
             const std::string& voName, const std::string& storage,
             const std::string& accessKey, const std::string& secretKey) = 0;
 

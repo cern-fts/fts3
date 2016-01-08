@@ -30,7 +30,7 @@
 #include "db/generic/SeProtocolConfig.h"
 #include "db/generic/ShareConfig.h"
 #include "db/generic/Job.h"
-#include "db/generic/OAuth.h"
+#include "db/generic/CloudStorageAuth.h"
 #include <soci.h>
 #include <time.h>
 
@@ -401,17 +401,17 @@ struct type_conversion<FileRetry>
 };
 
 template<>
-struct type_conversion<OAuth>
+struct type_conversion<CloudStorageAuth>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, OAuth& oauth)
+    static void from_base(values const& v, indicator, CloudStorageAuth& auth)
     {
-        oauth.appKey      = v.get<std::string>("APP_KEY", "");
-        oauth.appSecret   = v.get<std::string>("APP_SECRET", "");
-        oauth.accessToken = v.get<std::string>("ACCESS_TOKEN", "");
-        oauth.accessTokenSecret = v.get<std::string>("ACCESS_TOKEN_SECRET", "");
-        oauth.requestToken = v.get<std::string>("REQUEST_TOKEN", "");
+        auth.appKey      = v.get<std::string>("APP_KEY", "");
+        auth.appSecret   = v.get<std::string>("APP_SECRET", "");
+        auth.accessToken = v.get<std::string>("ACCESS_TOKEN", "");
+        auth.accessTokenSecret = v.get<std::string>("ACCESS_TOKEN_SECRET", "");
+        auth.requestToken = v.get<std::string>("REQUEST_TOKEN", "");
     }
 };
 
