@@ -35,7 +35,10 @@
 struct transfer_completed
 {
 public:
-    transfer_completed() {}
+    transfer_completed():
+        transfer_timeout(0), checksum_timeout(0), total_bytes_transfered(0), number_of_streams(0), tcp_buffer_size(0),
+        block_size(0), file_size(0), retry(0), retry_max(0), is_recoverable(false)
+    {}
     ~transfer_completed() {}
 
     std::string agent_fqdn;

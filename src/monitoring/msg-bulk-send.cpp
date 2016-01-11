@@ -36,21 +36,22 @@ using namespace fts3::config;
 
 static void DoServer(bool isDaemon) throw()
 {
-    if (!get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"))) {
-        FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the monitoring configuration file");
-        return;
-    }
-
-    std::string logFile = getLOGFILEDIR() + "" + getLOGFILENAME();
-    if (isDaemon) {
-        if (theLogger().redirect(logFile, logFile) != 0) {
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the log file");
+    try {
+        if (!get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"))) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the monitoring configuration file");
             return;
         }
-    }
-    theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
-    try {
+        std::string logFile = getLOGFILEDIR() + "" + getLOGFILENAME();
+        if (isDaemon) {
+            if (theLogger().redirect(logFile, logFile) != 0) {
+                FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the log file");
+                return;
+            }
+        }
+
+        theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+
         activemq::library::ActiveMQCPP::initializeLibrary();
 
         //initialize here to avoid race conditions

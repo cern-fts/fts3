@@ -77,10 +77,12 @@ BOOST_AUTO_TEST_CASE(redirect)
     // Save current stdout and stderr
     int oldOut = dup(STDOUT_FILENO);
     int oldErr = dup(STDERR_FILENO);
+    BOOST_CHECK_GT(oldOut, -1);
+    BOOST_CHECK_GT(oldErr, -1);
 
     // Do the test
     fts3::common::Logger &logger = fts3::common::theLogger();
-    logger.redirect(logPath, logPath);
+    BOOST_CHECK_EQUAL(logger.redirect(logPath, logPath), 0);
 
     logger.setLogLevel(fts3::common::Logger::WARNING);
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "APPEAR" << fts3::common::commit;
@@ -111,6 +113,8 @@ BOOST_AUTO_TEST_CASE(redirect)
 
     dup2(oldOut, STDOUT_FILENO);
     dup2(oldErr, STDERR_FILENO);
+    close(oldOut);
+    close(oldErr);
 
     // Clean
     BOOST_CHECK_NO_THROW(boost::filesystem::remove(logPath));

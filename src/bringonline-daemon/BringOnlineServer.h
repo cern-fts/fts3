@@ -48,6 +48,7 @@ public:
     }
 
 private:
+    std::vector<std::shared_ptr<boost::thread>> threadsPtr;
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
 

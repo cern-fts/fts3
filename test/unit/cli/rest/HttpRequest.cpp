@@ -68,7 +68,8 @@ class HttpRequestMock: public HttpRequest
 public:
     HttpRequestMock(std::string const & url, std::string const & capath, std::string const & proxy,
     std::iostream& stream, std::string const &topname = std::string()):
-        HttpRequest(url, capath, proxy, stream, topname), expectBody(false)
+        HttpRequest(url, capath, proxy, stream, topname),
+        performCode(CURLE_OK), httpCode(0), expectBody(false)
     {
     }
 

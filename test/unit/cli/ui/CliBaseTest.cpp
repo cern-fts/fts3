@@ -37,7 +37,7 @@ public:
     CliBaseTester() {}
 
     // implement the pure vitual method
-    std::string getUsageString(std::string tool)
+    std::string getUsageString(std::string tool) const
     {
         return tool;
     };

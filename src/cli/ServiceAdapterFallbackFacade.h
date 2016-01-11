@@ -41,7 +41,8 @@ public:
     ServiceAdapterFallbackFacade(std::string const & endpoint, std::string const & capath = std::string(), std::string const & proxy = std::string()):
         ServiceAdapter(endpoint),
         capath(capath),
-        proxy(proxy) {}
+        proxy(proxy),
+        fbstate(RESTWITHFB) {}
 
     ServiceAdapterFallbackFacade(const ServiceAdapterFallbackFacade &other);
 

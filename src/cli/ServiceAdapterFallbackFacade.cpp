@@ -545,10 +545,10 @@ std::string ServiceAdapterFallbackFacade::transferSubmit (std::vector<File> cons
 ServiceAdapterFallbackFacade::ServiceAdapterFallbackFacade(const ServiceAdapterFallbackFacade &other) :
     ServiceAdapter(other), capath(other.capath), proxy(other.proxy)
 {
+    fbstate = other.fbstate;
     if (!other.proxysvc) {
         return;
     }
-    fbstate = other.fbstate;
     if (fbstate == RESTWITHFB || fbstate == REST) {
         proxysvc.reset(new RestContextAdapter(endpoint, capath, proxy));
     } else {

@@ -19,6 +19,7 @@
  */
 
 #include <boost/test/included/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 #include "common/Exceptions.h"
 #include "config/ServerConfigReader.h"
@@ -81,6 +82,7 @@ BOOST_FIXTURE_TEST_CASE (functionOperatorFromFile, fts3::config::ServerConfigRea
     // Open a temporary file
     char filename[] = "/tmp/fts3tests.XXXXXX";
     int fd = mkstemp(filename);
+    BOOST_CHECK_GT (fd, -1);
     close(fd);
     std::ofstream file(filename);
 
@@ -113,7 +115,7 @@ BOOST_FIXTURE_TEST_CASE (functionOperatorFromFile, fts3::config::ServerConfigRea
     BOOST_CHECK_EQUAL (_vars["DbPassword"], f_str);
     BOOST_CHECK_EQUAL (_vars["TransferLogDirectory"], f_str);
 
-    std::remove(filename);
+    BOOST_CHECK_NO_THROW(boost::filesystem::remove(filename));
 }
 
 

@@ -50,7 +50,7 @@ class FileInfo
 public:
 
     FileInfo(tns3__FileTransferStatus const * f) :
-        src(*f->sourceSURL), dst (*f->destSURL), fileIdAvail(false), state(*f->transferFileState),
+        src(*f->sourceSURL), dst (*f->destSURL), fileId(-1), fileIdAvail(false), state(*f->transferFileState),
         reason(*f->reason), duration (f->duration), nbFailures(f->numFailures),
         stagingDuration(-1)
     {
