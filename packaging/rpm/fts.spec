@@ -13,7 +13,7 @@
 
 Name:       fts
 Version:    3.4.1
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -61,7 +61,7 @@ BuildRequires:  python2-devel
 BuildRequires:  voms-devel
 BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc 
 %if %systemd
-BuildRequires:	systemd-units
+BuildRequires:	systemd
 %endif
 
 Requires(pre):  shadow-utils
@@ -94,9 +94,9 @@ Requires: gfal2-plugin-srm%{?_isa} >= 2.9.0
 Requires: gridsite >= 1.7.25
 
 %if %systemd
-Requires(post):		systemd-units
-Requires(preun):	systemd-units
-Requires(postun):	systemd-units
+Requires(post):		systemd
+Requires(preun):	systemd
+Requires(postun):	systemd
 %else
 Requires(post):		chkconfig
 Requires(preun):	chkconfig
@@ -134,9 +134,9 @@ Requires:   fts-server%{?_isa} = %{version}-%{release}
 Requires:   glue-schema
 
 %if %systemd
-Requires(post):		systemd-units
-Requires(preun):	systemd-units
-Requires(postun):	systemd-units
+Requires(post):		systemd
+Requires(preun):	systemd
+Requires(postun):	systemd
 %else
 Requires(post):		chkconfig
 Requires(preun):	chkconfig
