@@ -90,7 +90,7 @@ public:
             // take ownership of the memory
             workers.push_back(worker);
             // create new thread belonging to the right group
-            threads.push_back(group.create_thread(boost::bind(&ThreadPoolWorker::run, worker)));
+            group.create_thread(boost::bind(&ThreadPoolWorker::run, worker));
         }
     }
 
@@ -206,7 +206,6 @@ private:
     boost::ptr_deque<TASK> tasks;
     /// pool of worker objects
     boost::ptr_vector<ThreadPoolWorker> workers;
-    boost::ptr_vector<boost::thread> threads;
     /// a flag indicating whether all threads should be stopped
     bool interrupt_flag;
     /// a flag indicating whether someone is joining us

@@ -100,24 +100,12 @@ void BringOnlineServer::start(void)
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
 
-    threadsPtr.emplace_back(
-        systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs))
-    );
-    threadsPtr.emplace_back(
-        systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs))
-    );
-    threadsPtr.emplace_back(
-        systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd))
-    );
-    threadsPtr.emplace_back(
-        systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater))
-    );
-    threadsPtr.emplace_back(
-        systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater))
-    );
-    threadsPtr.emplace_back(
-        systemThreads.create_thread(heartBeat)
-    );
+    systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
+    systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
+    systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
+    systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
+    systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
+    systemThreads.create_thread(heartBeat);
 }
 
 
