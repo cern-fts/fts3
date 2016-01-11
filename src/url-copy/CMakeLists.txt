@@ -27,7 +27,7 @@ include_directories (
     ${GFAL2_INCLUDE_DIRS}
 )
 
-find_package(Boost COMPONENTS thread)
+find_package(Boost COMPONENTS atomic thread)
 
 # Include directly the sources from common to reduce the memory footprint
 set(fts_url_copy_SOURCES
