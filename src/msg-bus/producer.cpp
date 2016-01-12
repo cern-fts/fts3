@@ -18,113 +18,90 @@
  * limitations under the License.
  */
 
-#include <sys/types.h>
-#include <errno.h>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <string.h>
-#include <sstream>
-#include <boost/lexical_cast.hpp>
-#include "common/UuidGenerator.h"
-
 #include "producer.h"
-
-
-static std::string getUniqueTempFileName(const std::string &basedir)
-{
-    std::string uuidGen = UuidGenerator::generateUUID();
-    time_t tmCurrent = time(NULL);
-    std::stringstream strmName;
-    strmName << basedir << "/" << uuidGen << "_" << tmCurrent;
-    return strmName.str();
-}
-
-
-static std::string getNewMessageFile(const std::string &basedir)
-{
-    return getUniqueTempFileName(basedir);
-}
+#include <fstream>
+#include <boost/filesystem.hpp>
+#include <glib.h>
 
 
 Producer::Producer(const std::string &baseDir): baseDir(baseDir)
 {
+    monitoringQueue = dirq_new((baseDir + "/monitoring").c_str());
+    statusQueue = dirq_new((baseDir + "/status").c_str());
+    stalledQueue = dirq_new((baseDir + "/stalled").c_str());
+    logQueue = dirq_new((baseDir + "/logs").c_str());
+    deletionQueue = dirq_new((baseDir + "/deletion").c_str());
+    stagingQueue = dirq_new((baseDir + "/staging").c_str());
 }
 
 
 Producer::~Producer()
 {
+    dirq_free(monitoringQueue);
+    dirq_free(statusQueue);
+    dirq_free(stalledQueue);
+    dirq_free(logQueue);
+    dirq_free(deletionQueue);
+    dirq_free(stagingQueue);
 }
 
 
-static int writeMessage(const void *buffer, size_t bufsize, const std::string &basedir, const std::string &extension)
+int Producer::writeMessage(dirq_t dirqHandle, const void *buffer, size_t bufsize)
 {
-    std::string tempname = getNewMessageFile(basedir);
-    if(tempname.length() <= 0)
-        return -1;
-    // Open
-    FILE* fp = NULL;
-    fp = fopen(tempname.c_str(), "w");
-    if (fp == NULL)
+    std::string tempTemplate(baseDir);
+    tempTemplate += "/XXXXXX";
+    std::vector<char> tempName(tempTemplate.size() + 1);
+    g_strlcpy(tempName.data(), tempTemplate.c_str(), tempName.size());
+
+    int tempFd = mkstemp(tempName.data());
+    if (tempFd < 0) {
         return errno;
+    }
 
-    // Try to write twice
-    size_t writeBytes = fwrite(buffer, bufsize, 1, fp);
-    if (writeBytes == 0)
-        writeBytes = fwrite(buffer, bufsize, 1, fp);
-
-    // Close
-    fclose(fp);
-
-    // Rename to final name (sort of commit)
-    // Try twice too
-    std::string renamedFile = tempname +  extension; //"_ready or _staging or _delete";
-    int r = rename(tempname.c_str(), renamedFile.c_str());
-    if (r == -1)
-        r = rename(tempname.c_str(), renamedFile.c_str());
-    if (r == -1)
+    if (write(tempFd, buffer, bufsize) != static_cast<ssize_t>(bufsize)) {
+        close(tempFd);
         return errno;
+    }
 
+    close(tempFd);
+
+    if (dirq_add_path(dirqHandle, tempName.data()) == NULL) {
+        return dirq_get_errcode(dirqHandle);
+    }
     return 0;
 }
 
 
 int Producer::runProducerMonitoring(const MessageMonitoring &msg)
 {
-    return writeMessage(&msg, sizeof(MessageMonitoring), baseDir + "/monitoring", "_ready");
+    return writeMessage(monitoringQueue, &msg, sizeof(MessageMonitoring));
 }
 
 
 int Producer::runProducerStatus(const Message &msg)
 {
-    return writeMessage(&msg, sizeof(Message), baseDir + "/status", "_ready");
+    return writeMessage(statusQueue, &msg, sizeof(Message));
 }
 
 
 int Producer::runProducerStall(const MessageUpdater &msg)
 {
-    return writeMessage(&msg, sizeof(MessageUpdater), baseDir + "/stalled", "_ready");
+    return writeMessage(stalledQueue, &msg, sizeof(MessageUpdater));
 }
 
 
 int Producer::runProducerLog(const MessageLog &msg)
 {
-    return writeMessage(&msg, sizeof(msg), baseDir + "/logs", "_ready");
+    return writeMessage(logQueue, &msg, sizeof(msg));
 }
 
 int Producer::runProducerDeletions(const struct MessageBringonline &msg)
 {
-    return writeMessage(&msg, sizeof(msg), baseDir + "/status", "_delete");
+    return writeMessage(deletionQueue, &msg, sizeof(msg));
 }
 
 
 int Producer::runProducerStaging(const struct MessageBringonline &msg)
 {
-    return writeMessage(&msg, sizeof(msg), baseDir + "/status", "_staging");
-}
-
-
-int Producer::runProducer(const struct MessageBringonline &msg, std::string const & operation)
-{
-    return writeMessage(&msg, sizeof(MessageMonitoring), baseDir + "/monitoring", "_ready");
+    return writeMessage(stagingQueue, &msg, sizeof(msg));
 }

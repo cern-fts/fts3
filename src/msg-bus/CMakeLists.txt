@@ -22,7 +22,10 @@ cmake_minimum_required(VERSION 2.8)
 
 # Find boost
 find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package (DIRQ REQUIRED)
 find_package (GLIB2 REQUIRED)
+
+include_directories (${DIRQ_INCLUDE_DIR})
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
 # Sources
@@ -32,6 +35,7 @@ add_library(fts_msg_bus SHARED ${msg_bus_sources})
 target_link_libraries(fts_msg_bus
     ${Boost_LIBRARIES}
     ${GLIB2_LIBRARIES}
+    ${DIRQ_LIBRARIES}
     -lpthread
 )
 

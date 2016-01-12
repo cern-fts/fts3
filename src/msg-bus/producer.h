@@ -23,12 +23,21 @@
 #define PRODUCER_H
 
 #include <string>
+#include <dirq.h>
 #include "messages.h"
 
 
 class Producer {
 private:
     std::string baseDir;
+    dirq_t monitoringQueue;
+    dirq_t statusQueue;
+    dirq_t stalledQueue;
+    dirq_t logQueue;
+    dirq_t deletionQueue;
+    dirq_t stagingQueue;
+
+    int writeMessage(dirq_t dirqHandle, const void *buffer, size_t bufsize);
 
 public:
     Producer(const std::string &baseDir);
@@ -46,8 +55,6 @@ public:
     int runProducerDeletions(const struct MessageBringonline &msg);
 
     int runProducerStaging(const struct MessageBringonline &msg);
-
-    int runProducer(const struct MessageBringonline &msg, std::string const & operation);
 };
 
 

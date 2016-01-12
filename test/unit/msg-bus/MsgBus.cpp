@@ -107,10 +107,6 @@ protected:
 public:
     MsgBusFixture() {
         boost::filesystem::create_directories(TEST_PATH);
-        boost::filesystem::create_directories(TEST_PATH + "/status");
-        boost::filesystem::create_directories(TEST_PATH + "/monitoring");
-        boost::filesystem::create_directories(TEST_PATH + "/stalled");
-        boost::filesystem::create_directories(TEST_PATH + "/logs");
     }
 
     ~MsgBusFixture() {

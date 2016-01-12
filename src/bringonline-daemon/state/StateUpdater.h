@@ -160,7 +160,12 @@ protected:
             g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
 
             //store the states into fs to be restored in the next run
-            producer.runProducer(msg, operation);
+            if (operation == "_delete") {
+                producer.runProducerDeletions(msg);
+            }
+            else {
+                producer.runProducerStaging(msg);
+            }
         }
     }
 

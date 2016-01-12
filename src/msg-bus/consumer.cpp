@@ -18,15 +18,7 @@
  * limitations under the License.
  */
 
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <string.h>
-#include <sys/stat.h>
-#include <boost/filesystem.hpp>
+#include <fcntl.h>
 #include "consumer.h"
 
 
@@ -50,181 +42,94 @@ struct sort_functor_status
 Consumer::Consumer(const std::string &baseDir, unsigned limit):
     baseDir(baseDir), limit(limit)
 {
+    monitoringQueue = dirq_new((baseDir + "/monitoring").c_str());
+    statusQueue = dirq_new((baseDir + "/status").c_str());
+    stalledQueue = dirq_new((baseDir + "/stalled").c_str());
+    logQueue = dirq_new((baseDir + "/logs").c_str());
+    deletionQueue = dirq_new((baseDir + "/deletion").c_str());
+    stagingQueue = dirq_new((baseDir + "/staging").c_str());
 }
 
 
 Consumer::~Consumer()
 {
+    dirq_free(monitoringQueue);
+    dirq_free(statusQueue);
+    dirq_free(stalledQueue);
+    dirq_free(logQueue);
+    dirq_free(deletionQueue);
+    dirq_free(stagingQueue);
 }
 
 
-static int getDirContent(const std::string &dir, std::vector<std::string> &files,
-    const std::string &extension, unsigned limit)
+template <typename MSG>
+static int genericConsumer(dirq_t dirq, std::vector<MSG> &messages)
 {
-    if (boost::filesystem::is_empty(dir)) {
-        return 0;
-    }
+    MSG buffer;
 
-    DIR *dp = NULL;
-    struct dirent *dirp = NULL;
-    struct stat st;
-    if ((dp = opendir(dir.c_str())) == NULL) {
-        return errno;
-    }
+    for (auto iter = dirq_first(dirq); iter != NULL; iter = dirq_next(dirq)) {
+        if (dirq_lock(dirq, iter, 0) == 0) {
+            const char *path = dirq_get_path(dirq, iter);
 
-    while ((dirp = readdir(dp)) != NULL && files.size() < limit) {
-        std::string fileName = std::string(dirp->d_name);
-        size_t found = fileName.find(extension);
-        if (found != std::string::npos) {
-            std::string copyFilename = dir + "/" + fileName;
-            int stCheck = stat(copyFilename.c_str(), &st);
-            if (stCheck == 0 && st.st_size > 0)
-                files.push_back(copyFilename);
-            else
-                unlink(copyFilename.c_str());
+            int fd = open(path, O_RDONLY);
+            if (fd < 0) {
+                buffer.set_error(errno);
+            }
+            else if (read(fd, &buffer, sizeof(buffer)) != sizeof(buffer)) {
+                buffer.set_error(EBADMSG);
+            }
+            messages.emplace_back(buffer);
+
+            close(fd);
+
+            dirq_remove(dirq, iter);
         }
     }
-    closedir(dp);
+
     return 0;
 }
 
 
 int Consumer::runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages)
 {
-    std::vector<std::string> files;
-    files.reserve(300);
-
-    if (getDirContent(baseDir + "/monitoring", files, "ready", limit) != 0) {
-        return errno;
-    }
-
-    for (unsigned int i = 0; i < files.size(); i++) {
-        FILE *fp = NULL;
-        struct MessageMonitoring msg;
-        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(msg), 1, fp);
-            if (readElements == 0)
-                readElements = fread(&msg, sizeof(msg), 1, fp);
-
-            if (readElements == 1)
-                messages.push_back(msg);
-            else
-                msg.set_error(EBADMSG);
-
-            unlink(files[i].c_str());
-            fclose(fp);
-            fp = NULL;
-        }
-        else {
-            msg.set_error(errno);
-        }
-    }
-    files.clear();
-    return 0;
+    return genericConsumer<MessageMonitoring>(monitoringQueue, messages);
 }
 
 
 int Consumer::runConsumerStatus(std::vector<struct Message> &messages)
 {
-    std::vector<std::string> files;
-    files.reserve(300);
-
-    if (getDirContent(baseDir + "/status", files, "ready", limit) != 0) {
-        return errno;
-    }
-
-    for (unsigned int i = 0; i < files.size(); i++) {
-        FILE *fp = NULL;
-        struct Message msg;
-        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(Message), 1, fp);
-            if (readElements == 0)
-                readElements = fread(&msg, sizeof(Message), 1, fp);
-
-            if (readElements == 1)
-                messages.push_back(msg);
-            else
-                msg.set_error(EBADMSG);
-
-            unlink(files[i].c_str());
-            fclose(fp);
-        }
-        else {
-            msg.set_error(errno);
-        }
-    }
-    files.clear();
-    std::sort(messages.begin(), messages.end(), sort_functor_status());
-    return 0;
+    return genericConsumer<Message>(statusQueue, messages);
 }
 
 
 int Consumer::runConsumerStall(std::vector<struct MessageUpdater> &messages)
 {
-    std::vector<std::string> files;
-    files.reserve(300);
-
-    if (getDirContent(baseDir + "/stalled", files, "ready", limit) != 0) {
-        return errno;
-    }
-
-    for (unsigned int i = 0; i < files.size(); i++) {
-        FILE *fp = NULL;
-        struct MessageUpdater msg_local;
-        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg_local, sizeof(MessageUpdater), 1, fp);
-            if (readElements == 0)
-                readElements = fread(&msg_local, sizeof(MessageUpdater), 1, fp);
-
-            if (readElements == 1)
-                messages.push_back(msg_local);
-            else
-                msg_local.set_error(EBADMSG);
-
-            unlink(files[i].c_str());
-            fclose(fp);
-        }
-        else {
-            msg_local.set_error(errno);
-        }
-    }
-    files.clear();
-    std::sort(messages.begin(), messages.end(), sort_functor_updater());
-
-    return 0;
+    return genericConsumer<MessageUpdater>(stalledQueue, messages);
 }
 
 
 int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
 {
-    std::vector<std::string> files;
-    files.reserve(300);
+    MessageLog buffer;
 
-    if (getDirContent(baseDir + "/logs", files, "ready", limit) != 0) {
-        return errno;
-    }
+    for (auto iter = dirq_first(logQueue); iter != NULL; iter = dirq_next(logQueue)) {
+        if (dirq_lock(logQueue, iter, 0) == 0) {
+            const char *path = dirq_get_path(logQueue, iter);
 
-    for (unsigned int i = 0; i < files.size(); i++) {
-        FILE *fp = NULL;
-        struct MessageLog msg;
-        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(MessageLog), 1, fp);
-            if (readElements == 0)
-                readElements = fread(&msg, sizeof(MessageLog), 1, fp);
+            int fd = open(path, O_RDONLY);
+            if (fd < 0) {
+                continue;
+            }
 
-            if (readElements == 1)
-                messages[msg.file_id] = msg;
-            else
-                msg.set_error(EBADMSG);
+            if (read(fd, &buffer, sizeof(buffer)) == sizeof(buffer)) {
+                messages[buffer.file_id] = buffer;
+            }
 
-            unlink(files[i].c_str());
-            fclose(fp);
-        }
-        else {
-            msg.set_error(errno);
+            close(fd);
+
+            dirq_remove(logQueue, iter);
         }
     }
-    files.clear();
 
     return 0;
 }
@@ -232,68 +137,11 @@ int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
 
 int Consumer::runConsumerDeletions(std::vector<struct MessageBringonline> &messages)
 {
-    std::vector<std::string> files;
-    files.reserve(300);
-
-    if (getDirContent(baseDir + "/status", files, "delete", limit) != 0)
-        return errno;
-
-    for (unsigned int i = 0; i < files.size(); i++) {
-        FILE *fp = NULL;
-        struct MessageBringonline msg;
-        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
-            if (readElements == 0)
-                readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
-
-            if (readElements == 1)
-                messages.push_back(msg);
-            else
-                msg.set_error(EBADMSG);
-
-            unlink(files[i].c_str());
-            fclose(fp);
-        }
-        else {
-            msg.set_error(errno);
-        }
-    }
-    files.clear();
-
-    return 0;
+    return genericConsumer<MessageBringonline>(deletionQueue, messages);
 }
 
 
 int Consumer::runConsumerStaging(std::vector<struct MessageBringonline> &messages)
 {
-    std::vector<std::string> files;
-    files.reserve(300);
-
-    if (getDirContent(baseDir + "/status", files, "staging", limit) != 0) {
-        return errno;
-    }
-
-    for (unsigned int i = 0; i < files.size(); i++) {
-        FILE *fp = NULL;
-        struct MessageBringonline msg;
-        if ((fp = fopen(files[i].c_str(), "r")) != NULL) {
-            size_t readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
-            if (readElements == 0)
-                readElements = fread(&msg, sizeof(MessageBringonline), 1, fp);
-
-            if (readElements == 1)
-                messages.push_back(msg);
-            else
-                msg.set_error(EBADMSG);
-
-            unlink(files[i].c_str());
-            fclose(fp);
-        }
-        else {
-            msg.set_error(errno);
-        }
-    }
-    files.clear();
-
-    return 0;
+    return genericConsumer<MessageBringonline>(stagingQueue, messages);
 }

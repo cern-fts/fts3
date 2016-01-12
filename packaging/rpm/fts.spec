@@ -45,6 +45,7 @@ BuildRequires:  cmake
 BuildRequires:  cmake28
 %endif
 
+BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 %if 0%{?el5}
 BuildRequires:  e2fsprogs-devel

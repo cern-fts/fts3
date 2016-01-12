@@ -24,10 +24,8 @@
 
 #include <string>
 #include <vector>
+#include <dirq.h>
 #include "messages.h"
-
-
-#define DEFAULT_LIMIT 10000
 
 
 class Consumer
@@ -35,6 +33,12 @@ class Consumer
 private:
     std::string baseDir;
     unsigned limit;
+    dirq_t monitoringQueue;
+    dirq_t statusQueue;
+    dirq_t stalledQueue;
+    dirq_t logQueue;
+    dirq_t stagingQueue;
+    dirq_t deletionQueue;
 
 public:
 
