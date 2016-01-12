@@ -18,36 +18,7 @@
  * limitations under the License.
  */
 
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-#include <cctype> //for isdigit
-#include <sstream> //to phrase std::string
-#include <sys/stat.h>
-#include <algorithm>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <iomanip>
-#include <fstream>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <boost/lexical_cast.hpp>
-
-#include <string>
-#include <vector>
+#include <glib.h>
 
 #include "common/definitions.h"
 #include "common/DaemonTools.h"

@@ -19,12 +19,14 @@
  */
 
 #include "SingleTrStateInstance.h"
-#include "db/generic/SingleDbInstance.h"
 #include <sstream>
+
+#include <glib.h>
 
 #include "common/Exceptions.h"
 #include "config/ServerConfig.h"
 #include "common/Logger.h"
+#include "db/generic/SingleDbInstance.h"
 #include "msg-bus/producer.h"
 
 using namespace db;

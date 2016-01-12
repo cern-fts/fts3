@@ -20,6 +20,7 @@
 
 #include "MessageProcessingService.h"
 
+#include <glib.h>
 #include <boost/filesystem.hpp>
 
 #include "common/Exceptions.h"

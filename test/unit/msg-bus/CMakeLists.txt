@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2015
+# Copyright (c) CERN 2016
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,4 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-find_package (Boost COMPONENTS unit_test_framework)
-find_package (GLIB2)
-
-include_directories (${Boost_INCLUDE_DIRS})
-include_directories (${GLIB2_INCLUDE_DIRS})
-include_directories (${CMAKE_SOURCE_DIR}/src)
-
-# Tests
-add_subdirectory (unit)
+define_test (MsgBus fts_msg_bus)

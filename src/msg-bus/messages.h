@@ -22,7 +22,6 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include <glib.h>
 #include <cstring>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
@@ -39,7 +38,7 @@
 struct MessageBase
 {
 public:
-    MessageBase(): msg_errno(false)
+    MessageBase(): msg_errno(0)
     {
     }
 

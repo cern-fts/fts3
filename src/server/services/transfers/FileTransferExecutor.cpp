@@ -20,6 +20,8 @@
 
 #include "FileTransferExecutor.h"
 
+#include <glib.h>
+
 #include "common/definitions.h"
 #include "common/Logger.h"
 #include "common/ThreadSafeList.h"

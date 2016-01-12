@@ -19,7 +19,10 @@
  */
 
 #include "reporter.h"
-#include "boost/date_time/gregorian/gregorian.hpp"
+
+#include <glib.h>
+#include <boost/date_time/gregorian/gregorian.hpp>
+
 #include "common/definitions.h"
 #include "common/Uri.h"
 

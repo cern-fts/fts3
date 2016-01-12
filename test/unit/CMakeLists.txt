@@ -38,6 +38,7 @@ endfunction(define_test)
 add_subdirectory (cli)
 add_subdirectory (common)
 add_subdirectory (config)
+add_subdirectory (msg-bus)
 
 # Build THE test binary
 message ("Found tests: ${UNIT_TEST_LIST}")

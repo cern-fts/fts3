@@ -20,6 +20,7 @@
 
 #include "ReuseTransfersService.h"
 
+#include <glib.h>
 #include <fstream>
 
 #include "common/definitions.h"
