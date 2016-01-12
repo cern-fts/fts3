@@ -66,6 +66,8 @@ public:
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Update : " << fileId << "  " << state << "  " << reason << " " << jobId << " " << retry << commit;
     }
 
+    using StateUpdater::recover;
+
 private:
     friend class BringOnlineServer;
 
@@ -80,6 +82,28 @@ private:
     void run()
     {
         runImpl(&GenericDbIfce::updateDeletionsState);
+    }
+
+    void recover(const std::vector<MinFileStatus> &recover)
+    {
+        if (!recover.empty()) {
+            // lock the vector
+            boost::mutex::scoped_lock lock(m);
+            // put the items back
+            updates.insert(updates.end(), recover.begin(), recover.end());
+        }
+
+        MessageBringonline msg;
+        for (auto itFind = recover.begin(); itFind != recover.end(); ++itFind)
+        {
+            msg.file_id = itFind->fileId;
+            g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
+            g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
+            g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
+
+            //store the states into fs to be restored in the next run
+            producer.runProducerDeletions(msg);
+        }
     }
 };
 
