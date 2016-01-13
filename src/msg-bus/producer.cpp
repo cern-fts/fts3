@@ -24,48 +24,36 @@
 #include <glib.h>
 
 
-Producer::Producer(const std::string &baseDir): baseDir(baseDir)
+Producer::Producer(const std::string &baseDir): baseDir(baseDir),
+    monitoringQueue(baseDir + "/monitoring"), statusQueue(baseDir + "/status"),
+    stalledQueue(baseDir + "/stalled"), logQueue(baseDir + "/logs"),
+    deletionQueue(baseDir + "/deletion"), stagingQueue(baseDir + "/staging")
 {
-    monitoringQueue = dirq_new((baseDir + "/monitoring").c_str());
-    statusQueue = dirq_new((baseDir + "/status").c_str());
-    stalledQueue = dirq_new((baseDir + "/stalled").c_str());
-    logQueue = dirq_new((baseDir + "/logs").c_str());
-    deletionQueue = dirq_new((baseDir + "/deletion").c_str());
-    stagingQueue = dirq_new((baseDir + "/staging").c_str());
 }
 
 
 Producer::~Producer()
 {
-    dirq_free(monitoringQueue);
-    dirq_free(statusQueue);
-    dirq_free(stalledQueue);
-    dirq_free(logQueue);
-    dirq_free(deletionQueue);
-    dirq_free(stagingQueue);
 }
 
 
-int Producer::writeMessage(dirq_t dirqHandle, const void *buffer, size_t bufsize)
+int Producer::writeMessage(DirQ &dirqHandle, const void *buffer, size_t bufsize)
 {
-    std::string tempTemplate(baseDir);
-    tempTemplate += "/XXXXXX";
-    std::vector<char> tempName(tempTemplate.size() + 1);
-    g_strlcpy(tempName.data(), tempTemplate.c_str(), tempName.size());
+    char tempName[PATH_MAX];
+    snprintf(tempName, PATH_MAX, "%s/XXXXXX", baseDir.c_str());
 
-    int tempFd = mkstemp(tempName.data());
+    int tempFd = mkstemp(tempName);
     if (tempFd < 0) {
         return errno;
     }
 
-    if (write(tempFd, buffer, bufsize) != static_cast<ssize_t>(bufsize)) {
-        close(tempFd);
-        return errno;
+    ssize_t ret = write(tempFd, buffer, bufsize);
+    close(tempFd);
+    if (ret != static_cast<ssize_t>(bufsize)) {
+        return EBADMSG;
     }
 
-    close(tempFd);
-
-    if (dirq_add_path(dirqHandle, tempName.data()) == NULL) {
+    if (dirq_add_path(dirqHandle, tempName) == NULL) {
         return dirq_get_errcode(dirqHandle);
     }
     return 0;

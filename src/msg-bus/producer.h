@@ -23,21 +23,21 @@
 #define PRODUCER_H
 
 #include <string>
-#include <dirq.h>
+#include "DirQ.h"
 #include "messages.h"
 
 
 class Producer {
 private:
     std::string baseDir;
-    dirq_t monitoringQueue;
-    dirq_t statusQueue;
-    dirq_t stalledQueue;
-    dirq_t logQueue;
-    dirq_t deletionQueue;
-    dirq_t stagingQueue;
+    DirQ monitoringQueue;
+    DirQ statusQueue;
+    DirQ stalledQueue;
+    DirQ logQueue;
+    DirQ deletionQueue;
+    DirQ stagingQueue;
 
-    int writeMessage(dirq_t dirqHandle, const void *buffer, size_t bufsize);
+    int writeMessage(DirQ &dirqHandle, const void *buffer, size_t bufsize);
 
 public:
     Producer(const std::string &baseDir);

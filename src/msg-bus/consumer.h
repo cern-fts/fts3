@@ -24,7 +24,7 @@
 
 #include <string>
 #include <vector>
-#include <dirq.h>
+#include "DirQ.h"
 #include "messages.h"
 
 
@@ -33,12 +33,12 @@ class Consumer
 private:
     std::string baseDir;
     unsigned limit;
-    dirq_t monitoringQueue;
-    dirq_t statusQueue;
-    dirq_t stalledQueue;
-    dirq_t logQueue;
-    dirq_t stagingQueue;
-    dirq_t deletionQueue;
+    DirQ monitoringQueue;
+    DirQ statusQueue;
+    DirQ stalledQueue;
+    DirQ logQueue;
+    DirQ stagingQueue;
+    DirQ deletionQueue;
 
 public:
 

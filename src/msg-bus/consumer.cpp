@@ -40,34 +40,25 @@ struct sort_functor_status
 
 
 Consumer::Consumer(const std::string &baseDir, unsigned limit):
-    baseDir(baseDir), limit(limit)
+    baseDir(baseDir), limit(limit),
+    monitoringQueue(baseDir + "/monitoring"), statusQueue(baseDir + "/status"),
+    stalledQueue(baseDir + "/stalled"), logQueue(baseDir + "/logs"),
+    stagingQueue(baseDir + "/staging"), deletionQueue(baseDir + "/deletion")
 {
-    monitoringQueue = dirq_new((baseDir + "/monitoring").c_str());
-    statusQueue = dirq_new((baseDir + "/status").c_str());
-    stalledQueue = dirq_new((baseDir + "/stalled").c_str());
-    logQueue = dirq_new((baseDir + "/logs").c_str());
-    deletionQueue = dirq_new((baseDir + "/deletion").c_str());
-    stagingQueue = dirq_new((baseDir + "/staging").c_str());
 }
 
 
 Consumer::~Consumer()
 {
-    dirq_free(monitoringQueue);
-    dirq_free(statusQueue);
-    dirq_free(stalledQueue);
-    dirq_free(logQueue);
-    dirq_free(deletionQueue);
-    dirq_free(stagingQueue);
 }
 
 
 template <typename MSG>
-static int genericConsumer(dirq_t dirq, std::vector<MSG> &messages)
+static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &messages)
 {
     MSG buffer;
 
-    for (auto iter = dirq_first(dirq); iter != NULL; iter = dirq_next(dirq)) {
+    for (auto iter = dirq_first(dirq); iter != NULL && limit > 0; iter = dirq_next(dirq), --limit) {
         if (dirq_lock(dirq, iter, 0) == 0) {
             const char *path = dirq_get_path(dirq, iter);
 
@@ -92,19 +83,19 @@ static int genericConsumer(dirq_t dirq, std::vector<MSG> &messages)
 
 int Consumer::runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages)
 {
-    return genericConsumer<MessageMonitoring>(monitoringQueue, messages);
+    return genericConsumer<MessageMonitoring>(monitoringQueue, limit, messages);
 }
 
 
 int Consumer::runConsumerStatus(std::vector<struct Message> &messages)
 {
-    return genericConsumer<Message>(statusQueue, messages);
+    return genericConsumer<Message>(statusQueue, limit, messages);
 }
 
 
 int Consumer::runConsumerStall(std::vector<struct MessageUpdater> &messages)
 {
-    return genericConsumer<MessageUpdater>(stalledQueue, messages);
+    return genericConsumer<MessageUpdater>(stalledQueue, limit, messages);
 }
 
 
@@ -112,7 +103,8 @@ int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
 {
     MessageLog buffer;
 
-    for (auto iter = dirq_first(logQueue); iter != NULL; iter = dirq_next(logQueue)) {
+    unsigned count = 0;
+    for (auto iter = dirq_first(logQueue); iter != NULL && count < limit; iter = dirq_next(logQueue), ++count) {
         if (dirq_lock(logQueue, iter, 0) == 0) {
             const char *path = dirq_get_path(logQueue, iter);
 
@@ -137,11 +129,11 @@ int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
 
 int Consumer::runConsumerDeletions(std::vector<struct MessageBringonline> &messages)
 {
-    return genericConsumer<MessageBringonline>(deletionQueue, messages);
+    return genericConsumer<MessageBringonline>(deletionQueue, limit, messages);
 }
 
 
 int Consumer::runConsumerStaging(std::vector<struct MessageBringonline> &messages)
 {
-    return genericConsumer<MessageBringonline>(stagingQueue, messages);
+    return genericConsumer<MessageBringonline>(stagingQueue, limit, messages);
 }
