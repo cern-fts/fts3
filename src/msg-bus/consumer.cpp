@@ -137,3 +137,14 @@ int Consumer::runConsumerStaging(std::vector<struct MessageBringonline> &message
 {
     return genericConsumer<MessageBringonline>(stagingQueue, limit, messages);
 }
+
+
+void Consumer::purgeAll()
+{
+    dirq_purge(monitoringQueue);
+    dirq_purge(statusQueue);
+    dirq_purge(stalledQueue);
+    dirq_purge(logQueue);
+    dirq_purge(stagingQueue);
+    dirq_purge(deletionQueue);
+}

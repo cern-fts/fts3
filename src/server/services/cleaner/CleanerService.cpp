@@ -23,6 +23,7 @@
 #include <boost/filesystem.hpp>
 #include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
+#include "msg-bus/consumer.h"
 
 namespace fs = boost::filesystem;
 using fts3::config::ServerConfig;
@@ -74,22 +75,13 @@ void CleanerService::runService()
 
         try
         {
-            // Once a day remove left over spool files
-            if(counter == 86400)
-            {
-                removeOldFiles(msgDir + "/monitoring/");
-                removeOldFiles(msgDir + "/stalled/");
-                removeOldFiles(msgDir + "/status/");
-                removeOldFiles(msgDir + "/logs/");
-
-                // Reset
-                counter = 0;
-            }
-
             // Every hour
-            if (counter % 3600 == 0)
+            if (counter == 3600)
             {
                 db::DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+                Consumer consumer(msgDir);
+                consumer.purgeAll();
+                counter = 0;
             }
         }
         catch(std::exception& e)

@@ -57,6 +57,8 @@ public:
     int runConsumerDeletions(std::vector<struct MessageBringonline> &messages);
 
     int runConsumerStaging(std::vector<struct MessageBringonline> &messages);
+
+    void purgeAll();
 };
 
 
