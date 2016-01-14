@@ -431,7 +431,7 @@ CREATE TABLE t_job (
   ,cred_id              VARCHAR2(100)
 --
 -- Blob to store user capabilites and groups
-  ,voms_cred            BLOB
+  ,voms_cred            CLOB default empty_clob()
 --
 -- The VO that owns this job
   ,vo_name              VARCHAR2(100)
