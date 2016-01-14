@@ -38,6 +38,7 @@ BuildRequires:  boost-devel
 BuildRequires:  boost148-devel
 %endif
 BuildRequires:  CGSI-gSOAP-devel
+BuildRequires:  cajun-jsonapi-devel
 
 %if %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:  cmake

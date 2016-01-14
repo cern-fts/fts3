@@ -21,6 +21,9 @@
 
 #include <iomanip>
 #include <fstream>
+#include <cajun/json/elements.h>
+#include <cajun/json/reader.h>
+#include <cajun/json/writer.h>
 #include "msg-ifce.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
@@ -55,6 +58,20 @@ msg_ifce::~msg_ifce()
 }
 
 
+static void set_metadata(json::Object &json, const std::string &key, const std::string &value)
+{
+    try {
+        std::istringstream valueStream(value);
+        json::UnknownElement metadata;
+        json::Reader::Read(metadata, valueStream);
+        json[key] = metadata;
+    }
+    catch (...) {
+        json[key] = json::String(value);
+    }
+}
+
+
 std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfer_completed &tr_started)
 {
     if (state != MSG_IFCE_WAITING_START) {
@@ -64,104 +81,41 @@ std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfe
 
     state = MSG_IFCE_WAITING_FINISH;
 
-    std::ostringstream msg;
-        
-    msg << "ST {";
-    msg << "\"agent_fqdn\":\"";
-    msg << tr_started.agent_fqdn;
-    msg << "\"";
+    json::Object message;
 
-    msg << ",\"transfer_id\":\"";
-    msg << tr_started.transfer_id;
-    msg << "\"";
+    message["agent_fqdn"] = json::String(tr_started.agent_fqdn);
+    message["transfer_id"] = json::String(tr_started.transfer_id);
+    message["endpnt"] = json::String(tr_started.endpoint);
+    message["timestamp"] = json::String(getTimestampStr());
+    message["src_srm_v"] = json::String(tr_started.source_srm_version);
+    message["dest_srm_v"] = json::String(tr_started.destination_srm_version);
+    message["vo"] = json::String(tr_started.vo);
+    message["src_url"] = json::String(tr_started.source_url);
+    message["dst_url"] = json::String(tr_started.dest_url);
+    message["src_hostname"] = json::String(tr_started.source_hostname);
+    message["dst_hostname"] = json::String(tr_started.dest_hostname);
+    message["src_site_name"] = json::String(tr_started.source_site_name);
+    message["dst_site_name"] = json::String(tr_started.dest_site_name);
+    message["t_channel"] = json::String(tr_started.t_channel);
+    message["srm_space_token_src"] = json::String(tr_started.srm_space_token_source);
+    message["srm_space_token_dst"] = json::String(tr_started.srm_space_token_dest);
+    message["user_dn"] = json::String(tr_started.user_dn);
 
-    msg << ",\"endpnt\":\"";
-    msg << tr_started.endpoint;
-    msg << "\"";
-
-    msg << ",\"timestamp\":\"";
-    msg << getTimestampStr();
-    msg << "\"";
-
-    msg << ",\"src_srm_v\":\"";
-    msg << tr_started.source_srm_version;
-    msg << "\"";
-
-    msg << ",\"dest_srm_v\":\"";
-    msg << tr_started.destination_srm_version;
-    msg << "\"";
-
-    msg << ",\"vo\":\"";
-    msg << tr_started.vo;
-    msg << "\"";
-
-    msg << ",\"src_url\":\"";
-    msg << tr_started.source_url;
-    msg << "\"";
-
-    msg << ",\"dst_url\":\"";
-    msg << tr_started.dest_url;
-    msg << "\"";
-
-    msg << ",\"src_hostname\":\"";
-    msg << tr_started.source_hostname;
-    msg << "\"";
-
-    msg << ",\"dst_hostname\":\"";
-    msg << tr_started.dest_hostname;
-    msg << "\"";
-
-    msg << ",\"src_site_name\":\"";
-    msg << tr_started.source_site_name;
-    msg << "\"";
-
-    msg << ",\"dst_site_name\":\"";
-    msg << tr_started.dest_site_name;
-    msg << "\"";
-
-    msg << ",\"t_channel\":\"";
-    msg << tr_started.t_channel;
-    msg << "\"";
-
-    msg << ",\"srm_space_token_src\":\"";
-    msg << tr_started.srm_space_token_source;
-    msg << "\"";
-
-    msg << ",\"srm_space_token_dst\":\"";
-    msg << tr_started.srm_space_token_dest;
-    msg << "\"";
-
-
-    msg << ",\"user_dn\":\"";
-    msg << tr_started.user_dn;
-    msg << "\"";
-
-    if (tr_started.file_metadata.length() > 0) {
-        if (tr_started.file_metadata == "x") {
-            msg << ",\"file_metadata\":\"\"";
-        }
-        else {
-            msg << ",\"file_metadata\":";
-            msg << tr_started.file_metadata;
-            msg << "";
-        }
+    if (tr_started.file_metadata != "x") {
+        set_metadata(message, "file_metadata", tr_started.file_metadata);
     }
     else {
-        msg << ",\"file_metadata\":\"\"";
+        message["file_metadata"] = json::String();
     }
 
-    if (tr_started.job_metadata.length() > 0) {
-        msg << ",\"job_metadata\":";
-        msg << tr_started.job_metadata;
-        msg << "";
-    }
-    else {
-        msg << ",\"job_metadata\":\"\"";
-    }
+    set_metadata(message, "job_metadata", tr_started.job_metadata);
 
-    msg << "}";
+    std::ostringstream stream;
 
-    std::string msgStr = msg.str();
+    stream << "ST ";
+    json::Writer::Write(message, stream);
+
+    std::string msgStr = stream.str();
     int errCode = restoreMessageToDisk(producer, msgStr);
     if (errCode == 0) {
         return msgStr;
@@ -182,242 +136,87 @@ std::string msg_ifce::SendTransferFinishMessage(Producer &producer, const transf
 
     state = MSG_IFCE_WAITING_START;
 
-    std::ostringstream msg;
+    json::Object message;
 
-    msg << "CO {";
-
-    msg << "\"tr_id\":\"";
-    msg << tr_completed.transfer_id;
-    msg << "\"";
-
-    msg << ",\"endpnt\":\"";
-    msg << tr_completed.endpoint;
-    msg << "\"";
-
-    msg << ",\"src_srm_v\":\"";
-    msg << tr_completed.source_srm_version;
-    msg << "\"";
-
-    msg << ",\"dest_srm_v\":\"";
-    msg << tr_completed.destination_srm_version;
-    msg << "\"";
-
-    msg << ",\"vo\":\"";
-    msg << tr_completed.vo;
-    msg << "\"";
-
-    msg << ",\"src_url\":\"";
-    msg << tr_completed.source_url;
-    msg << "\"";
-
-    msg << ",\"dst_url\":\"";
-    msg << tr_completed.dest_url;
-    msg << "\"";
-
-    msg << ",\"src_hostname\":\"";
-    msg << tr_completed.source_hostname;
-    msg << "\"";
-
-    msg << ",\"dst_hostname\":\"";
-    msg << tr_completed.dest_hostname;
-    msg << "\"";
-
-    msg << ",\"src_site_name\":\"";
-    msg << tr_completed.source_site_name;
-    msg << "\"";
-
-    msg << ",\"dst_site_name\":\"";
-    msg << tr_completed.dest_site_name;
-    msg << "\"";
-
-    msg << ",\"t_channel\":\"";
-    msg << tr_completed.t_channel;
-    msg << "\"";
-
-    msg << ",\"timestamp_tr_st\":\"";
-    msg << tr_completed.timestamp_transfer_started;
-    msg << "\"";
-
-    msg << ",\"timestamp_tr_comp\":\"";
-    msg << tr_completed.timestamp_transfer_completed;
-    msg << "\"";
-
-    msg << ",\"timestamp_chk_src_st\":\"";
-    msg << tr_completed.timestamp_checksum_source_started;
-    msg << "\"";
-
-    msg << ",\"timestamp_chk_src_ended\":\"";
-    msg << tr_completed.timestamp_checksum_source_ended;
-    msg << "\"";
-
-    msg << ",\"timestamp_checksum_dest_st\":\"";
-    msg << tr_completed.timestamp_checksum_dest_started;
-    msg << "\"";
-
-    msg << ",\"timestamp_checksum_dest_ended\":\"";
-    msg << tr_completed.timestamp_checksum_dest_ended;
-    msg << "\"";
-
-    msg << ",\"t_timeout\":\"";
-    msg << tr_completed.transfer_timeout;
-    msg << "\"";
-
-    msg << ",\"chk_timeout\":\"";
-    msg << tr_completed.checksum_timeout;
-    msg << "\"";
-
-    msg << ",\"t_error_code\":\"";
-    msg << tr_completed.transfer_error_code;
-    msg << "\"";
-
-    msg << ",\"tr_error_scope\":\"";
-    msg << tr_completed.transfer_error_scope;
-    msg << "\"";
-
-    msg << ",\"t_failure_phase\":\"";
-    msg << tr_completed.failure_phase;
-    msg << "\"";
-
-    msg << ",\"tr_error_category\":\"";
-    msg << tr_completed.transfer_error_category;
-    msg << "\"";
-
-    msg << ",\"t_final_transfer_state\":\"";
-    msg << tr_completed.final_transfer_state;
-    msg << "\"";
-
-    msg << ",\"tr_bt_transfered\":\"";
-    msg << tr_completed.total_bytes_transfered;
-    msg << "\"";
-
-    msg << ",\"nstreams\":\"";
-    msg << tr_completed.number_of_streams;
-    msg << "\"";
-
-    msg << ",\"buf_size\":\"";
-    msg << tr_completed.tcp_buffer_size;
-    msg << "\"";
-
-    msg << ",\"tcp_buf_size\":\"";
-    msg << tr_completed.tcp_buffer_size;
-    msg << "\"";
-
-    msg << ",\"block_size\":\"";
-    msg << tr_completed.block_size;
-    msg << "\"";
-
-    msg << ",\"f_size\":\"";
-    msg << tr_completed.file_size;
-    msg << "\"";
-
-    msg << ",\"time_srm_prep_st\":\"";
-    msg << tr_completed.time_spent_in_srm_preparation_start;
-    msg << "\"";
-
-    msg << ",\"time_srm_prep_end\":\"";
-    msg << tr_completed.time_spent_in_srm_preparation_end;
-    msg << "\"";
-
-    msg << ",\"time_srm_fin_st\":\"";
-    msg << tr_completed.time_spent_in_srm_finalization_start;
-    msg << "\"";
-
-    msg << ",\"time_srm_fin_end\":\"";
-    msg << tr_completed.time_spent_in_srm_finalization_end;
-    msg << "\"";
-
-    msg << ",\"srm_space_token_src\":\"";
-    msg << tr_completed.srm_space_token_source;
-    msg << "\"";
-
-    msg << ",\"srm_space_token_dst\":\"";
-    msg << tr_completed.srm_space_token_dest;
-    msg << "\"";
-
-    msg << ",\"t__error_message\":\"";
+    message["tr_id"] = json::String(tr_completed.transfer_id);
+    message["endpnt"] = json::String(tr_completed.endpoint);
+    message["src_srm_v"] = json::String(tr_completed.source_srm_version);
+    message["dest_srm_v"] = json::String(tr_completed.destination_srm_version);
+    message["vo"] = json::String(tr_completed.vo);
+    message["src_url"] = json::String(tr_completed.source_url);
+    message["dst_url"] = json::String(tr_completed.dest_url);
+    message["src_hostname"] = json::String(tr_completed.source_hostname);
+    message["dst_hostname"] = json::String(tr_completed.dest_hostname);
+    message["src_site_name"] = json::String(tr_completed.source_site_name);
+    message["dst_site_name"] = json::String(tr_completed.dest_site_name);
+    message["t_channel"] = json::String(tr_completed.t_channel);
+    message["timestamp_tr_st"] = json::String(tr_completed.timestamp_transfer_started);
+    message["timestamp_tr_comp"] = json::String(tr_completed.timestamp_transfer_completed);
+    message["timestamp_chk_src_st"] = json::String(tr_completed.timestamp_checksum_source_started);
+    message["timestamp_chk_src_ended"] = json::String(tr_completed.timestamp_checksum_source_ended);
+    message["timestamp_checksum_dest_st"] = json::String(tr_completed.timestamp_checksum_dest_started);
+    message["timestamp_checksum_dest_ended"] = json::String(tr_completed.timestamp_checksum_dest_ended);
+    message["t_timeout"] = json::Number(tr_completed.transfer_timeout);
+    message["chk_timeout"] = json::Number(tr_completed.checksum_timeout);
+    message["t_error_code"] = json::String(tr_completed.transfer_error_code);
+    message["tr_error_scope"] = json::String(tr_completed.transfer_error_scope);
+    message["t_failure_phase"] = json::String(tr_completed.failure_phase);
+    message["tr_error_category"] = json::String(tr_completed.transfer_error_category);
+    message["t_final_transfer_state"] = json::String(tr_completed.final_transfer_state);
+    message["tr_bt_transfered"] = json::Number(tr_completed.total_bytes_transfered);
+    message["nstreams"] = json::Number(tr_completed.number_of_streams);
+    message["buf_size"] = json::Number(tr_completed.tcp_buffer_size);
+    message["tcp_buf_size"] = json::Number(tr_completed.tcp_buffer_size);
+    message["block_size"] = json::Number(tr_completed.block_size);
+    message["f_size"] = json::Number(tr_completed.file_size);
+    message["time_srm_prep_st"] = json::String(tr_completed.time_spent_in_srm_preparation_start);
+    message["time_srm_prep_end"] = json::String(tr_completed.time_spent_in_srm_preparation_end);
+    message["time_srm_fin_st"] = json::String(tr_completed.time_spent_in_srm_finalization_start);
+    message["time_srm_fin_end"] = json::String(tr_completed.time_spent_in_srm_finalization_end);
+    message["srm_space_token_src"] = json::String(tr_completed.srm_space_token_source);
+    message["srm_space_token_dst"] = json::String(tr_completed.srm_space_token_dest);
 
     std::string temp = ReplaceNonPrintableCharacters(tr_completed.transfer_error_message);
     temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
     temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
     temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());
-
-    if (temp.length() > 1024) {
+    if (temp.size() > 1024) {
         temp.erase(1024);
     }
 
-    msg << temp;
+    message["t__error_message"] = json::String(temp);
+    message["tr_timestamp_start"] = json::String(tr_completed.tr_timestamp_start);
 
-    msg << "\"";
-
-    msg << ",\"tr_timestamp_start\":\"";
-    msg << tr_completed.tr_timestamp_start;
-    msg << "\"";
-
-    if (tr_completed.tr_timestamp_complete.empty() || tr_completed.tr_timestamp_complete.length() == 0) {
-        msg << ",\"tr_timestamp_complete\":\"";
-        msg << getTimestampStr();
-        msg << "\"";
+    if (tr_completed.tr_timestamp_complete.empty()) {
+        message["tr_timestamp_complete"] = json::String(getTimestampStr());
     }
     else {
-        msg << ",\"tr_timestamp_complete\":\"";
-        msg << tr_completed.tr_timestamp_complete;
-        msg << "\"";
+        message["tr_timestamp_complete"] = json::String(tr_completed.tr_timestamp_complete);
     }
 
-    msg << ",\"channel_type\":\"";
-    msg << tr_completed.channel_type;
-    msg << "\"";
+    message["channel_type"] = json::String(tr_completed.channel_type);
+    message["user_dn"] = json::String(tr_completed.user_dn);
 
-    msg << ",\"user_dn\":\"";
-    msg << tr_completed.user_dn;
-    msg << "\"";
-
-    if (tr_completed.file_metadata.length() > 0) {
-        if (tr_completed.file_metadata == "x") {
-            msg << ",\"file_metadata\":\"\"";
-        }
-        else {
-            msg << ",\"file_metadata\":";
-            msg << tr_completed.file_metadata;
-            msg << "";
-        }
+    if (tr_completed.file_metadata != "x") {
+        set_metadata(message, "file_metadata", tr_completed.file_metadata);
     }
     else {
-        msg << ",\"file_metadata\":\"\"";
+        message["file_metadata"] = json::String("");
     }
 
-    if (tr_completed.job_metadata.length() > 0) {
-        msg << ",\"job_metadata\":";
-        msg << tr_completed.job_metadata;
-        msg << "";
-    }
-    else {
-        msg << ",\"job_metadata\":\"\"";
-    }
+    set_metadata(message, "job_metadata", tr_completed.job_metadata);
+    message["retry"] = json::Number(tr_completed.retry);
+    message["retry_max"] = json::Number(tr_completed.retry_max);
+    message["job_m_replica"] = json::String(tr_completed.job_m_replica);
+    message["job_state"] = json::String(tr_completed.job_state);
+    message["is_recoverable"] = json::Boolean(tr_completed.is_recoverable);
 
-    msg << ",\"retry\":\"";
-    msg << tr_completed.retry;
-    msg << "\"";
+    std::ostringstream stream;
 
-    msg << ",\"retry_max\":\"";
-    msg << tr_completed.retry_max;
-    msg << "\"";
+    stream << "CO ";
+    json::Writer::Write(message, stream);
 
-    msg << ",\"job_m_replica\":\"";
-    msg << tr_completed.job_m_replica;
-    msg << "\"";
-
-    msg << ",\"job_state\":\"";
-    msg << tr_completed.job_state;
-    msg << "\"";
-
-    msg << ",\"is_recoverable\":\"";
-    msg << tr_completed.is_recoverable;
-    msg << "\"";
-
-    msg << "}";
-
-    std::string msgStr = msg.str();
+    std::string msgStr = stream.str();
     int errCode = restoreMessageToDisk(producer, msgStr);
     if (errCode == 0) {
         return msgStr;
