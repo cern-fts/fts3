@@ -49,30 +49,6 @@ static std::string replaceMetadataString(std::string text)
 }
 
 
-
-std::string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
-                    "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
-                    "srm_space_token_src", "srm_space_token_dst", "user_dn", "file_metadata", "job_metadata"
-                   };
-
-std::string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$"};
-
-std::string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
-                      "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",
-                      "timestamp_checksum_dest_ended", "t_timeout", "chk_timeout", "t_error_code", "tr_error_scope", "t_failure_phase", "tr_error_category", "t_final_transfer_state",
-                      "tr_bt_transfered", "nstreams", "buf_size", "tcp_buf_size", "block_size", "f_size", "time_srm_prep_st", "time_srm_prep_end", "time_srm_fin_st", "time_srm_fin_end",
-                      "srm_space_token_src", "srm_space_token_dst", "t__error_message", "tr_timestamp_start", "tr_timestamp_complete", "channel_type", "user_dn", "file_metadata", "job_metadata",
-                      "retry","retry_max","job_m_replica", "job_state", "is_recoverable"
-                     };
-
-std::string completedToken[] =
-{ "$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$",
-        "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$",
-        "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$",
-        "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$",
-        "$14$", "$15$", "$16$", "$17$", "$18$", "$19$", "$20$", "$21$", "$22$" };
-
-
 //utility routine private to this file
 void find_and_replace(std::string &source, const std::string &find, std::string &replace)
 {
@@ -131,9 +107,6 @@ void MsgProducer::sendMessage(std::string &temp)
     register int index = 0;
 
     if (temp.compare(0, 2, "ST") == 0) {
-        for (index = 0; index < 19; index++) {
-            find_and_replace(temp, startedToken[index], started[index]);
-        }
         temp = temp.substr(2, temp.length()); //remove message prefix
         tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
         find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
@@ -144,9 +117,6 @@ void MsgProducer::sendMessage(std::string &temp)
         delete message;
     }
     else if (temp.compare(0, 2, "CO") == 0) {
-        for (index = 0; index < 49; index++) {
-            find_and_replace(temp, completedToken[index], completed[index]);
-        }
         temp = temp.substr(2, temp.length()); //remove message prefix
         tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
         find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint

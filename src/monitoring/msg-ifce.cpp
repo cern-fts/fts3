@@ -67,96 +67,96 @@ std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfe
     std::ostringstream msg;
         
     msg << "ST {";
-    msg << "\"$a$\":\"";
+    msg << "\"agent_fqdn\":\"";
     msg << tr_started.agent_fqdn;
     msg << "\"";
 
-    msg << ",\"$b$\":\"";
+    msg << ",\"transfer_id\":\"";
     msg << tr_started.transfer_id;
     msg << "\"";
 
-    msg << ",\"$c$\":\"";
+    msg << ",\"endpnt\":\"";
     msg << tr_started.endpoint;
     msg << "\"";
 
-    msg << ",\"$d$\":\"";
+    msg << ",\"timestamp\":\"";
     msg << getTimestampStr();
     msg << "\"";
 
-    msg << ",\"$e$\":\"";
+    msg << ",\"src_srm_v\":\"";
     msg << tr_started.source_srm_version;
     msg << "\"";
 
-    msg << ",\"$f$\":\"";
+    msg << ",\"dest_srm_v\":\"";
     msg << tr_started.destination_srm_version;
     msg << "\"";
 
-    msg << ",\"$g$\":\"";
+    msg << ",\"vo\":\"";
     msg << tr_started.vo;
     msg << "\"";
 
-    msg << ",\"$h$\":\"";
+    msg << ",\"src_url\":\"";
     msg << tr_started.source_url;
     msg << "\"";
 
-    msg << ",\"$i$\":\"";
+    msg << ",\"dst_url\":\"";
     msg << tr_started.dest_url;
     msg << "\"";
 
-    msg << ",\"$j$\":\"";
+    msg << ",\"src_hostname\":\"";
     msg << tr_started.source_hostname;
     msg << "\"";
 
-    msg << ",\"$k$\":\"";
+    msg << ",\"dst_hostname\":\"";
     msg << tr_started.dest_hostname;
     msg << "\"";
 
-    msg << ",\"$l$\":\"";
+    msg << ",\"src_site_name\":\"";
     msg << tr_started.source_site_name;
     msg << "\"";
 
-    msg << ",\"$m$\":\"";
+    msg << ",\"dst_site_name\":\"";
     msg << tr_started.dest_site_name;
     msg << "\"";
 
-    msg << ",\"$n$\":\"";
+    msg << ",\"t_channel\":\"";
     msg << tr_started.t_channel;
     msg << "\"";
 
-    msg << ",\"$o$\":\"";
+    msg << ",\"srm_space_token_src\":\"";
     msg << tr_started.srm_space_token_source;
     msg << "\"";
 
-    msg << ",\"$p$\":\"";
+    msg << ",\"srm_space_token_dst\":\"";
     msg << tr_started.srm_space_token_dest;
     msg << "\"";
 
 
-    msg << ",\"$q$\":\"";
+    msg << ",\"user_dn\":\"";
     msg << tr_started.user_dn;
     msg << "\"";
 
     if (tr_started.file_metadata.length() > 0) {
         if (tr_started.file_metadata == "x") {
-            msg << ",\"$r$\":\"\"";
+            msg << ",\"file_metadata\":\"\"";
         }
         else {
-            msg << ",\"$r$\":";
+            msg << ",\"file_metadata\":";
             msg << tr_started.file_metadata;
             msg << "";
         }
     }
     else {
-        msg << ",\"$r$\":\"\"";
+        msg << ",\"file_metadata\":\"\"";
     }
 
     if (tr_started.job_metadata.length() > 0) {
-        msg << ",\"$s$\":";
+        msg << ",\"job_metadata\":";
         msg << tr_started.job_metadata;
         msg << "";
     }
     else {
-        msg << ",\"$s$\":\"\"";
+        msg << ",\"job_metadata\":\"\"";
     }
 
     msg << "}";
@@ -186,155 +186,155 @@ std::string msg_ifce::SendTransferFinishMessage(Producer &producer, const transf
 
     msg << "CO {";
 
-    msg << "\"$a$\":\"";
+    msg << "\"tr_id\":\"";
     msg << tr_completed.transfer_id;
     msg << "\"";
 
-    msg << ",\"$b$\":\"";
+    msg << ",\"endpnt\":\"";
     msg << tr_completed.endpoint;
     msg << "\"";
 
-    msg << ",\"$c$\":\"";
+    msg << ",\"src_srm_v\":\"";
     msg << tr_completed.source_srm_version;
     msg << "\"";
 
-    msg << ",\"$d$\":\"";
+    msg << ",\"dest_srm_v\":\"";
     msg << tr_completed.destination_srm_version;
     msg << "\"";
 
-    msg << ",\"$e$\":\"";
+    msg << ",\"vo\":\"";
     msg << tr_completed.vo;
     msg << "\"";
 
-    msg << ",\"$f$\":\"";
+    msg << ",\"src_url\":\"";
     msg << tr_completed.source_url;
     msg << "\"";
 
-    msg << ",\"$g$\":\"";
+    msg << ",\"dst_url\":\"";
     msg << tr_completed.dest_url;
     msg << "\"";
 
-    msg << ",\"$h$\":\"";
+    msg << ",\"src_hostname\":\"";
     msg << tr_completed.source_hostname;
     msg << "\"";
 
-    msg << ",\"$i$\":\"";
+    msg << ",\"dst_hostname\":\"";
     msg << tr_completed.dest_hostname;
     msg << "\"";
 
-    msg << ",\"$j$\":\"";
+    msg << ",\"src_site_name\":\"";
     msg << tr_completed.source_site_name;
     msg << "\"";
 
-    msg << ",\"$k$\":\"";
+    msg << ",\"dst_site_name\":\"";
     msg << tr_completed.dest_site_name;
     msg << "\"";
 
-    msg << ",\"$l$\":\"";
+    msg << ",\"t_channel\":\"";
     msg << tr_completed.t_channel;
     msg << "\"";
 
-    msg << ",\"$m$\":\"";
+    msg << ",\"timestamp_tr_st\":\"";
     msg << tr_completed.timestamp_transfer_started;
     msg << "\"";
 
-    msg << ",\"$n$\":\"";
+    msg << ",\"timestamp_tr_comp\":\"";
     msg << tr_completed.timestamp_transfer_completed;
     msg << "\"";
 
-    msg << ",\"$o$\":\"";
+    msg << ",\"timestamp_chk_src_st\":\"";
     msg << tr_completed.timestamp_checksum_source_started;
     msg << "\"";
 
-    msg << ",\"$p$\":\"";
+    msg << ",\"timestamp_chk_src_ended\":\"";
     msg << tr_completed.timestamp_checksum_source_ended;
     msg << "\"";
 
-    msg << ",\"$q$\":\"";
+    msg << ",\"timestamp_checksum_dest_st\":\"";
     msg << tr_completed.timestamp_checksum_dest_started;
     msg << "\"";
 
-    msg << ",\"$r$\":\"";
+    msg << ",\"timestamp_checksum_dest_ended\":\"";
     msg << tr_completed.timestamp_checksum_dest_ended;
     msg << "\"";
 
-    msg << ",\"$s$\":\"";
+    msg << ",\"t_timeout\":\"";
     msg << tr_completed.transfer_timeout;
     msg << "\"";
 
-    msg << ",\"$t$\":\"";
+    msg << ",\"chk_timeout\":\"";
     msg << tr_completed.checksum_timeout;
     msg << "\"";
 
-    msg << ",\"$u$\":\"";
+    msg << ",\"t_error_code\":\"";
     msg << tr_completed.transfer_error_code;
     msg << "\"";
 
-    msg << ",\"$v$\":\"";
+    msg << ",\"tr_error_scope\":\"";
     msg << tr_completed.transfer_error_scope;
     msg << "\"";
 
-    msg << ",\"$w$\":\"";
+    msg << ",\"t_failure_phase\":\"";
     msg << tr_completed.failure_phase;
     msg << "\"";
 
-    msg << ",\"$x$\":\"";
+    msg << ",\"tr_error_category\":\"";
     msg << tr_completed.transfer_error_category;
     msg << "\"";
 
-    msg << ",\"$y$\":\"";
+    msg << ",\"t_final_transfer_state\":\"";
     msg << tr_completed.final_transfer_state;
     msg << "\"";
 
-    msg << ",\"$z$\":\"";
+    msg << ",\"tr_bt_transfered\":\"";
     msg << tr_completed.total_bytes_transfered;
     msg << "\"";
 
-    msg << ",\"$0$\":\"";
+    msg << ",\"nstreams\":\"";
     msg << tr_completed.number_of_streams;
     msg << "\"";
 
-    msg << ",\"$1$\":\"";
+    msg << ",\"buf_size\":\"";
     msg << tr_completed.tcp_buffer_size;
     msg << "\"";
 
-    msg << ",\"$2$\":\"";
+    msg << ",\"tcp_buf_size\":\"";
     msg << tr_completed.tcp_buffer_size;
     msg << "\"";
 
-    msg << ",\"$3$\":\"";
+    msg << ",\"block_size\":\"";
     msg << tr_completed.block_size;
     msg << "\"";
 
-    msg << ",\"$4$\":\"";
+    msg << ",\"f_size\":\"";
     msg << tr_completed.file_size;
     msg << "\"";
 
-    msg << ",\"$5$\":\"";
+    msg << ",\"time_srm_prep_st\":\"";
     msg << tr_completed.time_spent_in_srm_preparation_start;
     msg << "\"";
 
-    msg << ",\"$6$\":\"";
+    msg << ",\"time_srm_prep_end\":\"";
     msg << tr_completed.time_spent_in_srm_preparation_end;
     msg << "\"";
 
-    msg << ",\"$7$\":\"";
+    msg << ",\"time_srm_fin_st\":\"";
     msg << tr_completed.time_spent_in_srm_finalization_start;
     msg << "\"";
 
-    msg << ",\"$8$\":\"";
+    msg << ",\"time_srm_fin_end\":\"";
     msg << tr_completed.time_spent_in_srm_finalization_end;
     msg << "\"";
 
-    msg << ",\"$9$\":\"";
+    msg << ",\"srm_space_token_src\":\"";
     msg << tr_completed.srm_space_token_source;
     msg << "\"";
 
-    msg << ",\"$10$\":\"";
+    msg << ",\"srm_space_token_dst\":\"";
     msg << tr_completed.srm_space_token_dest;
     msg << "\"";
 
-    msg << ",\"$11$\":\"";
+    msg << ",\"t__error_message\":\"";
 
     std::string temp = ReplaceNonPrintableCharacters(tr_completed.transfer_error_message);
     temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
@@ -349,69 +349,69 @@ std::string msg_ifce::SendTransferFinishMessage(Producer &producer, const transf
 
     msg << "\"";
 
-    msg << ",\"$12$\":\"";
+    msg << ",\"tr_timestamp_start\":\"";
     msg << tr_completed.tr_timestamp_start;
     msg << "\"";
 
     if (tr_completed.tr_timestamp_complete.empty() || tr_completed.tr_timestamp_complete.length() == 0) {
-        msg << ",\"$13$\":\"";
+        msg << ",\"tr_timestamp_complete\":\"";
         msg << getTimestampStr();
         msg << "\"";
     }
     else {
-        msg << ",\"$13$\":\"";
+        msg << ",\"tr_timestamp_complete\":\"";
         msg << tr_completed.tr_timestamp_complete;
         msg << "\"";
     }
 
-    msg << ",\"$14$\":\"";
+    msg << ",\"channel_type\":\"";
     msg << tr_completed.channel_type;
     msg << "\"";
 
-    msg << ",\"$15$\":\"";
+    msg << ",\"user_dn\":\"";
     msg << tr_completed.user_dn;
     msg << "\"";
 
     if (tr_completed.file_metadata.length() > 0) {
         if (tr_completed.file_metadata == "x") {
-            msg << ",\"$16$\":\"\"";
+            msg << ",\"file_metadata\":\"\"";
         }
         else {
-            msg << ",\"$16$\":";
+            msg << ",\"file_metadata\":";
             msg << tr_completed.file_metadata;
             msg << "";
         }
     }
     else {
-        msg << ",\"$16$\":\"\"";
+        msg << ",\"file_metadata\":\"\"";
     }
 
     if (tr_completed.job_metadata.length() > 0) {
-        msg << ",\"$17$\":";
+        msg << ",\"job_metadata\":";
         msg << tr_completed.job_metadata;
         msg << "";
     }
     else {
-        msg << ",\"$17$\":\"\"";
+        msg << ",\"job_metadata\":\"\"";
     }
 
-    msg << ",\"$18$\":\"";
+    msg << ",\"retry\":\"";
     msg << tr_completed.retry;
     msg << "\"";
 
-    msg << ",\"$19$\":\"";
+    msg << ",\"retry_max\":\"";
     msg << tr_completed.retry_max;
     msg << "\"";
 
-    msg << ",\"$20$\":\"";
+    msg << ",\"job_m_replica\":\"";
     msg << tr_completed.job_m_replica;
     msg << "\"";
 
-    msg << ",\"$21$\":\"";
+    msg << ",\"job_state\":\"";
     msg << tr_completed.job_state;
     msg << "\"";
 
-    msg << ",\"$22$\":\"";
+    msg << ",\"is_recoverable\":\"";
     msg << tr_completed.is_recoverable;
     msg << "\"";
 
