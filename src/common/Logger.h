@@ -126,11 +126,7 @@ Logger& commit(Logger& aLogger);
 
 
 /// Singleton access of logger.
-inline Logger& theLogger()
-{
-    static Logger logger;
-    return logger;
-}
+Logger& theLogger();
 
 
 /// This is how you should use FTS3 logging. For example:

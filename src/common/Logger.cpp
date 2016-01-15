@@ -31,6 +31,12 @@
 namespace fts3 {
 namespace common {
 
+static Logger logger;
+Logger& theLogger()
+{
+    return logger;
+}
+
 
 Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 {
@@ -59,11 +65,13 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 
 Logger::Logger(): _logLevel(DEBUG), _lastLogLevel(DEBUG), _separator("; "), _nCommits(0)
 {
+    newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
 }
 
 
 Logger::~Logger ()
 {
+    newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger about to be destroyed" << commit;
 }
 
 
