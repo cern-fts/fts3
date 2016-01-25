@@ -18,14 +18,14 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 Source0:   https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  boost-devel
 BuildRequires:  cmake
 BuildRequires:  libcurl-devel
 BuildRequires:  libuuid-devel
 BuildRequires:  python2-devel
 %else
-BuildRequires:  boost141-devel
+BuildRequires:  boost148-devel
 BuildRequires:  cmake28
 BuildRequires:  curl-devel
 BuildRequires:  e2fsprogs-devel

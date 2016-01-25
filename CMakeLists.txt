@@ -72,7 +72,6 @@ add_definitions(-DWITH_IPV6)
 add_definitions(-DOPENSSL_THREADS)
 add_definitions(-DSOCKET_CLOSE_ON_EXIT)
 add_definitions(-D_REENTRANT)
-add_definitions(-DBOOST_DATE_TIME_HAS_REENTRANT_STD_FUNCTIONS)
 
 # Enable C++11 if possible
 include(EnableCpp11 REQUIRED)
@@ -106,14 +105,13 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_NO_BOOST_CMAKE ON)
 
 # Hack for SL5 with EPEL5 enabled
-set(BOOST_INCLUDEDIR "/usr/include/boost141") # EPEL5
-set(BOOST_LIBRARYDIR "/usr/lib${LIB_SUFFIX}/boost141/") # EPEL5
-set(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
+set(BOOST_INCLUDEDIR "/usr/include/boost148")
+set(BOOST_LIBRARYDIR "/usr/lib${LIB_SUFFIX}/boost148/")
 
-find_package(Boost 1.41 REQUIRED)
+find_package(Boost 1.48 REQUIRED)
 
 link_directories (${Boost_LIBRARY_DIRS})
-include_directories(${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 # Subdirectories
 add_subdirectory(src)

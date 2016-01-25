@@ -32,7 +32,11 @@ BuildRequires:  activemq-cpp-library
 %else
 BuildRequires:  activemq-cpp-devel
 %endif
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  boost-devel
+%else
+BuildRequires:  boost148-devel
+%endif
 BuildRequires:  CGSI-gSOAP-devel
 
 %if %{?rhel}%{!?rhel:0} >= 6
