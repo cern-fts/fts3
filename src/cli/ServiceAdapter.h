@@ -160,12 +160,6 @@ public:
     virtual std::vector<std::string> getConfiguration (std::string src, std::string dest, std::string all, std::string name) = 0;
 
     /**
-     * @param jobId : job ID
-     * @return : vector containing detailed information about files in the given job (including file ID)
-     */
-    virtual std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId) = 0;
-
-    /**
      * Remote call to getFileStatus
      *
      * @param jobId   id of the job

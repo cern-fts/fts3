@@ -180,18 +180,6 @@ std::string ServiceAdapterFallbackFacade::getBandwidthLimit()
     }
 }
 
-std::vector<DetailedFileStatus> ServiceAdapterFallbackFacade::getDetailedJobStatus(std::string const & jobId)
-{
-    initfacade();
-    while(1) {
-        try {
-            return proxysvc->getDetailedJobStatus(jobId);
-        } catch(cli_exception const &ex) {
-            if (!tryfallback(ex)) throw;
-        }
-    }
-}
-
 std::vector<FileInfo> ServiceAdapterFallbackFacade::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
 {
     initfacade();

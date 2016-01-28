@@ -770,18 +770,6 @@ std::vector<Snapshot> GSoapContextAdapter::getSnapShot(std::string const & vo, s
     return ResponseParser(resp._result).getSnapshot(false);
 }
 
-std::vector<DetailedFileStatus> GSoapContextAdapter::getDetailedJobStatus(std::string const & jobId)
-{
-    impltns__detailedJobStatusResponse resp;
-    if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, jobId, resp))
-        throw gsoap_error(ctx);
-
-    std::vector<DetailedFileStatus> ret;
-    std::copy(resp._detailedJobStatus->transferStatus.begin(), resp._detailedJobStatus->transferStatus.end(), std::back_inserter(ret));
-
-    return ret;
-}
-
 void GSoapContextAdapter::setInterfaceVersion(std::string interface)
 {
 

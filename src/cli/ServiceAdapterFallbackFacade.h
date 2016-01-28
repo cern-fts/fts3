@@ -60,7 +60,6 @@ public:
     void doDrain(bool drain);
     std::string getBandwidthLimit();
     std::vector<std::string> getConfiguration (std::string src, std::string dest, std::string all, std::string name);
-    std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
     std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
     std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst);
     JobStatus getTransferJobStatus (std::string const & jobId, bool archive);

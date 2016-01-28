@@ -656,26 +656,5 @@ long RestContextAdapter::isCertValid()
     return delegator.isCertValid();
 }
 
-std::vector<DetailedFileStatus> RestContextAdapter::getDetailedJobStatus(std::string const & jobId)
-{
-    std::string url = endpoint + "/jobs/" + jobId + "/files";
-
-    std::stringstream ss;
-    HttpRequest http (url, capath, proxy, ss, "files");
-
-    try {
-        http.get();
-        return ResponseParser(ss).getDetailedFiles("files");
-    } catch(rest_failure const &ex) {
-        std::string msg = "Error getting the detailed job status: "
-                          + std::string(ex.what());
-        throw cli_exception(msg);
-    } catch(rest_invalid const &ex) {
-        std::string msg = "Error reading the server's reply for the detailed "
-                          "job status: " + std::string(ex.what());
-        throw cli_exception(msg);
-    }
-}
-
 } /* namespace cli */
 } /* namespace fts3 */

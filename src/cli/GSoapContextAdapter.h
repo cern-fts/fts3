@@ -411,12 +411,6 @@ public:
      */
     std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst);
 
-    /**
-     * @param jobId : job ID
-     * @return : vector containing detailed information about files in the given job (including file ID)
-     */
-    std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
-
 private:
 
     std::string proxy;
