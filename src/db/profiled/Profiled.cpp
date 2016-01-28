@@ -353,12 +353,6 @@ bool ProfiledDB::isDnBlacklisted(const std::string& userDn)
 }
 
 
-bool ProfiledDB::areFilesInReadyState(const std::string& jobId)
-{
-    PROFILE_PREFIXED("DB::", return db->areFilesInReadyState(jobId));
-}
-
-
 bool ProfiledDB::checkGroupExists(const std::string & groupName)
 {
     PROFILE_PREFIXED("DB::", return db->checkGroupExists(groupName));

@@ -165,8 +165,6 @@ public:
 
     bool isDnBlacklisted(const std::string& userDn);
 
-    bool areFilesInReadyState(const std::string& jobId);
-
     bool checkGroupExists(const std::string & groupName);
 
     void getGroupMembers(const std::string & groupName,

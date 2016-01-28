@@ -5056,30 +5056,6 @@ std::map<std::string, double> OracleAPI::getActivityConfig(std::string vo)
 }
 
 
-/*for session reuse check only*/
-bool OracleAPI::areFilesInReadyState(const std::string& jobId)
-{
-    soci::session sql(*connectionPool);
-
-    bool isReady = false;
-    try {
-        soci::rowset<std::string> rs = (sql.prepare <<
-                                        "SELECT file_state FROM t_file WHERE job_id = :jobId",
-            soci::use(jobId));
-        for (auto i = rs.begin(); i != rs.end(); ++i) {
-            isReady = (isReady && (*i == "READY"));
-        }
-    }
-    catch (std::exception &e) {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...) {
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-    return isReady;
-}
-
-
 /*
     we need to check if a member already belongs to another group
     true: it is member of another group
