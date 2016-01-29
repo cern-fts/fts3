@@ -4799,20 +4799,6 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
                                                      pid, 0, 0, false);
                     updateJobTransferStatusInternal(sql, jobId, "FAILED",0);
-
-                    std::vector<struct MessageState> files;
-                    //send state monitoring message for the state transition
-                    files = getStateOfTransferInternal(sql, jobId, fileId);
-                    if(!files.empty())
-                    {
-                        std::vector<struct MessageState>::iterator it;
-                        for (it = files.begin(); it != files.end(); ++it)
-                        {
-                            struct MessageState tmp = (*it);
-                            constructJSONMsg(&tmp);
-                        }
-                        files.clear();
-                    }
                 }
 
             }
@@ -5148,20 +5134,6 @@ bool MySqlAPI::markAsStalled(const std::vector<struct MessageUpdater>& messages,
                         (*iter).file_id, "FAILED", transfer_message,
                         (*iter).process_id, 0, 0, false);
                 updateJobTransferStatusInternal(sql, (*iter).job_id, "FAILED", 0);
-
-                std::vector<struct MessageState> files;
-                //send state monitoring message for the state transition
-                files = getStateOfTransferInternal(sql, (*iter).job_id, (*iter).file_id);
-                if(!files.empty())
-                {
-                    std::vector<struct MessageState>::iterator it;
-                    for (it = files.begin(); it != files.end(); ++it)
-                    {
-                        struct MessageState tmp = (*it);
-                        constructJSONMsg(&tmp);
-                    }
-                    files.clear();
-                }
             }
         }
     }

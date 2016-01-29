@@ -65,8 +65,7 @@ void CancelerService::markAsStalled()
         bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
         if (updated) {
             for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
-                if (iter->msg_errno == 0 && (*iter).file_id > 0
-                    && std::string((*iter).job_id).length() > 0) {
+                if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0) {
                     SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
                 }
             }
