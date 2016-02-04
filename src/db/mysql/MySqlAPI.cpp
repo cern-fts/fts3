@@ -8938,7 +8938,7 @@ void MySqlAPI::getTransferRetries(int fileId, std::vector<FileRetry>& retries)
     }
 }
 
-bool MySqlAPI::assignSanityRuns(soci::session& sql, struct MessageSanity &msg)
+bool MySqlAPI::assignSanityRuns(soci::session& sql, struct SanityFlags &msg)
 {
 
     long long rows = 0;
@@ -9064,7 +9064,7 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct MessageSanity &msg)
 }
 
 
-void MySqlAPI::resetSanityRuns(soci::session& sql, struct MessageSanity &msg)
+void MySqlAPI::resetSanityRuns(soci::session& sql, struct SanityFlags &msg)
 {
     try
     {

@@ -7527,7 +7527,7 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry> &retries)
 }
 
 
-bool OracleAPI::assignSanityRuns(soci::session& sql, struct MessageSanity &msg)
+bool OracleAPI::assignSanityRuns(soci::session& sql, struct SanityFlags &msg)
 {
     long long rows = 0;
 
@@ -7649,7 +7649,7 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct MessageSanity &msg)
 }
 
 
-void OracleAPI::resetSanityRuns(soci::session& sql, struct MessageSanity &msg)
+void OracleAPI::resetSanityRuns(soci::session& sql, struct SanityFlags &msg)
 {
     try {
         sql.begin();

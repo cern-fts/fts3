@@ -219,33 +219,4 @@ public:
 };
 
 
-struct MessageSanity
-{
-public:
-    MessageSanity(): revertToSubmitted(false),
-        cancelWaitingFiles(false),
-        revertNotUsedFiles(false),
-        forceFailTransfers(false),
-        setToFailOldQueuedJobs(false),
-        checkSanityState(false),
-        cleanUpRecords(false),
-        msgCron(false)
-    {
-    }
-
-    ~MessageSanity()
-    {
-    }
-
-    bool revertToSubmitted;
-    bool cancelWaitingFiles;
-    bool revertNotUsedFiles;
-    bool forceFailTransfers;
-    bool setToFailOldQueuedJobs;
-    bool checkSanityState;
-    bool cleanUpRecords;
-    bool msgCron;
-};
-
-
 #endif // MESSAGES_H

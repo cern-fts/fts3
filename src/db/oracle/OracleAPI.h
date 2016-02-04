@@ -23,6 +23,7 @@
 #include <soci/soci.h>
 #include "db/generic/GenericDbIfce.h"
 #include "db/generic/StoragePairState.h"
+#include "db/generic/SanityFlags.h"
 #include "msg-bus/consumer.h"
 #include "msg-bus/producer.h"
 
@@ -36,7 +37,7 @@ public:
     class CleanUpSanityChecks
     {
     public:
-        CleanUpSanityChecks(OracleAPI* instanceLocal, soci::session& sql, struct MessageSanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
+        CleanUpSanityChecks(OracleAPI* instanceLocal, soci::session& sql, struct SanityFlags &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
         {
             returnValue = instanceLocal->assignSanityRuns(sql, msg);
         }
@@ -53,7 +54,7 @@ public:
 
         OracleAPI* instanceLocal;
         soci::session& sql;
-        struct MessageSanity &msg;
+        struct SanityFlags &msg;
         bool returnValue;
     };
 
@@ -320,9 +321,9 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
 
-    bool assignSanityRuns(soci::session& sql, struct MessageSanity &msg);
+    bool assignSanityRuns(soci::session& sql, struct SanityFlags &msg);
 
-    void resetSanityRuns(soci::session& sql, struct MessageSanity &msg);
+    void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
