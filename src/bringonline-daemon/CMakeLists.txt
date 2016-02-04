@@ -46,6 +46,7 @@ target_link_libraries(fts_bringonline
     fts_common
 	fts_msg_bus
     fts_proxy
+	fts_msg_ifce
 )
 
 # Install artifacts

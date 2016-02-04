@@ -118,19 +118,6 @@ inline time_t getUTC(int advance)
     return timegm(utc);
 }
 
-/**
- * Get timestamp in milliseconds, UTC, as a string
- */
-static inline std::string getStrUTCTimestamp()
-{
-    //the number of milliseconds since the epoch
-    time_t msec = getUTC(0) * 1000;
-    std::ostringstream oss;
-    oss << std::fixed << msec;
-    return oss.str();
-}
-
-
 
 /**
  * From a transfer parameters string, return the timeout
@@ -154,56 +141,6 @@ inline int extractTimeout(std::string & str)
         }
     return 0;
 }
-
-
-static inline void constructJSONMsg(struct MessageState* state)
-{
-    bool monitoringMessages = true;
-    std::string monitoringMessagesStr = ServerConfig::instance().get<std::string > ("MonitoringMessaging");
-    if(monitoringMessagesStr == "false")
-        monitoringMessages = false;
-
-    if(!monitoringMessages)
-        return;
-
-    std::string ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
-
-    std::ostringstream json_message;
-    json_message << "SS {";
-
-    json_message << "\"endpnt\":" << "\"" << ftsAlias << "\",";
-    json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
-    json_message << "\"src_url\":" << "\"" << state->source_url << "\",";
-    json_message << "\"dst_url\":" << "\"" << state->dest_url << "\",";
-    json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
-    json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
-    json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";
-    json_message << "\"job_id\":" << "\"" << state->job_id << "\",";
-    json_message << "\"file_id\":" << "\"" << state->file_id << "\",";
-    json_message << "\"job_state\":" << "\"" << state->job_state << "\",";
-    json_message << "\"file_state\":" << "\"" << state->file_state << "\",";
-    json_message << "\"retry_counter\":" << "\"" << state->retry_counter << "\",";
-    json_message << "\"retry_max\":" << "\"" << state->retry_max << "\",";
-    if(state->job_metadata.length() > 0 )
-        json_message << "\"job_metadata\":" << state->job_metadata << ",";
-    else
-        json_message << "\"job_metadata\":\"\",";
-    if(state->file_metadata.length() > 0 )
-        json_message << "\"file_metadata\":" << state->file_metadata << ",";
-    else
-        json_message << "\"file_metadata\":\"\",";
-    json_message << "\"timestamp\":" << "\"" << state->timestamp << "\"";
-    json_message << "}";
-
-    struct MessageMonitoring message;
-
-    if(json_message.str().length() < 3000)
-        {
-            g_strlcpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
-            Producer(ServerConfig::instance().get<std::string >("MessagingDirectory")).runProducerMonitoring(message);
-        }
-}
-
 
 }
 

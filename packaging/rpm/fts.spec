@@ -61,6 +61,7 @@ BuildRequires:  gsoap-devel
 BuildRequires:  json-c-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
+BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
 BuildRequires:  python2-devel
 BuildRequires:  voms-devel

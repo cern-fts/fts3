@@ -1,0 +1,9 @@
+package fts3.events;
+
+message MessageBringonline {
+    required string job_id = 1;
+    required uint64 file_id = 2;
+
+    required string transfer_status = 3;
+    required string transfer_message = 4;
+}

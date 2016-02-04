@@ -147,7 +147,7 @@ bool ProfiledDB::updateJobStatus(const std::string& jobId, const std::string& jo
 }
 
 
-void ProfiledDB::updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages)
+void ProfiledDB::updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages)
 {
     PROFILE_PREFIXED("DB::", db->updateFileTransferProgressVector(messages));
 }
@@ -302,7 +302,7 @@ void ProfiledDB::forkFailed(const std::string& jobId)
 }
 
 
-bool ProfiledDB::markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull)
+bool ProfiledDB::markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull)
 {
     PROFILE_PREFIXED("DB::", return db->markAsStalled(messages, diskFull));
 }
@@ -641,7 +641,7 @@ void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int
 }
 
 
-void ProfiledDB::updateProtocol(std::vector<Message>& tempProtocol)
+void ProfiledDB::updateProtocol(std::vector<fts3::events::Message>& tempProtocol)
 {
     PROFILE_PREFIXED("DB::", db->updateProtocol(tempProtocol));
 }
@@ -659,13 +659,13 @@ void ProfiledDB::cancelJobsInTheQueue(const std::string& dn, std::vector<std::st
 }
 
 
-void ProfiledDB::transferLogFileVector(std::map<int, struct MessageLog>& messagesLog)
+void ProfiledDB::transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog)
 {
     PROFILE_PREFIXED("DB::", db->transferLogFileVector(messagesLog));
 }
 
 
-std::vector<struct MessageState> ProfiledDB::getStateOfTransfer(const std::string& jobId, int file_id)
+std::vector<TransferState> ProfiledDB::getStateOfTransfer(const std::string& jobId, int file_id)
 {
     PROFILE_PREFIXED("DB::", return db->getStateOfTransfer(jobId, file_id));
 }

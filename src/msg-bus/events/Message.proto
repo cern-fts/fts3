@@ -1,0 +1,22 @@
+package fts3.events;
+
+message Message {
+    required string job_id = 1;
+    required uint64 file_id = 2;
+
+    required string source_se = 3;
+    required string dest_se = 4;
+
+    required string transfer_status = 5;
+    required string transfer_message = 6;
+
+    required uint64 process_id = 7;
+    required double time_in_secs = 8;
+    required uint64 filesize = 9;
+    required uint32 nostreams = 10;
+    required uint32 timeout = 11;
+    required uint32 buffersize = 12;
+    required uint64 timestamp = 13;
+    required bool   retry = 14;
+    required double throughput = 15;
+}

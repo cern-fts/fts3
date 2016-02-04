@@ -26,9 +26,9 @@
 #include "common/Exceptions.h"
 #include "config/ServerConfig.h"
 #include "common/Logger.h"
-#include "common/ThreadSafeList.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
+#include "ThreadSafeList.h"
 
 
 using namespace fts3::common;
@@ -127,10 +127,10 @@ void MessageProcessingService::runService()
                 catch(...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 1" << commit;
-                    std::map<int, struct MessageLog>::const_iterator iterLogBreak;
+                    std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
                     for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                     {
-                        struct MessageLog msgLogBreak = (*iterLogBreak).second;
+                        fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
                         producer.runProducerLog( msgLogBreak );
                     }
                 }
@@ -147,10 +147,10 @@ void MessageProcessingService::runService()
                 catch(...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 3" << commit;
-                    std::map<int, struct MessageLog>::const_iterator iterLogBreak;
+                    std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
                     for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                     {
-                        struct MessageLog msgLogBreak = (*iterLogBreak).second;
+                        fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
                         producer.runProducerLog( msgLogBreak );
                     }
                 }
@@ -167,22 +167,19 @@ void MessageProcessingService::runService()
 
                 if(!messagesUpdater.empty())
                 {
-                    std::vector<struct MessageUpdater>::iterator iterUpdater;
+                    std::vector<fts3::events::MessageUpdater>::iterator iterUpdater;
                     for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
                     {
-                        if (iterUpdater->msg_errno == 0)
-                        {
-                            std::string job = std::string((*iterUpdater).job_id).substr(0, 36);
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                        std::string job = std::string((*iterUpdater).job_id()).substr(0, 36);
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
                             << "\nJob id: " << job
-                            << "\nFile id: " << (*iterUpdater).file_id
-                            << "\nPid: " << (*iterUpdater).process_id
-                            << "\nTimestamp: " << (*iterUpdater).timestamp
-                            << "\nThroughput: " << (*iterUpdater).throughput
-                            << "\nTransferred: " << (*iterUpdater).transferred
+                            << "\nFile id: " << (*iterUpdater).file_id()
+                            << "\nPid: " << (*iterUpdater).process_id()
+                            << "\nTimestamp: " << (*iterUpdater).timestamp()
+                            << "\nThroughput: " << (*iterUpdater).throughput()
+                            << "\nTransferred: " << (*iterUpdater).transferred()
                             << commit;
-                            ThreadSafeList::get_instance().updateMsg(*iterUpdater);
-                        }
+                        ThreadSafeList::get_instance().updateMsg(*iterUpdater);
                     }
 
                     //now update the progress markers in a "bulk fashion"
@@ -249,7 +246,7 @@ void MessageProcessingService::runService()
 
             for (auto iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
             {
-                struct MessageLog msgLogBreak = (*iterLogBreak).second;
+                fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
                 producer.runProducerLog( msgLogBreak );
             }
         }
@@ -262,10 +259,10 @@ void MessageProcessingService::runService()
                 producer.runProducerStatus(*iterBreak);
             }
 
-            std::map<int, struct MessageLog>::const_iterator iterLogBreak;
+            std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
             for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
             {
-                struct MessageLog msgLogBreak = (*iterLogBreak).second;
+                fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
                 producer.runProducerLog( msgLogBreak );
             }
         }
@@ -278,10 +275,10 @@ void MessageProcessingService::runService()
                 producer.runProducerStatus(*iterBreak);
             }
 
-            std::map<int, struct MessageLog>::const_iterator iterLogBreak;
+            std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
             for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
             {
-                struct MessageLog msgLogBreak = (*iterLogBreak).second;
+                fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
                 producer.runProducerLog( msgLogBreak );
             }
         }
@@ -290,38 +287,39 @@ void MessageProcessingService::runService()
 }
 
 
-void MessageProcessingService::updateDatabase(const struct Message& msg)
+void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
 {
     try
     {
-        std::string job = std::string(msg.job_id).substr(0, 36);
-
         //do not process the updates here, will be done separately
-        if(std::string(msg.transfer_status).compare("UPDATE") == 0)
-        return;
+        if(std::string(msg.transfer_status()).compare("UPDATE") == 0)
+            return;
 
-        if (std::string(msg.transfer_status).compare("FINISHED") == 0 ||
-                std::string(msg.transfer_status).compare("FAILED") == 0 ||
-                std::string(msg.transfer_status).compare("CANCELED") == 0)
+        if (std::string(msg.transfer_status()).compare("FINISHED") == 0 ||
+                std::string(msg.transfer_status()).compare("FAILED") == 0 ||
+                std::string(msg.transfer_status()).compare("CANCELED") == 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << commit;
-            ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                << "Removing job from monitoring list " << msg.job_id() << " " << msg.file_id()
+                << commit;
+            ThreadSafeList::get_instance().removeFinishedTr(msg.job_id(), msg.file_id());
         }
 
-        if(std::string(msg.transfer_status).compare("FAILED") == 0)
+        if(std::string(msg.transfer_status()).compare("FAILED") == 0)
         {
             try
             {
                 //multiple replica files belonging to a job will not be retried
-                int retry = db::DBSingleton::instance().getDBObjectInstance()->getRetry(job);
+                int retry = db::DBSingleton::instance().getDBObjectInstance()->getRetry(msg.job_id());
 
-                if(msg.retry==true && retry > 0 && msg.file_id > 0 && !job.empty())
+                if(msg.retry() == true && retry > 0 && msg.file_id() > 0)
                 {
-                    int retryTimes = db::DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
-                    if( retryTimes <= retry-1 )
+                    int retryTimes = db::DBSingleton::instance().getDBObjectInstance()->getRetryTimes(msg.job_id(),
+                        msg.file_id());
+                    if (retryTimes <= retry - 1)
                     {
                         db::DBSingleton::instance().getDBObjectInstance()
-                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                            ->setRetryTransfer(msg.job_id(), msg.file_id(), retryTimes+1, msg.transfer_message());
                         return;
                     }
                 }
@@ -337,37 +335,38 @@ void MessageProcessingService::updateDatabase(const struct Message& msg)
         }
 
         /*session reuse process died or terminated unexpected, must terminate all files of a given job*/
-        if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != std::string::npos ||
-                        std::string(msg.transfer_message).find("Transfer process died") != std::string::npos ||
-                        std::string(msg.transfer_message).find("because it was stalled") != std::string::npos ||
-                        std::string(msg.transfer_message).find("canceled by the user") != std::string::npos ||
-                        std::string(msg.transfer_message).find("undefined symbol") != std::string::npos ||
-                        std::string(msg.transfer_message).find("canceled because it was not responding") != std::string::npos ))
+        if (msg.transfer_message().find("Transfer terminate handler called") != std::string::npos ||
+            msg.transfer_message().find("Transfer process died") != std::string::npos ||
+            msg.transfer_message().find("because it was stalled") != std::string::npos ||
+            msg.transfer_message().find("canceled by the user") != std::string::npos ||
+            msg.transfer_message().find("undefined symbol") != std::string::npos ||
+            msg.transfer_message().find("canceled because it was not responding") != std::string::npos)
         {
-            if(std::string(msg.job_id).length() == 0)
+            if(std::string(msg.job_id()).length() == 0)
             {
-                db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(), static_cast<int> (msg.process_id),std::string(msg.transfer_message));
+                db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
+                    std::string(), msg.process_id(), msg.transfer_message());
             }
             else
             {
-                db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36),static_cast<int> (msg.process_id), std::string(msg.transfer_message));
+                db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
+                    msg.job_id(), msg.process_id(), msg.transfer_message());
             }
         }
 
         //update file/job state
         db::DBSingleton::instance().
         getDBObjectInstance()->
-        updateTransferStatus(job, msg.file_id, msg.throughput, std::string(msg.transfer_status),
-                std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                msg.filesize, msg.timeInSecs, msg.retry);
+        updateTransferStatus(msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
+                msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry());
 
         db::DBSingleton::instance().
         getDBObjectInstance()->
-        updateJobStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
+        updateJobStatus(msg.job_id(), msg.transfer_status(), msg.process_id());
 
-        if(std::string(msg.job_id).length() > 0 && msg.file_id > 0)
+        if(msg.job_id().length() > 0 && msg.file_id() > 0)
         {
-            SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
+            SingleTrStateInstance::instance().sendStateMessage(msg.job_id(), msg.file_id());
         }
     }
     catch (std::exception& e)
@@ -383,9 +382,10 @@ void MessageProcessingService::updateDatabase(const struct Message& msg)
 }
 
 
-void MessageProcessingService::executeUpdate(const std::vector<Message>& messages)
+void MessageProcessingService::executeUpdate(const std::vector<fts3::events::Message>& messages)
 {
-    struct MessageUpdater msgUpdater;
+    fts3::events::MessageUpdater msgUpdater;
+
     for (auto iter = messages.begin(); iter != messages.end(); ++iter)
     {
         try
@@ -397,33 +397,32 @@ void MessageProcessingService::executeUpdate(const std::vector<Message>& message
                     producer.runProducerStatus(*iterBreak);
                 }
 
-                std::map<int, struct MessageLog>::const_iterator iterLogBreak;
+                std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
                 for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                 {
-                    struct MessageLog msgLogBreak = (*iterLogBreak).second;
+                    fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
                     producer.runProducerLog( msgLogBreak );
                 }
 
                 break;
             }
 
-            std::string jobId = std::string((*iter).job_id).substr(0, 36);
-            g_strlcpy(msgUpdater.job_id, jobId.c_str(), sizeof(msgUpdater.job_id));
-            msgUpdater.file_id = (*iter).file_id;
-            msgUpdater.process_id = (*iter).process_id;
-            msgUpdater.timestamp = (*iter).timestamp;
-            msgUpdater.throughput = 0.0;
-            msgUpdater.transferred = 0.0;
+            msgUpdater.set_job_id((*iter).job_id());
+            msgUpdater.set_file_id((*iter).file_id());
+            msgUpdater.set_process_id((*iter).process_id());
+            msgUpdater.set_timestamp((*iter).timestamp());
+            msgUpdater.set_throughput(0.0);
+            msgUpdater.set_transferred(0.0);
             ThreadSafeList::get_instance().updateMsg(msgUpdater);
 
-            if (iter->msg_errno == 0 && std::string((*iter).transfer_status).compare("UPDATE") != 0)
+            if ((*iter).transfer_status().compare("UPDATE") != 0)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
-                << "\nFile id: " << (*iter).file_id
-                << "\nPid: " << (*iter).process_id
-                << "\nState: " << (*iter).transfer_status
-                << "\nSource: " << (*iter).source_se
-                << "\nDest: " << (*iter).dest_se << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << (*iter).job_id()
+                << "\nFile id: " << (*iter).file_id()
+                << "\nPid: " << (*iter).process_id()
+                << "\nState: " << (*iter).transfer_status()
+                << "\nSource: " << (*iter).source_se()
+                << "\nDest: " << (*iter).dest_se() << commit;
 
                 updateDatabase((*iter));
             }

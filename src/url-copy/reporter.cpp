@@ -32,10 +32,6 @@ using namespace std;
 Reporter::Reporter(const std::string &msgDir): nostreams(4), timeout(3600), buffersize(0),
     producer(msgDir), isTerminalSent(false), multiple(false)
 {
-    memset(&msg, 0, sizeof(Message));
-    memset(&msg_updater, 0, sizeof(MessageUpdater));
-    memset(&msg_log, 0, sizeof(MessageLog));
-
     hostname = fts3::common::getFullHostname();
 }
 
@@ -72,38 +68,23 @@ void Reporter::sendMessage(double throughput, bool retry,
                            const string &transfer_status, const string &transfer_message,
                            double timeInSecs, off_t filesize)
 {
-    msg.file_id = file_id;
-    g_strlcpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
-    g_strlcpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+    msg.set_file_id(file_id);
+    msg.set_job_id(job_id);
+    msg.set_transfer_status(transfer_status);
+    msg.set_transfer_message(ReplaceNonPrintableCharacters(transfer_message));
+    msg.set_process_id(getpid());
+    msg.set_time_in_secs(timeInSecs);
+    msg.set_filesize(filesize);
+    msg.set_nostreams(nostreams);
+    msg.set_timeout(timeout);
+    msg.set_buffersize(buffersize);
+    msg.set_source_se(source_se);
+    msg.set_dest_se(dest_se);
+    msg.set_timestamp(milliseconds_since_epoch());
+    msg.set_retry(retry);
+    msg.set_throughput(throughput);
 
-    if (transfer_message.length() > 0) {
-        std::string trmsg(transfer_message);
-        if (trmsg.length() >= 1023) {
-            trmsg = trmsg.substr(0, 1023);
-        }
-        trmsg = ReplaceNonPrintableCharacters(trmsg);
-        g_strlcpy(msg.transfer_message, trmsg.c_str(), sizeof(msg.transfer_message));
-    }
-    else {
-        msg.transfer_message[0] = '\0';
-    }
-
-    msg.process_id = (int) getpid();
-    msg.timeInSecs = timeInSecs;
-    msg.filesize = (double) filesize;
-    msg.nostreams = nostreams;
-    msg.timeout = timeout;
-    msg.buffersize = buffersize;
-    g_strlcpy(msg.source_se, source_se.c_str(), sizeof(msg.source_se));
-    g_strlcpy(msg.dest_se, dest_se.c_str(), sizeof(msg.dest_se));
-    msg.timestamp = milliseconds_since_epoch();
-    msg.retry = retry;
-    msg.throughput = throughput;
-
-    // Try twice
-    if (producer.runProducerStatus(msg) != 0) {
-        producer.runProducerStatus(msg);
-    }
+    producer.runProducerStatus(msg);
 }
 
 
@@ -132,37 +113,32 @@ void Reporter::sendPing(const std::string &job_id, unsigned file_id,
     std::string source_surl, std::string dest_surl, std::string source_turl,
     std::string dest_turl, const std::string &transfer_status)
 {
-    g_strlcpy(msg_updater.job_id, job_id.c_str(), sizeof(msg_updater.job_id));
-    msg_updater.file_id = file_id;
-    msg_updater.process_id = (int) getpid();
-    msg_updater.timestamp = milliseconds_since_epoch();
-    msg_updater.throughput = throughput;
-    msg_updater.transferred = (double) transferred;
+    msg_updater.set_job_id(job_id);
+    msg_updater.set_file_id(file_id);
+    msg_updater.set_process_id(getpid());
+    msg_updater.set_timestamp(milliseconds_since_epoch());
+    msg_updater.set_throughput(throughput);
+    msg_updater.set_transferred(transferred);
 
-    g_strlcpy(msg_updater.source_surl, source_surl.c_str(), sizeof(msg_updater.source_surl));
-    g_strlcpy(msg_updater.dest_surl, dest_surl.c_str(), sizeof(msg_updater.dest_surl));
-    g_strlcpy(msg_updater.source_turl, source_turl.c_str(), sizeof(msg_updater.source_turl));
-    g_strlcpy(msg_updater.dest_turl, dest_turl.c_str(), sizeof(msg_updater.dest_turl));
-    g_strlcpy(msg_updater.transfer_status, transfer_status.c_str(), sizeof(msg_updater.transfer_status));
+    msg_updater.set_source_surl(source_surl);
+    msg_updater.set_dest_surl(dest_surl);
+    msg_updater.set_source_turl(source_turl);
+    msg_updater.set_dest_turl(dest_turl);
+    msg_updater.set_transfer_status(transfer_status);
 
-    // Try twice
-    if (producer.runProducerStall(msg_updater) != 0) {
-        producer.runProducerStall(msg_updater);
-    }
+    producer.runProducerStall(msg_updater);
 }
 
 
 void Reporter::sendLog(const std::string &job_id, unsigned file_id,
     const std::string &logFileName, bool debug)
 {
-    msg_log.file_id = file_id;
-    g_strlcpy(msg_log.job_id, job_id.c_str(), sizeof(msg_log.job_id));
-    g_strlcpy(msg_log.filePath, logFileName.c_str(), sizeof(msg_log.filePath));
-    g_strlcpy(msg_log.host, hostname.c_str(), sizeof(msg_log.host));
-    msg_log.debugFile = debug;
-    msg_log.timestamp = milliseconds_since_epoch();
-    // Try twice
-    if (producer.runProducerLog(msg_log) != 0) {
-        producer.runProducerLog(msg_log);
-    }
+    msg_log.set_file_id(file_id);
+    msg_log.set_job_id(job_id);
+    msg_log.set_log_path(logFileName);
+    msg_log.set_host(hostname);
+    msg_log.set_has_debug_file(debug);
+    msg_log.set_timestamp(milliseconds_since_epoch());
+
+    producer.runProducerLog(msg_log);
 }

@@ -21,21 +21,37 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Find boost
-find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package (Boost COMPONENTS filesystem REQUIRED)
 find_package (DIRQ REQUIRED)
 find_package (GLIB2 REQUIRED)
+find_package (Protobuf REQUIRED)
 
 include_directories (${DIRQ_INCLUDE_DIR})
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
-# Sources
-file(GLOB msg_bus_sources "*.cpp")
+# Protocol buffers
+file (GLOB EVENTS "events/*.proto")
 
-add_library(fts_msg_bus SHARED ${msg_bus_sources})
+protobuf_generate_cpp (EVENTS_SOURCES EVENTS_HEADERS
+    PROTOFILES
+    ${EVENTS}
+    PROTOROOT "${CMAKE_CURRENT_SOURCE_DIR}/events"
+    OUTPATH "${CMAKE_CURRENT_SOURCE_DIR}/events"
+)
+
+# Sources
+include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
+file (GLOB msg_bus_sources "*.cpp")
+
+add_library(fts_msg_bus SHARED
+    ${msg_bus_sources}
+    ${EVENTS_SOURCES} ${EVENTS_HEADERS}
+)
 target_link_libraries(fts_msg_bus
     ${Boost_LIBRARIES}
     ${GLIB2_LIBRARIES}
     ${DIRQ_LIBRARIES}
+    ${PROTOBUF_LIBRARY}
     -lpthread
 )
 

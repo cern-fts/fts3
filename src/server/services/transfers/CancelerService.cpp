@@ -25,10 +25,10 @@
 #include <boost/filesystem.hpp>
 
 #include "common/Logger.h"
-#include "common/ThreadSafeList.h"
 #include "config/ServerConfig.h"
 #include "server/DrainMode.h"
 #include "server/services/webservice/ws/SingleTrStateInstance.h"
+#include "ThreadSafeList.h"
 
 
 using namespace fts3::common;
@@ -53,7 +53,7 @@ CancelerService::~CancelerService()
 
 void CancelerService::markAsStalled()
 {
-    std::vector<struct MessageUpdater> messages;
+    std::vector<fts3::events::MessageUpdater> messages;
     messages.reserve(500);
     ThreadSafeList::get_instance().checkExpiredMsg(messages);
     if (!messages.empty()) {
@@ -65,8 +65,8 @@ void CancelerService::markAsStalled()
         bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
         if (updated) {
             for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
-                if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0) {
-                    SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+                if ((*iter).file_id() > 0 && (*iter).job_id().length() > 0) {
+                    SingleTrStateInstance::instance().sendStateMessage((*iter).job_id(), (*iter).file_id());
                 }
             }
         }

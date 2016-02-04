@@ -47,7 +47,7 @@ using namespace boost::algorithm;
 using namespace fts3::common;
 
 static FileManagement fileManagement;
-static transfer_completed transferCompletedMessage;
+static TransferCompleted transferCompletedMessage;
 static bool retry = true;
 static std::string errorScope("");
 static std::string errorPhase("");
@@ -274,7 +274,7 @@ void abnormalTermination(Reporter &reporter, std::string classification, const s
 
     if (UrlCopyOpts::getInstance().monitoringMessages) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
-        std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(reporter.producer,
+        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(reporter.producer,
             transferCompletedMessage);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
     }
@@ -558,7 +558,7 @@ void setRemainingTransfersToFailed(Reporter &reporter, const std::vector<Transfe
         transferCompletedMessage.job_state = "UNKNOWN";
 
         if (UrlCopyOpts::getInstance().monitoringMessages) {
-            msg_ifce::getInstance()->SendTransferFinishMessage(reporter.producer, transferCompletedMessage, true);
+            MsgIfce::getInstance()->SendTransferFinishMessage(reporter.producer, transferCompletedMessage, true);
         }
 
         reporter.sendTerminal(0, false, t.jobId, t.fileId,
@@ -744,7 +744,7 @@ int main(int argc, char **argv)
 
     for (register unsigned int ii = 0; ii < numberOfFiles; ii++) {
         // New transfer, new message
-        transferCompletedMessage = transfer_completed();
+        transferCompletedMessage = TransferCompleted();
 
         errorScope = std::string("");
         reasonClass = std::string("");
@@ -820,7 +820,7 @@ int main(int argc, char **argv)
 
         if (opts.monitoringMessages) {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring start message " << commit;
-            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(reporter.producer,
+            std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(reporter.producer,
                 transferCompletedMessage);
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;
         }
@@ -1362,7 +1362,7 @@ stop:
 
         if (opts.monitoringMessages) {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Send monitoring complete message" << commit;
-            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(reporter.producer,
+            std::string msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(reporter.producer,
                 transferCompletedMessage);
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Complete message content: " << msgReturnValue << commit;
         }

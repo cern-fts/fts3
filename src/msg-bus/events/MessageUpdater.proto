@@ -1,0 +1,20 @@
+package fts3.events;
+
+message MessageUpdater {
+    required uint64 timestamp = 1;
+
+    required string job_id = 2;
+    required uint64 file_id = 3;
+    required string transfer_status = 4;
+
+    required string source_surl = 5;
+    required string dest_surl = 6;
+
+    required string source_turl = 7;
+    required string dest_turl = 8;
+
+    required uint64 process_id = 9;
+
+    required double throughput = 10;
+    required uint64 transferred = 11;
+}

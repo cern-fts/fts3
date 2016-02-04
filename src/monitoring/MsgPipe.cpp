@@ -83,8 +83,7 @@ MsgPipe::~MsgPipe()
 
 void MsgPipe::run()
 {
-    std::vector<struct MessageMonitoring> messages;
-    std::vector<struct MessageMonitoring>::const_iterator iter;
+    std::vector<std::string> messages;
 
     while (stopThreads == false) {
         try {
@@ -95,12 +94,10 @@ void MsgPipe::run()
                 FTS3_COMMON_LOGGER_LOG(ERR, errorMessage.str());
             }
 
-            if (!messages.empty()) {
-                for (iter = messages.begin(); iter != messages.end(); ++iter) {
-                    ConcurrentQueue::getInstance()->push((*iter).msg);
-                }
-                messages.clear();
+            for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
+                ConcurrentQueue::getInstance()->push(*iter);
             }
+            messages.clear();
         }
         catch (const fs::filesystem_error &ex) {
             FTS3_COMMON_LOGGER_LOG(ERR, ex.what());

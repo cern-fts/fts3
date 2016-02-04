@@ -104,7 +104,6 @@ static std::string _getVoFromMessage(const std::string &msg, const char *key)
 void MsgProducer::sendMessage(std::string &temp)
 {
     std::string tempFTS("");
-    register int index = 0;
 
     if (temp.compare(0, 2, "ST") == 0) {
         temp = temp.substr(2, temp.length()); //remove message prefix

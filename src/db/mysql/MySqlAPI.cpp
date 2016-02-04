@@ -42,6 +42,8 @@
 #include "common/Logger.h"
 #include "common/JobStatusHandler.h"
 #include "common/Uri.h"
+#include "monitoring/msg-ifce.h"
+
 
 using namespace fts3::common;
 using namespace db;
@@ -2884,7 +2886,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
 
 
-void MySqlAPI::updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages)
+void MySqlAPI::updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages)
 {
     soci::session sql(*connectionPool);
 
@@ -2940,7 +2942,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct MessageUpdate
 
         sql.begin();
 
-        std::vector<struct MessageUpdater>::iterator iter;
+        std::vector<fts3::events::MessageUpdater>::iterator iter;
         for (iter = messages.begin(); iter != messages.end(); ++iter)
         {
             throughput = 0.0;
@@ -2952,18 +2954,18 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct MessageUpdate
             source_turl = "";
             dest_turl = "";
 
-            if (iter->msg_errno == 0 && (*iter).file_id > 0)
+            if ((*iter).file_id() > 0)
             {
-                file_state = std::string((*iter).transfer_status);
+                file_state = (*iter).transfer_status();
 
                 if(file_state == "ACTIVE")
                 {
-                    file_id = (*iter).file_id;
+                    file_id = (*iter).file_id();
 
-                    if((*iter).throughput > 0.0 && file_id > 0 )
+                    if((*iter).throughput() > 0.0 && file_id > 0 )
                     {
-                        throughput = (*iter).throughput;
-                        transferred = (*iter).transferred;
+                        throughput = (*iter).throughput();
+                        transferred = (*iter).transferred();
                         stmt.execute(true);
                     }
                 }
@@ -5097,7 +5099,7 @@ void MySqlAPI::forkFailed(const std::string& jobId)
 }
 
 
-bool MySqlAPI::markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull)
+bool MySqlAPI::markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 
@@ -5122,18 +5124,18 @@ bool MySqlAPI::markAsStalled(const std::vector<struct MessageUpdater>& messages,
                                        " SELECT file_id FROM t_file "
                                        " WHERE file_id = :fileId AND job_id = :jobId AND file_state = 'ACTIVE' AND"
                                        " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                                       soci::use(iter->file_id),
-                                       soci::use(std::string(iter->job_id)),
+                                       soci::use(iter->file_id()),
+                                       soci::use(iter->job_id()),
                                        soci::use(hashSegment.start),
                                        soci::use(hashSegment.end));
 
             if (rs.begin() != rs.end())
             {
                 ok = true;
-                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id,
-                        (*iter).file_id, "FAILED", transfer_message,
-                        (*iter).process_id, 0, 0, false);
-                updateJobTransferStatusInternal(sql, (*iter).job_id, "FAILED", 0);
+                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id(),
+                        (*iter).file_id(), "FAILED", transfer_message,
+                        (*iter).process_id(), 0, 0, false);
+                updateJobTransferStatusInternal(sql, (*iter).job_id(), "FAILED", 0);
             }
         }
     }
@@ -6925,7 +6927,7 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
     }
 }
 
-void MySqlAPI::updateProtocol(std::vector<Message>& messages)
+void MySqlAPI::updateProtocol(std::vector<fts3::events::Message>& messages)
 {
     soci::session sql(*connectionPool);
 
@@ -6942,9 +6944,6 @@ void MySqlAPI::updateProtocol(std::vector<Message>& messages)
 
     try
     {
-
-
-
         sql.begin();
 
         for (auto iter = messages.begin(); iter != messages.end(); ++iter)
@@ -6952,12 +6951,14 @@ void MySqlAPI::updateProtocol(std::vector<Message>& messages)
             internalParams.str(std::string());
             internalParams.clear();
 
-            Message msg = *iter;
-            if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+            auto msg = *iter;
+            if(msg.transfer_status().compare("UPDATE") == 0)
             {
-                fileId = msg.file_id;
-                filesize = msg.filesize;
-                internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                fileId = msg.file_id();
+                filesize = msg.filesize();
+                internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
+                << ",timeout:" << static_cast<int> (msg.timeout())
+                << ",buffersize:" << static_cast<int> (msg.buffersize());
                 params = internalParams.str();
                 stmt.execute(true);
             }
@@ -6980,13 +6981,14 @@ void MySqlAPI::updateProtocol(std::vector<Message>& messages)
                 internalParams.str(std::string());
                 internalParams.clear();
 
-                Message msg = *iter;
-                if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+                auto msg = *iter;
+                if(msg.transfer_status().compare("UPDATE") == 0)
                 {
-
-                    fileId = msg.file_id;
-                    filesize = msg.filesize;
-                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                    fileId = msg.file_id();
+                    filesize = msg.filesize();
+                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
+                    << ",timeout:" << static_cast<int> (msg.timeout())
+                    << ",buffersize:" << static_cast<int> (msg.buffersize());
                     params = internalParams.str();
                     stmt.execute(true);
                 }
@@ -7020,13 +7022,14 @@ void MySqlAPI::updateProtocol(std::vector<Message>& messages)
                 internalParams.str(std::string());
                 internalParams.clear();
 
-                Message msg = *iter;
-                if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+                auto msg = *iter;
+                if(msg.transfer_status().compare("UPDATE") == 0)
                 {
-
-                    fileId = msg.file_id;
-                    filesize = msg.filesize;
-                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                    fileId = msg.file_id();
+                    filesize = msg.filesize();
+                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
+                        << ",timeout:" << static_cast<int> (msg.timeout())
+                        << ",buffersize:" << static_cast<int> (msg.buffersize());
                     params = internalParams.str();
                     stmt.execute(true);
                 }
@@ -7186,7 +7189,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
 
 
 
-void MySqlAPI::transferLogFileVector(std::map<int, struct MessageLog>& messagesLog)
+void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog)
 {
     soci::session sql(*connectionPool);
 
@@ -7232,7 +7235,7 @@ void MySqlAPI::transferLogFileVector(std::map<int, struct MessageLog>& messagesL
 }
 
 
-void MySqlAPI::transferLogFileVectorInternal(soci::session& sql, std::map<int, struct MessageLog>& messagesLog)
+void MySqlAPI::transferLogFileVectorInternal(soci::session& sql, std::map<int, fts3::events::MessageLog>& messagesLog)
 {
     std::string filePath;
     //soci doesn't access bool
@@ -7248,25 +7251,22 @@ void MySqlAPI::transferLogFileVectorInternal(soci::session& sql, std::map<int, s
 
         sql.begin();
 
-        std::map<int, struct MessageLog>::iterator iterLog = messagesLog.begin();
+        std::map<int, fts3::events::MessageLog>::iterator iterLog = messagesLog.begin();
         while (iterLog != messagesLog.end())
         {
-            if(((*iterLog).second).msg_errno == 0)
-            {
-                filePath = ((*iterLog).second).filePath;
-                fileId = ((*iterLog).second).file_id;
-                debugFile = ((*iterLog).second).debugFile;
-                stmt.execute(true);
+            filePath = ((*iterLog).second).log_path();
+            fileId = ((*iterLog).second).file_id();
+            debugFile = ((*iterLog).second).has_debug_file();
+            stmt.execute(true);
 
-                if (stmt.get_affected_rows() > 0)
-                {
-                    // erase
-                    messagesLog.erase(iterLog++);
-                }
-                else
-                {
-                    ++iterLog;
-                }
+            if (stmt.get_affected_rows() > 0)
+            {
+                // erase
+                messagesLog.erase(iterLog++);
+            }
+            else
+            {
+                ++iterLog;
             }
         }
 
@@ -7285,10 +7285,10 @@ void MySqlAPI::transferLogFileVectorInternal(soci::session& sql, std::map<int, s
 }
 
 
-std::vector<struct MessageState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId)
+std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId)
 {
-    MessageState ret;
-    std::vector<struct MessageState> temp;
+    TransferState ret;
+    std::vector<TransferState> temp;
 
     try
     {
@@ -7344,17 +7344,17 @@ std::vector<struct MessageState> MySqlAPI::getStateOfDeleteInternal(soci::sessio
             if(ret.file_state == "SUBMITTED")
             {
                 aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else if(ret.file_state == "STAGING")
             {
                 aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else if(ret.file_state == "DELETE")
             {
                 aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else if(ret.file_state == "ACTIVE")
             {
@@ -7362,16 +7362,16 @@ std::vector<struct MessageState> MySqlAPI::getStateOfDeleteInternal(soci::sessio
                 if (isNull3 == soci::i_ok)
                 {
                     aux_tm = it->get<struct tm>("start_time");
-                    ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                    ret.timestamp = (timegm(&aux_tm) * 1000);
                 }
                 else
                 {
-                    ret.timestamp = "";
+                    ret.timestamp = 0;
                 }
             }
             else
             {
-                ret.timestamp = getStrUTCTimestamp();
+                ret.timestamp = milliseconds_since_epoch();
             }
             ret.retry_counter = it->get<int>("retry_counter",0);
 
@@ -7410,10 +7410,10 @@ std::vector<struct MessageState> MySqlAPI::getStateOfDeleteInternal(soci::sessio
 
 }
 
-std::vector<struct MessageState> MySqlAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId)
+std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId)
 {
-    MessageState ret;
-    std::vector<struct MessageState> temp;
+    TransferState ret;
+    std::vector<TransferState> temp;
 
     try
     {
@@ -7463,26 +7463,26 @@ std::vector<struct MessageState> MySqlAPI::getStateOfTransferInternal(soci::sess
             if(ret.file_state == "SUBMITTED")
             {
                 aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else if(ret.file_state == "STAGING")
             {
                 aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else if(ret.file_state == "DELETE")
             {
                 aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else if(ret.file_state == "ACTIVE")
             {
                 aux_tm = it->get<struct tm>("start_time");
-                ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                ret.timestamp = (timegm(&aux_tm) * 1000);
             }
             else
             {
-                ret.timestamp = getStrUTCTimestamp();
+                ret.timestamp = milliseconds_since_epoch();
             }
             ret.retry_counter = it->get<int>("retry_counter",0);
             ret.file_metadata = it->get<std::string>("file_metadata","");
@@ -7514,10 +7514,10 @@ std::vector<struct MessageState> MySqlAPI::getStateOfTransferInternal(soci::sess
 
 }
 
-std::vector<struct MessageState> MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId)
 {
     soci::session sql(*connectionPool);
-    std::vector<struct MessageState> temp;
+    std::vector<TransferState> temp;
 
     try
     {
@@ -8212,7 +8212,7 @@ void MySqlAPI::checkSanityState()
                         " WHERE beat < DATE_SUB(UTC_TIMESTAMP(), interval 120 minute) and service_name = 'fts_server' "
                     );
 
-            std::vector<struct MessageState> files;
+            std::vector<TransferState> files;
 
             for (soci::rowset<std::string>::const_iterator irsCheckHosts = rsCheckHosts.begin(); irsCheckHosts != rsCheckHosts.end(); ++irsCheckHosts)
             {
@@ -8236,11 +8236,11 @@ void MySqlAPI::checkSanityState()
                     files = getStateOfTransferInternal(sql, job_id, file_id);
                     if(!files.empty())
                     {
-                        std::vector<struct MessageState>::iterator it;
+                        std::vector<TransferState>::iterator it;
                         for (it = files.begin(); it != files.end(); ++it)
                         {
-                            struct MessageState tmp = (*it);
-                            constructJSONMsg(&tmp);
+                            TransferState tmp = (*it);
+                            MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                         }
                         files.clear();
                     }
@@ -10674,7 +10674,7 @@ void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::strin
 
 void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus>& delOpsStatus)
 {
-    std::vector<struct MessageState> filesMsg;
+    std::vector<TransferState> filesMsg;
     std::vector<std::string> distinctJobIds;
 
     try
@@ -10845,11 +10845,11 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vecto
             filesMsg = getStateOfDeleteInternal(sql, i->jobId, i->fileId);
             if(!filesMsg.empty())
             {
-                std::vector<struct MessageState>::iterator it;
+                std::vector<TransferState>::iterator it;
                 for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
                 {
-                    struct MessageState tmp = (*it);
-                    constructJSONMsg(&tmp);
+                    TransferState tmp = (*it);
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                 }
             }
             filesMsg.clear();
@@ -10871,7 +10871,7 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vecto
 void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     soci::session sql(*connectionPool);
-    std::vector<struct MessageBringonline> messages;
+    std::vector<fts3::events::MessageBringonline> messages;
     std::vector<MinFileStatus> filesState;
 
 
@@ -10888,14 +10888,11 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
         {
             for (auto iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
             {
-                if (iterUpdater->msg_errno == 0)
-                {
-                    //now restore messages : //file_id / state / reason / job_id / retry
-                    filesState.emplace_back(
-                        iterUpdater->job_id, iterUpdater->file_id,
-                        iterUpdater->transfer_status, iterUpdater->transfer_message, false
-                    );
-                }
+                //now restore messages : //file_id / state / reason / job_id / retry
+                filesState.emplace_back(
+                    iterUpdater->job_id(), iterUpdater->file_id(),
+                    iterUpdater->transfer_status(), iterUpdater->transfer_message(), false
+                );
             }
         }
 
@@ -11027,15 +11024,15 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
             for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
             {
                 //send state message
-                std::vector<struct MessageState> filesMsg;
+                std::vector<TransferState> filesMsg;
                 filesMsg = getStateOfDeleteInternal(sql, itFind->jobId, itFind->fileId);
                 if(!filesMsg.empty())
                 {
-                    std::vector<struct MessageState>::iterator it;
+                    std::vector<TransferState>::iterator it;
                     for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
                     {
-                        struct MessageState tmp = (*it);
-                        constructJSONMsg(&tmp);
+                        TransferState tmp = (*it);
+                        MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                     }
                 }
                 filesMsg.clear();
@@ -11051,13 +11048,13 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                 //save state and restore afterwards
                 if(!filesState.empty())
                 {
-                    struct MessageBringonline msg;
+                    fts3::events::MessageBringonline msg;
                     for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                     {
-                        msg.file_id = itFind->fileId;
-                        g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-                        g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-                        g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
+                        msg.set_file_id(itFind->fileId);
+                        msg.set_job_id(itFind->jobId);
+                        msg.set_transfer_status(itFind->state);
+                        msg.set_transfer_message(itFind->reason);
 
                         //store the states into fs to be restored in the next run of this function
                         producer.runProducerDeletions(msg);
@@ -11110,7 +11107,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
     std::vector<MinFileStatus> filesState;
-    std::vector<struct MessageBringonline> messages;
+    std::vector<fts3::events::MessageBringonline> messages;
 
     int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
     int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
@@ -11129,14 +11126,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
         {
             for (auto iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
             {
-                if (iterUpdater->msg_errno == 0)
-                {
-                    //now restore messages
-                    filesState.emplace_back(
-                        iterUpdater->job_id, iterUpdater->file_id,
-                        iterUpdater->transfer_status, iterUpdater->transfer_message, false
-                    );
-                }
+                //now restore messages
+                filesState.emplace_back(
+                    iterUpdater->job_id(), iterUpdater->file_id(),
+                    iterUpdater->transfer_status(), iterUpdater->transfer_message(), false
+                );
             }
         }
 
@@ -11336,17 +11330,17 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 try
                 {
                     //send state message
-                    std::vector<struct MessageState> filesMsg;
+                    std::vector<TransferState> filesMsg;
                     if(!itFind->jobId.empty() && itFind->fileId > 0)
                     {
                         filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
                         if(!filesMsg.empty())
                         {
-                            std::vector<struct MessageState>::iterator it;
+                            std::vector<TransferState>::iterator it;
                             for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
                             {
-                                struct MessageState tmp = (*it);
-                                constructJSONMsg(&tmp);
+                                TransferState tmp = (*it);
+                                MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                             }
                         }
                         filesMsg.clear();
@@ -11368,13 +11362,13 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 //save state and restore afterwards
                 if(!filesState.empty())
                 {
-                    struct MessageBringonline msg;
+                    fts3::events::MessageBringonline msg;
                     for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                     {
-                        msg.file_id = itFind->fileId;
-                        g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-                        g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-                        g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
+                        msg.set_file_id(itFind->fileId);
+                        msg.set_job_id(itFind->jobId);
+                        msg.set_transfer_status(itFind->state);
+                        msg.set_transfer_message(itFind->reason);
 
                         //store the states into fs to be restored in the next run of this function
                         producer.runProducerStaging(msg);
@@ -11474,7 +11468,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
 
 void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus>& stagingOpsStatus)
 {
-    std::vector<struct MessageState> filesMsg;
+    std::vector<TransferState> filesMsg;
 
     try
     {
@@ -11611,8 +11605,8 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
             {
                 for (auto it = filesMsg.begin(); it != filesMsg.end(); ++it)
                 {
-                    struct MessageState tmp = (*it);
-                    constructJSONMsg(&tmp);
+                    TransferState tmp = (*it);
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                 }
             }
             filesMsg.clear();

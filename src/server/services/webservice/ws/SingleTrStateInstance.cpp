@@ -41,13 +41,14 @@ boost::mutex SingleTrStateInstance::_mutex;
 
 // Implementation
 
-SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
+SingleTrStateInstance::SingleTrStateInstance():
+    monitoringMessages(true), producer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
-    std::string monitoringMessagesStr = ServerConfig::instance().get<std::string > ("MonitoringMessaging");
+    std::string monitoringMessagesStr = ServerConfig::instance().get<std::string> ("MonitoringMessaging");
     if(monitoringMessagesStr == "false")
         monitoringMessages = false;
 
-    ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
+    ftsAlias = ServerConfig::instance().get<std::string>("Alias");
 }
 
 SingleTrStateInstance::~SingleTrStateInstance()
@@ -57,103 +58,25 @@ SingleTrStateInstance::~SingleTrStateInstance()
 
 void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileId)
 {
-
-    if(!monitoringMessages)
+    if (!monitoringMessages)
         return;
 
-    std::vector<struct MessageState> files;
-    try
-        {
-            if(fileId != -1)  //both job_id and file_id are provided
-                {
-                    files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
-                    if(!files.empty())
-                        {
-                            std::vector<struct MessageState>::iterator it;
-                            for (it = files.begin(); it != files.end(); ++it)
-                                {
-                                    struct MessageState tmp = (*it);
-                                    constructJSONMsg(&tmp);
-                                }
-                        }
-                }
-            else   //need to get file_id for the given job
-                {
-                    files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, -1);
-                    if(!files.empty())
-                        {
-                            std::vector<struct MessageState>::iterator it;
-                            for (it = files.begin(); it != files.end(); ++it)
-                                {
-                                    struct MessageState tmp = (*it);
-                                    constructJSONMsg(&tmp);
-                                }
-                        }
-                }
+    std::vector<TransferState> files;
+    try {
+        files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
+        if (!files.empty()) {
+            for (auto it = files.begin(); it != files.end(); ++it) {
+                MsgIfce::getInstance()->SendTransferStatusChange(producer, *it);
+            }
         }
-    catch (BaseException& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state, " << e.what() << commit;
-        }
-    catch (std::exception& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state, " << ex.what() << commit;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state " << commit;
-        }
+    }
+    catch (BaseException &e) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state, " << e.what() << commit;
+    }
+    catch (std::exception &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state, " << ex.what() << commit;
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed saving transfer state " << commit;
+    }
 }
-
-
-void SingleTrStateInstance::constructJSONMsg(const struct MessageState* state)
-{
-
-    if(!monitoringMessages)
-        return;
-
-    std::ostringstream json_message;
-    json_message << "SS {";
-
-
-    json_message << "\"endpnt\":" << "\"" << ftsAlias << "\",";
-    json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
-    json_message << "\"src_url\":" << "\"" << state->source_url << "\",";
-    json_message << "\"dst_url\":" << "\"" << state->dest_url << "\",";
-    json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
-    json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
-    json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";
-    json_message << "\"job_id\":" << "\"" << state->job_id << "\",";
-    json_message << "\"file_id\":" << "\"" << state->file_id << "\",";
-    json_message << "\"job_state\":" << "\"" << state->job_state << "\",";
-    json_message << "\"file_state\":" << "\"" << state->file_state << "\",";
-    json_message << "\"retry_counter\":" << "\"" << state->retry_counter << "\",";
-    json_message << "\"retry_max\":" << "\"" << state->retry_max << "\",";
-    if(state->job_metadata.length() > 0 )
-        json_message << "\"job_metadata\":" << state->job_metadata << ",";
-    else
-        json_message << "\"job_metadata\":\"\",";
-    if(state->file_metadata.length() > 0 )
-        json_message << "\"file_metadata\":" << state->file_metadata << ",";
-    else
-        json_message << "\"file_metadata\":\"\",";
-    json_message << "\"timestamp\":" << "\"" << state->timestamp << "\"";
-    json_message << "}";
-
-    struct MessageMonitoring message;
-
-    if(json_message.str().length() < 3000)
-        {
-            g_strlcpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
-            Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
-            producer.runProducerMonitoring( message );
-        }
-    else
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Message cannot be sent, check length: " << json_message.str().length() << commit;
-        }
-}
-
-
-
-

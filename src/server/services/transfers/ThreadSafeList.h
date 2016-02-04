@@ -25,7 +25,7 @@
 #include <vector>
 #include <string>
 #include <boost/thread.hpp>
-#include "msg-bus/messages.h"
+#include "msg-bus/events.h"
 
 
 class ThreadSafeList
@@ -40,16 +40,16 @@ public:
     ThreadSafeList();
     ~ThreadSafeList();
 
-    std::list<struct MessageUpdater> getList();
-    void push_back(MessageUpdater &msg);
+    std::list<fts3::events::MessageUpdater> getList();
+    void push_back(fts3::events::MessageUpdater &msg);
     void clear();
-    void updateMsg(MessageUpdater &msg);
-    void checkExpiredMsg(std::vector<struct MessageUpdater>& messages);
-    void deleteMsg(std::vector<struct MessageUpdater>& messages);
-    void removeFinishedTr(std::string job_id, int file_id);
+    void updateMsg(fts3::events::MessageUpdater &msg);
+    void checkExpiredMsg(std::vector<fts3::events::MessageUpdater>& messages);
+    void deleteMsg(std::vector<fts3::events::MessageUpdater>& messages);
+    void removeFinishedTr(std::string job_id, uint64_t file_id);
 
 private:
-    std::list<struct MessageUpdater> m_list;
+    std::list<fts3::events::MessageUpdater> m_list;
     mutable boost::recursive_mutex _mutex;
 };
 

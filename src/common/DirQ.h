@@ -24,9 +24,10 @@
 class DirQ {
 private:
     dirq_t dirq;
+    std::string path;
 
 public:
-    DirQ(const std::string &path) {
+    DirQ(const std::string &path): path(path) {
         dirq = dirq_new(path.c_str());
         if (dirq_get_errcode(dirq)) {
             std::stringstream msg;
@@ -43,6 +44,10 @@ public:
 
     DirQ(const DirQ&) = delete;
     DirQ& operator = (DirQ&) = delete;
+
+    const std::string &getPath(void) const throw() {
+        return path;
+    }
 
     operator dirq_t () {
         return dirq;

@@ -19,24 +19,10 @@
  */
 
 #include <fcntl.h>
+#include <unistd.h>
+#include <fstream>
+#include "common/Logger.h"
 #include "consumer.h"
-
-
-struct sort_functor_updater
-{
-    bool operator()(const MessageUpdater & a, const MessageUpdater & b) const
-    {
-        return a.timestamp < b.timestamp;
-    }
-};
-
-struct sort_functor_status
-{
-    bool operator()(const Message & a, const Message & b) const
-    {
-        return a.timestamp < b.timestamp;
-    }
-};
 
 
 Consumer::Consumer(const std::string &baseDir, unsigned limit):
@@ -56,23 +42,23 @@ Consumer::~Consumer()
 template <typename MSG>
 static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &messages)
 {
-    MSG buffer;
+    MSG event;
 
     for (auto iter = dirq_first(dirq); iter != NULL && limit > 0; iter = dirq_next(dirq), --limit) {
         if (dirq_lock(dirq, iter, 0) == 0) {
             const char *path = dirq_get_path(dirq, iter);
 
-            int fd = open(path, O_RDONLY);
-            if (fd < 0) {
-                buffer.set_error(errno);
+            try {
+                std::ifstream fstream(path);
+                event.ParseFromIstream(&fstream);
             }
-            else if (read(fd, &buffer, sizeof(buffer)) != sizeof(buffer)) {
-                buffer.set_error(EBADMSG);
+            catch (const std::exception &ex) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                    << "Could not load message from " << path << " (" << ex.what() << ")"
+                    << fts3::common::commit;
             }
-            messages.emplace_back(buffer);
 
-            close(fd);
-
+            messages.emplace_back(event);
             dirq_remove(dirq, iter);
         }
     }
@@ -81,44 +67,37 @@ static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &message
 }
 
 
-int Consumer::runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages)
+int Consumer::runConsumerStatus(std::vector<fts3::events::Message> &messages)
 {
-    return genericConsumer<MessageMonitoring>(monitoringQueue, limit, messages);
+    return genericConsumer<fts3::events::Message>(statusQueue, limit, messages);
 }
 
 
-int Consumer::runConsumerStatus(std::vector<struct Message> &messages)
+int Consumer::runConsumerStall(std::vector<fts3::events::MessageUpdater> &messages)
 {
-    return genericConsumer<Message>(statusQueue, limit, messages);
+    return genericConsumer<fts3::events::MessageUpdater>(stalledQueue, limit, messages);
 }
 
 
-int Consumer::runConsumerStall(std::vector<struct MessageUpdater> &messages)
+int Consumer::runConsumerLog(std::map<int, fts3::events::MessageLog> &messages)
 {
-    return genericConsumer<MessageUpdater>(stalledQueue, limit, messages);
-}
+    fts3::events::MessageLog buffer;
 
-
-int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
-{
-    MessageLog buffer;
-
-    unsigned count = 0;
-    for (auto iter = dirq_first(logQueue); iter != NULL && count < limit; iter = dirq_next(logQueue), ++count) {
+    for (auto iter = dirq_first(logQueue); iter != NULL && limit > 0; iter = dirq_next(logQueue), --limit) {
         if (dirq_lock(logQueue, iter, 0) == 0) {
             const char *path = dirq_get_path(logQueue, iter);
 
-            int fd = open(path, O_RDONLY);
-            if (fd < 0) {
-                continue;
+            try {
+                std::ifstream fstream(path);
+                buffer.ParseFromIstream(&fstream);
+            }
+            catch (const std::exception &ex) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                << "Could not load message from " << path << " (" << ex.what() << ")"
+                << fts3::common::commit;
             }
 
-            if (read(fd, &buffer, sizeof(buffer)) == sizeof(buffer)) {
-                messages[buffer.file_id] = buffer;
-            }
-
-            close(fd);
-
+            messages[buffer.file_id()] = buffer;
             dirq_remove(logQueue, iter);
         }
     }
@@ -127,15 +106,43 @@ int Consumer::runConsumerLog(std::map<int, struct MessageLog> &messages)
 }
 
 
-int Consumer::runConsumerDeletions(std::vector<struct MessageBringonline> &messages)
+int Consumer::runConsumerDeletions(std::vector<fts3::events::MessageBringonline> &messages)
 {
-    return genericConsumer<MessageBringonline>(deletionQueue, limit, messages);
+    return genericConsumer<fts3::events::MessageBringonline>(deletionQueue, limit, messages);
 }
 
 
-int Consumer::runConsumerStaging(std::vector<struct MessageBringonline> &messages)
+int Consumer::runConsumerStaging(std::vector<fts3::events::MessageBringonline> &messages)
 {
-    return genericConsumer<MessageBringonline>(stagingQueue, limit, messages);
+    return genericConsumer<fts3::events::MessageBringonline>(stagingQueue, limit, messages);
+}
+
+
+int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
+{
+    std::string content;
+
+    for (auto iter = dirq_first(monitoringQueue); iter != NULL && limit > 0; iter = dirq_next(monitoringQueue), --limit) {
+        if (dirq_lock(monitoringQueue, iter, 0) == 0) {
+            const char *path = dirq_get_path(monitoringQueue, iter);
+
+            try {
+                std::ifstream fstream(path);
+                content.assign((std::istreambuf_iterator<char>(fstream)), std::istreambuf_iterator<char>());
+                messages.emplace_back(content);
+            }
+            catch (const std::exception &ex) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                << "Could not load message from " << path << " (" << ex.what() << ")"
+                << fts3::common::commit;
+            }
+
+
+            dirq_remove(monitoringQueue, iter);
+        }
+    }
+
+    return 0;
 }
 
 

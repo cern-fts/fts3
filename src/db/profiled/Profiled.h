@@ -89,7 +89,7 @@ public:
 
     bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
 
-    void updateFileTransferProgressVector(std::vector<MessageUpdater>& messages);
+    void updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages);
 
     void cancelJob(const std::vector<std::string>& requestIDs);
 
@@ -146,7 +146,7 @@ public:
 
     void forkFailed(const std::string& jobId);
 
-    bool markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull);
+    bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull);
 
     void blacklistSe(const std::string& storage, const std::string& voName,
             const std::string& status, int timeout,
@@ -257,15 +257,15 @@ public:
 
     void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
 
-    void updateProtocol(std::vector<Message>& tempProtocol);
+    void updateProtocol(std::vector<fts3::events::Message>& tempProtocol);
 
     void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 
     void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    void transferLogFileVector(std::map<int, struct MessageLog>& messagesLog);
+    void transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog);
 
-    std::vector<struct MessageState> getStateOfTransfer(const std::string& jobId, int file_id);
+    std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int file_id);
 
     void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 

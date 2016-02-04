@@ -35,10 +35,10 @@ namespace server {
 class MessageProcessingService: public BaseService
 {
 private:
-    std::vector<struct Message> messages;
+    std::vector<fts3::events::Message> messages;
     std::string enableOptimization;
-    std::map<int, struct MessageLog> messagesLog;
-    std::vector<struct MessageUpdater> messagesUpdater;
+    std::map<int, fts3::events::MessageLog> messagesLog;
+    std::vector<fts3::events::MessageUpdater> messagesUpdater;
 
     Consumer consumer;
     Producer producer;
@@ -54,8 +54,8 @@ public:
     virtual void runService();
 
 private:
-    void updateDatabase(const struct Message& msg);
-    void executeUpdate(const std::vector<struct Message>& messages);
+    void updateDatabase(const fts3::events::Message& msg);
+    void executeUpdate(const std::vector<fts3::events::Message>& messages);
 };
 
 } // end namespace server

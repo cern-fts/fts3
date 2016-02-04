@@ -22,10 +22,11 @@
 #ifndef CONSUMER_H
 #define CONSUMER_H
 
+#include <map>
 #include <string>
 #include <vector>
-#include "DirQ.h"
-#include "messages.h"
+#include "common/DirQ.h"
+#include "events.h"
 
 
 class Consumer
@@ -46,17 +47,17 @@ public:
 
     ~Consumer();
 
-    int runConsumerMonitoring(std::vector<struct MessageMonitoring> &messages);
+    int runConsumerStatus(std::vector<fts3::events::Message> &messages);
 
-    int runConsumerStatus(std::vector<struct Message> &messages);
+    int runConsumerStall(std::vector<fts3::events::MessageUpdater> &messages);
 
-    int runConsumerStall(std::vector<struct MessageUpdater> &messages);
+    int runConsumerLog(std::map<int, fts3::events::MessageLog> &messages);
 
-    int runConsumerLog(std::map<int, struct MessageLog> &messages);
+    int runConsumerDeletions(std::vector<fts3::events::MessageBringonline> &messages);
 
-    int runConsumerDeletions(std::vector<struct MessageBringonline> &messages);
+    int runConsumerStaging(std::vector<fts3::events::MessageBringonline> &messages);
 
-    int runConsumerStaging(std::vector<struct MessageBringonline> &messages);
+    int runConsumerMonitoring(std::vector<std::string> &messages);
 
     void purgeAll();
 };

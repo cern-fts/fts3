@@ -24,7 +24,6 @@
 #include <fstream>
 
 #include "common/definitions.h"
-#include "common/ThreadSafeList.h"
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
 #include "profiler/Macros.h"
@@ -35,6 +34,7 @@
 
 #include "CloudStorageConfig.h"
 #include "FileTransferScheduler.h"
+#include "ThreadSafeList.h"
 
 
 using namespace fts3::common;
@@ -357,19 +357,12 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     std::map<int, std::string>::const_iterator iterFileIds;
     for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
     {
-        struct MessageUpdater msg2;
-        if (std::string(job_id).length() <= 37)
-        {
-            g_strlcpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
-            msg2.file_id = iterFileIds->first;
-            msg2.process_id = (int) pr.getPid();
-            msg2.timestamp = milliseconds_since_epoch();
-            ThreadSafeList::get_instance().push_back(msg2);
-        }
-        else
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
-        }
+        fts3::events::MessageUpdater msg2;
+        msg2.set_job_id(job_id);
+        msg2.set_file_id(iterFileIds->first);
+        msg2.set_process_id(pr.getPid());
+        msg2.set_timestamp(milliseconds_since_epoch());
+        ThreadSafeList::get_instance().push_back(msg2);
     }
 }
 

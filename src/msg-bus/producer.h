@@ -23,8 +23,8 @@
 #define PRODUCER_H
 
 #include <string>
-#include "DirQ.h"
-#include "messages.h"
+#include "common/DirQ.h"
+#include "events.h"
 
 
 class Producer {
@@ -37,24 +37,22 @@ private:
     DirQ deletionQueue;
     DirQ stagingQueue;
 
-    int writeMessage(DirQ &dirqHandle, const void *buffer, size_t bufsize);
-
 public:
     Producer(const std::string &baseDir);
 
     ~Producer();
 
-    int runProducerMonitoring(const struct MessageMonitoring &msg);
+    int runProducerStatus(const fts3::events::Message &msg);
 
-    int runProducerStatus(const struct Message &msg);
+    int runProducerStall(const fts3::events::MessageUpdater &msg);
 
-    int runProducerStall(const struct MessageUpdater &msg);
+    int runProducerLog(const fts3::events::MessageLog &msg);
 
-    int runProducerLog(const struct MessageLog &msg);
+    int runProducerDeletions(const fts3::events::MessageBringonline &msg);
 
-    int runProducerDeletions(const struct MessageBringonline &msg);
+    int runProducerStaging(const fts3::events::MessageBringonline &msg);
 
-    int runProducerStaging(const struct MessageBringonline &msg);
+    int runProducerMonitoring(const std::string &serialized);
 };
 
 

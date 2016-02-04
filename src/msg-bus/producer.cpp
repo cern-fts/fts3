@@ -23,6 +23,8 @@
 #include <boost/filesystem.hpp>
 #include <glib.h>
 
+#include "common/Logger.h"
+
 
 Producer::Producer(const std::string &baseDir): baseDir(baseDir),
     monitoringQueue(baseDir + "/monitoring"), statusQueue(baseDir + "/status"),
@@ -37,59 +39,86 @@ Producer::~Producer()
 }
 
 
-int Producer::writeMessage(DirQ &dirqHandle, const void *buffer, size_t bufsize)
+static int writeMessage(DirQ &dirqHandle, const google::protobuf::Message &msg)
 {
-    char tempName[PATH_MAX];
-    snprintf(tempName, PATH_MAX, "%s/XXXXXX", baseDir.c_str());
+    char tempTemplate[PATH_MAX];
+    snprintf(tempTemplate, PATH_MAX, "%s/%%%%%%%%%%%%%%%%", dirqHandle.getPath().c_str());
 
-    int tempFd = mkstemp(tempName);
-    if (tempFd < 0) {
-        return errno;
+    boost::filesystem::path temp = boost::filesystem::unique_path(tempTemplate);
+    const std::string tempPath = temp.native();
+
+    try {
+        std::ofstream stream(tempPath);
+        msg.SerializeToOstream(&stream);
+    }
+    catch (const std::exception &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)
+            << "Could not write message to " << tempPath << " (" << ex.what() << ")"
+            << fts3::common::commit;
+        return EIO;
     }
 
-    ssize_t ret = write(tempFd, buffer, bufsize);
-    close(tempFd);
-    if (ret != static_cast<ssize_t>(bufsize)) {
-        return EBADMSG;
-    }
 
-    if (dirq_add_path(dirqHandle, tempName) == NULL) {
+    if (dirq_add_path(dirqHandle, tempPath.c_str()) == NULL) {
         return dirq_get_errcode(dirqHandle);
     }
+
     return 0;
 }
 
 
-int Producer::runProducerMonitoring(const MessageMonitoring &msg)
+int Producer::runProducerStatus(const fts3::events::Message &msg)
 {
-    return writeMessage(monitoringQueue, &msg, sizeof(MessageMonitoring));
+    return writeMessage(statusQueue, msg);
 }
 
 
-int Producer::runProducerStatus(const Message &msg)
+int Producer::runProducerStall(const fts3::events::MessageUpdater &msg)
 {
-    return writeMessage(statusQueue, &msg, sizeof(Message));
+    return writeMessage(stalledQueue, msg);
 }
 
 
-int Producer::runProducerStall(const MessageUpdater &msg)
+int Producer::runProducerLog(const fts3::events::MessageLog &msg)
 {
-    return writeMessage(stalledQueue, &msg, sizeof(MessageUpdater));
+    return writeMessage(logQueue, msg);
+}
+
+int Producer::runProducerDeletions(const fts3::events::MessageBringonline &msg)
+{
+    return writeMessage(deletionQueue, msg);
 }
 
 
-int Producer::runProducerLog(const MessageLog &msg)
+int Producer::runProducerStaging(const fts3::events::MessageBringonline &msg)
 {
-    return writeMessage(logQueue, &msg, sizeof(msg));
-}
-
-int Producer::runProducerDeletions(const struct MessageBringonline &msg)
-{
-    return writeMessage(deletionQueue, &msg, sizeof(msg));
+    return writeMessage(stagingQueue, msg);
 }
 
 
-int Producer::runProducerStaging(const struct MessageBringonline &msg)
+int Producer::runProducerMonitoring(const std::string &serialized)
 {
-    return writeMessage(stagingQueue, &msg, sizeof(msg));
+    char tempTemplate[PATH_MAX];
+    snprintf(tempTemplate, PATH_MAX, "%s/%%%%%%%%%%%%%%%%", monitoringQueue.getPath().c_str());
+
+    boost::filesystem::path temp = boost::filesystem::unique_path(tempTemplate);
+    const std::string tempPath = temp.native();
+
+    try {
+        std::ofstream stream(tempPath);
+        stream << serialized;
+    }
+    catch (const std::exception &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)
+        << "Could not write message to " << tempPath << " (" << ex.what() << ")"
+        << fts3::common::commit;
+        return EIO;
+    }
+
+
+    if (dirq_add_path(monitoringQueue, tempPath.c_str()) == NULL) {
+        return dirq_get_errcode(monitoringQueue);
+    }
+
+    return 0;
 }

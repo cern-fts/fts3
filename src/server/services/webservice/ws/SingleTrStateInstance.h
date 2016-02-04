@@ -23,7 +23,9 @@
 #include <string>
 #include <boost/thread/mutex.hpp>
 
-#include "msg-bus/messages.h"
+#include "msg-bus/events.h"
+#include "monitoring/msg-ifce.h"
+#include "db/generic/TransferState.h"
 
 
 namespace fts3 {
@@ -55,22 +57,19 @@ public:
 
     void sendStateMessage(const std::string& jobId, int fileId);
 
-    void constructJSONMsg(const struct MessageState* state);
-
 private:
     SingleTrStateInstance(); // Private so that it can  not be called
 
-    SingleTrStateInstance(SingleTrStateInstance const&)
-    {
-    }; // copy constructor is private
+    SingleTrStateInstance(SingleTrStateInstance const&) = delete;
+    SingleTrStateInstance & operator=(SingleTrStateInstance const&) = delete;
+
     static boost::mutex _mutex;
-    SingleTrStateInstance & operator=(SingleTrStateInstance const&);
-    // assignment operator is private
     static std::unique_ptr<SingleTrStateInstance> i;
 
     std::string ftsAlias;
 
     bool monitoringMessages;
+    Producer producer;
 };
 
 } // end namespace server

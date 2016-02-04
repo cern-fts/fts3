@@ -1,0 +1,13 @@
+package fts3.events;
+
+message MessageLog {
+    required uint64 timestamp = 1;
+
+    required string job_id = 2;
+    required uint64 file_id = 3;
+
+    required string host = 4;
+
+    required string log_path = 5;
+    required bool   has_debug_file = 6;
+}

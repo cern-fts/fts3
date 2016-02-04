@@ -22,7 +22,6 @@
 #include <iomanip>
 #include <fstream>
 #include <cajun/json/elements.h>
-#include <cajun/json/reader.h>
 #include <cajun/json/writer.h>
 #include "msg-ifce.h"
 #include "common/Logger.h"
@@ -30,14 +29,14 @@
 
 using fts3::config::ServerConfig;
 
-bool msg_ifce::instanceFlag = false;
-msg_ifce* msg_ifce::single = NULL;
+bool MsgIfce::instanceFlag = false;
+MsgIfce *MsgIfce::single = NULL;
 
 
-msg_ifce *msg_ifce::getInstance()
+MsgIfce *MsgIfce::getInstance()
 {
     if (!instanceFlag) {
-        single = new msg_ifce();
+        single = new MsgIfce();
         instanceFlag = true;
         return single;
     }
@@ -47,12 +46,12 @@ msg_ifce *msg_ifce::getInstance()
 }
 
 
-msg_ifce::msg_ifce(): state(MSG_IFCE_WAITING_START)
+MsgIfce::MsgIfce(): state(MSG_IFCE_WAITING_START)
 {
 }
 
 
-msg_ifce::~msg_ifce()
+MsgIfce::~MsgIfce()
 {
     instanceFlag = false;
 }
@@ -72,7 +71,7 @@ static void set_metadata(json::Object &json, const std::string &key, const std::
 }
 
 
-std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfer_completed &tr_started)
+std::string MsgIfce::SendTransferStartMessage(Producer &producer, const TransferCompleted &tr_started)
 {
     if (state != MSG_IFCE_WAITING_START) {
         FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a start message, but the internal state is not MSG_IFCE_WAITING_START");
@@ -116,7 +115,7 @@ std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfe
     json::Writer::Write(message, stream);
 
     std::string msgStr = stream.str();
-    int errCode = restoreMessageToDisk(producer, msgStr);
+    int errCode = producer.runProducerMonitoring(msgStr);
     if (errCode == 0) {
         return msgStr;
     }
@@ -127,7 +126,7 @@ std::string msg_ifce::SendTransferStartMessage(Producer &producer, const transfe
 }
 
 
-std::string msg_ifce::SendTransferFinishMessage(Producer &producer, const transfer_completed &tr_completed, bool force)
+std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed, bool force)
 {
     if (!force && state != MSG_IFCE_WAITING_FINISH) {
         FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
@@ -217,7 +216,48 @@ std::string msg_ifce::SendTransferFinishMessage(Producer &producer, const transf
     json::Writer::Write(message, stream);
 
     std::string msgStr = stream.str();
-    int errCode = restoreMessageToDisk(producer, msgStr);
+    int errCode = producer.runProducerMonitoring(msgStr);
+    if (errCode == 0) {
+        return msgStr;
+    }
+    else {
+        char buffer[512];
+        return strerror_r(errCode, buffer, sizeof(buffer));
+    }
+}
+
+
+std::string MsgIfce::SendTransferStatusChange(Producer &producer, const TransferState &tr_state)
+{
+    std::string ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
+
+    json::Object message;
+
+    message["endpnt"] = json::String(ftsAlias);
+    message["user_dn"] = json::String(tr_state.user_dn);
+    message["src_url"] = json::String(tr_state.source_url);
+    message["dst_url"] = json::String(tr_state.dest_url);
+    message["vo_name"] = json::String(tr_state.vo_name);
+    message["source_se"] = json::String(tr_state.source_se);
+    message["dest_se"] = json::String(tr_state.dest_se);
+    message["job_id"] = json::String(tr_state.job_id);
+    message["file_id"] = json::Number(tr_state.file_id);
+    message["job_state"] = json::String(tr_state.job_state);
+    message["file_state"] = json::String(tr_state.file_state);
+    message["retry_counter"] = json::Number(tr_state.retry_counter);
+    message["retry_max"] = json::Number(tr_state.retry_max);
+    message["timestamp"] = json::Number(tr_state.timestamp);
+
+    set_metadata(message, "job_metadata", tr_state.job_metadata);
+    set_metadata(message, "file_metadata", tr_state.job_metadata);
+
+    std::ostringstream stream;
+
+    stream << "SS ";
+    json::Writer::Write(message, stream);
+
+    std::string msgStr = stream.str();
+    int errCode = producer.runProducerMonitoring(msgStr);
     if (errCode == 0) {
         return msgStr;
     }

@@ -63,7 +63,7 @@ inline double convertKbToMb(double throughput)
 }
 
 
-inline boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
+inline uint64_t milliseconds_since_epoch()
 {
     using boost::gregorian::date;
     using boost::posix_time::ptime;

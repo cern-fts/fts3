@@ -25,6 +25,7 @@
 #include <sstream>
 #include "UtilityRoutines.h"
 #include "msg-bus/producer.h"
+#include "db/generic/TransferState.h"
 
 /**
  * This is the external interface of the FTS messaging library.
@@ -32,14 +33,14 @@
  * and to sent the transfer to the message broker
  */
 
-struct transfer_completed
+struct TransferCompleted
 {
 public:
-    transfer_completed():
+    TransferCompleted():
         transfer_timeout(0), checksum_timeout(0), total_bytes_transfered(0), number_of_streams(0), tcp_buffer_size(0),
         block_size(0), file_size(0), retry(0), retry_max(0), is_recoverable(false)
     {}
-    ~transfer_completed() {}
+    ~TransferCompleted() {}
 
     std::string agent_fqdn;
     std::string transfer_id;
@@ -92,7 +93,7 @@ public:
     bool        is_recoverable;
 };
 
-class msg_ifce
+class MsgIfce
 {
 private:
 
@@ -102,15 +103,16 @@ private:
     } state;
 
     static bool instanceFlag;
-    static msg_ifce *single;
-    msg_ifce(); /*private constructor*/
+    static MsgIfce *single;
+    MsgIfce(); /*private constructor*/
 
 public:
-    std::string SendTransferStartMessage(Producer &producer, const transfer_completed &tr_started);
-    std::string SendTransferFinishMessage(Producer &producer, const transfer_completed &tr_completed, bool force=false);
+    std::string SendTransferStartMessage(Producer &producer, const TransferCompleted &tr_started);
+    std::string SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed, bool force=false);
+    std::string SendTransferStatusChange(Producer &producer, const TransferState &tr_state);
 
-    static msg_ifce* getInstance();
-    ~msg_ifce();
+    static MsgIfce * getInstance();
+    ~MsgIfce();
 };
 
 #endif

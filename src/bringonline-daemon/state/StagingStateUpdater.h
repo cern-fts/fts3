@@ -106,13 +106,13 @@ private:
             updates.insert(updates.end(), recover.begin(), recover.end());
         }
 
-        MessageBringonline msg;
+        fts3::events::MessageBringonline msg;
         for (auto itFind = recover.begin(); itFind != recover.end(); ++itFind)
         {
-            msg.file_id = itFind->fileId;
-            g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-            g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-            g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
+            msg.set_file_id(itFind->fileId);
+            msg.set_job_id(itFind->jobId);
+            msg.set_transfer_status(itFind->state);
+            msg.set_transfer_message(itFind->reason);
 
             //store the states into fs to be restored in the next run
             producer.runProducerStaging(msg);

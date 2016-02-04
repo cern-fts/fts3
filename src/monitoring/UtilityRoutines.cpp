@@ -306,8 +306,5 @@ std::string ReplaceNonPrintableCharacters(const std::string &s)
 
 int restoreMessageToDisk(Producer &producer, const std::string &text)
 {
-    struct MessageMonitoring message;
-    g_strlcpy(message.msg, text.c_str(), sizeof(message.msg));
-    message.timestamp = milliseconds_since_epoch();
-    return producer.runProducerMonitoring(message);
+    return producer.runProducerMonitoring(text);
 }

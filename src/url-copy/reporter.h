@@ -81,9 +81,9 @@ public:
     Producer producer;
 
 private:
-    struct Message         msg;
-    struct MessageUpdater msg_updater;
-    struct MessageLog     msg_log;
+    fts3::events::Message        msg;
+    fts3::events::MessageUpdater msg_updater;
+    fts3::events::MessageLog     msg_log;
     std::string            hostname;
 
 #ifdef __STDC_NO_ATOMICS__

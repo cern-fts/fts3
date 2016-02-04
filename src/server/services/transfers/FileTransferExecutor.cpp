@@ -24,7 +24,6 @@
 
 #include "common/definitions.h"
 #include "common/Logger.h"
-#include "common/ThreadSafeList.h"
 #include "common/Uri.h"
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
@@ -36,7 +35,7 @@
 #include "services/webservice/ws/SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
-
+#include "ThreadSafeList.h"
 #include "UrlCopyCmd.h"
 
 
@@ -282,11 +281,11 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // Send current state
             SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
-            struct MessageUpdater msg;
-            g_strlcpy(msg.job_id, std::string(tf.jobId).c_str(), sizeof(msg.job_id));
-            msg.file_id = tf.fileId;
-            msg.process_id = (int) pr.getPid();
-            msg.timestamp = milliseconds_since_epoch();
+            fts3::events::MessageUpdater msg;
+            msg.set_job_id(tf.jobId);
+            msg.set_file_id(tf.fileId);
+            msg.set_process_id(pr.getPid());
+            msg.set_timestamp(milliseconds_since_epoch());
 
             // Only set watcher when the file has started
             if(!failed) {

@@ -177,7 +177,7 @@ public:
 
     virtual void forkFailed(const std::string& jobId);
 
-    virtual bool markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull);
+    virtual bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull);
 
     virtual void blacklistSe(const std::string& storage, const std::string& voName,
             const std::string& status, int timeout,
@@ -288,13 +288,13 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
 
-    virtual void updateProtocol(std::vector<Message>& tempProtocol);
+    virtual void updateProtocol(std::vector<fts3::events::Message>& tempProtocol);
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    virtual std::vector<struct MessageState> getStateOfTransfer(const std::string& jobId, int file_id);
+    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int file_id);
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 
@@ -334,9 +334,9 @@ public:
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities);
 
-    virtual void updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages);
+    virtual void updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages);
 
-    virtual void transferLogFileVector(std::map<int, struct MessageLog>& messagesLog);
+    virtual void transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog);
 
     unsigned int updateFileStatusReuse(TransferFile const & file, const std::string status);
 
@@ -411,7 +411,7 @@ private:
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
-    void transferLogFileVectorInternal(soci::session& sql, std::map<int, struct MessageLog>& messagesLog);
+    void transferLogFileVectorInternal(soci::session& sql, std::map<int, fts3::events::MessageLog>& messagesLog);
 
     bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times);
 
@@ -443,7 +443,7 @@ private:
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
-                                         const struct MessageBringonline& msg);
+                                         const fts3::events::MessageBringonline& msg);
 
     void updateOptimizerEvolution(soci::session& sql,
             const std::string & source_hostname,
@@ -452,11 +452,11 @@ private:
 
     void getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname);
 
-    std::vector<struct MessageState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
+    std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 
     int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
 
-    std::vector<struct MessageState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
+    std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
     void setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry, const std::string& reason);
 

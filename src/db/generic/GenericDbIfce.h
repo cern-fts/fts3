@@ -39,6 +39,7 @@
 #include "LinkConfig.h"
 #include "ShareConfig.h"
 #include "CloudStorageAuth.h"
+#include "TransferState.h"
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
@@ -53,7 +54,7 @@
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
 
-#include "msg-bus/messages.h"
+#include "msg-bus/events.h"
 #include "profiler/Profiler.h"
 
 
@@ -407,7 +408,7 @@ public:
     /// Mark the files contained in 'messages' as stalled (FAILED)
     /// @param messages Only file_id, job_id and process_id from this is used
     /// @param diskFull Set to true if there are no messages because the disk is full
-    virtual bool markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull) = 0;
+    virtual bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull) = 0;
 
     /// Return true if the group 'groupName' exists
     virtual bool checkGroupExists(const std::string & groupName) = 0;
@@ -510,13 +511,13 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt) = 0;
 
-    virtual void updateProtocol(std::vector<Message>& tempProtocol) = 0;
+    virtual void updateProtocol(std::vector<fts3::events::Message>& tempProtocol) = 0;
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs) = 0;
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) = 0;
 
-    virtual std::vector<struct MessageState> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
+    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
 
@@ -542,9 +543,9 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries) = 0;
 
-    virtual void updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages) = 0;
+    virtual void updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages) = 0;
 
-    virtual void transferLogFileVector(std::map<int, struct MessageLog>& messagesLog) = 0;
+    virtual void transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog) = 0;
 
     /**
      * Signals that the server is alive

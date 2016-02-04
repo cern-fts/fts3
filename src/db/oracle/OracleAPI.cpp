@@ -31,11 +31,11 @@
 #include "common/definitions.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "common/ThreadSafeList.h"
 #include "common/Uri.h"
 #include "config/ServerConfig.h"
 #include "sociConversions.h"
 #include "db/generic/DbUtils.h"
+#include "monitoring/msg-ifce.h"
 
 
 using namespace fts3::common;
@@ -2364,7 +2364,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
 }
 
 
-void OracleAPI::updateFileTransferProgressVector(std::vector<struct MessageUpdater>& messages)
+void OracleAPI::updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages)
 {
     soci::session sql(*connectionPool);
 
@@ -2386,8 +2386,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct MessageUpdat
 
         sql.begin();
 
-        std::vector<struct MessageUpdater>::iterator iter;
-        for (iter = messages.begin(); iter != messages.end(); ++iter) {
+        for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
             throughput = 0.0;
             transferred = 0.0;
             file_id = 0;
@@ -2397,31 +2396,31 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct MessageUpdat
             source_turl = "";
             dest_turl = "";
 
-            if (iter->msg_errno == 0 && (*iter).file_id > 0)
+            if ((*iter).file_id() > 0)
             {
-                file_state = std::string((*iter).transfer_status);
+                file_state = std::string((*iter).transfer_status());
 
                 if (file_state == "ACTIVE") {
-                    file_id = (*iter).file_id;
+                    file_id = (*iter).file_id();
 
-                    if ((*iter).throughput > 0.0 && file_id > 0) {
-                        throughput = (*iter).throughput;
-                        transferred = (*iter).transferred;
+                    if ((*iter).throughput() > 0.0 && file_id > 0) {
+                        throughput = (*iter).throughput();
+                        transferred = (*iter).transferred();
                         stmt.execute(true);
                     }
                 }
                 else {
-                    source_surl = (*iter).source_surl;
-                    dest_surl = (*iter).dest_surl;
-                    source_turl = (*iter).source_turl;
-                    dest_turl = (*iter).dest_turl;
-                    file_id = (*iter).file_id;
+                    source_surl = (*iter).source_surl();
+                    dest_surl = (*iter).dest_surl();
+                    source_turl = (*iter).source_turl();
+                    dest_turl = (*iter).dest_turl();
+                    file_id = (*iter).file_id();
 
                     if (source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
                         continue;
 
-                    if ((*iter).throughput > 0.0 && file_id > 0) {
-                        throughput = (*iter).throughput;
+                    if ((*iter).throughput() > 0.0 && file_id > 0) {
+                        throughput = (*iter).throughput();
                     }
 
                     if (file_state == "FINISHED" && file_id > 0) {
@@ -3979,18 +3978,6 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                         "FAILED", "Transfer has been forced-killed because it was stalled",
                         boost::lexical_cast<int>(pid), 0, 0, false);
                     updateJobTransferStatusInternal(sql, jobId, "FAILED", 0);
-
-                    std::vector<struct MessageState> files;
-                    //send state monitoring message for the state transition
-                    files = getStateOfTransferInternal(sql, jobId, fileId);
-                    if (!files.empty()) {
-                        std::vector<struct MessageState>::iterator it;
-                        for (it = files.begin(); it != files.end(); ++it) {
-                            struct MessageState tmp = (*it);
-                            constructJSONMsg(&tmp);
-                        }
-                        files.clear();
-                    }
                 }
 
             }
@@ -4226,12 +4213,11 @@ void OracleAPI::forkFailed(const std::string& jobId)
 }
 
 
-bool OracleAPI::markAsStalled(const std::vector<struct MessageUpdater>& messages, bool diskFull)
+bool OracleAPI::markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 
     bool ok = false;
-    std::vector<struct MessageUpdater>::const_iterator iter;
     const std::string transfer_status = "FAILED";
     std::string transfer_message;
     if (diskFull) {
@@ -4246,34 +4232,22 @@ bool OracleAPI::markAsStalled(const std::vector<struct MessageUpdater>& messages
 
     try
     {
-        for (iter = messages.begin(); iter != messages.end(); ++iter) {
+        for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
             soci::rowset<long long> rs = (
                  sql.prepare <<
                  " SELECT file_id FROM t_file "
                  " WHERE file_id = :fileId AND job_id = :jobId AND file_state  = 'ACTIVE' AND"
                  " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                 soci::use(iter->file_id),
-                 soci::use(std::string(iter->job_id)),
+                 soci::use(iter->file_id()),
+                 soci::use(std::string(iter->job_id())),
                  soci::use(hashSegment.start),
                  soci::use(hashSegment.end));
 
             if (rs.begin() != rs.end()) {
                 ok = true;
-                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status,
-                    transfer_message, (*iter).process_id, 0, 0,false);
-                updateJobTransferStatusInternal(sql, (*iter).job_id, status,0);
-
-                std::vector<struct MessageState> files;
-                //send state monitoring message for the state transition
-                files = getStateOfTransferInternal(sql, (*iter).job_id, (*iter).file_id);
-                if (!files.empty()) {
-                    std::vector<struct MessageState>::iterator it;
-                    for (it = files.begin(); it != files.end(); ++it) {
-                        struct MessageState tmp = (*it);
-                        constructJSONMsg(&tmp);
-                    }
-                    files.clear();
-                }
+                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id(), (*iter).file_id(), transfer_status,
+                    transfer_message, (*iter).process_id(), 0, 0,false);
+                updateJobTransferStatusInternal(sql, (*iter).job_id(), status,0);
             }
         }
     }
@@ -5838,7 +5812,7 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
     }
 }
 
-void OracleAPI::updateProtocol(std::vector<Message>& messages)
+void OracleAPI::updateProtocol(std::vector<fts3::events::Message>& messages)
 {
     soci::session sql(*connectionPool);
 
@@ -5860,12 +5834,12 @@ void OracleAPI::updateProtocol(std::vector<Message>& messages)
             internalParams.str(std::string());
             internalParams.clear();
 
-            Message msg = *iter;
-            if (iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0) {
-                fileId = msg.file_id;
-                filesize = msg.filesize;
-                internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:"
-                    << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+            fts3::events::Message msg = *iter;
+            if (msg.transfer_status().compare("UPDATE") == 0) {
+                fileId = msg.file_id();
+                filesize = msg.filesize();
+                internalParams << "nostreams:" << static_cast<int> (msg.nostreams()) << ",timeout:"
+                    << static_cast<int> (msg.timeout()) << ",buffersize:" << static_cast<int> (msg.buffersize());
                 params = internalParams.str();
                 stmt.execute(true);
             }
@@ -5999,7 +5973,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
 }
 
 
-void OracleAPI::transferLogFileVector(std::map<int, struct MessageLog>& messagesLog)
+void OracleAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog)
 {
     soci::session sql(*connectionPool);
 
@@ -6018,21 +5992,19 @@ void OracleAPI::transferLogFileVector(std::map<int, struct MessageLog>& messages
 
         sql.begin();
 
-        std::map<int, struct MessageLog>::iterator iterLog = messagesLog.begin();
+        std::map<int, fts3::events::MessageLog>::iterator iterLog = messagesLog.begin();
         while (iterLog != messagesLog.end()) {
-            if (((*iterLog).second).msg_errno == 0) {
-                filePath = ((*iterLog).second).filePath;
-                fileId = ((*iterLog).second).file_id;
-                debugFile = ((*iterLog).second).debugFile;
-                stmt.execute(true);
+            filePath = ((*iterLog).second).log_path();
+            fileId = ((*iterLog).second).file_id();
+            debugFile = ((*iterLog).second).has_debug_file();
+            stmt.execute(true);
 
-                if (stmt.get_affected_rows() > 0) {
-                    // erase
-                    messagesLog.erase(iterLog++);
-                }
-                else {
-                    ++iterLog;
-                }
+            if (stmt.get_affected_rows() > 0) {
+                // erase
+                messagesLog.erase(iterLog++);
+            }
+            else {
+                ++iterLog;
             }
         }
 
@@ -6049,11 +6021,10 @@ void OracleAPI::transferLogFileVector(std::map<int, struct MessageLog>& messages
 }
 
 
-std::vector<struct MessageState> OracleAPI::getStateOfDeleteInternal(soci::session &sql, const std::string &jobId,
-    int fileId)
+std::vector<TransferState> OracleAPI::getStateOfDeleteInternal(soci::session &sql, const std::string &jobId, int fileId)
 {
-    MessageState ret;
-    std::vector<struct MessageState> temp;
+    TransferState ret;
+    std::vector<TransferState> temp;
 
     try {
         soci::rowset<soci::row> rs = (fileId ==-1) ? (
@@ -6102,36 +6073,34 @@ std::vector<struct MessageState> OracleAPI::getStateOfDeleteInternal(soci::sessi
                 ret.job_metadata = "";
 
 
-            ret.retry_max = static_cast<int>(it->get < long
-            long > ("RETRY_MAX", 0));
-            ret.file_id = static_cast<int>(it->get < long
-            long > ("FILE_ID"));
+            ret.retry_max = static_cast<int>(it->get<long long>("RETRY_MAX", 0));
+            ret.file_id = static_cast<int>(it->get<long long>("FILE_ID"));
             ret.file_state = it->get<std::string>("FILE_STATE");
             if (ret.file_state == "SUBMITTED") {
                 aux_time = soci::getTimeT(*it, "SUBMIT_TIME");
-                ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
+                ret.timestamp = (aux_time * 1000);
             }
             else if (ret.file_state == "STAGING") {
                 aux_time = soci::getTimeT(*it, "SUBMIT_TIME");
-                ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
+                ret.timestamp = (aux_time * 1000);
             }
             else if (ret.file_state == "DELETE") {
                 aux_time = soci::getTimeT(*it, "SUBMIT_TIME");
-                ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
+                ret.timestamp = (aux_time * 1000);
             }
             else if (ret.file_state == "ACTIVE") {
                 soci::indicator isNull3 = it->get_indicator("START_TIME");
                 if (isNull3 == soci::i_ok) {
                     aux_time = soci::getTimeT(*it, "START_TIME");
-                    ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
+                    ret.timestamp = (aux_time * 1000);
                 }
                 else {
-                    ret.timestamp = "";
+                    ret.timestamp = 0;
                 }
 
             }
             else {
-                ret.timestamp = getStrUTCTimestamp();
+                ret.timestamp = milliseconds_since_epoch();
             }
             ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER", 0));
 
@@ -6165,11 +6134,11 @@ std::vector<struct MessageState> OracleAPI::getStateOfDeleteInternal(soci::sessi
 }
 
 
-std::vector<struct MessageState> OracleAPI::getStateOfTransferInternal(soci::session &sql, const std::string &jobId,
+std::vector<TransferState> OracleAPI::getStateOfTransferInternal(soci::session &sql, const std::string &jobId,
     int fileId)
 {
-    MessageState ret;
-    std::vector<struct MessageState> temp;
+    TransferState ret;
+    std::vector<TransferState> temp;
 
     try {
         soci::rowset<soci::row> rs = (fileId ==-1) ? (
@@ -6209,25 +6178,23 @@ std::vector<struct MessageState> OracleAPI::getStateOfTransferInternal(soci::ses
             ret.job_state = it->get<std::string>("JOB_STATE");
             ret.vo_name = it->get<std::string>("VO_NAME");
             ret.job_metadata = it->get<std::string>("JOB_METADATA", "");
-            ret.retry_max = static_cast<int>(it->get < long
-            long > ("RETRY_MAX", 0));
-            ret.file_id = static_cast<int>(it->get < long
-            long > ("FILE_ID"));
+            ret.retry_max = static_cast<int>(it->get<long long>("RETRY_MAX", 0));
+            ret.file_id = static_cast<int>(it->get<long long> ("FILE_ID"));
             ret.file_state = it->get<std::string>("FILE_STATE");
             if (ret.file_state == "SUBMITTED") {
-                ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
+                ret.timestamp = (soci::getTimeT(*it, "SUBMIT_TIME") * 1000);
             }
             else if (ret.file_state == "STAGING") {
-                ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
+                ret.timestamp = (soci::getTimeT(*it, "SUBMIT_TIME") * 1000);
             }
             else if (ret.file_state == "DELETE") {
-                ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
+                ret.timestamp = (soci::getTimeT(*it, "SUBMIT_TIME") * 1000);
             }
             else if (ret.file_state == "ACTIVE") {
-                ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "START_TIME"));
+                ret.timestamp = (soci::getTimeT(*it, "START_TIME") * 1000);
             }
             else {
-                ret.timestamp = getStrUTCTimestamp();
+                ret.timestamp = (milliseconds_since_epoch());
             }
             ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER", 0));
             ret.file_metadata = it->get<std::string>("FILE_METADATA", "");
@@ -6256,10 +6223,10 @@ std::vector<struct MessageState> OracleAPI::getStateOfTransferInternal(soci::ses
 }
 
 
-std::vector<struct MessageState> OracleAPI::getStateOfTransfer(const std::string &jobId, int fileId)
+std::vector<TransferState> OracleAPI::getStateOfTransfer(const std::string &jobId, int fileId)
 {
     soci::session sql(*connectionPool);
-    std::vector<struct MessageState> temp;
+    std::vector<TransferState> temp;
 
     try {
         temp = getStateOfTransferInternal(sql, jobId, fileId);
@@ -6873,7 +6840,7 @@ void OracleAPI::checkSanityState()
                 " WHERE beat < (sys_extract_utc(systimestamp) - interval '120' MINUTE ) and service_name = 'fts_server' "
             );
 
-            std::vector<struct MessageState> files;
+            std::vector<TransferState> files;
 
             for (auto irsCheckHosts = rsCheckHosts.begin(); irsCheckHosts != rsCheckHosts.end(); ++irsCheckHosts) {
                 std::string deadHost = (*irsCheckHosts);
@@ -6893,10 +6860,10 @@ void OracleAPI::checkSanityState()
                     //send state monitoring message for the state transition
                     files = getStateOfTransferInternal(sql, job_id, file_id);
                     if (!files.empty()) {
-                        std::vector<struct MessageState>::iterator it;
+                        std::vector<TransferState>::iterator it;
                         for (it = files.begin(); it != files.end(); ++it) {
-                            struct MessageState tmp = (*it);
-                            constructJSONMsg(&tmp);
+                            TransferState tmp = (*it);
+                            MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                         }
                         files.clear();
                     }
@@ -9082,7 +9049,7 @@ void OracleAPI::updateBringOnlineToken(std::map<std::string, std::map<std::strin
 
 void OracleAPI::updateDeletionsStateInternal(soci::session &sql, const std::vector<MinFileStatus> &delOpsStatus)
 {
-    std::vector<struct MessageState> filesMsg;
+    std::vector<TransferState> filesMsg;
 
     try {
         sql.begin();
@@ -9232,10 +9199,10 @@ void OracleAPI::updateDeletionsStateInternal(soci::session &sql, const std::vect
             //send state message
             filesMsg = getStateOfDeleteInternal(sql, i->jobId, i->fileId);
             if (!filesMsg.empty()) {
-                std::vector<struct MessageState>::iterator it;
+                std::vector<TransferState>::iterator it;
                 for (it = filesMsg.begin(); it != filesMsg.end(); ++it) {
-                    struct MessageState tmp = (*it);
-                    constructJSONMsg(&tmp);
+                    TransferState tmp = (*it);
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                 }
             }
             filesMsg.clear();
@@ -9255,7 +9222,7 @@ void OracleAPI::updateDeletionsStateInternal(soci::session &sql, const std::vect
 void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
 {
     soci::session sql(*connectionPool);
-    std::vector<struct MessageBringonline> messages;
+    std::vector<fts3::events::MessageBringonline> messages;
     std::vector<MinFileStatus> filesState;
 
     try {
@@ -9267,12 +9234,10 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
         }
 
         if (!messages.empty()) {
-            std::vector<struct MessageBringonline>::iterator iterUpdater;
+            std::vector<fts3::events::MessageBringonline>::iterator iterUpdater;
             for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater) {
-                if (iterUpdater->msg_errno == 0) {
-                    filesState.emplace_back(iterUpdater->job_id, iterUpdater->file_id,
-                        iterUpdater->transfer_message, iterUpdater->transfer_message, false);
-                }
+                filesState.emplace_back(iterUpdater->job_id(), iterUpdater->file_id(),
+                    iterUpdater->transfer_message(), iterUpdater->transfer_message(), false);
             }
         }
 
@@ -9390,13 +9355,13 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
         if (!filesState.empty()) {
             for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind) {
                 //send state message
-                std::vector<struct MessageState> filesMsg;
+                std::vector<TransferState> filesMsg;
                 filesMsg = getStateOfDeleteInternal(sql, itFind->jobId, itFind->fileId);
                 if (!filesMsg.empty()) {
-                    std::vector<struct MessageState>::iterator it;
+                    std::vector<TransferState>::iterator it;
                     for (it = filesMsg.begin(); it != filesMsg.end(); ++it) {
-                        struct MessageState tmp = (*it);
-                        constructJSONMsg(&tmp);
+                        TransferState tmp = (*it);
+                        MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                     }
                 }
                 filesMsg.clear();
@@ -9409,12 +9374,12 @@ void OracleAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
             catch (...) {
                 //save state and restore afterwards
                 if (!filesState.empty()) {
-                    struct MessageBringonline msg;
+                    fts3::events::MessageBringonline msg;
                     for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind) {
-                        msg.file_id = itFind->fileId;
-                        g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-                        g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-                        g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
+                        msg.set_file_id(itFind->fileId);
+                        msg.set_job_id(itFind->jobId);
+                        msg.set_transfer_status(itFind->state);
+                        msg.set_transfer_message(itFind->reason);
 
                         //store the states into fs to be restored in the next run of this function
                         producer.runProducerDeletions(msg);
@@ -9460,7 +9425,7 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
     std::vector<MinFileStatus> filesState;
-    std::vector<struct MessageBringonline> messages;
+    std::vector<fts3::events::MessageBringonline> messages;
 
     int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
     int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
@@ -9474,14 +9439,12 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
         }
 
         if (!messages.empty()) {
-            std::vector<struct MessageBringonline>::iterator iterUpdater;
+            std::vector<fts3::events::MessageBringonline>::iterator iterUpdater;
             for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater) {
-                if (iterUpdater->msg_errno == 0) {
-                    filesState.emplace_back(
-                        iterUpdater->job_id, iterUpdater->file_id, iterUpdater->transfer_message,
-                        iterUpdater->transfer_message, false
-                    );
-                }
+                filesState.emplace_back(
+                    iterUpdater->job_id(), iterUpdater->file_id(), iterUpdater->transfer_message(),
+                    iterUpdater->transfer_message(), false
+                );
             }
         }
 
@@ -9660,14 +9623,14 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind) {
                 try {
                     //send state message
-                    std::vector<struct MessageState> filesMsg;
+                    std::vector<TransferState> filesMsg;
                     if (!itFind->jobId.empty() && itFind->fileId > 0) {
                         filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
                         if (!filesMsg.empty()) {
-                            std::vector<struct MessageState>::iterator it;
+                            std::vector<TransferState>::iterator it;
                             for (it = filesMsg.begin(); it != filesMsg.end(); ++it) {
-                                struct MessageState tmp = (*it);
-                                constructJSONMsg(&tmp);
+                                TransferState tmp = (*it);
+                                MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                             }
                         }
                         filesMsg.clear();
@@ -9685,12 +9648,12 @@ void OracleAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             catch (...) {
                 //save state and restore afterwards
                 if (!filesState.empty()) {
-                    struct MessageBringonline msg;
+                    fts3::events::MessageBringonline msg;
                     for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind) {
-                        msg.file_id = itFind->fileId;
-                        g_strlcpy(msg.job_id, itFind->jobId.c_str(), sizeof(msg.job_id));
-                        g_strlcpy(msg.transfer_status, itFind->state.c_str(), sizeof(msg.transfer_status));
-                        g_strlcpy(msg.transfer_message, itFind->reason.c_str(), sizeof(msg.transfer_message));
+                        msg.set_file_id(itFind->fileId);
+                        msg.set_job_id(itFind->jobId);
+                        msg.set_transfer_status(itFind->state);
+                        msg.set_transfer_message(itFind->reason);
 
                         //store the states into fs to be restored in the next run of this function
                         producer.runProducerStaging(msg);
@@ -9785,7 +9748,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingO
 
 void OracleAPI::updateStagingStateInternal(soci::session &sql, const std::vector<MinFileStatus> &stagingOpsStatus)
 {
-    std::vector<struct MessageState> filesMsg;
+    std::vector<TransferState> filesMsg;
 
     try {
         sql.begin();
@@ -9915,11 +9878,11 @@ void OracleAPI::updateStagingStateInternal(soci::session &sql, const std::vector
             filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
             if(!filesMsg.empty())
             {
-                std::vector<struct MessageState>::iterator it;
+                std::vector<TransferState>::iterator it;
                 for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
                 {
-                    struct MessageState tmp = (*it);
-                    constructJSONMsg(&tmp);
+                    TransferState tmp = (*it);
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
                 }
             }
             filesMsg.clear();
