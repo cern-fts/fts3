@@ -48,9 +48,7 @@ static void shutdownCallback(int signum, void*)
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Future signals will be ignored!" << commit;
 
     BringOnlineServer::instance().stop();
-    if (!ServerConfig::instance().get<bool> ("rush")) {
-        boost::this_thread::sleep(boost::posix_time::seconds(5));
-    }
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon stopping" << commit;
 
     // Some require traceback
     switch (signum)
@@ -62,28 +60,6 @@ static void shutdownCallback(int signum, void*)
             break;
         default:
             break;
-    }
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon stopping" << commit;
-
-    try {
-        db::DBSingleton::destroy();
-    }
-    catch (const std::exception& ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception when forcing the database teardown: " << ex.what() << commit;
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-    }
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon stopped" << commit;
-
-    // Handle termination for signals that do not imply errors
-    // Signals that do imply an error (i.e. SIGSEGV) will trigger a coredump in panic.c
-    switch (signum)
-    {
-        case SIGINT: case SIGTERM: case SIGUSR1:
-            exit(-signum);
     }
 }
 
