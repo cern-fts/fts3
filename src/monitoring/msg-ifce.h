@@ -37,7 +37,7 @@ struct TransferCompleted
 {
 public:
     TransferCompleted():
-        transfer_timeout(0), checksum_timeout(0), total_bytes_transfered(0), number_of_streams(0), tcp_buffer_size(0),
+        transfer_timeout(0), checksum_timeout(0), total_bytes_transferred(0), number_of_streams(0), tcp_buffer_size(0),
         block_size(0), file_size(0), retry(0), retry_max(0), is_recoverable(false)
     {}
     ~TransferCompleted() {}
@@ -67,9 +67,9 @@ public:
     std::string transfer_error_scope; //source/destination
     std::string transfer_error_message; //text error message
     std::string failure_phase; // (preparation, transfer, checksum, etc)
-    std::string transfer_error_category; //persmission, etc
+    std::string transfer_error_category; //permission, etc
     std::string final_transfer_state; //OK/Error/Aborted
-    off_t       total_bytes_transfered; // (this will include the info retrieved from the performance markers)
+    off_t       total_bytes_transferred; // (this will include the info retrieved from the performance markers)
     int         number_of_streams;
     unsigned    tcp_buffer_size;
     unsigned    block_size;

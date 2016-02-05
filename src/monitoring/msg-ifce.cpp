@@ -162,7 +162,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["t_failure_phase"] = json::String(tr_completed.failure_phase);
     message["tr_error_category"] = json::String(tr_completed.transfer_error_category);
     message["t_final_transfer_state"] = json::String(tr_completed.final_transfer_state);
-    message["tr_bt_transfered"] = json::Number(tr_completed.total_bytes_transfered);
+    message["tr_bt_transfered"] = json::Number(tr_completed.total_bytes_transferred);
     message["nstreams"] = json::Number(tr_completed.number_of_streams);
     message["buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["tcp_buf_size"] = json::Number(tr_completed.tcp_buffer_size);

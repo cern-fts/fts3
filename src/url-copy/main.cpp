@@ -1174,7 +1174,7 @@ int main(int argc, char **argv)
             }
 
             currentTransfer.transferredBytes = currentTransfer.fileSize;
-            transferCompletedMessage.total_bytes_transfered = currentTransfer.fileSize;
+            transferCompletedMessage.total_bytes_transferred = currentTransfer.fileSize;
 
             if (!opts.strictCopy) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Stat the dest surl start" << commit;
