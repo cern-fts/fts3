@@ -1,0 +1,31 @@
+package fts3.events;
+
+import "Agent.proto";
+import "EndpointInfo.proto";
+import "ProtocolInfo.proto";
+
+message TransferStart {
+    required uint64 timestamp = 1;
+    required string agent = 2;
+
+    required string job_id = 3;
+    required uint64 file_id = 4;
+    optional string transfer_id = 5;
+
+    required string vo_name = 6;
+    required string user_dn = 7;
+
+    required EndpointInfo source = 8;
+    required EndpointInfo dest = 9;
+
+    optional string channel = 10;
+
+    required uint64 process_id = 11;
+    required uint64 filesize = 12;
+
+    optional string job_metadata = 13;
+    optional string file_metadata = 14;
+
+    required string log_file = 15;
+    required bool   has_debug_log = 16;
+}

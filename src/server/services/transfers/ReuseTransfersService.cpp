@@ -196,7 +196,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     // Set parameters from the "representative", without using the source and destination url, and other data
     // that is per transfer
     TransferFile const & representative = files.front();
-    cmd_builder.setFromTransfer(representative, true);
+    cmd_builder.setFromTransfer(representative, true, db->getUserDnVisible());
 
     // Generate the file containing the list of transfers
     std::map<int, std::string> fileIds = generateJobFile(representative.jobId, files);
@@ -216,7 +216,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 
     if (user_protocol.is_initialized())
     {
-        cmd_builder.setManualConfig(true);
         cmd_builder.setFromProtocol(user_protocol.get());
     }
     else
@@ -264,7 +263,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         bool protocolExists = resolver.resolve();
         if (protocolExists)
         {
-            cmd_builder.setManualConfig(true);
             ProtocolResolver::protocol protocol;
 
             protocol.nostreams = resolver.getNoStreams();
@@ -272,11 +270,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
             protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
 
             cmd_builder.setFromProtocol(protocol);
-        }
-
-        if (resolver.isAuto())
-        {
-            cmd_builder.setAutoTuned(true);
         }
     }
 
@@ -319,9 +312,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 
     // FTS3 name
     cmd_builder.setFTSName(ftsHostName);
-
-    // Show user dn
-    cmd_builder.setShowUserDn(db->getUserDnVisible());
 
     // Current number of actives
     cmd_builder.setNumberOfActive(currentActive);

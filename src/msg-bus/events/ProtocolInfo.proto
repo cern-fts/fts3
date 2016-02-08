@@ -1,0 +1,10 @@
+package fts3.events;
+
+message ProtocolInfo {
+    required string job_id = 1;
+    required uint64 file_id = 2;
+
+    required uint32 nostreams = 3;
+    required uint32 timeout = 4;
+    required uint32 buffersize = 5;
+}

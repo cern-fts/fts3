@@ -37,8 +37,14 @@ struct TransferCompleted
 {
 public:
     TransferCompleted():
+        timestamp_transfer_started(0), timestamp_transfer_completed(0), timestamp_checksum_source_started(0),
+        timestamp_checksum_source_ended(0), timestamp_checksum_dest_started(0), timestamp_checksum_dest_ended(0),
         transfer_timeout(0), checksum_timeout(0), total_bytes_transferred(0), number_of_streams(0), tcp_buffer_size(0),
-        block_size(0), file_size(0), retry(0), retry_max(0), is_recoverable(false)
+        block_size(0), file_size(0),
+        time_spent_in_srm_preparation_start(0), time_spent_in_srm_preparation_end(0),
+        time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0), tr_timestamp_start(0),
+        tr_timestamp_complete(0),
+        retry(0), retry_max(0), is_recoverable(false)
     {}
     ~TransferCompleted() {}
 
@@ -55,40 +61,40 @@ public:
     std::string source_site_name;
     std::string dest_site_name;
     std::string t_channel;
-    std::string timestamp_transfer_started; //epoch-seconds
-    std::string timestamp_transfer_completed; //epoch-seconds
-    std::string timestamp_checksum_source_started; //epoch-seconds
-    std::string timestamp_checksum_source_ended; //epoch-seconds
-    std::string timestamp_checksum_dest_started; //epoch-seconds
-    std::string timestamp_checksum_dest_ended; //epoch-seconds
+    uint64_t    timestamp_transfer_started;
+    uint64_t    timestamp_transfer_completed;
+    uint64_t    timestamp_checksum_source_started;
+    uint64_t    timestamp_checksum_source_ended;
+    uint64_t    timestamp_checksum_dest_started;
+    uint64_t    timestamp_checksum_dest_ended;
     unsigned    transfer_timeout;
     int         checksum_timeout;
-    std::string transfer_error_code;
+    int         transfer_error_code;
     std::string transfer_error_scope; //source/destination
     std::string transfer_error_message; //text error message
     std::string failure_phase; // (preparation, transfer, checksum, etc)
     std::string transfer_error_category; //permission, etc
-    std::string final_transfer_state; //OK/Error/Aborted
+    std::string final_transfer_state; //OK/Error/Abort
     off_t       total_bytes_transferred; // (this will include the info retrieved from the performance markers)
     int         number_of_streams;
     unsigned    tcp_buffer_size;
     unsigned    block_size;
     off_t       file_size;
-    std::string time_spent_in_srm_preparation_start; //epoch
-    std::string time_spent_in_srm_preparation_end; //epoch
-    std::string time_spent_in_srm_finalization_start; //epoch
-    std::string time_spent_in_srm_finalization_end; //epoch
+    uint64_t    time_spent_in_srm_preparation_start;
+    uint64_t    time_spent_in_srm_preparation_end;
+    uint64_t    time_spent_in_srm_finalization_start;
+    uint64_t    time_spent_in_srm_finalization_end;
     std::string srm_space_token_source;
     std::string srm_space_token_dest;
-    std::string tr_timestamp_start;
-    std::string tr_timestamp_complete;
+    uint64_t    tr_timestamp_start;
+    uint64_t    tr_timestamp_complete;
     std::string channel_type;
     std::string user_dn;
     std::string file_metadata;
     std::string job_metadata;
     unsigned    retry;
     unsigned    retry_max;
-    std::string job_m_replica;
+    bool        job_m_replica;
     std::string job_state;
     bool        is_recoverable;
 };

@@ -14,14 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef EVENTS_H
-#define EVENTS_H
+#ifndef AUTOINTERRUPT_THREAD_H
+#define AUTOINTERRUPT_THREAD_H
 
-#include "events/Message.pb.h"
-#include "events/MessageBringonline.pb.h"
-#include "events/MessageLog.pb.h"
-#include "events/MessageUpdater.pb.h"
-#include "events/TransferStart.pb.h"
-#include "events/TransferCompleted.pb.h"
+#include <boost/function.hpp>
+#include <boost/thread.hpp>
 
-#endif // EVENTS_H
+/// Automatically interrupt and wait for the thread on destruction
+class AutoInterruptThread {
+private:
+    boost::thread thread;
+
+public:
+    AutoInterruptThread(boost::function<void()> func): thread(func) {
+    }
+
+    ~AutoInterruptThread() {
+        thread.interrupt();
+        thread.join();
+    }
+};
+
+
+#endif // AUTOINTERRUPT_THREAD_H

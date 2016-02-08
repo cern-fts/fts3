@@ -18,25 +18,19 @@
  * limitations under the License.
  */
 
-#ifndef HEURISTICS_H
-#define HEURISTICS_H
+#ifndef LOGHELPER_H
+#define LOGHELPER_H
 
-#include <string>
+#include "common/Logger.h"
+#include "Transfer.h"
 
-/**
- * Return true if the error is considered recoverable
- * (i.e. ENOENT is not recoverable)
- */
-bool retryTransfer(int errorNo, const std::string &category, const std::string &message);
+/// Configure the logging levels for both gfal2 and fts3 loggers
+void setupLogging(unsigned debugLevel);
 
-/**
- * Return the best number of streams for the given file size
- */
-unsigned adjustStreamsBasedOnSize(off_t sizeInBytes);
+/// Generate the log path for the given transfer
+std::string generateLogPath(const std::string &baseDir, const Transfer &transfer);
 
-/**
- * Return a reasonable timeout for the given filesize
- */
-unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned addSecPerMb);
+/// Generate the archival log path
+std::string generateArchiveLogPath(const std::string &baseDir, const Transfer &transfer);
 
-#endif // HEURISTICS_H
+#endif // LOGHELPER_H

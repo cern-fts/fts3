@@ -56,8 +56,6 @@ public:
 
     void setLogDir(const std::string&);
     void setMonitoring(bool);
-    void setManualConfig(bool);
-    void setAutoTuned(bool);
     void setInfosystem(const std::string&);
     void setOptimizerLevel(int);
     void setDebugLevel(int);
@@ -65,13 +63,12 @@ public:
     void setUDT(bool);
     void setIPv6(bool);
     bool isIPv6Explicit(void);
-    void setShowUserDn(bool);
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
 
     void setGlobalTimeout(long);
 
-    void setFromTransfer(const TransferFile&, bool is_multiple=false);
+    void setFromTransfer(const TransferFile&, bool is_multiple, bool hide_user_dn);
 
     void setFromProtocol(const ProtocolResolver::protocol& protocol);
     void setSecondsPerMB(long);

@@ -8,15 +8,15 @@ message Message {
     required string dest_se = 4;
 
     required string transfer_status = 5;
-    required string transfer_message = 6;
+    optional string transfer_message = 6;
 
     required uint64 process_id = 7;
-    required double time_in_secs = 8;
-    required uint64 filesize = 9;
-    required uint32 nostreams = 10;
-    required uint32 timeout = 11;
-    required uint32 buffersize = 12;
-    required uint64 timestamp = 13;
-    required bool   retry = 14;
-    required double throughput = 15;
+    optional double time_in_secs = 8;
+    optional uint64 filesize = 9;
+    optional uint32 nostreams = 10;
+    optional uint32 timeout = 11;
+    optional uint32 buffersize = 12;
+    optional uint64 timestamp = 13;
+    optional bool   retry = 14;
+    optional double throughput = 15;
 }

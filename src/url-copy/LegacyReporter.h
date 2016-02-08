@@ -14,14 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef EVENTS_H
-#define EVENTS_H
+#ifndef FTS3_LEGACYREPORTER_H
+#define FTS3_LEGACYREPORTER_H
 
-#include "events/Message.pb.h"
-#include "events/MessageBringonline.pb.h"
-#include "events/MessageLog.pb.h"
-#include "events/MessageUpdater.pb.h"
-#include "events/TransferStart.pb.h"
-#include "events/TransferCompleted.pb.h"
+#include "Reporter.h"
 
-#endif // EVENTS_H
+/// Implements reporter using MsgBus
+class LegacyReporter: public Reporter {
+private:
+    Producer producer;
+    UrlCopyOpts opts;
+
+public:
+    LegacyReporter(const UrlCopyOpts &opts);
+
+    virtual void sendTransferStart(const Transfer&, Gfal2TransferParams&);
+
+    virtual void sendProtocol(const Transfer&, Gfal2TransferParams&);
+
+    virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&);
+
+    virtual void sendPing(const Transfer&);
+};
+
+#endif // FTS3_LEGACYREPORTER_H

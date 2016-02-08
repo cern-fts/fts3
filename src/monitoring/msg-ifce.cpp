@@ -85,7 +85,7 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
     message["agent_fqdn"] = json::String(tr_started.agent_fqdn);
     message["transfer_id"] = json::String(tr_started.transfer_id);
     message["endpnt"] = json::String(tr_started.endpoint);
-    message["timestamp"] = json::String(getTimestampStr());
+    message["timestamp"] = json::Number(getTimestampMillisecs());
     message["src_srm_v"] = json::String(tr_started.source_srm_version);
     message["dest_srm_v"] = json::String(tr_started.destination_srm_version);
     message["vo"] = json::String(tr_started.vo);
@@ -149,15 +149,15 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["src_site_name"] = json::String(tr_completed.source_site_name);
     message["dst_site_name"] = json::String(tr_completed.dest_site_name);
     message["t_channel"] = json::String(tr_completed.t_channel);
-    message["timestamp_tr_st"] = json::String(tr_completed.timestamp_transfer_started);
-    message["timestamp_tr_comp"] = json::String(tr_completed.timestamp_transfer_completed);
-    message["timestamp_chk_src_st"] = json::String(tr_completed.timestamp_checksum_source_started);
-    message["timestamp_chk_src_ended"] = json::String(tr_completed.timestamp_checksum_source_ended);
-    message["timestamp_checksum_dest_st"] = json::String(tr_completed.timestamp_checksum_dest_started);
-    message["timestamp_checksum_dest_ended"] = json::String(tr_completed.timestamp_checksum_dest_ended);
+    message["timestamp_tr_st"] = json::Number(tr_completed.timestamp_transfer_started);
+    message["timestamp_tr_comp"] = json::Number(tr_completed.timestamp_transfer_completed);
+    message["timestamp_chk_src_st"] = json::Number(tr_completed.timestamp_checksum_source_started);
+    message["timestamp_chk_src_ended"] = json::Number(tr_completed.timestamp_checksum_source_ended);
+    message["timestamp_checksum_dest_st"] = json::Number(tr_completed.timestamp_checksum_dest_started);
+    message["timestamp_checksum_dest_ended"] = json::Number(tr_completed.timestamp_checksum_dest_ended);
     message["t_timeout"] = json::Number(tr_completed.transfer_timeout);
     message["chk_timeout"] = json::Number(tr_completed.checksum_timeout);
-    message["t_error_code"] = json::String(tr_completed.transfer_error_code);
+    message["t_error_code"] = json::Number(tr_completed.transfer_error_code);
     message["tr_error_scope"] = json::String(tr_completed.transfer_error_scope);
     message["t_failure_phase"] = json::String(tr_completed.failure_phase);
     message["tr_error_category"] = json::String(tr_completed.transfer_error_category);
@@ -168,10 +168,10 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["tcp_buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["block_size"] = json::Number(tr_completed.block_size);
     message["f_size"] = json::Number(tr_completed.file_size);
-    message["time_srm_prep_st"] = json::String(tr_completed.time_spent_in_srm_preparation_start);
-    message["time_srm_prep_end"] = json::String(tr_completed.time_spent_in_srm_preparation_end);
-    message["time_srm_fin_st"] = json::String(tr_completed.time_spent_in_srm_finalization_start);
-    message["time_srm_fin_end"] = json::String(tr_completed.time_spent_in_srm_finalization_end);
+    message["time_srm_prep_st"] = json::Number(tr_completed.time_spent_in_srm_preparation_start);
+    message["time_srm_prep_end"] = json::Number(tr_completed.time_spent_in_srm_preparation_end);
+    message["time_srm_fin_st"] = json::Number(tr_completed.time_spent_in_srm_finalization_start);
+    message["time_srm_fin_end"] = json::Number(tr_completed.time_spent_in_srm_finalization_end);
     message["srm_space_token_src"] = json::String(tr_completed.srm_space_token_source);
     message["srm_space_token_dst"] = json::String(tr_completed.srm_space_token_dest);
 
@@ -184,13 +184,13 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     }
 
     message["t__error_message"] = json::String(temp);
-    message["tr_timestamp_start"] = json::String(tr_completed.tr_timestamp_start);
+    message["tr_timestamp_start"] = json::Number(tr_completed.tr_timestamp_start);
 
-    if (tr_completed.tr_timestamp_complete.empty()) {
-        message["tr_timestamp_complete"] = json::String(getTimestampStr());
+    if (tr_completed.tr_timestamp_complete) {
+        message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
     }
     else {
-        message["tr_timestamp_complete"] = json::String(tr_completed.tr_timestamp_complete);
+        message["tr_timestamp_complete"] = json::Number(tr_completed.tr_timestamp_complete);
     }
 
     message["channel_type"] = json::String(tr_completed.channel_type);
@@ -206,7 +206,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     set_metadata(message, "job_metadata", tr_completed.job_metadata);
     message["retry"] = json::Number(tr_completed.retry);
     message["retry_max"] = json::Number(tr_completed.retry_max);
-    message["job_m_replica"] = json::String(tr_completed.job_m_replica);
+    message["job_m_replica"] = json::Boolean(tr_completed.job_m_replica);
     message["job_state"] = json::String(tr_completed.job_state);
     message["is_recoverable"] = json::Boolean(tr_completed.is_recoverable);
 

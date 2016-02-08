@@ -98,18 +98,6 @@ void UrlCopyCmd::setMonitoring(bool set)
 }
 
 
-void UrlCopyCmd::setManualConfig(bool set)
-{
-    setFlag("manual-config", set);
-}
-
-
-void UrlCopyCmd::setAutoTuned(bool set)
-{
-    setFlag("auto-tunned", set);
-}
-
-
 void UrlCopyCmd::setInfosystem(const std::string& infosys)
 {
     setOption("infosystem", infosys);
@@ -153,12 +141,6 @@ bool UrlCopyCmd::isIPv6Explicit(void)
 }
 
 
-void UrlCopyCmd::setShowUserDn(bool show)
-{
-    setFlag("hide-user-dn", !show);
-}
-
-
 void UrlCopyCmd::setFTSName(const std::string& hostname)
 {
     setOption("alias", hostname);
@@ -181,12 +163,10 @@ void UrlCopyCmd::setGlobalTimeout(long timeout)
 }
 
 
-void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple)
+void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple, bool hide_user_dn)
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
-    if (transfer.bringOnline > 0)
-        setOption("bringonline", transfer.bringOnline);
     setFlag("reuse", transfer.reuseJob == "Y");
     setFlag("multi-hop", transfer.reuseJob == "H");
     // setOption("source-site", std::string());
@@ -200,11 +180,13 @@ void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple)
     setFlag("overwrite", !transfer.overwriteFlag.empty());
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
-    setOption("user-dn", prepareMetadataString(transfer.userDn));
-    if (transfer.reuseJob == "R")
-        setOption("job_m_replica", "true");
-    setOption("last_replica", transfer.lastReplica == 1? "true": "false");
 
+    if (!hide_user_dn)
+        setOption("user-dn", prepareMetadataString(transfer.userDn));
+
+    setFlag("job_m_replica", transfer.reuseJob == "R");
+    setFlag("last_replica", transfer.lastReplica);
+    
     // On multiple jobs, this data is per transfer and is passed via a file
     // under /var/lib/fts3/<job-id>, so skip it
     if (!is_multiple) {
@@ -215,6 +197,10 @@ void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple)
         if (transfer.userFilesize > 0)
             setOption("user-filesize", transfer.userFilesize);
         setOption("token-bringonline", transfer.bringOnlineToken);
+    }
+    else {
+        setOption("bulk-file",
+            ServerConfig::instance().get<std::string>("MessagingDirectory") + "/" + transfer.jobId);
     }
 }
 

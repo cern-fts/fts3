@@ -27,30 +27,39 @@ include_directories (
     ${GFAL2_INCLUDE_DIRS}
 )
 
-find_package(Boost COMPONENTS atomic thread)
-
-# Include directly the sources from common to reduce the memory footprint
-set(fts_url_copy_SOURCES
-    args.cpp
-    main.cpp
-    file_management.cpp
+add_library(fts_url_copy_lib SHARED
+        LogHelper.cpp
     heuristics.cpp
-    reporter.cpp
+    LegacyReporter.cpp
+    Reporter.cpp
+    Transfer.cpp
+    UrlCopyOpts.cpp
+    UrlCopyProcess.cpp
+    Callbacks.cpp
 )
-
-add_executable(fts_url_copy ${fts_url_copy_SOURCES})
-target_link_libraries(fts_url_copy
-    uuid ssl crypto
-    #fts_common_min     Symbols brought in by fts_msg_ifce
-    fts_msg_ifce
-	fts_msg_bus
-	fts_proxy
-    ${Boost_LIBRARIES}
+target_link_libraries(fts_url_copy_lib
     ${GLIB2_LIBRARIES}
     ${GFAL2_LIBRARIES}
+    fts_common
+    fts_msg_bus
+    fts_msg_ifce
+)
+set_target_properties(fts_url_copy_lib
+    PROPERTIES OUTPUT_NAME fts_url_copy
+)
+
+add_executable(fts_url_copy
+    main.cpp
+)
+
+target_link_libraries(fts_url_copy
+    fts_url_copy_lib
 )
 
 # Install artifacts
-install(TARGETS fts_url_copy 
-	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
+install(TARGETS fts_url_copy_lib
+    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+)
+install(TARGETS fts_url_copy
+    RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )

@@ -31,18 +31,28 @@ namespace common {
 class Uri
 {
 public:
+    std::string fullUri;
     std::string queryString, path, protocol, host;
     unsigned port;
 
     Uri(): port(0) {}
 
-    std::string getSeName(void)
+    std::string getSeName(void) const
     {
         return protocol + "://" + host;
     }
 
+    operator std::string () const {
+        return fullUri;
+    }
+
     static Uri parse(const std::string &uri);
 };
+
+
+inline std::ostream& operator << (std::ostream &os, const Uri &uri) {
+    return (os << uri.fullUri);
+}
 
 /// Returns true if source and destination hosts are considered to belong
 /// to the same LAN

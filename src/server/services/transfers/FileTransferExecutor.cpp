@@ -116,11 +116,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             boost::optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(tf);
 
             if (user_protocol.is_initialized()) {
-                cmd_builder.setManualConfig(true);
                 cmd_builder.setFromProtocol(user_protocol.get());
             }
             else {
-                cmd_builder.setManualConfig(false);
                 ProtocolResolver::protocol protocol;
 
                 int optimizerLevel = db->getBufferOptimization();
@@ -156,7 +154,6 @@ void FileTransferExecutor::run(boost::any & ctx)
                 bool protocolExists = resolver.resolve();
                 if (protocolExists) {
                     ProtocolResolver::protocol protocol;
-                    cmd_builder.setManualConfig(true);
                     protocol.nostreams = resolver.getNoStreams();
                     protocol.tcp_buffer_size = resolver.getTcpBufferSize();
                     protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
@@ -164,14 +161,10 @@ void FileTransferExecutor::run(boost::any & ctx)
                     protocol.ipv6 = resolver.getIPv6();
                     cmd_builder.setFromProtocol(protocol);
                 }
-
-                if (resolver.isAuto()) {
-                    cmd_builder.setAutoTuned(true);
-                }
             }
 
             // Update from the transfer
-            cmd_builder.setFromTransfer(tf);
+            cmd_builder.setFromTransfer(tf, false, db->getUserDnVisible());
 
             // OAuth credentials
             std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);
@@ -181,9 +174,6 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // Debug level
             cmd_builder.setDebugLevel(db->getDebugLevel(source_hostname, destin_hostname));
-
-            // Show user DN
-            cmd_builder.setShowUserDn(db->getUserDnVisible());
 
             // Enable monitoring
             cmd_builder.setMonitoring(monitoringMsg);

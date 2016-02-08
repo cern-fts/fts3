@@ -1,0 +1,9 @@
+package fts3.events;
+
+message EndpointInfo {
+    optional string surl = 1;
+    required string hostname = 2;
+    optional string site_name = 3;
+    optional string srm_version = 4;
+    optional string srm_space_token = 5;
+}

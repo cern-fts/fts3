@@ -35,16 +35,14 @@
 #include <boost/lexical_cast.hpp>
 #include "msg-bus/producer.h"
 
-inline std::string getTimestampStr()
+inline uint64_t getTimestampMillisecs()
 {
     std::chrono::milliseconds timestamp =
             std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::high_resolution_clock::now().time_since_epoch()
             );
 
-    long double timestamp_double = static_cast<long double>(timestamp.count());
-    std::string transfer_started_to_string = boost::lexical_cast<std::string>(timestamp_double);
-    return transfer_started_to_string;
+    return timestamp.count();
 }
 
 /*

@@ -60,6 +60,7 @@ static void extractPort(Uri& u0)
 Uri Uri::parse(const std::string &uri)
 {
     Uri u0;
+    u0.fullUri = uri;
 
     boost::smatch matches;
     if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {

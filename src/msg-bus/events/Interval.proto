@@ -1,0 +1,6 @@
+package fts3.events;
+
+message Interval {
+    required uint64 start = 1;
+    required uint64 end = 2;
+}

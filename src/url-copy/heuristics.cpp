@@ -37,13 +37,13 @@ static bool findSubstring(const std::string &stack, const char *needles[])
 }
 
 
-static bool retryTransferInternal(int errorNo, const std::string &category, const std::string &message)
+bool retryTransfer(int errorNo, const std::string &category, const std::string &message)
 {
     // ETIMEDOUT shortcuts the following
     if (errorNo == ETIMEDOUT)
         return true;
 
-    // Do not retry cancelation
+    // Do not retry cancellation
     if (errorNo == ECANCELED)
         return false;
 
@@ -133,18 +133,7 @@ static bool retryTransferInternal(int errorNo, const std::string &category, cons
 }
 
 
-bool retryTransfer(int errorNo, const std::string &category, const std::string &message)
-{
-    bool retry = retryTransferInternal(errorNo, category, message);
-    if (retry)
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recoverable error: [" << errorNo << "] " << message << commit;
-    else
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Non-recoverable error: [" << errorNo << "] " << message << commit;
-    return retry;
-}
-
-
-unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int /*currentStreams*/)
+unsigned adjustStreamsBasedOnSize(off_t sizeInBytes)
 {
     if (sizeInBytes <= 5242880) //starting with 5MB
         return 1;
@@ -175,46 +164,18 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int /*currentStrea
 }
 
 
-static unsigned adjustTimeout(off_t sizeInBytes)
-{
-    if (sizeInBytes <= 10485760) //starting with 10MB
-        return 900;
-    else if (sizeInBytes > 10485760 && sizeInBytes <= 52428800)
-        return 1100;
-    return 3600;
-}
-
-
-unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned timeoutPerMB, bool global_timeout)
+unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
 {
     static const unsigned long MB = 1 << 20;
 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
     double timeoutPerMBLocal = 0;
-    if (timeoutPerMB > 0)
-        timeoutPerMBLocal = timeoutPerMB;
+    if (addSecPerMb > 0)
+        timeoutPerMBLocal = addSecPerMb;
     else
         timeoutPerMBLocal = 2;
 
-    // Reasonable time to wait for the transfer itself
-    unsigned transferTimeout = 0;
-    if (global_timeout)
-        transferTimeout = timeout;
-    else
-        transferTimeout = adjustTimeout(sizeInBytes);
-
     // Final timeout adjusted considering transfer timeout
-    long double totalTimeout = transferTimeout + ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
-
-    // Truncate to an unsigned
-    if (totalTimeout >= INT_MAX)
-        timeout = 4000;
-    else
-        timeout = static_cast<unsigned>(totalTimeout);
-
-    if (timeout > 30000)
-        timeout = 30000;
-
-    return timeout;
+    return ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
 }

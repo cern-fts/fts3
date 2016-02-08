@@ -1,0 +1,6 @@
+package fts3.events;
+
+message Agent {
+    required string fqdn = 1;
+    required string endpoint = 2;
+}
