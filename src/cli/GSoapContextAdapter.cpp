@@ -86,8 +86,9 @@ GSoapContextAdapter::GSoapContextAdapter(const std::string& endpoint, const std:
             if (soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK )) throw gsoap_error(ctx);
         }
 
-    if (!proxy.empty())
+    if (!proxy.empty() && access(proxy.c_str(), R_OK) == 0) {
         cgsi_plugin_set_credentials(ctx, 0, proxy.c_str(), proxy.c_str());
+    }
 
     // set the namespaces
     if (soap_set_namespaces(ctx, fts3_namespaces)) throw gsoap_error(ctx);
