@@ -1,4 +1,3 @@
-SET storage_engine=INNODB;
 
 CREATE TABLE t_server_sanity (
   revertToSubmitted TINYINT(1) DEFAULT 0,
@@ -17,7 +16,7 @@ CREATE TABLE t_server_sanity (
   t_checkSanityState          TIMESTAMP NULL DEFAULT NULL,
   t_cleanUpRecords          TIMESTAMP NULL DEFAULT NULL,
   t_msgcron          TIMESTAMP NULL DEFAULT NULL
-); 
+) ENGINE = INNODB;
 INSERT INTO t_server_sanity
     (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState, cleanUpRecords, msgcron,
      t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState, t_cleanUpRecords, t_msgcron)
@@ -37,7 +36,7 @@ CREATE TABLE t_server_config (
   max_per_se INTEGER DEFAULT 0,
   max_per_link INTEGER DEFAULT 0,
   global_tcp_stream INTEGER DEFAULT 0
-);
+) ENGINE = INNODB;
 INSERT INTO t_server_config (retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
 --
@@ -45,7 +44,7 @@ INSERT INTO t_server_config (retry,max_time_queue,global_timeout,sec_per_mb) val
 --
 CREATE TABLE t_optimize_mode (
   mode_opt       INTEGER NOT NULL DEFAULT 1
-);
+) ENGINE = INNODB;
 
 --
 -- Holds optimization parameters
@@ -90,10 +89,10 @@ CREATE TABLE t_optimize (
   ipv6         VARCHAR(3) CHECK (ipv6 in ('on', 'off')),
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
-);
+) ENGINE = INNODB;
 
 --
--- Historial optimizer evolution
+-- Historical optimizer evolution
 --
 CREATE TABLE t_optimizer_evolution (
     datetime     TIMESTAMP NULL DEFAULT NULL,
@@ -106,7 +105,7 @@ CREATE TABLE t_optimizer_evolution (
     buffer       INTEGER DEFAULT NULL,
     filesize     DOUBLE DEFAULT NULL,
     agrthroughput   FLOAT DEFAULT NULL
-);
+) ENGINE = INNODB;
 CREATE INDEX t_optimizer_source_and_dest ON t_optimizer_evolution(source_se, dest_se);
 CREATE INDEX t_optimizer_evolution_datetime ON t_optimizer_evolution(datetime);
 
@@ -126,7 +125,7 @@ CREATE TABLE t_config_audit (
 --
 -- action (insert/update/delete)
   action       VARCHAR(100)    
-);
+) ENGINE = INNODB;
 
 
 --
@@ -145,7 +144,7 @@ CREATE TABLE t_debug (
 --
 -- debug level
   debug_level  INTEGER DEFAULT 1
-);
+) ENGINE = INNODB;
 
 
 --
@@ -170,7 +169,7 @@ CREATE TABLE t_credential_cache (
 --
 -- set primary key
   CONSTRAINT cred_cache_pk PRIMARY KEY (dlg_id, dn)
-);
+) ENGINE = INNODB;
 
 --
 -- Holds delegated proxies
@@ -195,7 +194,7 @@ CREATE TABLE t_credential (
 -- set primary key
   CONSTRAINT cred_pk PRIMARY KEY (dlg_id, dn),
   INDEX (termination_time)
-);
+) ENGINE = INNODB;
 
 --
 -- Schema version
@@ -204,7 +203,7 @@ CREATE TABLE t_credential_vers (
   major INTEGER NOT NULL,
   minor INTEGER NOT NULL,
   patch INTEGER NOT NULL
-);
+) ENGINE = INNODB;
 INSERT INTO t_credential_vers (major,minor,patch) VALUES (1,2,0);
 
 --
@@ -228,7 +227,7 @@ CREATE TABLE t_se (
   gocdb_id             VARCHAR(100),
   KEY (se_id_info),
   CONSTRAINT se_info_pk PRIMARY KEY (name)
-);
+) ENGINE = INNODB;
 
 -- 
 -- relation of SE and VOs
@@ -237,7 +236,7 @@ CREATE TABLE t_se_acl (
   name VARCHAR(150),
   vo   VARCHAR(100),
   CONSTRAINT se_acl_pk PRIMARY KEY (name, vo)
-);
+) ENGINE = INNODB;
 
 -- GROUP NAME and its members
 CREATE TABLE t_group_members (
@@ -245,7 +244,7 @@ CREATE TABLE t_group_members (
   member    VARCHAR(150) NOT NULL UNIQUE,
   CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member),
   CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)  
-); 
+) ENGINE = INNODB; 
 
 -- SE HOSTNAME / GROUP NAME / *
 
@@ -263,7 +262,7 @@ CREATE TABLE t_link_config (
   placeholder2         INTEGER,  
   placeholder3         VARCHAR(255),
   CONSTRAINT t_link_config_pk PRIMARY KEY (source, destination)    
-);
+) ENGINE = INNODB;
 
 CREATE TABLE t_share_config ( 
   source       VARCHAR(150) NOT NULL,
@@ -272,13 +271,13 @@ CREATE TABLE t_share_config (
   active       INTEGER NOT NULL,
   CONSTRAINT t_share_config_pk PRIMARY KEY (source, destination, vo),
   CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination) ON DELETE CASCADE
-);
+) ENGINE = INNODB;
 
 CREATE TABLE t_activity_share_config (
   vo 			 VARCHAR(100) NOT NULL PRIMARY KEY,
   activity_share 	 VARCHAR(255) NOT NULL,
   active		 VARCHAR(3) check (active in ('on', 'off'))
-);
+) ENGINE = INNODB;
 
 --
 -- blacklist of bad SEs that should not be transferred to
@@ -306,7 +305,7 @@ CREATE TABLE t_bad_ses (
 -- the timeout that is used when WAIT status was specified
    wait_timeout  INTEGER default 0,
   CONSTRAINT bad_se_pk PRIMARY KEY (se)
-);
+) ENGINE = INNODB;
 
 --
 -- blacklist of bad DNs that should not be transferred to
@@ -331,8 +330,7 @@ CREATE TABLE t_bad_dns (
 -- the timeout that is used when WAIT status was specified
   wait_timeout  INTEGER default 0,
   CONSTRAINT bad_dn_pk PRIMARY KEY (dn)
-);
-
+) ENGINE = INNODB;
 
 --
 -- Store se_pair ACL
@@ -347,7 +345,7 @@ CREATE TABLE t_se_pair_acl (
 --
 -- Set Primary Key
   CONSTRAINT se_pair_acl_pk PRIMARY KEY (se_pair_name, principal)
-);
+) ENGINE = INNODB;
 
 --
 -- Store VO ACL
@@ -362,7 +360,7 @@ CREATE TABLE t_vo_acl (
 --
 -- Set Primary Key
   CONSTRAINT vo_acl_pk PRIMARY KEY (vo_name, principal)
-);
+) ENGINE = INNODB;
 
 --
 -- t_job contains the list of jobs currently in the transfer database.
@@ -484,7 +482,7 @@ CREATE TABLE t_job (
 --
 -- Job metadata
   job_metadata VARCHAR(1024)     
-);
+) ENGINE = INNODB;
   
   
 --
@@ -634,7 +632,7 @@ CREATE TABLE t_file (
   vo_name              VARCHAR(100),  
     
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
-);
+) ENGINE = INNODB;
 
 --
 -- Keep error reason that drove to retries
@@ -646,7 +644,7 @@ CREATE TABLE t_file_retry_errors (
     reason    VARCHAR(2048),
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
-);
+) ENGINE = INNODB;
 
 
 -- 
@@ -660,7 +658,7 @@ CREATE TABLE t_file_share_config (
   CONSTRAINT t_file_share_config_pk PRIMARY KEY (file_id, source, destination, vo),
   CONSTRAINT t_share_config_fk1 FOREIGN KEY (source, destination, vo) REFERENCES t_share_config (source, destination, vo) ON DELETE CASCADE,
   CONSTRAINT t_share_config_fk2 FOREIGN KEY (file_id) REFERENCES t_file (file_id) ON DELETE CASCADE
-);
+) ENGINE = INNODB;
 
 
 --
@@ -679,7 +677,7 @@ CREATE TABLE t_stage_req (
   
 -- Set primary key
   ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host, operation)
-);
+) ENGINE = INNODB;
 
 --
 -- Host hearbeats
@@ -690,7 +688,7 @@ CREATE TABLE t_hosts (
     beat        TIMESTAMP NULL DEFAULT NULL,
     drain 	INTEGER DEFAULT 0,
     CONSTRAINT t_hosts_pk PRIMARY KEY (hostname, service_name)
-);
+) ENGINE = INNODB;
 
 
 CREATE TABLE t_optimize_active (
@@ -703,7 +701,7 @@ CREATE TABLE t_optimize_active (
   ema           DOUBLE DEFAULT 0,
   fixed         VARCHAR(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
-);
+) ENGINE = INNODB;
 
 CREATE TABLE t_optimize_streams (
   source_se    VARCHAR(150) NOT NULL,
@@ -714,7 +712,7 @@ CREATE TABLE t_optimize_streams (
   tested       INTEGER DEFAULT 0,
   CONSTRAINT t_optimize_streams_pk PRIMARY KEY (source_se, dest_se, nostreams),
   CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
-);
+) ENGINE = INNODB;
 
 CREATE INDEX t_optimize_streams_datetime ON t_optimize_streams(datetime);
 CREATE INDEX t_optimize_streams_throughput ON t_optimize_streams(throughput);
@@ -733,7 +731,7 @@ CREATE TABLE t_turl (
   finish          DOUBLE DEFAULT 0,
   fail     	  DOUBLE DEFAULT 0,
   CONSTRAINT t_turl_pk PRIMARY KEY (source_surl, destin_surl, source_turl, destin_turl)
-);
+) ENGINE = INNODB;
 
 --
 -- t_file stores files for data management operations
@@ -815,7 +813,7 @@ CREATE TABLE t_dm (
 --
 --    
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
-);
+) ENGINE = INNODB;
 
 
 --
@@ -863,22 +861,22 @@ CREATE TABLE t_schema_vers (
   --
   -- save a state when upgrading the schema
   state VARCHAR(24)
-);
+) ENGINE = INNODB;
 INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 
 
 -- Saves the bother of writing down again the same schema
-CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
-CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
-CREATE TABLE t_dm_backup AS (SELECT * FROM t_dm);
-CREATE INDEX t_job_backup_job_id     ON t_job_backup(job_id);
+CREATE TABLE t_file_backup ENGINE = INNODB AS (SELECT * FROM t_file);
+CREATE TABLE t_job_backup ENGINE = INNODB  AS (SELECT * FROM t_job);
+CREATE TABLE t_dm_backup ENGINE = INNODB AS (SELECT * FROM t_dm);
+CREATE INDEX t_job_backup_job_id ON t_job_backup(job_id);
 
 
 -- Profiling information
 CREATE TABLE t_profiling_info (
     period  INT NOT NULL,
     updated TIMESTAMP NOT NULL
-);
+) ENGINE = INNODB;
 
 CREATE TABLE t_profiling_snapshot (
     scope      VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -886,7 +884,7 @@ CREATE TABLE t_profiling_snapshot (
     exceptions INT NOT NULL,
     total      DOUBLE NOT NULL,
     average    DOUBLE NOT NULL
-);
+) ENGINE = INNODB;
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 
@@ -895,7 +893,7 @@ CREATE TABLE t_authz_dn (
     dn         VARCHAR(255) NOT NULL,
     operation  VARCHAR(64) NOT NULL,
     CONSTRAINT t_authz_dn_pk PRIMARY KEY (dn, operation)
-);
+) ENGINE = INNODB;
 
 --
 -- Tables for cloud support
@@ -905,7 +903,7 @@ CREATE TABLE t_cloudStorage (
     app_key           VARCHAR(255),
     app_secret        VARCHAR(255),
     service_api_url   VARCHAR(1024)
-);
+) ENGINE = INNODB;
 
 CREATE TABLE t_cloudStorageUser (
     user_dn              VARCHAR(700) NULL,
@@ -917,4 +915,5 @@ CREATE TABLE t_cloudStorageUser (
     request_token_secret VARCHAR(255),
     FOREIGN KEY (cloudStorage_name) REFERENCES t_cloudStorage(cloudStorage_name),
     PRIMARY KEY (user_dn, vo_name, cloudStorage_name)
-);
+) ENGINE = INNODB;
+
