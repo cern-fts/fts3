@@ -4794,7 +4794,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     if(isNullPid != soci::i_null && pid > 0)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
-                        kill(pid, SIGUSR1);
+                        kill(pid, SIGKILL);
                     }
                     collectJobs.insert(std::make_pair(fileId, jobId));
                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
