@@ -334,13 +334,13 @@ void UrlCopyProcess::run(void)
 
         // Notify back the final state
         transfer.stats.process.end = Transfer::Statistics::timestampMilliseconds();
-        reporter.sendTransferCompleted(transfer, params);
-
         {
             boost::lock_guard<boost::mutex> lock(transfersMutex);
             doneTransfers.push_back(transfer);
+            // todoTransfers may have been emptied by panic()
             if (!todoTransfers.empty()) {
                 todoTransfers.pop_front();
+                reporter.sendTransferCompleted(transfer, params);
             }
         }
     }
