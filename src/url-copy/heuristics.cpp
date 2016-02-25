@@ -133,37 +133,6 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
 }
 
 
-unsigned adjustStreamsBasedOnSize(off_t sizeInBytes)
-{
-    if (sizeInBytes <= 5242880) //starting with 5MB
-        return 1;
-    else if (sizeInBytes <= 10485760)
-        return 2;
-    else if (sizeInBytes > 10485760 && sizeInBytes <= 52428800)
-        return 3;
-    else if (sizeInBytes > 52428800 && sizeInBytes <= 104857600)
-        return 4;
-    else if (sizeInBytes > 104857600 && sizeInBytes <= 209715200)
-        return 5;
-    else if (sizeInBytes > 209715200 && sizeInBytes <= 734003200)
-        return 6;
-    else if (sizeInBytes > 734003200 && sizeInBytes <= 1073741824)
-        return 7;
-    else if (sizeInBytes > 1073741824 && sizeInBytes <= 1610612736)
-        return 8;
-    else if (sizeInBytes > 1610612736 && sizeInBytes <= 2010612736)
-        return 9;
-    else if (sizeInBytes > 2010612736 && sizeInBytes <= 2576980377)
-        return 10;
-    else if (sizeInBytes > 2576980377 && sizeInBytes <= 3758096384)
-        return 12;
-    else if (sizeInBytes > 3758096384 && sizeInBytes <= 4858096384)
-        return 14;
-    else
-        return 16;
-}
-
-
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
 {
     static const unsigned long MB = 1 << 20;

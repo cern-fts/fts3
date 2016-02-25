@@ -102,42 +102,6 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
 }
 
 
-static void setupTransferProtocolConfig(const UrlCopyOpts &opts, const Transfer &transfer,
-    Gfal2TransferParams &params)
-{
-    if (!opts.isMultihop && opts.isSessionReuse) {
-        params.setNumberOfStreams(1);
-        params.setTcpBuffersize(0);
-    }
-    else if (opts.optimizerLevel == 3) {
-        unsigned tcpBufferSize = 8 * 1024 * 1024; //8MB
-        unsigned tcpStreamsMax = 16;
-
-        if (transfer.fileSize <= tcpBufferSize) {
-            tcpStreamsMax = 2;
-            tcpBufferSize /= 2;
-        }
-        else if ((transfer.fileSize / tcpBufferSize) > tcpStreamsMax) {
-            tcpStreamsMax = adjustStreamsBasedOnSize(transfer.fileSize);
-        }
-        else {
-            tcpStreamsMax = ceil((transfer.fileSize / static_cast<double>(tcpBufferSize))) + 1;
-        }
-
-        if (opts.nStreams == 0) {
-            params.setNumberOfStreams(tcpStreamsMax);
-        }
-        if (opts.tcpBuffersize == 0) {
-            params.setTcpBuffersize(tcpBufferSize);
-        }
-    }
-    else {
-        params.setNumberOfStreams(opts.nStreams);
-        params.setTcpBuffersize(opts.tcpBuffersize);
-    }
-}
-
-
 static void timeoutTask(boost::posix_time::time_duration &duration, UrlCopyProcess *urlCopyProcess)
 {
     try {
@@ -226,8 +190,9 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
     }
 
-    // Calculate protocol parameters
-    setupTransferProtocolConfig(opts, transfer, params);
+    // Set protocol parameters
+    params.setNumberOfStreams(opts.nStreams);
+    params.setTcpBuffersize(opts.tcpBuffersize);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
