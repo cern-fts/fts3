@@ -70,6 +70,9 @@ BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 BuildRequires:	systemd
 %endif
 
+# Required for some unit tests
+BuildRequires:  gfal2-plugin-mock
+
 Requires(pre):  shadow-utils
 
 %description
@@ -540,6 +543,7 @@ fi
 %{_libdir}/libfts_delegation_api_cpp.so*
 %{_libdir}/libfts_profiler.so*
 %{_libdir}/libfts_msg_bus.so*
+%{_libdir}/libfts_url_copy.so*
 %doc README.md
 %doc LICENSE
 
