@@ -34,10 +34,10 @@ endif(NOT PUGIXML_FOUND)
 
 # Used by all submodules
 add_subdirectory(common)
-add_subdirectory(msg-bus)
 
 # Used by DB backends and server side
 if(ORACLEBUILD OR MYSQLBUILD OR SERVERBUILD)
+    add_subdirectory(msg-bus)
     add_subdirectory(config)
     add_subdirectory(db)
     add_subdirectory(profiler)

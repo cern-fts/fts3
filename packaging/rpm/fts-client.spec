@@ -41,7 +41,6 @@ BuildRequires:  gridsite-devel
 BuildRequires:  gsoap-devel
 BuildRequires:  is-interface-devel
 BuildRequires:  openldap-devel
-BuildRequires:  libdirq-devel
 Requires(pre):  shadow-utils
 
 %description
