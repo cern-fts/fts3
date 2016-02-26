@@ -34,6 +34,7 @@ endif(NOT PUGIXML_FOUND)
 
 # Used by all submodules
 add_subdirectory(common)
+add_subdirectory(msg-bus)
 
 # Used by DB backends and server side
 if(ORACLEBUILD OR MYSQLBUILD OR SERVERBUILD)
@@ -59,7 +60,6 @@ if(SERVERBUILD)
     add_subdirectory(dbClear)
     add_subdirectory(glue2-publisher)
     add_subdirectory(myosg-update)
-    add_subdirectory(msg-bus)
 
     if(PUGIXML_FOUND)
         add_subdirectory(bdii-cache-update)
