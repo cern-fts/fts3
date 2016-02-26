@@ -20,9 +20,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-
-add_subdirectory (config)
-add_subdirectory (cron)
-add_subdirectory (init)
-add_subdirectory (util)
+install(FILES fts_db_rotate
+    DESTINATION ${SBIN_INSTALL_DIR}
+)
 

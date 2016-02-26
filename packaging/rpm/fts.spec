@@ -465,6 +465,7 @@ fi
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
+%{_sbindir}/fts_db_rotate
 
 %if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-server.service

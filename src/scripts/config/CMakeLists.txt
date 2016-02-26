@@ -20,9 +20,22 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_subdirectory (config)
-add_subdirectory (cron)
-add_subdirectory (init)
-add_subdirectory (util)
+install(FILES fts-server.sysconfig
+    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    RENAME fts-server
+)
+
+install(FILES fts-server.logrotate
+    DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
+    RENAME fts-server
+)
+
+install(FILES fts-bringonline.sysconfig
+    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    RENAME fts-bringonline
+)
 
