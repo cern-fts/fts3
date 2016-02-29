@@ -54,37 +54,37 @@
 #include "ExecuteProcess.h"
 #include "common/Exceptions.h"
 
-using namespace fts3::common; 
+
+using namespace fts3::common;
 using namespace db;
 
 
-ExecuteProcess::ExecuteProcess(const std::string& app, const std::string& arguments)
+ExecuteProcess::ExecuteProcess(const std::string &app, const std::string &arguments)
     : pid(0), m_app(app), m_arguments(arguments)
 {
 }
 
-int ExecuteProcess::executeProcessShell(std::string& forkMessage)
+int ExecuteProcess::executeProcessShell(std::string &forkMessage)
 {
     return execProcessShell(forkMessage);
 }
 
 // argsHolder is used to keep the argument pointers alive
 // for as long as needed
-void ExecuteProcess::getArgv(std::list<std::string>& argsHolder, size_t* argc, char*** argv)
+void ExecuteProcess::getArgv(std::list<std::string> &argsHolder, size_t *argc, char ***argv)
 {
     boost::split(argsHolder, m_arguments, boost::is_any_of(" "));
 
     *argc = argsHolder.size() + 2; // Need place for the binary and the NULL
-    *argv = new char*[*argc];
+    *argv = new char *[*argc];
 
     std::list<std::string>::iterator it;
     int i = 0;
-    (*argv)[i] = const_cast<char*> (m_app.c_str());
-    for (it = argsHolder.begin(); it != argsHolder.end(); ++it)
-        {
-            ++i;
-            (*argv)[i] = const_cast<char*> (it->c_str());
-        }
+    (*argv)[i] = const_cast<char *> (m_app.c_str());
+    for (it = argsHolder.begin(); it != argsHolder.end(); ++it) {
+        ++i;
+        (*argv)[i] = const_cast<char *> (it->c_str());
+    }
 
     ++i;
     (*argv)[i] = NULL;
@@ -95,32 +95,29 @@ static void closeAllFilesExcept(int exception)
     long maxfd = sysconf(_SC_OPEN_MAX);
 
     register int fdAll;
-    for(fdAll = 3; fdAll < maxfd; fdAll++)
-        {
-            if(fdAll != exception)
-                close(fdAll);
-        }
+    for (fdAll = 3; fdAll < maxfd; fdAll++) {
+        if (fdAll != exception)
+            close(fdAll);
+    }
 }
 
-int ExecuteProcess::execProcessShell(std::string& forkMessage)
+int ExecuteProcess::execProcessShell(std::string &forkMessage)
 {
     // Open pipe
     int pipefds[2] = {0, 0};
-    if (pipe(pipefds))
-        {
-            forkMessage = "Failed to create pipe between parent/child processes";
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
-            return -1;
-        }
-    if (fcntl(pipefds[1], F_SETFD, fcntl(pipefds[1], F_GETFD) | FD_CLOEXEC))
-        {
-            close(pipefds[0]);
-            close(pipefds[1]);
+    if (pipe(pipefds)) {
+        forkMessage = "Failed to create pipe between parent/child processes";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
+        return -1;
+    }
+    if (fcntl(pipefds[1], F_SETFD, fcntl(pipefds[1], F_GETFD) | FD_CLOEXEC)) {
+        close(pipefds[0]);
+        close(pipefds[1]);
 
-            forkMessage = "Failed to set fd FD_CLOEXEC";
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
-            return -1;
-        }
+        forkMessage = "Failed to set fd FD_CLOEXEC";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
+        return -1;
+    }
 
     // Ignore SIGCLD: Don't wait for the child to complete
     signal(SIGCLD, SIG_IGN);
@@ -128,78 +125,73 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
 
     pid_t child = fork();
     // Error
-    if (child == -1 )
-        {
-            close(pipefds[0]);
-            close(pipefds[1]);
+    if (child == -1) {
+        close(pipefds[0]);
+        close(pipefds[1]);
 
-            forkMessage = "Failed to fork " + std::string(strerror(errno));
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
-            return -1;
+        forkMessage = "Failed to fork " + std::string(strerror(errno));
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
+        return -1;
+    }
+        // Child
+    else if (child == 0) {
+        // Detach from parent
+        setsid();
+
+        // Set working directory
+        if (chdir(_PATH_TMP) != 0)
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chdir" << commit;
+
+        // Close all open file descriptors _except_ the write-end of the pipe
+        // (and stdin, stdout and stderr)
+        closeAllFilesExcept(pipefds[1]);
+
+        // Redirect stderr (points to the log)
+        stderr = freopen("/dev/null", "a", stderr);
+
+        // Get parameter array
+        std::list<std::string> argsHolder;
+        size_t argc;
+        char **argv;
+        getArgv(argsHolder, &argc, &argv);
+
+        // Execute the new binary
+        execvp(m_app.c_str(), argv);
+
+        // If we are here, execvp failed, so write the errno to the pipe
+        if (write(pipefds[1], &errno, sizeof(int)) < 0) {
+            fprintf(stderr, "Failed to write to the pipe!");
         }
-    // Child
-    else if (child == 0)
-        {
-            // Detach from parent
-            setsid();
-
-            // Set working directory
-            if(chdir(_PATH_TMP) != 0)
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chdir"  << commit;
-
-            // Close all open file descriptors _except_ the write-end of the pipe
-            // (and stdin, stdout and stderr)
-            closeAllFilesExcept(pipefds[1]);
-
-            // Redirect stderr (points to the log)
-            stderr = freopen("/dev/null", "a", stderr);
-
-            // Get parameter array
-            std::list<std::string> argsHolder;
-            size_t       argc;
-            char       **argv;
-            getArgv(argsHolder, &argc, &argv);
-
-            // Execute the new binary
-            execvp(m_app.c_str(), argv);
-
-            // If we are here, execvp failed, so write the errno to the pipe
-            if (write(pipefds[1], &errno, sizeof(int)) < 0) {
-                fprintf(stderr, "Failed to write to the pipe!");
-            }
-            _exit(EXIT_FAILURE);
-        }
+        _exit(EXIT_FAILURE);
+    }
 
     // Parent process
-    // Close writting end of the pipe, and wait and see if we got an error from
+    // Close writing end of the pipe, and wait and see if we got an error from
     // the child
     pid = child;
     close(pipefds[1]);
 
     ssize_t count = 0;
-    int     err = 0;
-    while ((count = read(pipefds[0], &err, sizeof(errno))) == -1)
-        {
-            if (errno != EAGAIN && errno != EINTR) break;
-        }
-    if (count)
-        {
-            forkMessage = "Child process failure " + std::string(strerror(errno));
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
-            return -1;
-        }
+    int err = 0;
+    while ((count = read(pipefds[0], &err, sizeof(err))) == -1) {
+        if (errno != EAGAIN && errno != EINTR) break;
+    }
+    if (count) {
+        forkMessage = "Child process failure " + std::string(strerror(errno));
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
+        return -1;
+    }
 
     // Close reading end
     close(pipefds[0]);
 
     // Sleep for awhile but do not block waiting for child
     boost::this_thread::sleep(boost::posix_time::microseconds(50000));
-    if(waitpid(pid, NULL, WNOHANG) != 0)
-        {
-            forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
-            return -1;
-        }
+    if (waitpid(pid, NULL, WNOHANG) != 0) {
+        forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
+        return -1;
+    }
 
     return 0;
 }
