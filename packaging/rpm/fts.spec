@@ -417,7 +417,7 @@ fi
 exit 0
 
 %postun msg
-if [ $1 -eq 0 ] ; then
+if [ "$1" -ge "1" ] ; then
 %if %systemd
     /bin/systemctl try-restart fts-msg-bulk.service > /dev/null 2>&1 || :
 %else
