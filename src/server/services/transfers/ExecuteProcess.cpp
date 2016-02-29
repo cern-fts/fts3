@@ -119,13 +119,12 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
         return -1;
     }
 
-    // Ignore SIGCLD: Don't wait for the child to complete
-    signal(SIGCLD, SIG_IGN);
+    // Ignore SIGPIPE
     signal(SIGPIPE, SIG_IGN);
 
-    pid_t child = fork();
+    pid = fork();
     // Error
-    if (child == -1) {
+    if (pid == -1) {
         close(pipefds[0]);
         close(pipefds[1]);
 
@@ -134,7 +133,7 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
         return -1;
     }
         // Child
-    else if (child == 0) {
+    else if (pid == 0) {
         // Detach from parent
         setsid();
 
@@ -168,7 +167,6 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
     // Parent process
     // Close writing end of the pipe, and wait and see if we got an error from
     // the child
-    pid = child;
     close(pipefds[1]);
 
     ssize_t count = 0;
@@ -177,7 +175,7 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
         if (errno != EAGAIN && errno != EINTR) break;
     }
     if (count) {
-        forkMessage = "Child process failure " + std::string(strerror(errno));
+        forkMessage = "Child process failed to execute: " + std::string(strerror(errno));
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
         return -1;
     }
@@ -185,12 +183,21 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
     // Close reading end
     close(pipefds[0]);
 
-    // Sleep for awhile but do not block waiting for child
-    boost::this_thread::sleep(boost::posix_time::microseconds(50000));
-    if (waitpid(pid, NULL, WNOHANG) != 0) {
-        forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
+    // Sleep for a moment, check if the child is still alive
+    boost::this_thread::sleep(boost::posix_time::millisec(50));
+    int child_ret = 0;
+    int waitpid_ret = waitpid(pid, &child_ret, WNOHANG);
+
+    if (waitpid_ret < 0) {
+        forkMessage = "Failed to double check child process: " + std::string(strerror(errno));
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
         return -1;
+    }
+    else if (waitpid_ret > 0) {
+        forkMessage = "Child process exited immediately with status " + boost::lexical_cast<std::string>(child_ret);
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
+        // Child may have exit too quickly but successfully (0)!
+        return child_ret;
     }
 
     return 0;
