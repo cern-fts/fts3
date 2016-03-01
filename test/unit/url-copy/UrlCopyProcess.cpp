@@ -28,7 +28,8 @@ protected:
 
 public:
     UrlCopyFixture() {
-        opts.logToStderr = true;
+        opts.logToStderr = false;
+        opts.logDir = "/tmp/fts3-tests";
     }
 
     void sendTransferStart(const Transfer &t, Gfal2TransferParams&) {

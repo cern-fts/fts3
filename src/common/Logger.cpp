@@ -24,7 +24,7 @@
 #include "Exceptions.h"
 
 #include <fcntl.h>
-#include <unistd.h>
+#include <fstream>
 #include <boost/algorithm/string.hpp>
 
 
@@ -65,6 +65,7 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 
 Logger::Logger(): _logLevel(DEBUG), _lastLogLevel(DEBUG), _separator("; "), _nCommits(0)
 {
+    out = &std::cout;
     newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
 }
 
@@ -88,7 +89,7 @@ Logger & Logger::setLogLevel(LogLevel level)
 void Logger::_commit()
 {
     if (_lastLogLevel >= _logLevel) {
-        std::cout << std::endl;
+        *out << std::endl;
         ++_nCommits;
         if (_nCommits >= NB_COMMITS_BEFORE_CHECK) {
             _nCommits = 0;
@@ -136,27 +137,32 @@ static int createAndReopen(const std::string& path, FILE* stream)
 
 int Logger::redirect(const std::string& outPath, const std::string& errPath) throw()
 {
-    if (createAndReopen(outPath, stdout) < 0)
-        return -1;
-    if (createAndReopen(errPath, stderr) < 0)
-        return -1;
+    if (out != &std::cout) {
+        delete out;
+    }
+    out = new std::ofstream(outPath);
+
+    if (!errPath.empty()) {
+        if (createAndReopen(errPath, stderr) < 0)
+            return -1;
+    }
     return 0;
 }
 
 
 void Logger::checkFd(void)
 {
-    if (std::cout.fail()) {
-        std::cout.clear();
+    if (out->fail()) {
+        out->clear();
         *this << logLevelStringRepresentation(WARNING) << timestamp() << _separator;
-        *this << "std::cout fail bit cleared";
+        *this << "out fail bit cleared";
     }
     else {
         *this << logLevelStringRepresentation(INFO) << timestamp() << _separator;
-        *this << "std::cout clear!";
+        *this << "out clear!";
     }
 
-    std::cout << std::endl;
+    *out << std::endl;
 }
 
 

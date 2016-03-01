@@ -79,7 +79,7 @@ public:
     {
         if (_lastLogLevel >= _logLevel)
         {
-            std::cout << aSrc;
+            *out << aSrc;
         }
         return *this;
     }
@@ -98,6 +98,9 @@ private:
     /// Separator for the logging
     std::string _separator;
 
+    // Where to write
+    std::ostream *out;
+
     /// Check file descriptor every X iterations
     static const unsigned NB_COMMITS_BEFORE_CHECK = 1000;
     unsigned _nCommits;
@@ -111,7 +114,7 @@ private:
     /// Commits (writes) the actual log line.
     void _commit();
 
-    /// When the disk is full, std::cout fail bits are set
+    /// When the disk is full, out fail bits are set
     /// Afterwards, any attempt to write will fail even if space is recovered
     /// So we clean here the fail bits to keep doing business as usual
     void checkFd(void);
