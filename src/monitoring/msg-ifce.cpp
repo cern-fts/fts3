@@ -46,7 +46,7 @@ MsgIfce *MsgIfce::getInstance()
 }
 
 
-MsgIfce::MsgIfce(): state(MSG_IFCE_WAITING_START)
+MsgIfce::MsgIfce()
 {
 }
 
@@ -73,13 +73,6 @@ static void set_metadata(json::Object &json, const std::string &key, const std::
 
 std::string MsgIfce::SendTransferStartMessage(Producer &producer, const TransferCompleted &tr_started)
 {
-    if (state != MSG_IFCE_WAITING_START) {
-        FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a start message, but the internal state is not MSG_IFCE_WAITING_START");
-        return std::string();
-    }
-
-    state = MSG_IFCE_WAITING_FINISH;
-
     json::Object message;
 
     message["agent_fqdn"] = json::String(tr_started.agent_fqdn);
@@ -126,15 +119,8 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
 }
 
 
-std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed, bool force)
+std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed)
 {
-    if (!force && state != MSG_IFCE_WAITING_FINISH) {
-        FTS3_COMMON_LOGGER_LOG(WARNING, "Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
-        return std::string();
-    }
-
-    state = MSG_IFCE_WAITING_START;
-
     json::Object message;
 
     message["tr_id"] = json::String(tr_completed.transfer_id);

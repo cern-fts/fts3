@@ -102,19 +102,13 @@ public:
 class MsgIfce
 {
 private:
-
-    enum {
-        MSG_IFCE_WAITING_START,
-        MSG_IFCE_WAITING_FINISH
-    } state;
-
     static bool instanceFlag;
     static MsgIfce *single;
     MsgIfce(); /*private constructor*/
 
 public:
     std::string SendTransferStartMessage(Producer &producer, const TransferCompleted &tr_started);
-    std::string SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed, bool force=false);
+    std::string SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed);
     std::string SendTransferStatusChange(Producer &producer, const TransferState &tr_state);
 
     static MsgIfce * getInstance();

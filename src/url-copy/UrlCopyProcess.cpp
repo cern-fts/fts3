@@ -59,7 +59,7 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 
 
 UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
-    opts(opts), reporter(reporter), canceled(false), timeoutExpired(false)
+    opts(opts), reporter(reporter), canceled(false), multihopFailed(false), timeoutExpired(false)
 {
     todoTransfers = opts.transfers;
     setupGlobalGfal2Config(opts, gfal2);
@@ -261,7 +261,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
 void UrlCopyProcess::run(void)
 {
-    while (!todoTransfers.empty() && !canceled) {
+    while (!todoTransfers.empty() && !canceled && !multihopFailed) {
 
         Transfer transfer;
         {
@@ -322,7 +322,7 @@ void UrlCopyProcess::run(void)
 
             // Do not continue after this failure if this is a multihop transfer
             if (opts.isMultihop) {
-                canceled = true;
+                multihopFailed = true;
             }
         }
         else {
@@ -349,7 +349,13 @@ void UrlCopyProcess::run(void)
     // for them
     for (auto transfer = todoTransfers.begin(); transfer != todoTransfers.end(); ++transfer) {
         Gfal2TransferParams params;
-        transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ECANCELED, "Transfer canceled"));
+        if (multihopFailed) {
+            transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EMULTIHOP,
+                "Transfer canceled because a previous hop failed"));
+        }
+        else {
+            transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ECANCELED, "Transfer canceled"));
+        }
         reporter.sendTransferCompleted(*transfer, params);
     }
 }
