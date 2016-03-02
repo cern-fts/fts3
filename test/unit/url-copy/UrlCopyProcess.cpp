@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE (simpleTransfer, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=2s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
     opts.transfers.push_back(original);
 
     UrlCopyProcess proc(opts, *this);
@@ -78,7 +78,7 @@ BOOST_FIXTURE_TEST_CASE (panic, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=2s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
     opts.transfers.push_back(original);
 
     UrlCopyProcess proc(opts, *this);
@@ -101,7 +101,7 @@ BOOST_FIXTURE_TEST_CASE (cancel, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=5s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=5");
     opts.transfers.push_back(original);
 
     UrlCopyProcess proc(opts, *this);
@@ -124,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE (timeout, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=10s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=10");
     opts.transfers.push_back(original);
     opts.timeout = 1;
 
@@ -147,9 +147,9 @@ BOOST_FIXTURE_TEST_CASE (multipleSimple, UrlCopyFixture)
 {
     Transfer original, original2;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=2s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
     original2.source = Uri::parse("mock://host/path2?size=42");
-    original2.destination = Uri::parse("mock://host/path2?size_post=42&transfer_time=1s");
+    original2.destination = Uri::parse("mock://host/path2?size_post=42&time=1");
     opts.transfers.push_back(original);
     opts.transfers.push_back(original2);
 
@@ -182,9 +182,9 @@ BOOST_FIXTURE_TEST_CASE (multipleCancel, UrlCopyFixture)
 {
     Transfer original, original2;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=2s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
     original2.source = Uri::parse("mock://host/path2?size=42");
-    original2.destination = Uri::parse("mock://host/path2?size_post=42&transfer_time=10s");
+    original2.destination = Uri::parse("mock://host/path2?size_post=42&time=10");
     opts.transfers.push_back(original);
     opts.transfers.push_back(original2);
 
@@ -213,9 +213,9 @@ BOOST_FIXTURE_TEST_CASE (multiplePanic, UrlCopyFixture)
 {
     Transfer original, original2;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=2s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
     original2.source = Uri::parse("mock://host/path2?size=42");
-    original2.destination = Uri::parse("mock://host/path2?size_post=42&transfer_time=10s");
+    original2.destination = Uri::parse("mock://host/path2?size_post=42&time=10");
     opts.transfers.push_back(original);
     opts.transfers.push_back(original2);
 
@@ -245,10 +245,10 @@ BOOST_FIXTURE_TEST_CASE (multihop, UrlCopyFixture)
 {
     Transfer original, original2;
     original.source = Uri::parse("mock://host/path?size=10&errno=2");
-    original.destination = Uri::parse("mock://host/path?size_post=10&transfer_time=2s");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
     original.fileId = 10;
     original2.source = Uri::parse("mock://host/path2?size=42");
-    original2.destination = Uri::parse("mock://host/path2?size_post=42&transfer_time=2s");
+    original2.destination = Uri::parse("mock://host/path2?size_post=42&time=2");
     original2.fileId = 11;
     opts.transfers.push_back(original);
     opts.transfers.push_back(original2);
