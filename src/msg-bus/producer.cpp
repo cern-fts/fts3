@@ -22,6 +22,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include <glib.h>
+#include <boost/thread/tss.hpp>
 
 #include "common/Logger.h"
 
@@ -39,27 +40,29 @@ Producer::~Producer()
 }
 
 
+boost::thread_specific_ptr<std::stringstream> msgBuffer;
+
+
+static void populateBuffer(const std::string &msg)
+{
+    if (msgBuffer.get() == NULL) {
+        msgBuffer.reset(new std::stringstream());
+    }
+    msgBuffer->clear();
+    *msgBuffer << msg;
+}
+
+
+static int producerDirqW(dirq_t, char *buffer, size_t length)
+{
+    return msgBuffer->readsome(buffer, length);
+}
+
+
 static int writeMessage(DirQ &dirqHandle, const google::protobuf::Message &msg)
 {
-    char tempTemplate[PATH_MAX];
-    snprintf(tempTemplate, PATH_MAX, "%s/%%%%%%%%%%%%%%%%", dirqHandle.getPath().c_str());
-
-    boost::filesystem::path temp = boost::filesystem::unique_path(tempTemplate);
-    const std::string tempPath = temp.native();
-
-    try {
-        std::ofstream stream(tempPath);
-        msg.SerializeToOstream(&stream);
-    }
-    catch (const std::exception &ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)
-            << "Could not write message to " << tempPath << " (" << ex.what() << ")"
-            << fts3::common::commit;
-        return EIO;
-    }
-
-
-    if (dirq_add_path(dirqHandle, tempPath.c_str()) == NULL) {
+    populateBuffer(msg.SerializeAsString());
+    if (dirq_add(dirqHandle, producerDirqW) == NULL) {
         return dirq_get_errcode(dirqHandle);
     }
 
@@ -98,25 +101,8 @@ int Producer::runProducerStaging(const fts3::events::MessageBringonline &msg)
 
 int Producer::runProducerMonitoring(const std::string &serialized)
 {
-    char tempTemplate[PATH_MAX];
-    snprintf(tempTemplate, PATH_MAX, "%s/%%%%%%%%%%%%%%%%", monitoringQueue.getPath().c_str());
-
-    boost::filesystem::path temp = boost::filesystem::unique_path(tempTemplate);
-    const std::string tempPath = temp.native();
-
-    try {
-        std::ofstream stream(tempPath);
-        stream << serialized;
-    }
-    catch (const std::exception &ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)
-        << "Could not write message to " << tempPath << " (" << ex.what() << ")"
-        << fts3::common::commit;
-        return EIO;
-    }
-
-
-    if (dirq_add_path(monitoringQueue, tempPath.c_str()) == NULL) {
+    populateBuffer(serialized);
+    if (dirq_add(monitoringQueue, producerDirqW) == NULL) {
         return dirq_get_errcode(monitoringQueue);
     }
 
