@@ -44,6 +44,9 @@ static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &message
 {
     MSG event;
 
+    const char *error = NULL;
+    dirq_clear_error(dirq);
+
     for (auto iter = dirq_first(dirq); iter != NULL && limit > 0; iter = dirq_next(dirq), --limit) {
         if (dirq_lock(dirq, iter, 0) == 0) {
             const char *path = dirq_get_path(dirq, iter);
@@ -59,8 +62,20 @@ static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &message
             }
 
             messages.emplace_back(event);
-            dirq_remove(dirq, iter);
+            if (dirq_remove(dirq, iter) < 0) {
+                error = dirq_get_errstr(dirq);
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
+                    << error
+                    << fts3::common::commit;
+                dirq_clear_error(dirq);
+            }
         }
+    }
+
+    error = dirq_get_errstr(dirq);
+    if (error) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
+        return -1;
     }
 
     return 0;
@@ -83,6 +98,9 @@ int Consumer::runConsumerLog(std::map<int, fts3::events::MessageLog> &messages)
 {
     fts3::events::MessageLog buffer;
 
+    const char *error = NULL;
+    dirq_clear_error(logQueue);
+
     for (auto iter = dirq_first(logQueue); iter != NULL && limit > 0; iter = dirq_next(logQueue), --limit) {
         if (dirq_lock(logQueue, iter, 0) == 0) {
             const char *path = dirq_get_path(logQueue, iter);
@@ -98,8 +116,20 @@ int Consumer::runConsumerLog(std::map<int, fts3::events::MessageLog> &messages)
             }
 
             messages[buffer.file_id()] = buffer;
-            dirq_remove(logQueue, iter);
+            if (dirq_remove(logQueue, iter) < 0) {
+                error = dirq_get_errstr(logQueue);
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
+                    << error
+                    << fts3::common::commit;
+                dirq_clear_error(logQueue);
+            }
         }
+    }
+
+    error = dirq_get_errstr(logQueue);
+    if (error) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
+        return -1;
     }
 
     return 0;
@@ -122,6 +152,9 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
 {
     std::string content;
 
+    const char *error = NULL;
+    dirq_clear_error(monitoringQueue);
+
     for (auto iter = dirq_first(monitoringQueue); iter != NULL && limit > 0; iter = dirq_next(monitoringQueue), --limit) {
         if (dirq_lock(monitoringQueue, iter, 0) == 0) {
             const char *path = dirq_get_path(monitoringQueue, iter);
@@ -138,8 +171,20 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
             }
 
 
-            dirq_remove(monitoringQueue, iter);
+            if (dirq_remove(monitoringQueue, iter) < 0) {
+                error = dirq_get_errstr(monitoringQueue);
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
+                    << error
+                    << fts3::common::commit;
+                dirq_clear_error(monitoringQueue);
+            }
         }
+    }
+
+    error = dirq_get_errstr(monitoringQueue);
+    if (error) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
+        return -1;
     }
 
     return 0;
