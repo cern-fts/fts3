@@ -18,8 +18,6 @@
  * limitations under the License.
  */
 
-#include <fcntl.h>
-#include <unistd.h>
 #include <fstream>
 #include "common/Logger.h"
 #include "consumer.h"
@@ -47,7 +45,8 @@ static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &message
     const char *error = NULL;
     dirq_clear_error(dirq);
 
-    for (auto iter = dirq_first(dirq); iter != NULL && limit > 0; iter = dirq_next(dirq), --limit) {
+    unsigned i = 0;
+    for (auto iter = dirq_first(dirq); iter != NULL && i < limit; iter = dirq_next(dirq), ++i) {
         if (dirq_lock(dirq, iter, 0) == 0) {
             const char *path = dirq_get_path(dirq, iter);
 
@@ -101,7 +100,8 @@ int Consumer::runConsumerLog(std::map<int, fts3::events::MessageLog> &messages)
     const char *error = NULL;
     dirq_clear_error(logQueue);
 
-    for (auto iter = dirq_first(logQueue); iter != NULL && limit > 0; iter = dirq_next(logQueue), --limit) {
+    unsigned i = 0;
+    for (auto iter = dirq_first(logQueue); iter != NULL && i < limit; iter = dirq_next(logQueue), ++i) {
         if (dirq_lock(logQueue, iter, 0) == 0) {
             const char *path = dirq_get_path(logQueue, iter);
 
@@ -155,7 +155,8 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
     const char *error = NULL;
     dirq_clear_error(monitoringQueue);
 
-    for (auto iter = dirq_first(monitoringQueue); iter != NULL && limit > 0; iter = dirq_next(monitoringQueue), --limit) {
+    unsigned i = 0;
+    for (auto iter = dirq_first(monitoringQueue); iter != NULL && i < limit; iter = dirq_next(monitoringQueue), ++i) {
         if (dirq_lock(monitoringQueue, iter, 0) == 0) {
             const char *path = dirq_get_path(monitoringQueue, iter);
 
