@@ -37,6 +37,7 @@ target_link_libraries(fts_db_cleaner
     fts_db_generic
     fts_config
     fts_common
+    fts_msg_bus
     ${Boost_LIBRARIES}
 )
 
