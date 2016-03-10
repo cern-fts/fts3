@@ -23,14 +23,15 @@
 #include <boost/filesystem.hpp>
 #include <glib.h>
 #include <boost/thread/tss.hpp>
+#include "DirQ.h"
 
 #include "common/Logger.h"
 
 
 Producer::Producer(const std::string &baseDir): baseDir(baseDir),
-    monitoringQueue(baseDir + "/monitoring"), statusQueue(baseDir + "/status"),
-    stalledQueue(baseDir + "/stalled"), logQueue(baseDir + "/logs"),
-    deletionQueue(baseDir + "/deletion"), stagingQueue(baseDir + "/staging")
+    monitoringQueue(new DirQ(baseDir + "/monitoring")), statusQueue(new DirQ(baseDir + "/status")),
+    stalledQueue(new DirQ(baseDir + "/stalled")), logQueue(new DirQ(baseDir + "/logs")),
+    deletionQueue(new DirQ(baseDir + "/deletion")), stagingQueue(new DirQ(baseDir + "/staging"))
 {
 }
 
@@ -59,11 +60,11 @@ static int producerDirqW(dirq_t, char *buffer, size_t length)
 }
 
 
-static int writeMessage(DirQ &dirqHandle, const google::protobuf::Message &msg)
+static int writeMessage(std::unique_ptr<DirQ> &dirqHandle, const google::protobuf::Message &msg)
 {
     populateBuffer(msg.SerializeAsString());
-    if (dirq_add(dirqHandle, producerDirqW) == NULL) {
-        return dirq_get_errcode(dirqHandle);
+    if (dirq_add(*dirqHandle, producerDirqW) == NULL) {
+        return dirq_get_errcode(*dirqHandle);
     }
 
     return 0;
@@ -102,8 +103,8 @@ int Producer::runProducerStaging(const fts3::events::MessageBringonline &msg)
 int Producer::runProducerMonitoring(const std::string &serialized)
 {
     populateBuffer(serialized);
-    if (dirq_add(monitoringQueue, producerDirqW) == NULL) {
-        return dirq_get_errcode(monitoringQueue);
+    if (dirq_add(*monitoringQueue, producerDirqW) == NULL) {
+        return dirq_get_errcode(*monitoringQueue);
     }
 
     return 0;

@@ -22,20 +22,21 @@
 #ifndef PRODUCER_H
 #define PRODUCER_H
 
+#include <memory>
 #include <string>
-#include "common/DirQ.h"
 #include "events.h"
 
+struct DirQ;
 
 class Producer {
 private:
     std::string baseDir;
-    DirQ monitoringQueue;
-    DirQ statusQueue;
-    DirQ stalledQueue;
-    DirQ logQueue;
-    DirQ deletionQueue;
-    DirQ stagingQueue;
+    std::unique_ptr<DirQ> monitoringQueue;
+    std::unique_ptr<DirQ> statusQueue;
+    std::unique_ptr<DirQ> stalledQueue;
+    std::unique_ptr<DirQ> logQueue;
+    std::unique_ptr<DirQ> deletionQueue;
+    std::unique_ptr<DirQ> stagingQueue;
 
 public:
     Producer(const std::string &baseDir);

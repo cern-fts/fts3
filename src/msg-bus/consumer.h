@@ -23,23 +23,24 @@
 #define CONSUMER_H
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include "common/DirQ.h"
 #include "events.h"
 
+struct DirQ;
 
 class Consumer
 {
 private:
     std::string baseDir;
     unsigned limit;
-    DirQ monitoringQueue;
-    DirQ statusQueue;
-    DirQ stalledQueue;
-    DirQ logQueue;
-    DirQ stagingQueue;
-    DirQ deletionQueue;
+    std::unique_ptr<DirQ> monitoringQueue;
+    std::unique_ptr<DirQ> statusQueue;
+    std::unique_ptr<DirQ> stalledQueue;
+    std::unique_ptr<DirQ> logQueue;
+    std::unique_ptr<DirQ> stagingQueue;
+    std::unique_ptr<DirQ> deletionQueue;
 
 public:
 

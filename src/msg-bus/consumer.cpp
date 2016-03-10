@@ -21,13 +21,14 @@
 #include <fstream>
 #include "common/Logger.h"
 #include "consumer.h"
+#include "DirQ.h"
 
 
 Consumer::Consumer(const std::string &baseDir, unsigned limit):
     baseDir(baseDir), limit(limit),
-    monitoringQueue(baseDir + "/monitoring"), statusQueue(baseDir + "/status"),
-    stalledQueue(baseDir + "/stalled"), logQueue(baseDir + "/logs"),
-    stagingQueue(baseDir + "/staging"), deletionQueue(baseDir + "/deletion")
+    monitoringQueue(new DirQ(baseDir + "/monitoring")), statusQueue(new DirQ(baseDir + "/status")),
+    stalledQueue(new DirQ(baseDir + "/stalled")), logQueue(new DirQ(baseDir + "/logs")),
+    stagingQueue(new DirQ(baseDir + "/staging")), deletionQueue(new DirQ(baseDir + "/deletion"))
 {
 }
 
@@ -38,17 +39,17 @@ Consumer::~Consumer()
 
 
 template <typename MSG>
-static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &messages)
+static int genericConsumer(std::unique_ptr<DirQ> &dirq, unsigned limit, std::vector<MSG> &messages)
 {
     MSG event;
 
     const char *error = NULL;
-    dirq_clear_error(dirq);
+    dirq_clear_error(*dirq);
 
     unsigned i = 0;
-    for (auto iter = dirq_first(dirq); iter != NULL && i < limit; iter = dirq_next(dirq), ++i) {
-        if (dirq_lock(dirq, iter, 0) == 0) {
-            const char *path = dirq_get_path(dirq, iter);
+    for (auto iter = dirq_first(*dirq); iter != NULL && i < limit; iter = dirq_next(*dirq), ++i) {
+        if (dirq_lock(*dirq, iter, 0) == 0) {
+            const char *path = dirq_get_path(*dirq, iter);
 
             try {
                 std::ifstream fstream(path);
@@ -61,17 +62,17 @@ static int genericConsumer(DirQ &dirq, unsigned limit, std::vector<MSG> &message
             }
 
             messages.emplace_back(event);
-            if (dirq_remove(dirq, iter) < 0) {
-                error = dirq_get_errstr(dirq);
+            if (dirq_remove(*dirq, iter) < 0) {
+                error = dirq_get_errstr(*dirq);
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
                     << error
                     << fts3::common::commit;
-                dirq_clear_error(dirq);
+                dirq_clear_error(*dirq);
             }
         }
     }
 
-    error = dirq_get_errstr(dirq);
+    error = dirq_get_errstr(*dirq);
     if (error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
         return -1;
@@ -98,12 +99,12 @@ int Consumer::runConsumerLog(std::map<int, fts3::events::MessageLog> &messages)
     fts3::events::MessageLog buffer;
 
     const char *error = NULL;
-    dirq_clear_error(logQueue);
+    dirq_clear_error(*logQueue);
 
     unsigned i = 0;
-    for (auto iter = dirq_first(logQueue); iter != NULL && i < limit; iter = dirq_next(logQueue), ++i) {
-        if (dirq_lock(logQueue, iter, 0) == 0) {
-            const char *path = dirq_get_path(logQueue, iter);
+    for (auto iter = dirq_first(*logQueue); iter != NULL && i < limit; iter = dirq_next(*logQueue), ++i) {
+        if (dirq_lock(*logQueue, iter, 0) == 0) {
+            const char *path = dirq_get_path(*logQueue, iter);
 
             try {
                 std::ifstream fstream(path);
@@ -116,17 +117,17 @@ int Consumer::runConsumerLog(std::map<int, fts3::events::MessageLog> &messages)
             }
 
             messages[buffer.file_id()] = buffer;
-            if (dirq_remove(logQueue, iter) < 0) {
-                error = dirq_get_errstr(logQueue);
+            if (dirq_remove(*logQueue, iter) < 0) {
+                error = dirq_get_errstr(*logQueue);
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
                     << error
                     << fts3::common::commit;
-                dirq_clear_error(logQueue);
+                dirq_clear_error(*logQueue);
             }
         }
     }
 
-    error = dirq_get_errstr(logQueue);
+    error = dirq_get_errstr(*logQueue);
     if (error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
         return -1;
@@ -153,12 +154,12 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
     std::string content;
 
     const char *error = NULL;
-    dirq_clear_error(monitoringQueue);
+    dirq_clear_error(*monitoringQueue);
 
     unsigned i = 0;
-    for (auto iter = dirq_first(monitoringQueue); iter != NULL && i < limit; iter = dirq_next(monitoringQueue), ++i) {
-        if (dirq_lock(monitoringQueue, iter, 0) == 0) {
-            const char *path = dirq_get_path(monitoringQueue, iter);
+    for (auto iter = dirq_first(*monitoringQueue); iter != NULL && i < limit; iter = dirq_next(*monitoringQueue), ++i) {
+        if (dirq_lock(*monitoringQueue, iter, 0) == 0) {
+            const char *path = dirq_get_path(*monitoringQueue, iter);
 
             try {
                 std::ifstream fstream(path);
@@ -172,17 +173,17 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
             }
 
 
-            if (dirq_remove(monitoringQueue, iter) < 0) {
-                error = dirq_get_errstr(monitoringQueue);
+            if (dirq_remove(*monitoringQueue, iter) < 0) {
+                error = dirq_get_errstr(*monitoringQueue);
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
                     << error
                     << fts3::common::commit;
-                dirq_clear_error(monitoringQueue);
+                dirq_clear_error(*monitoringQueue);
             }
         }
     }
 
-    error = dirq_get_errstr(monitoringQueue);
+    error = dirq_get_errstr(*monitoringQueue);
     if (error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
         return -1;
@@ -194,10 +195,10 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
 
 void Consumer::purgeAll()
 {
-    dirq_purge(monitoringQueue);
-    dirq_purge(statusQueue);
-    dirq_purge(stalledQueue);
-    dirq_purge(logQueue);
-    dirq_purge(stagingQueue);
-    dirq_purge(deletionQueue);
+    dirq_purge(*monitoringQueue);
+    dirq_purge(*statusQueue);
+    dirq_purge(*stalledQueue);
+    dirq_purge(*logQueue);
+    dirq_purge(*stagingQueue);
+    dirq_purge(*deletionQueue);
 }
