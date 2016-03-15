@@ -41,6 +41,15 @@ static void heartBeat(void)
     unsigned myIndex=0, count=0;
     unsigned hashStart=0, hashEnd=0;
     const std::string service_name = "fts_bringonline";
+    int heartBeatInterval;
+    try {
+        heartBeatInterval = ServerConfig::instance().get<int>("HeartBeatInterval");
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
+        _exit(1);
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat interval " << heartBeatInterval << commit;
 
     while (!boost::this_thread::interruption_requested()) {
         try {
@@ -51,8 +60,6 @@ static void heartBeat(void)
                 continue;
             }
 
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
-
             db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                 &myIndex, &count, &hashStart, &hashEnd, service_name);
 
@@ -61,16 +68,18 @@ static void heartBeat(void)
                 << std::dec
                 << commit;
 
-            boost::this_thread::sleep(boost::posix_time::seconds(59));
+            boost::this_thread::sleep(boost::posix_time::seconds(heartBeatInterval));
         }
         catch (const std::exception& ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Hearbeat interruption requested" << commit;
             return;
         }
         catch (...) {
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
         }
     }

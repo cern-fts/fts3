@@ -260,8 +260,17 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["StagingWaitingFactor"]) )->default_value("30"),
         "The lower the value, the less time FTS3 waits to fill a bulk request"
     )
+    (
+        "HeartBeatInterval",
+        po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
+        "Interval in seconds between beats"
+    )
+    (
+        "HeartBeatGraceInterval",
+        po::value<std::string>( &(_vars["HeartBeatGraceInterval"]) )->default_value("120"),
+        "After this many seconds, a host is considered to be down"
+    )
     ;
-
     return config;
 }
 

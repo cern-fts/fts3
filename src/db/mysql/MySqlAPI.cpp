@@ -9164,6 +9164,8 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 {
     try
     {
+        auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
+
         sql.begin();
 
         // Update beat
@@ -9176,7 +9178,8 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         // Total number of working instances
         soci::statement stmt2 = (
                                     sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-                                    "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute) and service_name = :service_name",
+                                    "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
+                                    soci::use(heartBeatGraceInterval),
                                     soci::use(service_name),
                                     soci::into(*count));
         stmt2.execute(true);
@@ -9185,9 +9188,9 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         // Mind that MySQL does not have rownum
         soci::rowset<std::string> rsHosts = (sql.prepare <<
                                              "SELECT hostname FROM t_hosts "
-                                             "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute) and service_name = :service_name "
+                                             "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
                                              "ORDER BY hostname",
-                                             soci::use(service_name)
+                                             soci::use(heartBeatGraceInterval), soci::use(service_name)
                                             );
 
         soci::rowset<std::string>::const_iterator i;

@@ -21,12 +21,13 @@
 #include "HeartBeat.h"
 
 #include "common/Logger.h"
+#include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/DrainMode.h"
 #include "server/Server.h"
 
 using namespace fts3::common;
-
+using namespace fts3::config;
 
 namespace fts3 {
 namespace server {
@@ -43,6 +44,24 @@ HeartBeat::HeartBeat(): BaseService("HeartBeat")
 
 void HeartBeat::runService()
 {
+    int heartBeatInterval, heartBeatGraceInterval;
+    try {
+        heartBeatInterval = ServerConfig::instance().get<int>("HeartBeatInterval");
+        heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
+        if (heartBeatInterval >= heartBeatGraceInterval) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
+            _exit(1);
+        }
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
+        _exit(1);
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat interval " << heartBeatInterval << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat grace interval " << heartBeatGraceInterval << commit;
+
+
     while (!boost::this_thread::interruption_requested())
     {
         try
@@ -78,7 +97,7 @@ void HeartBeat::runService()
 
             // It the update was successful, we sleep here
             // If it wasn't, only one second will pass until the next retry
-            boost::this_thread::sleep(boost::posix_time::seconds(59));
+            boost::this_thread::sleep(boost::posix_time::seconds(heartBeatInterval));
         }
         catch (const boost::thread_interrupted&)
         {
@@ -87,12 +106,13 @@ void HeartBeat::runService()
         catch (const std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }
 
