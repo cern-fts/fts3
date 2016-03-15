@@ -2463,7 +2463,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 soci::use(process_id), soci::into(file_id);
 
         // query for the file state in DB
-        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId",
+        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId LOCK IN SHARE MODE",
             soci::use(file_id),
             soci::use(job_id),
             soci::into(st);
