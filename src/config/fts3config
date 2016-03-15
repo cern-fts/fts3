@@ -55,6 +55,11 @@ ServerLogDirectory=/var/log/fts3
 # This is intended to protect against system resource exhaustion
 MinRequiredFreeRAM = 50
 
+# In seconds, interval between heartbeats
+#HeartBeatInterval=60
+# I seconds, after this interval a host is considered down
+#HeartBeatGraceInterval=120
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer

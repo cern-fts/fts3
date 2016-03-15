@@ -134,6 +134,15 @@ void heartbeat(void)
     unsigned myIndex=0, count=0;
     unsigned hashStart=0, hashEnd=0;
     std::string service_name = "fts_bringonline";
+    int heartBeatInterval;
+    try {
+        heartBeatInterval = theServerConfig().get<int>("HeartBeatInterval");
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
+        _exit(1);
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat interval " << heartBeatInterval << commit;
 
     while (!stopThreads)
         {
@@ -155,7 +164,7 @@ void heartbeat(void)
                                                     << std::dec
                                                     << commit;
 
-                    boost::this_thread::sleep(boost::posix_time::seconds(60));
+                    boost::this_thread::sleep(boost::posix_time::seconds(heartBeatInterval));
                 }
             catch (std::exception& ex)
                 {

@@ -80,6 +80,23 @@ private:
 
     void beat_impl(void)
     {
+        int heartBeatInterval, heartBeatGraceInterval;
+        try {
+            heartBeatInterval = theServerConfig().get<int>("HeartBeatInterval");
+            heartBeatGraceInterval = theServerConfig().get<int>("HeartBeatGraceInterval");
+            if (heartBeatInterval >= heartBeatGraceInterval) {
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+                    << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
+                _exit(1);
+            }
+        }
+        catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
+            _exit(1);
+        }
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat interval " << heartBeatInterval << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat grace interval " << heartBeatGraceInterval << commit;
+
         while (!stopThreads)
             {
                 try
@@ -152,17 +169,17 @@ private:
                                             }
                                     }
                             }
-                        sleep(60);
+                        sleep(heartBeatInterval);
                     }
                 catch (const std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
-                        sleep(60);
+                        sleep(heartBeatInterval);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
-                        sleep(60);
+                        sleep(heartBeatInterval);
                     }
             }
     }

@@ -213,8 +213,17 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["MinRequiredFreeRAM"]) )->default_value("50"),
         "Minimum amount of free RAM in MB required for FTS3 to not go into auto-drain mode"
     )
+    (
+        "HeartBeatInterval",
+        po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
+        "Interval in seconds between beats"
+    )
+    (
+        "HeartBeatGraceInterval",
+        po::value<std::string>( &(_vars["HeartBeatGraceInterval"]) )->default_value("120"),
+        "After this many seconds, a host is considered to be down"
+    )
     ;
-
     return config;
 }
 
