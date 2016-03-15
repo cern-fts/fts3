@@ -737,7 +737,11 @@ void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
 
     try
     {
-        soci::rowset<soci::row> rs1 = (sql.prepare << "select f.vo_name, f.source_se, f.dest_se from t_file f where f.file_state = 'SUBMITTED'  group by f.vo_name, f.source_se, f.dest_se order by null");
+        soci::rowset<soci::row> rs1 = (sql.prepare <<
+                                       "select f.vo_name, f.source_se, f.dest_se from t_file f "
+                                           "where f.file_state = 'SUBMITTED' and f.job_finished IS NULL "
+                                           "group by f.vo_name, f.source_se, f.dest_se "
+                                           "order by null");
 
         soci::statement stmt1 = (sql.prepare <<
                                  "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name and file_state='SUBMITTED' AND (hashed_id >= :hashStart AND hashed_id <= :hashEnd) LIMIT 1",
@@ -909,6 +913,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             // We then filter by this, and order by file_id
             // Doing this, we avoid a order by priority, which would trigger a filesort, which
             // can be pretty slow...
+            soci::indicator isMaxNull = soci::i_ok;
             int maxPriority = 3;
             sql << "SELECT MAX(priority) "
                    "FROM t_job, t_file "
@@ -917,7 +922,11 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest AND "
                    "    t_file.file_state = 'SUBMITTED'",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
-                   soci::into(maxPriority);
+                   soci::into(maxPriority, isMaxNull);
+            if (isMaxNull == soci::i_null) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
+                continue;
+            }
 
             std::set<std::string> default_activities;
             std::map<std::string, int> activityFilesNum =
