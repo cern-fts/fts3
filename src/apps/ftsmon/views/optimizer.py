@@ -160,11 +160,18 @@ class AppendQuantile(object):
 @require_certificate
 @jsonify
 def get_optimizer_streams(http_request):
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(hours=1)
+
     streams = OptimizerStreams.objects
     if http_request.GET.get('source_se', None):
         streams = streams.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
         streams = streams.filter(dest_se=http_request.GET['dest_se'])
+
+    streams = streams.filter(datetime__gte=datetime.utcnow() - time_window)
     streams = streams.order_by('-throughput')
 
     # Compute quantiles
