@@ -119,7 +119,7 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
         return -1;
     }
 
-    // Ignore SIGPIPE
+    signal(SIGCLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
 
     pid = fork();
