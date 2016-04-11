@@ -4,35 +4,41 @@
     Optimizer - Streams
 </h3>
 
-<pagination rotate="false"
-    page="streams.page" total-items="streams.count" items-per-page="streams.pageSize"
-    max-size="15" class="pagination" boundary-links="true"
-    on-select-page="pageChanged(page)"></pagination>
+<div data-ng-if="streams.null">
+    ⚠️ The stream optimizer is disabled.
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th style="width: 30%">Source</th>
-            <th style="width: 30%">Destination</th>
-            <th class="numeric">N.Streams</th>
-            <th class="numeric">Throughput</th>
-            <th class="numeric">Tested</th>
-            <th style="width: 20%">Timestamp</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr data-ng-repeat="s in streams.items" data-ng-class-odd="'odd'" data-ng-style="quantileColor(s)">
-            <td>{{ s.source_se }}</td>
-            <td>{{ s.dest_se }}</td>
-            <td class="numeric">{{ s.nostreams }}</td>
-            <td class="numeric"><span data-optional-number="{{s.throughput}}" data-suffix="MB/s" data-decimals="2"></span></td>
-            <td class="numeric">{{ s.tested }}</td>
-            <td>{{ s.datetime }}</td>
-        </tr>
-    </tbody>
-</table>
+<div data-ng-if="!streams.null">
+    <pagination rotate="false"
+        page="streams.page" total-items="streams.count" items-per-page="streams.pageSize"
+        max-size="15" class="pagination" boundary-links="true"
+        on-select-page="pageChanged(page)"></pagination>
 
-<pagination rotate="false"
-    page="streams.page" total-items="streams.count" items-per-page="streams.pageSize"
-    max-size="15" class="pagination" boundary-links="true"
-    on-select-page="pageChanged(page)"></pagination>
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 30%">Source</th>
+                <th style="width: 30%">Destination</th>
+                <th class="numeric">N.Streams</th>
+                <th class="numeric">Throughput</th>
+                <th class="numeric">Tested</th>
+                <th style="width: 20%">Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr data-ng-repeat="s in streams.items" data-ng-class-odd="'odd'" data-ng-style="quantileColor(s)">
+                <td>{{ s.source_se }}</td>
+                <td>{{ s.dest_se }}</td>
+                <td class="numeric">{{ s.nostreams }}</td>
+                <td class="numeric"><span data-optional-number="{{s.throughput}}" data-suffix="MB/s" data-decimals="2"></span></td>
+                <td class="numeric">{{ s.tested }}</td>
+                <td>{{ s.datetime }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <pagination rotate="false"
+        page="streams.page" total-items="streams.count" items-per-page="streams.pageSize"
+        max-size="15" class="pagination" boundary-links="true"
+        on-select-page="pageChanged(page)"></pagination>
+</div>

@@ -38,12 +38,21 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('OptimizerStreams', function($resource) {
 	return $resource('optimizer/streams', {}, {
-		query: {method: 'GET', isArray: false}
+		query: {
+            method: 'GET',
+            isArray: false,
+            transformResponse: function(data, headersGetter) {
+                if (data === 'null') {
+                    return {null: true};
+                }
+                return angular.fromJson(data);
+            }
+        }
 	})
 })
 .factory('Errors', function($resource) {
 	return $resource('errors', {}, {
-		query: {method: 'GET', isArray: false}
+        query: {method: 'GET', isArray: false}
 	})
 })
 .factory('ErrorsForPair', function($resource) {

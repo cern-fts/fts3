@@ -157,9 +157,22 @@ class AppendQuantile(object):
             yield s
 
 
+def is_stream_optimizer_disabled():
+    """
+    Check if the stream optimizer is disabled
+    """
+    cursor = connection.cursor()
+    cursor.execute("SELECT mode_opt FROM t_optimize_mode")
+    modes = cursor.fetchall()
+    return len(modes) > 0 and modes[0][0] <= 1
+
+
 @require_certificate
 @jsonify
 def get_optimizer_streams(http_request):
+    if is_stream_optimizer_disabled():
+        return None
+
     try:
         time_window = timedelta(hours=int(http_request.GET['time_window']))
     except:
