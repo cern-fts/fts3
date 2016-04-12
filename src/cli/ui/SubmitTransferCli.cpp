@@ -428,7 +428,7 @@ std::map<std::string, std::string> SubmitTransferCli::getParams()
     if (vm.count("nostreams"))
         {
             int val = vm["nostreams"].as<int>();
-            if (val <= 0) throw bad_option("nostreams", "The number of streams has to be greater than 0!");
+            if (val < 0) throw bad_option("nostreams", "The number of streams has to be greater or equal than 0!");
             parameters[JobParameterHandler::NOSTREAMS] = boost::lexical_cast<std::string>(val);
         }
     if (vm.count("timeout"))

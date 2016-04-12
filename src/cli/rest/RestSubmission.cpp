@@ -214,6 +214,11 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
         {
             params.put("strict_copy", true);
         }
+    param_itr = me.parameters.find(JobParameterHandler::NOSTREAMS);
+    if (param_itr != me.parameters.end())
+        {
+            params.put("nostreams", param_itr->second);
+        }
 
 
     // add params to root
