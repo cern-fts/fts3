@@ -59,15 +59,20 @@ MsgIfce::~MsgIfce()
 
 static void set_metadata(json::Object &json, const std::string &key, const std::string &value)
 {
-    try {
-        std::istringstream valueStream(value);
-        json::UnknownElement metadata;
-        json::Reader::Read(metadata, valueStream);
-        json[key] = metadata;
+    if (!value.empty()) {
+        try {
+            std::istringstream valueStream(value);
+            json::UnknownElement metadata;
+            json::Reader::Read(metadata, valueStream);
+            json[key] = metadata;
+            return;
+        }
+        catch (...) {
+            // continue
+        }
     }
-    catch (...) {
-        json[key] = json::String(value);
-    }
+
+    json[key] = json::String(value);
 }
 
 
