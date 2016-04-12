@@ -72,6 +72,9 @@ MinRequiredFreeRAM = 50
 # I seconds, after this interval a host is considered down
 #HeartBeatGraceInterval=120
 
+# Seconds between optimizer runs
+# OptimizerInterval = 60
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer

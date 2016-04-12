@@ -16,40 +16,24 @@
 cmake_minimum_required(VERSION 2.8)
 
 if (ORACLEBUILD STREQUAL "ON")
-install(FILES         oracle-drop.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
-
-install(FILES         oracle-schema.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
+	install(FILES        oracle/fts-schema-1.0.0.sql
+			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle)
+	install(FILES        oracle/fts-diff-1.0.1.sql
+			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle)
+    install(FILES        oracle/fts-diff-2.0.0.sql
+            DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle)
 endif ()
 
 if (MYSQLBUILD STREQUAL "ON")
-
-set(APPLICATION_NAME fts-mysql)
-
-install(FILES         mysql-schema.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
-
-install(FILES         mysql-drop.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
-
-install(FILES         mysql-truncate.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
+	install(FILES       mysql/fts-schema-1.0.0.sql
+			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
+    install(FILES       mysql/fts-diff-1.0.1.sql
+            DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
+    install(FILES       mysql/fts-diff-2.0.0.sql
+            DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
 endif ()
 
-if (ALLBUILD STREQUAL "ON")
-install(FILES         oracle-drop.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
-
-install(FILES         oracle-schema.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
-	
-	install(FILES         mysql-schema.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
-
-install(FILES         mysql-drop.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
-
-install(FILES         mysql-truncate.sql
-        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
+if (SERVERBUILD STREQUAL "ON")
+	install(FILES       fts-database-upgrade.py
+			DESTINATION ${SHARE_INSTALL_PREFIX}/fts)
 endif ()

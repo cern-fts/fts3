@@ -1,3 +1,6 @@
+--
+-- FTS3 Initial Baseline Schema, version 1.0.0
+--
 
 CREATE TABLE t_server_sanity (
   revertToSubmitted TINYINT(1) DEFAULT 0,

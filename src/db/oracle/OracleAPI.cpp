@@ -176,6 +176,31 @@ OracleAPI::~OracleAPI()
 }
 
 
+static void validateSchemaVersion(soci::connection_pool *connectionPool)
+{
+    static const unsigned expect[] = {1, 1};
+    unsigned major, minor;
+
+    soci::session sql(*connectionPool);
+    sql << "SELECT major, minor FROM t_schema_vers ORDER BY major DESC, minor DESC, patch DESC",
+        soci::into(major), soci::into(minor);
+
+    if (major > expect[0]) {
+        throw SystemError("The database schema major version is higher than expected. Please, upgrade fts");
+    }
+    else if (major < expect[0]) {
+        throw SystemError("The database schema major version is lower than expected. Please, upgrade the database");
+    }
+    else if (minor > expect[1]) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
+        << "Database minor version is higher than expected. Fts should be able to run, but it should be upgraded."
+        << commit;
+    }
+    else if (minor < expect[1]) {
+        throw SystemError("The database schema minor version is lower than expected. Please, upgrade the database");
+    }
+}
+
 
 void OracleAPI::init(const std::string& username, const std::string& password,
         const std::string& connectString, int pooledConn)
@@ -200,6 +225,7 @@ void OracleAPI::init(const std::string& username, const std::string& password,
             soci::session &sql = (*connectionPool).at(i);
             sql.open(soci::oracle, connStr);
         }
+        validateSchemaVersion(connectionPool);
     }
     catch (std::exception &e) {
         if (connectionPool) {
@@ -2965,126 +2991,93 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
 }
 
 
-bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname, int &currentActive)
+bool OracleAPI::isTrAllowed(const std::string &sourceStorage, const std::string &destStorage, int &currentActive)
 {
     soci::session sql(*connectionPool);
 
     int maxActive = 0;
-    int active = 0;
     bool allowed = false;
-    soci::indicator isNull = soci::i_ok;
-    int max_per_se = 0;
-    int max_per_link = 0;;
+    std::string activeFixed;
 
-    try {
-        int highDefault = MIN_ACTIVE;
-
-        sql << "SELECT max_per_se, max_per_link "
-            "FROM t_server_config "
-            "WHERE vo_name IS NULL OR vo_name = '*'",
-            soci::into(max_per_se), soci::into(max_per_link);
-
-
-        if (max_per_link > 0)
-            MAX_ACTIVE_PER_LINK = max_per_link;
-        if (max_per_se > 0)
-            MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-
-
-        soci::statement stmt1 = (sql.prepare <<
-                "SELECT active FROM t_optimize_active "
-                "WHERE source_se = :source AND dest_se = :dest_se ",
-                soci::use(source_hostname), soci::use(destin_hostname), soci::into(maxActive, isNull));
-        stmt1.execute(true);
-
-        soci::statement stmt2 = (sql.prepare <<
-                "SELECT count(*) FROM t_file "
-                "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' ",
-                soci::use(source_hostname), soci::use(destin_hostname), soci::into(active));
-        stmt2.execute(true);
-
-        if (isNull != soci::i_null) {
-            if (active < maxActive)
-                allowed = true;
+    try
+    {
+        sql << "SELECT active, fixed FROM t_optimize_active "
+            "WHERE source_se = :source AND dest_se = :dest_se",
+            soci::use(sourceStorage), soci::use(destStorage),
+            soci::into(maxActive), soci::into(activeFixed);
+        if (!sql.got_data()) {
+            maxActive = DEFAULT_MIN_ACTIVE;
         }
 
-        if (active < highDefault) {
-            allowed = true;
-        }
+        sql << "SELECT count(*) FROM t_file "
+            "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
+            soci::use(sourceStorage), soci::use(destStorage),
+            soci::into(currentActive);
 
-        currentActive = active;
+        allowed = (currentActive < maxActive);
     }
-    catch (std::exception &e) {
+    catch (std::exception& e)
+    {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...) {
-        throw UserError(std::string(__func__) + ": Caught exception ");
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
     }
     return allowed;
 }
 
 
-void OracleAPI::getMaxActive(soci::session &sql, int &source, int &destination, const std::string &source_hostname,
-    const std::string &destination_hostname)
+void OracleAPI::getMaxActive(soci::session &sql, const std::string &sourceSe, const std::string &destSe,
+    int *maxSource, int *maxDestination, int *maxPerLink)
 {
-    int maxActiveSource = 0;
-    int maxActiveDest = 0;
-    int max_per_se = 0;
-    int max_per_link = 0;
-
-    try {
-        sql << "SELECT max_per_se, max_per_link "
+    try
+    {
+        sql << "SELECT max_per_link "
             "FROM t_server_config "
-            "WHERE vo_name IS NULL OR vo_name = '*'",
-            soci::into(max_per_se), soci::into(max_per_link);
+            "WHERE max_per_link > 0 AND"
+            "   vo_name IS NULL OR vo_name = '*'",
+            soci::into(*maxPerLink);
 
-        if(max_per_link > 0)
-            MAX_ACTIVE_PER_LINK = max_per_link;
-        if(max_per_se > 0)
-            MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-
-        int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
-
-        //check for source
-        sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
-            soci::use(source_hostname),
-            soci::into(maxActiveSource);
-
-        if (!sql.got_data()) {
-            source = maxDefault;
-        }
-        else if (sql.got_data() && maxActiveSource == -1) {
-            source = maxDefault;
-        }
-        else if (sql.got_data() && maxActiveSource == 0) {
-            source = 0; //stop processing for this source endpoint
-        }
-        else {
-            source = maxActiveSource;
+        if(!sql.got_data() || maxPerLink <= 0) {
+            *maxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
         }
 
-        sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
-            soci::use(destination_hostname),
-            soci::into(maxActiveDest);
+        int maxPerSe = 0;
+        sql << "SELECT max_per_se "
+            "FROM t_server_config "
+            "WHERE max_per_se > 0 AND"
+            "   vo_name IS NULL OR vo_name = '*'",
+            soci::into(maxPerSe);
 
-        if (!sql.got_data()) {
-            destination = maxDefault;
+        if(!sql.got_data() || maxPerSe <= 0) {
+            maxPerSe = DEFAULT_MAX_ACTIVE_ENDPOINT_LINK;
         }
-        else if (sql.got_data() && maxActiveDest == -1) {
-            destination = maxDefault;
+
+        // check for source
+        sql << "SELECT active FROM t_optimize WHERE source_se = :source_se AND active IS NOT NULL",
+            soci::use(sourceSe),
+            soci::into(*maxSource);
+
+        if (!sql.got_data() || *maxSource < 0) {
+            *maxSource = maxPerSe;
         }
-        else if (sql.got_data() && maxActiveDest == 0) {
-            destination = 0; //stop processing for this destination endpoint
-        }
-        else {
-            destination = maxActiveDest;
+
+        sql << "SELECT active FROM t_optimize WHERE dest_se = :dest_se AND active IS NOT NULL",
+            soci::use(destSe),
+            soci::into(*maxDestination);
+
+        if (!sql.got_data() || *maxDestination < 0) {
+            *maxDestination = maxPerSe;
         }
     }
-    catch (std::exception &e) {
+    catch (std::exception& e)
+    {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...) {
-        throw UserError(std::string(__func__) + ": Caught exception ");
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
 
@@ -3125,15 +3118,11 @@ bool OracleAPI::updateOptimizer()
     int activeDestination = 0;
     double avgDuration = 0.0;
     soci::indicator isNullAvg = soci::i_ok;
-    int max_per_se = 0;
-    int max_per_link = 0;
-
 
     try
     {
         //check optimizer level, minimum active per link
-        int highDefault = MIN_ACTIVE;
-
+        int highDefault = DEFAULT_MIN_ACTIVE;
 
         //based on the level, how many transfers will be spawned
         int spawnActive = getOptimizerDefaultMode(sql);
@@ -3260,14 +3249,6 @@ bool OracleAPI::updateOptimizer()
                                      soci::use(destin_hostname),
                                      soci::into(allTested));
 
-        sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-
-        if(max_per_link > 0)
-            MAX_ACTIVE_PER_LINK = max_per_link;
-        if(max_per_se > 0)
-            MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-
-
         for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
         {
 
@@ -3314,7 +3295,7 @@ bool OracleAPI::updateOptimizer()
             avgDuration = 0.0;
             isNullAvg = soci::i_ok;
             active_fixed = "off";
-            highDefault = MIN_ACTIVE;
+            highDefault = DEFAULT_MIN_ACTIVE;
 
             // Weighted average
             soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3457,7 +3438,7 @@ bool OracleAPI::updateOptimizer()
 
             lanTransferBool = isLanTransfer(source_hostname, destin_hostname);
             if(lanTransferBool)
-                highDefault = LAN_ACTIVE;
+                highDefault = DEFAULT_LAN_ACTIVE;
 
             //get the average transfer duration for this link
             stmt_avg_duration.execute(true);
@@ -3603,48 +3584,10 @@ bool OracleAPI::updateOptimizer()
                 //make sure it doesn't grow beyond the limits
                 int maxSource = 0;
                 int maxDestination = 0;
-                getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
+                int maxPerLink = 0;
+                getMaxActive(sql, source_hostname, destin_hostname, &maxSource, &maxDestination, &maxPerLink);
 
-                //FTS3 admin requested to stop processing for this source or destination endpoints
-                if(maxSource == 0 || maxDestination == 0)
-                {
-                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                    continue;
-                }
-                else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-                {
-                    //do nothing, use default for both
-                }
-                else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
-                {
-                    if(maxSource > maxDestination)
-                    {
-                        maxSource =     maxDestination; //take the min
-                    }
-                    else if( maxDestination > maxSource)
-                    {
-                        maxDestination = maxSource;
-                    }
-                    else
-                    {
-                        //do nothing
-                    }
-                }
-                else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-                {
-                    maxDestination = maxSource;
-                }
-                else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
-                {
-                    maxSource = maxDestination;
-                }
-                else
-                {
-                    //do nothing, use default
-                }
-
-
-                if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
+                if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= maxPerLink)
                 {
                     if(ratioSuccessFailure >= MED_SUCCESS_RATE )
                     {
@@ -7335,7 +7278,7 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {
-    int modeDefault = MIN_ACTIVE;
+    int modeDefault = DEFAULT_MIN_ACTIVE;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 

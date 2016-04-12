@@ -39,6 +39,7 @@ add_subdirectory (cli)
 add_subdirectory (common)
 add_subdirectory (config)
 add_subdirectory (msg-bus)
+add_subdirectory (server)
 add_subdirectory (url-copy)
 
 # Build THE test binary

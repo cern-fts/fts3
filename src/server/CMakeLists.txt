@@ -41,6 +41,7 @@ target_link_libraries(fts_server_gsoap_transfer
     fts_config
     fts_db_generic
     fts_msg_ifce
+	fts_proxy
     gridsite
     cgsi_plugin_voms_cpp
 )

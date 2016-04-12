@@ -126,7 +126,7 @@ public:
 
     bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
-    bool updateOptimizer();
+    fts3::optimizer::OptimizerDataSource* getOptimizerDataSource();
 
     bool isTrAllowed(const std::string & source_se, const std::string & dest, int &currentActive);
 

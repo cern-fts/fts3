@@ -446,7 +446,8 @@ private:
             const std::string & destination_hostname, int active,
             double throughput, double successRate, int pathFollowed, int bandwidth);
 
-    void getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname);
+    void getMaxActive(soci::session &sql, const std::string &sourceSe, const std::string &destSe,
+        int *maxSource, int *maxDestination, int *maxPerLink);
 
     std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 

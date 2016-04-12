@@ -66,7 +66,6 @@ public:
 
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
-    std::vector<StoragePairState> filesMemStore;
 
     virtual void init(const std::string& username, const std::string& password,
             const std::string& connectString, int pooledConn);
@@ -156,7 +155,7 @@ public:
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
-    virtual bool updateOptimizer();
+    virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource();
 
     virtual bool isTrAllowed(const std::string& sourceStorage,
             const std::string & destStorage, int &currentActive);
@@ -425,15 +424,7 @@ private:
 
     std::string getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
-    bool bandwidthChecker(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int& bandwidth);
-
     int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
-
-    int getOptimizerMode(soci::session& sql);
-
-    int getOptimizerDefaultMode(soci::session& sql);
-
-    bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int& throughputSamples, int& throughputSamplesStored);
 
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
                                           std::string transfer_message, int process_id, double filesize, double duration, bool retry);
@@ -444,13 +435,6 @@ private:
 
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
                                          const fts3::events::MessageBringonline& msg);
-
-    void updateOptimizerEvolution(soci::session& sql,
-            const std::string & source_hostname,
-            const std::string & destination_hostname, int active,
-            double throughput, double successRate, int pathFollowed, int bandwidth);
-
-    void getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname);
 
     std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 

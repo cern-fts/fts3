@@ -270,6 +270,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["HeartBeatGraceInterval"]) )->default_value("120"),
         "After this many seconds, a host is considered to be down"
     )
+    (
+        "OptimizerSteadyInterval",
+        po::value<std::string>( &(_vars["OptimizerSteadyInterval"]) )->default_value("300"),
+        "After this time without optimizer updates, force a run"
+    )
+    (
+        "OptimizerInterval",
+        po::value<std::string>( &(_vars["OptimizerInterval"]) )->default_value("60"),
+        "Seconds between optimizer runs"
+    )
     ;
     return config;
 }

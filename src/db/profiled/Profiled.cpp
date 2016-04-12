@@ -243,9 +243,9 @@ bool ProfiledDB::isCredentialExpired(const std::string & dlg_id, const std::stri
 }
 
 
-bool ProfiledDB::updateOptimizer()
+fts3::optimizer::OptimizerDataSource* ProfiledDB::getOptimizerDataSource()
 {
-    PROFILE_PREFIXED("DB::", return db->updateOptimizer());
+    PROFILE_PREFIXED("DB::", return db->getOptimizerDataSource());
 }
 
 bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest,int &currentActive)

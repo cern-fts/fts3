@@ -57,6 +57,8 @@
 #include "msg-bus/events.h"
 #include "profiler/Profiler.h"
 
+#include "server/services/optimizer/Optimizer.h"
+
 
 /// Hold information about individual submitted transfers
 struct SubmittedTransfer
@@ -356,8 +358,8 @@ public:
     /// @note This does nothing really, since it uses defaults to initialize the return value (!?)
     virtual OptimizerSample fetchOptimizationConfig(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
-    /// *this* is the optimizer
-    virtual bool updateOptimizer() = 0;
+    /// Optimizer data source
+    virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource() = 0;
 
     /// Checks if there are available slots to run transfers for the given pair
     /// @param sourceStorage        The source storage  (as protocol://host)

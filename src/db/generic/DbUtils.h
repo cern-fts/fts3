@@ -37,18 +37,11 @@ using namespace fts3::config;
 namespace db
 {
 
-int MAX_ACTIVE_PER_LINK = 60;
-int MAX_ACTIVE_ENDPOINT_LINK = 60;
-const int MIN_ACTIVE = 2;
-const int LAN_ACTIVE = 10;
+const int DEFAULT_MIN_ACTIVE = 2;
+const int DEFAULT_LAN_ACTIVE = 10;
 const int DEFAULT_RETRY_DELAY = 120;
 const int STREAMS_UPDATE_SAMPLE = 120;
 const int STREAMS_UPDATE_MAX = 36000;
-const double EMA = 0.7;
-const int MAX_SUCCESS_RATE = 100;
-const int MED_SUCCESS_RATE = 98;
-const int LOW_SUCCESS_RATE = 97;
-const int BASE_SUCCESS_RATE = 96;
 const int HIGH_THROUGHPUT = 50;
 const int AVG_TRANSFER_DURATION = 15;
 const int MAX_TRANSFER_DURATION = 3600;
@@ -89,15 +82,6 @@ inline bool is_mhop(const std::list<SubmittedTransfer>& transfers)
         }
 
     return true;
-}
-
-
-/*borrowed from http://oroboro.com/irregular-ema/*/
-inline double exponentialMovingAverage( double sample, double alpha, double cur )
-{
-    if(sample > 0)
-        cur = ( sample * alpha ) + (( 1-alpha) * cur );
-    return cur;
 }
 
 

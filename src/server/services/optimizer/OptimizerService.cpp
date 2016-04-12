@@ -18,7 +18,9 @@
  * limitations under the License.
  */
 
+#include <config/ServerConfig.h>
 #include "OptimizerService.h"
+#include "Optimizer.h"
 
 #include "db/generic/SingleDbInstance.h"
 #include "common/Logger.h"
@@ -26,6 +28,8 @@
 
 namespace fts3 {
 namespace server {
+
+using optimizer::Optimizer;
 
 
 OptimizerService::OptimizerService(): BaseService("OptimizerService")
@@ -35,21 +39,24 @@ OptimizerService::OptimizerService(): BaseService("OptimizerService")
 
 void OptimizerService::runService()
 {
-    while (!boost::this_thread::interruption_requested())
-    {
-        try
-        {
-            db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
+    auto optimizerInterval = config::ServerConfig::instance().get<int>("OptimizerInterval");
+    auto optimizerSteadyInterval = config::ServerConfig::instance().get<int>("OptimizerSteadyInterval");
+
+    Optimizer optimizer(db::DBSingleton::instance().getDBObjectInstance()->getOptimizerDataSource());
+    optimizer.setSteadyInterval(optimizerSteadyInterval);
+
+    while (!boost::this_thread::interruption_requested()) {
+        try {
+            optimizer.run();
         }
-        catch (std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() << fts3::common::commit;
+        catch (std::exception &e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService " << e.what() <<
+            fts3::common::commit;
         }
-        catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" << fts3::common::commit;
+        catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService unknown" << fts3::common::commit;
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(15));
+        boost::this_thread::sleep(boost::posix_time::seconds(optimizerInterval));
     }
 }
 

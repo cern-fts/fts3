@@ -1,9 +1,5 @@
 #
-# Copyright (c) CERN 2013-2015
-#
-# Copyright (c) Members of the EMI Collaboration. 2010-2013
-#  See  http://www.eu-emi.eu/partners for details on the copyright
-#  holders.
+# Copyright (c) CERN 2016
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,16 +16,4 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-add_definitions(-DBOOST_DISABLE_ASSERTS)
-
-add_subdirectory(generic)
-add_subdirectory(profiled)
-add_subdirectory(schema)
-
-#if (ORACLEBUILD)
-#    add_subdirectory(oracle)
-#endif ()
-
-if (MYSQLBUILD)
-    add_subdirectory(mysql)
-endif ()
+define_test (Optimizer fts_server_lib)
