@@ -47,17 +47,21 @@
     <table class="table">
         <thead>
             <tr>
-                <th width="10%">Timestamp</th>
-                <th width="10%" class="numeric">Active</th>
+                <th width="6%">Timestamp</th>
+                <th width="10%" class="numeric">Optimizer decision</th>
+                <th width="10%" class="numeric">Running</th>
+                <th width="10%" class="numeric">Queue size</th>
                 <th width="10%" class="numeric">Success rate (last 1min)</th>
                 <th width="10%" class="numeric">Throughput</th>
-                <th width="60%">Decision</th>
+                <th width="44%">Decision</th>
             </tr>
         </thead>
         <tbody>
             <tr data-ng-repeat="o in optimizer.evolution.items" data-ng-class-odd="'odd'" class="optimizer-branch-{{o.branch}}">
                 <td>{{ o.datetime }}</td>
                 <td class="numeric">{{ o.active }}</td>
+                <td class="numeric">{{ o.actual_active }}</td>
+                <td class="numeric">{{ o.queue_size }}</td>
                 <td class="numeric">{{ o.success|number:2 }}%</td>
                 <td class="numeric">{{ o.throughput|number:3 }} MB/s</td>
                 <td data-ng-switch data-on="o.branch">

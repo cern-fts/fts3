@@ -123,7 +123,7 @@ def get_optimizer_details(http_request):
 
     optimizer = OptimizerEvolution.objects.filter(source_se=source_se, dest_se=dest_se)
     optimizer = optimizer.filter(datetime__gte=not_before)
-    optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch')
+    optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch', 'actual_active', 'queue_size')
     optimizer = optimizer.order_by('-datetime')
 
     fixed = OptimizeActive.objects.filter(fixed='on', source_se=source_se, dest_se=dest_se)

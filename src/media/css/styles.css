@@ -225,16 +225,17 @@ td.SUBMITTED, .SUBMITTED {
     border-left: solid 12px #999999;
 }
 
-.optimizer-branch-1 {
+.optimizer-branch-1, .optimizer-branch-3 {
 	border-left: solid 12px #468847;
 }
 
 .optimizer-branch-2, .optimizer-branch-6,
-.optimizer-branch-7, .optimizer-branch-9 {
+.optimizer-branch-7, .optimizer-branch-9,
+.optimizer-branch-15 {
 	border-left: solid 12px #3a87ad;
 }
 
-.optimizer-branch-3, .optimizer-branch-4,
+.optimizer-branch-4,
 .optimizer-branch-5, .optimizer-branch-8 {
 	border-left: solid 12px #b94a48;
 }
