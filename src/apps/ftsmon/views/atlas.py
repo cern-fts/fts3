@@ -19,13 +19,11 @@
 
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Count
-import types
 
-from ftsweb.models import Job, File, OptimizeActive
 from authn import require_certificate
 from jobs import setup_filters
 from jsonify import jsonify
+from overview import OverviewExtended
 from util import get_order_by, paged, db_to_date
 
 
@@ -58,76 +56,6 @@ def _get_pair_udt(udt_pairs, source, destination):
         elif not udt_pairs[0] and udt_pairs[1] == destination:
             return True
     return False
-
-
-class OverviewExtended(object):
-    """
-    Wraps the return of overview, so when iterating, we can retrieve
-    additional information.
-    This way we avoid doing it for all items. Only those displayed will be queried
-    (i.e. paging)
-    """
-
-    def __init__(self, not_before, objects, cursor):
-        self.objects = objects
-        self.not_before = not_before
-        self.cursor = cursor
-
-    def __len__(self):
-        return len(self.objects)
-
-    def _get_frequent_error(self, source, destination, vo):
-        reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
-            .filter(job_finished__gte=self.not_before, file_state='FAILED') \
-            .values('reason').annotate(count=Count('reason')).values('reason', 'count').order_by('-count')[:1]
-        if len(reason) > 0:
-            return "[%(count)d] %(reason)s" % reason[0]
-        else:
-            return None
-
-    def _get_fixed(self, source, destination):
-        oa = OptimizeActive.objects.filter(source_se=source, dest_se=destination).values('fixed').all()
-        if len(oa):
-            oa = oa[0]
-            return oa['fixed'] is not None and oa['fixed'].lower == 'on'
-        return False
-
-    def _get_average(self, source, destination, vo, active):
-        if active > 0:
-            query = """
-            SELECT AVG(throughput), AVG(tx_duration) FROM t_file
-            WHERE source_se = %s AND dest_se = %s AND vo_name = %s
-                AND file_state in ('ACTIVE','FINISHED') AND throughput > 0
-                AND (job_finished is NULL OR job_finished > """ + db_to_date() + ")"
-            self.cursor.execute(query, [source, destination, vo, self.not_before])
-            result = self.cursor.fetchall()
-            if len(result):
-                avg_thr, avg_duration = result[0]
-                total_thr = avg_thr * active if avg_thr is not None else None
-                return total_thr, avg_duration
-        return None, None
-
-    def _get_job_state_count(self, source, destination, vo):
-        states_count = Job.objects.filter(
-            source_se=source, dest_se=destination, vo_name=vo, reuse_job__in=['Y', 'N'], job_finished__isnull=True
-        ).values('job_state').annotate(count=Count('job_state')).values('job_state', 'count')
-        states = dict()
-        for row in states_count:
-            states[row['job_state'].lower()] = row['count']
-        return states
-
-    def __getitem__(self, indexes):
-        if isinstance(indexes, types.SliceType):
-            return_list = self.objects[indexes]
-            for item in return_list:
-                item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
-                                                                       item['vo_name'])
-                item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
-                item['current'], item['avg_duration'] = self._get_average(item['source_se'], item['dest_se'], item['vo_name'], item.get('active', 0))
-                #item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
-            return return_list
-        else:
-            return self.objects[indexes]
 
 
 @require_certificate
