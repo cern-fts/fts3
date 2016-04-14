@@ -107,8 +107,9 @@ class OverviewExtended(object):
         """
         Calculate throughput (in MB) over this pair + vo over the last minute
         """
+        now = datetime.utcnow()
         window_size = 60
-        window_start = datetime.utcnow() - timedelta(seconds=window_size)
+        window_start = now - timedelta(seconds=window_size)
 
         # Get all transfers than were running during the time window
         transfers = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo)\
@@ -121,14 +122,14 @@ class OverviewExtended(object):
         total_bytes = 0.0
         for transfer in transfers:
             if transfer['finish_time'] is None:
-                period_in_window = datetime.utcnow() - max(transfer['start_time'], window_start)
+                period_in_window = now - max(transfer['start_time'], window_start)
             else:
                 period_in_window = transfer['finish_time'] - max(transfer['start_time'], window_start)
 
             bytes_in_window = 0
             if period_in_window > timedelta(seconds=0):
                 if transfer['finish_time'] is None:
-                    duration = _seconds(datetime.utcnow() - transfer['start_time'])
+                    duration = _seconds(now - transfer['start_time'])
                     if duration > 0:
                         bytes_in_window = (float(transfer['transferred']) / duration) * _seconds(period_in_window)
                 else:
