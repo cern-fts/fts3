@@ -114,7 +114,7 @@ class OverviewExtended(object):
         # Get all transfers than were running during the time window
         transfers = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo)\
             .values('job_id', 'file_id', 'filesize', 'finish_time', 'start_time', 'transferred') \
-            .filter(file_state__in=['FINISHED', 'ACTIVE', 'FAILED']) \
+            .filter(file_state__in=['FINISHED', 'ACTIVE', 'FAILED', 'CANCELED']) \
             .filter(start_time__isnull=False) \
             .filter(Q(job_finished__gte=window_start) | Q(job_finished__isnull=True))
 
