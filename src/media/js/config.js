@@ -214,7 +214,7 @@ function _plotDataFromCount(activeCount, key)
     var total = 0;
     for (var activity in activeCount) {
         if (activity[0] != '$') {
-            var value = undefinedAsZero(activeCount[activity][key]);
+            var value = undefinedAsZero(activeCount[activity]['count'][key]);
             total += value;
             points.push({x: activity, y: [value]});
         }
