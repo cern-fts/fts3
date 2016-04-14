@@ -19,7 +19,7 @@
 
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Count
+from django.db.models import Count, Q
 import types
 
 from ftsweb.models import Job, File, OptimizeActive
@@ -61,6 +61,10 @@ def _get_pair_udt(udt_pairs, source, destination):
     return False
 
 
+def _seconds(td):
+    return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+
+
 class OverviewExtended(object):
     """
     Wraps the return of overview, so when iterating, we can retrieve
@@ -78,6 +82,9 @@ class OverviewExtended(object):
         return len(self.objects)
 
     def _get_frequent_error(self, source, destination, vo):
+        """
+        Get the most frequent error for the pair + vo
+        """
         reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
             .filter(job_finished__gte=self.not_before, file_state='FAILED') \
             .values('reason').annotate(count=Count('reason')).values('reason', 'count').order_by('-count')[:1]
@@ -87,35 +94,52 @@ class OverviewExtended(object):
             return None
 
     def _get_fixed(self, source, destination):
+        """
+        Return true if the number of actives is fixed for this pair
+        """
         oa = OptimizeActive.objects.filter(source_se=source, dest_se=destination).values('fixed').all()
         if len(oa):
             oa = oa[0]
             return oa['fixed'] is not None and oa['fixed'].lower == 'on'
         return False
 
-    def _get_average(self, source, destination, vo, active):
-        if active > 0:
-            query = """
-            SELECT AVG(throughput), AVG(tx_duration) FROM t_file
-            WHERE source_se = %s AND dest_se = %s AND vo_name = %s
-                AND file_state in ('ACTIVE','FINISHED') AND throughput > 0
-                AND (job_finished is NULL OR job_finished > """ + db_to_date() + ")"
-            self.cursor.execute(query, [source, destination, vo, self.not_before])
-            result = self.cursor.fetchall()
-            if len(result):
-                avg_thr, avg_duration = result[0]
-                total_thr = avg_thr * active if avg_thr is not None else None
-                return total_thr, avg_duration
-        return None, None
+    def _get_throughput(self, source, destination, vo):
+        """
+        Calculate throughput (in MB) over this pair + vo over the last minute
+        """
+        window_size = 60
+        window_start = datetime.utcnow() - timedelta(seconds=window_size)
 
-    def _get_job_state_count(self, source, destination, vo):
-        states_count = Job.objects.filter(
-            source_se=source, dest_se=destination, vo_name=vo, reuse_job__in=['Y', 'N'], job_finished__isnull=True
-        ).values('job_state').annotate(count=Count('job_state')).values('job_state', 'count')
-        states = dict()
-        for row in states_count:
-            states[row['job_state'].lower()] = row['count']
-        return states
+        # Get all transfers than were running during the time window
+        transfers = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo)\
+            .values('job_id', 'file_id', 'filesize', 'finish_time', 'start_time', 'transferred') \
+            .filter(file_state__in=['FINISHED', 'ACTIVE', 'FAILED']) \
+            .filter(start_time__isnull=False) \
+            .filter(Q(job_finished__gte=window_start) | Q(job_finished__isnull=True))
+
+        # Calculate bytes transferred, proportional to the time these transfers were inside the window
+        total_bytes = 0.0
+        for transfer in transfers:
+            if transfer['finish_time'] is None:
+                period_in_window = datetime.utcnow() - max(transfer['start_time'], window_start)
+            else:
+                period_in_window = transfer['finish_time'] - max(transfer['start_time'], window_start)
+
+            bytes_in_window = 0
+            if period_in_window > timedelta(seconds=0):
+                if transfer['finish_time'] is None:
+                    duration = _seconds(datetime.utcnow() - transfer['start_time'])
+                    if duration > 0:
+                        bytes_in_window = (float(transfer['transferred']) / duration) * _seconds(period_in_window)
+                else:
+                    # tx_duration may be 0 in case of FAILED, CANCELED, so calculate ourselves
+                    duration = _seconds(transfer['finish_time'] - transfer['start_time'])
+                    if duration > 0:
+                        bytes_in_window = (float(transfer['filesize']) / duration) * _seconds(period_in_window)
+
+            total_bytes += bytes_in_window
+
+        return total_bytes, (total_bytes / window_size) / 1024**2
 
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
@@ -124,8 +148,7 @@ class OverviewExtended(object):
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
                 item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
-                item['current'], item['avg_duration'] = self._get_average(item['source_se'], item['dest_se'], item['vo_name'], item.get('active', 0))
-                #item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
+                item['transferred'], item['current'] = self._get_throughput(item['source_se'], item['dest_se'], item['vo_name'])
             return return_list
         else:
             return self.objects[indexes]
