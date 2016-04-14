@@ -54,6 +54,7 @@ def get_optimizer_pairs(http_request):
         from_fixed = from_fixed.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
         from_fixed = from_fixed.filter(dest_se=http_request.GET['dest_se'])
+    from_fixed = from_fixed.filter(fixed='on')
 
     from_fixed = from_fixed.values('source_se', 'dest_se', 'fixed').distinct()
 
