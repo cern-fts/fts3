@@ -520,8 +520,8 @@ void GSoapContextAdapter::setConfiguration (std::vector<std::string> const &cfgs
     implcfg__setConfigurationResponse resp;
     if (soap_call_implcfg__setConfiguration(ctx, endpoint.c_str(), 0, config, resp))
         throw gsoap_error(ctx);
-    soap_delete_implcfg__setConfigurationResponse(ctx, &resp);
-    soap_delete_config__Configuration(ctx, config);
+    soap_delete(ctx, &resp);
+    soap_delete(ctx, config);
 }
 
 void GSoapContextAdapter::getConfiguration (std::string src, std::string dest, std::string all, std::string name, implcfg__getConfigurationResponse& resp)
@@ -536,7 +536,7 @@ std::vector<std::string> GSoapContextAdapter::getConfiguration (std::string src,
     if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, all, name, src, dest, resp))
         throw gsoap_error(ctx);
     std::vector<std::string> cfg = resp.configuration->cfg;
-    soap_delete_implcfg__getConfigurationResponse(ctx, &resp);
+    soap_delete(ctx, &resp);
     return cfg;
 }
 
@@ -553,8 +553,8 @@ void GSoapContextAdapter::delConfiguration(std::vector<std::string> const &cfgs)
     implcfg__delConfigurationResponse resp;
     if (soap_call_implcfg__delConfiguration(ctx, endpoint.c_str(), 0, config, resp))
         throw gsoap_error(ctx);
-    soap_delete_implcfg__delConfigurationResponse(ctx,&resp);
-    soap_delete_config__Configuration(ctx,config);
+    soap_delete(ctx,&resp);
+    soap_delete(ctx,config);
 }
 
 void GSoapContextAdapter::setMaxOpt(std::tuple<std::string, int, std::string> const & triplet, std::string const & opt)
@@ -597,7 +597,7 @@ std::string GSoapContextAdapter::getBandwidthLimit()
     if (soap_call_implcfg__getBandwidthLimit(ctx, endpoint.c_str(), 0, resp))
         throw gsoap_error(ctx);
     std::string limit = resp.limit;
-    soap_delete_implcfg__getBandwidthLimitResponse(ctx, &resp);
+    soap_delete(ctx, &resp);
     return limit;
 }
 
