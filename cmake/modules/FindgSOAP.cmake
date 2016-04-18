@@ -87,6 +87,15 @@ find_program(GSOAP_SOAPCPP2
 )
 
 # -----------------------------------------------------
+# GSOAP Import Include Directory
+# -----------------------------------------------------
+find_path(GSOAP_IMPORT_DIR 
+    NAMES stlvector.h
+    HINTS /usr/include/gsoap /usr/share/gsoap/import
+    DOC "The gsoap include directory"
+)
+
+# -----------------------------------------------------
 # GSOAP_276_COMPAT_FLAGS and GSOAPVERSION
 # try to determine the flagfor the 2.7.6 compatiblity, break with 2.7.13 and re-break with 2.7.16
 # ----------------------------------------------------
@@ -121,4 +130,5 @@ endif ( "${GSOAP_VERSION}"  VERSION_LESS "2.7.6")
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(gsoap DEFAULT_MSG GSOAP_LIBRARIES 
     GSOAP_INCLUDE_DIR GSOAP_WSDL2H GSOAP_SOAPCPP2)
-mark_as_advanced(GSOAP_INCLUDE_DIR GSOAP_LIBRARIES GSOAP_DEFINITIONS GSOAP_WSDL2H GSOAP_SOAPCPP2)
+mark_as_advanced(GSOAP_INCLUDE_DIR GSOAP_LIBRARIES GSOAP_DEFINITIONS GSOAP_WSDL2H
+    GSOAP_SOAPCPP2 GSOAP_IMPORT_DIR)
