@@ -1,16 +1,3 @@
-# Copyright @ Members of the EMI Collaboration, 2010.
-# See www.eu-emi.eu for details on the copyright holders.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
-#
-#    http://www.apache.org/licenses/LICENSE-2.0 
-#
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific
 #
 # This module detects if gsoap is installed and determines where the
 # include files and libraries are.
@@ -28,38 +15,59 @@
 #   setting this enables search for gsoap libraries / headers in this location
 
 
+# ------------------------------------------------------
+# try pkg config search
+#
 # -----------------------------------------------------
-# GSOAP Libraries
+
+
+find_package(PkgConfig)
+pkg_check_modules(PC_GSOAP gsoap)
+
+IF(PC_GSOAP_FOUND)
+
+    SET(GSOAP_LIBRARIES ${PC_GSOAP_LIBRARIES})
+    SET(GSOAP_INCLUDE_DIR ${PC_GSOAP_INCLUDE_DIRS})
+    if (NOT GSOAP_INCLUDE_DIR)
+        set (GSOAP_INCLUDE_DIR "/usr/include")
+    endif (NOT GSOAP_INCLUDE_DIR)
+    SET(GSOAP_DEFINITIONS "${PC_GSOAP_CFLAGS} ${PC_GSOAP_CFLAGS_OTHER}")
+
+ELSE(PC_GSOAP_FOUND)
+
+    # -----------------------------------------------------
+    # GSOAP Libraries
+    # -----------------------------------------------------
+    find_library(GSOAP_LIBRARIES
+        NAMES gsoap
+        HINTS ${GSOAP_LOCATION} 
+              ${CMAKE_INSTALL_PREFIX}/gsoap/*/${PLATFORM}/
+        DOC "The main gsoap library"
+    )
+    
+    # -----------------------------------------------------
+    # GSOAP Include Directories
+    # -----------------------------------------------------
+    find_path(GSOAP_INCLUDE_DIR 
+        NAMES stdsoap2.h
+        HINTS ${GSOAP_LOCATION}
+              ${CMAKE_INSTALL_PREFIX}/gsoap/*/${PLATFORM}/
+        DOC "The gsoap include directory"
+    )
+    
+    SET(GSOAP_DEFINITIONS "")
+
+ENDIF(PC_GSOAP_FOUND)
+
 # -----------------------------------------------------
-find_library(GSOAP_LIBRARIES
-    NAMES gsoap++
-    HINTS ${GSOAP_LOCATION}/lib ${GSOAP_LOCATION}/lib64 
-          ${GSOAP_LOCATION}/lib32
-    DOC "The main gsoap library"
-)
+# GSOAP ssl Libraries
+# -----------------------------------------------------
+
 find_library(GSOAP_SSL_LIBRARIES
     NAMES gsoapssl
-    HINTS ${GSOAP_LOCATION}/lib ${GSOAP_LOCATION}/lib64 
-          ${GSOAP_LOCATION}/lib32
+    HINTS ${GSOAP_LOCATION} 
+          ${CMAKE_INSTALL_PREFIX}/gsoap/*/${PLATFORM}/
     DOC "The ssl gsoap library"
-)
-
-# -----------------------------------------------------
-# GSOAP Include Directories
-# -----------------------------------------------------
-find_path(GSOAP_INCLUDE_DIR 
-    NAMES stdsoap2.h
-    HINTS ${GSOAP_LOCATION} ${GSOAP_LOCATION}/include ${GSOAP_LOCATION}/include/*
-    DOC "The gsoap include directory"
-)
-
-# -----------------------------------------------------
-# GSOAP Import Include Directory
-# -----------------------------------------------------
-find_path(GSOAP_IMPORT_DIR 
-    NAMES stlvector.h
-    HINTS /usr/include/gsoap /usr/share/gsoap/import
-    DOC "The gsoap include directory"
 )
 
 # -----------------------------------------------------
@@ -68,11 +76,13 @@ find_path(GSOAP_IMPORT_DIR
 find_program(GSOAP_WSDL2H
     NAMES wsdl2h
     HINTS ${GSOAP_LOCATION}/bin
+          ${CMAKE_INSTALL_PREFIX}/gsoap/*/${PLATFORM}/bin/
     DOC "The gsoap bin directory"
 )
 find_program(GSOAP_SOAPCPP2
     NAMES soapcpp2
     HINTS ${GSOAP_LOCATION}/bin
+          ${CMAKE_INSTALL_PREFIX}/gsoap/*/${PLATFORM}/bin/
     DOC "The gsoap bin directory"
 )
 
@@ -83,6 +93,8 @@ find_program(GSOAP_SOAPCPP2
 message(STATUS " - wsdlh : ${GSOAP_WSDL2H}")
 message(STATUS " - SOAPCPP2 : ${GSOAP_SOAPCPP2}")
 
+# some versions of soapcpp2 interpret "-v" as verbose, and hang while waiting for input
+# try "-help" first, and if it fails, do "-v"
 execute_process(COMMAND ${GSOAP_SOAPCPP2}  "-help"   OUTPUT_VARIABLE GSOAP_STRING_VERSION ERROR_VARIABLE GSOAP_STRING_VERSION )
 string(REGEX MATCH "[0-9]*\\.[0-9]*\\.[0-9]*" GSOAP_VERSION ${GSOAP_STRING_VERSION})
 
@@ -100,12 +112,7 @@ else ( "${GSOAP_VERSION}"  VERSION_LESS "2.7.14")
 	set(GSOAP_276_COMPAT_FLAGS "-z1 -z2")	
 endif ( "${GSOAP_VERSION}"  VERSION_LESS "2.7.6")
 
-# -----------------------------------------------------
-# GSOAP C / C++ flags
-# ----------------------------------------------------
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set (GSOAP_CXX_FLAGS "-DSOAP_DEBUG -DSOAP_MEM_DEBUG")
-endif ()
+
 
 # -----------------------------------------------------
 # handle the QUIETLY and REQUIRED arguments and set GSOAP_FOUND to TRUE if 
@@ -114,4 +121,4 @@ endif ()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(gsoap DEFAULT_MSG GSOAP_LIBRARIES 
     GSOAP_INCLUDE_DIR GSOAP_WSDL2H GSOAP_SOAPCPP2)
-mark_as_advanced(GSOAP_INCLUDE_DIR GSOAP_LIBRARIES GSOAP_WSDL2H GSOAP_SOAPCPP2)
+mark_as_advanced(GSOAP_INCLUDE_DIR GSOAP_LIBRARIES GSOAP_DEFINITIONS GSOAP_WSDL2H GSOAP_SOAPCPP2)
