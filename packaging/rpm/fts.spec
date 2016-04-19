@@ -241,6 +241,7 @@ mkdir build
 cd build
 %cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
     -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
+    -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX='' \
 %if %systemd
