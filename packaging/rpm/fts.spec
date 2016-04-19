@@ -20,11 +20,11 @@ License:    ASL 2.0
 URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.3.1
-#  cd fts-3.3.1
-#  git submodule init && git submodule update
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.5.0
+#  cd fts-3.5.0
+#  git checkout v3.5.0
 #  cd ..
-#  tar --exclude-vcs -vczf fts-3.3.1.tar.gz fts-3.3.1
+#  tar --exclude-vcs -vczf fts-3.5.0.tar.gz fts-3.5.0
 Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -40,12 +40,7 @@ BuildRequires:  boost148-devel
 BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
 
-%if %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:  cmake
-%else
-BuildRequires:  cmake28
-%endif
-
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 %if 0%{?el5}
@@ -147,10 +142,10 @@ Requires(post):		systemd
 Requires(preun):	systemd
 Requires(postun):	systemd
 %else
-Requires(post):     chkconfig
-Requires(preun):    chkconfig
-Requires(preun):    initscripts
-Requires(postun):   initscripts
+Requires(post):		chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
+Requires(postun):	initscripts
 %endif
 
 %description infosys
@@ -244,26 +239,14 @@ fi
 # Build
 mkdir build
 cd build
-%if %{?rhel}%{!?rhel:0} >= 6
-    %cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
-        -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
-        -DTESTBUILD=ON \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DCMAKE_INSTALL_PREFIX='' \
+%cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
+    -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_INSTALL_PREFIX='' \
 %if %systemd
-        -DSYSTEMD_INSTALL_DIR=%{_unitdir} \
+    -DSYSTEMD_INSTALL_DIR=%{_unitdir} \
 %endif
-        ..
-%else
-    %cmake28 -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
-        -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DCMAKE_INSTALL_PREFIX='' \
-%if %systemd
-        -DSYSTEMD_INSTALL_DIR=%{_unitdir} \
-%endif
-        ..
-%endif
+    ..
 
 make %{?_smp_mflags}
 
@@ -436,10 +419,10 @@ exit 0
 #SELinux scriptlets
 %post server-selinux
 if [ $1 -eq 1 ] ; then
-    for selinuxvariant in %{selinux_variants}; do
-      /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
-    done
-    /sbin/restorecon -R %{_var}/log/fts3 || :
+	for selinuxvariant in %{selinux_variants}; do
+	  /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
+	done
+	/sbin/restorecon -R %{_var}/log/fts3 || :
 fi
 exit 0
 
@@ -571,8 +554,19 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 
 
 %changelog
-* Wed Nov 18 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.5.0-1
-- Add check
+* Mon Apr 18 2016 Alejandro Alvarez <aalvarez@cern.ch> - 3.4.3-2
+- Patch gsoap find module
+- Patch url_copy for boost scoped ptr
+
+* Mon Apr 18 2016 Alejandro Alvarez <aalvarez@cern.ch> - 3.4.3-1
+- New upstream release
+- systemd scripts
+
+* Tue Feb 02 2016 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-5
+- Rebuilt for gsoap 2.8.28
+
+* Fri Jan 15 2016 Jonathan Wakely <jwakely@redhat.com> - 3.3.1-4
+- Rebuilt for Boost 1.60
 
 * Tue Sep 22 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-3
 - Supress -devel rpm
