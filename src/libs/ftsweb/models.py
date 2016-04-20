@@ -313,14 +313,13 @@ class OptimizerEvolution(models.Model):
     datetime     = models.DateTimeField(primary_key = True)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
-    #nostreams    = models.IntegerField()
-    timeout      = models.IntegerField()
     active       = models.IntegerField()
     throughput   = models.FloatField()
-    branch       = models.IntegerField(db_column = 'buffer')
-    success      = models.FloatField(db_column = 'filesize')
+    success      = models.FloatField(db_column = 'success')
     actual_active = models.IntegerField()
     queue_size   = models.IntegerField()
+    rationale    = models.TextField()
+    diff         = models.IntegerField()
 
     class Meta:
         db_table = 't_optimizer_evolution'

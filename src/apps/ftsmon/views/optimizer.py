@@ -63,7 +63,7 @@ def get_optimizer_pairs(http_request):
 
 class OptimizerAppendLimits(object):
     """
-    Query for the limits if the branch is 10 (limited bandwidth)
+    Query for the limits
     """
 
     def __init__(self, source_se, dest_se, evolution):
@@ -78,11 +78,10 @@ class OptimizerAppendLimits(object):
         entries = self.evolution[index]
         if isinstance(entries, list):
             for e in entries:
-                if e['branch'] == 10:
-                    e['bandwidth_limits'] = {
-                        'source': self._get_source_limit(),
-                        'destination': self._get_destination_limit()
-                    }
+                e['bandwidth_limits'] = {
+                    'source': self._get_source_limit(),
+                    'destination': self._get_destination_limit()
+                }
         return entries
 
     def _get_source_limit(self):
@@ -123,7 +122,9 @@ def get_optimizer_details(http_request):
 
     optimizer = OptimizerEvolution.objects.filter(source_se=source_se, dest_se=dest_se)
     optimizer = optimizer.filter(datetime__gte=not_before)
-    optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch', 'actual_active', 'queue_size')
+    optimizer = optimizer.values(
+        'datetime', 'active', 'throughput', 'success', 'rationale', 'actual_active', 'queue_size', 'diff'
+    )
     optimizer = optimizer.order_by('-datetime')
 
     fixed = OptimizeActive.objects.filter(fixed='on', source_se=source_se, dest_se=dest_se)

@@ -1,4 +1,17 @@
 
+function getRowClass(diff)
+{
+    if (diff < 0) {
+        return "optimizer-decrease";
+    }
+    else if (diff > 0) {
+        return "optimizer-increase"
+    }
+    else {
+        return "optimizer-steady";
+    }
+}
+
 function OptimizerCtrl($rootScope, $location, $scope, optimizer, Optimizer)
 {
     $scope.optimizer = optimizer;
@@ -63,6 +76,7 @@ OptimizerCtrl.resolve = {
 function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, OptimizerDetailed)
 {
     $scope.optimizer = optimizer;
+    $scope.getRowClass = getRowClass;
 
     // Set timer to trigger autorefresh
     $scope.autoRefresh = setInterval(function() {
