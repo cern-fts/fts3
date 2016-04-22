@@ -278,6 +278,14 @@ public:
         }
     }
 
+    /// Add additional metadata
+    void addClientInfo(const std::string &key, const std::string &value) {
+        GError *error = NULL;
+        if (gfal2_add_client_info(context, key.c_str(), value.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     /// Cancel any running operation
     void cancel(void) {
         gfal2_cancel(context);

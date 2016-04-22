@@ -15,6 +15,7 @@
  */
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/lexical_cast.hpp>
 #include "common/Logger.h"
 
 #include "LogHelper.h"
@@ -99,6 +100,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     }
 
     params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
+
+    // Additional metadata
+    gfal2.addClientInfo("job-id", transfer.jobId);
+    gfal2.addClientInfo("file-id", boost::lexical_cast<std::string>(transfer.fileId));
+    gfal2.addClientInfo("retry", boost::lexical_cast<std::string>(opts.retry));
 }
 
 
