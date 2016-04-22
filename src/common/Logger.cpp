@@ -124,7 +124,7 @@ Logger& Logger::operator << (Logger& (*aFunc)(Logger &aLogger))
 
 static int createAndReopen(const std::string& path, FILE* stream)
 {
-    int fd = ::creat(path.c_str(), 0644);
+    int fd = ::open(path.c_str(), O_APPEND | O_CREAT, 0644);
     if (fd < 0)
         return -1;
     close(fd);
@@ -140,7 +140,7 @@ int Logger::redirect(const std::string& outPath, const std::string& errPath) thr
     if (out != &std::cout) {
         delete out;
     }
-    out = new std::ofstream(outPath);
+    out = new std::ofstream(outPath, std::ios_base::app);
 
     if (!errPath.empty()) {
         if (createAndReopen(errPath, stderr) < 0)
