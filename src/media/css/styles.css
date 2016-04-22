@@ -87,6 +87,14 @@ td.status {
 	vertical-align: middle;
 }
 
+tr.transfer_header {
+    background: #DDDDDD;
+}
+
+tr.nested td {
+    padding-left: 2em;
+}
+
 .inconsistency.odd {
     background: #f2dede;
 }

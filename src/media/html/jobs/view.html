@@ -107,45 +107,38 @@
 <table class="table table-small">
     <thead>
         <tr>
-            <th style="width: 6%">
+            <th style="width: 8%">
                <span data-order-by="id">File ID</span>
             </th>
-            <th>Source URL</th>
-            <th>Destination URL</th>
             <th style="width: 6%">File State</th>
-            <th style="width: 8%">
+            <th style="width: 7%">
                <span data-order-by="size">File Size</span>
             </th>
-            <th style="width: 8%">
+            <th style="width: 7%">
                <span data-order-by="throughput">Throughput</span>
             </th>
             <th style="width: 6%">Remaining</th>
-            <th style="width: 8%">
+            <th style="width: 10%">
                <span data-order-by="start_time">Start Time</span>
             </th>
-            <th style="width: 8%">
+            <th style="width: 10%">
                <span data-order-by="finish_time">Finish Time</span>
             </th>
-            <th style="width: 8%">
+            <th style="width: 10%">
                 <span data-order-by="staging_start">Staging Start</span>
             </th>
-            <th style="width: 8%">
+            <th style="width: 10%">
                 <span data-order-by="staging_finished">Staging End</span>
             </th>
+            <th style="width: 6%"></th>
         </tr>
     </thead>
-    <tbody data-ng-repeat="file in files.files.items" data-ng-class-odd="'odd'">
-        <tr>
+    <tbody data-ng-repeat="file in files.files.items">
+        <tr class="transfer_header">
             <td>
                 <i class="icon-plus" data-ng-click="file.show = !file.show"></i>
                 {{file.file_id}}
                 <i class="icon-refresh" data-ng-show="file.retry"></i>
-            </td>
-            <td title="{{file.source_surl}}" class="hscroll">
-                {{file.source_surl}}
-            </td>
-            <td title="{{file.dest_surl}}" class="hscroll">
-                {{file.dest_surl}}
             </td>
             <td class="status {{file.file_state}}">
                 {{file.file_state}}
@@ -159,9 +152,26 @@
             <td>{{file.finish_time}}</td>
             <td>{{file.staging_start}}</td>
             <td>{{file.staging_finished}}</td>
+            <td>
+                <span data-ng-if="file.log_file">
+                   <a href="{{file.log_file}}">
+                       <i class="glyphicon icon-file"></i> Log
+                   </a>
+                </span>
+            </td>
+        </tr>
+        <tr class="nested">
+            <td colspan="10" class="hscroll">
+                <i class="glyphicon icon-home" title="Source"></i> {{file.source_surl}}
+            </td>
+        </tr>
+        <tr class="nested">
+            <td colspan="10" class="hscroll">
+                <i class="glyphicon icon-download-alt" title="Destination"></i> {{file.dest_surl}}
+            </td>
         </tr>
         <tr style="background: #CCC" data-ng-show="file.show">
-            <td colspan="11">
+            <td colspan="10">
                 <ul>
                     <li>Transfer host: {{file.transferHost}}</li>
                     <li>Staging host: {{file.stagingHost}}</li>
