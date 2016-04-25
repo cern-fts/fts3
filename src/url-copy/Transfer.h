@@ -26,6 +26,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
+#include "common/definitions.h"
 #include "common/Uri.h"
 #include "UrlCopyError.h"
 
@@ -41,7 +42,7 @@ public:
     struct Statistics {
         static uint64_t timestampMilliseconds()
         {
-            return time(NULL) * 1000;
+            return milliseconds_since_epoch();
         }
 
         struct Interval {

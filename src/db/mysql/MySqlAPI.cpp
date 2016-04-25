@@ -5131,7 +5131,8 @@ bool MySqlAPI::markAsStalled(const std::vector<fts3::events::MessageUpdater>& me
             soci::rowset<int> rs = (
                                        sql.prepare <<
                                        " SELECT file_id FROM t_file "
-                                       " WHERE file_id = :fileId AND job_id = :jobId AND file_state = 'ACTIVE' AND"
+                                       " WHERE file_id = :fileId AND job_id = :jobId AND "
+                                       "    file_state IN ('ACTIVE', 'READY') AND"
                                        " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                        soci::use(iter->file_id()),
                                        soci::use(iter->job_id()),

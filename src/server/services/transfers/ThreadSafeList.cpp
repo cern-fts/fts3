@@ -22,6 +22,8 @@
 #include <ctime>
 
 #include "common/definitions.h"
+#include "common/Logger.h"
+#include "common/PidTools.h"
 #include "ThreadSafeList.h"
 
 
@@ -62,12 +64,12 @@ void ThreadSafeList::checkExpiredMsg(std::vector<fts3::events::MessageUpdater> &
     boost::recursive_mutex::scoped_lock lock(_mutex);
     boost::posix_time::time_duration::tick_type timestamp1;
     boost::posix_time::time_duration::tick_type timestamp2;
-    boost::posix_time::time_duration::tick_type n_seconds = 0;
+    boost::posix_time::time_duration::tick_type n_milliseconds = 0;
     for (auto iter = m_list.begin(); iter != m_list.end(); ++iter) {
         timestamp1 = milliseconds_since_epoch();
         timestamp2 = iter->timestamp();
-        n_seconds = timestamp1 - timestamp2;
-        if (n_seconds > 300000) //5min
+        n_milliseconds = timestamp1 - timestamp2;
+        if (n_milliseconds > 300000) //5min
         {
             messages.push_back(*iter);
         }
@@ -80,11 +82,19 @@ void ThreadSafeList::updateMsg(fts3::events::MessageUpdater &msg)
     boost::recursive_mutex::scoped_lock lock(_mutex);
     std::list<fts3::events::MessageUpdater>::iterator iter;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        if (msg.file_id() == iter->file_id() &&
-            std::string(msg.job_id()).compare(std::string(iter->job_id())) == 0 &&
-            msg.process_id() == iter->process_id()) {
-            iter->set_timestamp(msg.timestamp());
-            break;
+        uint64_t pidStartTime = fts3::common::getPidStartime(msg.process_id());
+        pidStartTime *= 1000; // timestamp() is in milliseconds
+
+        if (msg.process_id() == iter->process_id()) {
+            if (pidStartTime > 0 && msg.timestamp() >= pidStartTime) {
+                iter->set_timestamp(msg.timestamp());
+            }
+            else if (pidStartTime > 0){
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                    << "Found a matching pid, but start time is more recent than last known message"
+                    << "(" << pidStartTime << " vs " << msg.timestamp() << " for " << msg.process_id() << ")"
+                    << fts3::common::commit;
+            }
         }
     }
 }

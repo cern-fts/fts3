@@ -68,6 +68,7 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     if (opts.isSessionReuse || opts.isMultihop) {
         events::Message status;
 
+        status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
         status.set_job_id(transfer.jobId);
         status.set_file_id(transfer.fileId);
         status.set_source_se(transfer.source.host);
@@ -151,6 +152,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     // Status
     events::Message status;
 
+    status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
     status.set_source_se(transfer.source.host);
