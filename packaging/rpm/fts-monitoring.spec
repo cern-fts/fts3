@@ -15,6 +15,7 @@ BuildRequires:  python2-devel
 Requires:   MySQL-python
 Requires:   Django >= 1.3.7
 Requires:   httpd
+Requires:   mod_ssl
 Requires:   mod_wsgi
 Requires:   python
 Requires:   python-decorator
