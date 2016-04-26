@@ -139,7 +139,8 @@ def run_sql_script_mysql(config, sql):
 [client]
 user=%(fts3.DbUserName)s
 password=%(fts3.DbPassword)s
-"""
+""" % config
+    creds.flush()
 
     cmd = [
         'mysql',
