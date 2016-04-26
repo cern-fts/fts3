@@ -17,6 +17,8 @@ limitations under the License. */
 #include <time.h>
 #include <ctime>
 #include "queue_updater.h"
+#include "PidTools.h"
+#include "logger.h"
 
 
 ThreadSafeList::ThreadSafeList()
@@ -108,16 +110,21 @@ void ThreadSafeList::updateMsg(message_updater &msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;
-    for (iter = m_list.begin(); iter != m_list.end(); ++iter)
-        {
-            if (msg.file_id == iter->file_id &&
-                    std::string(msg.job_id).compare(std::string(iter->job_id)) == 0 &&
-                    msg.process_id == iter->process_id)
-                {
-                    iter->timestamp = msg.timestamp;
-                    break;
-                }
+    for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
+        auto pidStartTime = fts3::common::getPidStartime(msg.process_id);
+
+        if (msg.process_id == iter->process_id) {
+            if (pidStartTime > 0 && msg.timestamp >= pidStartTime) {
+                iter->timestamp = msg.timestamp;
+            }
+            else if (pidStartTime > 0) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Found a matching pid, but start time is more recent than last known message"
+                << "(" << pidStartTime << " vs " << msg.timestamp << " for " << msg.process_id << ")"
+                << fts3::common::commit;
+            }
         }
+    }
 }
 
 void ThreadSafeList::deleteMsg(std::vector<struct message_updater>& messages)

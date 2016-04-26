@@ -5655,7 +5655,8 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
             soci::rowset<int> rs = (
                                        sql.prepare <<
                                        " SELECT file_id FROM t_file "
-                                       " WHERE file_id = :fileId AND job_id = :jobId AND file_state = 'ACTIVE' AND"
+                                       " WHERE file_id = :fileId AND job_id = :jobId AND "
+                                       "    file_state IN ('ACTIVE', 'READY') AND"
                                        " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                        soci::use(iter->file_id),
                                        soci::use(std::string(iter->job_id)),
