@@ -144,8 +144,8 @@ ConfigLimitsCtrl.resolve = {
     }
 }
 
-function ConfigFixedCtrl($location, $scope, fixed) {
-    $scope.fixed = fixed;
+function ConfigRangeCtrl($location, $scope, range) {
+    $scope.range = range;
 
     // On page change, reload
     $scope.pageChanged = function(newPage) {
@@ -153,13 +153,13 @@ function ConfigFixedCtrl($location, $scope, fixed) {
     };
 }
 
-ConfigFixedCtrl.resolve = {
-    fixed: function($rootScope, $location, $route, $q, ConfigFixed) {
+ConfigRangeCtrl.resolve = {
+    range: function($rootScope, $location, $route, $q, ConfigRange) {
         loading($rootScope);
 
         var deferred = $q.defer();
 
-        ConfigFixed.query($location.search(),
+        ConfigRange.query($location.search(),
               genericSuccessMethod(deferred, $rootScope),
               genericFailureMethod(deferred, $rootScope, $location));
 

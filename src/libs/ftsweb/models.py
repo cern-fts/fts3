@@ -297,6 +297,8 @@ class OptimizeActive(models.Model):
     dest_se    = models.CharField(max_length = 255)
     active     = models.IntegerField(primary_key = True)
     fixed      = models.CharField(max_length=3)
+    max_active = models.IntegerField()
+    min_active = models.IntegerField()
 
     def __eq__(self, other):
         if type(self) != type(other):

@@ -140,7 +140,7 @@ def get_limit_config(http_request):
 
 @require_certificate
 @jsonify_paged
-def get_fixed_limits(http_request):
+def get_ranges(http_request):
     return OptimizeActive.objects.filter(fixed='on').all()
 
 
