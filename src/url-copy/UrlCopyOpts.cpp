@@ -235,14 +235,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     if (strncmp("relaxed", optarg, 7) == 0 || strncmp("r", optarg, 1) == 0) {
                         referenceTransfer.checksumMethod = Transfer::kChecksumRelaxed;
                     }
-		    
-                    else if(strncmp ("strict", optarg, 6) == 0 || strncmp("s", optarg, 1) == 0 || (strncmp("compare", optarg, 7) == 0) {
+                    else {
                         referenceTransfer.checksumMethod = Transfer::kChecksumStrict;
                     }
-		    else {
-			referenceTransfer.checksumMethod = Transfer::kChecksumDoNotCheck;
-                    }
-		    break;
+                    break;
                 case 302:
                     strictCopy = true;
                     break;
