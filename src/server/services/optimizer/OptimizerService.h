@@ -23,7 +23,7 @@
 #define OPTIMIZERSERVICE_H_
 
 #include "../BaseService.h"
-
+#include "../heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
@@ -31,8 +31,11 @@ namespace server {
 
 class OptimizerService: public BaseService
 {
+protected:
+    HeartBeat *beat;
+
 public:
-    OptimizerService();
+    OptimizerService(HeartBeat *beat);
     virtual void runService();
 };
 

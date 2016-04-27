@@ -39,7 +39,11 @@ public:
     HeartBeat();
     virtual void runService();
 
+    bool isLeadNode();
+
 private:
+    unsigned index, count, start, end;
+
     bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords,
             time_t stallRecords);
 

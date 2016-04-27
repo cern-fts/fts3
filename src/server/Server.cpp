@@ -72,9 +72,10 @@ void Server::addService(BaseService *service)
 
 void Server::start()
 {
+    auto heartBeatService = new HeartBeat;
     addService(new CleanerService);
     addService(new MessageProcessingService);
-    addService(new HeartBeat);
+    addService(heartBeatService);
 
     // Give cleaner and heartbeat some time ahead
     if (!config::ServerConfig::instance().get<bool> ("rush")) {
@@ -88,7 +89,7 @@ void Server::start()
         boost::this_thread::sleep(boost::posix_time::seconds(12));
     }
 
-    addService(new OptimizerService);
+    addService(new OptimizerService(heartBeatService));
     addService(new TransfersService);
     addService(new ReuseTransfersService);
     addService(new MultihopTransfersService);

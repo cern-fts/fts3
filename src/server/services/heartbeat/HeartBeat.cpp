@@ -37,7 +37,7 @@ time_t updateRecords = time(0);
 time_t stallRecords = time(0);
 
 
-HeartBeat::HeartBeat(): BaseService("HeartBeat")
+HeartBeat::HeartBeat(): BaseService("HeartBeat"), index(0), count(0), start(0), end(0)
 {
 }
 
@@ -85,7 +85,6 @@ void HeartBeat::runService()
                 orderedShutdown();
             }
 
-            unsigned index = 0, count = 0, start = 0, end = 0;
             std::string serviceName = "fts_server";
 
             db::DBSingleton::instance().getDBObjectInstance()
@@ -160,6 +159,11 @@ void HeartBeat::orderedShutdown()
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting" << commit;
     exit(1);
+}
+
+bool HeartBeat::isLeadNode()
+{
+    return index == 0;
 }
 
 } // end namespace server

@@ -32,7 +32,7 @@ namespace server {
 using optimizer::Optimizer;
 
 
-OptimizerService::OptimizerService(): BaseService("OptimizerService")
+OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerService"), beat(beat)
 {
 }
 
@@ -47,7 +47,9 @@ void OptimizerService::runService()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            optimizer.run();
+            if (beat->isLeadNode()) {
+                optimizer.run();
+            }
         }
         catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService " << e.what() <<
