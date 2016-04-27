@@ -149,7 +149,7 @@ password=%(fts3.DbPassword)s
         '-v'
     ]
     if parsed.port:
-        cmd.extend(['-P', parsed.port])
+        cmd.extend(['-P', str(parsed.port)])
     cmd.append(parsed.path[1:])
 
     log.debug('Running %s < %s', ' '.join(cmd), sql)
