@@ -41,14 +41,14 @@ TempFile::TempFile(const std::string& prefix, const std::string& dir)
         snprintf(tmp_proxy, FILENAME_MAX, "%s.XXXXXX", prefix.c_str());
     }
 
-    mode_t restore = umask(0077);
+    
     int fd = mkstemp(tmp_proxy);
-    umask(restore);
+    
     if (fd == -1) {
         std::string reason = (std::string) "Cannot create temporary file <"+ tmp_proxy + ">.    Error is: " + strerror(errno);
         throw fts3::common::SystemError(reason);
     }
-
+    fchmod(fd, 0660);
     m_filename = tmp_proxy;
 }
 
