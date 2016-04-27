@@ -451,6 +451,8 @@ fi
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_rotate
 
+%{_datadir}/fts/fts-database-upgrade.py*
+
 %if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-server.service
 %attr(0644,root,root) %{_unitdir}/fts-bringonline.service
