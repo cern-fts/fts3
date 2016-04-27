@@ -46,6 +46,8 @@ private:
 
     bool IPv6Explicit;
 
+    friend std::ostream& operator << (std::ostream& os, const UrlCopyCmd&);
+
 public:
     static const std::string Program;
     static std::string prepareMetadataString(const std::string& text);
@@ -77,6 +79,8 @@ public:
     void setNumberOfRetries(int);
     void setMaxNumberOfRetries(int);
 };
+
+std::ostream& operator << (std::ostream& os, const fts3::server::UrlCopyCmd&);
 
 }
 }

@@ -27,19 +27,21 @@
 #include "config/ServerConfig.h"
 #include <boost/algorithm/string/replace.hpp>
 
-using namespace fts3::server;
+namespace fts3 {
+namespace server {
+
 using fts3::config::ServerConfig;
 
 const std::string UrlCopyCmd::Program("fts_url_copy");
 
 
-UrlCopyCmd::UrlCopyCmd(): IPv6Explicit(false)
+UrlCopyCmd::UrlCopyCmd() : IPv6Explicit(false)
 {
     setOption("msgDir", ServerConfig::instance().get<std::string>("MessagingDirectory"));
 }
 
 
-std::string UrlCopyCmd::prepareMetadataString(const std::string& text)
+std::string UrlCopyCmd::prepareMetadataString(const std::string &text)
 {
     std::string copy(text);
     copy = boost::replace_all_copy(copy, " ", "?");
@@ -48,7 +50,7 @@ std::string UrlCopyCmd::prepareMetadataString(const std::string& text)
 }
 
 
-void UrlCopyCmd::setFlag(const std::string& key, bool set)
+void UrlCopyCmd::setFlag(const std::string &key, bool set)
 {
     options.erase(key);
 
@@ -60,7 +62,7 @@ void UrlCopyCmd::setFlag(const std::string& key, bool set)
 }
 
 
-void UrlCopyCmd::setOption(const std::string& key, const std::string& value, bool skip_if_empty)
+void UrlCopyCmd::setOption(const std::string &key, const std::string &value, bool skip_if_empty)
 {
     std::list<std::string>::iterator i = std::find(flags.begin(), flags.end(), key);
     if (i != flags.end())
@@ -86,7 +88,7 @@ std::string UrlCopyCmd::generateParameters(void)
 }
 
 
-void UrlCopyCmd::setLogDir(const std::string& path)
+void UrlCopyCmd::setLogDir(const std::string &path)
 {
     setOption("logDir", path);
 }
@@ -98,7 +100,7 @@ void UrlCopyCmd::setMonitoring(bool set)
 }
 
 
-void UrlCopyCmd::setInfosystem(const std::string& infosys)
+void UrlCopyCmd::setInfosystem(const std::string &infosys)
 {
     setOption("infosystem", infosys);
 }
@@ -116,7 +118,7 @@ void UrlCopyCmd::setDebugLevel(int level)
 }
 
 
-void UrlCopyCmd::setProxy(const std::string& path)
+void UrlCopyCmd::setProxy(const std::string &path)
 {
     setOption("proxy", path);
 }
@@ -141,13 +143,13 @@ bool UrlCopyCmd::isIPv6Explicit(void)
 }
 
 
-void UrlCopyCmd::setFTSName(const std::string& hostname)
+void UrlCopyCmd::setFTSName(const std::string &hostname)
 {
     setOption("alias", hostname);
 }
 
 
-void UrlCopyCmd::setOAuthFile(const std::string& path)
+void UrlCopyCmd::setOAuthFile(const std::string &path)
 {
     setOption("oauth", path);
 }
@@ -163,7 +165,7 @@ void UrlCopyCmd::setGlobalTimeout(long timeout)
 }
 
 
-void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple, bool hide_user_dn)
+void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool hide_user_dn)
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
@@ -186,7 +188,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple,
 
     setFlag("job_m_replica", transfer.reuseJob == "R");
     setFlag("last_replica", transfer.lastReplica);
-    
+
     // On multiple jobs, this data is per transfer and is passed via a file
     // under /var/lib/fts3/<job-id>, so skip it
     if (!is_multiple) {
@@ -205,7 +207,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile& transfer, bool is_multiple,
 }
 
 
-void UrlCopyCmd::setFromProtocol(const ProtocolResolver::protocol& protocol)
+void UrlCopyCmd::setFromProtocol(const ProtocolResolver::protocol &protocol)
 {
     if (protocol.nostreams >= 0) {
         setOption("nstreams", protocol.nostreams);
@@ -258,4 +260,23 @@ void UrlCopyCmd::setNumberOfRetries(int count)
 void UrlCopyCmd::setMaxNumberOfRetries(int retry_max)
 {
     setOption("retry_max", retry_max);
+}
+
+
+std::ostream &operator<<(std::ostream &os, const UrlCopyCmd &cmd)
+{
+    os << UrlCopyCmd::Program << " ";
+
+    for (auto flag = cmd.flags.begin(); flag != cmd.flags.end(); ++flag) {
+        os << " --" << *flag;
+    }
+
+    for (auto option = cmd.options.begin(); option != cmd.options.end(); ++option) {
+        os << " --" << option->first << " \"" << option->second << "\"";
+    }
+
+    return os;
+}
+
+}
 }

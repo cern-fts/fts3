@@ -212,7 +212,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // Build the parameters
             std::string params = cmd_builder.generateParameters();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << UrlCopyCmd::Program << " " << params << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd_builder << commit;
             ExecuteProcess pr(UrlCopyCmd::Program, params);
 
             // check again here if the server has stopped - just in case
