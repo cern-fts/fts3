@@ -133,13 +133,13 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
 
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
 
-    mode_t oldMask = umask(0117);
     int fd = mkstemp(oauth_path);
-    umask(oldMask);
     if (fd < 0) {
         strerror_r(errno, errDescr, sizeof(errDescr));
         throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
     }
+    fchmod(fd, 0660);
+
     FILE *f = fdopen(fd, "w");
     if (f == NULL) {
         close(fd);
