@@ -7759,7 +7759,8 @@ int getOptimizerMode(soci::session &sql)
 }
 
 
-void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry, const std::string& reason)
+void MySqlAPI::setRetryTransferInternal(soci::session &sql, const std::string &jobId, int fileId, int retry,
+    const std::string &reason, int errcode)
 {
     //expressed in secs, default delay
     const int default_retry_delay = DEFAULT_RETRY_DELAY;
@@ -7813,11 +7814,8 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
             soci::into(bring_online),
             soci::into(copy_pin_lifetime);
 
-
-        bool exists = (reason.find("ETIMEDOUT") != std::string::npos);
-
         //staging exception, if file failed with timeout and was staged before, reset it
-        if( (bring_online > 0 || copy_pin_lifetime > 0) && exists)
+        if( (bring_online > 0 || copy_pin_lifetime > 0) && errcode == ETIMEDOUT)
         {
             sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
                 " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','STAGING','SUBMITTED','FAILED','CANCELED') ",
@@ -7854,20 +7852,21 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
     }
 }
 
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
+    int errcode)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        setRetryTransferInternal(sql, jobId, fileId, retry, reason);
+        setRetryTransferInternal(sql, jobId, fileId, retry, reason, errcode);
     }
     catch (std::exception& e)
     {
         try
         {
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            setRetryTransferInternal(sql, jobId, fileId, retry, reason);
+            setRetryTransferInternal(sql, jobId, fileId, retry, reason, errcode);
         }
         catch (std::exception& e)
         {
@@ -7883,7 +7882,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
         try
         {
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            setRetryTransferInternal(sql, jobId, fileId, retry, reason);
+            setRetryTransferInternal(sql, jobId, fileId, retry, reason, errcode);
         }
         catch (std::exception& e)
         {

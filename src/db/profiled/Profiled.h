@@ -235,8 +235,6 @@ public:
 
     int getRetryTimes(const std::string & jobId, int fileId);
 
-    void setRetryTransfer(const std::string & jobId, int fileId);
-
     void setMaxTimeInQueue(int afterXHours);
 
     void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
@@ -287,7 +285,7 @@ public:
 
     void setOptimizerMode(int mode);
 
-    void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
+    void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason, int errcode);
 
     void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
 

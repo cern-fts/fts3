@@ -166,8 +166,10 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         status.set_transfer_status("FAILED");
         status.set_transfer_message(fullErrMsg.str());
         status.set_retry(transfer.error->isRecoverable());
+        status.set_errcode(transfer.error->code());
     }
     else {
+        status.set_errcode(01);
         status.set_transfer_status("FINISHED");
     }
 

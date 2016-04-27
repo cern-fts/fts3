@@ -315,7 +315,8 @@ public:
 
     virtual void setOptimizerMode(int mode);
 
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
+        int errcode);
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
 
@@ -442,7 +443,8 @@ private:
 
     std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
-    void setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry, const std::string& reason);
+    void setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry,
+        const std::string& reason, int errcode);
 
     void cancelJobInternal(soci::session& sql, const std::vector<std::string>& requestIDs);
 

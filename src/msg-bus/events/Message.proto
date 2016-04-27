@@ -19,4 +19,6 @@ message Message {
     optional uint64 timestamp = 13;
     optional bool   retry = 14;
     optional double throughput = 15;
+
+    optional int32 errcode = 16;
 }

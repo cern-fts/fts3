@@ -317,7 +317,8 @@ public:
 
     virtual void setOptimizerMode(int mode);
 
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
+        int errcode);
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
 
