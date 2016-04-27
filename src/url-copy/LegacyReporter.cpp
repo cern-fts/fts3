@@ -278,7 +278,7 @@ void LegacyReporter::sendPing(const Transfer &transfer)
     ping.set_source_surl(transfer.source.fullUri);
     ping.set_dest_surl(transfer.destination.fullUri);
     ping.set_process_id(getpid());
-    ping.set_throughput(transfer.throughput);
+    ping.set_throughput(convertKbToMb(transfer.throughput));
     ping.set_transferred(transfer.transferredBytes);
     ping.set_source_turl("gsiftp:://fake");
     ping.set_dest_turl("gsiftp:://fake");
