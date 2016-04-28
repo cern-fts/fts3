@@ -41,8 +41,8 @@
             <td class="numeric">{{s.staging}}</td>
             <td class="numeric">{{s.started}}</td>
             <td>
-                <a href="{{s.fts3server_log}}">FTS3</a><br/>
-                <a href="{{s.fts3bringonline_log}}">Bringonline</a>
+                <a href="{{s.fts3server_log}}" data-ng-if="s.services.hasOwnProperty('fts_server')">FTS3</a><br/>
+                <a href="{{s.fts3bringonline_log}}" data-ng-if="s.services.hasOwnProperty('fts_bringonline')">Bringonline</a>
             </td>
         </tr>
     </tbody>
