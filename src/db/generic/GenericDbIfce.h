@@ -47,7 +47,6 @@
 #include "DeleteOperation.h"
 #include "Job.h"
 #include "MinFileStatus.h"
-#include "OptimizerSample.h"
 #include "StagingOperation.h"
 #include "StorageElement.h"
 #include "TransferFile.h"
@@ -354,9 +353,6 @@ public:
 
     /// Check is the user has been banned
     virtual bool isDnBlacklisted(const std::string& userDn) = 0;
-
-    /// @note This does nothing really, since it uses defaults to initialize the return value (!?)
-    virtual OptimizerSample fetchOptimizationConfig(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
     /// Optimizer data source
     virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource() = 0;

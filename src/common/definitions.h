@@ -73,24 +73,14 @@ inline uint64_t milliseconds_since_epoch()
     return (microsec_clock::universal_time() - epoch).total_milliseconds();
 }
 
-
-#define DEFAULT_TIMEOUT 4000
-#define MID_TIMEOUT 4000
-const int timeouts[] = {4000};
-const size_t timeoutslen = (sizeof (timeouts) / sizeof *(timeouts));
-
-#define DEFAULT_NOSTREAMS 4
-const int nostreams[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
-
-
-#define DEFAULT_BUFFSIZE 0
-const int buffsizes[] = {1048576, 4194304, 5242880, 7340032, 8388608, 9437184, 11534336, 12582912, 14680064, 67108864};
-const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
-
 /*low active / high active / jobs / files*/
 const int mode_1[] = {2,4,3,5};
 const int mode_2[] = {4,6,5,8};
 const int mode_3[] = {6,8,7,10};
+
+// Default params
+#define DEFAULT_TIMEOUT 4000
+#define DEFAULT_NOSTREAMS 1
+#define DEFAULT_BUFFSIZE 0
 
 #endif // DEFINITIONS_H

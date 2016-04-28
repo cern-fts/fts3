@@ -20,15 +20,11 @@
 
 #include "ProtocolResolver.h"
 
+#include "common/definitions.h"
 #include "server/services/webservice/ws/config/Configuration.h"
-
-#include "db/generic/OptimizerSample.h"
-
-#include <vector>
 
 #include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace fts3::server;
 using namespace fts3::ws;
@@ -292,14 +288,9 @@ ProtocolResolver::protocol ProtocolResolver::autotune()
 {
     protocol ret;
 
-    std::string source = file.sourceSe;
-    std::string destination = file.destSe;
-
-    OptimizerSample opt_config;
-    opt_config = DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig(source, destination);
-    ret.tcp_buffer_size = opt_config.bufferSize;
-    ret.nostreams = opt_config.streamsPerFile;
-    ret.urlcopy_tx_to = opt_config.timeout;
+    ret.tcp_buffer_size = DEFAULT_BUFFSIZE;
+    ret.nostreams = DEFAULT_NOSTREAMS;
+    ret.urlcopy_tx_to = DEFAULT_TIMEOUT;
 
     return ret;
 }

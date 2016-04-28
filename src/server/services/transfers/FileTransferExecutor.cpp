@@ -27,7 +27,6 @@
 #include "common/Uri.h"
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
-#include "db/generic/OptimizerSample.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"

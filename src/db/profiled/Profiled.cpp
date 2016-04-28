@@ -231,12 +231,6 @@ void ProfiledDB::auditConfiguration(const std::string & dn, const std::string & 
 }
 
 
-OptimizerSample ProfiledDB::fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname)
-{
-    PROFILE_PREFIXED("DB::", return db->fetchOptimizationConfig(source_hostname, destin_hostname));
-}
-
-
 bool ProfiledDB::isCredentialExpired(const std::string & dlg_id, const std::string & dn)
 {
     PROFILE_PREFIXED("DB::", return db->isCredentialExpired(dlg_id, dn));

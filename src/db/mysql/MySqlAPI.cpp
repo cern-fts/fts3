@@ -3551,16 +3551,6 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
 }
 
 
-OptimizerSample MySqlAPI::fetchOptimizationConfig(const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
-{
-    OptimizerSample ops;
-    ops.streamsPerFile = DEFAULT_NOSTREAMS;
-    ops.timeout = MID_TIMEOUT;
-    ops.bufferSize = DEFAULT_BUFFSIZE;
-    return ops;
-}
-
-
 bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string & dn)
 {
     soci::session sql(*connectionPool);

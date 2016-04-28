@@ -122,8 +122,6 @@ public:
 
     void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
-    OptimizerSample fetchOptimizationConfig(const std::string & source_hostname, const std::string & destin_hostname);
-
     bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
     fts3::optimizer::OptimizerDataSource* getOptimizerDataSource();
