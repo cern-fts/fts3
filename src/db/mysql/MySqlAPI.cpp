@@ -2243,21 +2243,7 @@ bool MySqlAPI::updateTransferStatus(const std::string& jobId, int fileId, double
     }
     catch (...)
     {
-        try
-        {
-            //try again if deadlocked
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-                            transferState, errorReason, processId, filesize, duration, retry);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
+        throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
 
@@ -2368,56 +2354,49 @@ void MySqlAPI::revertToSubmitted()
 
 
 
-bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id,
-        std::string transfer_status, std::string transfer_message,
-        int process_id, double filesize, double duration, bool retry)
+bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string jobId, int fileId,
+        std::string newState, std::string transferMessage,
+        int processId, double filesize, double duration, bool retry)
 {
     try
     {
         sql.begin();
 
         double throughput = 0.0;
-
-        std::string st;
-
-        bool staging = false;
-
-        int current_failures = retry; // false = 0 / true = 1
+        std::string storedState;
 
         time_t now = time(NULL);
         struct tm tTime;
         gmtime_r(&now, &tTime);
 
-        if((job_id.empty() || file_id == 0) && transfer_status == "FAILED")
-            sql <<  "SELECT file_id FROM t_file WHERE pid=:pid AND job_finished is NULL AND file_state  = 'ACTIVE' LIMIT 1 ",
-                soci::use(process_id), soci::into(file_id);
+        if((jobId.empty() || fileId == 0) && newState == "FAILED") {
+            sql << "SELECT file_id FROM t_file WHERE pid=:pid AND job_finished is NULL AND file_state  = 'ACTIVE' LIMIT 1 ",
+                soci::use(processId), soci::into(fileId);
+        }
 
         // query for the file state in DB
         sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId LOCK IN SHARE MODE",
-            soci::use(file_id),
-            soci::use(job_id),
-            soci::into(st);
+            soci::use(fileId),
+            soci::use(jobId),
+            soci::into(storedState);
 
-        staging = (st == "STAGING");
+        bool isStaging = (storedState == "STAGING");
 
-        // If file is in terminal and trying to set a non-terminal, don't do anything, just return
-        if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
+        // If file is in terminal don't do anything, just return
+        if(storedState == "FAILED" || storedState == "FINISHED" || storedState == "CANCELED" )
         {
-            if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
-            {
-                sql.rollback();
-                return false;
-            }
+            sql.rollback();
+            return false;
         }
 
         // If trying to go from ACTIVE back to READY, do nothing either
-        if (st == "ACTIVE" && transfer_status == "READY") {
+        if (storedState == "ACTIVE" && newState == "READY") {
             sql.rollback();
             return false;
         }
 
         // If the file already in the same state, don't do anything either
-        if (st == transfer_status) {
+        if (storedState == newState) {
             sql.rollback();
             return false;
         }
@@ -2427,16 +2406,16 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
         query << "UPDATE t_file SET "
               "    file_state = :state, reason = :reason";
-        stmt.exchange(soci::use(transfer_status, "state"));
-        stmt.exchange(soci::use(transfer_message, "reason"));
+        stmt.exchange(soci::use(newState, "state"));
+        stmt.exchange(soci::use(transferMessage, "reason"));
 
-        if (transfer_status == "FINISHED" || transfer_status == "FAILED" || transfer_status == "CANCELED")
+        if (newState == "FINISHED" || newState == "FAILED" || newState == "CANCELED")
         {
             query << ", FINISH_TIME = :time1";
             query << ", JOB_FINISHED = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
         }
-        if (transfer_status == "ACTIVE")
+        if (newState == "ACTIVE")
         {
             query << ", START_TIME = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
@@ -2446,22 +2425,22 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         query << ", transferHost = :hostname";
         stmt.exchange(soci::use(hostname, "hostname"));
 
-        if (transfer_status == "FINISHED")
+        if (newState == "FINISHED")
         {
             query << ", transferred = :filesize";
             stmt.exchange(soci::use(filesize, "filesize"));
         }
 
-        if (transfer_status == "FAILED" || transfer_status == "CANCELED")
+        if (newState == "FAILED" || newState == "CANCELED")
         {
             query << ", transferred = :transferred";
             stmt.exchange(soci::use(0, "transferred"));
         }
 
 
-        if (transfer_status == "STAGING")
+        if (newState == "STAGING")
         {
-            if (staging)
+            if (isStaging)
             {
                 query << ", STAGING_FINISHED = :time1";
                 stmt.exchange(soci::use(tTime, "time1"));
@@ -2473,7 +2452,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             }
         }
 
-        if (filesize > 0 && duration > 0 && transfer_status == "FINISHED")
+        if (filesize > 0 && duration > 0 && newState == "FINISHED")
         {
             if(throughputIn != 0.0)
             {
@@ -2484,7 +2463,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 throughput = convertBtoM(filesize, duration);
             }
         }
-        else if (filesize > 0 && duration <= 0 && transfer_status == "FINISHED")
+        else if (filesize > 0 && duration <= 0 && newState == "FINISHED")
         {
             if(throughputIn != 0.0)
             {
@@ -2502,12 +2481,12 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
               "WHERE file_id = :fileId ";
-        stmt.exchange(soci::use(process_id, "pid"));
+        stmt.exchange(soci::use(processId, "pid"));
         stmt.exchange(soci::use(filesize, "filesize"));
         stmt.exchange(soci::use(duration, "duration"));
         stmt.exchange(soci::use(throughput, "throughput"));
-        stmt.exchange(soci::use(current_failures, "current_failures"));
-        stmt.exchange(soci::use(file_id, "fileId"));
+        stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
+        stmt.exchange(soci::use(fileId, "fileId"));
         stmt.alloc();
         stmt.prepare(query.str());
         stmt.define_and_bind();
@@ -2516,10 +2495,10 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
         sql.commit();
 
-        if(transfer_status == "FAILED")
+        if(newState == "FAILED")
         {
             sql.begin();
-            useFileReplica(sql, job_id, file_id);
+            useFileReplica(sql, jobId, fileId);
             sql.commit();
         }
     }

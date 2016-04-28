@@ -355,17 +355,20 @@ void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
         }
 
         //update file/job state
-        db::DBSingleton::instance().
-        getDBObjectInstance()->
-        updateTransferStatus(msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
-                msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry());
+        bool updated = db::DBSingleton::instance().getDBObjectInstance()->updateTransferStatus(
+            msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
+            msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry());
 
-        db::DBSingleton::instance().
-        getDBObjectInstance()->
-        updateJobStatus(msg.job_id(), msg.transfer_status(), msg.process_id());
+        db::DBSingleton::instance().getDBObjectInstance()->updateJobStatus(
+            msg.job_id(), msg.transfer_status(), msg.process_id());
 
-        if(msg.job_id().length() > 0 && msg.file_id() > 0)
-        {
+        if (!updated && msg.transfer_status() != "CANCELED") {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Entry in the database not updated for "
+                << msg.job_id() << " " << msg.file_id()
+                << ". Probably already in a different terminal state"
+                << commit;
+        }
+        else if (!msg.job_id().empty() && msg.file_id() > 0) {
             SingleTrStateInstance::instance().sendStateMessage(msg.job_id(), msg.file_id());
         }
     }

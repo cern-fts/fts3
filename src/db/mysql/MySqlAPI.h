@@ -427,8 +427,8 @@ private:
 
     int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
-    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
-                                          std::string transfer_message, int process_id, double filesize, double duration, bool retry);
+    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string jobId, int fileId, std::string newState,
+                                          std::string transferMessage, int processId, double filesize, double duration, bool retry);
 
     bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
 
