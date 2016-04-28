@@ -236,7 +236,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                         referenceTransfer.checksumMethod = Transfer::kChecksumRelaxed;
                     }
                     else if (strncmp("strict", optarg, 6) == 0 || strncmp("s", optarg, 1) == 0
-                    		|| strncmp("compare", optarg, 7) == 0) {
+                    		|| strncmp("compare", optarg, 7) == 0 || strncmp("c", optarg, 1) == 0) {
                         referenceTransfer.checksumMethod = Transfer::kChecksumStrict;
                     }
                     else {

@@ -32,7 +32,7 @@ Transfer::Statistics::Statistics()
 
 
 Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
-                       checksumMethod(kChecksumStrict), startTime(0), finishTime(0),
+                       checksumMethod(Transfer::kChecksumDoNotCheck), startTime(0), finishTime(0),
                        fileSize(0), throughput(0.0), transferredBytes(0)
 {
 }
