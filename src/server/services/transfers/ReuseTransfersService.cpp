@@ -224,15 +224,8 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 
         int level = db->getBufferOptimization();
         cmd_builder.setOptimizerLevel(level);
-        if (level == 2)
-        {
-            protocol.nostreams = db->getStreamsOptimization(
-                    representative.sourceSe, representative.destSe);
-            if (protocol.nostreams == 0)
-                protocol.nostreams = DEFAULT_NOSTREAMS;
-        }
-        else
-        {
+        protocol.nostreams = db->getStreamsOptimization(representative.sourceSe, representative.destSe);
+        if (protocol.nostreams == 0) {
             protocol.nostreams = DEFAULT_NOSTREAMS;
         }
 
@@ -297,8 +290,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     }
 
     // Debug level
-    unsigned debugLevel = db->getDebugLevel(representative.sourceSe,
-            representative.destSe);
+    unsigned debugLevel = db->getDebugLevel(representative.sourceSe, representative.destSe);
     if (debugLevel > 0)
     {
         cmd_builder.setDebugLevel(debugLevel);
@@ -317,8 +309,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     cmd_builder.setNumberOfActive(currentActive);
 
     std::string params = cmd_builder.generateParameters();
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " "
-            << params << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd_builder << commit;
     ExecuteProcess pr(cmd, params);
 
     // Check if fork failed , check if execvp failed
@@ -345,6 +336,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     }
 
     std::map<int, std::string>::const_iterator iterFileIds;
+    std::vector<events::Message> protoMsgs;
     for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
     {
         fts3::events::MessageUpdater msg2;
@@ -353,7 +345,18 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         msg2.set_process_id(pr.getPid());
         msg2.set_timestamp(milliseconds_since_epoch());
         ThreadSafeList::get_instance().push_back(msg2);
+
+        events::Message protoMsg;
+        protoMsg.set_file_id(iterFileIds->first);
+        protoMsg.set_transfer_status("UPDATE");
+        protoMsg.set_timeout(cmd_builder.getTimeout());
+        protoMsg.set_buffersize(cmd_builder.getBuffersize());
+        protoMsg.set_nostreams(cmd_builder.getNoStreams());
+        protoMsgs.push_back(protoMsg);
     }
+
+    // Set known protocol settings
+    db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(protoMsgs);
 }
 
 

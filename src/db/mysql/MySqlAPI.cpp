@@ -5915,7 +5915,7 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
     }
 }
 
-void MySqlAPI::updateProtocol(std::vector<fts3::events::Message>& messages)
+void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages)
 {
     soci::session sql(*connectionPool);
 
@@ -5957,85 +5957,12 @@ void MySqlAPI::updateProtocol(std::vector<fts3::events::Message>& messages)
     catch (std::exception& e)
     {
         sql.rollback();
-
-        //try again if deadlock occured
-        sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-        try
-        {
-            sql.begin();
-
-            for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-            {
-                internalParams.str(std::string());
-                internalParams.clear();
-
-                auto msg = *iter;
-                if(msg.transfer_status().compare("UPDATE") == 0)
-                {
-                    fileId = msg.file_id();
-                    filesize = msg.filesize();
-                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
-                    << ",timeout:" << static_cast<int> (msg.timeout())
-                    << ",buffersize:" << static_cast<int> (msg.buffersize());
-                    params = internalParams.str();
-                    stmt.execute(true);
-                }
-            }
-            sql.commit();
-
-        }
-        catch (std::exception& e)
-        {
-            sql.rollback();
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            sql.rollback();
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
         sql.rollback();
-
-        //try again if deadlock occured
-        sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-        try
-        {
-            sql.begin();
-
-            for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-            {
-                internalParams.str(std::string());
-                internalParams.clear();
-
-                auto msg = *iter;
-                if(msg.transfer_status().compare("UPDATE") == 0)
-                {
-                    fileId = msg.file_id();
-                    filesize = msg.filesize();
-                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
-                        << ",timeout:" << static_cast<int> (msg.timeout())
-                        << ",buffersize:" << static_cast<int> (msg.buffersize());
-                    params = internalParams.str();
-                    stmt.execute(true);
-                }
-            }
-            sql.commit();
-
-        }
-        catch (std::exception& e)
-        {
-            sql.rollback();
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            sql.rollback();
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
-
+        throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
 

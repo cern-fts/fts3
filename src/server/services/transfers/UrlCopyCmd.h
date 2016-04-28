@@ -78,6 +78,11 @@ public:
     void setNumberOfActive(int);
     void setNumberOfRetries(int);
     void setMaxNumberOfRetries(int);
+
+    // Observers
+    int getBuffersize();
+    int getNoStreams();
+    int getTimeout();
 };
 
 std::ostream& operator << (std::ostream& os, const fts3::server::UrlCopyCmd&);

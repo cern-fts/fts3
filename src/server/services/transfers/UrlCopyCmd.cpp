@@ -263,6 +263,36 @@ void UrlCopyCmd::setMaxNumberOfRetries(int retry_max)
 }
 
 
+int UrlCopyCmd::getBuffersize()
+{
+    auto buffersize = options["tcp-buffersize"];
+    if (buffersize.empty()) {
+        return 0;
+    }
+    return boost::lexical_cast<int>(buffersize);
+}
+
+
+int UrlCopyCmd::getNoStreams()
+{
+    auto nstreams = options["nstreams"];
+    if (nstreams.empty()) {
+        return 0;
+    }
+    return boost::lexical_cast<int>(nstreams);
+}
+
+
+int UrlCopyCmd::getTimeout()
+{
+    auto timeout = options["timeout"];
+    if (timeout.empty()) {
+        return 0;
+    }
+    return boost::lexical_cast<int>(timeout);
+}
+
+
 std::ostream &operator<<(std::ostream &os, const UrlCopyCmd &cmd)
 {
     os << UrlCopyCmd::Program << " ";

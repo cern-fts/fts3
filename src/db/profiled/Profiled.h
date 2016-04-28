@@ -253,7 +253,7 @@ public:
 
     void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
 
-    void updateProtocol(std::vector<fts3::events::Message>& tempProtocol);
+    void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol);
 
     void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 

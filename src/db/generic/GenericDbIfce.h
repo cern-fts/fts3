@@ -509,7 +509,7 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt) = 0;
 
-    virtual void updateProtocol(std::vector<fts3::events::Message>& tempProtocol) = 0;
+    virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol) = 0;
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs) = 0;
 

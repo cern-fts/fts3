@@ -5738,7 +5738,7 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
     }
 }
 
-void OracleAPI::updateProtocol(std::vector<fts3::events::Message>& messages)
+void OracleAPI::updateProtocol(const std::vector<fts3::events::Message>& messages)
 {
     soci::session sql(*connectionPool);
 

@@ -120,15 +120,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             else {
                 ProtocolResolver::protocol protocol;
 
-                int optimizerLevel = db->getBufferOptimization();
-                if (optimizerLevel == 2) {
-                    protocol.nostreams = db->getStreamsOptimization(source_hostname, destin_hostname);
-                    if (protocol.nostreams == 0)
-                        protocol.nostreams = DEFAULT_NOSTREAMS;
-                }
-                else {
+                protocol.nostreams = db->getStreamsOptimization(source_hostname, destin_hostname);
+                if (protocol.nostreams == 0)
                     protocol.nostreams = DEFAULT_NOSTREAMS;
-                }
 
                 protocol.urlcopy_tx_to = db->getGlobalTimeout();
                 if (protocol.urlcopy_tx_to == 0) {
@@ -239,6 +233,15 @@ void FileTransferExecutor::run(boost::any & ctx)
                     << " not updated. Probably picked by another node" << commit;
                 return;
             }
+
+            // Update protocol parameters (specially interested on nostreams)
+            events::Message protoMsg;
+            protoMsg.set_transfer_status("UPDATE");
+            protoMsg.set_file_id(tf.fileId);
+            protoMsg.set_buffersize(cmd_builder.getBuffersize());
+            protoMsg.set_nostreams(cmd_builder.getNoStreams());
+            protoMsg.set_timeout(cmd_builder.getTimeout());
+            db->updateProtocol(std::vector<events::Message>{protoMsg});
 
             // Spawn the fts_url_copy
             bool failed = false;

@@ -635,7 +635,7 @@ void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int
 }
 
 
-void ProfiledDB::updateProtocol(std::vector<fts3::events::Message>& tempProtocol)
+void ProfiledDB::updateProtocol(const std::vector<fts3::events::Message>& tempProtocol)
 {
     PROFILE_PREFIXED("DB::", db->updateProtocol(tempProtocol));
 }
