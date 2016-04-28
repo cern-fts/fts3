@@ -74,7 +74,12 @@ int main(int argc, char *argv[])
     panic::setup_signal_handlers(signalCallback, &urlCopyProcess);
 
     // Run the transfer
-    urlCopyProcess.run();
+    try {
+        urlCopyProcess.run();
+    }
+    catch (const std::exception &e) {
+        urlCopyProcess.panic(e.what());
+    }
 
     return 0;
 }

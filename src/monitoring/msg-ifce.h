@@ -39,12 +39,13 @@ public:
     TransferCompleted():
         timestamp_transfer_started(0), timestamp_transfer_completed(0), timestamp_checksum_source_started(0),
         timestamp_checksum_source_ended(0), timestamp_checksum_dest_started(0), timestamp_checksum_dest_ended(0),
-        transfer_timeout(0), checksum_timeout(0), total_bytes_transferred(0), number_of_streams(0), tcp_buffer_size(0),
+        transfer_timeout(0), checksum_timeout(0), transfer_error_code(0), total_bytes_transferred(0),
+        number_of_streams(0), tcp_buffer_size(0),
         block_size(0), file_size(0),
         time_spent_in_srm_preparation_start(0), time_spent_in_srm_preparation_end(0),
         time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0), tr_timestamp_start(0),
         tr_timestamp_complete(0),
-        retry(0), retry_max(0), is_recoverable(false)
+        retry(0), retry_max(0), job_m_replica(false), is_recoverable(false)
     {}
     ~TransferCompleted() {}
 

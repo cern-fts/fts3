@@ -131,8 +131,8 @@ class Optimizer: public boost::noncopyable {
 protected:
     std::map<Pair, PairState> inMemoryStore;
     OptimizerDataSource *dataSource;
-    int globalMaxPerLink, globalMaxPerStorage;
     int optimizerSteadyInterval;
+    int globalMaxPerLink, globalMaxPerStorage;
 
     void runForPair(const Pair&);
 

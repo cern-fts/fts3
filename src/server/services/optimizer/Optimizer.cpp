@@ -48,7 +48,10 @@ static inline double exponentialMovingAverage(double sample, double alpha, doubl
 }
 
 
-Optimizer::Optimizer(OptimizerDataSource *ds): dataSource(ds), optimizerSteadyInterval(300)
+Optimizer::Optimizer(OptimizerDataSource *ds):
+    dataSource(ds), optimizerSteadyInterval(300),
+    globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
+    globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK)
 {
 }
 

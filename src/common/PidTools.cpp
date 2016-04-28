@@ -15,11 +15,9 @@
  */
 
 #include "PidTools.h"
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <string.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
 
@@ -58,7 +56,12 @@ struct ProcStatInfo {
     long unsigned rsslim; // %lu
 
     ProcStatInfo() {
-        comm = (char*)malloc(sysconf(_SC_ARG_MAX));
+        memset(this, 0, sizeof(*this));
+        long maxarg = sysconf(_SC_ARG_MAX);
+        if (maxarg < 0) {
+            maxarg = 1024;
+        }
+        comm = (char*)malloc(maxarg);
     }
 
     ~ProcStatInfo() {
