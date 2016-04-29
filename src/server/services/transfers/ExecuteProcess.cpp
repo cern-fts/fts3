@@ -183,22 +183,5 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
     // Close reading end
     close(pipefds[0]);
 
-    // Sleep for a moment, check if the child is still alive
-    boost::this_thread::sleep(boost::posix_time::millisec(50));
-    int child_ret = 0;
-    int waitpid_ret = waitpid(pid, &child_ret, WNOHANG);
-
-    if (waitpid_ret < 0) {
-        forkMessage = "Failed to double check child process: " + std::string(strerror(errno));
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
-        return -1;
-    }
-    else if (waitpid_ret > 0) {
-        forkMessage = "Child process exited immediately with status " + boost::lexical_cast<std::string>(child_ret);
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage << commit;
-        // Child may have exit too quickly but successfully (0)!
-        return child_ret;
-    }
-
     return 0;
 }
