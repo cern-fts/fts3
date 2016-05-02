@@ -3759,7 +3759,6 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
         soci::indicator isNull = soci::i_ok;
         soci::indicator isNullParams = soci::i_ok;
         soci::indicator isNullPid = soci::i_ok;
-        int count = 0;
 
         soci::statement stmt = (
                                    sql.prepare <<
@@ -3772,12 +3771,6 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                    soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                                    soci::into(pid, isNullPid), soci::into(params, isNullParams), soci::into(reuse, isNull)
                                );
-
-        soci::statement stmt1 = (
-                                    sql.prepare <<
-                                    " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count)
-                                );
-
 
         if (stmt.execute(true))
         {
@@ -3800,20 +3793,8 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     timeout = 7200;
                 }
 
-                int terminateTime = timeout + 1000;
-
-                if (isNull != soci::i_null && reuse == "Y")
-                {
-                    count = 0;
-
-                    stmt1.execute(true);
-
-                    if(count > 0)
-                        terminateTime = count * 360;
-                }
-
                 diff = difftime(now2, startTime);
-                if (diff > terminateTime)
+                if (diff > timeout)
                 {
                     if(isNullPid != soci::i_null && pid > 0)
                     {
