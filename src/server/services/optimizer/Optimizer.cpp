@@ -51,7 +51,8 @@ static inline double exponentialMovingAverage(double sample, double alpha, doubl
 Optimizer::Optimizer(OptimizerDataSource *ds):
     dataSource(ds), optimizerSteadyInterval(300),
     globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
-    globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK)
+    globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK),
+    optimizerMode(1)
 {
 }
 
@@ -82,6 +83,10 @@ void Optimizer::run(void)
         globalMaxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
     }
 
+    optimizerMode = dataSource->getOptimizerMode();
+    if (optimizerMode <= 0) {
+        optimizerMode = 1;
+    }
 
     try {
         std::list<Pair> pairs = dataSource->getActivePairs();
@@ -160,11 +165,6 @@ void Optimizer::runForPair(const Pair &pair)
     bool isRangeConfigured = getOptimizerWorkingRange(pair, &range, &limits);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
-
-    // Parameters we need for the decision
-    // TODO: Move outside
-    // TODO: Per VO (??)
-    int optimizerMode = dataSource->getOptimizerMode();
 
     // Initialize current state
     PairState current;

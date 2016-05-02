@@ -133,6 +133,7 @@ protected:
     OptimizerDataSource *dataSource;
     int optimizerSteadyInterval;
     int globalMaxPerLink, globalMaxPerStorage;
+    int optimizerMode;
 
     void runForPair(const Pair&);
 
