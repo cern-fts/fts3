@@ -49,7 +49,7 @@ static void heartBeat(void)
         FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
         _exit(1);
     }
-    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat interval " << heartBeatInterval << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat interval " << heartBeatInterval << commit;
 
     while (!boost::this_thread::interruption_requested()) {
         try {
