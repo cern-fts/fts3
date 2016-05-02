@@ -21,6 +21,7 @@
 #ifndef PROTOCOLRESOLVER_H_
 #define PROTOCOLRESOLVER_H_
 
+#include "common/definitions.h"
 #include "db/generic/SingleDbInstance.h"
 
 #include <list>
@@ -52,20 +53,15 @@ public:
      */
     struct protocol
     {
-        protocol():nostreams(4),tcp_buffer_size(0),urlcopy_tx_to(3600), strict_copy(false) {}
+        protocol() : nostreams(DEFAULT_NOSTREAMS), tcp_buffer_size(DEFAULT_BUFFSIZE), urlcopy_tx_to(DEFAULT_TIMEOUT),
+                     strict_copy(false)
+        { }
 
         int nostreams;
         int tcp_buffer_size;
         int urlcopy_tx_to;
         bool strict_copy;
         boost::tribool ipv6;
-
-        static const int size = 4;
-
-        int& operator[] (const int index)
-        {
-            return ((int*) this)[index];
-        }
     };
 
     /**
@@ -116,13 +112,6 @@ public:
      * @return an object containing protocol parameters (the memory has to be released by the user)
      */
     bool resolve();
-
-    /**
-     * checks if the configuration says to use auto tuning
-     *
-     * @return true if auto tuning should be used, false otherwise
-     */
-    bool isAuto();
 
     /**
      * gets the number of streams that should be used
@@ -201,23 +190,6 @@ private:
      * @return an object containing protocol parameters (the memory has to be released by the user)
      */
     boost::optional<protocol> merge(boost::optional<protocol> source, boost::optional<protocol> destination);
-
-    /**
-     * Fill the fields market as auto (-1) with respective value
-     *
-     * @param p - the protocol that if being transformed
-     * @return input protocol after transformation
-     */
-    void fillAuto(boost::optional<protocol>& source, boost::optional<protocol>& destination);
-
-
-    /**
-     * Does the auto tuning in case the protocol was set to 'auto'
-     *
-     * @param source - the source hostname
-     * @param destination - the destination hostname
-     */
-    protocol autotune();
 
     /// DB singleton instance
     GenericDbIfce* db;

@@ -24,7 +24,6 @@
 #include "server/services/webservice/ws/config/Configuration.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
 
 using namespace fts3::server;
 using namespace fts3::ws;
@@ -144,96 +143,29 @@ boost::optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProt
 {
     if (file.internalFileParams.empty()) return boost::optional<protocol>();
 
-    std::vector<std::string> params;
-    boost::split(params, file.internalFileParams, boost::is_any_of(","));
-
+    auto params = file.getProtocolParameters();
     protocol ret;
 
-    for (auto i = params.begin(); i != params.end(); ++i)
-        {
-            if (boost::starts_with(*i, "nostreams:"))
-                {
-                    ret.nostreams = boost::lexical_cast<int>(i->substr(10));
-                }
-            else if (boost::starts_with(*i, "timeout:"))
-                {
-                    ret.urlcopy_tx_to = boost::lexical_cast<int>(i->substr(8));
-                }
-            else if (boost::starts_with(*i, "buffersize:"))
-                {
-                    ret.tcp_buffer_size = boost::lexical_cast<int>(i->substr(11));
-                }
-            else if (*i == "strict")
-                {
-                    ret.strict_copy = true;
-                }
-            else if (*i == "ipv4")
-                {
-                    ret.ipv6 = false;
-                }
-            else if (*i == "ipv6")
-                {
-                    ret.ipv6 = true;
-                }
-        }
+    ret.ipv6 = params.ipv6;
+    ret.nostreams = params.nostreams;
+    ret.strict_copy = params.strictCopy;
+    ret.tcp_buffer_size = params.buffersize;
+    ret.urlcopy_tx_to = params.timeout;
 
     return ret;
 }
 
-void ProtocolResolver::fillAuto(boost::optional<protocol>& source, boost::optional<protocol>& destination)
-{
-
-    if (!source && !destination) return;
-
-    protocol auto_prot = autotune();
-
-    // iterate over all protocol parameters
-    for (int i = 0; i < protocol::size; i++)
-        {
-            // source and destination auto flags
-            bool src_auto_tuned = false, dst_auto_tuned = false;
-            // check the source
-            if (source.is_initialized() && (*source)[i] == automatic)
-                {
-                    // set the flag
-                    src_auto_tuned = true;
-                    (*source)[i] = auto_prot[i];
-                }
-            // check the destination
-            if (destination.is_initialized() && (*destination)[i] == automatic)
-                {
-                    // set the flag
-                    dst_auto_tuned = true;
-                    (*destination)[i] = auto_prot[i];
-                }
-            // auto_tuned is set to true if:
-            // - both source and destination use auto
-            // - or source uses auto and destination does not exist
-            // - or destination uses auto and source does not exist
-            auto_tuned |= (src_auto_tuned && dst_auto_tuned) || (src_auto_tuned && !destination) || (dst_auto_tuned && !source);
-        }
-}
-
 boost::optional<ProtocolResolver::protocol> ProtocolResolver::merge(boost::optional<protocol> source, boost::optional<protocol> destination)
 {
-    // replace the 'automatic' marker (-1) with autotuner values
-    fillAuto(source, destination);
-
     // make sure both source and destination protocol exists
     if (!source) return destination;
     if (!destination) return source;
 
     protocol ret, &src_prot = *source, &dst_prot = *destination;
 
-    // iterate over all protocol parameters
-    for (int i = 0; i < protocol::size; i++)
-        {
-            ret[i] =
-                src_prot[i] < dst_prot[i] ?
-                src_prot[i] : dst_prot[i]
-                ;
-        }
-
+    ret.nostreams = std::min(src_prot.nostreams, dst_prot.nostreams);
+    ret.tcp_buffer_size = std::min(src_prot.tcp_buffer_size, dst_prot.tcp_buffer_size);
+    ret.urlcopy_tx_to = std::max(src_prot.urlcopy_tx_to, dst_prot.urlcopy_tx_to);
     ret.strict_copy = (src_prot.strict_copy || dst_prot.strict_copy);
     ret.ipv6 = (src_prot.ipv6 || dst_prot.ipv6);
 
@@ -282,22 +214,6 @@ bool ProtocolResolver::resolve()
            );
 
     return prot.is_initialized();
-}
-
-ProtocolResolver::protocol ProtocolResolver::autotune()
-{
-    protocol ret;
-
-    ret.tcp_buffer_size = DEFAULT_BUFFSIZE;
-    ret.nostreams = DEFAULT_NOSTREAMS;
-    ret.urlcopy_tx_to = DEFAULT_TIMEOUT;
-
-    return ret;
-}
-
-bool ProtocolResolver::isAuto()
-{
-    return auto_tuned;
 }
 
 int ProtocolResolver::getNoStreams()

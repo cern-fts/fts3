@@ -23,6 +23,10 @@
 #define TRANSFERFILES_H_
 
 #include <string>
+#include <vector>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/logic/tribool.hpp>
 
 /**
  * Describes the status of one file in a transfer job.
@@ -30,6 +34,45 @@
 class TransferFile
 {
 public:
+
+    struct ProtocolParameters {
+        int nostreams;
+        int timeout;
+        int buffersize;
+        bool strictCopy;
+        boost::tribool ipv6;
+
+        ProtocolParameters(): nostreams(1), timeout(0), buffersize(0),
+          strictCopy(false) {}
+
+        ProtocolParameters(const std::string &serialized): nostreams(1), timeout(0), buffersize(0),
+            strictCopy(false)
+        {
+            std::vector<std::string> params;
+            boost::split(params, serialized, boost::is_any_of(","));
+
+            for (auto i = params.begin(); i != params.end(); ++i) {
+                if (boost::starts_with(*i, "nostreams:")) {
+                    nostreams = boost::lexical_cast<int>(i->substr(10));
+                }
+                else if (boost::starts_with(*i, "timeout:")) {
+                    timeout = boost::lexical_cast<int>(i->substr(8));
+                }
+                else if (boost::starts_with(*i, "buffersize:")) {
+                    buffersize = boost::lexical_cast<int>(i->substr(11));
+                }
+                else if (*i == "strict") {
+                    strictCopy = true;
+                }
+                else if (*i == "ipv4") {
+                    ipv6 = false;
+                }
+                else if (*i == "ipv6") {
+                    ipv6 = true;
+                }
+            }
+        }
+    };
 
 
     TransferFile() :
@@ -77,6 +120,10 @@ public:
     std::string userCredentials;
     std::string reuseJob;
     int lastReplica;
+
+    ProtocolParameters getProtocolParameters(void) const {
+        return ProtocolParameters(internalFileParams);
+    }
 };
 
 #endif // TRANSFERFILES_H_
