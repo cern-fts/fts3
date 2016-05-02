@@ -163,51 +163,10 @@ OptimizerDetailedCtrl.resolve = {
     }
 }
 
-// From
-// http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
-function hsvToRgb(h, s, v){
-    var r, g, b;
-
-    var i = Math.floor(h * 6);
-    var f = h * 6 - i;
-    var p = v * (1 - s);
-    var q = v * (1 - f * s);
-    var t = v * (1 - (1 - f) * s);
-
-    switch(i % 6){
-        case 0: r = v, g = t, b = p; break;
-        case 1: r = q, g = v, b = p; break;
-        case 2: r = p, g = v, b = t; break;
-        case 3: r = p, g = q, b = v; break;
-        case 4: r = t, g = p, b = v; break;
-        case 5: r = v, g = p, b = q; break;
-    }
-
-    return [r * 255, g * 255, b * 255];
-}
-
-
-function quantileColor(stream)
-{
-    var n_quantiles = stream.quantiles;
-    var quantile = stream.quantile;
-
-    var h_start = 0;
-    var h_end   = 0.333;
-
-    var h = h_start + ((h_end - h_start) * ((quantile - 1) / n_quantiles));
-
-    var rgb = hsvToRgb(h, 1, 1);
-    var color = 'rgba(' + Math.ceil(rgb[0]) + ',' + Math.ceil(rgb[1]) + ',' + Math.ceil(rgb[2]) + ', 0.8)';
-
-    return {'border-left': 'solid 10px ' + color};
-}
-
 
 function OptimizerStreamsCtrl($rootScope, $location, $scope, streams, OptimizerStreams)
 {
     $scope.streams = streams;
-    $scope.quantileColor = quantileColor;
 
     // Set timer to trigger autorefresh
     $scope.autoRefresh = setInterval(function() {

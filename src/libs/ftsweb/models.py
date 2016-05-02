@@ -332,8 +332,6 @@ class OptimizerStreams(models.Model):
     dest_se    = models.CharField(max_length = 255)
     nostreams  = models.IntegerField()
     datetime   = models.DateTimeField(primary_key = True)
-    throughput = models.FloatField()
-    tested     = models.IntegerField()
 
     def __eq__(self, other):
         if type(self) != type(other):
