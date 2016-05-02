@@ -87,10 +87,6 @@ public:
 
     CompareChecksum checksumMethod;
 
-    // Timestamps in milliseconds
-    uint64_t startTime;
-    uint64_t finishTime;
-
     // File size
     uint64_t fileSize;
 

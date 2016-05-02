@@ -32,7 +32,7 @@ Transfer::Statistics::Statistics()
 
 
 Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
-                       checksumMethod(Transfer::kChecksumDoNotCheck), startTime(0), finishTime(0),
+                       checksumMethod(Transfer::kChecksumDoNotCheck),
                        fileSize(0), throughput(0.0), transferredBytes(0)
 {
 }
@@ -40,10 +40,10 @@ Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), 
 
 double Transfer::getTransferDurationInSeconds() const
 {
-    if (startTime == 0 || finishTime == 0) {
+    if (stats.transfer.start == 0 || stats.transfer.end == 0) {
         return 0;
     }
-    return (static_cast<double>(finishTime - startTime)) / 1000.0;
+    return (static_cast<double>(stats.transfer.end - stats.transfer.start)) / 1000.0;
 }
 
 
