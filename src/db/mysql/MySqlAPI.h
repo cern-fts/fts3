@@ -423,7 +423,7 @@ private:
 
     std::string getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
-    int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
+    int getCredits(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
 
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string jobId, int fileId, std::string newState,
                                           std::string transferMessage, int processId, double filesize, double duration, bool retry);

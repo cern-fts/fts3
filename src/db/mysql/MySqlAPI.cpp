@@ -3589,22 +3589,36 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
 
     int maxActive = 0;
     bool allowed = false;
-    std::string activeFixed;
 
     try
     {
-        sql << "SELECT active, fixed FROM t_optimize_active "
+        sql << "SELECT active FROM t_optimize_active "
                "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
                soci::use(sourceStorage), soci::use(destStorage),
-               soci::into(maxActive), soci::into(activeFixed);
+               soci::into(maxActive);
         if (!sql.got_data()) {
             maxActive = DEFAULT_MIN_ACTIVE;
         }
 
-        sql << "SELECT count(*) FROM t_file "
-               "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
-               soci::use(sourceStorage), soci::use(destStorage),
-               soci::into(currentActive);
+        // The trick here, is that t_optimize_active refers to the number of connections,
+        // so we need to count the number of streams
+        currentActive = 0;
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT internal_file_params FROM t_file "
+            "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
+            soci::use(sourceStorage), soci::use(destStorage)
+        );
+        for (auto i = rs.begin(); i != rs.end(); ++i) {
+            auto paramsStr = i->get<std::string>("internal_file_params", "");
+
+            if (paramsStr.empty()) {
+                ++currentActive;
+            }
+            else {
+                TransferFile::ProtocolParameters params(paramsStr);
+                currentActive += params.nostreams;
+            }
+        }
 
         allowed = (currentActive < maxActive);
     }
@@ -3620,7 +3634,7 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
 }
 
 
-int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> & destination)
+int MySqlAPI::getSeOut(const std::string &source, const std::set<std::string> &destinations)
 {
     soci::session sql(*connectionPool);
 
@@ -3629,22 +3643,29 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
 
     try
     {
-        int nActiveSource=0;
+        int nActiveSource = 0;
 
-        std::set<std::string>::iterator it;
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT internal_file_params FROM t_file "
+            "WHERE source_se = :source AND file_state = 'ACTIVE' AND job_finished is NULL ",
+            soci::use(source)
+        );
+        for (auto i = rs.begin(); i != rs.end(); ++i) {
+            auto paramsStr = i->get<std::string>("internal_file_params", "");
 
-        std::string source_hostname = source;
+            if (paramsStr.empty()) {
+                ++nActiveSource;
+            }
+            else {
+                TransferFile::ProtocolParameters params(paramsStr);
+                nActiveSource += params.nostreams;
+            }
+        }
 
-        sql << "SELECT COUNT(*) FROM t_file "
-            "WHERE t_file.source_se = :source AND t_file.file_state  = 'ACTIVE' and job_finished is null ",
-            soci::use(source_hostname), soci::into(nActiveSource);
-
-        ret += nActiveSource;
-
-        for (it = destination.begin(); it != destination.end(); ++it)
+        ret = nActiveSource;
+        for (auto it = destinations.begin(); it != destinations.end(); ++it)
         {
-            std::string destin_hostname = *it;
-            ret += getCredits(sql, source_hostname, destin_hostname);
+            ret += getCredits(sql, source, *it);
         }
 
     }
@@ -3660,7 +3681,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
     return ret;
 }
 
-int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & destination)
+int MySqlAPI::getSeIn(const std::set<std::string> &sources, const std::string &destination)
 {
     soci::session sql(*connectionPool);
 
@@ -3669,22 +3690,29 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 
     try
     {
-        int nActiveDest=0;
+        int nActiveDest = 0;
 
-        std::set<std::string>::iterator it;
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT internal_file_params FROM t_file "
+            "WHERE dest_se = :dest AND file_state = 'ACTIVE' AND job_finished is NULL ",
+            soci::use(destination)
+        );
+        for (auto i = rs.begin(); i != rs.end(); ++i) {
+            auto paramsStr = i->get<std::string>("internal_file_params", "");
 
-        std::string destin_hostname = destination;
-
-        sql << "SELECT COUNT(*) FROM t_file "
-            "WHERE t_file.dest_se = :dst AND t_file.file_state  = 'ACTIVE' and job_finished is null ",
-            soci::use(destin_hostname), soci::into(nActiveDest);
+            if (paramsStr.empty()) {
+                ++nActiveDest;
+            }
+            else {
+                TransferFile::ProtocolParameters params(paramsStr);
+                nActiveDest += params.nostreams;
+            }
+        }
 
         ret += nActiveDest;
-
-        for (it = source.begin(); it != source.end(); ++it)
+        for (auto it = sources.begin(); it != sources.end(); ++it)
         {
-            std::string source_hostname = *it;
-            ret += getCredits(sql, source_hostname, destin_hostname);
+            ret += getCredits(sql, *it, destination);
         }
 
     }
@@ -3700,27 +3728,42 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
     return ret;
 }
 
-int MySqlAPI::getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destin_hostname)
+int MySqlAPI::getCredits(soci::session& sql, const std::string &sourceSe, const std::string &destSe)
 {
     int freeCredits = 0;
-    int limit = 0;
-    int maxActive = 0;
-    soci::indicator isNull = soci::i_ok;
 
     try
     {
-        sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state  = 'ACTIVE' and job_finished is null ",
-            soci::use(source_hostname),
-            soci::use(destin_hostname),
-            soci::into(limit);
+        int pairActiveCount = 0;
 
-        sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
-            soci::use(source_hostname),
-            soci::use(destin_hostname),
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT internal_file_params FROM t_file "
+            " WHERE source_se = :source AND dest_se = :dest AND file_state = 'ACTIVE' AND job_finished is NULL ",
+            soci::use(sourceSe), soci::use(destSe)
+        );
+        for (auto i = rs.begin(); i != rs.end(); ++i) {
+            auto paramsStr = i->get<std::string>("internal_file_params", "");
+
+            if (paramsStr.empty()) {
+                ++pairActiveCount;
+            }
+            else {
+                TransferFile::ProtocolParameters params(paramsStr);
+                pairActiveCount += params.nostreams;
+            }
+        }
+
+        int maxActive = 0;
+        soci::indicator isNull = soci::i_ok;
+        sql << "SELECT active FROM t_optimize_active "
+               " WHERE source_se = :source_se AND dest_se = :dest_se",
+            soci::use(sourceSe),
+            soci::use(destSe),
             soci::into(maxActive, isNull);
 
-        if (isNull != soci::i_null)
-            freeCredits = maxActive - limit;
+        if (isNull != soci::i_null) {
+            freeCredits = maxActive - pairActiveCount;
+        }
 
     }
     catch (std::exception& e)
