@@ -159,6 +159,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     status.set_dest_se(transfer.destination.host);
     status.set_process_id(getpid());
     status.set_filesize(transfer.fileSize);
+    status.set_time_in_secs(transfer.getTransferDurationInSeconds());
 
     if (transfer.error) {
         std::stringstream fullErrMsg;
