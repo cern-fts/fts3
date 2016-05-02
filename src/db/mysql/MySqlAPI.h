@@ -460,5 +460,5 @@ private:
 
     bool getUserDnVisibleInternal(soci::session& sql);
 
-    int getStreamsOptimizationInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
+    int getStreamsOptimizationInternal(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
 };

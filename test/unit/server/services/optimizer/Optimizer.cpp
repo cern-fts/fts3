@@ -64,6 +64,7 @@ typedef std::list<MockTransfer> TransferList;
 class BaseOptimizerFixture: public OptimizerDataSource, public Optimizer {
 protected:
     std::map<Pair, OptimizerRegister> registry;
+    std::map<Pair, int> streamsRegistry;
     std::map<Pair, TransferList> transferStore;
 
     void populateTransfers(const Pair &pair, const std::string &state, int count,
@@ -111,6 +112,7 @@ public:
     BaseOptimizerFixture(): Optimizer(this) {
         globalMaxPerStorage = DEFAULT_MAX_ACTIVE_ENDPOINT_LINK;
         globalMaxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
+        optimizerMode = 1;
     }
 
     std::list<Pair> getActivePairs(void) {
@@ -120,7 +122,7 @@ public:
     }
 
     int getOptimizerMode(void) {
-        return 0;
+        return 2;
     }
 
     bool isRetryEnabled(void) {
@@ -304,6 +306,10 @@ public:
         const PairState &newState, int diff, const std::string &rationale) {
         registry[pair].push_back(OptimizerEntry(activeDecision, bandwidthLimit, newState, diff, rationale));
     }
+
+    void storeOptimizerStreams(const Pair &pair, int streams) {
+        streamsRegistry[pair] = streams;
+    }
 };
 
 
@@ -383,7 +389,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "ACTIVE", 20);
 
     // Run once (first time)
-    optimizeConnectionsForPair(pair);
+    runOptimizerForPair(pair);
 
     // Patch decision
     setOptimizerValue(pair, 20);
@@ -393,12 +399,13 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "FAILED", 10, true);
 
     // Run again
-    optimizeConnectionsForPair(pair);
+    runOptimizerForPair(pair);
 
     // Should back off
     auto lastEntry = getLastEntry(pair);
 
     BOOST_CHECK_LT(lastEntry->activeDecision, 20);
+    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
 }
 
 // Success rate gets better, so the number should be increased
@@ -413,7 +420,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 100);
 
     // Run once (first time)
-    optimizeConnectionsForPair(pair);
+    runOptimizerForPair(pair);
 
     // Patch decision
     setOptimizerValue(pair, 20);
@@ -424,17 +431,84 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 20, false, 150);
 
     // Run again
-    optimizeConnectionsForPair(pair);
+    runOptimizerForPair(pair);
 
-    // Should back off
     auto lastEntry = getLastEntry(pair);
 
     BOOST_CHECK_GT(lastEntry->activeDecision, 20);
+    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
 }
 
+// Success rate gets better, so the number should be increased, but there aren't
+// enough queued. Optimizer mode is 1, so should stay stable.
+BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
+{
+    optimizerMode = 1;
+
+    const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+
+    // Feed successful and actives
+    populateTransfers(pair, "FINISHED", 96, false, 100);
+    populateTransfers(pair, "FAILED", 4, true);
+    populateTransfers(pair, "ACTIVE", 20);
+    populateTransfers(pair, "SUBMITTED", 10);
+
+    // Run once (first time)
+    runOptimizerForPair(pair);
+
+    // Patch decision
+    setOptimizerValue(pair, 40);
+
+    // New finished
+    removeTransfers(pair, "ACTIVE", 15);
+    removeTransfers(pair, "FAILED", 2);
+    populateTransfers(pair, "FINISHED", 20, false, 150);
+
+    // Run again
+    runOptimizerForPair(pair);
+
+    auto lastEntry = getLastEntry(pair);
+
+    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
+    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
+}
+
+// Success rate gets better, so the number should be increased, but there aren't
+// enough queued. Optimizer mode is 2, so streams should be increased.
+BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
+{
+    optimizerMode = 2;
+
+    const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+
+    // Feed successful and actives
+    populateTransfers(pair, "FINISHED", 96, false, 100);
+    populateTransfers(pair, "FAILED", 4, true);
+    populateTransfers(pair, "ACTIVE", 20);
+    populateTransfers(pair, "SUBMITTED", 10);
+
+    // Run once (first time)
+    runOptimizerForPair(pair);
+
+    // Patch decision
+    setOptimizerValue(pair, 40);
+
+    // New finished
+    removeTransfers(pair, "ACTIVE", 15);
+    removeTransfers(pair, "FAILED", 2);
+    populateTransfers(pair, "FINISHED", 20, false, 150);
+
+    // Run again
+    runOptimizerForPair(pair);
+
+    auto lastEntry = getLastEntry(pair);
+
+    BOOST_CHECK_GT(lastEntry->activeDecision, 40);
+    BOOST_CHECK_GT(streamsRegistry[pair], 1);
+}
 
 // NOTE: I am not sure it is worth to add more tests. At the end, we will basically be
-//       writting tests that set the parameters to fit the implementation at the time.
+//       writing tests that set the parameters to fit the implementation at the time.
 //       They do not prove that the optimizer optimizes.
 //       Still useful to have something that, at the very least, checks it doesn't crash!
 

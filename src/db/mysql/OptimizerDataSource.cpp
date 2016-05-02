@@ -387,6 +387,20 @@ public:
         updateOptimizerEvolution(sql, pair, activeDecision, newState.throughput, newState.successRate,
             bandwidthLimit, newState.activeCount, newState.queueSize, diff, rationale);
     }
+
+    void storeOptimizerStreams(const Pair &pair, int streams) {
+        sql.begin();
+
+        sql << "INSERT INTO t_optimize_streams (source_se, dest_se, nostreams, datetime) "
+               " VALUES(:source, :dest, :nostreams, UTC_TIMESTAMP()) "
+               " ON DUPLICATE KEY"
+               " UPDATE "
+               "    nostreams = :nostreams, datetime = UTC_TIMESTAMP()",
+            soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
+            soci::use(streams, "nostreams");
+
+        sql.commit();
+    }
 };
 
 

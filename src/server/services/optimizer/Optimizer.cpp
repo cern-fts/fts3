@@ -74,10 +74,7 @@ void Optimizer::run(void)
         std::list<Pair> pairs = dataSource->getActivePairs();
 
         for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-            optimizeConnectionsForPair(*i);
-            if (optimizerMode >= 2) {
-                optimizeStreamsForPair(*i);
-            }
+            runOptimizerForPair(*i);
         }
     }
     catch (std::exception &e) {
@@ -88,6 +85,12 @@ void Optimizer::run(void)
     }
 }
 
+
+void Optimizer::runOptimizerForPair(const Pair &pair)
+{
+    optimizeConnectionsForPair(pair);
+    optimizeStreamsForPair(pair);
+}
 
 }
 }

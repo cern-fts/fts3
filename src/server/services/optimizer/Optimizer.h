@@ -73,13 +73,15 @@ struct PairState {
     int queueSize;
     // Exponential Moving Average
     double ema;
+    // Optimizer last decision
+    int connections;
 
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0) {}
+                 queueSize(0), ema(0), connections(1) {}
 
-    PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema):
+    PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
-        activeCount(ac), queueSize(qs), ema(ema) {}
+        activeCount(ac), queueSize(qs), ema(ema), connections(conn) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -124,6 +126,9 @@ public:
     // Permanently register the optimizer decision
     virtual void storeOptimizerDecision(const Pair &pair, int activeDecision, double bandwidthLimit,
         const PairState &newState, int diff, const std::string &rationale) = 0;
+
+    // Permanently register the number of streams per active
+    virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
 };
 
 // Optimizer implementation
@@ -146,12 +151,17 @@ protected:
     // Returns false if the range max is *not* configured, so the optimizer must be careful and start low
     bool getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits);
 
+    // Updates decision
+    void storeOptimizerDecision(const Pair &pair, int decision, double throughput, const PairState &current,
+        int diff, const std::string &rationale);
+
 public:
     Optimizer(OptimizerDataSource *ds);
     ~Optimizer();
 
     void setSteadyInterval(int);
     void run(void);
+    void runOptimizerForPair(const Pair&);
 };
 
 

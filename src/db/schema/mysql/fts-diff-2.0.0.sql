@@ -57,6 +57,14 @@ WHERE datetime > (UTC_TIMESTAMP() - INTERVAL 7 DAY);
 DROP TABLE t_optimizer_evolution;
 RENAME TABLE t_optimizer_evolution_new TO t_optimizer_evolution;
 
+-- Prepare t_optimize_streams
+TRUNCATE t_optimize_streams;
+ALTER TABLE t_optimize_streams
+    DROP COLUMN `throughput`,
+    DROP COLUMN `tested`,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (source_se, dest_se);
+
 --
 -- Store update history
 --

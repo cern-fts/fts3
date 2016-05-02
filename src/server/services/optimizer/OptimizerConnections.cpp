@@ -91,7 +91,11 @@ bool Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
     return isMaxConfigured;
 }
 
-
+// This algorithm idea is similar to the TCP congestion window.
+// It gives priority to success rate. If it gets worse, it will back off reducing
+// the total number of connections between storages.
+// If the success rate is good, and the throughput improves, it will increase the number
+// of connections.
 void Optimizer::optimizeConnectionsForPair(const Pair &pair)
 {
     // Optimizer working values
@@ -132,7 +136,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        dataSource->storeOptimizerDecision(pair, range.min, 0.0, current, 0, "Range fixed");
+        storeOptimizerDecision(pair, range.min, 0.0, current, 0, "Range fixed");
         return;
     }
 
@@ -153,7 +157,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             rationale << "No information. Use to default min.";
         }
 
-        dataSource->storeOptimizerDecision(pair, decision, 0.0, current, decision, rationale.str());
+        storeOptimizerDecision(pair, decision, 0.0, current, decision, rationale.str());
         return;
     }
 
@@ -163,7 +167,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         if (throughput > limits.throughputSource) {
             decision = previousValue - 1;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            dataSource->storeOptimizerDecision(pair, decision, limits.throughputSource, current, 0, rationale.str());
+            storeOptimizerDecision(pair, decision, limits.throughputSource, current, 0, rationale.str());
             return;
         }
     }
@@ -172,7 +176,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         if (throughput > limits.throughputDestination) {
             decision = previousValue - 1;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            dataSource->storeOptimizerDecision(pair, decision, limits.throughputDestination, current, 0, rationale.str());
+            storeOptimizerDecision(pair, decision, limits.throughputDestination, current, 0, rationale.str());
             return;
         }
     }
@@ -198,19 +202,19 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     if (activeForSource >= limits.source) {
         decision = previousValue;
         rationale << "Source limit reached (" << activeForSource << "/" << limits.source << ")";
-        dataSource->storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
+        storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
         return;
     }
     if (activeForDestination >= limits.destination) {
         decision = previousValue;
         rationale << "Destination limit reached (" << activeForDestination << "/" << limits.destination << ")";
-        dataSource->storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
+        storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
         return;
     }
     if (current.activeCount >= limits.link) {
         decision = previousValue;
         rationale << "Link limit reached (" << current.activeCount << "/" << limits.link << ")";
-        dataSource->storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
+        storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
         return;
     }
 
@@ -288,18 +292,30 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         rationale << ". Hit range limit";
     }
 
-    // Do not push further if there are no transfers in the queue
-    if (decision > previousValue && current.queueSize < decision) {
-        decision = previousValue;
-        rationale << ". Not enough files in the queue";
+    // We may have a higher number of connections than available on the queue.
+    // If stream optimize is enabled, push forward and let those extra connections
+    // go into streams.
+    // Otherwise, stop pushing.
+    if (optimizerMode <= 1) {
+        if (decision > previousValue && current.queueSize < decision) {
+            decision = previousValue;
+            rationale << ". Not enough files in the queue";
+        }
     }
 
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    dataSource->storeOptimizerDecision(pair, decision, 0.0, current, decision - previousValue, rationale.str());
+    storeOptimizerDecision(pair, decision, 0.0, current, decision - previousValue, rationale.str());
 }
 
+
+void Optimizer::storeOptimizerDecision(const Pair &pair, int decision, double throughput, const PairState &current,
+    int diff, const std::string &rationale)
+{
+    inMemoryStore[pair].connections = decision;
+    dataSource->storeOptimizerDecision(pair, decision, throughput, current, diff, rationale);
+}
 
 }
 }

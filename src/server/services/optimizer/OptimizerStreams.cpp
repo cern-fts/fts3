@@ -30,9 +30,30 @@ namespace fts3 {
 namespace optimizer {
 
 
+// This part of the algorithm will check how to split the number of connections
+// between the number of available transfers.
+// Basically, divide the number of connections between the number of queued+active
 void Optimizer::optimizeStreamsForPair(const Pair &pair)
 {
+    // No optimization for streams, so go for 1
+    if (optimizerMode == 1) {
+        dataSource->storeOptimizerStreams(pair, 1);
+        return;
+    }
 
+    auto state = inMemoryStore[pair];
+
+    int connectionsAvailable = state.connections;
+    int availableTransfers = state.activeCount + state.queueSize;
+    int streamsDecision = 1;
+
+    if (availableTransfers > 0) {
+        streamsDecision = std::max(
+            static_cast<int>(floor(connectionsAvailable/availableTransfers)),
+            1);
+    }
+
+    dataSource->storeOptimizerStreams(pair, streamsDecision);
 }
 
 

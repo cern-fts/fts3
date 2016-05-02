@@ -8942,60 +8942,33 @@ bool MySqlAPI::isProtocolIPv6(const std::string & source_hostname, const std::st
     return false;
 }
 
-int MySqlAPI::getStreamsOptimizationInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname)
+int MySqlAPI::getStreamsOptimizationInternal(soci::session &sql, const std::string &sourceSe,
+    const std::string &destSe)
 {
-    long long int maxNoStreams = 0;
-    long long int optimumNoStreams = 0;
-    int defaultStreams = 1;
-    soci::indicator isNullMaxStreamsFound = soci::i_ok;
-    soci::indicator isNullOptimumStreamsFound = soci::i_ok;
-    int allTested = 0;
-    int global_tcp_stream = 0;
-
     try
     {
-        sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0",
-            soci::into(global_tcp_stream);
-        if(sql.got_data() && global_tcp_stream > 0)
-        {
-            return global_tcp_stream;
+        int globalConfig = 0;
+        sql << "SELECT global_tcp_stream "
+               " FROM t_server_config "
+               " WHERE (vo_name IS NULL OR vo_name = '*') AND "
+               "    global_tcp_stream > 0",
+            soci::into(globalConfig);
+        if(sql.got_data() && globalConfig > 0) {
+            return globalConfig;
         }
 
-        sql << " SELECT count(*) from t_optimize_streams where source_se=:source_se "
-            " and dest_se=:dest_se and tested = 1 and throughput is not NULL  and throughput > 0",
-            soci::use(source_hostname), soci::use(destination_hostname), soci::into(allTested);
+        int streams = 0;
+        soci::indicator isNullStreams = soci::i_ok;
+        sql << " SELECT nostreams FROM t_optimize_streams "
+               " WHERE source_se = :source_se AND dest_se = :dest_se",
+            soci::use(sourceSe), soci::use(destSe),
+            soci::into(streams, isNullStreams);
 
-        if(sql.got_data())
-        {
-            if(allTested == 16) //this is the maximum, meaning taken all samples from 1-16 TCP strreams
-            {
-                sql << " SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
-                    soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
-
-                if(sql.got_data())
-                {
-                    return (int) optimumNoStreams;
-                }
-                else
-                {
-                    return defaultStreams;
-                }
-            }
-            else
-            {
-                sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
-                    soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
-
-                sql.begin();
-                sql << "update IGNORE t_optimize_streams set tested = 1, datetime = UTC_TIMESTAMP() where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
-                    soci::use(source_hostname), soci::use(destination_hostname), soci::use(maxNoStreams);
-                sql.commit();
-                return (int) maxNoStreams;
-            }
+        if (isNullStreams == soci::i_ok) {
+            return streams;
         }
-        else  //it's NULL, no info yet stored, use default 1
-        {
-            return defaultStreams;
+        else {
+            return DEFAULT_NOSTREAMS;
         }
     }
     catch (std::exception& e)
@@ -9008,9 +8981,6 @@ int MySqlAPI::getStreamsOptimizationInternal(soci::session& sql, const std::stri
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-
-    return defaultStreams;
-
 }
 
 int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
