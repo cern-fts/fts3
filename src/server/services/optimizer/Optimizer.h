@@ -135,7 +135,11 @@ protected:
     int globalMaxPerLink, globalMaxPerStorage;
     int optimizerMode;
 
-    void runForPair(const Pair&);
+    // Run the optimization algorithm for the number of connections.
+    void optimizeConnectionsForPair(const Pair &);
+
+    // Run the optimization algorithm for the number of streams.
+    void optimizeStreamsForPair(const Pair &);
 
     // Stores into rangeActiveMin and rangeActiveMax the working range for the optimizer
     // Returns true if the range is configured, so the optimizer can start higher by default
@@ -149,6 +153,16 @@ public:
     void setSteadyInterval(int);
     void run(void);
 };
+
+
+inline std::ostream& operator << (std::ostream &os, const Pair &pair) {
+    return (os << pair.source << " => " << pair.destination);
+}
+
+
+inline std::ostream& operator << (std::ostream &os, const Range &range) {
+    return (os << range.min << "/" << range.max);
+}
 
 }
 }

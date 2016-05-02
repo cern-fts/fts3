@@ -383,7 +383,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "ACTIVE", 20);
 
     // Run once (first time)
-    runForPair(pair);
+    optimizeConnectionsForPair(pair);
 
     // Patch decision
     setOptimizerValue(pair, 20);
@@ -393,7 +393,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "FAILED", 10, true);
 
     // Run again
-    runForPair(pair);
+    optimizeConnectionsForPair(pair);
 
     // Should back off
     auto lastEntry = getLastEntry(pair);
@@ -413,7 +413,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 100);
 
     // Run once (first time)
-    runForPair(pair);
+    optimizeConnectionsForPair(pair);
 
     // Patch decision
     setOptimizerValue(pair, 20);
@@ -424,7 +424,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 20, false, 150);
 
     // Run again
-    runForPair(pair);
+    optimizeConnectionsForPair(pair);
 
     // Should back off
     auto lastEntry = getLastEntry(pair);
