@@ -29,6 +29,9 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 #include "config/ServerConfig.h"
 #include "common/Exceptions.h"
@@ -41,6 +44,17 @@ using namespace fts3::config;
 using namespace fts3::common;
 using namespace db;
 
+std::string exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get())) {
+        if (fgets(buffer, 128, pipe.get()) != NULL)
+            result += buffer;
+    }
+    return result;
+}
 
 static int DoPublisher(int argc, char **argv)
 {
@@ -74,14 +88,34 @@ static int DoPublisher(int argc, char **argv)
     }
 
     //get fts server health state
+    
     std::string serverStatus("");
+    bool centos = false;
     if (fs::exists("/var/lock/subsys/fts-server")) {
         serverStatus = "ok";
+    }
+    else {
+    	std::string serverStatus = exec("systemctl is-active fts-server");
+    	if (serverStatus == "active"){
+    		serverStatus = "ok";
+    		centos = true ;
+    	}
+    	else {
+    		std::cerr << "fts3 server is not running" << std::endl;
+    	}
     }
 
 
     //get timestamps
-    std::string getTimetamps = "stat -c %z /var/lock/subsys/fts-server | sed -e 's/+[0-9]*//g' -e 's/\\.[0-9]*/Z/g' -e 's/ /T/g' -e 's/ZT/Z/g'";
+    std::string getTimetamps("");
+
+    if (centos) {
+    	exec("systemctl status fts-server.service | grep Active | awk '{print $6 " " $7 " "}' | sed -e 's/+[0-9]*//g' -e 's/\\.[0-9]*/Z/g' -e 's/ /T/g' -e 's/ZT/Z/g'");
+    }
+
+    else {
+    	std::string getTimetamps = "stat -c %z /var/lock/subsys/fts-server | sed -e 's/+[0-9]*//g' -e 's/\\.[0-9]*/Z/g' -e 's/ /T/g' -e 's/ZT/Z/g'";
+    }
     std::stringstream timestamp;
     FILE *inTime;
     char buffTime[512];
