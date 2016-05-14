@@ -96,9 +96,9 @@ static int DoPublisher(int argc, char **argv)
     }
     else {
     	std::string serverStatus = exec("systemctl is-active fts-server");
-    	if (serverStatus == "active"){
+    	if (serverStatus.compare(0, 5, "active") == 0){
     		serverStatus = "ok";
-    		centos = true ;
+    		centos = true;
     	}
     	else {
     		std::cerr << "fts3 server is not running" << std::endl;
