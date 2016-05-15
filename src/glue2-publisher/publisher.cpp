@@ -101,7 +101,7 @@ static int DoPublisher(int argc, char **argv)
     		centos = true;
     	}
     	else {
-    		std::cerr << "fts3 server is not running, status "<< serverStatus <<"; "<< serverStatus.lengh() << std::endl;
+    		std::cerr << "fts3 server is not running, status "<< serverStatus <<"." << std::endl;
 		
     	}
     }
