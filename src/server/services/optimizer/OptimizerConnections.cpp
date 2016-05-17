@@ -131,9 +131,6 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         exponentialMovingAverage(current.throughput, EMA_ALPHA, stored.ema)
     );
 
-    // Update stored value
-    inMemoryStore[pair] = current;
-
     // If we have no range, leave it here
     if (range.min == range.max) {
         storeOptimizerDecision(pair, range.min, 0.0, current, 0, "Range fixed");
