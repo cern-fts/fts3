@@ -124,11 +124,11 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         return;
     }
 
-    const PairState stored = inMemoryStore[pair];
+    const PairState previous = inMemoryStore[pair];
 
     // Calculate new Exponential Moving Average
     current.ema = ceil(
-        exponentialMovingAverage(current.throughput, EMA_ALPHA, stored.ema)
+        exponentialMovingAverage(current.throughput, EMA_ALPHA, previous.ema)
     );
 
     // If we have no range, leave it here
@@ -179,10 +179,10 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     }
 
     // Run only when it makes sense
-    time_t timeSinceLastUpdate = current.timestamp - stored.timestamp;
+    time_t timeSinceLastUpdate = current.timestamp - previous.timestamp;
 
-    if (current.successRate == stored.successRate &&
-        current.ema == stored.ema &&
+    if (current.successRate == previous.successRate &&
+        current.ema == previous.ema &&
         timeSinceLastUpdate < optimizerSteadyInterval) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
             << "Optimizer for " << pair
@@ -221,13 +221,13 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     // For low success rates, do not even care about throughput
     if (current.successRate < LOW_SUCCESS_RATE) {
         // If improving, keep it stable
-        if (current.successRate > stored.successRate && current.successRate >= BASE_SUCCESS_RATE &&
-            current.retryCount <= stored.retryCount) {
+        if (current.successRate > previous.successRate && current.successRate >= BASE_SUCCESS_RATE &&
+            current.retryCount <= previous.retryCount) {
             decision = previousValue;
             rationale << "Bad link efficiency but progressively improving";
         }
         // If worse or the same, step back
-        else if (current.successRate < stored.successRate) {
+        else if (current.successRate < previous.successRate) {
             decision = previousValue - 2;
             rationale << "Bad link efficiency";
         }
@@ -237,7 +237,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         }
     }
     // Success rate worsening
-    else if (current.successRate >= LOW_SUCCESS_RATE && current.successRate < stored.successRate) {
+    else if (current.successRate >= LOW_SUCCESS_RATE && current.successRate < previous.successRate) {
         decision = previousValue - 1;
         rationale << "Worse link efficiency";
     }
@@ -248,14 +248,14 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     }
     // Good success rate
     else if ((current.successRate == MAX_SUCCESS_RATE ||
-             (current.successRate >= MED_SUCCESS_RATE && current.successRate >= stored.successRate)) &&
-             current.retryCount <= stored.retryCount)  {
+             (current.successRate >= MED_SUCCESS_RATE && current.successRate >= previous.successRate)) &&
+             current.retryCount <= previous.retryCount)  {
         // Throughput going worse
-        if (current.ema < stored.ema) {
+        if (current.ema < previous.ema) {
             decision = previousValue - 1;
             rationale << "Good link efficiency, throughput deterioration";
         }
-        else if (current.ema > stored.ema) {
+        else if (current.ema > previous.ema) {
             if (optimizerMode >= 2) {
                 decision = previousValue + 2;
             }
@@ -270,7 +270,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         }
     }
     // No changes since previous run, try one more
-    else if (current.successRate == stored.successRate && current.ema == stored.ema) {
+    else if (current.successRate == previous.successRate && current.ema == previous.ema) {
         decision = previousValue + 1;
         rationale << "Good link efficiency. Increment";
     }
@@ -310,6 +310,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
 void Optimizer::storeOptimizerDecision(const Pair &pair, int decision, double throughput, const PairState &current,
     int diff, const std::string &rationale)
 {
+    inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
     dataSource->storeOptimizerDecision(pair, decision, throughput, current, diff, rationale);
 }
