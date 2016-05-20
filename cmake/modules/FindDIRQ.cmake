@@ -4,7 +4,7 @@
 #
 # This code sets the following variables:
 # 
-# DIRQ_LIBRARIES       = full path to the dirq static library
+# DIRQ_LIBRARIES       = full path to the dirq library
 # DIRQ_INCLUDE_DIR     = include dir to be used when using the dirq library
 # DIRQ_FOUND           = set to true if dirq was found successfully
 #
@@ -22,7 +22,7 @@ if (DIRQ_PKG)
 else (DIRQ_PKG)
 
     find_library(DIRQ_LIBRARIES
-        NAMES libdirq.a
+        NAMES dirq
         HINTS ${DIRQ_LOCATION}
         DOC "dirq library"
     )
