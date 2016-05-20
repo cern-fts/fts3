@@ -76,9 +76,12 @@ void CleanerService::runService()
         try
         {
             // Every hour
-            if (counter == 3600)
-            {
+            if (counter >= 3600) {
                 db::DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+            }
+
+            // Every 10 minutes
+            if (counter % 600 == 0) {
                 Consumer consumer(msgDir);
                 consumer.purgeAll();
                 counter = 0;

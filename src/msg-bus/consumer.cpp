@@ -193,12 +193,22 @@ int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
 }
 
 
+static void _purge(DirQ *dq)
+{
+    if (dirq_purge(*dq) < 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)
+            << "Could not purge " << dq->getPath() << " (" << dirq_get_errstr(*dq) << ")"
+            << fts3::common::commit;
+    }
+}
+
+
 void Consumer::purgeAll()
 {
-    dirq_purge(*monitoringQueue);
-    dirq_purge(*statusQueue);
-    dirq_purge(*stalledQueue);
-    dirq_purge(*logQueue);
-    dirq_purge(*stagingQueue);
-    dirq_purge(*deletionQueue);
+    _purge(monitoringQueue.get());
+    _purge(statusQueue.get());
+    _purge(stalledQueue.get());
+    _purge(logQueue.get());
+    _purge(stagingQueue.get());
+    _purge(deletionQueue.get());
 }
