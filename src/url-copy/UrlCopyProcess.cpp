@@ -196,9 +196,16 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
     }
 
+    // Timeout
+    unsigned timeout = opts.timeout;
+    if (timeout == 0) {
+        timeout = adjustTimeoutBasedOnSize(transfer.fileSize, opts.addSecPerMb);
+    }
+
     // Set protocol parameters
     params.setNumberOfStreams(opts.nStreams);
     params.setTcpBuffersize(opts.tcpBuffersize);
+    params.setTimeout(timeout);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
@@ -209,15 +216,9 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     params.addEventCallback(eventCallback, &transfer);
     params.addMonitorCallback(performanceCallback, &transfer);
 
-    // Timeout
-    unsigned timeout = opts.timeout;
-    if (timeout == 0) {
-        timeout = adjustTimeoutBasedOnSize(transfer.fileSize, opts.addSecPerMb) + 600;
-    }
-
     timeoutExpired = false;
     AutoInterruptThread timeoutThread(
-        boost::bind(&timeoutTask, boost::posix_time::seconds(timeout), this)
+        boost::bind(&timeoutTask, boost::posix_time::seconds(timeout + 60), this)
     );
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << timeout << commit;
 
