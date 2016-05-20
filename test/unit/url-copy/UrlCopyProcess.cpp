@@ -65,7 +65,7 @@ BOOST_FIXTURE_TEST_CASE (simpleTransfer, UrlCopyFixture)
     BOOST_CHECK_EQUAL(protoMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK(!(static_cast<bool>(c.error)));
+    BOOST_CHECK_EQUAL(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.fileSize, 10);
     BOOST_CHECK_NE(c.stats.process.start, 0);
     BOOST_CHECK_NE(c.stats.process.end, 0);
@@ -88,7 +88,7 @@ BOOST_FIXTURE_TEST_CASE (panic, UrlCopyFixture)
 
     Transfer &t = completedMsgs.front();
 
-    BOOST_CHECK(static_cast<bool>(t.error));
+    BOOST_CHECK_NE(t.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(original.source.fullUri, t.source.fullUri);
     BOOST_CHECK_EQUAL(original.destination.fullUri, t.destination.fullUri);
     BOOST_CHECK_EQUAL(t.error->code(), EINTR);
@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE (cancel, UrlCopyFixture)
     BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK(static_cast<bool>(c.error));
+    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.error->code(), ECANCELED);
     BOOST_CHECK_EQUAL(c.fileSize, 10);
 }
@@ -124,20 +124,20 @@ BOOST_FIXTURE_TEST_CASE (timeout, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_post=10&time=10");
+    original.destination = Uri::parse("mock://host/path?size_post=10&time=100");
     opts.transfers.push_back(original);
     opts.timeout = 1;
 
     UrlCopyProcess proc(opts, *this);
     boost::thread thread(boost::bind(&UrlCopyProcess::run, &proc));
-    boost::this_thread::sleep(boost::posix_time::seconds(1));
+    boost::this_thread::sleep(boost::posix_time::seconds(65));
     thread.join();
 
     BOOST_CHECK_EQUAL(startMsgs.size(), 1);
     BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK(static_cast<bool>(c.error));
+    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.error->code(), ETIMEDOUT);
     BOOST_CHECK_EQUAL(c.fileSize, 10);
 }
@@ -160,7 +160,7 @@ BOOST_FIXTURE_TEST_CASE (multipleSimple, UrlCopyFixture)
     BOOST_CHECK_EQUAL(completedMsgs.size(), 2);
 
     Transfer c = completedMsgs.front();
-    BOOST_CHECK(!(static_cast<bool>(c.error)));
+    BOOST_CHECK_EQUAL(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.fileSize, 10);
     BOOST_CHECK_NE(c.stats.process.start, 0);
     BOOST_CHECK_NE(c.stats.process.end, 0);
@@ -169,7 +169,7 @@ BOOST_FIXTURE_TEST_CASE (multipleSimple, UrlCopyFixture)
 
     completedMsgs.pop_front();
     c = completedMsgs.front();
-    BOOST_CHECK(!(static_cast<bool>(c.error)));
+    BOOST_CHECK_EQUAL(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.fileSize, 42);
     BOOST_CHECK_NE(c.stats.process.start, 0);
     BOOST_CHECK_NE(c.stats.process.end, 0);
@@ -198,12 +198,12 @@ BOOST_FIXTURE_TEST_CASE (multipleCancel, UrlCopyFixture)
     BOOST_CHECK_EQUAL(completedMsgs.size(), 2);
 
     Transfer c = completedMsgs.front();
-    BOOST_CHECK(!(static_cast<bool>(c.error)));
+    BOOST_CHECK_EQUAL(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.fileSize, 10);
 
     completedMsgs.pop_front();
     c = completedMsgs.front();
-    BOOST_CHECK(static_cast<bool>(c.error));
+    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.error->code(), ECANCELED);
     BOOST_CHECK_EQUAL(c.fileSize, 42);
 }
@@ -228,12 +228,12 @@ BOOST_FIXTURE_TEST_CASE (multiplePanic, UrlCopyFixture)
     BOOST_CHECK_EQUAL(completedMsgs.size(), 2);
 
     Transfer c = completedMsgs.front();
-    BOOST_CHECK(!(static_cast<bool>(c.error)));
+    BOOST_CHECK_EQUAL(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.fileSize, 10);
 
     completedMsgs.pop_front();
     c = completedMsgs.front();
-    BOOST_CHECK(static_cast<bool>(c.error));
+    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.error->code(), EINTR);
     BOOST_CHECK_EQUAL(c.error->what(), "Signal 385");
 
@@ -260,7 +260,7 @@ BOOST_FIXTURE_TEST_CASE (multihop, UrlCopyFixture)
     BOOST_CHECK_EQUAL(completedMsgs.size(), 2);
 
     Transfer c = completedMsgs.front();
-    BOOST_CHECK((static_cast<bool>(c.error)));
+    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(c.error->code(), ENOENT);
     BOOST_CHECK_EQUAL(c.fileId, 10);
 
