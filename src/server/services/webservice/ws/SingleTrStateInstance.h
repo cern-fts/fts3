@@ -22,6 +22,7 @@
 
 #include <string>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/tss.hpp>
 
 #include "msg-bus/events.h"
 #include "monitoring/msg-ifce.h"
@@ -69,7 +70,7 @@ private:
     std::string ftsAlias;
 
     bool monitoringMessages;
-    Producer producer;
+    boost::thread_specific_ptr<Producer> producer;
 };
 
 } // end namespace server

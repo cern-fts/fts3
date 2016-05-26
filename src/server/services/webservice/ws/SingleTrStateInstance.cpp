@@ -41,8 +41,7 @@ boost::mutex SingleTrStateInstance::_mutex;
 
 // Implementation
 
-SingleTrStateInstance::SingleTrStateInstance():
-    monitoringMessages(true), producer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
+SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
 {
     std::string monitoringMessagesStr = ServerConfig::instance().get<std::string> ("MonitoringMessaging");
     if(monitoringMessagesStr == "false")
@@ -61,12 +60,16 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
     if (!monitoringMessages)
         return;
 
+    if (!producer.get()) {
+        producer.reset(new Producer(ServerConfig::instance().get<std::string>("MessagingDirectory")));
+    }
+
     std::vector<TransferState> files;
     try {
         files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
         if (!files.empty()) {
             for (auto it = files.begin(); it != files.end(); ++it) {
-                MsgIfce::getInstance()->SendTransferStatusChange(producer, *it);
+                MsgIfce::getInstance()->SendTransferStatusChange(*producer, *it);
             }
         }
     }
