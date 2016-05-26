@@ -104,7 +104,8 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         if(DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn))
         {
             // This looks crazy, but right now I don't know what can happen if I throw here
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Proxy for dlg id "<< id << " and DN " << userDn
+                << " has expired in the DB, needs renewal!" << commit;
             return std::string();
         }
 
