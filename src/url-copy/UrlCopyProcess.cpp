@@ -54,8 +54,10 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 
     gfal2.setUserAgent("fts_url_copy", VERSION);
 
-    gfal2.set("X509", "CERT", opts.proxy);
-    gfal2.set("X509", "KEY", opts.proxy);
+    if (!opts.proxy.empty()) {
+        gfal2.set("X509", "CERT", opts.proxy);
+        gfal2.set("X509", "KEY", opts.proxy);
+    }
 }
 
 
@@ -144,7 +146,12 @@ static void pingTask(Transfer *transfer, Reporter *reporter)
 void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params)
 {
     // Log info
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy: " << opts.proxy << commit;
+    if (!opts.proxy.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy: " << opts.proxy << commit;
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running without proxy" << commit;
+    }
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User DN: " << opts.userDn << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO: " << opts.voName << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << transfer.jobId << commit;

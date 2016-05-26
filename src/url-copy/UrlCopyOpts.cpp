@@ -363,8 +363,4 @@ void UrlCopyOpts::validateRequired()
         std::cerr << "Specify --source and --destination, or --bulk-file" << std::endl;
         exit(-1);
     }
-    if (proxy.empty()) {
-        std::cerr << "--proxy is mandatory" << std::endl;
-        exit(-1);
-    }
 }
