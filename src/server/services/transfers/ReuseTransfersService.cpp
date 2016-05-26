@@ -201,7 +201,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     // Generate the file containing the list of transfers
     std::map<int, std::string> fileIds = generateJobFile(representative.jobId, files);
 
-    /*check if manual config exist for this pair and vo*/
+    // Check if manual config exist for this pair and vo
     std::vector<std::shared_ptr<ShareConfig> > cfgs;
     ConfigurationAssigner cfgAssigner(representative);
     cfgAssigner.assign(cfgs);
@@ -308,6 +308,14 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     // Current number of actives
     cmd_builder.setNumberOfActive(currentActive);
 
+    // Number of retries and maximum number allowed
+    int retry_times = db->getRetryTimes(representative.jobId, representative.fileId);
+    cmd_builder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
+
+    int retry_max = db->getRetry(representative.jobId);
+    cmd_builder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
+
+    // Log and run
     std::string params = cmd_builder.generateParameters();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd_builder << commit;
     ExecuteProcess pr(cmd, params);
