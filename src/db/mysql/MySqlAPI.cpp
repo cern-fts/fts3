@@ -1927,7 +1927,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                 try {
                     sql.begin();
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP())",
-                        soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
+                        soci::use(source_se), soci::use(dest_se);
                     sql.commit();
                 }
                 catch (std::exception& e)
@@ -1938,6 +1938,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                 catch (...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to insert pair into t_optimize_active: unknown reason" << commit;
+                    sql.rollback();
                 }
             }
         }
