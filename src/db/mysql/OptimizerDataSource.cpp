@@ -384,7 +384,7 @@ public:
         const PairState &newState, int diff, const std::string &rationale) {
 
         setNewOptimizerValue(sql, pair, activeDecision, newState.ema);
-        updateOptimizerEvolution(sql, pair, activeDecision, newState.throughput, newState.successRate,
+        updateOptimizerEvolution(sql, pair, activeDecision, newState.ema, newState.successRate,
             bandwidthLimit, newState.activeCount, newState.queueSize, diff, rationale);
     }
 
