@@ -265,14 +265,9 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             rationale << "Good link efficiency, current average throughput is larger than the preceding average";
         }
         else {
-            decision = previousValue;
-            rationale << "Good link efficiency, no throughput changes";
+            decision = previousValue + 1;
+            rationale << "Good link efficiency. Increment";
         }
-    }
-    // No changes since previous run, try one more
-    else if (current.successRate == previous.successRate && current.ema == previous.ema) {
-        decision = previousValue + 1;
-        rationale << "Good link efficiency. Increment";
     }
     // Not enough information to take any decision
     else {
