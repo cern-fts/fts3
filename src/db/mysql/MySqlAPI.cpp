@@ -1782,11 +1782,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<SubmittedTran
                 }
                 catch (std::exception& e)
                 {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to insert pair into t_optimize_active: " << e.what() << commit;
                     sql.rollback();
                 }
                 catch (...)
                 {
-                    sql.rollback();
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to insert pair into t_optimize_active: unknown reason" << commit;
                 }
             }
         }
