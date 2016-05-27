@@ -5,7 +5,7 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts-client
-Version: 3.4.4
+Version: 3.4.5
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: Applications/Internet
