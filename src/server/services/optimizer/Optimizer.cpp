@@ -31,7 +31,7 @@ namespace optimizer {
 
 
 Optimizer::Optimizer(OptimizerDataSource *ds):
-    dataSource(ds), optimizerSteadyInterval(300),
+    dataSource(ds), optimizerSteadyInterval(60),
     globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
     globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK),
     optimizerMode(1)
