@@ -109,10 +109,9 @@ bool ThreadSafeList::isAlive(int fileID)
 void ThreadSafeList::updateMsg(message_updater &msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);
+    auto pidStartTime = fts3::common::getPidStartime(msg.process_id);
     std::list<struct message_updater>::iterator iter;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        auto pidStartTime = fts3::common::getPidStartime(msg.process_id);
-
         if (msg.process_id == iter->process_id) {
             if (pidStartTime > 0 && msg.timestamp >= pidStartTime) {
                 iter->timestamp = msg.timestamp;
