@@ -82,8 +82,8 @@ void ThreadSafeList::updateMsg(fts3::events::MessageUpdater &msg)
     boost::recursive_mutex::scoped_lock lock(_mutex);
     std::list<fts3::events::MessageUpdater>::iterator iter;
     uint64_t pidStartTime = fts3::common::getPidStartime(msg.process_id());
+    pidStartTime *= 1000; // timestamp() is in milliseconds
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        pidStartTime *= 1000; // timestamp() is in milliseconds
 
         if (msg.process_id() == iter->process_id()) {
             if (pidStartTime > 0 && msg.timestamp() >= pidStartTime) {
