@@ -61,6 +61,13 @@ boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
     return (microsec_clock::universal_time() - epoch).total_milliseconds();
 }
 
+static void wrap_unlink(const std::string &path)
+{
+    if (unlink(path.c_str()) < 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Could not unlink message " << path << fts3::common::commit;
+    }
+}
+
 
 int getDir(const std::string& dir, std::vector<std::string> &files,
     const std::string& extension, unsigned limit)
@@ -84,7 +91,7 @@ int getDir(const std::string& dir, std::vector<std::string> &files,
                     if(stCheck==0 && st.st_size > 0)
                         files.push_back(copyFilename);
                     else
-                        unlink(copyFilename.c_str());
+                        wrap_unlink(copyFilename.c_str());
                 }
         }
     closedir(dp);
@@ -115,7 +122,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages, unsi
                     else
                         msg.set_error(EBADMSG);
 
-                    unlink(files[i].c_str());
+                    wrap_unlink(files[i].c_str());
                     fclose(fp);
                     fp = NULL;
                 }
@@ -153,7 +160,7 @@ int runConsumerStatus(std::vector<struct message>& messages, unsigned limit)
                     else
                         msg.set_error(EBADMSG);
 
-                    unlink(files[i].c_str());
+                    wrap_unlink(files[i].c_str());
                     fclose(fp);
                 }
             else
@@ -191,7 +198,7 @@ int runConsumerStall(std::vector<struct message_updater>& messages, unsigned lim
                     else
                         msg_local.set_error(EBADMSG);
 
-                    unlink(files[i].c_str());
+                    wrap_unlink(files[i].c_str());
                     fclose(fp);
                 }
             else
@@ -230,7 +237,7 @@ int runConsumerLog(std::map<int, struct message_log>& messages, unsigned limit)
                     else
                         msg.set_error(EBADMSG);
 
-                    unlink(files[i].c_str());
+                    wrap_unlink(files[i].c_str());
                     fclose(fp);
                 }
             else
@@ -268,7 +275,7 @@ int runConsumerDeletions(std::vector<struct message_bringonline>& messages, unsi
                     else
                         msg.set_error(EBADMSG);
 
-                    unlink(files[i].c_str());
+                    wrap_unlink(files[i].c_str());
                     fclose(fp);
                 }
             else
@@ -305,7 +312,7 @@ int runConsumerStaging(std::vector<struct message_bringonline>& messages, unsign
                     else
                         msg.set_error(EBADMSG);
 
-                    unlink(files[i].c_str());
+                    wrap_unlink(files[i].c_str());
                     fclose(fp);
                 }
             else
