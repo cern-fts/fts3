@@ -5027,7 +5027,7 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 
 
 
-bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
+bool OracleAPI::markAsStalled(std::vector<struct message_updater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 

@@ -161,7 +161,7 @@ public:
 
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids);
 
-    virtual bool retryFromDead(std::vector<struct message_updater>& messages, bool diskFull);
+    virtual bool markAsStalled(std::vector<struct message_updater> &messages, bool diskFull);
 
     virtual void blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn);
 

@@ -301,9 +301,9 @@ void ProfiledDB::forkFailedRevertStateV(std::map<int,std::string>& pids)
 }
 
 
-bool ProfiledDB::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
+bool ProfiledDB::markAsStalled(std::vector<struct message_updater>& messages, bool diskFull)
 {
-    PROFILE_PREFIXED("DB::", return db->retryFromDead(messages, diskFull));
+    PROFILE_PREFIXED("DB::", return db->markAsStalled(messages, diskFull));
 }
 
 

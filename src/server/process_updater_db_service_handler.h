@@ -151,35 +151,21 @@ protected:
                                 boost::filesystem::path p("/var/lib/fts3/");
                                 boost::filesystem::space_info s = boost::filesystem::space(p);
 
-                                if(s.free <=0 || s.available <= 0)
+                                bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, s.free <=0 || s.available <= 0);
+                                if(updated)
                                     {
-                                        bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages, true);
-                                        if(updated)
+                                        ThreadSafeList::get_instance().deleteMsg(messages);
+                                        std::vector<struct message_updater>::const_iterator iter;
+                                        for (iter = messages.begin(); iter != messages.end(); ++iter)
                                             {
-                                                ThreadSafeList::get_instance().deleteMsg(messages);
-                                                std::vector<struct message_updater>::const_iterator iter;
-                                                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                                if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0)
                                                     {
-                                                        if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0)
-                                                            {
-                                                                SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
-                                                            }
-                                                    }
-                                            }
-                                    }
-                                else
-                                    {
-                                        bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages, false);
-                                        if(updated)
-                                            {
-                                                ThreadSafeList::get_instance().deleteMsg(messages);
-                                                std::vector<struct message_updater>::const_iterator iter;
-                                                for (iter = messages.begin(); iter != messages.end(); ++iter)
-                                                    {
-                                                        if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0)
-                                                            {
-                                                                SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
-                                                            }
+                                                        kill(iter->process_id, SIGKILL);
+                                                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                                                            << "SIGKILL " << iter->process_id
+                                                            << " (probably stalled for transfer " << iter->file_id << ")"
+                                                            << commit;
+                                                        SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
                                                     }
                                             }
                                     }
