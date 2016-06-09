@@ -65,7 +65,14 @@ LogLevel=DEBUG
 # Minimum required free RAM (in MB) for FTS3 to work normally
 # If the amount of free RAM goes below the limit, FTS3 will enter auto-drain mode
 # This is intended to protect against system resource exhaustion
-MinRequiredFreeRAM = 50
+# MinRequiredFreeRAM = 50
+
+# Maximum number of url copy processes that the node can run
+# The RAM limitation may not take into account other node limitations (i.e. IO)
+# or, depending on the swapping policy, may not even prevent overloads if the kernel
+# starts swapping before the free RAM decreases until it reaches the value of MinRequiredFreeRAM
+# 0 disables the check (default)
+# MaxUrlCopyProcesses = 400
 
 # In seconds, interval between heartbeats
 #HeartBeatInterval=60

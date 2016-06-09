@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <fstream>
 
+#include "common/DaemonTools.h"
 #include "common/definitions.h"
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
@@ -163,6 +164,8 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
             std::queue<std::pair<std::string, std::list<TransferFile> > > >::iterator vo_it;
 
     bool empty = false;
+    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+    int urlCopyCount = countProcessesWithName("fts_url_copy");
 
     while (!empty)
     {
@@ -177,7 +180,16 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
                 std::pair<std::string, std::list<TransferFile> > const job =
                         vo_jobs.front();
                 vo_jobs.pop();
-                startUrlCopy(job.first, job.second);
+
+                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                    << "Reached limitation of MaxUrlCopyProcesses"
+                    << commit;
+                    return;
+                } else {
+                    startUrlCopy(job.first, job.second);
+                    ++urlCopyCount;
+                }
             }
         }
     }

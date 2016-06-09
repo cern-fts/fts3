@@ -21,6 +21,7 @@
 #include "TransfersService.h"
 
 #include "config/ServerConfig.h"
+#include "common/DaemonTools.h"
 #include "common/Logger.h"
 #include "common/ThreadPool.h"
 
@@ -123,6 +124,9 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
         if (voQueues.empty())
             return;
 
+        int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+        int urlCopyCount = countProcessesWithName("fts_url_copy");
+
         // create transfer-file handler
         TransferFileHandler tfh(voQueues);
 
@@ -165,12 +169,18 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                     proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
                 }
 
-                FileTransferExecutor* exec = new FileTransferExecutor(tf,
+                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                        << "Reached limitation of MaxUrlCopyProcesses"
+                        << commit;
+                    break;
+                } else {
+                    FileTransferExecutor *exec = new FileTransferExecutor(tf,
                         tfh, monitoringMessages, infosys, ftsHostName,
                         proxies[proxy_key], logDir);
 
-                execPool.start(exec);
-
+                    execPool.start(exec);
+                }
             }
         }
 

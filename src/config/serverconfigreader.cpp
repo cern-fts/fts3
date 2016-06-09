@@ -280,6 +280,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["OptimizerInterval"]) )->default_value("60"),
         "Seconds between optimizer runs"
     )
+    (
+        "MaxUrlCopyProcesses",
+        po::value<std::string>( &(_vars["MaxUrlCopyProcesses"]) )->default_value("0"),
+        "Maximum number of url copy processes to run"
+    )
     ;
     return config;
 }

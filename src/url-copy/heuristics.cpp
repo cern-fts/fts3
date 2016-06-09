@@ -39,14 +39,6 @@ static bool findSubstring(const std::string &stack, const char *needles[])
 
 bool retryTransfer(int errorNo, const std::string &category, const std::string &message)
 {
-    // ETIMEDOUT shortcuts the following
-    if (errorNo == ETIMEDOUT)
-        return true;
-
-    // Do not retry cancellation
-    if (errorNo == ECANCELED)
-        return false;
-
     // If the following strings appear in the error message, assume retriable
     const char *msg_imply_retry[] = {
         "performance marker",
@@ -62,6 +54,14 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
 
     if (findSubstring(message, msg_imply_retry))
         return true;
+
+    // ETIMEDOUT shortcuts the following
+    if (errorNo == ETIMEDOUT)
+        return true;
+
+    // Do not retry cancelation
+    if (errorNo == ECANCELED)
+        return false;
 
     // If the following strings appear in the error message, assume non-retriable
     const char *msg_imply_do_not_retry[] = {

@@ -20,6 +20,7 @@
 
 #include "MultihopTransfersService.h"
 
+#include "common/DaemonTools.h"
 #include "common/Logger.h"
 #include "server/DrainMode.h"
 
@@ -85,6 +86,8 @@ void MultihopTransfersService::executeUrlcopy()
     DBSingleton::instance().getDBObjectInstance()->getMultihopJobs(voQueues);
 
     bool empty = false;
+    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+    int urlCopyCount = countProcessesWithName("fts_url_copy");
 
     while (!empty)
     {
@@ -97,7 +100,15 @@ void MultihopTransfersService::executeUrlcopy()
                 empty = false; //< if we are here there are still some data
                 std::pair<std::string, std::list<TransferFile> > const job = vo_jobs.front();
                 vo_jobs.pop();
-                ReuseTransfersService::startUrlCopy(job.first, job.second);
+                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                        << "Reached limitation of MaxUrlCopyProcesses"
+                        << commit;
+                    return;
+                } else {
+                    ReuseTransfersService::startUrlCopy(job.first, job.second);
+                    ++urlCopyCount;
+                }
             }
         }
     }
