@@ -1235,7 +1235,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
         soci::indicator ind = soci::i_ok;
         std::string selection_strategy;
         std::string vo_name;
-        int nextReplica = 0;
+        int nextReplica = 0, alreadyActive;
         soci::indicator indNull = soci::i_ok;
 
         //check if the file belongs to a multiple replica job
@@ -1247,6 +1247,16 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
         //this is a m-replica job
         if(mreplica == "R" && job_state != "CANCELED" && job_state != "FAILED")
         {
+            // make sure there hasn't been another already picked up
+            sql << "select count(*) from t_file where file_state in ('READY', 'ACTIVE') and job_id=:job_id",
+                soci::use(jobId), soci::into(alreadyActive);
+            if (alreadyActive > 0) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Tried to look for another replica for "
+                    << jobId << " when there is already at least one READY or ACTIVE "
+                    << commit;
+                return;
+            }
+
             //check if it's auto or manual
             sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
                 soci::use(fileId), soci::into(selection_strategy, ind), soci::into(vo_name);
