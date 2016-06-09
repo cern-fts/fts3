@@ -24,6 +24,7 @@ limitations under the License. */
 #include "common/logger.h"
 #include "common/error.h"
 #include "common/ThreadPool.h"
+#include "common/DaemonTools.h"
 #include "process.h"
 #include <iostream>
 #include <map>
@@ -169,6 +170,9 @@ protected:
                 if(voQueues.empty())
                     return;
 
+                int maxUrlCopy = theServerConfig().get<int> ("MaxUrlCopyProcesses");
+                int urlCopyCount = countProcessesWithName("fts_url_copy");
+
                 // create transfer-file handler
                 TransferFileHandler tfh(voQueues);
 
@@ -180,7 +184,6 @@ protected:
                 // loop until all files have been served
 
                 int initial_size = tfh.size();
-
 
                 while (!tfh.empty())
                     {
@@ -246,18 +249,25 @@ protected:
                                         proxies[proxy_key] = filename;
                                     }
 
-                                FileTransferExecutor* exec = new FileTransferExecutor(
-                                    tf,
-                                    tfh,
-                                    monitoringMessages,
-                                    infosys,
-                                    ftsHostName,
-                                    proxies[proxy_key],
-				    logDir
-                                );
+                                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                                    << "Reached limitation of MaxUrlCopyProcesses"
+                                    << commit;
+                                    break;
+                                } else {
+                                    FileTransferExecutor *exec = new FileTransferExecutor(
+                                        tf,
+                                        tfh,
+                                        monitoringMessages,
+                                        infosys,
+                                        ftsHostName,
+                                        proxies[proxy_key],
+                                        logDir
+                                    );
 
-                                execPool.start(exec);
-
+                                    execPool.start(exec);
+                                    ++urlCopyCount;
+                                }
                             }
                     }
 

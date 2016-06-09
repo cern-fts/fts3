@@ -64,6 +64,8 @@ protected:
         std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >::iterator vo_it;
 
         bool empty = false;
+        int maxUrlCopy = theServerConfig().get<int> ("MaxUrlCopyProcesses");
+        int urlCopyCount = countProcessesWithName("fts_url_copy");
 
         while(!empty)
             {
@@ -76,7 +78,15 @@ protected:
                                 empty = false; //< if we are here there are still some data
                                 std::pair< std::string, std::list<TransferFiles> > const job = vo_jobs.front();
                                 vo_jobs.pop();
-                                ProcessServiceReuseHandler<TRAITS>::startUrlCopy(job.first, job.second);
+                                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                                    << "Reached limitation of MaxUrlCopyProcesses"
+                                    << commit;
+                                    return;
+                                } else {
+                                    ProcessServiceReuseHandler<TRAITS>::startUrlCopy(job.first, job.second);
+                                    ++urlCopyCount;
+                                }
                             }
                     }
             }

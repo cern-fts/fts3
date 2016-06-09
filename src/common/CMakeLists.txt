@@ -34,7 +34,7 @@ find_package (LibUuid REQUIRED)
 include_directories (${LIBUUID_INCLUDE_DIRS})
 
 # Find boost
-find_package (Boost COMPONENTS regex iostreams system thread)
+find_package (Boost COMPONENTS regex iostreams system thread filesystem)
 
 # Sources
 file(GLOB fts_common_sources "*.cpp")

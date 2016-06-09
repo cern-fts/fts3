@@ -223,6 +223,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["HeartBeatGraceInterval"]) )->default_value("120"),
         "After this many seconds, a host is considered to be down"
     )
+    (
+        "MaxUrlCopyProcesses",
+        po::value<std::string>( &(_vars["MaxUrlCopyProcesses"]) )->default_value("0"),
+        "Maximum number of url copy processes to run"
+    )
     ;
     return config;
 }
