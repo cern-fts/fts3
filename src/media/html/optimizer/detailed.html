@@ -52,7 +52,7 @@
                 <th width="10%" class="numeric">Running</th>
                 <th width="10%" class="numeric">Queue size</th>
                 <th width="10%" class="numeric">Success rate (last 1min)</th>
-                <th width="10%" class="numeric">Throughput</th>
+                <th width="10%" class="numeric">Weighted throughput*</th>
                 <th width="10%" class="numeric">Diff</th>
                 <th>Explanation</th>
             </tr>
@@ -75,4 +75,8 @@
         page="optimizer.evolution.page" total-items="optimizer.evolution.count" items-per-page="optimizer.evolution.pageSize"
         max-size="15" class="pagination" boundary-links="true"
         on-select-page="pageChanged(page)"></pagination>
+
+    <div>
+        <span class="label">* Weighted throughput</span> <code>Sum(size * throughput) / Sum(size)</code>
+    </div>
 </div>

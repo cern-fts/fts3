@@ -126,13 +126,13 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
 
     $scope.plots = {
         throughput: {
-            series: ['Active', 'Throughput'],
+            series: ['Active', 'Weighted throughput'],
             data: throughputData,
             config: {
                 title: 'Throughput evolution',
                 colors: ["#0000FF", "#00FF00"],
                 doubleYAxis: true,
-                labels: ['Active', 'Throughput']
+                labels: ['Active', 'Weighted throughput']
             }
         },
         success: {
