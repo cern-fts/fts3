@@ -191,30 +191,6 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         return;
     }
 
-    // Count actives for the source and for the destination, to apply storage limits
-    int activeForSource = dataSource->getActive(Pair(pair.source, ""));
-    int activeForDestination = dataSource->getActive(Pair("", pair.destination));
-
-    // Apply limits
-    if (activeForSource >= limits.source) {
-        decision = previousValue;
-        rationale << "Source limit reached (" << activeForSource << "/" << limits.source << ")";
-        storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
-        return;
-    }
-    if (activeForDestination >= limits.destination) {
-        decision = previousValue;
-        rationale << "Destination limit reached (" << activeForDestination << "/" << limits.destination << ")";
-        storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
-        return;
-    }
-    if (current.activeCount >= limits.link) {
-        decision = previousValue;
-        rationale << "Link limit reached (" << current.activeCount << "/" << limits.link << ")";
-        storeOptimizerDecision(pair, decision, 0.0, current, 0, rationale.str());
-        return;
-    }
-
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
         << "Optimizer max possible number of actives for " << pair << ": " << range.max << commit;
 
