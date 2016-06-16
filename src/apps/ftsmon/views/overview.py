@@ -135,7 +135,7 @@ class OverviewExtended(object):
                 else:
                     # tx_duration may be 0 in case of FAILED, CANCELED, so calculate ourselves
                     duration = _seconds(transfer['finish_time'] - transfer['start_time'])
-                    if duration > 0:
+                    if duration > 0 and transfer['filesize']:
                         bytes_in_window = (float(transfer['filesize']) / duration) * _seconds(period_in_window)
 
             total_bytes += bytes_in_window
