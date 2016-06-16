@@ -105,10 +105,13 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
 
+    // Previous decision
+    int previousValue = dataSource->getOptimizerValue(pair);
+
     // Initialize current state
     PairState current;
     current.timestamp = time(NULL);
-    current.throughput = dataSource->getWeightedThroughput(pair, boost::posix_time::minutes(1));
+    current.throughput = dataSource->getThroughput(pair, boost::posix_time::minutes(1));
     current.avgDuration = dataSource->getAverageDuration(pair, boost::posix_time::minutes(30));
     current.successRate = dataSource->getSuccessRateForPair(pair,
         calculateTimeFrame(current.avgDuration), &current.retryCount);
@@ -119,7 +122,6 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     if (inMemoryStore.find(pair) == inMemoryStore.end()) {
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
-
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Store first feedback from " << pair << commit;
         return;
     }
@@ -127,18 +129,13 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     const PairState previous = inMemoryStore[pair];
 
     // Calculate new Exponential Moving Average
-    current.ema = ceil(
-        exponentialMovingAverage(current.throughput, EMA_ALPHA, previous.ema)
-    );
+    current.ema = exponentialMovingAverage(current.throughput, EMA_ALPHA, previous.ema);
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        storeOptimizerDecision(pair, range.min, 0.0, current, 0, "Range fixed");
+        storeOptimizerDecision(pair, range.min, current, 0, "Range fixed");
         return;
     }
-
-    // Previous decision
-    int previousValue = dataSource->getOptimizerValue(pair);
 
     // New decision
     int decision = 0;
@@ -154,7 +151,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             rationale << "No information. Use to default min.";
         }
 
-        storeOptimizerDecision(pair, decision, 0.0, current, decision, rationale.str());
+        storeOptimizerDecision(pair, decision, current, decision, rationale.str());
         return;
     }
 
@@ -164,7 +161,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         if (throughput > limits.throughputSource) {
             decision = previousValue - 1;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            storeOptimizerDecision(pair, decision, limits.throughputSource, current, 0, rationale.str());
+            storeOptimizerDecision(pair, decision, current, 0, rationale.str());
             return;
         }
     }
@@ -173,7 +170,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         if (throughput > limits.throughputDestination) {
             decision = previousValue - 1;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            storeOptimizerDecision(pair, decision, limits.throughputDestination, current, 0, rationale.str());
+            storeOptimizerDecision(pair, decision, current, 0, rationale.str());
             return;
         }
     }
@@ -228,7 +225,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
              current.retryCount <= previous.retryCount)  {
         // Throughput going worse
         if (current.ema < previous.ema) {
-            decision = previousValue - 1;
+            decision = previousValue;// - 1;
             rationale << "Good link efficiency, throughput deterioration";
         }
         else if (current.ema > previous.ema) {
@@ -274,16 +271,16 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    storeOptimizerDecision(pair, decision, 0.0, current, decision - previousValue, rationale.str());
+    storeOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str());
 }
 
 
-void Optimizer::storeOptimizerDecision(const Pair &pair, int decision, double throughput, const PairState &current,
+void Optimizer::storeOptimizerDecision(const Pair &pair, int decision, const PairState &current,
     int diff, const std::string &rationale)
 {
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
-    dataSource->storeOptimizerDecision(pair, decision, throughput, current, diff, rationale);
+    dataSource->storeOptimizerDecision(pair, decision, current, diff, rationale);
 }
 
 }

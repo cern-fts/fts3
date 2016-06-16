@@ -108,7 +108,7 @@ public:
     virtual int getOptimizerValue(const Pair&) = 0;
 
     // Get the weighted throughput for the pair
-    virtual double getWeightedThroughput(const Pair&, const boost::posix_time::time_duration&) = 0;
+    virtual double getThroughput(const Pair &, const boost::posix_time::time_duration &) = 0;
 
     virtual time_t getAverageDuration(const Pair&, const boost::posix_time::time_duration&) = 0;
 
@@ -124,7 +124,7 @@ public:
     virtual double getThroughputAsDestination(const std::string&) = 0;
 
     // Permanently register the optimizer decision
-    virtual void storeOptimizerDecision(const Pair &pair, int activeDecision, double bandwidthLimit,
+    virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) = 0;
 
     // Permanently register the number of streams per active
@@ -152,7 +152,7 @@ protected:
     bool getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits);
 
     // Updates decision
-    void storeOptimizerDecision(const Pair &pair, int decision, double throughput, const PairState &current,
+    void storeOptimizerDecision(const Pair &pair, int decision, const PairState &current,
         int diff, const std::string &rationale);
 
 public:

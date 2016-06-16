@@ -33,13 +33,12 @@ BOOST_AUTO_TEST_SUITE(OptimizerTestSuite)
 
 struct OptimizerEntry {
     int activeDecision;
-    double bandwidthLimit;
     const PairState state;
     int diff;
     std::string rationale;
 
-    OptimizerEntry(int ad, double bl, const PairState &ps, int diff, const std::string &r):
-        activeDecision(ad), bandwidthLimit(bl), state(ps), diff(diff), rationale(r) {
+    OptimizerEntry(int ad, const PairState &ps, int diff, const std::string &r):
+        activeDecision(ad), state(ps), diff(diff), rationale(r) {
     }
 };
 typedef std::list<OptimizerEntry> OptimizerRegister;
@@ -105,7 +104,7 @@ protected:
     }
 
     void setOptimizerValue(const Pair &pair, int value) {
-        registry[pair].emplace_back(value, 0.0, PairState(), value, "Patched");
+        registry[pair].emplace_back(value, PairState(), value, "Patched");
     }
 
 public:
@@ -150,7 +149,7 @@ public:
         return i->second.back().activeDecision;
     }
 
-    double getWeightedThroughput(const Pair &pair, const boost::posix_time::time_duration &interval) {
+    double getThroughput(const Pair &pair, const boost::posix_time::time_duration &interval) {
         auto tsi = transferStore.find(pair);
         if (tsi == transferStore.end()) {
             return 0;
@@ -302,9 +301,9 @@ public:
         return acc;
     }
 
-    void storeOptimizerDecision(const Pair &pair, int activeDecision, double bandwidthLimit,
+    void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
-        registry[pair].push_back(OptimizerEntry(activeDecision, bandwidthLimit, newState, diff, rationale));
+        registry[pair].push_back(OptimizerEntry(activeDecision, newState, diff, rationale));
     }
 
     void storeOptimizerStreams(const Pair &pair, int streams) {

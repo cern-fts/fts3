@@ -24,7 +24,7 @@
 namespace fts3 {
 namespace optimizer {
 
-    const double EMA_ALPHA = 0.7;
+    const double EMA_ALPHA = 0.1;
     const int MAX_SUCCESS_RATE = 100;
     const int MED_SUCCESS_RATE = 98;
     const int LOW_SUCCESS_RATE = 97;

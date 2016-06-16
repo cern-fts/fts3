@@ -32,10 +32,11 @@ CREATE TABLE t_optimizer_evolution_new LIKE t_optimizer_evolution;
 -- Modify the schema in the empty table
 ALTER TABLE t_optimizer_evolution_new
     CHANGE COLUMN `filesize` `success` FLOAT DEFAULT NULL,
+    CHANGE COLUMN `agrthroughput` `throughput` FLOAT DEFAULT NULL,
     DROP COLUMN `buffer`,
-    CHANGE COLUMN `nostreams` `throughput_limit` FLOAT DEFAULT NULL,
+    DROP COLUMN `nostreams`,
     DROP COLUMN `timeout`,
-    DROP COLUMN `agrthroughput`,
+    ADD COLUMN `ema` FLOAT DEFAULT NULL,
     ADD COLUMN `rationale` TEXT DEFAULT NULL,
     ADD COLUMN `diff` INTEGER DEFAULT 0,
     ADD COLUMN actual_active INTEGER DEFAULT NULL,

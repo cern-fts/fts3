@@ -43,7 +43,7 @@ static void setNewOptimizerValue(soci::session &sql,
 // the progress
 static void updateOptimizerEvolution(soci::session &sql,
     const Pair &pair,
-    int active, double throughput, double successRate, double bandwidthLimit,
+    int active, double ema, double successRate, double throughput,
     int actualActive, int queueSize,
     int diff, const std::string &rationale)
 {
@@ -52,16 +52,16 @@ static void updateOptimizerEvolution(soci::session &sql,
             sql.begin();
             sql << " INSERT INTO t_optimizer_evolution "
                 " (datetime, source_se, dest_se, "
-                "  throughput_limit, active, throughput, success, "
+                "  ema, active, throughput, success, "
                 "  actual_active, queue_size, "
                 "  rationale, diff) "
                 " VALUES "
                 " (UTC_TIMESTAMP(), :source, :dest, "
-                "  :thr_limit, :active, :throughput, :success, "
+                "  :ema, :active, :throughput, :success, "
                 "  :actual_active, :queue_size, "
                 "  :rationale, :diff)",
                 soci::use(pair.source), soci::use(pair.destination),
-                soci::use(bandwidthLimit), soci::use(active), soci::use(throughput), soci::use(successRate),
+                soci::use(ema), soci::use(active), soci::use(throughput), soci::use(successRate),
                 soci::use(actualActive), soci::use(queueSize),
                 soci::use(rationale), soci::use(diff);
             sql.commit();
@@ -236,30 +236,56 @@ public:
         return currentActive;
     }
 
-    double getWeightedThroughput(const Pair &pair, const boost::posix_time::time_duration &interval) {
-        soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
-            "SELECT filesize, throughput "
+    double getThroughput(const Pair &pair, const boost::posix_time::time_duration &interval)
+    {
+        static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+        time_t now = time(NULL);
+        time_t windowStart = now - interval.total_seconds();
+
+        soci::rowset<soci::row> transfers = (sql.prepare <<
+            "SELECT start_time, finish_time, transferred, filesize "
             " FROM t_file "
             " WHERE source_se = :source AND dest_se = :dest AND "
-            "       file_state  in ('ACTIVE','FINISHED') AND throughput > 0 AND "
-            "       filesize > 0 AND "
+            "       file_state  in ('ACTIVE','FINISHED') AND "
+            "       transferred > 0 AND "
             "       (job_finished IS NULL OR job_finished >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND))",
         soci::use(pair.source),soci::use(pair.destination), soci::use(interval.total_seconds()));
 
-        double accumulator = 0;
-        double totalSize = 0;
+        double totalBytes = 0.0;
 
-        for (auto j = rsSizeAndThroughput.begin(); j != rsSizeAndThroughput.end(); ++j) {
-            double filesize = j->get<double>("filesize", 0.0);
-            totalSize += filesize;
-            accumulator += (j->get<double>("throughput", 0.0) * filesize);
+        for (auto j = transfers.begin(); j != transfers.end(); ++j) {
+            auto transferred = j->get<double>("transferred", 0.0);
+            auto filesize = j->get<double>("filesize", 0.0);
+            auto starttm = j->get<struct tm>("start_time");
+            auto endtm = j->get<struct tm>("finish_time", nulltm);
+
+            time_t start = timegm(&starttm);
+            time_t end = timegm(&endtm);
+            time_t periodInWindow = 0;
+            double bytesInWindow = 0;
+
+            // Not finish information
+            if (endtm.tm_year <= 0) {
+                periodInWindow = now - std::max(start, windowStart);
+                long duration = now - start;
+                if (duration > 0) {
+                    bytesInWindow = (transferred / duration) * periodInWindow;
+                }
+            }
+            // Finished
+            else {
+                periodInWindow = end - std::max(start, windowStart);
+                long duration = end - start;
+                if (duration > 0 && filesize > 0) {
+                    bytesInWindow = (filesize / duration) * periodInWindow;
+                }
+            }
+
+            totalBytes += bytesInWindow;
         }
 
-        if (totalSize > 0) {
-            accumulator /= totalSize;
-        }
-
-        return accumulator;
+        return totalBytes /= interval.total_seconds();
     }
 
     time_t getAverageDuration(const Pair &pair, const boost::posix_time::time_duration &interval) {
@@ -380,12 +406,12 @@ public:
         return throughput;
     }
 
-    void storeOptimizerDecision(const Pair &pair, int activeDecision, double bandwidthLimit,
+    void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
 
         setNewOptimizerValue(sql, pair, activeDecision, newState.ema);
         updateOptimizerEvolution(sql, pair, activeDecision, newState.ema, newState.successRate,
-            bandwidthLimit, newState.activeCount, newState.queueSize, diff, rationale);
+            newState.throughput, newState.activeCount, newState.queueSize, diff, rationale);
     }
 
     void storeOptimizerStreams(const Pair &pair, int streams) {
