@@ -105,26 +105,138 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
     }
 
     var throughputData = [];
+    var emaData = [];
     var successData = [];
+    var activeData = [];
+    var labels = [];
+
     for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
-        var label = $scope.optimizer.evolution.items[i].datetime;
-        throughputData.unshift({
-            x: label,
-            y: [
-                $scope.optimizer.evolution.items[i].active,
-                $scope.optimizer.evolution.items[i].ema,
-                $scope.optimizer.evolution.items[i].throughput
-            ]
-        });
-        successData.unshift({
-            x: label,
-            y: [
-                $scope.optimizer.evolution.items[i].active,
-                $scope.optimizer.evolution.items[i].success,
-            ]
-        });
+        // avoid cluttering the plot
+        labels.unshift("");
+        throughputData.unshift($scope.optimizer.evolution.items[i].throughput/(1024*1024));
+        emaData.unshift($scope.optimizer.evolution.items[i].ema/(1024*1024));
+        successData.unshift($scope.optimizer.evolution.items[i].success);
+        activeData.unshift($scope.optimizer.evolution.items[i].active);
     }
 
+    // Throughput chart
+    var thrChart = new Chart(document.getElementById("throughputPlot"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    yAxisID: "active",
+                    label: "Decision",
+                    data: activeData,
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    borderColor: "rgb(255, 0, 0)",
+                },
+                {
+                    yAxisID: "throughput",
+                    label: "EMA",
+                    data: emaData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)",
+                },
+                {
+                    yAxisID: "throughput",
+                    label: "Throughput",
+                    data: throughputData,
+                    backgroundColor: "rgba(102, 204, 255, 0.5)",
+                },
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        id: "throughput",
+                        type: "linear",
+                        position: "left",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value + ' MB/s'
+                            }
+                        }
+                    },
+                    {
+                        id: "active",
+                        type: "linear",
+                        position: "right",
+                        ticks: {
+                            beginAtZero: true,
+                        }
+                    },
+                ]
+            }
+        }
+    })
+
+    // Success chart
+    var successChart = new Chart(document.getElementById("successPlot"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    yAxisID: "active",
+                    label: "Decision",
+                    data: activeData,
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    borderColor: "rgb(255, 0, 0)",
+                },
+                {
+                    yAxisID: "success",
+                    label: "Success rate",
+                    data: successData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)",
+                }
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        id: "success",
+                        type: "linear",
+                        position: "left",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value + ' %'
+                            }
+                        }
+                    },
+                    {
+                        id: "active",
+                        type: "linear",
+                        position: "right",
+                        ticks: {
+                            beginAtZero: true,
+                        },
+                    },
+                ]
+            }
+        }
+    })
+    
+    
+/*
+    $scope.plots = {
+        labels: labels,
+        throughput: {
+            series: ['Throughput', 'EMA'],
+            data: [throughputData, emaData],
+            colours: ['#80d4ff', '#79ff4d'],
+            options: {
+                responsive: true,
+                scaleShowLabels: true,
+            }
+        }
+    }
+*/
+/*
     $scope.plots = {
         throughput: {
             series: ['Active', 'Weighted throughput'],
@@ -147,6 +259,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
             }
         }
     };
+    */
 }
 
 
