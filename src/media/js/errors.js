@@ -122,6 +122,27 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
     };
 
     // Generate plot
+    var labels = []
+    var count = []
+    for (phase in $scope.errors.classification) {
+        if (phase[0] != '$') {
+            labels.push(phase);
+            count.push($scope.errors.classification[phase])
+        }
+    }
+
+    var phasePlot = new Chart(document.getElementById("phasePlot"), {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: count,
+                backgroundColor: ['#366DD8', '#D836BE', '#D8A136', '#36D850'],
+            }],
+        },
+
+    });
+    /*
     $scope.plots = {
         phase: {
             data: _countPerClassification($scope.errors.classification),
@@ -136,6 +157,7 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
             }
         }
     };
+    */
 }
 
 

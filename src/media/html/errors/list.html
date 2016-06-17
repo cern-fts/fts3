@@ -5,9 +5,13 @@
     <button class="btn btn-mini btn-info" type="button" data-ng-click="showFilterDialog()">Filter</button>
 </h2>
 
-<div style="text-align: center">
-    <div data-ac-chart="'pie'" data-ac-data="plots.phase" data-ac-config="plots.phase.config" id="queue" class="chart">
+<div class="row-fluid">
+    <div class="span4"></div>
+    <div class="span4">
+        <canvas id="phasePlot">
+        </canvas>
     </div>
+    <div class="span4"></div>
 </div>
 
 <pagination rotate="false"
