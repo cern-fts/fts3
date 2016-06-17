@@ -112,6 +112,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
             x: label,
             y: [
                 $scope.optimizer.evolution.items[i].active,
+                $scope.optimizer.evolution.items[i].ema,
                 $scope.optimizer.evolution.items[i].throughput
             ]
         });

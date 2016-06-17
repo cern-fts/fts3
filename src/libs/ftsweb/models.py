@@ -316,6 +316,7 @@ class OptimizerEvolution(models.Model):
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
     active       = models.IntegerField()
+    ema          = models.FloatField()
     throughput   = models.FloatField()
     success      = models.FloatField(db_column = 'success')
     actual_active = models.IntegerField()

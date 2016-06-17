@@ -47,13 +47,14 @@
     <table class="table">
         <thead>
             <tr>
-                <th width="6%">Timestamp</th>
-                <th width="10%" class="numeric">Optimizer decision</th>
-                <th width="10%" class="numeric">Running</th>
-                <th width="10%" class="numeric">Queue size</th>
+                <th width="10%">Timestamp</th>
+                <th width="8%" class="numeric">Decision</th>
+                <th width="8%" class="numeric">Running</th>
+                <th width="8%" class="numeric">Queue</th>
                 <th width="10%" class="numeric">Success rate (last 1min)</th>
-                <th width="10%" class="numeric">Weighted throughput*</th>
-                <th width="10%" class="numeric">Diff</th>
+                <th width="10%" class="numeric">Throughput*</th>
+                <th width="10%" class="numeric">EMA</th>
+                <th width="8%" class="numeric">Diff</th>
                 <th>Explanation</th>
             </tr>
         </thead>
@@ -64,7 +65,8 @@
                 <td class="numeric">{{ o.actual_active }}</td>
                 <td class="numeric">{{ o.queue_size }}</td>
                 <td class="numeric">{{ o.success|number:2 }}%</td>
-                <td class="numeric">{{ o.throughput|number:3 }} MB/s</td>
+                <td class="numeric">{{ o.throughput/(1024*1024)|number:3 }} MB/s</td>
+                <td class="numeric">{{ o.ema/(1024*1024)|number:3 }} MB/s</td>
                 <td class="numeric">{{ o.diff }}</td>
                 <td>{{ o.rationale }}</td>
             </tr>
