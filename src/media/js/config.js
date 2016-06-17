@@ -211,12 +211,10 @@ ActivitiesCtrl.resolve = {
 function _plotDataFromCount(activeCount, key)
 {
     var points = [];
-    var total = 0;
     for (var activity in activeCount) {
         if (activity[0] != '$') {
             var value = undefinedAsZero(activeCount[activity]['count'][key]);
-            total += value;
-            points.push({x: activity, y: [value]});
+            points.push(value);
         }
     }
     if (points)
@@ -232,28 +230,47 @@ function VoActivePerActivitiesCtrl($location, $scope, $route, activeCount) {
     var colors = [
         '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
     ];
-    $scope.plots = {
-        submittedCount: {
-            data: _plotDataFromCount(activeCount, 'SUBMITTED'),
-            config: {
-                title: 'Submitted per activity',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: colors,
-                labels: true
-            }
-        },
-        activeCount: {
-            data: _plotDataFromCount(activeCount, 'ACTIVE'),
-            config: {
-                title: 'Actives per activity',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: colors,
-                labels: true
-            }
+
+    var labels = []
+    for (state in activeCount) {
+        if (state[0] != '$') {
+            labels.push(state);
         }
     }
+
+    new Chart(document.getElementById("submittedPlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _plotDataFromCount(activeCount, 'SUBMITTED'),
+                backgroundColor: colors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Submitted per activity"
+            }
+        }
+    });
+
+    new Chart(document.getElementById("activePlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _plotDataFromCount(activeCount, 'ACTIVE'),
+                backgroundColor: colors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Actives per activity"
+            }
+        }
+    });
 }
 
 VoActivePerActivitiesCtrl.resolve = {

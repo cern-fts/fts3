@@ -142,22 +142,6 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
         },
 
     });
-    /*
-    $scope.plots = {
-        phase: {
-            data: _countPerClassification($scope.errors.classification),
-            config: {
-                title: 'Error phase',
-                colors: ['#366DD8', '#D836BE', '#D8A136', '#36D850'],
-                labels: true,
-                legend: {
-                    display: true,
-                    position: 'right'
-                }
-            }
-        }
-    };
-    */
 }
 
 

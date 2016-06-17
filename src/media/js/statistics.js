@@ -4,36 +4,28 @@ function _generateOverviewPlots(stats)
 {
     var queueColors = ["#fae932", "#9ed5ff", "#006dcc", "#990099"];
     var lastHourColors = ["#5bb75b", "#bd362f"];
-    return {
-        queue: {
-            data: [
-                {x: "submitted", y: [stats.lasthour.submitted]},
-                {x: "ready", y: [stats.lasthour.ready]},
-                {x: "active", y: [stats.lasthour.active]},
-                {x: "staging", y: [stats.lasthour.staging]},
-            ],
-            config: {
-                title: 'Queue',
-                legend: {position: 'right', display: true},
-                innerRadius: 50,
-                colors: queueColors,
-                labels: true
-            }
+
+    new Chart(document.getElementById("queuePlot"), {
+        type: "doughnut",
+        data: {
+            labels: ['Submitted', 'Ready', 'Active', 'Staging'],
+            datasets: [{
+                data: [stats.lasthour.submitted, stats.lasthour.ready, stats.lasthour.active, stats.lasthour.staging],
+                backgroundColor: queueColors
+            }],
         },
-        lasthour: {
-            data: [
-                {x: "finished", y: [stats.lasthour.finished]},
-                {x: "failed", y: [stats.lasthour.failed]},
-            ],
-            config: {
-                title: 'Last hour',
-                legend: {position: 'right', display: true},
-                innerRadius: 50,
-                colors: lastHourColors,
-                labels: true
-            }
+    });
+
+    new Chart(document.getElementById("lastHourPlot"), {
+        type: "doughnut",
+        data: {
+            labels: ['Finished', 'Failed'],
+            datasets: [{
+                data: [stats.lasthour.finished, stats.lasthour.failed],
+                backgroundColor: lastHourColors,
+            }]
         }
-    };
+    })
 }
 
 function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, Statistics, Unique)
@@ -60,7 +52,7 @@ function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, S
         Statistics.query(filter,
             function(updatedStats) {
                 $scope.stats = updatedStats;
-                $scope.plots = _generateOverviewPlots($scope.stats);
+                _generateOverviewPlots($scope.stats);
                 stopLoading($rootScope);
             },
             genericFailureMethod(null, $rootScope, $location)
@@ -70,7 +62,7 @@ function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, S
         clearInterval($scope.autoRefresh);
     });
 
-    $scope.plots = _generateOverviewPlots($scope.stats);
+    _generateOverviewPlots(stats);
 }
 
 
@@ -98,7 +90,7 @@ function _dataByState(servers, state)
         if (server[0] != '$') {
             var value = undefinedAsZero(servers[server][state]);
             total += value;
-            points.push({x: server, y: [value]});
+            points.push(value)
         }
     }
     if (points)
@@ -112,58 +104,98 @@ function _generateServerPlots(servers)
     var serverColors = [
         '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
     ];
-    return {
-        submit: {
-            data: _dataByState(servers, 'submissions'),
-            config: {
-                title: 'Submissions',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: serverColors,
-                labels: true
-            }
+
+    var labels = []
+    for (server in servers) {
+        if (server[0] != '$') {
+            labels.push(server)
+        }
+    }
+
+    new Chart(document.getElementById("submitPlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(servers, 'submissions'),
+                backgroundColor: serverColors
+            }],
         },
-        executed: {
-            data: _dataByState(servers, 'transfers'),
-            config: {
-                title: 'Executed',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: serverColors,
-                labels: true
-            }
-        },
-        active: {
-            data: _dataByState(servers, 'active'),
-            config: {
-                title: 'Active',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: serverColors,
-                labels: true
-            }
-        },
-        staging: {
-            data: _dataByState(servers, 'staging'),
-            config: {
-                title: 'Staging',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: serverColors,
-                labels: true
-            }
-        },
-        started: {
-            data: _dataByState(servers, 'started'),
-            config: {
-                title: 'Staging started',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: serverColors,
-                labels: true
+        options: {
+            title: {
+                display: true,
+                text: "Submissions"
             }
         }
-    };
+    });
+
+    new Chart(document.getElementById("executedPlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(servers, 'transfers'),
+                backgroundColor: serverColors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Executed"
+            }
+        }
+    });
+
+    new Chart(document.getElementById("activePlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(servers, 'active'),
+                backgroundColor: serverColors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Active"
+            }
+        }
+    });
+
+    new Chart(document.getElementById("stagingPlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(servers, 'staging'),
+                backgroundColor: serverColors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Staging"
+            }
+        }
+    });
+
+    new Chart(document.getElementById("startedPlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(servers, 'started'),
+                backgroundColor: serverColors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Started"
+            }
+        }
+    });
 }
 
 function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
@@ -180,7 +212,7 @@ function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
                     updatedServers[server].show = $scope.servers[server].show;
             }
             $scope.servers = updatedServers;
-            $scope.plots = _generateServerPlots($scope.servers);
+            _generateServerPlots($scope.servers);
             stopLoading($rootScope);
         },
         genericFailureMethod(null, $rootScope, $location));
@@ -189,7 +221,7 @@ function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
         clearInterval($scope.autoRefresh);
     });
 
-    $scope.plots = _generateServerPlots($scope.servers);
+    _generateServerPlots($scope.servers);
 }
 
 
@@ -259,28 +291,46 @@ function _generatePerVoPlots(vos)
         '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
     ];
 
-    return {
-        active: {
-            data: _dataByState(vos, 'active'),
-            config: {
-                title: 'Active',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: perVoColors,
-                labels: true
-            }
+    var labels = []
+    for (vo in vos) {
+        if (vo[0] != '$') {
+            labels.push(vo);
+        }
+    }
+
+    new Chart(document.getElementById("activePlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(vos, 'active'),
+                backgroundColor: perVoColors
+            }],
         },
-        submitted: {
-            data: _dataByState(vos, 'submitted'),
-            config: {
-                title: 'Submitted',
-                legend: {position: 'left', display: true},
-                innerRadius: 50,
-                colors: perVoColors,
-                labels: true
+        options: {
+            title: {
+                display: true,
+                text: "Active"
             }
         }
-    };
+    });
+
+    new Chart(document.getElementById("submittedPlot"), {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: _dataByState(vos, 'submitted'),
+                backgroundColor: perVoColors
+            }],
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Submitted"
+            }
+        }
+    });
 }
 
 function StatsVosCtrl($rootScope, $location, $scope, vos, StatsVO, Unique)
@@ -309,7 +359,7 @@ function StatsVosCtrl($rootScope, $location, $scope, vos, StatsVO, Unique)
         StatsVO.query(filter,
         function(updatedVos) {
             $scope.vos = updatedVos;
-            $scope.plots = _generatePerVoPlots($scope.vos);
+            _generatePerVoPlots($scope.vos);
             stopLoading($rootScope);
         },
         genericFailureMethod(null, $rootScope, $location));
@@ -318,7 +368,7 @@ function StatsVosCtrl($rootScope, $location, $scope, vos, StatsVO, Unique)
         clearInterval($scope.autoRefresh);
     });
 
-    $scope.plots = _generatePerVoPlots($scope.vos);
+    _generatePerVoPlots($scope.vos);
 }
 
 

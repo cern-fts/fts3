@@ -210,7 +210,7 @@ def get_actives_per_activity(http_request, vo):
 
     for activity in grouped.keys():
         if activity.lower() not in share_config:
-            grouped[activity]['notes'] = 'Activity not configured. Fallsback to default.'
+            grouped[activity]['notes'] = 'Activity not configured. Fallback to default.'
         else:
             grouped[activity]['weight'] = share_config[activity.lower()]
             if grouped[activity]['count'].get('SUBMITTED', 0) > 0:
