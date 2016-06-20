@@ -227,7 +227,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
              current.retryCount <= previous.retryCount)  {
         // Throughput going worse
         if (current.ema < previous.ema) {
-            decision = previousValue;// - 1;
+            decision = previousValue - 1;
             rationale << "Good link efficiency, throughput deterioration";
         }
         else if (current.ema > previous.ema) {
