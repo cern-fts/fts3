@@ -108,7 +108,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
     var emaData = [];
     var successData = [];
     var activeData = [];
-    var filesizeBottom = [];
+    var filesizeStd = [];
     var filesizeData = [];
     var filesizeTop = [];
     var labels = [];
@@ -124,7 +124,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
         var filesize = $scope.optimizer.evolution.items[i].filesize_avg/(1024*1024);
         var stddev = $scope.optimizer.evolution.items[i].filesize_stddev/(1024*1024);
 
-        filesizeBottom.unshift(filesize - stddev);
+        filesizeStd.unshift(stddev);
         filesizeData.unshift(filesize);
         filesizeTop.unshift(filesize + stddev);
     }
@@ -233,37 +233,34 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
 
     // Filesize plot
     new Chart(document.getElementById("filesizePlot"), {
-        type: "line",
+        type: "lineError",
         data: {
             labels: labels,
             datasets: [
                 {
-                    yAxisID: "throughput",
-                    label: "EMA",
-                    data: emaData,
-                    backgroundColor: "rgba(0, 0, 0, 0)",
-                    borderColor: "rgb(0, 204, 0)",
-                },
-                {
-                    yAxisID: "filesize",
-                    label: "Min",
-                    data: filesizeBottom,
-                    backgroundColor: "rgba(255, 255, 255, 0)",
-                    borderColor: "rgba(102, 204, 255, 0.5)",
-                },
-                {
                     yAxisID: "filesize",
                     label: "Average filesize",
                     data: filesizeData,
-                    backgroundColor: "rgba(255, 255, 255, 0)",
+                    error: filesizeStd,
+                    errorDir : "both",
+                    errorStrokeWidth : 1,
+                    errorColor: "rgba(0, 0, 255, 0.5)",
                     borderColor: "rgb(0, 0, 255)",
+                    backgroundColor: "rgba(0, 0, 0, 0)",
                 },
                 {
                     yAxisID: "filesize",
-                    label: "Max",
+                    label: "",
                     data: filesizeTop,
-                    backgroundColor: "rgba(255, 255, 255, 0)",
-                    borderColor: "rgba(102, 204, 255, 0.5)",
+                    borderColor: "rgba(0, 0, 0, 0.01)",
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                },
+                {
+                    yAxisID: "throughput",
+                    label: "EMA",
+                    data: emaData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)",
+                    borderColor: "rgb(0, 204, 0)",
                 },
             ]
         },
