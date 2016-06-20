@@ -73,6 +73,8 @@ struct PairState {
     int queueSize;
     // Exponential Moving Average
     double ema;
+    // Filesize statistics
+    double filesizeAvg, filesizeStdDev;
     // Optimizer last decision
     int connections;
 
@@ -108,7 +110,8 @@ public:
     virtual int getOptimizerValue(const Pair&) = 0;
 
     // Get the weighted throughput for the pair
-    virtual double getThroughput(const Pair &, const boost::posix_time::time_duration &) = 0;
+    virtual void getThroughputInfo(const Pair &, const boost::posix_time::time_duration &,
+        double *throughput, double *filesizeAvg, double *filesizeStdDev) = 0;
 
     virtual time_t getAverageDuration(const Pair&, const boost::posix_time::time_duration&) = 0;
 

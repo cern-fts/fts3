@@ -40,7 +40,9 @@ ALTER TABLE t_optimizer_evolution_new
     ADD COLUMN `rationale` TEXT DEFAULT NULL,
     ADD COLUMN `diff` INTEGER DEFAULT 0,
     ADD COLUMN actual_active INTEGER DEFAULT NULL,
-    ADD COLUMN queue_size INTEGER DEFAULT NULL;
+    ADD COLUMN queue_size INTEGER DEFAULT NULL,
+    ADD COLUMN filesize_avg DOUBLE DEFAULT NULL,
+    ADD COLUMN filesize_stddev DOUBLE DEFAULT NULL;
 
 -- Populate the empty table with data from the old one, adapted to the
 -- new schema

@@ -149,10 +149,14 @@ public:
         return i->second.back().activeDecision;
     }
 
-    double getThroughput(const Pair &pair, const boost::posix_time::time_duration &interval) {
+    void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
+        double *throughput, double *filesizeAvg, double *filesizeStdDev)
+    {
+        *throughput = *filesizeAvg = *filesizeStdDev = 0;
+
         auto tsi = transferStore.find(pair);
         if (tsi == transferStore.end()) {
-            return 0;
+            return;
         }
 
         auto &transfers = tsi->second;
@@ -169,10 +173,10 @@ public:
         }
 
         if (totalSize > 0) {
-            acc /= totalSize;
+            *throughput = acc / totalSize;
         }
 
-        return acc;
+        return;
     }
 
     time_t getAverageDuration(const Pair &pair, const boost::posix_time::time_duration &interval) {

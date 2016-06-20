@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <numeric>
 #include "MySqlAPI.h"
 #include "db/generic/DbUtils.h"
 #include "common/Exceptions.h"
@@ -42,27 +43,27 @@ static void setNewOptimizerValue(soci::session &sql,
 // Insert the optimizer decision into the historical table, so we can follow
 // the progress
 static void updateOptimizerEvolution(soci::session &sql,
-    const Pair &pair,
-    int active, double ema, double successRate, double throughput,
-    int actualActive, int queueSize,
-    int diff, const std::string &rationale)
+    const Pair &pair, int active, int diff, const std::string &rationale, const PairState &newState)
 {
     try {
-        if (throughput > 0 && successRate > 0) {
+        if (newState.throughput > 0 && newState.successRate > 0) {
             sql.begin();
             sql << " INSERT INTO t_optimizer_evolution "
                 " (datetime, source_se, dest_se, "
                 "  ema, active, throughput, success, "
+                "  filesize_avg, filesize_stddev, "
                 "  actual_active, queue_size, "
                 "  rationale, diff) "
                 " VALUES "
                 " (UTC_TIMESTAMP(), :source, :dest, "
                 "  :ema, :active, :throughput, :success, "
+                "  :filesize_avg, :filesize_stddev, "
                 "  :actual_active, :queue_size, "
                 "  :rationale, :diff)",
                 soci::use(pair.source), soci::use(pair.destination),
-                soci::use(ema), soci::use(active), soci::use(throughput), soci::use(successRate),
-                soci::use(actualActive), soci::use(queueSize),
+                soci::use(newState.ema), soci::use(active), soci::use(newState.throughput), soci::use(newState.successRate),
+                soci::use(newState.filesizeAvg), soci::use(newState.filesizeStdDev),
+                soci::use(newState.activeCount), soci::use(newState.queueSize),
                 soci::use(rationale), soci::use(diff);
             sql.commit();
         }
@@ -236,9 +237,12 @@ public:
         return currentActive;
     }
 
-    double getThroughput(const Pair &pair, const boost::posix_time::time_duration &interval)
+    void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
+        double *throughput, double *filesizeAvg, double *filesizeStdDev)
     {
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+        *throughput = *filesizeAvg = *filesizeStdDev = 0;
 
         time_t now = time(NULL);
         time_t windowStart = now - interval.total_seconds();
@@ -253,6 +257,7 @@ public:
         soci::use(pair.source),soci::use(pair.destination), soci::use(interval.total_seconds()));
 
         double totalBytes = 0.0;
+        std::vector<double> filesizes;
 
         for (auto j = transfers.begin(); j != transfers.end(); ++j) {
             auto transferred = j->get<double>("transferred", 0.0);
@@ -283,9 +288,26 @@ public:
             }
 
             totalBytes += bytesInWindow;
+            if (filesize > 0) {
+                filesizes.push_back(filesize);
+            }
         }
 
-        return totalBytes /= interval.total_seconds();
+        *throughput = totalBytes / interval.total_seconds();
+        // Statistics on the file size
+        if (!filesizes.empty()) {
+            for (auto i = filesizes.begin(); i != filesizes.end(); ++i) {
+                *filesizeAvg += *i;
+            }
+            *filesizeAvg /= filesizes.size();
+
+            double deviations = 0.0;
+            for (auto i = filesizes.begin(); i != filesizes.end(); ++i) {
+                deviations += pow(*filesizeAvg - *i, 2);
+
+            }
+            *filesizeStdDev = sqrt(deviations / filesizes.size());
+        }
     }
 
     time_t getAverageDuration(const Pair &pair, const boost::posix_time::time_duration &interval) {
@@ -410,8 +432,7 @@ public:
         const PairState &newState, int diff, const std::string &rationale) {
 
         setNewOptimizerValue(sql, pair, activeDecision, newState.ema);
-        updateOptimizerEvolution(sql, pair, activeDecision, newState.ema, newState.successRate,
-            newState.throughput, newState.activeCount, newState.queueSize, diff, rationale);
+        updateOptimizerEvolution(sql, pair, activeDecision, diff, rationale, newState);
     }
 
     void storeOptimizerStreams(const Pair &pair, int streams) {
