@@ -108,6 +108,9 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
     var emaData = [];
     var successData = [];
     var activeData = [];
+    var filesizeBottom = [];
+    var filesizeData = [];
+    var filesizeTop = [];
     var labels = [];
 
     for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
@@ -117,10 +120,17 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
         emaData.unshift($scope.optimizer.evolution.items[i].ema/(1024*1024));
         successData.unshift($scope.optimizer.evolution.items[i].success);
         activeData.unshift($scope.optimizer.evolution.items[i].active);
+
+        var filesize = $scope.optimizer.evolution.items[i].filesize_avg/(1024*1024);
+        var stddev = $scope.optimizer.evolution.items[i].filesize_stddev/(1024*1024);
+
+        filesizeBottom.unshift(filesize - stddev);
+        filesizeData.unshift(filesize);
+        filesizeTop.unshift(filesize + stddev);
     }
 
     // Throughput chart
-    var thrChart = new Chart(document.getElementById("throughputPlot"), {
+    new Chart(document.getElementById("throughputPlot"), {
         type: "line",
         data: {
             labels: labels,
@@ -174,7 +184,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
     })
 
     // Success chart
-    var successChart = new Chart(document.getElementById("successPlot"), {
+    new Chart(document.getElementById("successPlot"), {
         type: "line",
         data: {
             labels: labels,
@@ -220,46 +230,72 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
             }
         }
     })
-    
-    
-/*
-    $scope.plots = {
-        labels: labels,
-        throughput: {
-            series: ['Throughput', 'EMA'],
-            data: [throughputData, emaData],
-            colours: ['#80d4ff', '#79ff4d'],
-            options: {
-                responsive: true,
-                scaleShowLabels: true,
-            }
-        }
-    }
-*/
-/*
-    $scope.plots = {
-        throughput: {
-            series: ['Active', 'Weighted throughput'],
-            data: throughputData,
-            config: {
-                title: 'Throughput evolution',
-                colors: ["#0000FF", "#00FF00"],
-                doubleYAxis: true,
-                labels: ['Active', 'Weighted throughput']
-            }
+
+    // Filesize plot
+    new Chart(document.getElementById("filesizePlot"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    yAxisID: "throughput",
+                    label: "EMA",
+                    data: emaData,
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    borderColor: "rgb(0, 204, 0)",
+                },
+                {
+                    yAxisID: "filesize",
+                    label: "Min",
+                    data: filesizeBottom,
+                    backgroundColor: "rgba(255, 255, 255, 0)",
+                    borderColor: "rgba(102, 204, 255, 0.5)",
+                },
+                {
+                    yAxisID: "filesize",
+                    label: "Average filesize",
+                    data: filesizeData,
+                    backgroundColor: "rgba(255, 255, 255, 0)",
+                    borderColor: "rgb(0, 0, 255)",
+                },
+                {
+                    yAxisID: "filesize",
+                    label: "Max",
+                    data: filesizeTop,
+                    backgroundColor: "rgba(255, 255, 255, 0)",
+                    borderColor: "rgba(102, 204, 255, 0.5)",
+                },
+            ]
         },
-        success: {
-            series: ['Active', 'Success'],
-            data: successData,
-            config: {
-                title: 'Success rate evolution',
-                colors: ["#0000FF", "#00FF00"],
-                doubleYAxis: true,
-                labels: ['Active', 'Success']
-            }
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        id: "filesize",
+                        type: "linear",
+                        position: "right",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value + ' MB'
+                            }
+                        }
+                    },
+                    {
+                        id: "throughput",
+                        type: "linear",
+                        position: "left",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value + ' MB/s'
+                            }
+                        },
+                    },
+                ]
+            },
         }
-    };
-    */
+    })
 }
 
 

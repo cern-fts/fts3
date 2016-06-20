@@ -123,7 +123,9 @@ def get_optimizer_details(http_request):
     optimizer = OptimizerEvolution.objects.filter(source_se=source_se, dest_se=dest_se)
     optimizer = optimizer.filter(datetime__gte=not_before)
     optimizer = optimizer.values(
-        'datetime', 'active', 'ema', 'throughput', 'success', 'rationale', 'actual_active', 'queue_size', 'diff'
+        'datetime', 'active', 'ema', 'throughput', 'success',
+        'filesize_avg', 'filesize_stddev',
+        'rationale', 'actual_active', 'queue_size', 'diff'
     )
     optimizer = optimizer.order_by('-datetime')
 

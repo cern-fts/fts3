@@ -318,6 +318,8 @@ class OptimizerEvolution(models.Model):
     active       = models.IntegerField()
     ema          = models.FloatField()
     throughput   = models.FloatField()
+    filesize_avg = models.FloatField()
+    filesize_stddev = models.FloatField()
     success      = models.FloatField(db_column = 'success')
     actual_active = models.IntegerField()
     queue_size   = models.IntegerField()
