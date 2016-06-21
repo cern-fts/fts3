@@ -166,7 +166,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
                         ticks: {
                             beginAtZero: true,
                             callback: function(value, index, values) {
-                                return value + ' MB/s'
+                                return value.toFixed(2) + ' MB/s'
                             }
                         }
                     },
@@ -214,7 +214,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
                         ticks: {
                             beginAtZero: true,
                             callback: function(value, index, values) {
-                                return value + ' %'
+                                return value.toFixed(2) + ' %'
                             }
                         }
                     },
@@ -274,7 +274,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
                         ticks: {
                             beginAtZero: true,
                             callback: function(value, index, values) {
-                                return value + ' MB'
+                                return value.toFixed(2) + ' MB'
                             }
                         }
                     },
@@ -285,7 +285,7 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
                         ticks: {
                             beginAtZero: true,
                             callback: function(value, index, values) {
-                                return value + ' MB/s'
+                                return value.toFixed(2) + ' MB/s'
                             }
                         },
                     },
