@@ -41,7 +41,7 @@ def infer_sql_location(config):
     :return: The inferred SQL script location
     """
     base = '/usr/share'
-    if config['fts3.DbType'] not in ['mysql', 'oracle']:
+    if config['fts3.DbType'] not in ['mysql']:
         raise NotImplementedError('Database type %s not supported', config['fts3.DbType'])
     return os.path.join(base, 'fts-%s' % config['fts3.DbType'])
 
@@ -160,25 +160,6 @@ password=%(fts3.DbPassword)s
         raise Exception('Failed to run mysql (%d)' % ret)
 
 
-def run_sql_script_oracle(config, sql):
-    """
-    Run a SQL script
-    :param config: FTS3 config file parsed
-    :param sql: The SQL script
-    """
-    cmd = [
-        'sqlplus',
-        '%(fts3.DbUserName)s/%(fts3.DbPassword)s@%(fts3.DbConnectString)s' % config,
-    ]
-
-    log.debug('Running %s < %s', ' '.join(cmd), sql)
-
-    sql_fd = open(sql)
-    ret = subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr, stdin=sql_fd)
-    if ret != 0:
-        raise Exception('Failed to run mysql (%d)' % ret)
-
-
 def run_sql_script(config, sql):
     """
     Run a SQL script
@@ -186,11 +167,7 @@ def run_sql_script(config, sql):
     :param sql: The SQL script
     """
     log.info('Running %s' % sql)
-    if config['fts3.DbType'] == 'mysql':
-        run_sql_script_mysql(config, sql)
-    elif config['fts3.DbType'] == 'oracle':
-        run_sql_script_oracle(config, sql)
-
+    run_sql_script_mysql(config, sql)
 
 def populate_schema(config, sql_location):
     """

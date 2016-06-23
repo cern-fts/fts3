@@ -26,10 +26,6 @@ add_subdirectory(generic)
 add_subdirectory(profiled)
 add_subdirectory(schema)
 
-#if (ORACLEBUILD)
-#    add_subdirectory(oracle)
-#endif ()
-
 if (MYSQLBUILD)
     add_subdirectory(mysql)
 endif ()

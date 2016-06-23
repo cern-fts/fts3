@@ -39,7 +39,7 @@ using namespace fts3::config;
 #define FTS3_CONFIG_SERVERCONFIG_MESSAGINGDIRECTORY_DEFAULT "/var/lib/fts3"
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/fts3/fts3config"
 #define FTS3_CONFIG_SERVERCONFIG_MONFILE_DEFAULT "/etc/fts3/fts-msg-monitoring.conf"
-#define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
+#define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "mysql"
 #define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
 #define FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT "12500"
 
@@ -100,7 +100,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     (
         "DbType,d",
         po::value<std::string>( &(_vars["DbType"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT),
-        "Database backend type. Allowed values: oracle"
+        "Database backend type. Allowed values: mysql"
     )
 
     (

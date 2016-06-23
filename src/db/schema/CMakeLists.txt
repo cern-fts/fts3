@@ -15,15 +15,6 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-if (ORACLEBUILD STREQUAL "ON")
-	install(FILES        oracle/fts-schema-1.0.0.sql
-			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle)
-	install(FILES        oracle/fts-diff-1.0.1.sql
-			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle)
-    install(FILES        oracle/fts-diff-2.0.0.sql
-            DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle)
-endif ()
-
 if (MYSQLBUILD STREQUAL "ON")
 	install(FILES       mysql/fts-schema-1.0.0.sql
 			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)

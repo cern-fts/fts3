@@ -8,7 +8,7 @@ IP=0.0.0.0
 User=fts3
 Group=fts3
 
-#mysql or oracle
+# mysql only
 DbType=mysql
 
 #db username
@@ -18,8 +18,6 @@ DbUserName=replacethis
 DbPassword=replacethis
 
 #For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db") 
-#For Oracle, it supports transparent application failover, to enable it you need to use a connection string such as: "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = fts2source.cern.ch)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = fts2source.cern.ch)(PORT = 1521))(LOAD_BALANCE = yes) (FAILOVER=yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = XE)(FAILOVER_MODE=(TYPE = SELECT)(METHOD = BASIC)(RETRIES = 200)(DELAY = 15))))"
-#An alternative for oracle connection string (without failover support) is: hostname.cern.ch:10121/Service name
 DbConnectString=replacethis
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
