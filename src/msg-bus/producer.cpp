@@ -41,16 +41,16 @@ Producer::~Producer()
 }
 
 
-boost::thread_specific_ptr<std::stringstream> msgBuffer;
+boost::thread_specific_ptr<std::istringstream> msgBuffer;
 
 
 static void populateBuffer(const std::string &msg)
 {
     if (msgBuffer.get() == NULL) {
-        msgBuffer.reset(new std::stringstream());
+        msgBuffer.reset(new std::istringstream());
     }
     msgBuffer->clear();
-    *msgBuffer << msg;
+    msgBuffer->str(msg);
 }
 
 
