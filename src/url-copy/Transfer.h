@@ -57,6 +57,8 @@ public:
 
         Interval process;
 
+        bool ipv6Used;
+
         Statistics();
     };
 

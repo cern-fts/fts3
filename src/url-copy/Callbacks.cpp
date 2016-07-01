@@ -94,6 +94,7 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
 {
     static const char *sideStr[] = {"SOURCE", "DEST", "BOTH"};
     static const GQuark SRM_DOMAIN = g_quark_from_static_string("SRM");
+    static const GQuark IPV6_EVENT = g_quark_from_static_string("IPv6");
 
     Transfer *transfer = (Transfer*)(udata);
 
@@ -140,5 +141,8 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     }
     else if (e->stage == GFAL_EVENT_CLOSE_EXIT && e->domain == SRM_DOMAIN) {
         transfer->stats.srmFinalization.end = e->timestamp;
+    }
+    else if (e->stage == IPV6_EVENT) {
+        transfer->stats.ipv6Used = true;
     }
 }

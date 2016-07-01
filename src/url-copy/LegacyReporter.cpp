@@ -269,6 +269,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.tr_timestamp_start = transfer.stats.process.start;
     completed.tr_timestamp_complete = transfer.stats.process.end;
 
+    completed.ipv6 = transfer.stats.ipv6Used;
+
     if (opts.enableMonitoring) {
         std::string msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;

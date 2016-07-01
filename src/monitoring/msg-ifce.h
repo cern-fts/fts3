@@ -98,6 +98,7 @@ public:
     bool        job_m_replica;
     std::string job_state;
     bool        is_recoverable;
+    bool        ipv6;
 };
 
 class MsgIfce
