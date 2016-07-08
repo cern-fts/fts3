@@ -2825,50 +2825,10 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<fts3::events::Messag
         double throughput = 0.0;
         double transferred = 0.0;
         int file_id = 0;
-        std::string source_surl;
-        std::string dest_surl;
-        std::string source_turl;
-        std::string dest_turl;
         std::string file_state;
 
         soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
                                 soci::use(throughput), soci::use(transferred), soci::use(file_id));
-
-        soci::statement stmtTurl = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput) "
-                                    " VALUES (:source_surl, :destin_surl, :source_turl, :destin_turl, UTC_TIMESTAMP(), :throughput) "
-                                    " ON DUPLICATE KEY UPDATE "
-                                    " datetime = UTC_TIMESTAMP(), throughput = :throughput",
-                                    soci::use(source_surl),
-                                    soci::use(dest_surl),
-                                    soci::use(source_turl),
-                                    soci::use(dest_turl),
-                                    soci::use(throughput),
-                                    soci::use(throughput)
-                                   );
-
-        soci::statement stmtFinish = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, finish) "
-                                      " VALUES (:source_surl, :destin_surl, :source_turl, :destin_turl, UTC_TIMESTAMP(), :throughput, 1) "
-                                      " ON DUPLICATE KEY UPDATE "
-                                      " datetime = UTC_TIMESTAMP(), throughput = :throughput, finish = finish + 1",
-                                      soci::use(source_surl),
-                                      soci::use(dest_surl),
-                                      soci::use(source_turl),
-                                      soci::use(dest_turl),
-                                      soci::use(throughput),
-                                      soci::use(throughput)
-                                     );
-
-        soci::statement stmtFail = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, fail) "
-                                    " VALUES (:source_surl, :destin_surl, :source_turl, :destin_turl, UTC_TIMESTAMP(), :throughput, 1) "
-                                    " ON DUPLICATE KEY UPDATE "
-                                    " datetime = UTC_TIMESTAMP(), throughput = :throughput, fail = fail + 1",
-                                    soci::use(source_surl),
-                                    soci::use(dest_surl),
-                                    soci::use(source_turl),
-                                    soci::use(dest_turl),
-                                    soci::use(throughput),
-                                    soci::use(throughput)
-                                   );
 
         sql.begin();
 
@@ -2879,10 +2839,6 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<fts3::events::Messag
             transferred = 0.0;
             file_id = 0;
             file_state = "";
-            source_surl = "";
-            dest_surl = "";
-            source_turl = "";
-            dest_turl = "";
 
             if ((*iter).file_id() > 0)
             {
@@ -2903,57 +2859,6 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<fts3::events::Messag
         }
 
         sql.commit();
-
-        //now update t_turl table, DISABLED for now due to deadlocks
-        //DO not remove
-        /*
-            sql.begin();
-
-            for (iter = messages.begin(); iter != messages.end(); ++iter)
-                {
-                    throughput = 0.0;
-                    transferred = 0.0;
-                    file_id = 0;
-                    file_state = "";
-                    source_surl = "";
-                    dest_surl = "";
-                    source_turl = "";
-                    dest_turl = "";
-
-                    if (iter->msg_errno == 0 && (*iter).file_id > 0)
-                        {
-                            file_state = std::string((*iter).transfer_status);
-
-                            if(file_state != "ACTIVE")
-                                {
-                                    source_surl = (*iter).source_surl;
-                                    dest_surl = (*iter).dest_surl;
-                                    source_turl = (*iter).source_turl;
-                                    dest_turl = (*iter).dest_turl;
-                                    file_id = (*iter).file_id;
-
-                                    if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
-                                        continue;
-
-                                    if((*iter).throughput > 0.0 && file_id > 0)
-                                        {
-                                            throughput = (*iter).throughput;
-                                        }
-
-                                    if(file_state == "FINISHED" && file_id > 0 )
-                                        {
-                                            stmtFinish.execute(true);
-                                        }
-                                    else if (file_state == "FAILED" && file_id > 0 )
-                                        {
-                                            stmtFail.execute(true);
-                                        }
-                                }
-                        }
-                }
-
-            sql.commit();
-        */
     }
     catch (std::exception& e)
     {

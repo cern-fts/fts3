@@ -72,8 +72,11 @@ ALTER TABLE t_optimize_streams
 DROP TABLE IF EXISTS t_profiling_info;
 DROP TABLE IF EXISTS t_profiling_snapshot;
 
+-- Drop t_turl
+DROP TABLE IF EXISTS t_turl;
+
 --
 -- Store update history
 --
 INSERT INTO t_schema_vers (major, minor, patch, message)
-    VALUES (2, 0, 0, 'FTS-308, FTS-506, FTS-627 diff');
+    VALUES (2, 0, 0, 'FTS-308, FTS-506, FTS-627, FTS-628 diff');
