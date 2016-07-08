@@ -91,7 +91,6 @@ static void doServer()
     theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
     initializeDatabase();
-    fts3::ProfilingSubsystem::instance().start();
     BringOnlineServer::instance().start();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Daemon started" << commit;

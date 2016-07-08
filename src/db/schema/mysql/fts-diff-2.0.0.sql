@@ -68,8 +68,12 @@ ALTER TABLE t_optimize_streams
     DROP PRIMARY KEY,
     ADD PRIMARY KEY (source_se, dest_se);
 
+-- Drop profiling tables
+DROP TABLE IF EXISTS t_profiling_info;
+DROP TABLE IF EXISTS t_profiling_snapshot;
+
 --
 -- Store update history
 --
 INSERT INTO t_schema_vers (major, minor, patch, message)
-    VALUES (2, 0, 0, 'FTS-308, FTS-506 diff');
+    VALUES (2, 0, 0, 'FTS-308, FTS-506, FTS-627 diff');

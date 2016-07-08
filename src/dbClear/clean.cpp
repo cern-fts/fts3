@@ -25,7 +25,6 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "profiler/Profiler.h"
 
 
 namespace fs = boost::filesystem;
@@ -78,10 +77,6 @@ int main(int argc, char **argv)
         << nJobs << " jobs and "
         << nFiles << " files affected"
         << commit;
-
-        // If profiling is configured, dump the timing
-        db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(
-            &fts3::ProfilingSubsystem::instance());
 
     }
     catch (const std::exception &e) {

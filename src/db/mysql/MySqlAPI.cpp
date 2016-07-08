@@ -7563,61 +7563,6 @@ void MySqlAPI::checkSchemaLoaded()
     }
 }
 
-void MySqlAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        sql.begin();
-
-        sql << "UPDATE t_profiling_snapshot SET "
-            "    cnt = 0, exceptions = 0, total = 0, average = 0";
-
-        std::map<std::string, fts3::Profile> profiles = prof->getProfiles();
-        std::map<std::string, fts3::Profile>::const_iterator i;
-        for (i = profiles.begin(); i != profiles.end(); ++i)
-        {
-            sql << "INSERT INTO t_profiling_snapshot (scope, cnt, exceptions, total, average) "
-                "VALUES (:scope, :cnt, :exceptions, :total, :avg) "
-                "ON DUPLICATE KEY UPDATE "
-                "    cnt = :cnt, exceptions = :exceptions, total = :total, average = :avg",
-                soci::use(i->second.nCalled, "cnt"), soci::use(i->second.nExceptions, "exceptions"),
-                soci::use(i->second.totalTime, "total"), soci::use(i->second.getAverage(), "avg"),
-                soci::use(i->first, "scope");
-        }
-
-
-        soci::statement update(sql);
-        update.exchange(soci::use(prof->getInterval()));
-        update.alloc();
-
-        update.prepare("UPDATE t_profiling_info SET "
-                       "    updated = UTC_TIMESTAMP(), period = :period");
-
-        update.define_and_bind();
-        update.execute(true);
-
-        if (update.get_affected_rows() == 0)
-        {
-            sql << "INSERT INTO t_profiling_info (updated, period) "
-                "VALUES (UTC_TIMESTAMP(), :period)",
-                soci::use(prof->getInterval());
-        }
-
-        sql.commit();
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
 
 void MySqlAPI::setOptimizerMode(int mode)
 {

@@ -28,7 +28,6 @@ target_link_libraries(fts_db_generic
     ${CMAKE_THREAD_LIBS_INIT}
     fts_common
     fts_config
-    fts_db_profiled
 )
 set_target_properties(fts_db_generic PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/generic

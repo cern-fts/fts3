@@ -29,9 +29,6 @@
 
 #include "db/generic/TransferFile.h"
 
-#include "profiler/Profiler.h"
-#include "profiler/Macros.h"
-
 #include "server/DrainMode.h"
 
 #include "TransferFileHandler.h"
@@ -140,8 +137,6 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
 
         while (!tfh.empty())
         {
-            PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
-
             // iterate over all VOs
             for (auto it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
             {

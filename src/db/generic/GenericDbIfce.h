@@ -54,7 +54,6 @@
 #include "UserCredentialCache.h"
 
 #include "msg-bus/events.h"
-#include "profiler/Profiler.h"
 
 #include "server/services/optimizer/Optimizer.h"
 
@@ -532,8 +531,6 @@ public:
     virtual void checkSanityState() = 0;
 
     virtual void checkSchemaLoaded() = 0;
-
-    virtual void storeProfiling(const fts3::ProfilingSubsystem* prof) = 0;
 
     virtual void setOptimizerMode(int mode) = 0;
 

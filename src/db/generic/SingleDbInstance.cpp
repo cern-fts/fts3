@@ -25,11 +25,7 @@
 #include "config/ServerConfig.h"
 #include "common/Logger.h"
 #include "version.h"
-#include "../profiled/Profiled.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-#include "unittest/testsuite.h"
-#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 using namespace fts3::config;
 using namespace fts3::common;
@@ -63,19 +59,6 @@ DBSingleton::DBSingleton(): dbBackend(NULL)
 
             // create an instance of the DB class
             dbBackend = create_db();
-
-            // If profiling is enabled, wrap it!
-            int profileDumpInterval = ServerConfig::instance().get<int>("Profiling");
-            if (profileDumpInterval)
-                {
-                    dbBackend = new ProfiledDB(dbBackend, destroy_db);
-                    destroy_db = destroy_profiled_db;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Database wrapped in the profiler!" << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Should report every "
-                                                    << profileDumpInterval << " seconds" << commit;
-                }
-
-            // create monitoring db on request
         }
     else
         {

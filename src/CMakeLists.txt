@@ -40,7 +40,6 @@ if(MYSQLBUILD OR SERVERBUILD)
     add_subdirectory(msg-bus)
     add_subdirectory(config)
     add_subdirectory(db)
-    add_subdirectory(profiler)
 endif()
 
 #  Used by server and client

@@ -91,7 +91,6 @@ target_link_libraries(fts_server
     fts_server_gsoap_transfer
     gsoap++
     fts_ws_ifce_server
-    fts_profiler
     fts_infosys
     ${Boost_LIBRARIES}
 )

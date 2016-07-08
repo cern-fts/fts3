@@ -31,7 +31,6 @@
 #include "common/Logger.h"
 #include "common/panic.h"
 #include "db/generic/SingleDbInstance.h"
-#include "profiler/Profiler.h"
 
 #include "Server.h"
 
@@ -108,7 +107,6 @@ static void doServer(void)
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting server..." << commit;
 
     intializeDatabase();
-    fts3::ProfilingSubsystem::instance().start();
     Server::instance().start();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Server started" << commit;

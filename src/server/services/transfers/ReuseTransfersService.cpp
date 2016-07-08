@@ -27,7 +27,6 @@
 #include "common/definitions.h"
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
-#include "profiler/Macros.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "server/DrainMode.h"
@@ -123,8 +122,6 @@ std::map<int, std::string> ReuseTransfersService::generateJobFile(
 
     for (auto it = files.begin(); it != files.end(); ++it)
     {
-        PROFILE_SCOPE("executeUrlcopy::for[reuse]");
-
         fileIds.insert(std::make_pair(it->fileId, it->jobId));
 
         std::string fileMetadata = UrlCopyCmd::prepareMetadataString(

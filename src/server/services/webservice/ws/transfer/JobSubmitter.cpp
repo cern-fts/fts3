@@ -29,8 +29,6 @@
 #include "../delegation/GSoapDelegationHandler.h"
 #include "../config/Configuration.h"
 
-#include "profiler/Macros.h"
-
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>
@@ -76,8 +74,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
     copyPinLifeTime(-1),
     srm_source(true)
 {
-    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob*, bool)");
-
     // do the common initialisation
     init(ctx, job);
 
@@ -105,8 +101,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob2 *job) :
     copyPinLifeTime(-1),
     srm_source(true)
 {
-    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
-
     // do the common initialisation
     init(ctx, job);
 
@@ -131,8 +125,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     db (DBSingleton::instance().getDBObjectInstance()),
     copyPinLifeTime(-1)
 {
-    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob3*)");
-
     // do the common initialisation
     init(ctx, job);
 
