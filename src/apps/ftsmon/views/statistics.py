@@ -23,7 +23,6 @@ from django.db.models import Q, Count, Sum
 from django.db.utils import DatabaseError
 
 from ftsweb.models import Job, File, Host
-from ftsweb.models import Turl
 from ftsweb.models import ACTIVE_STATES, STATES
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged, as_json
@@ -386,32 +385,4 @@ def get_transfer_volume(http_request):
 
     # Trick to calculate the sum only for those that are visible
     return CalculateVolume(triplets, not_before)
-
-
-@require_certificate
-@jsonify_paged
-def get_turls(http_request):
-    try:
-        time_window = timedelta(hours=int(http_request.GET['time_window']))
-    except:
-        time_window = timedelta(hours=1)
-    not_before = datetime.utcnow() - time_window
-
-    turls = Turl.objects.filter(datetime__gte = not_before)
-    if http_request.GET.get('source_se'):
-        turls = turls.filter(source_surl = http_request.GET['source_se'])
-    if http_request.GET.get('dest_se'):
-        turls = turls.filter(destin_surl = http_request.GET['dest_se'])
-
-    (order_by, order_desc) = get_order_by(http_request)
-    if order_by == 'throughput':
-        turls = turls.order_by(ordered_field('throughput', order_desc))
-    elif order_by == 'finish':
-        turls = turls.order_by(ordered_field('finish', order_desc))
-    elif order_by == 'fail':
-        turls = turls.order_by(ordered_field('fail', order_desc))
-    else:
-        turls = turls.order_by('throughput')
-
-    return turls.all()
 

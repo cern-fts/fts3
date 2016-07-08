@@ -73,9 +73,6 @@ config(function($routeProvider) {
        when('/statistics/volume',     {templateUrl: STATIC_ROOT + 'html/statistics/volume.html',
                                        controller:  TransferVolumeCtrl,
                                        resolve:     TransferVolumeCtrl.resolve}).
-       when('/statistics/turls',      {templateUrl: STATIC_ROOT + 'html/statistics/turls.html',
-                                       controller:  TurlsCtrl,
-                                       resolve:     TurlsCtrl.resolve}).
 
         when('/overview/atlas',       {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
                                        controller:  OverviewAtlasCtrl,

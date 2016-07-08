@@ -411,31 +411,3 @@ TransferVolumeCtrl.resolve = {
     }
 }
 
-// TURLS
-function TurlsCtrl($location, $scope, turls)
-{
-    $scope.turls = turls;
-
-    // On page change, reload
-    $scope.pageChanged = function(newPage) {
-        $location.search('page', newPage);
-    };
-
-    $scope.filterBy = function(filter) {
-        $location.search(filter);
-    }
-}
-
-TurlsCtrl.resolve = {
-    turls: function($rootScope, $location, $q, Turls) {
-        loading($rootScope);
-
-        var deferred = $q.defer();
-
-        Turls.query($location.$$search,
-            genericSuccessMethod(deferred, $rootScope),
-            genericFailureMethod(deferred, $rootScope, $location));
-
-        return deferred.promise;
-    }
-}
