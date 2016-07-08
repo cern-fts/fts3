@@ -77,14 +77,7 @@ config(function($routeProvider) {
                                        controller:  TurlsCtrl,
                                        resolve:     TurlsCtrl.resolve}).
 
-        when('/statistics/profiling', {templateUrl: STATIC_ROOT + 'html/statistics/profiling.html',
-                                       controller:  StatsProfilingCtrl,
-                                       resolve:     StatsProfilingCtrl.resolve}).
-        when('/statistics/slowqueries', {templateUrl: STATIC_ROOT + 'html/statistics/slowqueries.html',
-                                         controller:  SlowQueriesCtrl,
-                                         resolve:     SlowQueriesCtrl.resolve}).
-
-        when('/overview/atlas',                 {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
+        when('/overview/atlas',       {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
                                        controller:  OverviewAtlasCtrl,
                                        resolve:     OverviewAtlasCtrl.resolve}).
 

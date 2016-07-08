@@ -411,62 +411,6 @@ TransferVolumeCtrl.resolve = {
     }
 }
 
-// Profiling
-
-function StatsProfilingCtrl($rootScope, $location, $scope, profile, Profile)
-{
-    $scope.profile = profile;
-
-    // Set timer to trigger autorefresh
-    $scope.autoRefresh = setInterval(function() {
-        loading($rootScope);
-        var filter = $location.$$search;
-        Profile.query(filter, function(updatedProfile) {
-            $scope.profile = updatedProfile;
-            stopLoading($rootScope);
-        },
-        genericFailureMethod(null, $rootScope, $location));
-    }, REFRESH_INTERVAL);
-    $scope.$on('$destroy', function() {
-        clearInterval($scope.autoRefresh);
-    });
-}
-
-
-StatsProfilingCtrl.resolve = {
-    profile: function($rootScope, $location, $q, Profile) {
-        loading($rootScope);
-
-        var deferred = $q.defer();
-
-        Profile.query($location.$$search,
-              genericSuccessMethod(deferred, $rootScope),
-              genericFailureMethod(deferred, $rootScope, $location));
-
-        return deferred.promise;
-    }
-}
-
-
-function SlowQueriesCtrl($location, $scope, slowQueries)
-{
-    $scope.slowQueries = slowQueries;
-}
-
-SlowQueriesCtrl.resolve = {
-    slowQueries: function($rootScope, $location, $q, SlowQueries) {
-        loading($rootScope);
-
-        var deferred = $q.defer();
-
-        SlowQueries.query($location.$$search,
-              genericSuccessMethod(deferred, $rootScope),
-              genericFailureMethod(deferred, $rootScope, $location));
-
-        return deferred.promise;
-    }
-}
-
 // TURLS
 function TurlsCtrl($location, $scope, turls)
 {

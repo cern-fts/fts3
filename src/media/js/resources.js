@@ -95,16 +95,6 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Profile', function($resource) {
-	return $resource('stats/profiling', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
-.factory('SlowQueries', function($resource) {
-	return $resource('stats/slowqueries', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
 .factory('Unique', function($resource) {
 	return $resource('unique/:field', {}, {
 		query: {method: 'GET', isArray: true}

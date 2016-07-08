@@ -348,25 +348,6 @@ class OptimizerStreams(models.Model):
         db_table = 't_optimize_streams'
 
 
-class ProfilingSnapshot(models.Model):
-    scope      = models.CharField(primary_key = True, max_length = 255)
-    cnt        = models.IntegerField()
-    exceptions = models.IntegerField()
-    total      = models.FloatField()
-    average    = models.FloatField()
-
-    class Meta:
-        db_table = 't_profiling_snapshot'
-
-
-class ProfilingInfo(models.Model):
-    updated = models.DateTimeField(primary_key = True)
-    period  = models.IntegerField()
-
-    class Meta:
-        db_table = 't_profiling_info'
-
-
 class Host(models.Model):
     hostname = models.CharField(primary_key = True, max_length = 64)
     beat     = models.DateTimeField()

@@ -23,7 +23,7 @@ from django.db.models import Q, Count, Sum
 from django.db.utils import DatabaseError
 
 from ftsweb.models import Job, File, Host
-from ftsweb.models import ProfilingSnapshot, ProfilingInfo, Turl
+from ftsweb.models import Turl
 from ftsweb.models import ACTIVE_STATES, STATES
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged, as_json
@@ -415,72 +415,3 @@ def get_turls(http_request):
 
     return turls.all()
 
-
-@require_certificate
-@jsonify
-def get_profiling(http_request):
-    profiling = {}
-
-    info = ProfilingInfo.objects.all()
-    if len(info) > 0:
-        profiling['updated'] = info[0].updated
-        profiling['period'] = info[0].period
-    else:
-        profiling['updated'] = False
-        profiling['period'] = False
-
-    profiles = ProfilingSnapshot.objects
-    if not http_request.GET.get('showall', False):
-        profiles = profiles.filter(cnt__gt=0)
-
-    (order_by, order_desc) = get_order_by(http_request)
-    if order_by == 'scope':
-        profiles = profiles.order_by(ordered_field('scope', order_desc))
-    elif order_by == 'called':
-        profiles = profiles.order_by(ordered_field('cnt', order_desc))
-    elif order_by == 'aggregate':
-        profiles = profiles.order_by(ordered_field('total', order_desc))
-    elif order_by == 'average':
-        profiles = profiles.order_by(ordered_field('average', order_desc))
-    elif order_by == 'exceptions':
-        profiles = profiles.order_by(ordered_field('exceptions', order_desc))
-    else:
-        profiles = profiles.order_by('total')
-
-    profiling['profiles'] = profiles.all()
-
-    return profiling
-
-
-def _slow_entry_to_dict(queries):
-    for q in queries:
-        yield {
-            'start_time': q[0],
-            'user_host': q[1],
-            'query_time': q[2],
-            'lock_time': q[3],
-            'rows_sent': q[4],
-            'rows_examined': q[5],
-            'db': q[6],
-            'last_insert_id': q[7],
-            'insert_id': q[8],
-            'server_id': q[9],
-            'sql_text': q[10]
-        }
-
-
-@require_certificate
-@jsonify
-def get_slow_queries(http_request):
-    engine = settings.DATABASES['default']['ENGINE']
-
-    if engine.endswith('oracle'):
-        return {'message': 'Not supported for Oracle'}
-
-    try:
-        dbname = settings.DATABASES['default']['NAME']
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM mysql.slow_log WHERE db = %s ORDER BY query_time DESC", [dbname])
-        return {'queries': _slow_entry_to_dict(cursor.fetchall())}
-    except DatabaseError:
-        return {'message': 'Could not execute the query'}
