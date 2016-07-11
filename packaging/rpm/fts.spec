@@ -518,7 +518,6 @@ fi
 %{_libdir}/libfts_config.so*
 %{_libdir}/libfts_infosys.so*
 %{_libdir}/libfts_db_generic.so*
-%{_libdir}/libfts_db_profiled.so*
 %{_libdir}/libfts_msg_ifce.so*
 %{_libdir}/libfts_proxy.so*
 %{_libdir}/libfts_server_gsoap_transfer.so*
@@ -528,7 +527,6 @@ fi
 %{_libdir}/libfts_ws_ifce_server.so*
 %{_libdir}/libfts_delegation_api_simple.so*
 %{_libdir}/libfts_delegation_api_cpp.so*
-%{_libdir}/libfts_profiler.so*
 %{_libdir}/libfts_msg_bus.so*
 %{_libdir}/libfts_url_copy.so*
 %doc README.md
