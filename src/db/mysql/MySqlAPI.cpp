@@ -162,14 +162,23 @@ static void validateSchemaVersion(soci::connection_pool *connectionPool)
         throw SystemError("The database schema major version is higher than expected. Please, upgrade fts");
     }
     else if (major < expect[0]) {
-        throw SystemError("The database schema major version is lower than expected. Please, upgrade the database");
+        // For 3.5, we can get away with it!
+        // Future updates may not be that lucky
+        //throw SystemError("The database schema major version is lower than expected. Please, upgrade the database");
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
+            << " Database schema major version is lower than expected. "
+            << "Fts can get away with it, but the database should be upgraded and the process restarted."
+            << commit;
     }
     else if (minor > expect[1]) {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
-            << "Database minor version is higher than expected. Fts should be able to run, but it should be upgraded."
+            << " Database minor version is higher than expected. Fts should be able to run, but it should be upgraded."
             << commit;
     }
     else if (minor < expect[1]) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
+            << " Database minor version is lower than expected. Fts should be able to run, but it should be upgraded."
+            << commit;
         throw SystemError("The database schema minor version is lower than expected. Please, upgrade the database");
     }
 }
