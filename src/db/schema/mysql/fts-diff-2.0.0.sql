@@ -32,7 +32,7 @@ CREATE TABLE t_optimizer_evolution_new LIKE t_optimizer_evolution;
 -- Modify the schema in the empty table
 ALTER TABLE t_optimizer_evolution_new
     CHANGE COLUMN `filesize` `success` FLOAT DEFAULT NULL,
-    CHANGE COLUMN `agrthroughput` `throughput` FLOAT DEFAULT NULL,
+    DROP COLUMN `agrthroughput`,
     DROP COLUMN `buffer`,
     DROP COLUMN `nostreams`,
     DROP COLUMN `timeout`,
@@ -48,10 +48,10 @@ ALTER TABLE t_optimizer_evolution_new
 -- new schema
 INSERT INTO t_optimizer_evolution_new
     (datetime, source_se, dest_se,
-     throughput_limit, active, throughput, success,
+     active, throughput, success,
      rationale)
 SELECT datetime, source_se, dest_se,
-    nostreams AS throughput_limit, active, throughput, filesize AS success,
+    active, throughput, filesize AS success,
     'Entry recovered from old database schema'
 FROM t_optimizer_evolution
 WHERE datetime > (UTC_TIMESTAMP() - INTERVAL 7 DAY);
