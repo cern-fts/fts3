@@ -31,14 +31,8 @@ include_directories(${GLOBUS_INCLUDE_DIRS})
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_PATH})
 
-find_package(Boost COMPONENTS python program_options unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 
-execute_process(
-    COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)" 
-    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-                 
 # Require soap headers
 include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
 
@@ -75,7 +69,6 @@ endif ()
 
 # Common CLI library
 file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp" "exception/*.cpp" "delegation/*.cpp")
-file(GLOB fts_cli_python_sources "python/*.cpp")
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})
 target_link_libraries(fts_cli_common ${fts_cli_libs})
@@ -176,14 +169,6 @@ add_executable(fts-set-priority
 target_link_libraries(fts-set-priority fts_cli_common)
 
 
-
-# python bindings
-find_package(PythonEasy REQUIRED)
-
-add_library(ftspython SHARED ${fts_cli_python_sources})
-target_link_libraries(ftspython fts_cli_common ${Boost_PYTHON_LIBRARIES} ${PYTHON_LIBRARIES})
-
-
 # Man pages
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/cli")
  
@@ -223,11 +208,4 @@ install(TARGETS
 install(TARGETS fts_cli_common 
 	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-)
-	
-install(TARGETS ftspython
-    LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}/fts
-)
-install (FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/__init__.py
-    DESTINATION ${PYTHON_SITE_PACKAGES}/fts
 )

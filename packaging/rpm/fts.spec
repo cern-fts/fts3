@@ -1,7 +1,6 @@
 %bcond_with oracle
 
 %global _hardened_build 1
-%global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
 
@@ -159,15 +158,6 @@ Requires:   fts-server%{?_isa} = %{version}-%{release}
 %description msg
 FTS messaging integration
 
-%package python
-Summary:    File Transfer Service version 3 python bindings
-Group:      System Environment/Libraries
-Requires:   fts-libs%{?_isa} = %{version}-%{release}
-Requires:   python%{?_isa}
-
-%description python
-FTS python bindings for client libraries and DB API
-
 %package client
 Summary:    File Transfer Service version 3 client
 Group:      Applications/Internet
@@ -272,7 +262,6 @@ mkdir -p %{buildroot}%{_var}/lib/fts3/logs
 mkdir -p %{buildroot}%{_var}/log/fts3
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
 make install DESTDIR=%{buildroot}
-mkdir -p %{buildroot}%{python_sitearch}/fts
 
 cd -
 
@@ -531,9 +520,6 @@ fi
 %{_libdir}/libfts_url_copy.so*
 %doc README.md
 %doc LICENSE
-
-%files python
-%{python_sitearch}/fts
 
 %files server-selinux
 %defattr(-,root,root,0755)

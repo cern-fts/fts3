@@ -59,15 +59,6 @@ server. This includes among others: configuration
 parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
-%package -n fts-python
-Summary: File Transfer Service version 3 python bindings
-Group: System Environment/Libraries
-Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: python%{?_isa}
-
-%description -n fts-python
-FTS python bindings for client libraries and DB API
-
 %clean
 rm -rf %{buildroot}
 
@@ -133,10 +124,6 @@ make install DESTDIR=%{buildroot}
 %{_libdir}/libfts_delegation_api_cpp.so*
 %doc README.md
 %doc LICENSE
-
-%files -n fts-python
-%defattr(-,root,root,-)
-%{python_sitearch}/fts
 
 %changelog
 * Tue Apr 08 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-5
