@@ -99,7 +99,7 @@ protected:
     enum FallbackState { RESTWITHFB, REST, GSOAP } fbstate;
 
     void getInterfaceDetails();
-    void initfacade();
+    void initfacade(bool isConfig);
     bool tryfallback(cli_exception const &ex);
 };
 

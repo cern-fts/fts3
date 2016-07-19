@@ -31,7 +31,7 @@ volatile sig_atomic_t ServiceAdapterFallbackFacade::warngiven2 = 0;
 
 void ServiceAdapterFallbackFacade::authorize(const std::string& op, const std::string& dn)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->authorize(op, dn);
@@ -44,7 +44,7 @@ void ServiceAdapterFallbackFacade::authorize(const std::string& op, const std::s
 
 void ServiceAdapterFallbackFacade::blacklistDn(std::string subject, std::string status, int timeout, bool mode)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->blacklistDn(subject, status, timeout, mode);
@@ -57,7 +57,7 @@ void ServiceAdapterFallbackFacade::blacklistDn(std::string subject, std::string 
 
 void ServiceAdapterFallbackFacade::blacklistSe(std::string name, std::string vo, std::string status, int timeout, bool mode)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->blacklistSe(name, vo, status, timeout, mode);
@@ -70,7 +70,7 @@ void ServiceAdapterFallbackFacade::blacklistSe(std::string name, std::string vo,
 
 std::vector< std::pair<std::string, std::string> > ServiceAdapterFallbackFacade::cancel(std::vector<std::string> const & jobIds)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->cancel(jobIds);
@@ -82,7 +82,7 @@ std::vector< std::pair<std::string, std::string> > ServiceAdapterFallbackFacade:
 
 boost::tuple<int, int>  ServiceAdapterFallbackFacade::cancelAll(const std::string& vo)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->cancelAll(vo);
@@ -94,7 +94,7 @@ boost::tuple<int, int>  ServiceAdapterFallbackFacade::cancelAll(const std::strin
 
 void ServiceAdapterFallbackFacade::debugSet(std::string source, std::string destination, unsigned level)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->debugSet(source, destination, level);
@@ -107,7 +107,7 @@ void ServiceAdapterFallbackFacade::debugSet(std::string source, std::string dest
 
 void ServiceAdapterFallbackFacade::delConfiguration(std::vector<std::string> const &cfgs)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->delConfiguration(cfgs);
@@ -120,7 +120,7 @@ void ServiceAdapterFallbackFacade::delConfiguration(std::vector<std::string> con
 
 void ServiceAdapterFallbackFacade::delegate(std::string const & delegationId, long expirationTime)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             proxysvc->delegate(delegationId, expirationTime);
@@ -133,7 +133,7 @@ void ServiceAdapterFallbackFacade::delegate(std::string const & delegationId, lo
 
 std::string ServiceAdapterFallbackFacade::deleteFile (const std::vector<std::string>& filesForDelete)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->deleteFile(filesForDelete);
@@ -145,7 +145,7 @@ std::string ServiceAdapterFallbackFacade::deleteFile (const std::vector<std::str
 
 void ServiceAdapterFallbackFacade::doDrain(bool drain)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->doDrain(drain);
@@ -158,7 +158,7 @@ void ServiceAdapterFallbackFacade::doDrain(bool drain)
 
 std::vector<std::string> ServiceAdapterFallbackFacade::getConfiguration(std::string src, std::string dest, std::string all, std::string name)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             return proxysvc->getConfiguration(src,dest,all,name);
@@ -170,7 +170,7 @@ std::vector<std::string> ServiceAdapterFallbackFacade::getConfiguration(std::str
 
 std::string ServiceAdapterFallbackFacade::getBandwidthLimit()
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             return proxysvc->getBandwidthLimit();
@@ -182,7 +182,7 @@ std::string ServiceAdapterFallbackFacade::getBandwidthLimit()
 
 std::vector<FileInfo> ServiceAdapterFallbackFacade::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->getFileStatus(jobId, archive, offset, limit, retries);
@@ -194,7 +194,7 @@ std::vector<FileInfo> ServiceAdapterFallbackFacade::getFileStatus (std::string c
 
 void ServiceAdapterFallbackFacade::getInterfaceDetails()
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             proxysvc->getInterfaceDetails();
@@ -211,7 +211,7 @@ void ServiceAdapterFallbackFacade::getInterfaceDetails()
 
 std::vector<Snapshot> ServiceAdapterFallbackFacade::getSnapShot(std::string const & vo, std::string const & src, std::string const & dst)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->getSnapShot(vo, src, dst);
@@ -223,7 +223,7 @@ std::vector<Snapshot> ServiceAdapterFallbackFacade::getSnapShot(std::string cons
 
 JobStatus ServiceAdapterFallbackFacade::getTransferJobStatus (std::string const & jobId, bool archive)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->getTransferJobStatus(jobId, archive);
@@ -235,7 +235,7 @@ JobStatus ServiceAdapterFallbackFacade::getTransferJobStatus (std::string const 
 
 JobStatus ServiceAdapterFallbackFacade::getTransferJobSummary (std::string const & jobId, bool archive)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->getTransferJobSummary(jobId, archive);
@@ -247,7 +247,7 @@ JobStatus ServiceAdapterFallbackFacade::getTransferJobSummary (std::string const
 
 long ServiceAdapterFallbackFacade::isCertValid()
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->isCertValid();
@@ -259,7 +259,7 @@ long ServiceAdapterFallbackFacade::isCertValid()
 
 std::vector<JobStatus> ServiceAdapterFallbackFacade::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const &source, std::string const &destination)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->listRequests(statuses, dn, vo, source, destination);
@@ -271,7 +271,7 @@ std::vector<JobStatus> ServiceAdapterFallbackFacade::listRequests (std::vector<s
 
 std::vector<JobStatus> ServiceAdapterFallbackFacade::listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->listDeletionRequests(statuses, dn, vo, source, destination);
@@ -284,7 +284,7 @@ std::vector<JobStatus> ServiceAdapterFallbackFacade::listDeletionRequests (std::
 
 void ServiceAdapterFallbackFacade::optimizerModeSet(int mode)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->optimizerModeSet(mode);
@@ -297,7 +297,7 @@ void ServiceAdapterFallbackFacade::optimizerModeSet(int mode)
 
 void ServiceAdapterFallbackFacade::prioritySet(std::string jobId, int priority)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             proxysvc->prioritySet(jobId, priority);
@@ -310,7 +310,7 @@ void ServiceAdapterFallbackFacade::prioritySet(std::string jobId, int priority)
 
 void ServiceAdapterFallbackFacade::queueTimeoutSet(unsigned timeout)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->queueTimeoutSet(timeout);
@@ -323,7 +323,7 @@ void ServiceAdapterFallbackFacade::queueTimeoutSet(unsigned timeout)
 
 void ServiceAdapterFallbackFacade::retrySet(std::string vo, int retry)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->retrySet(vo, retry);
@@ -336,7 +336,7 @@ void ServiceAdapterFallbackFacade::retrySet(std::string vo, int retry)
 
 void ServiceAdapterFallbackFacade::revoke(const std::string& op, const std::string& dn)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->revoke(op, dn);
@@ -349,7 +349,7 @@ void ServiceAdapterFallbackFacade::revoke(const std::string& op, const std::stri
 
 void ServiceAdapterFallbackFacade::setBandwidthLimit(const std::string& source_se, const std::string& dest_se, int limit)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setBandwidthLimit(source_se, dest_se, limit);
@@ -362,7 +362,7 @@ void ServiceAdapterFallbackFacade::setBandwidthLimit(const std::string& source_s
 
 void ServiceAdapterFallbackFacade::setConfiguration(std::vector<std::string> const &cfgs)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setConfiguration(cfgs);
@@ -375,7 +375,7 @@ void ServiceAdapterFallbackFacade::setConfiguration(std::vector<std::string> con
 
 void ServiceAdapterFallbackFacade::setDropboxCredential(std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setDropboxCredential(appKey, appSecret, apiUrl);
@@ -388,7 +388,7 @@ void ServiceAdapterFallbackFacade::setDropboxCredential(std::string const & appK
 
 void ServiceAdapterFallbackFacade::setFixActivePerPair(std::string source, std::string destination, int active)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setFixActivePerPair(source, destination, active);
@@ -401,7 +401,7 @@ void ServiceAdapterFallbackFacade::setFixActivePerPair(std::string source, std::
 
 void ServiceAdapterFallbackFacade::setGlobalLimits(boost::optional<int> maxActivePerLink, boost::optional<int> maxActivePerSe)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setGlobalLimits(maxActivePerLink, maxActivePerSe);
@@ -414,7 +414,7 @@ void ServiceAdapterFallbackFacade::setGlobalLimits(boost::optional<int> maxActiv
 
 void ServiceAdapterFallbackFacade::setGlobalTimeout(int timeout)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setGlobalTimeout(timeout);
@@ -427,7 +427,7 @@ void ServiceAdapterFallbackFacade::setGlobalTimeout(int timeout)
 
 void ServiceAdapterFallbackFacade::setMaxDstSeActive(std::string se, int active)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setMaxDstSeActive(se, active);
@@ -440,7 +440,7 @@ void ServiceAdapterFallbackFacade::setMaxDstSeActive(std::string se, int active)
 
 void ServiceAdapterFallbackFacade::setMaxOpt(std::tuple<std::string, int, std::string> const &triplet, std::string const &opt)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setMaxOpt(triplet, opt);
@@ -453,7 +453,7 @@ void ServiceAdapterFallbackFacade::setMaxOpt(std::tuple<std::string, int, std::s
 
 void ServiceAdapterFallbackFacade::setMaxSrcSeActive(std::string se, int active)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setMaxSrcSeActive(se, active);
@@ -466,7 +466,7 @@ void ServiceAdapterFallbackFacade::setMaxSrcSeActive(std::string se, int active)
 
 void ServiceAdapterFallbackFacade::setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setS3Credential(accessKey, secretKey, vo, storage);
@@ -479,7 +479,7 @@ void ServiceAdapterFallbackFacade::setS3Credential(std::string const & accessKey
 
 void ServiceAdapterFallbackFacade::setSecPerMb(int secPerMb)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setSecPerMb(secPerMb);
@@ -492,7 +492,7 @@ void ServiceAdapterFallbackFacade::setSecPerMb(int secPerMb)
 
 void ServiceAdapterFallbackFacade::setSeProtocol(std::string protocol, std::string se, std::string state)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->setSeProtocol(protocol, se, state);
@@ -505,7 +505,7 @@ void ServiceAdapterFallbackFacade::setSeProtocol(std::string protocol, std::stri
 
 void ServiceAdapterFallbackFacade::showUserDn(bool show)
 {
-    initfacade();
+    initfacade(true);
     while(1) {
         try {
             proxysvc->showUserDn(show);
@@ -518,7 +518,7 @@ void ServiceAdapterFallbackFacade::showUserDn(bool show)
 
 std::string ServiceAdapterFallbackFacade::transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
 {
-    initfacade();
+    initfacade(false);
     while(1) {
         try {
             return proxysvc->transferSubmit(files, parameters);
@@ -544,7 +544,7 @@ ServiceAdapterFallbackFacade::ServiceAdapterFallbackFacade(const ServiceAdapterF
     }
 }
 
-void ServiceAdapterFallbackFacade::initfacade()
+void ServiceAdapterFallbackFacade::initfacade(bool isConfig)
 {
     if (proxysvc) {
         // do nothing more
@@ -571,10 +571,21 @@ void ServiceAdapterFallbackFacade::initfacade()
                     // race here may lead to message being given more than once.
                     // more complete exclusion thought not necessary.
                     warngiven1 = 1;
-                    std::cerr << "warning : fts client is connecting using the "
-                        "gSOAP interface. Consider changing" << std::endl <<
-                        "          your configured fts endpoint port to select "
-                        "the REST interface." << std::endl;
+                    if (!isConfig) {
+                        std::cerr <<
+                            "warning : fts client is connecting using the gSOAP interface. Consider changing"
+                        << std::endl <<
+                            "          your configured fts endpoint port to select the REST interface."
+                        << std::endl;
+                    }
+                    else {
+                        std::cerr <<
+                            "warning : fts configuration client is now deprecated."
+                            << std::endl <<
+                            "          See http://fts3-docs.web.cern.ch/fts3-docs/fts-rest/docs/config_alternatives.html"
+                            << std::endl;
+                    }
+
                 }
                 fbstate = GSOAP;
             } else if (port == 8446) {
