@@ -51,13 +51,11 @@ namespace fts3
 namespace cli
 {
 
-static std::string strFromStrPtr(const std::string* ptr)
-{
-    if (ptr)
-        return *ptr;
-    else
-        return std::string();
-}
+class GSoapSupportRemoved: public cli_exception {
+public:
+    GSoapSupportRemoved(): cli_exception("gSOAP support removed for this operation") {
+    }
+};
 
 GSoapContextAdapter::GSoapContextAdapter(const std::string& endpoint, const std::string& proxy):
     ServiceAdapter(endpoint), proxy(proxy), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
@@ -159,192 +157,40 @@ void GSoapContextAdapter::getInterfaceDetails()
         }
 }
 
-std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
+std::string GSoapContextAdapter::transferSubmit(std::vector<File> const &, std::map<std::string, std::string> const &)
 {
-    // the transfer job
-    tns3__TransferJob3 job;
-
-    // the job's elements
-    tns3__TransferJobElement3* element;
-
-    // iterate over the internal vector containing job elements
-    std::vector<File>::const_iterator f_it;
-    for (f_it = files.begin(); f_it < files.end(); f_it++)
-        {
-
-            // create the job element, and set the source, destination and checksum values
-            element = soap_new_tns3__TransferJobElement3(ctx, -1);
-
-            // set the required fields (source and destination)
-            element->source = f_it->sources;
-            element->dest = f_it->destinations;
-
-            // set the optional fields:
-
-
-            element->checksum = f_it->checksums;
-
-            // the file size
-            if (f_it->file_size)
-                {
-                    element->filesize = (double*) soap_malloc(ctx, sizeof(double));
-                    *element->filesize = *f_it->file_size;
-                }
-            else
-                {
-                    element->filesize = 0;
-                }
-
-            // the file metadata
-            if (f_it->metadata)
-                {
-                    element->metadata = soap_new_std__string(ctx, -1);
-                    *element->metadata = *f_it->metadata;
-                }
-            else
-                {
-                    element->metadata = 0;
-                }
-
-            if (f_it->selection_strategy)
-                {
-                    element->selectionStrategy = soap_new_std__string(ctx, -1);
-                    *element->selectionStrategy = *f_it->selection_strategy;
-                }
-            else
-                {
-                    element->selectionStrategy = 0;
-                }
-
-            if (f_it->activity)
-                {
-                    element->activity = soap_new_std__string(ctx, -1);
-                    *element->activity = *f_it->activity;
-                }
-            else
-                {
-                    element->activity = 0;
-                }
-
-            // push the element into the result vector
-            job.transferJobElements.push_back(element);
-        }
-
-
-    job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
-    std::map<std::string, std::string>::const_iterator p_it;
-
-    for (p_it = parameters.begin(); p_it != parameters.end(); p_it++)
-        {
-            job.jobParams->keys.push_back(p_it->first);
-            job.jobParams->values.push_back(p_it->second);
-        }
-
-    impltns__transferSubmit4Response resp;
-    if (soap_call_impltns__transferSubmit4(ctx, endpoint.c_str(), 0, &job, resp))
-        throw gsoap_error(ctx);
-
-    return resp._transferSubmit4Return;
+    throw GSoapSupportRemoved();
 }
 
 
-void GSoapContextAdapter::delegate(std::string const & delegationId, long expirationTime)
+void GSoapContextAdapter::delegate(std::string const &, long)
 {
-    // delegate Proxy Certificate
-    SoapDelegator delegator(endpoint, delegationId, expirationTime, proxy);
-    delegator.delegate();
+    throw GSoapSupportRemoved();
 }
 
 long GSoapContextAdapter::isCertValid()
 {
-    SoapDelegator delegator(endpoint, std::string(), 0, proxy);
-    return delegator.isCertValid();
+    throw GSoapSupportRemoved();
 }
 
-std::string GSoapContextAdapter::deleteFile (const std::vector<std::string>& filesForDelete)
+std::string GSoapContextAdapter::deleteFile(const std::vector<std::string> &)
 {
-    impltns__fileDeleteResponse resp;
-    tns3__deleteFiles delFiles;
-
-    std::vector<std::string>::const_iterator it;
-    for (it = filesForDelete.begin(); it != filesForDelete.end(); ++it)
-        delFiles.delf.push_back(*it);
-
-    if (soap_call_impltns__fileDelete(ctx, endpoint.c_str(), 0, &delFiles,resp))
-        throw gsoap_error(ctx);
-
-    return resp._jobid;
+    throw GSoapSupportRemoved();
 }
 
-
-JobStatus GSoapContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobStatus(std::string const &, bool)
 {
-    tns3__JobRequest req;
-
-    req.jobId   = jobId;
-    req.archive = archive;
-
-    impltns__getTransferJobStatus2Response resp;
-    if (soap_call_impltns__getTransferJobStatus2(ctx, endpoint.c_str(), 0, &req, resp))
-        throw gsoap_error(ctx);
-
-    if (!resp.getTransferJobStatusReturn)
-        throw cli_exception("The response from the server is empty!");
-
-    long submitTime = resp.getTransferJobStatusReturn->submitTime / 1000;
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
-
-    return JobStatus(
-               strFromStrPtr(resp.getTransferJobStatusReturn->jobID),
-               strFromStrPtr(resp.getTransferJobStatusReturn->jobStatus),
-               strFromStrPtr(resp.getTransferJobStatusReturn->clientDN),
-               strFromStrPtr(resp.getTransferJobStatusReturn->reason),
-               strFromStrPtr(resp.getTransferJobStatusReturn->voName),
-               time_buff,
-               resp.getTransferJobStatusReturn->numFiles,
-               resp.getTransferJobStatusReturn->priority
-           );
+    throw GSoapSupportRemoved();
 }
 
-std::vector< std::pair<std::string, std::string>  > GSoapContextAdapter::cancel(std::vector<std::string> const & jobIds)
+std::vector<std::pair<std::string, std::string> > GSoapContextAdapter::cancel(std::vector<std::string> const &)
 {
-
-    impltns__ArrayOf_USCOREsoapenc_USCOREstring rqst;
-    rqst.item = jobIds;
-
-    impltns__cancel2Response resp;
-
-
-    if (soap_call_impltns__cancel2(ctx, endpoint.c_str(), 0, &rqst, resp))
-        throw gsoap_error(ctx);
-
-    std::vector< std::pair<std::string, std::string> > ret;
-
-    if (resp._jobIDs && resp._status)
-        {
-            // zip two vectors
-            std::vector<std::string> &ids = resp._jobIDs->item, &stats = resp._status->item;
-            std::vector<std::string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
-
-            for (; itr_id != ids.end() && itr_stat != stats.end(); ++itr_id, ++ itr_stat)
-                {
-                    ret.push_back(make_pair(*itr_id, *itr_stat));
-                }
-        }
-
-    return ret;
+    throw GSoapSupportRemoved();
 }
 
-
-boost::tuple<int, int> GSoapContextAdapter::cancelAll(const std::string& vo)
+boost::tuple<int, int> GSoapContextAdapter::cancelAll(const std::string &)
 {
-    impltns__cancelAllResponse resp;
-
-    if (soap_call_impltns__cancelAll(ctx, endpoint.c_str(), 0, vo, resp))
-        throw gsoap_error(ctx);
-
-    return boost::tuple<int, int>(resp._jobCount, resp._fileCount);
+    throw GSoapSupportRemoved();
 }
 
 
@@ -360,151 +206,27 @@ void GSoapContextAdapter::getRolesOf (std::string dn, impltns__getRolesOfRespons
         throw gsoap_error(ctx);
 }
 
-std::vector<JobStatus> GSoapContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
+std::vector<JobStatus> GSoapContextAdapter::listRequests(std::vector<std::string> const &, std::string const &,
+    std::string const &, std::string const &, std::string const &)
 {
-
-    impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
-    array->item = statuses;
-
-    impltns__listRequests2Response resp;
-    if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, "", dn, vo, source, destination, resp))
-        throw gsoap_error(ctx);
-
-    if (!resp._listRequests2Return)
-        throw cli_exception("The response from the server is empty!");
-
-    std::vector<JobStatus> ret;
-    std::vector<tns3__JobStatus*>::iterator it;
-
-    for (it = resp._listRequests2Return->item.begin(); it < resp._listRequests2Return->item.end(); it++)
-        {
-            tns3__JobStatus* gstat = *it;
-
-            long submitTime = gstat->submitTime / 1000;
-            char time_buff[20];
-            strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
-
-            JobStatus status (
-                *gstat->jobID,
-                *gstat->jobStatus,
-                *gstat->clientDN,
-                *gstat->reason,
-                *gstat->voName,
-                time_buff,
-                gstat->numFiles,
-                gstat->priority
-            );
-            ret.push_back(status);
-        }
-
-    return ret;
+    throw GSoapSupportRemoved();
 }
 
-std::vector<JobStatus> GSoapContextAdapter::listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
+std::vector<JobStatus> GSoapContextAdapter::listDeletionRequests(std::vector<std::string> const &, std::string const &,
+    std::string const &, std::string const &, std::string const &)
 {
-    impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
-    array->item = statuses;
-
-    impltns__listDeletionRequestsResponse resp;
-    if (soap_call_impltns__listDeletionRequests(ctx, endpoint.c_str(), 0, array, "", dn, vo, source, destination, resp))
-        throw gsoap_error(ctx);
-
-    if (!resp._listRequests2Return)
-        throw cli_exception("The response from the server is empty!");
-
-    std::vector<JobStatus> ret;
-    std::vector<tns3__JobStatus*>::iterator it;
-
-    for (it = resp._listRequests2Return->item.begin(); it < resp._listRequests2Return->item.end(); it++)
-        {
-            tns3__JobStatus* gstat = *it;
-
-            long submitTime = gstat->submitTime / 1000;
-            char time_buff[20];
-            strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
-
-            JobStatus status (
-                *gstat->jobID,
-                *gstat->jobStatus,
-                *gstat->clientDN,
-                *gstat->reason,
-                *gstat->voName,
-                time_buff,
-                gstat->numFiles,
-                gstat->priority
-            );
-            ret.push_back(status);
-        }
-
-    return ret;
+    throw GSoapSupportRemoved();
 }
 
-void GSoapContextAdapter::listVoManagers(std::string vo, impltns__listVOManagersResponse& resp)
+
+JobStatus GSoapContextAdapter::getTransferJobSummary(std::string const &, bool)
 {
-    if (soap_call_impltns__listVOManagers(ctx, endpoint.c_str(), 0, vo, resp))
-        throw gsoap_error(ctx);
+    throw GSoapSupportRemoved();
 }
 
-JobStatus GSoapContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
+std::vector<FileInfo> GSoapContextAdapter::getFileStatus(std::string const &, bool, int, int, bool)
 {
-    tns3__JobRequest req;
-
-    req.jobId   = jobId;
-    req.archive = archive;
-
-    impltns__getTransferJobSummary3Response resp;
-    if (soap_call_impltns__getTransferJobSummary3(ctx, endpoint.c_str(), 0, &req, resp))
-        throw gsoap_error(ctx);
-
-    if (!resp.getTransferJobSummary2Return)
-        throw cli_exception("The response from the server is empty!");
-
-    long submitTime = resp.getTransferJobSummary2Return->jobStatus->submitTime / 1000;
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
-
-    JobStatus::JobSummary summary (
-        resp.getTransferJobSummary2Return->numActive,
-        resp.getTransferJobSummary2Return->numReady,
-        resp.getTransferJobSummary2Return->numCanceled,
-        resp.getTransferJobSummary2Return->numFinished,
-        resp.getTransferJobSummary2Return->numSubmitted,
-        resp.getTransferJobSummary2Return->numFailed,
-        resp.getTransferJobSummary2Return->numStaging,
-        resp.getTransferJobSummary2Return->numStarted,
-        resp.getTransferJobSummary2Return->numDelete
-    );
-
-    return JobStatus(
-               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->jobID),
-               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->jobStatus),
-               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->clientDN),
-               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->reason),
-               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->voName),
-               time_buff,
-               resp.getTransferJobSummary2Return->jobStatus->numFiles,
-               resp.getTransferJobSummary2Return->jobStatus->priority,
-               summary
-           );
-}
-
-std::vector<FileInfo> GSoapContextAdapter::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
-{
-    tns3__FileRequest req;
-
-    req.jobId   = jobId;
-    req.archive = archive;
-    req.offset  = offset;
-    req.limit   = limit;
-    req.retries = retries;
-
-    impltns__getFileStatus3Response resp;
-    if (soap_call_impltns__getFileStatus3(ctx, endpoint.c_str(), 0, &req, resp))
-        throw gsoap_error(ctx);
-
-    std::vector<FileInfo> ret;
-    std::copy(resp.getFileStatusReturn->item.begin(), resp.getFileStatusReturn->item.end(), std::back_inserter(ret));
-    return ret;
+    throw GSoapSupportRemoved();
 }
 
 void GSoapContextAdapter::setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp)

@@ -164,14 +164,6 @@ public:
     virtual std::vector<JobStatus> listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
 
     /**
-     * Remote call to listVOManagers
-     *
-     * @param vo vo name
-     * @param resp server response
-     */
-    void listVoManagers (std::string vo, impltns__listVOManagersResponse& resp);
-
-    /**
      * Remote call to getTransferJobSummary
      * Internally it is getTransferJobSummary3
      *

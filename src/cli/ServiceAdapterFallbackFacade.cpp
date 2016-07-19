@@ -573,9 +573,13 @@ void ServiceAdapterFallbackFacade::initfacade(bool isConfig)
                     warngiven1 = 1;
                     if (!isConfig) {
                         std::cerr <<
-                            "warning : fts client is connecting using the gSOAP interface. Consider changing"
+                        "warning : fts client is trying to use the gSOAP interface, but it has been removed "
+                        << std::endl
+                        << "          except for configuration commands."
                         << std::endl <<
-                            "          your configured fts endpoint port to select the REST interface."
+                        "          Consider changing your configured fts endpoint port to select the REST "
+                        << std::endl
+                        << "          interface (defaults to 8446)."
                         << std::endl;
                     }
                     else {
