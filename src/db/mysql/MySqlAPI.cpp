@@ -2659,19 +2659,16 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             soci::use(job_id),
             soci::into(numberOfFilesInJob);
 
-
-
         sql << " SELECT COUNT(DISTINCT file_index) "
             " FROM t_file "
             " WHERE job_id = :jobId "
             "   AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
-            soci::use(job_id),                  // so if just one replica is in a different state it is enoght to count it as not canceled
+            soci::use(job_id),                  // so if just one replica is in a different state it is enough to count it as not canceled
             soci::into(numberOfFilesNotCanceled);
 
 
         // number of files that were canceled
         numberOfFilesCanceled = numberOfFilesInJob - numberOfFilesNotCanceled;
-
 
         // number of files that were finished
         sql << " SELECT COUNT(DISTINCT file_index) "
@@ -5663,7 +5660,7 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                 "UPDATE t_file SET "
                 "   job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                 "   file_state = 'CANCELED', reason = :reason "
-                "   WHERE job_id = :jobId AND file_state = 'SUBMITTED'",
+                "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED')",
                 soci::use(message), soci::use(job_id));
 
         // Cancel jobs using global timeout
