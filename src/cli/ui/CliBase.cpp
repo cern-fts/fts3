@@ -26,6 +26,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <bits/local_lim.h>
 #include "version.h"
 
 #include "exception/bad_option.h"
@@ -100,40 +101,13 @@ void CliBase::parse(int ac, char *av[])
     else if ((fts3_env = getenv("FTS3_ENDPOINT")) != NULL) {
         endpoint = fts3_env;
     }
+    else if (access("/etc/fts3/fts3config", F_OK) == 0) {
+        char hostname[HOST_NAME_MAX];
+        gethostname(hostname, sizeof(hostname));
+        endpoint = std::string("https://") + hostname + ":8446";
+    }
     else {
-
-        if (useSrvConfig()) {
-            std::fstream cfg("/etc/fts3/fts3config", std::fstream::in);
-            if (cfg.is_open()) {
-
-                std::string ip;
-                std::string port;
-                std::string line;
-
-                do {
-                    getline(cfg, line);
-                    if (line.find("#") != 0 && line.find("Port") == 0) {
-                        // erase 'Port='
-                        port = line.erase(0, 5);
-
-                    }
-                    else if (line.find("#") != 0 && line.find("IP") == 0) {
-                        // erase 'IP='
-                        ip += line.erase(0, 3);
-                    }
-
-                }
-                while (!cfg.eof());
-
-                if (!ip.empty() && !port.empty())
-                    endpoint = "https://" + ip + ":" + port;
-            }
-        }
-        else if (!vm.count("help") && !vm.count("version")) {
-            // if the -s option has not been used try to discover the endpoint
-            // (but only if -h and -v option were not used)
-            endpoint = discoverService();
-        }
+        throw bad_option("service", "Missing --service option");
     }
 }
 
@@ -224,10 +198,6 @@ std::string CliBase::getService() const
     return endpoint;
 }
 
-std::string CliBase::discoverService() const
-{
-    return std::string();
-}
 
 std::string CliBase::getCliVersion() const
 {

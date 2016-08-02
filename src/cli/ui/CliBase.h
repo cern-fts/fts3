@@ -162,15 +162,6 @@ protected:
     }
 
     /**
-     * Discovers the FTS3 service (if the -s option has not been used).
-     *
-     * Uses ServiceDiscoveryIfce to find a FTS3 service.
-     *
-     * @return FTS3 service string
-     */
-    std::string discoverService() const;
-
-    /**
      * a map containing parsed options
      */
     po::variables_map vm;
