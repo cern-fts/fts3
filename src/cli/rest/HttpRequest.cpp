@@ -51,7 +51,7 @@ HttpRequest::HttpRequest(std::string const & url, std::string const & capath, st
         curl_easy_setopt(curl, CURLOPT_SSLKEY, getenv("X509_USER_KEY"));
         curl_easy_setopt(curl, CURLOPT_SSLCERT, getenv("X509_USER_CERT"));
     }
-    else {
+    else if (access("/etc/grid-security/hostcert.pem", F_OK) == 0) {
         curl_easy_setopt(curl, CURLOPT_SSLKEY, "/etc/grid-security/hostkey.pem");
         curl_easy_setopt(curl, CURLOPT_SSLCERT, "/etc/grid-security/hostcert.pem");
     }
