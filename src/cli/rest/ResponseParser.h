@@ -52,7 +52,10 @@ public:
     void parse(std::istream &stream);
     void parse(std::string const &json);
 
-    std::string get(std::string const & path) const;
+    template <typename T = std::string>
+    T get(std::string const & path) {
+        return response.get<T>(path);
+    }
 
     std::vector<JobStatus> getJobs(std::string const & path) const;
 
@@ -66,9 +69,9 @@ public:
 
     void setRetries(std::string const &path, FileInfo &fi);
 
-private:
-
     static std::string restGmtToLocal(std::string gmt);
+
+private:
 
     std::vector<Snapshot> get_snapshot_for_rest() const;
     std::vector<Snapshot> get_snapshot_for_soap() const;

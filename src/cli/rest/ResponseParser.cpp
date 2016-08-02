@@ -82,14 +82,6 @@ std::string ResponseParser::restGmtToLocal(std::string gmt)
     return std::string(time_buff);
 }
 
-std::string ResponseParser::get(std::string const & path) const
-{
-    if (path == "submit_time") {
-        return ResponseParser::restGmtToLocal(response.get<std::string>(path));
-    }
-    return response.get<std::string>(path);
-}
-
 void ResponseParser::setRetries(std::string const &path, FileInfo &fi)
 {
     pt::ptree const &r = response.get_child(path);

@@ -343,10 +343,8 @@ boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string &vo)
 
     try {
         http.del();
-        // ResponseParser response(ss);
-        // should populate result with data from response.
-        // but no meaningful response sent at the moment
-        result = boost::make_tuple(-1,-1);
+        ResponseParser response(ss);
+        result = boost::make_tuple(response.get<int>("affected_jobs"), response.get<int>("affected_files"));
     } catch(rest_failure const &ex) {
         std::string msg = "Error while doing vo wide cancel: "
                           + std::string(ex.what());
@@ -432,7 +430,7 @@ JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, b
                    response.get("user_dn"),
                    response.get("reason"),
                    response.get("vo_name"),
-                   response.get("submit_time"),
+                   ResponseParser::restGmtToLocal(response.get("submit_time")),
                    -1, // this is never shown so we don't care
                    boost::lexical_cast<int>(response.get("priority"))
                );
@@ -499,7 +497,7 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
                    response.get("user_dn"),
                    response.get("reason"),
                    response.get("vo_name"),
-                   response.get("submit_time"),
+                   ResponseParser::restGmtToLocal(response.get("submit_time")),
                    (int)response_files.getFiles("files").size(),
                    boost::lexical_cast<int>(response.get("priority")),
                    summary
