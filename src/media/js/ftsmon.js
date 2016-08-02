@@ -1,4 +1,4 @@
-angular.module('ftsmon', ['ngRoute', 'ftsmon.resources', 'ftsmon.plots', 'ftsmon.global_filter', 'ui.bootstrap', 'angularCharts']).
+angular.module('ftsmon', ['ngRoute', 'ftsmon.resources', 'ftsmon.plots', 'ftsmon.global_filter', 'ui.bootstrap']).
 config(function($routeProvider) {
     $routeProvider.
         when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',
@@ -45,9 +45,9 @@ config(function($routeProvider) {
         when('/config/limits',        {templateUrl: STATIC_ROOT + 'html/config/limits.html',
                                        controller:  ConfigLimitsCtrl,
                                        resolve:     ConfigLimitsCtrl.resolve}).
-        when('/config/fixed',        {templateUrl: STATIC_ROOT + 'html/config/fixed.html',
-                                       controller:  ConfigFixedCtrl,
-                                       resolve:     ConfigFixedCtrl.resolve}).
+        when('/config/range',         {templateUrl: STATIC_ROOT + 'html/config/range.html',
+                                       controller:  ConfigRangeCtrl,
+                                       resolve:     ConfigRangeCtrl.resolve}).
         when('/config/gfal2',         {templateUrl: STATIC_ROOT + 'html/config/gfal2.html',
                                        controller:  Gfal2Ctrl,
                                        resolve:     Gfal2Ctrl.resolve}).
@@ -64,24 +64,17 @@ config(function($routeProvider) {
         when('/statistics/servers',   {templateUrl: STATIC_ROOT + 'html/statistics/servers.html',
                                        controller:  StatsServersCtrl,
                                        resolve:     StatsServersCtrl.resolve}).
+        when('/statistics/database',  {templateUrl: STATIC_ROOT + 'html/statistics/database.html',
+                                       controller:  StatsDatabaseCtrl,
+                                       resolve:     StatsDatabaseCtrl.resolve}).
         when('/statistics/vos',       {templateUrl: STATIC_ROOT + 'html/statistics/vos.html',
                                        controller:  StatsVosCtrl,
                                        resolve:     StatsVosCtrl.resolve}).
        when('/statistics/volume',     {templateUrl: STATIC_ROOT + 'html/statistics/volume.html',
                                        controller:  TransferVolumeCtrl,
                                        resolve:     TransferVolumeCtrl.resolve}).
-       when('/statistics/turls',      {templateUrl: STATIC_ROOT + 'html/statistics/turls.html',
-                                       controller:  TurlsCtrl,
-                                       resolve:     TurlsCtrl.resolve}).
 
-        when('/statistics/profiling', {templateUrl: STATIC_ROOT + 'html/statistics/profiling.html',
-                                       controller:  StatsProfilingCtrl,
-                                       resolve:     StatsProfilingCtrl.resolve}).
-        when('/statistics/slowqueries', {templateUrl: STATIC_ROOT + 'html/statistics/slowqueries.html',
-                                         controller:  SlowQueriesCtrl,
-                                         resolve:     SlowQueriesCtrl.resolve}).
-
-        when('/overview/atlas',                 {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
+        when('/overview/atlas',       {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
                                        controller:  OverviewAtlasCtrl,
                                        resolve:     OverviewAtlasCtrl.resolve}).
 

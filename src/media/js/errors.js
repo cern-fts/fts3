@@ -122,20 +122,26 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
     };
 
     // Generate plot
-    $scope.plots = {
-        phase: {
-            data: _countPerClassification($scope.errors.classification),
-            config: {
-                title: 'Error phase',
-                colors: ['#366DD8', '#D836BE', '#D8A136', '#36D850'],
-                labels: true,
-                legend: {
-                    display: true,
-                    position: 'right'
-                }
-            }
+    var labels = []
+    var count = []
+    for (phase in $scope.errors.classification) {
+        if (phase[0] != '$') {
+            labels.push(phase);
+            count.push($scope.errors.classification[phase])
         }
-    };
+    }
+
+    var phasePlot = new Chart(document.getElementById("phasePlot"), {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: count,
+                backgroundColor: ['#366DD8', '#D836BE', '#D8A136', '#36D850'],
+            }],
+        },
+
+    });
 }
 
 

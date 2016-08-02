@@ -19,69 +19,74 @@
 </h2>
 
 <div class="row-fluid">
-    <div class="row-fluid">
-		<div class="span6">
-			<h4>Queue</h4>
-			<table class="table">
-			    <thead>
-			        <tr>
-			            <th>Submitted</th>
-			            <th>Ready</th>
-			            <th>Active</th>
-			            <th>Staging</th>
-			        </tr>
-			    </thead>
-			    <tbody>
-			        <tr>
-			            <td>
-			                <a href="#/transfers?hostname={{host|escape}}&state=SUBMITTED">{{stats.lasthour.submitted}}</a>
-			            </td>
-			            <td>
-			                <a href="#/transfers?hostname={{host|escape}}&state=READY">{{stats.lasthour.ready}}</a>
-			            </td>
-			            <td>
-			                <a href="#/transfers?hostname={{host|escape}}&state=ACTIVE">{{stats.lasthour.active}}</a>
-		                </td>
-			            <td>
-			                <a href="#/transfers?hostname={{host|escape}}&state=STAGING">{{stats.lasthour.staging}}</a>
-			            </td>
-			        </tr>
-			    </tbody>
-			</table>
-            <div data-ac-chart="'pie'" data-ac-data="plots.queue" data-ac-config="plots.queue.config" id="queue" class="chart">
-            </div>
-		</div>
+    <div class="span6">
+        <h4>Queue</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Submitted</th>
+                    <th>Ready</th>
+                    <th>Active</th>
+                    <th>Staging</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <a href="#/transfers?hostname={{host|escape}}&state=SUBMITTED">{{stats.lasthour.submitted}}</a>
+                    </td>
+                    <td>
+                        <a href="#/transfers?hostname={{host|escape}}&state=READY">{{stats.lasthour.ready}}</a>
+                    </td>
+                    <td>
+                        <a href="#/transfers?hostname={{host|escape}}&state=ACTIVE">{{stats.lasthour.active}}</a>
+                    </td>
+                    <td>
+                        <a href="#/transfers?hostname={{host|escape}}&state=STAGING">{{stats.lasthour.staging}}</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-		<div class="span6">
-			<h4>
-                For the last {{globalFilter.time_window || '1' }}
-                <span data-ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
-                <span data-ng-show="globalFilter.time_window > 1">hours</span>
-            </h4>
-			<table class="table">
-			    <thead>
-			        <tr>
-			            <th>Succeeded</th>
-			            <th>Failed</th>
-			            <th>Canceled</th>
-			        </tr>
-			    </thead>
-			    <tbody>
-			        <tr>
-			            <td>
-			                <a href="#/transfers?time_window=1&hostname={{host|escape}}&state=FINISHED">{{stats.lasthour.finished}}</a>
-                        </td>
-			            <td>
-                            <a href="#/transfers?time_window=1&hostname={{host|escape}}&state=FAILED">{{stats.lasthour.failed}}</a>
-                        </td>
-			            <td>
-			                <a href="#/transfers?time_window=1&hostname={{host|escape}}&state=CANCELED">{{stats.lasthour.canceled}}</a>
-			            </td>
-			        </tr>
-			    </tbody>
-			</table>
-            <div data-ac-chart="'pie'" data-ac-data="plots.lasthour" data-ac-config="plots.lasthour.config" id="lasthour" class="chart"></div>
-			<div><p><b>Note: </b>Canceled transfers are not shown on the plot</p></div>
-		</div>
-	</div>
+    <div class="span6">
+        <h4>
+            For the last {{globalFilter.time_window || '1' }}
+            <span data-ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
+            <span data-ng-show="globalFilter.time_window > 1">hours</span>
+        </h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Succeeded</th>
+                    <th>Failed</th>
+                    <th>Canceled</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <a href="#/transfers?time_window=1&hostname={{host|escape}}&state=FINISHED">{{stats.lasthour.finished}}</a>
+                    </td>
+                    <td>
+                        <a href="#/transfers?time_window=1&hostname={{host|escape}}&state=FAILED">{{stats.lasthour.failed}}</a>
+                    </td>
+                    <td>
+                        <a href="#/transfers?time_window=1&hostname={{host|escape}}&state=CANCELED">{{stats.lasthour.canceled}}</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div><p><b>Note: </b>Canceled transfers are not shown on the plot</p></div>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <div class="span6">
+        <canvas id="queuePlot"></canvas>
+    </div>
+    <div class="span6">
+        <canvas id="lastHourPlot"></canvas>
+    </div>
 </div>

@@ -323,7 +323,7 @@ def get_job_transfers(http_request, job_id):
     if running_time:
         stats['time_transfering'] = running_time
     if len(actives_throughput):
-        stats['current_throughput'] = sum(map(lambda f: f.throughput, actives_throughput)) / len(actives_throughput)
+        stats['current_throughput'] = sum(map(lambda f: f.throughput, actives_throughput))
     if len(with_throughputs):
         stats['avg_throughput'] = sum(map(lambda f: f.throughput, with_throughputs)) / len(with_throughputs)
 

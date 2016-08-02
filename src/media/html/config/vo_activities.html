@@ -4,10 +4,10 @@
 
 <div class="row-fluid">
     <div class="span6">
-        <div data-ac-chart="'pie'" data-ac-data="plots.submittedCount" data-ac-config="plots.submittedCount.config" id="submittedCount" class="chart"></div>
+        <canvas id="submittedPlot"></canvas>
     </div>
     <div class="span6">
-        <div data-ac-chart="'pie'" data-ac-data="plots.activeCount" data-ac-config="plots.activeCount.config" id="activeCount" class="chart"></div>
+        <canvas id="activePlot"></canvas>
     </div>
 </div>
 
@@ -17,13 +17,19 @@
             <th>Activity</th>
             <th>Submitted</th>
             <th>Active</th>
+            <th>Configured weight</th>
+            <th>Calculated ratio</th>
+            <th>&nbsp;</th>
         </tr>
     </thead>
     <tbody>
-        <tr data-ng-repeat="(activity, count) in activeCount" data-ng-class-odd="'odd'">
+        <tr data-ng-repeat="(activity, info) in activeCount" data-ng-class-odd="'odd'">
             <td>{{ activity }}</td>
-            <td><span data-optional-number="{{count.SUBMITTED}}" data-decimals="0" data-display-zero="true"></span></td>
-            <td><span data-optional-number="{{count.ACTIVE}}" data-decimals="0" data-display-zero="true"></span></td>
+            <td><span data-optional-number="{{info.count.SUBMITTED}}" data-decimals="0" data-display-zero="true"></span></td>
+            <td><span data-optional-number="{{info.count.ACTIVE}}" data-decimals="0" data-display-zero="true"></span></td>
+            <td><span data-optional-number="{{info.weight}}" data-decimals="2" data-display-zero="false"></td>
+            <td><span data-optional-number="{{info.ratio}}" data-decimals="2" data-display-zero="false"></td>
+            <td>{{ info.notes }}</td>
         </tr>
     </tbody>
 </table>

@@ -54,6 +54,7 @@ def get_optimizer_pairs(http_request):
         from_fixed = from_fixed.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
         from_fixed = from_fixed.filter(dest_se=http_request.GET['dest_se'])
+    from_fixed = from_fixed.filter(fixed='on')
 
     from_fixed = from_fixed.values('source_se', 'dest_se', 'fixed').distinct()
 
@@ -62,7 +63,7 @@ def get_optimizer_pairs(http_request):
 
 class OptimizerAppendLimits(object):
     """
-    Query for the limits if the branch is 10 (limited bandwidth)
+    Query for the limits
     """
 
     def __init__(self, source_se, dest_se, evolution):
@@ -77,11 +78,10 @@ class OptimizerAppendLimits(object):
         entries = self.evolution[index]
         if isinstance(entries, list):
             for e in entries:
-                if e['branch'] == 10:
-                    e['bandwidth_limits'] = {
-                        'source': self._get_source_limit(),
-                        'destination': self._get_destination_limit()
-                    }
+                e['bandwidth_limits'] = {
+                    'source': self._get_source_limit(),
+                    'destination': self._get_destination_limit()
+                }
         return entries
 
     def _get_source_limit(self):
@@ -122,7 +122,11 @@ def get_optimizer_details(http_request):
 
     optimizer = OptimizerEvolution.objects.filter(source_se=source_se, dest_se=dest_se)
     optimizer = optimizer.filter(datetime__gte=not_before)
-    optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch')
+    optimizer = optimizer.values(
+        'datetime', 'active', 'ema', 'throughput', 'success',
+        'filesize_avg', 'filesize_stddev',
+        'rationale', 'actual_active', 'queue_size', 'diff'
+    )
     optimizer = optimizer.order_by('-datetime')
 
     fixed = OptimizeActive.objects.filter(fixed='on', source_se=source_se, dest_se=dest_se)
@@ -137,46 +141,34 @@ def get_optimizer_details(http_request):
     }
 
 
-class AppendQuantile(object):
+def is_stream_optimizer_disabled():
     """
-    Compute the quantile for each stream
+    Check if the stream optimizer is disabled
     """
-
-    def __init__(self, streams, quantiles):
-        self.streams = streams
-        self.quantiles = quantiles
-        self.n_quantiles = len(self.quantiles)
-
-    def __len__(self):
-        return len(self.streams)
-
-    def __getitem__(self, index):
-        for s in self.streams[index]:
-            s.quantile = len(filter(lambda x: x < s.throughput, self.quantiles)) + 1
-            s.quantiles = self.n_quantiles
-            yield s
+    cursor = connection.cursor()
+    cursor.execute("SELECT mode_opt FROM t_optimize_mode")
+    modes = cursor.fetchall()
+    return len(modes) > 0 and modes[0][0] <= 1
 
 
 @require_certificate
 @jsonify
 def get_optimizer_streams(http_request):
+    if is_stream_optimizer_disabled():
+        return None
+
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(hours=1)
+
     streams = OptimizerStreams.objects
     if http_request.GET.get('source_se', None):
         streams = streams.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
         streams = streams.filter(dest_se=http_request.GET['dest_se'])
-    streams = streams.order_by('-throughput')
 
-    # Compute quantiles
-    n_quantiles = 10
-    rows = sorted(map(lambda s: s.throughput, streams))
-    n_rows = len(rows)
-    if n_rows:
-        quantiles = map(
-            lambda x: rows[int(x) - 1],
-            map(lambda y: n_rows * (float(y)/n_quantiles), range(1, n_quantiles + 1))
-        )
-    else:
-        quantiles = [0] * n_quantiles
+    streams = streams.filter(datetime__gte=datetime.utcnow() - time_window)
+    streams = streams.order_by('-datetime')
 
-    return paged(AppendQuantile(streams, quantiles), http_request)
+    return paged(streams, http_request)

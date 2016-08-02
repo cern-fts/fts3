@@ -23,7 +23,6 @@ from django.db.models import Q, Count, Sum
 from django.db.utils import DatabaseError
 
 from ftsweb.models import Job, File, Host
-from ftsweb.models import ProfilingSnapshot, ProfilingInfo, Turl
 from ftsweb.models import ACTIVE_STATES, STATES
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged, as_json
@@ -169,6 +168,79 @@ def _get_host_service_and_segment():
     return host_map
 
 
+def _query_worrying_level(time_elapsed, state):
+    """
+    Gives a "worriness" level to a query
+    For instance, long times waiting for something to happen is bad
+    Very long times sending is bad too
+    Return a value between 0 and 1 rating the "worrying level"
+    See http://dev.mysql.com/doc/refman/5.7/en/general-thread-states.html
+    """
+    state_lower = state.lower()
+
+    if state in ('creating sort index', 'sorting result'):
+        max_time = 60
+    elif state in ('creating table', 'creating tmp table', 'removing tmp table'):
+        max_time = 180
+    elif state == 'copying to tmp table on disk':
+        max_time = 60
+    elif state in ('executing', 'preparing'):
+        max_time = 300
+    elif state == 'logging slow query':
+        return 0.5
+    elif state_lower == 'sending data':
+        max_time = 600
+    elif state_lower in ('sorting for group', 'sorting for order'):
+        max_time = 60
+    elif state_lower.startswith('waiting'):
+        max_time = 600
+    else:
+        return 0
+
+    if time_elapsed > max_time:
+        return 1
+    else:
+        return float(time_elapsed) / max_time
+
+
+def _get_database():
+    cursor = connection.cursor()
+    cursor.execute("""
+      SELECT Id, Host, Command, Time, State, Info
+      FROM INFORMATION_SCHEMA.PROCESSLIST
+      WHERE State != ''
+      ORDER BY State ASC, TIME DESC
+    """)
+    for row in cursor.fetchall():
+        query = str(row[5])
+        # Try not to show user dn on the query
+        if query:
+            where_index = query.lower().find('where')
+            user_dn_index = query[where_index:].find('user_dn')
+            if user_dn_index > -1:
+                query = query[0:where_index + user_dn_index + 7] + ' ....'
+        yield row[0], row[1], row[2], row[3], row[4],\
+              query, _query_worrying_level(row[3], row[4])
+
+
+def _get_server(time_window):
+    segments = _get_host_service_and_segment()
+    transfers = _get_transfer_and_submission_per_host(time_window, segments)
+
+    hosts = segments.keys()
+
+    servers = dict()
+    for host in hosts:
+        servers[host] = dict()
+        if host in transfers:
+            servers[host].update(transfers[host])
+        else:
+            servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
+
+        servers[host]['services'] = segments[host]
+    return servers
+
+
 # This one does not require certificate, so the Service Level can be still queried
 def get_servers(http_request):
     try:
@@ -178,30 +250,37 @@ def get_servers(http_request):
 
     format = http_request.GET.get('format', None)
     try:
-        segments = _get_host_service_and_segment()
-        transfers = _get_transfer_and_submission_per_host(time_window, segments)
-
-        hosts = segments.keys()
-
-        servers = dict()
-        for host in hosts:
-            servers[host] = dict()
-            if host in transfers:
-                servers[host].update(transfers[host])
-            else:
-                servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
-
-            servers[host]['services'] = segments[host]
-
         if format == 'sls':
+            # For SLS, poll the DB load first. If it is way too high, do not bother querying for the servers
+            database = _get_database()
+            waiting_times = map(
+                lambda d: d[3],
+                filter(lambda d: d[4].lower().startswith('waiting'), database)
+            )
+            if len(waiting_times):
+                avg_waiting_time = reduce(int.__add__, waiting_times, 0) / len(waiting_times)
+            else:
+                avg_waiting_time = 0
+
+            if avg_waiting_time > 120 and len(waiting_times) > 5:
+                servers = dict()
+            else:
+                servers = _get_server(time_window)
+
             return  slsfy(servers, id_tail='Server Info')
         else:
-            return as_json(servers)
+            return as_json(_get_server(time_window))
     except Exception, e:
         if format == 'sls':
             return slsfy_error(str(e), id_tail='Server Info')
         else:
             return as_json(dict(exception=str(e)))
+
+
+@require_certificate
+@jsonify
+def get_database(http_request):
+    return _get_database()
 
 
 @require_certificate
@@ -307,100 +386,3 @@ def get_transfer_volume(http_request):
     # Trick to calculate the sum only for those that are visible
     return CalculateVolume(triplets, not_before)
 
-
-@require_certificate
-@jsonify_paged
-def get_turls(http_request):
-    try:
-        time_window = timedelta(hours=int(http_request.GET['time_window']))
-    except:
-        time_window = timedelta(hours=1)
-    not_before = datetime.utcnow() - time_window
-
-    turls = Turl.objects.filter(datetime__gte = not_before)
-    if http_request.GET.get('source_se'):
-        turls = turls.filter(source_surl = http_request.GET['source_se'])
-    if http_request.GET.get('dest_se'):
-        turls = turls.filter(destin_surl = http_request.GET['dest_se'])
-
-    (order_by, order_desc) = get_order_by(http_request)
-    if order_by == 'throughput':
-        turls = turls.order_by(ordered_field('throughput', order_desc))
-    elif order_by == 'finish':
-        turls = turls.order_by(ordered_field('finish', order_desc))
-    elif order_by == 'fail':
-        turls = turls.order_by(ordered_field('fail', order_desc))
-    else:
-        turls = turls.order_by('throughput')
-
-    return turls.all()
-
-
-@require_certificate
-@jsonify
-def get_profiling(http_request):
-    profiling = {}
-
-    info = ProfilingInfo.objects.all()
-    if len(info) > 0:
-        profiling['updated'] = info[0].updated
-        profiling['period'] = info[0].period
-    else:
-        profiling['updated'] = False
-        profiling['period'] = False
-
-    profiles = ProfilingSnapshot.objects
-    if not http_request.GET.get('showall', False):
-        profiles = profiles.filter(cnt__gt=0)
-
-    (order_by, order_desc) = get_order_by(http_request)
-    if order_by == 'scope':
-        profiles = profiles.order_by(ordered_field('scope', order_desc))
-    elif order_by == 'called':
-        profiles = profiles.order_by(ordered_field('cnt', order_desc))
-    elif order_by == 'aggregate':
-        profiles = profiles.order_by(ordered_field('total', order_desc))
-    elif order_by == 'average':
-        profiles = profiles.order_by(ordered_field('average', order_desc))
-    elif order_by == 'exceptions':
-        profiles = profiles.order_by(ordered_field('exceptions', order_desc))
-    else:
-        profiles = profiles.order_by('total')
-
-    profiling['profiles'] = profiles.all()
-
-    return profiling
-
-
-def _slow_entry_to_dict(queries):
-    for q in queries:
-        yield {
-            'start_time': q[0],
-            'user_host': q[1],
-            'query_time': q[2],
-            'lock_time': q[3],
-            'rows_sent': q[4],
-            'rows_examined': q[5],
-            'db': q[6],
-            'last_insert_id': q[7],
-            'insert_id': q[8],
-            'server_id': q[9],
-            'sql_text': q[10]
-        }
-
-
-@require_certificate
-@jsonify
-def get_slow_queries(http_request):
-    engine = settings.DATABASES['default']['ENGINE']
-
-    if engine.endswith('oracle'):
-        return {'message': 'Not supported for Oracle'}
-
-    try:
-        dbname = settings.DATABASES['default']['NAME']
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM mysql.slow_log WHERE db = %s ORDER BY query_time DESC", [dbname])
-        return {'queries': _slow_entry_to_dict(cursor.fetchall())}
-    except DatabaseError:
-        return {'message': 'Could not execute the query'}

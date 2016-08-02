@@ -38,12 +38,21 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('OptimizerStreams', function($resource) {
 	return $resource('optimizer/streams', {}, {
-		query: {method: 'GET', isArray: false}
+		query: {
+            method: 'GET',
+            isArray: false,
+            transformResponse: function(data, headersGetter) {
+                if (data === 'null') {
+                    return {null: true};
+                }
+                return angular.fromJson(data);
+            }
+        }
 	})
 })
 .factory('Errors', function($resource) {
 	return $resource('errors', {}, {
-		query: {method: 'GET', isArray: false}
+        query: {method: 'GET', isArray: false}
 	})
 })
 .factory('ErrorsForPair', function($resource) {
@@ -66,28 +75,18 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('Database', function($resource) {
+	return $resource('stats/database', {}, {
+		query: {method: 'GET', isArray: true}
+	})
+})
 .factory('TransferVolume', function($resource) {
     return $resource('stats/volume', {}, {
         query: {method: 'GET', isArray: false}
     })
 })
-.factory('Turls', function($resource) {
-    return $resource('stats/turls', {}, {
-        query: {method: 'GET', isArray: false}
-    })
-})
 .factory('StatsVO', function($resource) {
 	return $resource('stats/vo', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
-.factory('Profile', function($resource) {
-	return $resource('stats/profiling', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
-.factory('SlowQueries', function($resource) {
-	return $resource('stats/slowqueries', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
@@ -116,8 +115,8 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('ConfigFixed', function($resource) {
-	return $resource('config/fixed', {}, {
+.factory('ConfigRange', function($resource) {
+	return $resource('config/range', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })

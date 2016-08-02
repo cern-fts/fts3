@@ -140,7 +140,7 @@ def get_limit_config(http_request):
 
 @require_certificate
 @jsonify_paged
-def get_fixed_limits(http_request):
+def get_ranges(http_request):
     return OptimizeActive.objects.filter(fixed='on').all()
 
 
@@ -190,7 +190,30 @@ def get_actives_per_activity(http_request, vo):
 
     grouped = dict()
     for row in active:
-        activity = grouped.get(row['activity'], dict())
-        activity[row['file_state']] = row['count']
-        grouped[row['activity']] = activity
+        activity = row['activity']
+        info = grouped.get(activity, dict(count=dict()))
+        info['count'][row['file_state']] = row['count']
+        grouped[activity] = info
+
+    # Find config
+    share_config = dict()
+    share_db = ActivityShare.objects.get(vo = vo)
+    if share_db is not None:
+        for entry in json.loads(share_db.activity_share):
+            for share_name, share_value in entry.iteritems():
+                share_config[share_name.lower()] = share_value
+
+    weight_sum = 0
+    for activity in grouped.keys():
+        if activity.lower() in share_config and grouped[activity]['count'].get('SUBMITTED', 0) > 0:
+            weight_sum += share_config.get(activity.lower(), 0)
+
+    for activity in grouped.keys():
+        if activity.lower() not in share_config:
+            grouped[activity]['notes'] = 'Activity not configured. Fallback to default.'
+        else:
+            grouped[activity]['weight'] = share_config[activity.lower()]
+            if grouped[activity]['count'].get('SUBMITTED', 0) > 0:
+                grouped[activity]['ratio'] = share_config[activity.lower()] / weight_sum
+
     return grouped

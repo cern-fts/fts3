@@ -297,6 +297,8 @@ class OptimizeActive(models.Model):
     dest_se    = models.CharField(max_length = 255)
     active     = models.IntegerField(primary_key = True)
     fixed      = models.CharField(max_length=3)
+    max_active = models.IntegerField()
+    min_active = models.IntegerField()
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -313,12 +315,16 @@ class OptimizerEvolution(models.Model):
     datetime     = models.DateTimeField(primary_key = True)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
-    #nostreams    = models.IntegerField()
-    timeout      = models.IntegerField()
     active       = models.IntegerField()
+    ema          = models.FloatField()
     throughput   = models.FloatField()
-    branch       = models.IntegerField(db_column = 'buffer')
-    success      = models.FloatField(db_column = 'filesize')
+    filesize_avg = models.FloatField()
+    filesize_stddev = models.FloatField()
+    success      = models.FloatField(db_column = 'success')
+    actual_active = models.IntegerField()
+    queue_size   = models.IntegerField()
+    rationale    = models.TextField()
+    diff         = models.IntegerField()
 
     class Meta:
         db_table = 't_optimizer_evolution'
@@ -329,8 +335,6 @@ class OptimizerStreams(models.Model):
     dest_se    = models.CharField(max_length = 255)
     nostreams  = models.IntegerField()
     datetime   = models.DateTimeField(primary_key = True)
-    throughput = models.FloatField()
-    tested     = models.IntegerField()
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -342,25 +346,6 @@ class OptimizerStreams(models.Model):
 
     class Meta:
         db_table = 't_optimize_streams'
-
-
-class ProfilingSnapshot(models.Model):
-    scope      = models.CharField(primary_key = True, max_length = 255)
-    cnt        = models.IntegerField()
-    exceptions = models.IntegerField()
-    total      = models.FloatField()
-    average    = models.FloatField()
-
-    class Meta:
-        db_table = 't_profiling_snapshot'
-
-
-class ProfilingInfo(models.Model):
-    updated = models.DateTimeField(primary_key = True)
-    period  = models.IntegerField()
-
-    class Meta:
-        db_table = 't_profiling_info'
 
 
 class Host(models.Model):
@@ -384,28 +369,6 @@ class DebugConfig(models.Model):
 
     class Meta:
         db_table = 't_debug'
-
-
-class Turl(models.Model):
-    source_surl = models.CharField(primary_key=True)
-    destin_surl = models.CharField()
-    source_turl = models.CharField()
-    destin_turl = models.CharField()
-    datetime    = models.DateField()
-    throughput  = models.FloatField()
-    finish      = models.FloatField()
-    fail        = models.FloatField()
-
-    def __eq__(self, other):
-        if type(other) != type(self):
-            return False
-        return self.source_surl == other.source_surl and \
-            self.destin_surl == other.destin_surl and \
-            self.source_turl == other.source_turl and \
-            self.destin_turl == other.destin_turl
-
-    class Meta:
-        db_table = 't_turl'
 
 
 class ActivityShare(models.Model):

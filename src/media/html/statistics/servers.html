@@ -41,8 +41,8 @@
             <td class="numeric">{{s.staging}}</td>
             <td class="numeric">{{s.started}}</td>
             <td>
-                <a href="{{s.fts3server_log}}">FTS3</a><br/>
-                <a href="{{s.fts3bringonline_log}}">Bringonline</a>
+                <a href="{{s.fts3server_log}}" data-ng-if="s.services.hasOwnProperty('fts_server')">FTS3</a><br/>
+                <a href="{{s.fts3bringonline_log}}" data-ng-if="s.services.hasOwnProperty('fts_bringonline')">Bringonline</a>
             </td>
         </tr>
     </tbody>
@@ -50,25 +50,21 @@
 
 <div class="row-fluid">
     <div class="span4" style="text-align: center">
-        <div data-ac-chart="'pie'" data-ac-data="plots.submit" data-ac-config="plots.submit.config" id="submissions" class="chart">
-        </div>
+        <canvas id="submitPlot"></canvas>
     </div>
     <div class="span4" style="text-align: center">
-        <div data-ac-chart="'pie'" data-ac-data="plots.executed" data-ac-config="plots.executed.config" id="executed" class="chart">
-        </div>
+        <canvas id="executedPlot"></canvas>
     </div>
     <div class="span4" style="text-align: center">
-        <div data-ac-chart="'pie'" data-ac-data="plots.active" data-ac-config="plots.active.config" id="active" class="chart">
-        </div>
+        <canvas id="activePlot"></canvas>
     </div>
 </div>
 <div class="row-fluid">
-    <div class="span6" style="text-align: center">
-        <div data-ac-chart="'pie'" data-ac-data="plots.staging" data-ac-config="plots.staging.config" id="staging" class="chart">
-        </div>
+    <div class="span4">
+        <canvas id="stagingPlot"></canvas>
     </div>
-    <div class="span6" style="text-align: center">
-        <div data-ac-chart="'pie'" data-ac-data="plots.started" data-ac-config="plots.started.config" id="started" class="chart">
-        </div>
+    <div class="span4">
+        <canvas id="startedPlot"></canvas>
     </div>
+    <div class="span4"></div>
 </div>

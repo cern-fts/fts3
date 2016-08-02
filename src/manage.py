@@ -24,9 +24,8 @@ import os
 import sys
 
 # Set environment pointing to development ini file
-path = os.path.dirname(__file__)
 if 'FTS3WEB_CONFIG' not in os.environ:
-    os.environ['FTS3WEB_CONFIG'] = path + "/etc/fts3web/fts3web.ini"
+    os.environ['FTS3WEB_CONFIG'] = "/etc/fts3web/fts3web.ini"
 
 
 if __name__ == "__main__":

@@ -1,0 +1,32 @@
+<h2>Range configuration</h2>
+
+<pagination rotate="false"
+    page="range.page" total-items="range.count" items-per-page="range.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Source</th>
+            <th>Destination</th>
+            <th>Current active</th>
+            <th>Max. Active</th>
+            <th>Min. Active</th>
+        </tr>
+    </thead>
+    <tbody data-ng-repeat="range in range.items" data-ng-class-odd="'odd'">
+        <tr>
+            <td>{{ range.source_se }}</td>
+            <td>{{ range.dest_se }}</td>
+            <td>{{ range.active }}</td>
+            <td>{{ range.max_active }}</td>
+            <td>{{ range.min_active }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false"
+    page="range.page" total-items="range.count" items-per-page="range.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

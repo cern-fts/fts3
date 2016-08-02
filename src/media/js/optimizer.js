@@ -1,4 +1,17 @@
 
+function getRowClass(diff)
+{
+    if (diff < 0) {
+        return "optimizer-decrease";
+    }
+    else if (diff > 0) {
+        return "optimizer-increase"
+    }
+    else {
+        return "optimizer-steady";
+    }
+}
+
 function OptimizerCtrl($rootScope, $location, $scope, optimizer, Optimizer)
 {
     $scope.optimizer = optimizer;
@@ -63,6 +76,7 @@ OptimizerCtrl.resolve = {
 function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, OptimizerDetailed)
 {
     $scope.optimizer = optimizer;
+    $scope.getRowClass = getRowClass;
 
     // Set timer to trigger autorefresh
     $scope.autoRefresh = setInterval(function() {
@@ -91,47 +105,194 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
     }
 
     var throughputData = [];
+    var emaData = [];
     var successData = [];
+    var activeData = [];
+    var filesizeStd = [];
+    var filesizeData = [];
+    var filesizeTop = [];
+    var labels = [];
+
     for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
-        var label = $scope.optimizer.evolution.items[i].datetime;
-        throughputData.unshift({
-            x: label,
-            y: [
-                $scope.optimizer.evolution.items[i].active,
-                $scope.optimizer.evolution.items[i].throughput
-            ]
-        });
-        successData.unshift({
-            x: label,
-            y: [
-                $scope.optimizer.evolution.items[i].active,
-                $scope.optimizer.evolution.items[i].success,
-            ]
-        });
+        // avoid cluttering the plot
+        labels.unshift("");
+        throughputData.unshift($scope.optimizer.evolution.items[i].throughput/(1024*1024));
+        emaData.unshift($scope.optimizer.evolution.items[i].ema/(1024*1024));
+        successData.unshift($scope.optimizer.evolution.items[i].success);
+        activeData.unshift($scope.optimizer.evolution.items[i].active);
+
+        var filesize = $scope.optimizer.evolution.items[i].filesize_avg/(1024*1024);
+        var stddev = $scope.optimizer.evolution.items[i].filesize_stddev/(1024*1024);
+
+        filesizeStd.unshift(stddev);
+        filesizeData.unshift(filesize);
+        filesizeTop.unshift(filesize + stddev);
     }
 
-    $scope.plots = {
-        throughput: {
-            series: ['Active', 'Throughput'],
-            data: throughputData,
-            config: {
-                title: 'Throughput evolution',
-                colors: ["#0000FF", "#00FF00"],
-                doubleYAxis: true,
-                labels: ['Active', 'Throughput']
-            }
+    // Throughput chart
+    new Chart(document.getElementById("throughputPlot"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    yAxisID: "active",
+                    label: "Decision",
+                    data: activeData,
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    borderColor: "rgb(255, 0, 0)",
+                },
+                {
+                    yAxisID: "throughput",
+                    label: "EMA",
+                    data: emaData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)",
+                },
+                {
+                    yAxisID: "throughput",
+                    label: "Throughput",
+                    data: throughputData,
+                    backgroundColor: "rgba(102, 204, 255, 0.5)",
+                },
+            ]
         },
-        success: {
-            series: ['Active', 'Success'],
-            data: successData,
-            config: {
-                title: 'Success rate evolution',
-                colors: ["#0000FF", "#00FF00"],
-                doubleYAxis: true,
-                labels: ['Active', 'Success']
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        id: "throughput",
+                        type: "linear",
+                        position: "left",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value.toFixed(2) + ' MB/s'
+                            }
+                        }
+                    },
+                    {
+                        id: "active",
+                        type: "linear",
+                        position: "right",
+                        ticks: {
+                            beginAtZero: true,
+                        }
+                    },
+                ]
             }
         }
-    };
+    })
+
+    // Success chart
+    new Chart(document.getElementById("successPlot"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    yAxisID: "active",
+                    label: "Decision",
+                    data: activeData,
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    borderColor: "rgb(255, 0, 0)",
+                },
+                {
+                    yAxisID: "success",
+                    label: "Success rate",
+                    data: successData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)",
+                }
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        id: "success",
+                        type: "linear",
+                        position: "left",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value.toFixed(2) + ' %'
+                            }
+                        }
+                    },
+                    {
+                        id: "active",
+                        type: "linear",
+                        position: "right",
+                        ticks: {
+                            beginAtZero: true,
+                        },
+                    },
+                ]
+            }
+        }
+    })
+
+    // Filesize plot
+    new Chart(document.getElementById("filesizePlot"), {
+        type: "lineError",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    yAxisID: "filesize",
+                    label: "Average filesize",
+                    data: filesizeData,
+                    error: filesizeStd,
+                    errorDir : "both",
+                    errorStrokeWidth : 1,
+                    errorColor: "rgba(0, 0, 255, 0.5)",
+                    borderColor: "rgb(0, 0, 255)",
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                },
+                {
+                    yAxisID: "filesize",
+                    label: "",
+                    data: filesizeTop,
+                    borderColor: "rgba(0, 0, 0, 0.01)",
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                },
+                {
+                    yAxisID: "throughput",
+                    label: "EMA",
+                    data: emaData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)",
+                    borderColor: "rgb(0, 204, 0)",
+                },
+            ]
+        },
+        options: {
+            scales: {
+                yAxes: [
+                    {
+                        id: "filesize",
+                        type: "linear",
+                        position: "right",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value.toFixed(2) + ' MB'
+                            }
+                        }
+                    },
+                    {
+                        id: "throughput",
+                        type: "linear",
+                        position: "left",
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value.toFixed(2) + ' MB/s'
+                            }
+                        },
+                    },
+                ]
+            },
+        }
+    })
 }
 
 
@@ -149,51 +310,10 @@ OptimizerDetailedCtrl.resolve = {
     }
 }
 
-// From
-// http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
-function hsvToRgb(h, s, v){
-    var r, g, b;
-
-    var i = Math.floor(h * 6);
-    var f = h * 6 - i;
-    var p = v * (1 - s);
-    var q = v * (1 - f * s);
-    var t = v * (1 - (1 - f) * s);
-
-    switch(i % 6){
-        case 0: r = v, g = t, b = p; break;
-        case 1: r = q, g = v, b = p; break;
-        case 2: r = p, g = v, b = t; break;
-        case 3: r = p, g = q, b = v; break;
-        case 4: r = t, g = p, b = v; break;
-        case 5: r = v, g = p, b = q; break;
-    }
-
-    return [r * 255, g * 255, b * 255];
-}
-
-
-function quantileColor(stream)
-{
-    var n_quantiles = stream.quantiles;
-    var quantile = stream.quantile;
-
-    var h_start = 0;
-    var h_end   = 0.333;
-
-    var h = h_start + ((h_end - h_start) * ((quantile - 1) / n_quantiles));
-
-    var rgb = hsvToRgb(h, 1, 1);
-    var color = 'rgba(' + Math.ceil(rgb[0]) + ',' + Math.ceil(rgb[1]) + ',' + Math.ceil(rgb[2]) + ', 0.8)';
-
-    return {'border-left': 'solid 10px ' + color};
-}
-
 
 function OptimizerStreamsCtrl($rootScope, $location, $scope, streams, OptimizerStreams)
 {
     $scope.streams = streams;
-    $scope.quantileColor = quantileColor;
 
     // Set timer to trigger autorefresh
     $scope.autoRefresh = setInterval(function() {
