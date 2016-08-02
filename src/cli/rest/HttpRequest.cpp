@@ -40,12 +40,22 @@ HttpRequest::HttpRequest(std::string const & url, std::string const & capath, st
     // the url we are going to contact
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    // our proxy certificate (the '-E' option)
-    curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
     // path to certificates (the '--capath' option)
     curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
-    // our proxy again (the '-cacert' option)
-    curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
+
+    if (!proxy.empty() && access(proxy.c_str(), F_OK) == 0) {
+        curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
+        curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
+    }
+    else if (getenv("X509_USER_CERT") != NULL) {
+        curl_easy_setopt(curl, CURLOPT_SSLKEY, getenv("X509_USER_KEY"));
+        curl_easy_setopt(curl, CURLOPT_SSLCERT, getenv("X509_USER_CERT"));
+    }
+    else {
+        curl_easy_setopt(curl, CURLOPT_SSLKEY, "/etc/grid-security/hostkey.pem");
+        curl_easy_setopt(curl, CURLOPT_SSLCERT, "/etc/grid-security/hostcert.pem");
+    }
+
     // the write callback function
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
     // the stream the data will be written to
