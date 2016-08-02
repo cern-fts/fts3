@@ -32,10 +32,8 @@
 #include <vector>
 
 
-namespace fts3
-{
-namespace cli
-{
+namespace fts3 {
+namespace cli {
 
 namespace po = boost::program_options;
 
@@ -52,8 +50,7 @@ namespace po = boost::program_options;
  *  has to implement 'getUsageString()', which returns an instruction on how
  *  to use the given command line tool.
  */
-class CliBase
-{
+class CliBase {
 
 public:
 
@@ -75,7 +72,8 @@ public:
     /**
      * Destructor
      */
-    virtual ~CliBase() {}
+    virtual ~CliBase()
+    {}
 
     /**
      * Initializes the object with command line options.
@@ -87,7 +85,7 @@ public:
      * @param ac - argument count
      * @param av - argument array
      */
-    virtual void parse(int ac, char* av[]);
+    virtual void parse(int ac, char *av[]);
 
     /**
      * Validates command line options
@@ -100,7 +98,7 @@ public:
     /**
      * If verbose additional info is printed
      */
-    void printApiDetails(ServiceAdapter & ctx) const;
+    void printApiDetails(ServiceAdapter &ctx) const;
 
     /**
      * Prints help message if the -h option has been used.
