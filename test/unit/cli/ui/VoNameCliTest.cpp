@@ -33,6 +33,7 @@ BOOST_AUTO_TEST_CASE (VONameCli_options)
 {
     std::vector<const char*> argv {
         "prog_name",
+        "-s", "https://fts3.cern.ch:8446",
         "voname"
     };
 
