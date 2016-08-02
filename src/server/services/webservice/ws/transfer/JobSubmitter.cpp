@@ -422,8 +422,7 @@ std::string JobSubmitter::submit()
         }
 
 
-    //send state message - disabled for now but pls do not remove it
-    //SingleTrStateInstance::instance().sendStateMessage(id, -1);
+    fts3::server::SingleTrStateInstance::instance().sendStateMessage(id, -1);
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
     return id;

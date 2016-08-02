@@ -213,12 +213,9 @@ void FileTransferExecutor::run(boost::any & ctx)
                 return;
             }
 
-            //send current state message
-            SingleTrStateInstance::instance().sendStateMessage(tf.jobId, tf.fileId);
-
             scheduled += 1;
 
-            bool fileUpdated = false;
+            bool fileUpdated;
             fileUpdated = db->updateTransferStatus(
                 tf.jobId, tf.fileId, 0.0, "READY", "",
                 0, 0, 0, false
@@ -248,7 +245,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             std::string forkMessage;
             if (-1 == pr.executeProcessShell(forkMessage)) {
                 failed = true;
-                fileUpdated = db->updateTransferStatus(
+                db->updateTransferStatus(
                     tf.jobId, tf.fileId, 0.0, "FAILED",
                     "Transfer failed to fork, check fts3server.log for more details",
                     (int) pr.getPid(), 0, 0, false

@@ -9669,23 +9669,6 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
         //now update the initial state
         if(!filesState.empty())
         {
-            for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
-            {
-                //send state message
-                std::vector<TransferState> filesMsg;
-                filesMsg = getStateOfDeleteInternal(sql, itFind->jobId, itFind->fileId);
-                if(!filesMsg.empty())
-                {
-                    std::vector<TransferState>::iterator it;
-                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                    {
-                        TransferState tmp = (*it);
-                        MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
-                    }
-                }
-                filesMsg.clear();
-            }
-
             try
             {
                 updateDeletionsStateInternal(sql, filesState);
@@ -9973,33 +9956,6 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
         //now update the initial state
         if(!filesState.empty())
         {
-            for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
-            {
-                try
-                {
-                    //send state message
-                    std::vector<TransferState> filesMsg;
-                    if(!itFind->jobId.empty() && itFind->fileId > 0)
-                    {
-                        filesMsg = getStateOfTransferInternal(sql, itFind->jobId, itFind->fileId);
-                        if(!filesMsg.empty())
-                        {
-                            std::vector<TransferState>::iterator it;
-                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                            {
-                                TransferState tmp = (*it);
-                                MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
-                            }
-                        }
-                        filesMsg.clear();
-                    }
-                }
-                catch(...)
-                {
-                    //do not let the process die due to messaging
-                }
-            }
-
             try
             {
                 updateStagingStateInternal(sql, filesState);

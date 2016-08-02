@@ -284,9 +284,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         cmd_builder.setOAuthFile(cloudConfigFile);
     }
 
-    // Send initial message
-    SingleTrStateInstance::instance().sendStateMessage(job_id, -1);
-
     // Set all to ready, special case for session reuse
     int updatedFiles = db->updateFileStatusReuse(representative, "READY");
     if (updatedFiles <= 0)
