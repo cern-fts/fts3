@@ -1,5 +1,3 @@
-%bcond_with oracle
-
 %global _hardened_build 1
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
@@ -195,23 +193,6 @@ Requires:   fts-server%{?_isa}
 %description mysql
 The File Transfer Service V3 mysql plug-in
 
-%{?with_oracle:%package oracle
-Summary:    File Transfer Service V3 oracle plug-in
-Group:      Applications/Internet
-
-BuildRequires:  soci-oracle-devel
-BuildRequires:  oracle-instantclient-devel
-Requires:       soci-oracle%{?_isa}
-Requires:       fts-server%{?_isa}
-
-AutoReq: no
-AutoProv: yes
-
-%description oracle
-The File Transfer Service V3 oracle plug-in
-}
-
-
 %prep
 %setup -q
 
@@ -230,7 +211,6 @@ fi
 mkdir build
 cd build
 %cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
-    -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX='' \
@@ -530,10 +510,6 @@ fi
 %{_libdir}/libfts_db_mysql.so.*
 %{_datadir}/fts-mysql
 
-%{?with_oracle:%files oracle
-%{_libdir}/libfts_db_oracle.so.*
-%{_datadir}/fts-oracle
-}
 
 %check
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
