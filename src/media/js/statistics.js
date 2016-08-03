@@ -1,11 +1,11 @@
 
 // Overview
-function _generateOverviewPlots(stats)
-{
-    var queueColors = ["#fae932", "#9ed5ff", "#006dcc", "#990099"];
-    var lastHourColors = ["#5bb75b", "#bd362f"];
+var queueColors = ["#fae932", "#9ed5ff", "#006dcc", "#990099"];
+var lastHourColors = ["#5bb75b", "#bd362f"];
 
-    new Chart(document.getElementById("queuePlot"), {
+function _generateOverviewPlots($scope, stats)
+{
+    $scope.queuePlot = new Chart(document.getElementById("queuePlot"), {
         type: "doughnut",
         data: {
             labels: ['Submitted', 'Ready', 'Active', 'Staging'],
@@ -16,7 +16,7 @@ function _generateOverviewPlots(stats)
         },
     });
 
-    new Chart(document.getElementById("lastHourPlot"), {
+    $scope.lastHoutPlot = new Chart(document.getElementById("lastHourPlot"), {
         type: "doughnut",
         data: {
             labels: ['Finished', 'Failed'],
@@ -26,6 +26,21 @@ function _generateOverviewPlots(stats)
             }]
         }
     })
+}
+
+function _updateOverviewPlots($scope, stats)
+{
+    $scope.queuePlot.data.datasets = [{
+        data: [stats.lasthour.submitted, stats.lasthour.ready, stats.lasthour.active, stats.lasthour.staging],
+        backgroundColor: queueColors
+    }];
+    $scope.queuePlot.update();
+
+    $scope.lastHoutPlot.data.datasets = [{
+        data: [stats.lasthour.finished, stats.lasthour.failed],
+        backgroundColor: lastHourColors,
+    }];
+    $scope.lastHoutPlot.update();
 }
 
 function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, Statistics, Unique)
@@ -52,7 +67,7 @@ function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, S
         Statistics.query(filter,
             function(updatedStats) {
                 $scope.stats = updatedStats;
-                _generateOverviewPlots($scope.stats);
+                _updateOverviewPlots($scope, $scope.stats);
                 stopLoading($rootScope);
             },
             genericFailureMethod(null, $rootScope, $location)
@@ -62,7 +77,7 @@ function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, S
         clearInterval($scope.autoRefresh);
     });
 
-    _generateOverviewPlots(stats);
+    _generateOverviewPlots($scope, stats);
 }
 
 
@@ -99,12 +114,11 @@ function _dataByState(servers, state)
         return null;
 }
 
-function _generateServerPlots(servers)
+var serverColors = [
+    '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
+];
+function _generateServerPlots($scope, servers)
 {
-    var serverColors = [
-        '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
-    ];
-
     var labels = []
     for (server in servers) {
         if (server[0] != '$') {
@@ -112,7 +126,7 @@ function _generateServerPlots(servers)
         }
     }
 
-    new Chart(document.getElementById("submitPlot"), {
+    $scope.submitPlot = new Chart(document.getElementById("submitPlot"), {
         type: "doughnut",
         data: {
             labels: labels,
@@ -129,7 +143,7 @@ function _generateServerPlots(servers)
         }
     });
 
-    new Chart(document.getElementById("executedPlot"), {
+    $scope.executedPlot = new Chart(document.getElementById("executedPlot"), {
         type: "doughnut",
         data: {
             labels: labels,
@@ -146,7 +160,7 @@ function _generateServerPlots(servers)
         }
     });
 
-    new Chart(document.getElementById("activePlot"), {
+    $scope.activePlot = new Chart(document.getElementById("activePlot"), {
         type: "doughnut",
         data: {
             labels: labels,
@@ -163,7 +177,7 @@ function _generateServerPlots(servers)
         }
     });
 
-    new Chart(document.getElementById("stagingPlot"), {
+    $scope.stagingPlot = new Chart(document.getElementById("stagingPlot"), {
         type: "doughnut",
         data: {
             labels: labels,
@@ -180,7 +194,7 @@ function _generateServerPlots(servers)
         }
     });
 
-    new Chart(document.getElementById("startedPlot"), {
+    $scope.startedPlot = new Chart(document.getElementById("startedPlot"), {
         type: "doughnut",
         data: {
             labels: labels,
@@ -198,6 +212,51 @@ function _generateServerPlots(servers)
     });
 }
 
+function _updateServerPlots($scope, servers)
+{
+    var labels = []
+    for (server in servers) {
+        if (server[0] != '$') {
+            labels.push(server)
+        }
+    }
+
+    $scope.submitPlot.data.labels = labels;
+    $scope.submitPlot.data.datasets = [{
+        data: _dataByState(servers, 'submissions'),
+        backgroundColor: serverColors
+    }];
+    $scope.submitPlot.update();
+
+    $scope.executedPlot.data.labels = labels;
+    $scope.executedPlot.data.datasets = [{
+        data: _dataByState(servers, 'transfers'),
+        backgroundColor: serverColors
+    }];
+    $scope.executedPlot.update();
+
+    $scope.activePlot.data.labels = labels;
+    $scope.activePlot.data.datasets = [{
+        data: _dataByState(servers, 'active'),
+        backgroundColor: serverColors
+    }];
+    $scope.activePlot.update();
+
+    $scope.stagingPlot.data.labels = labels;
+    $scope.stagingPlot.data.datasets = [{
+        data: _dataByState(servers, 'staging'),
+        backgroundColor: serverColors
+    }];
+    $scope.stagingPlot.update();
+
+    $scope.startedPlot.data.labels = labels;
+    $scope.startedPlot.data.datasets = [{
+        data: _dataByState(servers, 'started'),
+        backgroundColor: serverColors
+    }];
+    $scope.startedPlot.update();
+}
+
 function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
 {
     $scope.servers = servers;
@@ -212,7 +271,7 @@ function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
                     updatedServers[server].show = $scope.servers[server].show;
             }
             $scope.servers = updatedServers;
-            _generateServerPlots($scope.servers);
+            _updateServerPlots($scope, $scope.servers);
             stopLoading($rootScope);
         },
         genericFailureMethod(null, $rootScope, $location));
@@ -221,7 +280,7 @@ function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
         clearInterval($scope.autoRefresh);
     });
 
-    _generateServerPlots($scope.servers);
+    _generateServerPlots($scope, $scope.servers);
 }
 
 
