@@ -31,10 +31,10 @@
 namespace fts3 {
 namespace common {
 
-static Logger logger;
 Logger& theLogger()
 {
-    return logger;
+    static Logger *logger = new Logger();
+    return *logger;
 }
 
 
