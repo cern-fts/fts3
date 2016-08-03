@@ -83,7 +83,12 @@ config(function($routeProvider) {
         otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
 .filter('escape', function() {
-    return window.encodeURIComponent;
+    return function(v) {
+        if (typeof v == 'undefined' || v === null) {
+            return "";
+        }
+        return window.encodeURIComponent(v);
+    }
 })
 .filter('hex', function() {
 	return function(value) {
