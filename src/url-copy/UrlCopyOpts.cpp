@@ -83,9 +83,8 @@ const option UrlCopyOpts::long_options[] =
 
 const char UrlCopyOpts::short_options[] = "";
 
-static void setChecksum(Transfer &transfer, const std::string &checksum, Transfer::CompareChecksum method)
+static void setChecksum(Transfer &transfer, const std::string &checksum)
 {
-    transfer.checksumMethod = method;
     if (checksum == "x") {
         return;
     }
@@ -116,7 +115,8 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.fileId = boost::lexical_cast<uint64_t>(strArray[0]);
     t.source = Uri::parse(strArray[1]);
     t.destination = Uri::parse(strArray[2]);
-    setChecksum(t, strArray[3], reference.checksumMethod);
+    t.checksumMethod = reference.checksumMethod;
+    setChecksum(t, strArray[3]);
     t.userFileSize = boost::lexical_cast<uint64_t>(strArray[4]);
     t.fileMetadata = strArray[5];
     t.tokenBringOnline = strArray[6];
@@ -229,7 +229,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
 
                 case 300:
-                    referenceTransfer.checksumValue = optarg;
+                    setChecksum(referenceTransfer, optarg);
                     break;
                 case 301:
                     if (strncmp("relaxed", optarg, 7) == 0 || strncmp("r", optarg, 1) == 0) {
