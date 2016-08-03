@@ -58,8 +58,8 @@ void HeartBeat::runService()
         FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
         _exit(1);
     }
-    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat interval " << heartBeatInterval << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Using heartbeat grace interval " << heartBeatGraceInterval << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat interval " << heartBeatInterval << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat grace interval " << heartBeatGraceInterval << commit;
 
 
     while (!boost::this_thread::interruption_requested())
