@@ -271,7 +271,7 @@ struct RestSubmissionFixture : public RestSubmission
         std::map <std::string, std::string> parameters = get_params(json_str);
 
         std::stringstream stream;
-        stream << RestSubmission(files, parameters);
+        stream << RestSubmission(files, parameters, boost::property_tree::ptree());
         return stream.str();
     }
 
