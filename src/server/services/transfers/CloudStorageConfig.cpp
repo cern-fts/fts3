@@ -106,12 +106,13 @@ static void writeDropboxCreds(FILE *f, const std::string& csName, const CloudSto
 }
 
 
-static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageAuth& auth)
+static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageAuth& auth, bool alternate)
 {
     fprintf(f, "[%s]\n", csName.c_str());
     fprintf(f, "SECRET_KEY=%s\n", auth.accessTokenSecret.c_str());
     fprintf(f, "ACCESS_KEY=%s\n", auth.accessToken.c_str());
     fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
+    fprintf(f, "ALTERNATE=%s\n", alternate?"true":"false");
 }
 
 
@@ -167,7 +168,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
                     writeDropboxCreds(f, upperCsName, auth);
                 }
                 else {
-                    writeS3Creds(f, upperCsName, auth);
+                    writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);
                 }
                 break;
             }

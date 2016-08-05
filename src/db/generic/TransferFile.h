@@ -41,12 +41,14 @@ public:
         int buffersize;
         bool strictCopy;
         boost::tribool ipv6;
+        // If true, gfal2/davix must generate the S3 signature with the bucket on the path
+        bool s3Alternate;
 
         ProtocolParameters(): nostreams(1), timeout(0), buffersize(0),
-          strictCopy(false) {}
+          strictCopy(false), s3Alternate(false) {}
 
         ProtocolParameters(const std::string &serialized): nostreams(1), timeout(0), buffersize(0),
-            strictCopy(false)
+            strictCopy(false), s3Alternate(false)
         {
             std::vector<std::string> params;
             boost::split(params, serialized, boost::is_any_of(","));
@@ -69,6 +71,9 @@ public:
                 }
                 else if (*i == "ipv6") {
                     ipv6 = true;
+                }
+                else if (*i == "s3alternate") {
+                    s3Alternate = true;
                 }
             }
         }
