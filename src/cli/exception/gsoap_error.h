@@ -80,12 +80,12 @@ public:
     /**
      * returns the error message that should be included in the JSON output
      */
-    virtual pt::ptree const json_obj() const
+    virtual boost::property_tree::ptree const json_obj() const
     {
         std::string::size_type start = msg.find("SOAP 1.1 fault: SOAP-ENV:");
         std::string::size_type stop  = msg.find("Detail: ");
 
-        pt::ptree obj;
+        boost::property_tree::ptree obj;
 
         if (start != std::string::npos && stop != std::string::npos)
             {

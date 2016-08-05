@@ -358,10 +358,11 @@ boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string &vo)
 }
 
 
-std::string RestContextAdapter::transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
+std::string RestContextAdapter::transferSubmit (std::vector<File> const & files,
+    std::map<std::string, std::string> const & parameters, boost::property_tree::ptree const& extraParams)
 {
     std::stringstream ss;
-    ss << RestSubmission(files, parameters);
+    ss << RestSubmission(files, parameters, extraParams);
 
     std::string url = endpoint + "/jobs";
     HttpRequest http (url, capath, proxy, ss);

@@ -57,9 +57,9 @@ public:
     /**
      * returns the error message that should be included in the JSON output
      */
-    virtual pt::ptree const json_obj() const
+    virtual boost::property_tree::ptree const json_obj() const
     {
-        pt::ptree obj;
+        boost::property_tree::ptree obj;
         obj.put(opt, msg);
 
         return obj;

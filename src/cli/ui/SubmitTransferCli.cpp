@@ -143,6 +143,7 @@ void SubmitTransferCli::createJobElements()
         if (vm.count("json-submission")) {
             BulkSubmissionParser bulk(ifs);
             files = bulk.getFiles();
+            jobParams = bulk.getJobParameters();
         }
         else {
             // Parse the file
@@ -400,6 +401,11 @@ std::map<std::string, std::string> SubmitTransferCli::getParams()
     }
 
     return parameters;
+}
+
+pt::ptree SubmitTransferCli::getExtraParameters()
+{
+    return jobParams;
 }
 
 std::string SubmitTransferCli::getPassword()

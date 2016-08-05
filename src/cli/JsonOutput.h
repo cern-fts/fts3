@@ -32,8 +32,6 @@
 #include "exception/gsoap_error.h"
 #include "exception/bad_option.h"
 
-namespace pt = boost::property_tree;
-
 namespace fts3
 {
 
@@ -102,15 +100,15 @@ public:
     /**
      * Puts the value into given node as a array member
      */
-    void printArray(std::string const & path, pt::ptree const & obj);
+    void printArray(std::string const & path, boost::property_tree::ptree const & obj);
 
 private:
 
     /// converts all the pairs from a given container to ptree
     template <typename CONTAINER>
-    static pt::ptree to_ptree(CONTAINER const & values)
+    static boost::property_tree::ptree to_ptree(CONTAINER const & values)
     {
-        pt::ptree pt;
+        boost::property_tree::ptree pt;
 
         typename CONTAINER::const_iterator it;
         for (it = values.begin(); it != values.end(); ++it)
@@ -123,7 +121,7 @@ private:
 
 
     /// the ptree used to store the JSON object
-    pt::ptree json_out;
+    boost::property_tree::ptree json_out;
     /// the output stream
     std::ostream * out;
 };

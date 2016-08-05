@@ -59,6 +59,11 @@ public:
      */
     std::vector<File> getFiles();
 
+    /**
+     * Gets the parameters from the bulk submission
+     */
+    pt::ptree getJobParameters();
+
 private:
 
     /**
@@ -107,6 +112,9 @@ private:
 
     /// the files that were described in the bulk submission file
     std::vector<File> files;
+
+    /// Additional job parameters
+    boost::optional<pt::ptree &> jobParams;
 
     /// token that are allowed for a file description
     static const std::set<std::string> file_tokens;

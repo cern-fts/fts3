@@ -104,6 +104,8 @@ std::string RestSubmission::strip_values(std::string const & json)
 std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
 {
     pt::ptree root, files, params;
+    // Preset with the bulk values
+    params = me.extra;
 
     // prepare the files array
     std::vector<File>::const_iterator it;

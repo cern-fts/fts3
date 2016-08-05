@@ -108,7 +108,8 @@ public:
     void setSecPerMb(int) { throw rest_client_not_implemented("setSecPerMb"); }
     void setSeProtocol(std::string, std::string, std::string) { throw rest_client_not_implemented("setSeProtocol"); }
     void showUserDn(bool) { throw rest_client_not_implemented("showUserDn"); }
-    std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);
+    std::string transferSubmit (std::vector<File> const & files,
+        std::map<std::string, std::string> const &parameters, boost::property_tree::ptree const& extraParams);
 
 
 private:

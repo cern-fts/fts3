@@ -41,7 +41,6 @@ const std::set<std::string> BulkSubmissionParser::file_tokens =
 
 BulkSubmissionParser::BulkSubmissionParser(std::istream &ifs)
 {
-
     try {
         // JSON parsing
         read_json(ifs, pt);
@@ -62,24 +61,23 @@ BulkSubmissionParser::~BulkSubmissionParser()
 
 void BulkSubmissionParser::parse()
 {
-    // check if the job is empty
-    if (pt.empty()) throw cli_exception("The 'Files' elements of the transfer job are missing!");
-    // check if there is more than one job in a single file
-    if (pt.size() > 1) throw cli_exception("Too many elements in the bulk submission file!");
-    // check if the 'Files' have been defined
     boost::optional<pt::ptree &> v = pt.get_child_optional("Files");
-    if (!v.is_initialized()) throw cli_exception("The array of files does not exist!");
-    // check if it's an array
-    if (!isArray(pt, "Files")) throw cli_exception("The 'Files' element is not an array");
+    if (!v.is_initialized()) {
+        throw cli_exception("The array of files does not exist!");
+    }
+    if (!isArray(pt, "Files")) {
+        throw cli_exception("The 'Files' element is not an array");
+    }
+
     pt::ptree &root = v.get();
-    // iterate over all the file in the job and check their format
     for (auto it = root.begin(); it != root.end(); it++) {
-        // validate the item in array
         std::pair<std::string, pt::ptree> p = *it;
         pt::ptree &item = p.second;
         validate(item);
         parse_item(item);
     }
+
+    jobParams = pt.get_child_optional("Params");
 }
 
 void BulkSubmissionParser::parse_item(pt::ptree &item)
@@ -222,6 +220,16 @@ boost::optional<std::string> BulkSubmissionParser::getMetadata(pt::ptree &item)
 std::vector<File> BulkSubmissionParser::getFiles()
 {
     return files;
+}
+
+pt::ptree BulkSubmissionParser::getJobParameters()
+{
+    if (jobParams.is_initialized()) {
+        return jobParams.get();
+    }
+    else {
+        return pt::ptree();
+    }
 }
 
 } /* namespace cli */

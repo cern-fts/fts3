@@ -85,7 +85,8 @@ public:
     void setSecPerMb(int secPerMb);
     void setSeProtocol(std::string protocol, std::string se, std::string state);
     void showUserDn(bool show);
-    std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);
+    std::string transferSubmit (std::vector<File> const & files,
+        std::map<std::string, std::string> const & parameters, boost::property_tree::ptree const & extraParameters);
 
 
 protected:

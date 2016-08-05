@@ -157,7 +157,8 @@ void GSoapContextAdapter::getInterfaceDetails()
         }
 }
 
-std::string GSoapContextAdapter::transferSubmit(std::vector<File> const &, std::map<std::string, std::string> const &)
+std::string GSoapContextAdapter::transferSubmit(std::vector<File> const &,
+    std::map<std::string, std::string> const &, boost::property_tree::ptree const &)
 {
     throw GSoapSupportRemoved();
 }

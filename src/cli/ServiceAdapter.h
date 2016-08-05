@@ -338,12 +338,12 @@ public:
      *
      * @param elements - job elements to be executed
      * @param parameters - parameters for the job that is being submitted
-     * @param checksum - flag indicating whether the checksum should be used
-     *  (if false transferSubmit2 is used, otherwise transferSubmit3 is used)
+     * @param extraParameters - raw json with the extra parameters
      *
      * @return the job ID
      */
-    virtual std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters) = 0;
+    virtual std::string transferSubmit (std::vector<File> const & files,
+        std::map<std::string, std::string> const & parameters, boost::property_tree::ptree const & extraParameters) = 0;
 
 protected:
 

@@ -96,7 +96,8 @@ public:
      *
      * @return the job ID
      */
-    std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);
+    std::string transferSubmit (std::vector<File> const & files,
+        std::map<std::string, std::string> const & parameters, boost::property_tree::ptree const& extraParams);
 
     /**
      * Delegates the credential

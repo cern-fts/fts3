@@ -148,6 +148,11 @@ public:
     std::map<std::string, std::string> getParams();
 
     /**
+     * Gets the explicit params json set in the bulk file, if any
+     */
+    pt::ptree getExtraParameters();
+
+    /**
      * Gets a vector containing job elements (files).
      *
      * The returned vector is created based on the internal vector created using 'createJobElements()'.
@@ -254,6 +259,10 @@ private:
      */
     std::vector<File> files;
 
+    /**
+     * job parameters
+     */
+    pt::ptree jobParams;
 };
 
 }

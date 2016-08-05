@@ -26,8 +26,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-namespace pt = boost::property_tree;
-
 namespace fts3
 {
 
@@ -64,9 +62,9 @@ public:
     /**
      * returns the error message that should be included in the JSON output
      */
-    virtual pt::ptree const json_obj() const
+    virtual boost::property_tree::ptree const json_obj() const
     {
-        pt::ptree obj;
+        boost::property_tree::ptree obj;
         obj.put("message", msg);
 
         return obj;

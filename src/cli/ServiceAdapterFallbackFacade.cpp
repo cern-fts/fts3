@@ -516,12 +516,13 @@ void ServiceAdapterFallbackFacade::showUserDn(bool show)
     }
 }
 
-std::string ServiceAdapterFallbackFacade::transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
+std::string ServiceAdapterFallbackFacade::transferSubmit (std::vector<File> const & files,
+    std::map<std::string, std::string> const & parameters, boost::property_tree::ptree const & extraParameters)
 {
     initfacade(false);
     while(1) {
         try {
-            return proxysvc->transferSubmit(files, parameters);
+            return proxysvc->transferSubmit(files, parameters, extraParameters);
         } catch(cli_exception const &ex) {
             if (!tryfallback(ex)) throw;
         }

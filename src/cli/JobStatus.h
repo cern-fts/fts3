@@ -43,8 +43,6 @@ namespace fts3
 namespace cli
 {
 
-namespace pt = boost::property_tree;
-
 class FileInfo
 {
 public:
@@ -65,15 +63,15 @@ public:
             stagingDuration = *f->staging;
     }
 
-    FileInfo(pt::ptree const & t) :
+    FileInfo(boost::property_tree::ptree const & t) :
         src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), fileId(t.get<int>("file_id")),
         fileIdAvail(true), state(t.get<std::string>("file_state")), reason(t.get<std::string>("reason")), duration(0),
         nbFailures(t.get<int>("retry")), stagingDuration(0)
     {
         try {
-            pt::ptree const & r = t.get_child("retries");
+            boost::property_tree::ptree const & r = t.get_child("retries");
             setRetries(r);
-        } catch(const pt::ptree_bad_path &) {
+        } catch(const boost::property_tree::ptree_bad_path &) {
             // retries path may not be available
         }
 
@@ -106,9 +104,9 @@ public:
             }
     }
 
-    void setRetries(pt::ptree const & r)
+    void setRetries(boost::property_tree::ptree const & r)
     {
-        pt::ptree::const_iterator itr;
+        boost::property_tree::ptree::const_iterator itr;
 
         retries.clear();
         for (itr = r.begin(); itr != r.end(); ++itr)
@@ -162,7 +160,7 @@ public:
 
     }
 
-    DetailedFileStatus(pt::ptree const & t) :
+    DetailedFileStatus(boost::property_tree::ptree const & t) :
         jobId(t.get<std::string>("job_id")), src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")),
         fileId(t.get<int>("file_id")), state(t.get<std::string>("file_state"))
     {

@@ -41,8 +41,9 @@ class RestSubmission
 {
 
 public:
-    RestSubmission(std::vector<File> const & files, std::map<std::string, std::string> const & parameters) :
-        files(files), parameters(parameters) {}
+    RestSubmission(std::vector<File> const & files,
+        std::map<std::string, std::string> const & parameters, boost::property_tree::ptree const& extraParams) :
+        files(files), parameters(parameters), extra(extraParams) {}
 
     virtual ~RestSubmission() {}
 
@@ -57,6 +58,7 @@ protected:
 
     std::vector<File> const & files;
     std::map<std::string, std::string> const & parameters;
+    boost::property_tree::ptree const& extra;
 };
 
 } /* namespace cli */

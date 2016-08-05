@@ -32,6 +32,26 @@ using namespace fts3::cli;
 
 const std::string HttpRequest::PORT = "8446";
 
+static int debug_callback(CURL*, curl_infotype type, char *data, size_t size, void*)
+{
+    switch (type) {
+        case CURLINFO_DATA_IN:
+        case CURLINFO_HEADER_IN:
+            std::cerr << "< ";
+            std::cerr.write(data, size);
+            break;
+        case CURLINFO_DATA_OUT:
+        case CURLINFO_HEADER_OUT:
+            std::cerr << "> ";
+            std::cerr.write(data, size);
+            break;
+        // Silence warnings
+        default:
+            break;
+    }
+    return 0;
+}
+
 HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy,
     std::iostream& stream, std::string const &topname /* = std::string() */) : stream(stream), curl(curl_easy_init()), topname(topname)
 {
@@ -77,6 +97,11 @@ HttpRequest::HttpRequest(std::string const & url, std::string const & capath, st
     }
     headerslist = curl_slist_append(headerslist, "Accept: application/json");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerslist);
+
+    if (getenv("FTS3_CLI_VERBOSE")) {
+        curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, debug_callback);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    }
 }
 
 HttpRequest::~HttpRequest()

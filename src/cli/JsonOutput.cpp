@@ -37,7 +37,7 @@ namespace cli
 void JsonOutput::print(cli_exception const & ex)
 {
     json_out.push_back(
-        pt::ptree::value_type(ex.json_node(), ex.json_obj())
+        boost::property_tree::ptree::value_type(ex.json_node(), ex.json_obj())
     );
 }
 
@@ -48,15 +48,15 @@ void JsonOutput::print(std::exception const & ex)
 
 void JsonOutput::printArray(std::string const & path, std::string const & value)
 {
-    pt::ptree item;
+    boost::property_tree::ptree item;
     item.put("", value);
 
     printArray(path, item);
 }
 
-void JsonOutput::printArray(std::string const & path, pt::ptree const & obj)
+void JsonOutput::printArray(std::string const & path, boost::property_tree::ptree const & obj)
 {
-    boost::optional<pt::ptree&> child = json_out.get_child_optional(path);
+    boost::optional<boost::property_tree::ptree&> child = json_out.get_child_optional(path);
 
     if (child.is_initialized())
         {
@@ -64,7 +64,7 @@ void JsonOutput::printArray(std::string const & path, pt::ptree const & obj)
         }
     else
         {
-            pt::ptree new_child;
+            boost::property_tree::ptree new_child;
             new_child.push_back(std::make_pair("", obj));
             json_out.put_child(path, new_child);
         }
@@ -76,7 +76,7 @@ JsonOutput::~JsonOutput()
         {
             // first write the output to a 'stringstream'
             std::stringstream str_out;
-            pt::write_json(str_out, json_out);
+            boost::property_tree::write_json(str_out, json_out);
             // then make sure symbols like null and true/false are not in double quotes
             static const boost::regex exp(":\\s*\"(null|true|false|\\[\\]|[0-9]+(\\.[0-9]+)?)\"");
             (*out) << boost::regex_replace(str_out.str(), exp, ": $1");

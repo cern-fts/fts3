@@ -57,7 +57,8 @@ int main(int ac, char* av[])
             // submit the job
             jobId = ctx.transferSubmit (
                         files,
-                        params
+                        params,
+                        cli.getExtraParameters()
                     );
 
             MsgPrinter::instance().print("", "job_id", jobId);
