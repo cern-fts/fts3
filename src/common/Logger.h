@@ -25,6 +25,9 @@
 #define LOGGER_H_
 
 #include <iostream>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread.hpp>
+
 
 namespace fts3 {
 namespace common {
@@ -79,7 +82,7 @@ public:
     {
         if (_lastLogLevel >= _logLevel)
         {
-            *out << aSrc;
+            threadStream() << aSrc;
         }
         return *this;
     }
@@ -99,7 +102,8 @@ private:
     std::string _separator;
 
     // Where to write
-    std::ostream *out;
+    boost::mutex outMutex;
+    std::ostream *ostream;
 
     /// Check file descriptor every X iterations
     static const unsigned NB_COMMITS_BEFORE_CHECK = 1000;
@@ -118,6 +122,15 @@ private:
     /// Afterwards, any attempt to write will fail even if space is recovered
     /// So we clean here the fail bits to keep doing business as usual
     void checkFd(void);
+
+    /// Write logs to a memory stream, flush on commit
+    static std::stringstream &threadStream() {
+        static boost::thread_specific_ptr<std::stringstream> threadBuffer;
+        if (threadBuffer.get() == NULL) {
+            threadBuffer.reset(new std::stringstream());
+        }
+        return *threadBuffer;
+    }
 
     // Need to give it access to _commit
     friend Logger& commit(Logger& aLogger);

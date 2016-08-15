@@ -31,6 +31,7 @@
 namespace fts3 {
 namespace common {
 
+
 Logger& theLogger()
 {
     static Logger *logger = new Logger();
@@ -65,7 +66,7 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 
 Logger::Logger(): _logLevel(DEBUG), _lastLogLevel(DEBUG), _separator("; "), _nCommits(0)
 {
-    out = &std::cout;
+    ostream = &std::cout;
     newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
 }
 
@@ -86,15 +87,22 @@ Logger & Logger::setLogLevel(LogLevel level)
 }
 
 
+/// This method has to be thread safe!
 void Logger::_commit()
 {
     if (_lastLogLevel >= _logLevel) {
-        *out << std::endl;
+        std::string line = threadStream().str();
+        threadStream().str(std::string());
+
+        boost::mutex::scoped_lock lock(outMutex);
+
         ++_nCommits;
         if (_nCommits >= NB_COMMITS_BEFORE_CHECK) {
             _nCommits = 0;
             checkFd();
         }
+
+        *ostream << line << std::endl;
     }
 }
 
@@ -137,10 +145,10 @@ static int createAndReopen(const std::string& path, FILE* stream)
 
 int Logger::redirect(const std::string& outPath, const std::string& errPath) throw()
 {
-    if (out != &std::cout) {
-        delete out;
+    if (ostream != &std::cout) {
+        delete ostream;
     }
-    out = new std::ofstream(outPath, std::ios_base::app);
+    ostream = new std::ofstream(outPath, std::ios_base::app);
 
     if (!errPath.empty()) {
         if (createAndReopen(errPath, stderr) < 0)
@@ -152,8 +160,8 @@ int Logger::redirect(const std::string& outPath, const std::string& errPath) thr
 
 void Logger::checkFd(void)
 {
-    if (out->fail()) {
-        out->clear();
+    if (ostream->fail()) {
+        ostream->clear();
         *this << logLevelStringRepresentation(WARNING) << timestamp() << _separator;
         *this << "out fail bit cleared";
     }
@@ -162,7 +170,7 @@ void Logger::checkFd(void)
         *this << "out clear!";
     }
 
-    *out << std::endl;
+    *ostream << std::endl;
 }
 
 
