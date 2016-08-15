@@ -24,108 +24,113 @@
 #include "db/generic/DbUtils.h"
 #include "monitoring/msg-ifce.h"
 
+
 using namespace fts3::common;
 using namespace db;
 
 
-bool MySqlAPI::assignSanityRuns(soci::session& sql, struct SanityFlags &msg)
+static void logInconsistency(const std::string &jobId, const std::string &message)
+{
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Found inconsistency for " << jobId << ": " << message << commit;
+}
+
+
+bool MySqlAPI::assignSanityRuns(soci::session &sql, struct SanityFlags &msg)
 {
     long long rows = 0;
 
-    try
-    {
-        if(msg.checkSanityState)
-        {
+    try {
+        if (msg.checkSanityState) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = UTC_TIMESTAMP() "
-                "where checkSanityState=0"
-                " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) "));
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = UTC_TIMESTAMP() "
+                    "where checkSanityState=0"
+                    " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) "));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.checkSanityState = (rows > 0? true: false);
+            msg.checkSanityState = (rows > 0 ? true : false);
             sql.commit();
             return msg.checkSanityState;
         }
-        else if(msg.setToFailOldQueuedJobs)
-        {
+        else if (msg.setToFailOldQueuedJobs) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = UTC_TIMESTAMP() "
-                " where setToFailOldQueuedJobs=0"
-                " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+            soci::statement st((sql.prepare
+                << "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = UTC_TIMESTAMP() "
+                    " where setToFailOldQueuedJobs=0"
+                    " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
             ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.setToFailOldQueuedJobs = (rows > 0? true: false);
+            msg.setToFailOldQueuedJobs = (rows > 0 ? true : false);
             sql.commit();
             return msg.setToFailOldQueuedJobs;
         }
-        else if(msg.forceFailTransfers)
-        {
+        else if (msg.forceFailTransfers) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = UTC_TIMESTAMP() "
-                " where forceFailTransfers=0"
-                " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+            soci::statement st((sql.prepare
+                << "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = UTC_TIMESTAMP() "
+                    " where forceFailTransfers=0"
+                    " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
             ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.forceFailTransfers = (rows > 0? true: false);
+            msg.forceFailTransfers = (rows > 0 ? true : false);
             sql.commit();
             return msg.forceFailTransfers;
         }
-        else if(msg.revertToSubmitted)
-        {
+        else if (msg.revertToSubmitted) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = UTC_TIMESTAMP() "
-                " where revertToSubmitted=0"
-                " AND (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
-            ));
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = UTC_TIMESTAMP() "
+                    " where revertToSubmitted=0"
+                    " AND (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+                ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.revertToSubmitted = (rows > 0? true: false);
+            msg.revertToSubmitted = (rows > 0 ? true : false);
             sql.commit();
             return msg.revertToSubmitted;
         }
-        else if(msg.cancelWaitingFiles)
-        {
+        else if (msg.cancelWaitingFiles) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = UTC_TIMESTAMP() "
-                "  where cancelWaitingFiles=0"
-                " AND (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+            soci::statement st((sql.prepare
+                << "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = UTC_TIMESTAMP() "
+                    "  where cancelWaitingFiles=0"
+                    " AND (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
             ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.cancelWaitingFiles = (rows > 0? true: false);
+            msg.cancelWaitingFiles = (rows > 0 ? true : false);
             sql.commit();
             return msg.cancelWaitingFiles;
         }
-        else if(msg.revertNotUsedFiles)
-        {
+        else if (msg.revertNotUsedFiles) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = UTC_TIMESTAMP() "
-                " where revertNotUsedFiles=0"
-                " AND (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+            soci::statement st((sql.prepare
+                << "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = UTC_TIMESTAMP() "
+                    " where revertNotUsedFiles=0"
+                    " AND (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
             ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.revertNotUsedFiles = (rows > 0? true: false);
+            msg.revertNotUsedFiles = (rows > 0 ? true : false);
             sql.commit();
             return msg.revertNotUsedFiles;
         }
-        else if(msg.cleanUpRecords)
-        {
+        else if (msg.cleanUpRecords) {
             sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = UTC_TIMESTAMP() "
-                " where cleanUpRecords=0"
-                " AND (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '3' day)) "
-            ));
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = UTC_TIMESTAMP() "
+                    " where cleanUpRecords=0"
+                    " AND (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '3' day)) "
+                ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.cleanUpRecords = (rows > 0? true: false);
+            msg.cleanUpRecords = (rows > 0 ? true : false);
             sql.commit();
             return msg.cleanUpRecords;
         }
-        else if(msg.msgCron)
-        {
+        else if (msg.msgCron) {
             sql.begin();
             soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = UTC_TIMESTAMP() "
                 " where msgcron=0"
@@ -133,18 +138,16 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct SanityFlags &msg)
             ));
             st.execute(true);
             rows = st.get_affected_rows();
-            msg.msgCron = (rows > 0? true: false);
+            msg.msgCron = (rows > 0 ? true : false);
             sql.commit();
             return msg.msgCron;
         }
     }
-    catch (std::exception& e)
-    {
+    catch (std::exception &e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
@@ -153,448 +156,413 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct SanityFlags &msg)
 }
 
 
-void MySqlAPI::resetSanityRuns(soci::session& sql, struct SanityFlags &msg)
+void MySqlAPI::resetSanityRuns(soci::session &sql, struct SanityFlags &msg)
 {
-    try
-    {
+    try {
         sql.begin();
-        if(msg.checkSanityState)
-        {
-            soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
-                " OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+        if (msg.checkSanityState) {
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
+                    " OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
             st.execute(true);
         }
-        else if(msg.setToFailOldQueuedJobs)
-        {
-            soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=0 where (setToFailOldQueuedJobs=1 "
-                " OR (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+        else if (msg.setToFailOldQueuedJobs) {
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=0 where (setToFailOldQueuedJobs=1 "
+                    " OR (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
             st.execute(true);
         }
-        else if(msg.forceFailTransfers)
-        {
-            soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=0 where (forceFailTransfers=1 "
-                " OR (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+        else if (msg.forceFailTransfers) {
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set forceFailTransfers=0 where (forceFailTransfers=1 "
+                    " OR (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
             st.execute(true);
         }
-        else if(msg.revertToSubmitted)
-        {
-            soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=0 where (revertToSubmitted=1  "
-                " OR (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+        else if (msg.revertToSubmitted) {
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set revertToSubmitted=0 where (revertToSubmitted=1  "
+                    " OR (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
             st.execute(true);
         }
-        else if(msg.cancelWaitingFiles)
-        {
-            soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=0 where (cancelWaitingFiles=1  "
-                " OR (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+        else if (msg.cancelWaitingFiles) {
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set cancelWaitingFiles=0 where (cancelWaitingFiles=1  "
+                    " OR (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
             st.execute(true);
         }
-        else if(msg.revertNotUsedFiles)
-        {
-            soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where (revertNotUsedFiles=1  "
-                " OR (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+        else if (msg.revertNotUsedFiles) {
+            soci::statement st(
+                (sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where (revertNotUsedFiles=1  "
+                    " OR (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
             st.execute(true);
         }
-        else if(msg.cleanUpRecords)
-        {
+        else if (msg.cleanUpRecords) {
             soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=0 where (cleanUpRecords=1  "
                 " OR (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '4' day)))  "));
             st.execute(true);
         }
-        else if(msg.msgCron)
-        {
+        else if (msg.msgCron) {
             soci::statement st((sql.prepare << "update t_server_sanity set msgcron=0 where msgcron=1"));
             st.execute(true);
         }
         sql.commit();
     }
-    catch (std::exception& e)
-    {
+    catch (std::exception &e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
 }
 
 
-void MySqlAPI::checkSanityState()
+static void fixEmptyJob(soci::session &sql, const std::string &jobId)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread started " << commit;
+    sql << "UPDATE t_job SET "
+    " job_finished = UTC_TIMESTAMP(), "
+    " job_state = 'CANCELED', "
+    " reason = 'The job was empty'"
+    " WHERE job_id = :jobId",
+    soci::use(jobId);
+    logInconsistency(jobId, "The job was empty");
+}
 
-    soci::session sql(*connectionPool);
 
-    unsigned int numberOfFiles = 0;
-    unsigned int terminalState = 0;
-    unsigned int allFinished = 0;
-    unsigned int allFailed = 0;
-    unsigned int allCanceled = 0;
-    unsigned int numberOfFilesRevert = 0;
-    unsigned int numberOfFilesDelete = 0;
+static void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
+    uint64_t filesInJob, uint64_t cancelCount, uint64_t finishedCount, uint64_t failedCount)
+{
+    const std::string failed = "One or more files failed. Please have a look at the details for more information";
+    const std::string canceledMessage = "Transfer canceled by the user";
 
-    std::string mreplica;
-
-    std::string canceledMessage = "Transfer canceled by the user";
-    std::string failed = "One or more files failed. Please have a look at the details for more information";
-    std::string job_id;
-
-    try
+    if (cancelCount > 0) {
+        sql << "UPDATE t_job SET "
+            "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    reason = :canceledMessage "
+            "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ",
+            soci::use(canceledMessage), soci::use(jobId);
+    }
+    else if (filesInJob == finishedCount)  // All files finished
     {
-        if(hashSegment.start == 0)
-        {
-            soci::rowset<std::string> rs = (
-                sql.prepare <<
-                            " select SQL_BUFFER_RESULT job_id from t_job  where job_finished is null "
-            );
+        sql << "UPDATE t_job SET "
+            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+            "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ",
+            soci::use(jobId);
+    }
+    else if (filesInJob == failedCount)  // All files failed
+    {
+        sql << "UPDATE t_job SET "
+            "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    reason = :failed "
+            "    WHERE job_id = :jobId and  job_state <> 'FAILED' ",
+            soci::use(failed), soci::use(jobId);
+    }
+    else   // Otherwise it is FINISHEDDIRTY
+    {
+        sql << "UPDATE t_job SET "
+            "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    reason = :failed "
+            "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'",
+            soci::use(failed), soci::use(jobId);
+    }
 
-            soci::statement stmt1 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
-
-            soci::statement stmt2 = (sql.prepare << "UPDATE t_job SET "
-                "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                "    reason = :canceledMessage "
-                "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ", soci::use(canceledMessage), soci::use(job_id));
-
-            soci::statement stmt3 = (sql.prepare << "UPDATE t_job SET "
-                "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
-                "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ", soci::use(job_id));
-
-            soci::statement stmt4 = (sql.prepare << "UPDATE t_job SET "
-                "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                "    reason = :failed "
-                "    WHERE job_id = :jobId and  job_state <> 'FAILED' ", soci::use(failed), soci::use(job_id));
-
-
-            soci::statement stmt5 = (sql.prepare << "UPDATE t_job SET "
-                "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                "    reason = :failed "
-                "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'", soci::use(failed), soci::use(job_id));
-
-            soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') ", soci::use(job_id), soci::into(numberOfFilesRevert));
-
-            soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
-                "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                "    reason = 'Force failure due to file state inconsistency' "
-                "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ", soci::use(job_id));
-
-            soci::statement stmt8 = (sql.prepare << " select count(*)  "
-                " from t_file "
-                " where job_id = :jobId "
-                "  and  file_state = 'FINISHED' ",
-                soci::use(job_id),
-                soci::into(allFinished));
-
-            soci::statement stmt9 = (sql.prepare << " select count(*) "
-                " from t_file f1 "
-                " where f1.job_id = :jobId "
-                "  and f1.file_state = 'CANCELED' ",
-                soci::use(job_id),
-                soci::into(allCanceled));
-
-            soci::statement stmt10 = (sql.prepare << " select count(*) "
-                " from t_file f1 "
-                " where f1.job_id = :jobId "
-                " and f1.file_state = 'FAILED' ",
-                soci::use(job_id),
-                soci::into(allFailed));
+    logInconsistency(jobId, "Non terminal job with all its files terminal");
+}
 
 
-            soci::statement stmt_m_replica = (sql.prepare << " select reuse_job from t_job where job_id=:job_id  ",
-                soci::use(job_id),
-                soci::into(mreplica));
+/// Search for jobs in non terminal state for which all transfers are in terminal
+static void fixJobNonTerminallAllFilesTerminal(soci::session &sql)
+{
+    sql.begin();
 
-            //this section is for deletion jobs
-            soci::statement stmtDel1 = (sql.prepare << "SELECT COUNT(*) FROM t_dm where job_id=:jobId AND file_state in ('DELETE','STARTED') ", soci::use(job_id), soci::into(numberOfFilesDelete));
+    soci::rowset<std::string> notFinishedJobIds = (
+        sql.prepare <<
+            "SELECT SQL_BUFFER_RESULT job_id FROM t_job WHERE job_finished IS NULL"
+    );
 
-            soci::statement stmtDel2 = (sql.prepare << "UPDATE t_dm SET "
-                "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                "    reason = 'Force failure due to file state inconsistency' "
-                "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId", soci::use(job_id));
+    for (auto i = notFinishedJobIds.begin(); i != notFinishedJobIds.end(); ++i) {
+        const std::string jobId = (*i);
 
+        uint64_t filesInJob;
+        sql << "SELECT COUNT(*) FROM t_file WHERE job_id = :jobId",
+            soci::use(jobId), soci::into(filesInJob);
 
-            sql.begin();
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            {
-                try
-                {
-                    job_id = (*i);
-                    numberOfFiles = 0;
-                    allFinished = 0;
-                    allCanceled = 0;
-                    allFailed = 0;
-                    terminalState = 0;
-                    mreplica = std::string("");
+        if (filesInJob == 0) {
+            fixEmptyJob(sql, jobId);
+            continue;
+        }
 
-                    stmt1.execute(true);
+        std::string mreplica;
+        sql << "SELECT reuse_job FROM t_job WHERE job_id = :job_id",
+            soci::use(jobId), soci::into(mreplica);
 
-                    //check for m-replicas job
-                    stmt_m_replica.execute(true);
-
-                    //check if the file belongs to a multiple replica job
-                    long long replicaJob = 0;
-                    long long replicaJobCountAll = 0;
-                    sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-                        soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);
+        //check if the file belongs to a multiple replica job
+        uint64_t replicaJob = 0;
+        uint64_t replicaJobCountAll = 0;
+        sql << "SELECT count(*), COUNT(distinct file_index) FROM t_file WHERE job_id=:job_id",
+            soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
 
 
+        // If the job is *NOT* a multiple replica job
+        if (mreplica != "R" && !(replicaJobCountAll > 1 && replicaJob == 1)) {
+            uint64_t finishedCount;
+            sql << "SELECT COUNT(*) FROM t_file WHERE job_id = :jobId AND file_state = 'FINISHED'",
+                soci::use(jobId), soci::into(finishedCount);
 
-                    if(numberOfFiles > 0 && (mreplica == "N" || mreplica == "Y" || mreplica == "H") &&  !(replicaJobCountAll > 1 && replicaJob == 1))
-                    {
-                        stmt8.execute(true);
-                        stmt9.execute(true);
-                        stmt10.execute(true);
+            uint64_t cancelCount;
+            sql << "SELECT count(*) FROM t_file f1 WHERE f1.job_id = :jobId AND f1.file_state = 'CANCELED'",
+                soci::use(jobId), soci::into(cancelCount);
 
-                        terminalState = allFinished + allCanceled + allFailed;
+            uint64_t failedCount;
+            sql << "SELECT count(*) FROM t_file f1 WHERE f1.job_id = :jobId AND f1.file_state = 'FAILED'",
+                soci::use(jobId), soci::into(failedCount);
 
-                        if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
-                        {
-                            if(allCanceled > 0)
-                            {
-                                stmt2.execute(true);
-                            }
-                            else   //non canceled, check other states: "FINISHED" and FAILED"
-                            {
-                                if(numberOfFiles == allFinished)  /*all files finished*/
-                                {
-                                    stmt3.execute(true);
-                                }
-                                else
-                                {
-                                    if(numberOfFiles == allFailed)  /*all files failed*/
-                                    {
-                                        stmt4.execute(true);
-                                    }
-                                    else   // otherwise it is FINISHEDDIRTY
-                                    {
-                                        stmt5.execute(true);
-                                    }
-                                }
-                            }
-                        }
-                    }
+            uint64_t terminalCount = finishedCount + cancelCount + failedCount;
 
-                    if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
-                    {
-                        if(mreplica != "R")
-                        {
-                            sql << "UPDATE t_job set reuse_job='R' where job_id=:job_id", soci::use(job_id);
-                        }
-                        std::string job_state;
-                        soci::rowset<soci::row> rsReplica = (
-                            sql.prepare <<
-                                        " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
-                                soci::use(job_id)
-                        );
-
-                        sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
-
-                        soci::rowset<soci::row>::const_iterator iRep;
-                        for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
-                        {
-                            std::string file_state = iRep->get<std::string>("file_state");
-                            //long long countStates = iRep->get<long long>("COUNT(file_state)",0);
-                            if(job_state == "CANCELED")
-                            {
-                                sql << "UPDATE t_file SET "
-                                    "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                                    "    reason = 'Job canceled by the user' "
-                                    "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
-                                break;
-                            }
-
-                            if(file_state == "FINISHED") //if at least one is finished, reset the rest
-                            {
-                                sql << "UPDATE t_file SET "
-                                    "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
-                                    "    reason = '' "
-                                    "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
-
-                                if(job_state != "FINISHED")
-                                {
-                                    stmt3.execute(true); //set the job_state to finished if at least one finished
-                                }
-                                break;
-                            }
-                        }
-
-                        //do some more sanity checks for m-replica jobs to avoid state incosistencies
-                        if(job_state == "ACTIVE" || job_state == "READY")
-                        {
-                            long long countSubmittedActiveReady = 0;
-                            sql << " SELECT count(*) from t_file where file_state in ('ACTIVE','SUBMITTED') and job_id = :job_id",
-                                soci::use(job_id), soci::into(countSubmittedActiveReady);
-
-                            if(countSubmittedActiveReady == 0)
-                            {
-                                long long countNotUsed = 0;
-                                sql << " SELECT count(*) from t_file where file_state = 'NOT_USED' and job_id = :job_id",
-                                    soci::use(job_id), soci::into(countNotUsed);
-                                if(countNotUsed > 0)
-                                {
-                                    sql << "UPDATE t_file SET "
-                                        "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
-                                        "    reason = '' "
-                                        "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(job_id);
-                                }
-                            }
-                        }
-                    }
-
-                }
-                catch(...)
-                {
-
-                }
+            if (filesInJob == terminalCount) {
+                fixNonTerminalJob(sql, jobId, filesInJob, cancelCount, finishedCount, failedCount);
             }
-            sql.commit();
-
-
-            //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
-            //special case for canceled
-            soci::rowset<soci::row> rs2 = (
-                sql.prepare <<
-                            " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished is not NULL  and f.file_state in ('SUBMITTED','ACTIVE','STAGING','STARTED') "
-            );
-
-
-
-            sql.begin();
-            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-            {
-                try
-                {
-                    job_id = i2->get<std::string>("job_id");
-                    std::string job_state = i2->get<std::string>("job_state");
-                    std::string reuse_job = i2->get<std::string>("reuse_job");
-                    mreplica = std::string("");
-
-                    //check for m-replicas sanity
-                    stmt_m_replica.execute(true);
-
-                    long long replicaJob = 0;
-                    long long replicaJobCountAll = 0;
-                    sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-                        soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);
-
-                    if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
-                    {
-                        int checkFinished = 0;
-                        sql << "SELECT COUNT(*) from t_file where file_state='FINISHED' and job_id=:job_id", soci::use(job_id), soci::into(checkFinished);
-                        if(checkFinished >= 1)
-                        {
-                            sql << "UPDATE t_file SET "
-                                "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                                "    reason = 'File state inconsistencies, better force-fail' "
-                                "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
-                        }
-                    }
-                    else
-                    {
-                        stmt7.execute(true);
-                    }
-                }
-                catch(...)
-                {
-                }
+        // If the job IS a multiple replica job
+        } else {
+            // Fix inconsistencies on the flag
+            if (mreplica != "R") {
+                sql << "UPDATE t_job set reuse_job='R' where job_id = :job_id", soci::use(jobId);
+                logInconsistency(jobId, "Multireplica job with an incorrect flag: " + mreplica);
             }
-            sql.commit();
 
-            //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE
-            soci::rowset<std::string> rs3 = (
-                sql.prepare <<
-                            " select  j.job_id from t_job j inner join t_dm f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('STARTED','DELETE')  "
+            std::string jobState;
+            sql << "SELECT job_state FROM t_job WHERE job_id = :job_id", soci::use(jobId), soci::into(jobState);
+
+            soci::rowset<soci::row> replicas = (sql.prepare <<
+                "SELECT file_state, COUNT(file_state) "
+                "FROM t_file "
+                "WHERE job_id = :job_id "
+                "GROUP BY file_state "
+                "ORDER BY NULL",
+                soci::use(jobId)
             );
 
-            sql.begin();
-            for (soci::rowset<std::string>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
-            {
-                job_id = (*i3);
-                stmtDel2.execute(true);
-            }
-            sql.commit();
+            for (auto iRep = replicas.begin(); iRep != replicas.end(); ++iRep) {
+                const std::string fileState = iRep->get<std::string>("file_state");
 
+                // TODO: I am concerned about this check. jobState is supposed to be terminal, so... why would
+                // TODO: job_finished be NULL?
+                if (jobState == "CANCELED") {
+                    sql << "UPDATE t_file SET "
+                        "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                        "    reason = 'Job canceled by the user' "
+                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(jobId);
 
-            //now check if a host has been offline for more than 120 min and set its transfers to failed
-            soci::rowset<std::string> rsCheckHosts = (
-                sql.prepare <<
-                            " SELECT hostname "
-                                " FROM t_hosts "
-                                " WHERE beat < DATE_SUB(UTC_TIMESTAMP(), interval 120 minute) and service_name = 'fts_server' "
-            );
+                    logInconsistency(jobId, "Multireplica job canceled, but the files weren't");
+                    break;
+                }
 
-            std::vector<TransferState> files;
-
-            for (soci::rowset<std::string>::const_iterator irsCheckHosts = rsCheckHosts.begin(); irsCheckHosts != rsCheckHosts.end(); ++irsCheckHosts)
-            {
-                std::string deadHost = (*irsCheckHosts);
-
-                //now check and collect if there are any active/ready in these hosts
-                soci::rowset<soci::row> rsCheckHostsActive = (
-                    sql.prepare <<
-                                " SELECT file_id, job_id from t_file where file_state  = 'ACTIVE' and transferHost = :transferHost ", soci::use(deadHost)
-                );
-                for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
+                // If at least one is finished, reset the rest
+                if (fileState == "FINISHED")
                 {
-                    int file_id = iCheckHostsActive->get<int>("file_id");
-                    std::string job_id = iCheckHostsActive->get<std::string>("job_id");
-                    std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost + " is offline and transfers still assigned to it";
+                    sql << "UPDATE t_file SET "
+                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                        "    reason = '' "
+                        "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
+                        soci::use(jobId);
 
-                    updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "CANCELED", errorMessage, 0, 0, 0, false);
-                    updateJobTransferStatusInternal(sql, job_id, "CANCELED",0);
+                    if (jobState != "FINISHED") {
+                        sql << "UPDATE t_job SET "
+                            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                            "    WHERE job_id = :jobId",
+                            soci::use(jobId);
 
-                    //send state monitoring message for the state transition
-                    files = getStateOfTransferInternal(sql, job_id, file_id);
-                    if(!files.empty())
-                    {
-                        std::vector<TransferState>::iterator it;
-                        for (it = files.begin(); it != files.end(); ++it)
-                        {
-                            TransferState tmp = (*it);
-                            MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
-                        }
-                        files.clear();
+                        logInconsistency(jobId, "Multireplica job with a finished replica not marked as FINISHED");
+
                     }
+
+                    logInconsistency(jobId, "Multireplica job with a finished replica not marked as terminal");
+                    break;
                 }
             }
 
-            //now check for stalled bringonline files
-            soci::rowset<soci::row> rsStagingStarted = (
-                sql.prepare <<
-                            " select  f.file_id, f.staging_start, j.bring_online, j.job_id from t_file f inner join t_job j on (f.job_id = j.job_id) where file_state = 'STARTED' "
-            );
-            for (soci::rowset<soci::row>::const_iterator iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging)
-            {
-                int file_id = iStaging->get<int>("file_id");
-                std::string job_id = iStaging->get<std::string>("job_id");
-                int bring_online  = iStaging->get<int>("bring_online");
-                struct tm start_time = iStaging->get<struct tm>("staging_start");
-                time_t start_time_t = timegm(&start_time);
-                std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+            //do some more sanity checks for m-replica jobs to avoid state inconsistencies
+            if (jobState == "ACTIVE" || jobState == "READY") {
+                uint64_t countSubmittedActiveReady = 0;
+                sql << " SELECT count(*) "
+                    "FROM t_file "
+                    "WHERE file_state IN ('ACTIVE','SUBMITTED') "
+                    "   AND job_id = :job_id",
+                    soci::use(jobId), soci::into(countSubmittedActiveReady);
 
-                time_t now = getUTC(0);
-                double diff = difftime(now, start_time_t);
-                int diffInt =  boost::lexical_cast<int>(diff);
-
-                if (diffInt > (bring_online + 800))
-                {
-                    updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
-                    updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
-
-                    sql.begin();
-                    sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(file_id);
-                    sql.commit();
+                if (countSubmittedActiveReady == 0) {
+                    uint64_t countNotUsed = 0;
+                    sql << " SELECT count(*) FROM t_file WHERE file_state = 'NOT_USED' AND job_id = :job_id",
+                        soci::use(jobId), soci::into(countNotUsed);
+                    if (countNotUsed > 0) {
+                        sql << "UPDATE t_file SET "
+                            "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
+                            "    reason = '' "
+                            "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(jobId);
+                    }
                 }
             }
         }
     }
-    catch (std::exception& e)
-    {
+    sql.commit();
+}
+
+/// Search for jobs in terminal state with files still in non terminal
+static void fixJobTerminalFileNonTerminal(soci::session &sql)
+{
+    soci::rowset<soci::row> rs = (
+        sql.prepare <<
+            "SELECT j.job_id "
+            "FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
+            "WHERE j.job_finished IS NOT NULL "
+            "AND f.file_state IN ('SUBMITTED','ACTIVE','STAGING','STARTED') "
+    );
+
+    sql.begin();
+    for (auto i = rs.begin(); i != rs.end(); ++i) {
+        const std::string jobId = i->get<std::string>("job_id");
+
+        sql << "UPDATE t_file SET "
+            "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    reason = 'Force failure due to file state inconsistency' "
+            "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ",
+            soci::use(jobId);
+
+        logInconsistency(jobId, "The job is in terminal state, but there are transfers still in non terminal state");
+    }
+    sql.commit();
+}
+
+/// Search for DELETE tasks that are still running, but belong to a job marked as terminal
+static void fixDeleteInconsistencies(soci::session &sql)
+{
+    soci::rowset<std::string> rs = (
+        sql.prepare <<
+            "SELECT j.job_id FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
+            "WHERE j.job_finished >= (UTC_TIMESTAMP() - INTERVAL '24' HOUR ) "
+            "   AND f.file_state IN ('STARTED','DELETE')"
+    );
+
+    sql.begin();
+    for (auto i = rs.begin(); i != rs.end(); ++i) {
+        std::string jobId = (*i);
+        sql << "UPDATE t_dm SET "
+            "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    reason = 'Force failure due to file state inconsistency' "
+            "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId",
+            soci::use(jobId);
+
+        logInconsistency(jobId,
+            "The job is in terminal state, but there are still deletion tasks in non terminal state");
+    }
+    sql.commit();
+}
+
+
+/// Search for hosts that haven't updated their status for more than two hours.
+/// For those matches, mark assigned transfers as CANCELED
+static void recoverFromDeadHosts(soci::session &sql, MySqlAPI *mysql)
+{
+    soci::rowset<std::string> deadHosts = (
+        sql.prepare <<
+            " SELECT hostname "
+            " FROM t_hosts "
+            " WHERE beat < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 120 MINUTE) AND service_name = 'fts_server' "
+    );
+
+    for (auto i = deadHosts.begin(); i != deadHosts.end(); ++i) {
+        const std::string deadHost = (*i);
+
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Found host offline for too long: " << deadHost << commit;
+
+        //now check and collect if there are any active/ready in these hosts
+        soci::rowset<soci::row> transfersActiveInHost = (
+            sql.prepare <<
+                "SELECT file_id, job_id FROM t_file "
+                "WHERE file_state  = 'ACTIVE' "
+                "   AND transferHost = :transferHost ",
+                soci::use(deadHost)
+        );
+        for (auto active = transfersActiveInHost.begin(); active != transfersActiveInHost.end(); ++active) {
+            int fileId = active->get<int>("file_id");
+            const std::string jobId = active->get<std::string>("job_id");
+            const std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost +
+                                             " is offline and the transfer is still assigned to it";
+
+            mysql->updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "CANCELED", errorMessage, 0, 0, 0, false);
+            mysql->updateJobTransferStatusInternal(sql, jobId, "CANCELED", 0);
+
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling assigned transfer " << jobId << " / " << fileId
+               << commit;
+
+            //send state monitoring message for the state transition
+            const std::vector<TransferState> files = mysql->getStateOfTransferInternal(sql, jobId, fileId);
+            for (auto it = files.begin(); it != files.end(); ++it) {
+                TransferState tmp = (*it);
+                MsgIfce::getInstance()->SendTransferStatusChange(mysql->producer, tmp);
+            }
+        }
+    }
+}
+
+/// Search for staging operations in STARTED, for which their bring online timeout
+/// has expired.
+static void recoverStalledStaging(soci::session &sql, MySqlAPI *mysql)
+{
+    soci::rowset<soci::row> rsStagingStarted = (
+        sql.prepare <<
+            "SELECT f.file_id, f.staging_start, j.bring_online, j.job_id "
+            "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+            "WHERE file_state = 'STARTED'"
+    );
+    for (auto iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging) {
+        int fileId = iStaging->get<int>("file_id");
+        const std::string jobId = iStaging->get<std::string>("job_id");
+        int bringOnline = iStaging->get<int>("bring_online");
+        struct tm startTime = iStaging->get<struct tm>("staging_start");
+        time_t startTimeT = timegm(&startTime);
+        std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+
+        time_t now = getUTC(0);
+        double diff = difftime(now, startTimeT);
+        int diffInt = boost::lexical_cast<int>(diff);
+
+        if (diffInt > (bringOnline + 800)) {
+            mysql->updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
+            mysql->updateJobTransferStatusInternal(sql, jobId, "FAILED", 0);
+
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
+
+            sql.begin();
+            sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(fileId);
+            sql.commit();
+        }
+    }
+}
+
+
+void MySqlAPI::checkSanityState()
+{
+    if (hashSegment.start != 0) {
+        return;
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread started " << commit;
+
+    soci::session sql(*connectionPool);
+
+    try {
+        fixJobNonTerminallAllFilesTerminal(sql);
+        fixJobTerminalFileNonTerminal(sql);
+        fixDeleteInconsistencies(sql);
+        recoverFromDeadHosts(sql, this);
+        recoverStalledStaging(sql, this);
+    }
+    catch (std::exception &e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }

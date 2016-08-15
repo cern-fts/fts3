@@ -396,8 +396,6 @@ public:
 
     virtual bool getUserDnVisible();
 
-
-private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
