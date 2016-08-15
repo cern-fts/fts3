@@ -92,6 +92,12 @@ void TransfersService::runService()
             }
 
             executeUrlcopy();
+            boost::this_thread::sleep(boost::posix_time::seconds(2));
+        }
+        catch (boost::thread_interrupted&)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            break;
         }
         catch (std::exception& e)
         {
@@ -101,7 +107,6 @@ void TransfersService::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
 }
 
@@ -189,10 +194,12 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
     catch (std::exception& e)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
+        throw;
     }
     catch (...)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+        throw;
     }
 }
 
@@ -249,10 +256,12 @@ void TransfersService::executeUrlcopy()
     catch (std::exception& e)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService " << e.what() << commit;
+        throw;
     }
     catch (...)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+        throw;
     }
 }
 
