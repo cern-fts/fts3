@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2016
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -26,6 +26,8 @@
 #include "db/generic/SanityFlags.h"
 #include "msg-bus/consumer.h"
 #include "msg-bus/producer.h"
+
+#define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
 
 class MySqlAPI : public GenericDbIfce

@@ -26,7 +26,14 @@ find_package(MySQL REQUIRED)
 include_directories (${MYSQL_INCLUDE_DIR})
 include_directories (/usr/include/soci)
 
-set(fts_db_mysql_SOURCES MySqlAPI.cpp OptimizerDataSource.cpp)
+set(fts_db_mysql_SOURCES
+        MySqlAPI.cpp
+        Config.cpp
+        Credentials.cpp
+        OptimizerDataSource.cpp
+        SanityChecks.cpp
+        Snapshot.cpp
+)
 add_library(fts_db_mysql SHARED ${fts_db_mysql_SOURCES})
 target_link_libraries(fts_db_mysql
     fts_common
