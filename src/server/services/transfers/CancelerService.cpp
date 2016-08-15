@@ -143,6 +143,19 @@ void CancelerService::applyWaitingTimeouts()
     }
 }
 
+/// Get a list of processes belonging to this host from the DB
+/// To be called on start
+static void recoverProcessesFromDb()
+{
+    auto actives = DBSingleton::instance().getDBObjectInstance()->getActiveInHost(getFullHostname());
+    for (auto i = actives.begin(); i != actives.end(); ++i) {
+        const fts3::events::MessageUpdater &msg = *i;
+        ThreadSafeList::get_instance().push_back(*i);
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Adding to watchlist from DB: "
+            << msg.job_id() << " / " << msg.file_id() << commit;
+    }
+}
+
 
 void CancelerService::runService()
 {
@@ -151,6 +164,8 @@ void CancelerService::runService()
     unsigned int countReverted = 0;
     unsigned int counterWaitingTimeouts = 0;
     unsigned int counterCanceled = 0;
+
+    recoverProcessesFromDb();
 
 
     while (!boost::this_thread::interruption_requested())

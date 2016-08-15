@@ -72,6 +72,7 @@ public:
     virtual void init(const std::string& username, const std::string& password,
             const std::string& connectString, int pooledConn);
 
+    virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host);
 
     virtual void submitDelete(const std::string & jobId,
             const std::map<std::string, std::string>& urlsHost,

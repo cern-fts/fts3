@@ -256,6 +256,43 @@ void MySqlAPI::init(const std::string& username, const std::string& password,
 }
 
 
+std::list<fts3::events::MessageUpdater> MySqlAPI::getActiveInHost(const std::string &host)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT job_id, file_id, pid FROM t_file "
+            " WHERE job_finished IS NULL AND file_state = 'ACTIVE' AND transferHost = :host",
+            soci::use(host)
+        );
+
+        std::list<fts3::events::MessageUpdater> msgs;
+
+        for (auto i = rs.begin(); i != rs.end(); ++i) {
+            fts3::events::MessageUpdater msg;
+
+            msg.set_job_id(i->get<std::string>("job_id"));
+            msg.set_file_id(i->get<int>("file_id"));
+            msg.set_process_id(i->get<int>("pid"));
+            msg.set_timestamp(milliseconds_since_epoch());
+
+            msgs.push_back(msg);
+        }
+
+        return msgs;
+    }
+    catch (std::exception &e)
+    {
+        throw SystemError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw SystemError(std::string(__func__) + ": Caught exception " );
+    }
+}
+
+
 void MySqlAPI::submitDelete(const std::string & jobId,
         const std::map<std::string, std::string>& urlsHost,
         const std::string & userDN, const std::string & voName,

@@ -89,6 +89,9 @@ public:
     virtual void init(const std::string& username, const std::string& password,
             const std::string& connectString, int nPooledConnections) = 0;
 
+    /// Recover from the DB transfers marked as ACTIVE for the host 'host'
+    virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host) = 0;
+
     /// Submit a delete job
     /// @param jobID        The job id
     /// @param urlsHost     A map where the key is the SURL to delete, and the value the storage element
