@@ -71,12 +71,10 @@ void CleanerService::runService()
 
     while (!boost::this_thread::interruption_requested())
     {
-        ++counter;
-
         try
         {
             // Every hour
-            if (counter >= 3600) {
+            if (counter % 3600 == 0) {
                 db::DBSingleton::instance().getDBObjectInstance()->checkSanityState();
             }
 
@@ -84,7 +82,6 @@ void CleanerService::runService()
             if (counter % 600 == 0) {
                 Consumer consumer(msgDir);
                 consumer.purgeAll();
-                counter = 0;
             }
         }
         catch(std::exception& e)
@@ -96,6 +93,7 @@ void CleanerService::runService()
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  fts3::common::commit;
         }
 
+        ++counter;
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }

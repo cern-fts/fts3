@@ -31,7 +31,7 @@ using namespace db;
 
 static void logInconsistency(const std::string &jobId, const std::string &message)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Found inconsistency for " << jobId << ": " << message << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Found inconsistency for " << jobId << ": " << message << commit;
 }
 
 
@@ -274,6 +274,8 @@ static void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
 /// Search for jobs in non terminal state for which all transfers are in terminal
 static void fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check non terminal jobs with all transfers terminal" << commit;
+
     sql.begin();
 
     soci::rowset<std::string> notFinishedJobIds = (
@@ -411,6 +413,8 @@ static void fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 /// Search for jobs in terminal state with files still in non terminal
 static void fixJobTerminalFileNonTerminal(soci::session &sql)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check job terminal with transfers not terminal" << commit;
+
     soci::rowset<soci::row> rs = (
         sql.prepare <<
             "SELECT j.job_id "
@@ -437,6 +441,8 @@ static void fixJobTerminalFileNonTerminal(soci::session &sql)
 /// Search for DELETE tasks that are still running, but belong to a job marked as terminal
 static void fixDeleteInconsistencies(soci::session &sql)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check delete jobs" << commit;
+
     soci::rowset<std::string> rs = (
         sql.prepare <<
             "SELECT j.job_id FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
@@ -464,6 +470,8 @@ static void fixDeleteInconsistencies(soci::session &sql)
 /// For those matches, mark assigned transfers as CANCELED
 static void recoverFromDeadHosts(soci::session &sql, MySqlAPI *mysql)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check from dead hosts" << commit;
+
     soci::rowset<std::string> deadHosts = (
         sql.prepare <<
             " SELECT hostname "
@@ -510,19 +518,28 @@ static void recoverFromDeadHosts(soci::session &sql, MySqlAPI *mysql)
 /// has expired.
 static void recoverStalledStaging(soci::session &sql, MySqlAPI *mysql)
 {
+    std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check stalled staging" << commit;
+
     soci::rowset<soci::row> rsStagingStarted = (
         sql.prepare <<
             "SELECT f.file_id, f.staging_start, j.bring_online, j.job_id "
             "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
             "WHERE file_state = 'STARTED'"
     );
+
+    sql.begin();
     for (auto iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging) {
         int fileId = iStaging->get<int>("file_id");
         const std::string jobId = iStaging->get<std::string>("job_id");
-        int bringOnline = iStaging->get<int>("bring_online");
-        struct tm startTime = iStaging->get<struct tm>("staging_start");
-        time_t startTimeT = timegm(&startTime);
-        std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+        int bringOnline = iStaging->get<int>("bring_online", 0);
+
+        time_t startTimeT = 0;
+        if (iStaging->get_indicator("staging_start") == soci::i_ok) {
+            struct tm startTime = iStaging->get<struct tm>("staging_start");
+            startTimeT = timegm(&startTime);
+        }
 
         time_t now = getUTC(0);
         double diff = difftime(now, startTimeT);
@@ -534,11 +551,10 @@ static void recoverStalledStaging(soci::session &sql, MySqlAPI *mysql)
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
 
-            sql.begin();
             sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(fileId);
-            sql.commit();
         }
     }
+    sql.commit();
 }
 
 
