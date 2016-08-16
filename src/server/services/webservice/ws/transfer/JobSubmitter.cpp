@@ -223,7 +223,7 @@ void JobSubmitter::init(soap *ctx, JOB *job)
     vo = cgsi.getClientVo();
     dn = cgsi.getClientDn();
 
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " (" << vo << ") is submitting a transfer job" << commit;
 
     if (db->isDnBlacklisted(dn)) {
         throw UserError("The DN: " + dn + " is blacklisted!");
