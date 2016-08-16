@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include "common/Logger.h"
@@ -58,6 +59,11 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
     if (!opts.proxy.empty()) {
         gfal2.set("X509", "CERT", opts.proxy);
         gfal2.set("X509", "KEY", opts.proxy);
+
+        // Most, if not all, gfal2 plugins support the previous way of setting credentials,
+        // but just in case for backwards compatibility
+        setenv("X509_USER_CERT", opts.proxy.c_str(), 1);
+        setenv("X509_USER_KEY", opts.proxy.c_str(), 1);
     }
 }
 

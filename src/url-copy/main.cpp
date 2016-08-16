@@ -18,10 +18,11 @@
 #include "common/panic.h"
 
 #include "LogHelper.h"
-#include "Transfer.h"
 #include "UrlCopyOpts.h"
 #include "UrlCopyProcess.h"
 #include "LegacyReporter.h"
+
+#include <cstdlib>
 
 using fts3::common::commit;
 namespace panic = fts3::common::panic;
@@ -54,12 +55,22 @@ static void signalCallback(int signum, void *udata)
     }
 }
 
+/// Remove some environment variables that may interfere
+void clearEnvironment()
+{
+    unsetenv("X509_USER_CERT");
+    unsetenv("X509_USER_KEY");
+    unsetenv("X509_USER_PROXY");
+}
+
 
 int main(int argc, char *argv[])
 {
     if (getuid() == 0 || geteuid() == 0) {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Running as root! This is not recommended." << commit;
     }
+
+    clearEnvironment();
 
     // Parse options and setup log levels
     UrlCopyOpts opts;
