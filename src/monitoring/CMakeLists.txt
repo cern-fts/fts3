@@ -35,7 +35,7 @@ set(fts_msg_ifce_SOURCES
 
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
 target_link_libraries(fts_msg_ifce
-    fts_common_min
+    fts_common
 	fts_config
 )
 set_target_properties(fts_msg_ifce PROPERTIES
