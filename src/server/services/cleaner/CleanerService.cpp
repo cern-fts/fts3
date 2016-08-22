@@ -71,6 +71,8 @@ void CleanerService::runService()
 
     while (!boost::this_thread::interruption_requested())
     {
+        ++counter;
+
         try
         {
             // Every hour
@@ -93,7 +95,6 @@ void CleanerService::runService()
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  fts3::common::commit;
         }
 
-        ++counter;
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }
