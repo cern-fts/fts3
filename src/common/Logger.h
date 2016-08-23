@@ -43,6 +43,7 @@ private:
     bool writeable;
 
     LoggerEntry(bool writeable);
+    LoggerEntry(const LoggerEntry& le);
 
     /// Commits (writes) the actual log line.
     void _commit();
@@ -103,7 +104,7 @@ public:
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
     /// proper debug information. Th einteher LOGLEVEL template parameter
     /// is understood by the logger traits.
-    LoggerEntry& newLog(LogLevel logLevel, const char* aFile,
+    LoggerEntry newLog(LogLevel logLevel, const char* aFile,
             const char* aFunc, const int aLineNo);
 
     /// Redirect the output and error streams

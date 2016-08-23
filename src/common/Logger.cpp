@@ -43,6 +43,11 @@ LoggerEntry::LoggerEntry(bool writeable): writeable(writeable)
 }
 
 
+LoggerEntry::LoggerEntry(const LoggerEntry& le): stream(le.stream.str()), writeable(le.writeable)
+{
+}
+
+
 LoggerEntry::~LoggerEntry()
 {
 }
@@ -124,15 +129,15 @@ void LoggerEntry::_commit()
 }
 
 
-LoggerEntry& Logger::newLog(LogLevel level, const char* aFile,
+LoggerEntry Logger::newLog(LogLevel level, const char* aFile,
         const char* aFunc, const int aLineNo)
 {
-    LoggerEntry *entry = new LoggerEntry(level >= this->_logLevel);
-    (*entry) << logLevelStringRepresentation(level) << timestamp() << _separator;
+    LoggerEntry entry(level >= this->_logLevel);
+    entry << logLevelStringRepresentation(level) << timestamp() << _separator;
     if (level >= ERR && this->_logLevel <= DEBUG) {
-        (*entry) << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
+        entry << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
     }
-    return *entry;
+    return entry;
 }
 
 
