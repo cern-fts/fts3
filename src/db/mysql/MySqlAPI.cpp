@@ -540,8 +540,6 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
             }
         }
 
-
-
         // if default was used add it as well
         if (!default_activities.empty())
             sum += activityShares["default"];

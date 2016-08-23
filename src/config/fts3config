@@ -55,7 +55,7 @@ ServerLogDirectory=/var/log/fts3
 #   NOTICE (final states), WARNING (things worth checking), ERR (internal FTS3 errors, as database connectivity),
 #   CRIT (fatal errors, as segmentation fault)
 # It is recommended to use DEBUG or INFO
-LogLevel=DEBUG
+LogLevel=INFO
 
 # Check for fts_url_copy processes that do not give their progress back
 # CheckStalledTransfers = true

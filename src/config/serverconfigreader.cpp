@@ -232,7 +232,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "LogLevel",
-        po::value<std::string>( &(_vars["LogLevel"]) )->default_value("DEBUG"),
+        po::value<std::string>( &(_vars["LogLevel"]) )->default_value("INFO"),
         "Logging level"
     )
     (
