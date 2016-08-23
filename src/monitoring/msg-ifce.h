@@ -45,7 +45,7 @@ public:
         time_spent_in_srm_preparation_start(0), time_spent_in_srm_preparation_end(0),
         time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0), tr_timestamp_start(0),
         tr_timestamp_complete(0),
-        retry(0), retry_max(0), job_m_replica(false), is_recoverable(false)
+        retry(0), retry_max(0), job_m_replica(false), is_recoverable(false), ipv6(false)
     {}
     ~TransferCompleted() {}
 

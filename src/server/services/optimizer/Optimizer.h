@@ -79,11 +79,11 @@ struct PairState {
     int connections;
 
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), connections(1) {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1) {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
-        activeCount(ac), queueSize(qs), ema(ema), connections(conn) {}
+        activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
