@@ -38,6 +38,21 @@ Logger& theLogger()
     return *logger;
 }
 
+LoggerEntry::LoggerEntry(bool writeable): writeable(writeable)
+{
+}
+
+
+LoggerEntry::~LoggerEntry()
+{
+}
+
+
+LoggerEntry& LoggerEntry::operator << (LoggerEntry& (*aFunc)(LoggerEntry &aLogger))
+{
+    return aFunc(*this);
+}
+
 
 Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 {
@@ -64,7 +79,7 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 }
 
 
-Logger::Logger(): _logLevel(DEBUG), _lastLogLevel(DEBUG), _separator("; "), _nCommits(0)
+Logger::Logger(): _logLevel(DEBUG), _separator("; "), _nCommits(0)
 {
     ostream = &std::cout;
     newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
@@ -87,46 +102,37 @@ Logger & Logger::setLogLevel(LogLevel level)
 }
 
 
-/// This method has to be thread safe!
-void Logger::_commit()
+void Logger::flush(const std::string &line)
 {
-    if (_lastLogLevel >= _logLevel) {
-        std::string line = threadStream().str();
-        threadStream().str(std::string());
+    boost::mutex::scoped_lock lock(outMutex);
+    _nCommits++;
+    if (_nCommits >= NB_COMMITS_BEFORE_CHECK) {
+        _nCommits = 0;
+        checkFd();
+    }
+    *ostream << line << std::endl;
+}
 
-        boost::mutex::scoped_lock lock(outMutex);
 
-        ++_nCommits;
-        if (_nCommits >= NB_COMMITS_BEFORE_CHECK) {
-            _nCommits = 0;
-            checkFd();
-        }
-
-        *ostream << line << std::endl;
+/// This method has to be thread safe!
+void LoggerEntry::_commit()
+{
+    if (writeable) {
+        std::string line = stream.str();
+        theLogger().flush(line);
     }
 }
 
 
-Logger& Logger::newLog(LogLevel level, const char* aFile,
+LoggerEntry& Logger::newLog(LogLevel level, const char* aFile,
         const char* aFunc, const int aLineNo)
 {
-    _lastLogLevel = level;
-
-    if (level >= this->_logLevel) {
-        (*this) << logLevelStringRepresentation(level) << timestamp() << _separator;
-
-        if (level >= ERR && this->_logLevel <= DEBUG) {
-            (*this) << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
-        }
+    LoggerEntry *entry = new LoggerEntry(level >= this->_logLevel);
+    (*entry) << logLevelStringRepresentation(level) << timestamp() << _separator;
+    if (level >= ERR && this->_logLevel <= DEBUG) {
+        (*entry) << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
     }
-
-    return *this;
-}
-
-
-Logger& Logger::operator << (Logger& (*aFunc)(Logger &aLogger))
-{
-    return (aFunc)(*this);
+    return *entry;
 }
 
 
@@ -162,15 +168,7 @@ void Logger::checkFd(void)
 {
     if (ostream->fail()) {
         ostream->clear();
-        *this << logLevelStringRepresentation(WARNING) << timestamp() << _separator;
-        *this << "out fail bit cleared";
     }
-    else {
-        *this << logLevelStringRepresentation(INFO) << timestamp() << _separator;
-        *this << "out clear!";
-    }
-
-    *ostream << std::endl;
 }
 
 
@@ -210,10 +208,10 @@ std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
 }
 
 
-Logger& commit(Logger& aLogger)
+LoggerEntry& commit(LoggerEntry& entry)
 {
-    aLogger._commit();
-    return aLogger;
+    entry._commit();
+    return entry;
 }
 
 } // namespace common

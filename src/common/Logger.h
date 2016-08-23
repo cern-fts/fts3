@@ -26,11 +26,48 @@
 
 #include <iostream>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread.hpp>
 
 
 namespace fts3 {
 namespace common {
+
+class Logger;
+
+// Logger entry
+class LoggerEntry {
+private:
+    friend class Logger;
+    friend LoggerEntry& commit(LoggerEntry& entry);
+
+    std::stringstream stream;
+    bool writeable;
+
+    LoggerEntry(bool writeable);
+
+    /// Commits (writes) the actual log line.
+    void _commit();
+
+public:
+    ~LoggerEntry();
+
+    /// Handles stream modifiers as well. So, you can do things like
+    ///
+    /// \code
+    /// ... << message << commit
+    /// \endcode
+    LoggerEntry& operator << (LoggerEntry& (*aFunc)(LoggerEntry &aLogger));
+
+    /// Write any type to the output streams
+    template <typename T>
+    LoggerEntry& operator << (const T& aSrc)
+    {
+        if (writeable)
+        {
+            stream << aSrc;
+        }
+        return *this;
+    }
+};
 
 /// Logger class
 class Logger
@@ -66,26 +103,8 @@ public:
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
     /// proper debug information. Th einteher LOGLEVEL template parameter
     /// is understood by the logger traits.
-    Logger& newLog(LogLevel logLevel, const char* aFile,
+    LoggerEntry& newLog(LogLevel logLevel, const char* aFile,
             const char* aFunc, const int aLineNo);
-
-    /// Handles stream modifiers as well. So, you can do things like
-    ///
-    /// \code
-    /// ... << message << commit
-    /// \endcode
-    Logger& operator << (Logger& (*aFunc)(Logger &aLogger));
-
-    /// Write any type to the output streams
-    template <typename T>
-    Logger& operator << (const T& aSrc)
-    {
-        if (_lastLogLevel >= _logLevel)
-        {
-            threadStream() << aSrc;
-        }
-        return *this;
-    }
 
     /// Redirect the output and error streams
     /// @param stdout   File for the standard output
@@ -94,9 +113,10 @@ public:
     int redirect(const std::string& stdout, const std::string& stderr) throw();
 
 private:
+    friend class LoggerEntry;
+
     /// Log level
     LogLevel _logLevel;
-    LogLevel _lastLogLevel;
 
     /// Separator for the logging
     std::string _separator;
@@ -109,36 +129,23 @@ private:
     static const unsigned NB_COMMITS_BEFORE_CHECK = 1000;
     unsigned _nCommits;
 
+    void flush(const std::string &line);
+
     /// String representation of the timestamp
     static std::string timestamp();
 
     /// String representation of the log level
     static std::string logLevelStringRepresentation(LogLevel loglevel);
 
-    /// Commits (writes) the actual log line.
-    void _commit();
-
     /// When the disk is full, out fail bits are set
     /// Afterwards, any attempt to write will fail even if space is recovered
     /// So we clean here the fail bits to keep doing business as usual
     void checkFd(void);
-
-    /// Write logs to a memory stream, flush on commit
-    static std::stringstream &threadStream() {
-        static boost::thread_specific_ptr<std::stringstream> threadBuffer;
-        if (threadBuffer.get() == NULL) {
-            threadBuffer.reset(new std::stringstream());
-        }
-        return *threadBuffer;
-    }
-
-    // Need to give it access to _commit
-    friend Logger& commit(Logger& aLogger);
 };
 
 
 /// Stream modifier: writes actual system error into the log stream.
-Logger& commit(Logger& aLogger);
+LoggerEntry& commit(LoggerEntry& entry);
 
 
 /// Singleton access of logger.
