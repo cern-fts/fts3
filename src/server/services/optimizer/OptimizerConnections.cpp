@@ -253,10 +253,11 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     // Apply margins to the decision
     if (decision < range.min) {
         decision = range.min;
+        rationale << ". Hit lower range limit";
     }
     else if (decision > range.max) {
         decision = range.max;
-        rationale << ". Hit range limit";
+        rationale << ". Hit upper range limit";
     }
 
     // We may have a higher number of connections than available on the queue.
