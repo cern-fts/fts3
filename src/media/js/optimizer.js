@@ -114,8 +114,8 @@ function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, Optimiz
     var labels = [];
 
     for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
-        // avoid cluttering the plot
-        labels.unshift("");
+        labels.unshift($scope.optimizer.evolution.items[i].datetime);
+
         throughputData.unshift($scope.optimizer.evolution.items[i].throughput/(1024*1024));
         emaData.unshift($scope.optimizer.evolution.items[i].ema/(1024*1024));
         successData.unshift($scope.optimizer.evolution.items[i].success);
