@@ -91,6 +91,74 @@ bool Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
     return isMaxConfigured;
 }
 
+// To be called for low success rates (<= LOW_SUCCESS_RATE)
+static int optimizeLowSuccessRate(const PairState &current, const PairState &previous, int previousValue,
+    std::stringstream& rationale)
+{
+    int decision = previousValue;
+
+    // If improving, keep it stable
+    if (current.successRate > previous.successRate && current.successRate >= BASE_SUCCESS_RATE &&
+        current.retryCount <= previous.retryCount) {
+        rationale << "Bad link efficiency but progressively improving";
+    }
+        // If worse or the same, step back
+    else if (current.successRate < previous.successRate) {
+        decision = previousValue - 2;
+        rationale << "Bad link efficiency";
+    }
+    else {
+        decision = previousValue - 2;
+        rationale << "Bad link efficiency, no changes";
+    }
+
+    return decision;
+}
+
+// To be called for success rates higher than low, but worsening
+static int optimizeWorseningSuccessRate(const PairState &, const PairState &, int previousValue,
+    std::stringstream& rationale)
+{
+    rationale << "Worse link efficiency";
+    return previousValue - 1;
+}
+
+// To be called when there is not enough information to decide what to do
+static int optimizeNotEnoughInformation(const PairState &, const PairState &, int previousValue,
+    std::stringstream& rationale)
+{
+    rationale << "Steady, not enough throughput information";
+    return previousValue;
+}
+
+// To be called when the success rate is good
+static int optimizeGoodSuccessRate(const PairState &current, const PairState &previous, int previousValue,
+    int optimizerMode, std::stringstream& rationale)
+{
+    int decision;
+
+    // Throughput going worse
+    if (current.ema < previous.ema) {
+        decision = previousValue - 1;
+        rationale << "Good link efficiency, throughput deterioration";
+    }
+    else if (current.ema > previous.ema) {
+        if (optimizerMode >= 2) {
+            decision = previousValue + 2;
+        }
+        else {
+            decision = previousValue + 1;
+        }
+        rationale << "Good link efficiency, current average throughput is larger than the preceding average";
+    }
+    else {
+        decision = previousValue + 1;
+        rationale << "Good link efficiency. Increment";
+    }
+
+    return decision;
+}
+
 // This algorithm idea is similar to the TCP congestion window.
 // It gives priority to success rate. If it gets worse, it will back off reducing
 // the total number of connections between storages.
@@ -195,59 +263,25 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
 
     // For low success rates, do not even care about throughput
     if (current.successRate < LOW_SUCCESS_RATE) {
-        // If improving, keep it stable
-        if (current.successRate > previous.successRate && current.successRate >= BASE_SUCCESS_RATE &&
-            current.retryCount <= previous.retryCount) {
-            decision = previousValue;
-            rationale << "Bad link efficiency but progressively improving";
-        }
-        // If worse or the same, step back
-        else if (current.successRate < previous.successRate) {
-            decision = previousValue - 2;
-            rationale << "Bad link efficiency";
-        }
-        else {
-            decision = previousValue - 2;
-            rationale << "Bad link efficiency, no changes";
-        }
+        decision = optimizeLowSuccessRate(current, previous, previousValue, rationale);
     }
     // Success rate worsening
     else if (current.successRate >= LOW_SUCCESS_RATE && current.successRate < previous.successRate) {
-        decision = previousValue - 1;
-        rationale << "Worse link efficiency";
+        decision = optimizeWorseningSuccessRate(current, previous, previousValue, rationale);
     }
     // No throughput info
     else if (current.ema == 0) {
-        decision = previousValue;
-        rationale << "Steady, not enough throughput information";
+        decision = optimizeNotEnoughInformation(current, previous, previousValue, rationale);
     }
     // Good success rate
     else if ((current.successRate == MAX_SUCCESS_RATE ||
              (current.successRate >= MED_SUCCESS_RATE && current.successRate >= previous.successRate)) &&
              current.retryCount <= previous.retryCount)  {
-        // Throughput going worse
-        if (current.ema < previous.ema) {
-            decision = previousValue - 1;
-            rationale << "Good link efficiency, throughput deterioration";
-        }
-        else if (current.ema > previous.ema) {
-            if (optimizerMode >= 2) {
-                decision = previousValue + 2;
-            }
-            else {
-                decision = previousValue + 1;
-            }
-            rationale << "Good link efficiency, current average throughput is larger than the preceding average";
-        }
-        else {
-            decision = previousValue + 1;
-            rationale << "Good link efficiency. Increment";
-        }
+        decision = optimizeGoodSuccessRate(current, previous, previousValue, optimizerMode, rationale);
     }
     // Not enough information to take any decision
     else {
-        decision = previousValue;
-        rationale << "Steady, not enough information";
+        decision = optimizeGoodSuccessRate(current, previous, previousValue, optimizerMode, rationale);
     }
 
     // Apply margins to the decision
