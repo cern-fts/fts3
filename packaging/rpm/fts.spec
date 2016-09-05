@@ -420,6 +420,7 @@ fi
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_rotate
 
+%dir %attr(0755,root,root) %{_datadir}/fts/
 %{_datadir}/fts/fts-database-upgrade.py*
 
 %if %systemd
