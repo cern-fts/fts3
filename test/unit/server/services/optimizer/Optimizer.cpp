@@ -67,7 +67,7 @@ protected:
     std::map<Pair, TransferList> transferStore;
 
     void populateTransfers(const Pair &pair, const std::string &state, int count,
-        bool recoverable = false, double thr = 10) {
+        bool recoverable = false, double thr = 10, uint64_t filesize = 1024) {
         auto &transfers = transferStore[pair];
 
         for (int i = 0; i < count; i++) {
@@ -79,7 +79,7 @@ protected:
                 start = time(NULL) - count - 60;
             }
 
-            transfers.emplace_back(start, end, state, 1024, thr, recoverable);
+            transfers.emplace_back(start, end, state, filesize, thr, recoverable);
         }
     }
 
@@ -174,6 +174,7 @@ public:
 
         if (totalSize > 0) {
             *throughput = acc / totalSize;
+            *filesizeAvg = totalSize / transfers.size();
         }
 
         return;
@@ -508,6 +509,32 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
 
     BOOST_CHECK_GT(lastEntry->activeDecision, 40);
     BOOST_CHECK_GT(streamsRegistry[pair], 1);
+}
+
+// Success rate is good, throughput worsens, but so does avg. filesize.
+// The value should remain stable.
+BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
+{
+    const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+
+    // Feed a bunch of successful with a big filesize
+    populateTransfers(pair, "FINISHED", 96, false, 100, 1024*1024*1024);
+
+    // Run once
+    runOptimizerForPair(pair);
+
+    // Patch decision
+    setOptimizerValue(pair, 40);
+
+    // Another bunch, with smaller filesizes and less throughput
+    populateTransfers(pair, "FINISHED", 100, false, 10, 1024);
+
+    // Run again
+    runOptimizerForPair(pair);
+
+    auto lastEntry = getLastEntry(pair);
+
+    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
 }
 
 // NOTE: I am not sure it is worth to add more tests. At the end, we will basically be
