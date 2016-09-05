@@ -137,10 +137,17 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 {
     int decision;
 
-    // Throughput going worse
     if (current.ema < previous.ema) {
-        decision = previousValue - 1;
-        rationale << "Good link efficiency, throughput deterioration";
+        // If the throughput is worsening, we need to look at the file sizes.
+        // If the file sizes are decreasing, then it could be that the throughput deterioration is due to
+        // this. Thus, decreasing the number of actives will be a bad idea.
+        if (round(log(current.filesizeAvg)) < round(log(previous.filesizeAvg))) {
+            decision = previousValue;
+            rationale << "Good link efficiency, throughput deterioration, avg. filesize decreasing";
+        } else {
+            decision = previousValue - 1;
+            rationale << "Good link efficiency, throughput deterioration";
+        }
     }
     else if (current.ema > previous.ema) {
         if (optimizerMode >= 2) {
