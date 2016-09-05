@@ -21,6 +21,7 @@
 #include "ReuseTransfersService.h"
 
 #include <glib.h>
+#include <algorithm>
 #include <fstream>
 
 #include "common/DaemonTools.h"
@@ -380,6 +381,8 @@ void ReuseTransfersService::executeUrlcopy()
     {
         std::vector<QueueId> queues;
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
+        // Breaking determinism. See FTS-704 for an explanation.
+        std::random_shuffle(queues.begin(), queues.end());
 
         if (queues.empty()) {
             return;

@@ -34,6 +34,8 @@
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"
 
+#include <algorithm>
+
 
 using namespace fts3::common;
 
@@ -120,8 +122,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
 
         //now get files to be scheduled
         std::map<std::string, std::list<TransferFile> > voQueues;
-        DBSingleton::instance().getDBObjectInstance()->getReadyTransfers(
-                queues, voQueues);
+        DBSingleton::instance().getDBObjectInstance()->getReadyTransfers(queues, voQueues);
 
         if (voQueues.empty())
             return;
@@ -212,6 +213,8 @@ void TransfersService::executeUrlcopy()
     {
         boost::thread_group g;
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
+        // Breaking determinism. See FTS-704 for an explanation.
+        std::random_shuffle(queues.begin(), queues.end());
 
         if (queues.empty())
         {
