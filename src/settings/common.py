@@ -41,8 +41,6 @@ if os.path.exists('/etc/fts3/fts3config'):
 
 # Overload if /etc/fts3/fts3config is present
 if not FTS3WEB_CONFIG.has_section('database'):
-    print >>sys.stderr, "[database] not present in the fts3web configuration file"
-    print >>sys.stderr, "           Using /etc/fts3/fts3config instead"
     if not fts3cfg:
         raise Exception('[database] not present, and could not load /etc/fts3/fts3config')
 
