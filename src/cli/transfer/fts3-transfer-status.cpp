@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ServiceAdapterFallbackFacade.h"
+#include "RestContextAdapter.h"
 
 #include "JobStatus.h"
 #include "ui/TransferStatusCli.h"
@@ -61,7 +61,7 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
 
             cli.printApiDetails(ctx);
 

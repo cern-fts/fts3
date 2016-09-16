@@ -29,7 +29,6 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "exception/cli_exception.h"
-#include "exception/gsoap_error.h"
 #include "exception/bad_option.h"
 
 namespace fts3

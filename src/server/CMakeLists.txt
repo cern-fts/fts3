@@ -25,33 +25,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(GLIB2)
 include_directories(${GLIB2_INCLUDE_DIRS})
 
-# Web service / gsoap subsystem
-include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
-file(GLOB fts_server_gsoap_transfer_sources
-    "services/webservice/ws/*.cpp"
-    "services/webservice/ws/transfer/*.cpp"
-    "services/webservice/ws/delegation/*.cpp"
-    "services/webservice/ws/config/*.cpp"
-)
-
-add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})
-target_link_libraries(fts_server_gsoap_transfer
-    fts_ws_ifce_server
-    fts_common
-    fts_config
-    fts_db_generic
-    fts_msg_ifce
-	fts_proxy
-    gridsite
-    cgsi_plugin_voms_cpp
-)
-set_target_properties(fts_server_gsoap_transfer PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/server
-    VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-    SOVERSION ${VERSION_MAJOR}
-    CLEAN_DIRECT_OUTPUT 1
-)
-
 # Server lib
 find_package(Boost COMPONENTS thread regex filesystem)
 
@@ -63,12 +36,12 @@ file(GLOB fts_server_lib_sources
 list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
 
 add_library(fts_server_lib SHARED ${fts_server_lib_sources})
-target_link_libraries(fts_server_lib 
-	fts_server_gsoap_transfer
+target_link_libraries(fts_server_lib
+    fts_db_generic
 	fts_msg_bus
+    fts_proxy
 	${GLIB2_LIBRARIES} 
 	gridsite
-	cgsi_plugin_voms_cpp
 	${Boost_LIBRARIES}
 )
 set_target_properties(fts_server_lib PROPERTIES
@@ -84,14 +57,10 @@ add_executable(fts_server main.cpp)
 add_dependencies(fts_server fts_server_lib)
 target_link_libraries(fts_server
     fts_server_lib
-    fts_proxy
     fts_config
     fts_common
-    fts_db_generic
-    fts_server_gsoap_transfer
-    gsoap++
-    fts_ws_ifce_server
     fts_infosys
+	fts_msg_ifce
     ${Boost_LIBRARIES}
 )
 
@@ -108,12 +77,7 @@ install(FILES "${MAN_INPUT_DIR}/fts_info_publisher.8" DESTINATION ${MAN_INSTALL_
 
 
 # Artifacts
-install(TARGETS fts_server_gsoap_transfer 
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-)
-
-install(TARGETS fts_server_lib 
+install(TARGETS fts_server_lib
 	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
 )

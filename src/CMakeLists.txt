@@ -42,11 +42,6 @@ if(MYSQLBUILD OR SERVERBUILD)
     add_subdirectory(db)
 endif()
 
-#  Used by server and client
-if(SERVERBUILD OR CLIENTBUILD)
-    add_subdirectory(ws-ifce)
-endif()
-
 # Used only by the server
 if(SERVERBUILD)
     add_subdirectory(infosys)
@@ -68,5 +63,4 @@ endif()
 # Used only by the client
 if(CLIENTBUILD)
     add_subdirectory(cli)
-    add_subdirectory(delegation-cli)
 endif()

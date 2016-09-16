@@ -19,14 +19,11 @@
  */
 
 #include "ProtocolResolver.h"
-
-#include "common/definitions.h"
-#include "server/services/webservice/ws/config/Configuration.h"
-
 #include <boost/assign/list_of.hpp>
+#include "ConfigurationAssigner.h"
+
 
 using namespace fts3::server;
-using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
@@ -50,13 +47,13 @@ ProtocolResolver::ProtocolResolver(TransferFile const & file, std::vector< std::
             std::pair<std::string, std::string> entry = std::make_pair(source, destination);
 
             // check if it is default configuration for destination SE
-            if (destination == Configuration::wildcard && source == Configuration::any)
+            if (destination == ConfigurationAssigner::wildcard && source == ConfigurationAssigner::any)
                 {
                     link[DESTINATION_WILDCARD] = entry;
                     continue;
                 }
             // check if it is default configuration for source SE
-            if (source == Configuration::wildcard && destination == Configuration::any)
+            if (source == ConfigurationAssigner::wildcard && destination == ConfigurationAssigner::any)
                 {
                     link[SOURCE_WILDCARD] = entry;
                     continue;
@@ -66,13 +63,13 @@ ProtocolResolver::ProtocolResolver(TransferFile const & file, std::vector< std::
             if (isGr(source) || isGr(destination))
                 {
                     // check if it's standalone group configuration of the destination
-                    if (destination != Configuration::any && source == Configuration::any)
+                    if (destination != ConfigurationAssigner::any && source == ConfigurationAssigner::any)
                         {
                             link[DESTINATION_GROUP] = entry;
                             continue;
                         }
                     // check if it's standalone group configuration of the source
-                    if (source != Configuration::any && destination == Configuration::any)
+                    if (source != ConfigurationAssigner::any && destination == ConfigurationAssigner::any)
                         {
                             link[SOURCE_GROUP] = entry;
                             continue;
@@ -84,13 +81,13 @@ ProtocolResolver::ProtocolResolver(TransferFile const & file, std::vector< std::
             else
                 {
                     // check if it's standalone SE configuration of the destination
-                    if (destination != Configuration::any && source == Configuration::any)
+                    if (destination != ConfigurationAssigner::any && source == ConfigurationAssigner::any)
                         {
                             link[DESTINATION_SE] = entry;
                             continue;
                         }
                     // check if it's standalone SE configuration of the source
-                    if (source != Configuration::any && destination == Configuration::any)
+                    if (source != ConfigurationAssigner::any && destination == ConfigurationAssigner::any)
                         {
                             link[SOURCE_SE] = entry;
                             continue;

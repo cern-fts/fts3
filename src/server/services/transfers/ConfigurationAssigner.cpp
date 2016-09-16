@@ -20,23 +20,27 @@
 
 #include "ConfigurationAssigner.h"
 
-#include "server/services/webservice/ws/config/Configuration.h"
-
 #include "common/JobStatusHandler.h"
 
 #include <boost/assign.hpp>
 #include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
 
 namespace fts3
 {
 namespace server
 {
 
-using namespace fts3::ws;
 using namespace fts3::common;
-
 using namespace boost::assign;
+
+const std::string ConfigurationAssigner::any = "*";
+const std::string ConfigurationAssigner::wildcard = "(*)";
+const std::string ConfigurationAssigner::on = "on";
+const std::string ConfigurationAssigner::off = "off";
+const std::string ConfigurationAssigner::pub = "public";
+const std::string ConfigurationAssigner::share_only = "all";
+const int ConfigurationAssigner::automatic = -1;
+
 
 ConfigurationAssigner::ConfigurationAssigner(TransferFile const & file) :
     file(file),
@@ -60,10 +64,10 @@ void ConfigurationAssigner::assign(std::vector< std::shared_ptr<ShareConfig> >& 
     // possible configurations for SE
     std::list<cfg_type> se_cfgs = list_of
                              ( cfg_type( share(source, destination, vo), content(true, true) ) )
-                             ( cfg_type( share(source, Configuration::any, vo), content(true, false) ) )
-                             ( cfg_type( share(Configuration::wildcard, Configuration::any, vo), content(true, false) ) )
-                             ( cfg_type( share(Configuration::any, destination, vo), content(false, true) ) )
-                             ( cfg_type( share(Configuration::any, Configuration::wildcard, vo), content(false, true) ) )
+                             ( cfg_type( share(source, ConfigurationAssigner::any, vo), content(true, false) ) )
+                             ( cfg_type( share(ConfigurationAssigner::wildcard, ConfigurationAssigner::any, vo), content(true, false) ) )
+                             ( cfg_type( share(ConfigurationAssigner::any, destination, vo), content(false, true) ) )
+                             ( cfg_type( share(ConfigurationAssigner::any, ConfigurationAssigner::wildcard, vo), content(false, true) ) )
                              ;
 
     assignShareCfg(se_cfgs, out);
@@ -77,9 +81,9 @@ void ConfigurationAssigner::assign(std::vector< std::shared_ptr<ShareConfig> >& 
     if (!sourceGr.empty() && !destinationGr.empty())
         gr_cfgs.push_back( cfg_type( share(sourceGr, destinationGr, vo), content(true, true) ) );
     if (!sourceGr.empty())
-        gr_cfgs.push_back( cfg_type( share(sourceGr, Configuration::any, vo), content(true, false) ) );
+        gr_cfgs.push_back( cfg_type( share(sourceGr, ConfigurationAssigner::any, vo), content(true, false) ) );
     if (!destinationGr.empty())
-        gr_cfgs.push_back( cfg_type( share(Configuration::any, destinationGr, vo), content(false, true) ) );
+        gr_cfgs.push_back( cfg_type( share(ConfigurationAssigner::any, destinationGr, vo), content(false, true) ) );
 
     assignShareCfg(gr_cfgs, out);
 }
@@ -105,7 +109,7 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
 
             // if there is no link there will be no share
             // (also if the link configuration state is 'off' we don't care about the share)
-            if (!link.get() || link->state == Configuration::off) continue;
+            if (!link.get() || link->state == ConfigurationAssigner::off) continue;
 
             // check if there is a VO share
             std::shared_ptr<ShareConfig> ptr (
@@ -115,7 +119,7 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
             if (ptr.get())
                 {
                     // set the share only status
-                    ptr->shareOnly = link->autoTuning == Configuration::share_only;
+                    ptr->shareOnly = link->autoTuning == ConfigurationAssigner::share_only;
                     // add to out
                     out.push_back(ptr);
                     // add to DB
@@ -132,7 +136,7 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
                 }
 
             // check if there is a public share
-            ptr = db->getShareConfig(source, destination, Configuration::pub);
+            ptr = db->getShareConfig(source, destination, ConfigurationAssigner::pub);
 
             // if not create a public share with 0 active transfer (equivalent)
             if (!ptr.get())
@@ -144,14 +148,14 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
                     // fill in the respective values
                     ptr->source = source;
                     ptr->destination = destination;
-                    ptr->vo = Configuration::pub;
+                    ptr->vo = ConfigurationAssigner::pub;
                     ptr->activeTransfers = 0;
                     // insert into DB
                     db->addShareConfig(*ptr.get());
                 }
 
             // set the share only status
-            ptr->shareOnly = link->autoTuning == Configuration::share_only;
+            ptr->shareOnly = link->autoTuning == ConfigurationAssigner::share_only;
             // add to out
             out.push_back(ptr);
             // add to DB

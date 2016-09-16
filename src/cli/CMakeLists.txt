@@ -50,7 +50,6 @@ endif(DOXYGEN_FOUND)
 
 # Set up libs
 set (fts_cli_internal_libs
-    fts_ws_ifce_client
     fts_common
 )
 
@@ -58,9 +57,8 @@ set(fts_cli_libs
     ${fts_cli_internal_libs}
     gridsite
     curl
-    cgsi_plugin_cpp
+	globus_gsi_proxy_core
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-    fts_delegation_api_simple
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -129,27 +127,6 @@ add_executable(fts-transfer-cancel
 )
 target_link_libraries(fts-transfer-cancel fts_cli_common)
 
-
-# FTS3 config transfer - common structures
-
-# fts-config-set command
-add_executable(fts-config-set 
-    config/fts3-config-set.cpp
-)
-target_link_libraries(fts-config-set fts_cli_common)
-
-# fts-config-del command
-add_executable(fts-config-del 
-    config/fts3-config-del.cpp
-)
-target_link_libraries(fts-config-del fts_cli_common)
-
-# fts-config-get command
-add_executable(fts-config-get 
-    config/fts3-config-get.cpp
-)
-target_link_libraries(fts-config-get fts_cli_common)
-
 # fts-set-debug command
 add_executable(fts-set-debug 
     set/fts3-set-debug.cpp
@@ -186,16 +163,12 @@ install(FILES "${MAN_INPUT_DIR}/fts-transfer-snapshot.1" DESTINATION ${MAN_INSTA
 install(FILES "${MAN_INPUT_DIR}/fts-transfer-delete.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-delegation-init.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 
-
 # Artifacts
 install(TARGETS
 	fts-transfer-submit
     fts-transfer-status
     fts-transfer-cancel
     fts-transfer-list
-	fts-config-get
-	fts-config-set
-	fts-config-del
 	fts-set-debug
 	fts-set-blacklist
 	fts-set-priority

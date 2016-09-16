@@ -1,9 +1,0 @@
-impltns = "http://glite.org/wsdl/services/org.glite.data.transfer.fts"
-tns3 = "http://transfer.data.glite.org"
-implcfg = "http://cern.ch/wsdl/services/fts3/config"
-config = "http://cern.ch/fts3/config"
-delegation = "http://www.gridsite.org/namespaces/delegation-2"
-log = "http://cern.ch/wsdl/services/fts3/log"
-xop = <http://www.w3.org/2004/08/xop/include>
-xmime5 = <http://www.w3.org/2005/05/xmlmime>
-xmime4 = <http://www.w3.org/2004/11/xmlmime> 

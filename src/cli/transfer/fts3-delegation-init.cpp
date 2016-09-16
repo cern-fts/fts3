@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ServiceAdapterFallbackFacade.h"
+#include "RestContextAdapter.h"
 #include "ui/DelegationCli.h"
 
 #include "JsonOutput.h"
@@ -40,7 +40,7 @@ int main(int ac, char* av[])
             cli.validate();
 
             // delegate Proxy Certificate
-            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
 
             ctx.delegate(cli.getDelegationId(), cli.getExpirationTime());
 

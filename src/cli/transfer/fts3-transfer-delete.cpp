@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ServiceAdapterFallbackFacade.h"
+#include "RestContextAdapter.h"
 
 #include "MsgPrinter.h"
 #include "ui/SrcDelCli.h"
@@ -56,7 +56,7 @@ int main(int ac, char* av[])
                     return 1;
                 }
 
-            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
             cli.printApiDetails(ctx);
 
             // delegate Proxy Certificate

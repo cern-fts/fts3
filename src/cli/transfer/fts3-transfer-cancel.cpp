@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ServiceAdapterFallbackFacade.h"
+#include "RestContextAdapter.h"
 
 #include "MsgPrinter.h"
 #include "ui/CancelCli.h"
@@ -52,7 +52,7 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            ServiceAdapterFallbackFacade ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
 
             // print API details if verbose
             cli.printApiDetails(ctx);

@@ -62,6 +62,21 @@ class ConfigurationAssigner
     typedef boost::tuple< share, content > cfg_type;
 
 public:
+    /// the 'any' character used to describe the SE (or SE group) to 'any' relation
+    static const std::string any;
+    /// the 'wildcard' std::string, so called catch-all
+    static const std::string wildcard;
+    /// 'on' std::string
+    static const std::string on;
+    /// 'off' std::string
+    static const std::string off;
+    /// the public share
+    static const std::string pub;
+    /// 'share_only' std::string
+    static const std::string share_only;
+    // 'auto' std::string
+    static const int automatic;
+
 
     /**
      * Constructor.

@@ -26,8 +26,6 @@
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
 
-#include "ws-ifce/gsoap/gsoap_stubs.h"
-
 #include <string>
 #include <vector>
 #include <ostream>

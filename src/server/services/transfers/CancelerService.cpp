@@ -27,7 +27,7 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "server/DrainMode.h"
-#include "server/services/webservice/ws/SingleTrStateInstance.h"
+#include "SingleTrStateInstance.h"
 #include "ThreadSafeList.h"
 
 

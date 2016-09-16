@@ -22,7 +22,6 @@
 #define LISTTRANSFERCLI_H_
 
 #include "DnCli.h"
-#include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "VoNameCli.h"
 #include "TransferCliBase.h"
 
@@ -68,17 +67,7 @@ public:
     std::string getUsageString(std::string tool) const;
 
     /**
-     * Gets a pointer to impl__ArrayOf_USCOREsoapenc_USCOREstring object.
-     * The object contains set of statuses of interest. This are the statuses
-     * that the user passed using command line options. If no statuses were
-     * passed, the set is determined depending on the version of the FTS3 service.
-     * The object is created using gSOAP memory-allocation utility, and will
-     * be garbage collected. If there is a need to delete it manually gSOAP dedicated
-     * functions should be used (in particular 'soap_unlink'!)
-     *
-     * @param soap - soap object corresponding to FTS3 service
-     *
-     * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
+     * @return an array of statuses by which the user wants to filter
      */
     std::vector<std::string> getStatusArray();
 

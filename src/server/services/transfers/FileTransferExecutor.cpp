@@ -31,7 +31,7 @@
 #include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"
 #include "ProtocolResolver.h"
-#include "services/webservice/ws/SingleTrStateInstance.h"
+#include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
 #include "ThreadSafeList.h"

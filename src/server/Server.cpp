@@ -30,7 +30,6 @@
 #include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
 #include "services/transfers/MessageProcessingService.h"
-#include "services/webservice/WebService.h"
 
 
 namespace fts3 {
@@ -93,24 +92,6 @@ void Server::start()
     addService(new TransfersService);
     addService(new ReuseTransfersService);
     addService(new MultihopTransfersService);
-
-    if (!config::ServerConfig::instance().get<bool>("WithoutSoap")) {
-        unsigned int port = config::ServerConfig::instance().get <unsigned int> ("Port");
-        const std::string &ip = config::ServerConfig::instance().get<std::string>("IP");
-        int threadPoolSize = fts3::config::ServerConfig::instance().get<int>("ThreadNum");
-
-        if (threadPoolSize > 100) {
-            threadPoolSize = 100;
-        }
-        else if (threadPoolSize < 0) {
-            threadPoolSize = 2;
-        }
-
-        addService(new WebService(port, ip, threadPoolSize));
-    }
-    else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SOAP interface disabled" << fts3::common::commit;
-    }
 }
 
 

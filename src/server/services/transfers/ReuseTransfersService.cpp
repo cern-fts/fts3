@@ -20,18 +20,15 @@
 
 #include "ReuseTransfersService.h"
 
-#include <glib.h>
-#include <algorithm>
 #include <fstream>
 
 #include "common/DaemonTools.h"
-#include "common/definitions.h"
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "server/DrainMode.h"
-#include "server/services/webservice/ws/SingleTrStateInstance.h"
+#include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
 #include "FileTransferScheduler.h"

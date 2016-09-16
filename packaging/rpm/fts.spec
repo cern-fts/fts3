@@ -34,7 +34,6 @@ BuildRequires:  boost-devel
 %else
 BuildRequires:  boost148-devel
 %endif
-BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
 
 BuildRequires:  cmake
@@ -49,7 +48,6 @@ BuildRequires:  gfal2-devel >= 2.9.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
-BuildRequires:  gsoap-devel
 BuildRequires:  json-c-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
@@ -107,7 +105,7 @@ Requires(postun):   initscripts
 
 %description server
 The FTS server is a service which accepts transfer jobs,
-it exposes both a SOAP and a RESTful interface. The File
+it exposes a RESTful interface. The File
 Transfer Service allows also for querying and canceling
 transfer-jobs. The authentication and authorization is
 VOMS based. Furthermore, the service provides a mechanism that
@@ -490,7 +488,6 @@ fi
 %{_libdir}/libfts_db_generic.so*
 %{_libdir}/libfts_msg_ifce.so*
 %{_libdir}/libfts_proxy.so*
-%{_libdir}/libfts_server_gsoap_transfer.so*
 %{_libdir}/libfts_server_lib.so*
 %{_libdir}/libfts_cli_common.so*
 %{_libdir}/libfts_ws_ifce_client.so*

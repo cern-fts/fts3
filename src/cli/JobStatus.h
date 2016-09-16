@@ -21,8 +21,6 @@
 #ifndef CLI_JOBSTATUS_H_
 #define CLI_JOBSTATUS_H_
 
-#include "ws-ifce/gsoap/gsoap_stubs.h"
-
 #include "exception/cli_exception.h"
 
 #include <time.h>
@@ -46,22 +44,6 @@ namespace cli
 class FileInfo
 {
 public:
-
-    FileInfo(tns3__FileTransferStatus const * f) :
-        src(*f->sourceSURL), dst (*f->destSURL), fileId(-1), fileIdAvail(false), state(*f->transferFileState),
-        reason(*f->reason), duration (f->duration), nbFailures(f->numFailures),
-        stagingDuration(-1)
-    {
-        std::transform(
-            f->retries.begin(),
-            f->retries.end(),
-            std::back_inserter(retries),
-            boost::bind(&tns3__FileTransferRetry::reason, _1)
-        );
-
-        if (f->staging)
-            stagingDuration = *f->staging;
-    }
 
     FileInfo(boost::property_tree::ptree const & t) :
         src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), fileId(t.get<int>("file_id")),
@@ -154,12 +136,6 @@ public:
 class DetailedFileStatus
 {
 public:
-    DetailedFileStatus(tns3__DetailedFileStatus const * df) :
-        jobId(df->jobId), src(df->sourceSurl), dst(df->destSurl), fileId(df->fileId), state(df->fileState)
-    {
-
-    }
-
     DetailedFileStatus(boost::property_tree::ptree const & t) :
         jobId(t.get<std::string>("job_id")), src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")),
         fileId(t.get<int>("file_id")), state(t.get<std::string>("file_state"))

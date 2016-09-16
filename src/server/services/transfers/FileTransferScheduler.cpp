@@ -19,22 +19,18 @@
  */
 
 #include <boost/lexical_cast.hpp>
-#include <boost/tuple/tuple.hpp>
-
-#include <sstream>
-
-#include "FileTransferScheduler.h"
 
 #include "common/Logger.h"
-
 #include "common/JobStatusHandler.h"
 
-#include "services/webservice/ws/config/Configuration.h"
-#include "services/webservice/ws/SingleTrStateInstance.h"
+#include "ConfigurationAssigner.h"
+#include "FileTransferScheduler.h"
+#include "SingleTrStateInstance.h"
 
 
 using namespace db;
-using namespace fts3::ws;
+using namespace fts3::common;
+using namespace fts3::server;
 
 
 FileTransferScheduler::FileTransferScheduler(
@@ -65,13 +61,13 @@ FileTransferScheduler::FileTransferScheduler(
                     int sum = 0;
 
 
-                    if (cfg->source == Configuration::any)
+                    if (cfg->source == ConfigurationAssigner::any)
                         {
                             // calculate for destination
                             tmp = db->getSeIn(outses, cfg->destination);
                             sum = db->sumUpVoShares(cfg->source, cfg->destination, invos);
                         }
-                    else if (cfg->destination == Configuration::any)
+                    else if (cfg->destination == ConfigurationAssigner::any)
                         {
                             // calculate for source
                             tmp = db->getSeOut(cfg->source, inses);
@@ -96,7 +92,7 @@ FileTransferScheduler::FileTransferScheduler(
                     cfg->shareOnly = false; // now the value has been set
                 }
 
-            if (cfg->activeTransfers != Configuration::automatic) no_auto_share.push_back(cfg);
+            if (cfg->activeTransfers != ConfigurationAssigner::automatic) no_auto_share.push_back(cfg);
         }
 
     this->cfgs = no_auto_share;
@@ -155,14 +151,14 @@ bool FileTransferScheduler::schedule(int &currentActive)
 
                     int active_transfers = 0;
 
-                    if (source == Configuration::wildcard)
+                    if (source == ConfigurationAssigner::wildcard)
                         {
                             active_transfers = db->countActiveOutboundTransfersUsingDefaultCfg(srcSeName, vo);
                             if (cfg->activeTransfers - active_transfers > 0) continue;
                             return false;
                         }
 
-                    if (destination == Configuration::wildcard)
+                    if (destination == ConfigurationAssigner::wildcard)
                         {
                             active_transfers = db->countActiveInboundTransfersUsingDefaultCfg(destSeName, vo);
                             if (cfg->activeTransfers - active_transfers > 0) continue;
@@ -192,25 +188,25 @@ std::string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
 
     ss << "Failed to allocate active transfer credits to transfer job due to ";
 
-    if (cfg->source == Configuration::wildcard || cfg->destination == Configuration::wildcard)
+    if (cfg->source == ConfigurationAssigner::wildcard || cfg->destination == ConfigurationAssigner::wildcard)
         {
 
             ss << "the default standalone SE configuration.";
 
         }
-    else if (cfg->source != Configuration::any && cfg->destination != Configuration::any)
+    else if (cfg->source != ConfigurationAssigner::any && cfg->destination != ConfigurationAssigner::any)
         {
 
             ss << "a pair configuration (" << cfg->source << " -> " << cfg->destination << ").";
 
         }
-    else if (cfg->source != Configuration::any)
+    else if (cfg->source != ConfigurationAssigner::any)
         {
 
             ss << "a standalone out-bound configuration (" << cfg->source << ").";
 
         }
-    else if (cfg->destination != Configuration::any)
+    else if (cfg->destination != ConfigurationAssigner::any)
         {
 
             ss << "a standalone in-bound configuration (" << cfg->destination << ").";
