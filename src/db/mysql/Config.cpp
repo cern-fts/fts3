@@ -567,9 +567,10 @@ bool MySqlAPI::isProtocolIPv6(const std::string & source_hostname, const std::st
 }
 
 
-int MySqlAPI::getStreamsOptimizationInternal(soci::session &sql, const std::string &sourceSe,
-    const std::string &destSe)
+int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
 {
+    soci::session sql(*connectionPool);
+
     try
     {
         int globalConfig = 0;
@@ -586,7 +587,7 @@ int MySqlAPI::getStreamsOptimizationInternal(soci::session &sql, const std::stri
         soci::indicator isNullStreams = soci::i_ok;
         sql << " SELECT nostreams FROM t_optimize_streams "
             " WHERE source_se = :source_se AND dest_se = :dest_se",
-            soci::use(sourceSe), soci::use(destSe),
+            soci::use(source_hostname), soci::use(destination_hostname),
             soci::into(streams, isNullStreams);
 
         if (isNullStreams == soci::i_ok) {
@@ -606,50 +607,6 @@ int MySqlAPI::getStreamsOptimizationInternal(soci::session &sql, const std::stri
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-}
-
-
-int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        return getStreamsOptimizationInternal(sql, source_hostname, destination_hostname);
-    }
-    catch (std::exception& e)
-    {
-        try
-        {
-            sleep(1);
-            return getStreamsOptimizationInternal(sql, source_hostname, destination_hostname);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception ");
-        }
-    }
-    catch (...)
-    {
-        try
-        {
-            sleep(1);
-            return getStreamsOptimizationInternal(sql, source_hostname, destination_hostname);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception ");
-        }
-    }
-
 }
 
 

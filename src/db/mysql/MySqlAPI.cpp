@@ -1276,35 +1276,9 @@ bool MySqlAPI::updateTransferStatus(const std::string& jobId, int fileId, double
         const std::string& transferState, const std::string& errorReason,
         int processId, double filesize, double duration, bool retry)
 {
-
     soci::session sql(*connectionPool);
-    try
-    {
-        return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-                transferState, errorReason, processId, filesize, duration, retry);
-    }
-    catch (std::exception& e)
-    {
-        try
-        {
-            //try again if deadlocked
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-                            transferState, errorReason, processId, filesize, duration, retry);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
+    return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
+            transferState, errorReason, processId, filesize, duration, retry);
 }
 
 
@@ -1578,47 +1552,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 bool MySqlAPI::updateJobStatus(const std::string& jobId, const std::string& jobState, int pid)
 {
     soci::session sql(*connectionPool);
-
-    try
-    {
-        updateJobTransferStatusInternal(sql, jobId, jobState, pid);
-    }
-    catch (std::exception& e)
-    {
-        try
-        {
-            //try again if deadlocked
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            updateJobTransferStatusInternal(sql, jobId, jobState, pid);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
-
-    }
-    catch (...)
-    {
-        try
-        {
-            //try again if deadlocked
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            updateJobTransferStatusInternal(sql, jobId, jobState, pid);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
-    }
-    return true;
+    return updateJobTransferStatusInternal(sql, jobId, jobState, pid);
 }
 
 
@@ -2891,52 +2825,8 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
 void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog)
 {
     soci::session sql(*connectionPool);
-
-    try
-    {
-        transferLogFileVectorInternal(sql, messagesLog);
-    }
-    catch (std::exception& e)
-    {
-        try
-        {
-            //retry if deadlocked
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            transferLogFileVectorInternal(sql, messagesLog);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
-    }
-    catch (...)
-    {
-        try
-        {
-            //retry if deadlocked
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            transferLogFileVectorInternal(sql, messagesLog);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " );
-        }
-    }
-
-}
-
-
-void MySqlAPI::transferLogFileVectorInternal(soci::session& sql, std::map<int, fts3::events::MessageLog>& messagesLog)
-{
     std::string filePath;
+
     //soci doesn't access bool
     unsigned int debugFile = 0;
     int fileId = 0;
@@ -3378,9 +3268,11 @@ void MySqlAPI::checkSchemaLoaded()
 }
 
 
-void MySqlAPI::setRetryTransferInternal(soci::session &sql, const std::string &jobId, int fileId, int retry,
+void MySqlAPI::setRetryTransfer(const std::string &jobId, int fileId, int retry,
     const std::string &reason, int errcode)
 {
+    soci::session sql(*connectionPool);
+
     //expressed in secs, default delay
     const int default_retry_delay = DEFAULT_RETRY_DELAY;
     int retry_delay = 0;
@@ -3468,49 +3360,6 @@ void MySqlAPI::setRetryTransferInternal(soci::session &sql, const std::string &j
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-}
-
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
-    int errcode)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        setRetryTransferInternal(sql, jobId, fileId, retry, reason, errcode);
-    }
-    catch (std::exception& e)
-    {
-        try
-        {
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            setRetryTransferInternal(sql, jobId, fileId, retry, reason, errcode);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception ");
-        }
-    }
-    catch (...)
-    {
-        try
-        {
-            sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            setRetryTransferInternal(sql, jobId, fileId, retry, reason, errcode);
-        }
-        catch (std::exception& e)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-        }
-        catch (...)
-        {
-            throw UserError(std::string(__func__) + ": Caught exception ");
-        }
     }
 }
 

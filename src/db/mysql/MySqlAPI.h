@@ -355,14 +355,9 @@ private:
 
     bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
 
-    void transferLogFileVectorInternal(soci::session& sql, std::map<int, fts3::events::MessageLog>& messagesLog);
-
     bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times);
 
     bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
-
-    void setRetryTransferInternal(soci::session &sql, const std::string &jobId, int fileId, int retry,
-        const std::string &reason, int errcode);
 
     int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
 
@@ -379,9 +374,6 @@ private:
     int getMaxTimeInQueue();
 
     bool getUserDnVisibleInternal(soci::session& sql);
-
-    int getStreamsOptimizationInternal(soci::session &sql, const std::string &sourceSe,
-        const std::string &destSe);
 
 
     // Sanity checks
