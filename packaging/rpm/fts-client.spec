@@ -98,9 +98,6 @@ make install DESTDIR=%{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%{_bindir}/fts-config-set
-%{_bindir}/fts-config-get
-%{_bindir}/fts-config-del
 %{_bindir}/fts-set-debug
 %{_bindir}/fts-set-blacklist
 %{_bindir}/fts-set-priority
