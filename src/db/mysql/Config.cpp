@@ -216,7 +216,7 @@ std::string MySqlAPI::getGroupForSe(const std::string se)
 }
 
 
-std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(std::string source, std::string destination)
+std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);
 
@@ -271,7 +271,8 @@ void MySqlAPI::addShareConfig(const ShareConfig& cfg)
 }
 
 
-std::unique_ptr<ShareConfig> MySqlAPI::getShareConfig(std::string source, std::string destination, std::string vo)
+std::unique_ptr<ShareConfig> MySqlAPI::getShareConfig(const std::string &source, const std::string &destination,
+    const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
@@ -297,7 +298,7 @@ std::unique_ptr<ShareConfig> MySqlAPI::getShareConfig(std::string source, std::s
 }
 
 
-std::vector<ShareConfig> MySqlAPI::getShareConfig(std::string source, std::string destination)
+std::vector<ShareConfig> MySqlAPI::getShareConfig(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);
 
@@ -567,7 +568,7 @@ bool MySqlAPI::isProtocolIPv6(const std::string & source_hostname, const std::st
 }
 
 
-int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
+int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)
 {
     soci::session sql(*connectionPool);
 
@@ -587,7 +588,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
         soci::indicator isNullStreams = soci::i_ok;
         sql << " SELECT nostreams FROM t_optimize_streams "
             " WHERE source_se = :source_se AND dest_se = :dest_se",
-            soci::use(source_hostname), soci::use(destination_hostname),
+            soci::use(sourceSe), soci::use(destSe),
             soci::into(streams, isNullStreams);
 
         if (isNullStreams == soci::i_ok) {

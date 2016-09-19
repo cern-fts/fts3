@@ -154,8 +154,14 @@ public:
     /// @param[out] currentActive   The current number of running transfers is put here
     virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive);
 
+    /// Returns how many outbound connections a storage has towards the given set of destinations
+    /// @param source       The origin of the connections
+    /// @param destination  A set of destinations for the connections
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
+    /// Returns how many inbound connections a storage has from the given set of sources
+    /// @param source       A set of sources for the connections
+    /// @param destination  The destination of the connections
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
     /// Mark a reuse or multihop job (and its files) as failed
@@ -206,46 +212,78 @@ public:
     /// @note   It will be the empty string if there is no group
     virtual std::string getGroupForSe(const std::string storage);
 
-    //t_config_symbolic
-    virtual std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination);
+    /// Get the link configuration for the link defined by the source and destination given
+    virtual std::unique_ptr<LinkConfig> getLinkConfig(const std::string &source, const std::string &destination);
 
+    /// Register a new VO share configuration
     virtual void addShareConfig(const ShareConfig& cfg);
-    virtual std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo);
-    virtual std::vector<ShareConfig> getShareConfig(std::string source, std::string destination);
 
-    virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
+    /// Get the VO share configuration for the given link and VO
+    virtual std::unique_ptr<ShareConfig> getShareConfig(const std::string &source, const std::string &destination,
+        const std::string &vo);
 
-    virtual int countActiveTransfers(std::string source, std::string destination, std::string vo);
+    /// Get the list of VO share configurations for the given link
+    virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination);
 
-    virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo);
+    /// Register in the DB that the given file ID has been scheduled for a share configuration
+    virtual void addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
+        const std::string &vo);
 
-    virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo);
+    /// Returns how many active transfers there is for the given link and VO
+    virtual int countActiveTransfers(const std::string &source, const std::string &destination,
+        const std::string &vo);
 
-    virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
+    /// Returns how many outbound transfers there is from the given storage and VO
+    virtual int countActiveOutboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo);
 
+    /// Returns how many inbound transfers there is towards the given storage for the given VO
+    virtual int countActiveInboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo);
+
+    /// Returns the total value of all the shares for the given link and set of VO
+    virtual int sumUpVoShares(const std::string &source, const std::string &destination,
+        const std::set<std::string> &vos);
+
+    /// Returns how many retries there is configured for the given jobId
     virtual int getRetry(const std::string & jobId);
 
+    /// Returns how many thime the given file has been already retried
     virtual int getRetryTimes(const std::string & jobId, int fileId);
 
+    /// Set to FAIL jobs that have been in the queue for more than its max in queue time
+    /// @param jobs An output parameter, where the set of expired job ids is stored
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
+    /// Update the protocol parameters used for each transfer
     virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol);
 
-    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int file_id);
+    /// Get the state the transfer identified by jobId/fileId
+    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int fileId);
 
+    /// Cancel files that have been set to wait, but the wait time expired
+    /// @param jobs An output parameter, where the set of expired job ids is stored
     virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
+    // TODO: UNUSED
     virtual void revertNotUsedFiles();
 
+    /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
     virtual void checkSanityState();
 
+    /// Checks if the database schema has been loaded
     virtual void checkSchemaLoaded();
 
+    /// Add a new retry to the transfer identified by fileId
+    /// @param jobId    Job identifier
+    /// @param fileId   Transfer identifier
+    /// @param reason   String representation of the failure
+    /// @param errcode  An integer representing the failure
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
         int errcode);
 
-    virtual void updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages);
+    /// Bulk update of transfer progress
+    virtual void updateFileTransferProgressVector(const std::vector<fts3::events::MessageUpdater> &messages);
 
+    /// Bulk update for log files
     virtual void transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog);
 
     /**
@@ -259,27 +297,38 @@ public:
     virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end,
         std::string service_name);
 
-    virtual unsigned int updateFileStatusReuse(TransferFile const & file, const std::string status);
+    /// Update the state of a trnasfer inside a session reuse job
+    virtual unsigned int updateFileStatusReuse(const TransferFile &file, const std::string &status);
 
+    /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
     virtual void getCancelJob(std::vector<int>& requestIDs);
 
+    /// Returns if this host has been set to drain
     virtual bool getDrain();
 
-    virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
+    /// Returns if for the given link, UDT has been enabled
+    virtual bool isProtocolUDT(const std::string &sourceSe, const std::string &destSe);
 
-    virtual bool isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname);
+    /// Returns if for the given link, IPv6 has been enabled
+    virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe);
 
-    virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
+    /// Returns how many streams must be used for the given link
+    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);
 
+    /// Returns the globally configured transfer timeout
     virtual int getGlobalTimeout();
 
+    /// Returns how many seconds must be added to the timeout per MB to be transferred
     virtual int getSecPerMb();
 
+    /// Returns the optimizer level for the TCP buffersize
     virtual int getBufferOptimization();
 
+    /// Puts into the vector queue the Queues for which there are pending transfers
     virtual void getQueuesWithPending(std::vector<QueueId>& queues);
 
-    virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queued);
+    /// Puts into the vector queues the Queues for which there are session-reuse pending transfers
+    virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
 
     /// Updates the status for delete operations
     /// @param delOpsStatus  Update for files in delete or started
@@ -297,9 +346,12 @@ public:
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus);
 
-    //  job_id / file_id / token
-    virtual void updateBringOnlineToken(std::map< std::string,
-        std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);
+    /// Update the bring online token for the given set of transfers
+    /// @param jobs     A map where the key is the job id, and the value another map where the key is a surl, and the
+    ///                     value a file id
+    /// @param token    The SRM token
+    virtual void updateBringOnlineToken(const std::map< std::string, std::map<std::string, std::vector<int> > > &jobs,
+        const std::string &token);
 
     /// Get staging operations ready to be started
     /// @params[out] stagingOps The list of staging operations will be put here
@@ -309,7 +361,8 @@ public:
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);
 
-    //file_id / surl / token
+    /// Put into files a set of bring online requests that must be cancelled
+    /// @param files    Each entry in the set if a pair of surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO

@@ -1136,7 +1136,7 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
     return bestFileId;
 }
 
-unsigned int MySqlAPI::updateFileStatusReuse(TransferFile const & file, const std::string status)
+unsigned int MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std::string &status)
 {
     soci::session sql(*connectionPool);
 
@@ -1792,7 +1792,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 }
 
 
-void MySqlAPI::updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages)
+void MySqlAPI::updateFileTransferProgressVector(const std::vector<fts3::events::MessageUpdater>& messages)
 {
     soci::session sql(*connectionPool);
 
@@ -1808,8 +1808,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<fts3::events::Messag
 
         sql.begin();
 
-        std::vector<fts3::events::MessageUpdater>::iterator iter;
-        for (iter = messages.begin(); iter != messages.end(); ++iter)
+        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
         {
             throughput = 0.0;
             transferred = 0.0;
@@ -2504,7 +2503,8 @@ bool MySqlAPI::markAsStalled(const std::vector<fts3::events::MessageUpdater>& me
 }
 
 
-void MySqlAPI::addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo)
+void MySqlAPI::addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
+    const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
@@ -2514,7 +2514,7 @@ void MySqlAPI::addFileShareConfig(int file_id, std::string source, std::string d
 
         sql << " insert ignore into t_file_share_config (file_id, source, destination, vo) "
             "  values(:file_id, :source, :destination, :vo)",
-            soci::use(file_id),
+            soci::use(fileId),
             soci::use(source),
             soci::use(destination),
             soci::use(vo);
@@ -2534,7 +2534,7 @@ void MySqlAPI::addFileShareConfig(int file_id, std::string source, std::string d
 }
 
 
-int MySqlAPI::countActiveTransfers(std::string source, std::string destination, std::string vo)
+int MySqlAPI::countActiveTransfers(const std::string &source, const std::string &destination, const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
@@ -2562,7 +2562,7 @@ int MySqlAPI::countActiveTransfers(std::string source, std::string destination, 
 }
 
 
-int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo)
+int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
@@ -2590,7 +2590,7 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
 }
 
 
-int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo)
+int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
@@ -2618,19 +2618,20 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
 }
 
 
-int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos)
+int MySqlAPI::sumUpVoShares(const std::string &source, const std::string &destination,
+    const std::set<std::string> &vos)
 {
     soci::session sql(*connectionPool);
 
     int sum = 0;
     try
     {
+        std::set<std::string> shares;
 
         std::set<std::string>::iterator it = vos.begin();
 
         while (it != vos.end())
         {
-
             std::set<std::string>::iterator remove = it;
             it++;
 
@@ -2645,17 +2646,17 @@ int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::s
                 soci::use(*remove)
                 ;
 
-            if (!sql.got_data() && *remove != "public")
-            {
+            if (!sql.got_data() && *remove != "public") {
                 // if there is no configuration for this VO replace it with 'public'
-                vos.erase(remove);
-                vos.insert("public");
+                shares.insert("public");
+            } else {
+                shares.insert(*remove);
             }
         }
 
         std::string vos_str = "(";
 
-        for (it = vos.begin(); it != vos.end(); ++it)
+        for (it = shares.begin(); it != shares.end(); ++it)
         {
 
             vos_str += "'" + *it + "'" + ",";
