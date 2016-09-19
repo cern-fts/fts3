@@ -57,7 +57,7 @@ set(fts_cli_libs
     ${fts_cli_internal_libs}
     gridsite
     curl
-	globus_gsi_proxy_core
+	globus_gsi_sysconfig
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
 )
 
