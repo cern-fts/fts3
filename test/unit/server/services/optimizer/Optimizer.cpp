@@ -172,7 +172,7 @@ public:
             }
         }
 
-        if (totalSize > 0) {
+        if (totalSize > 0 && transfers.size() > 0) {
             *throughput = acc / totalSize;
             *filesizeAvg = totalSize / transfers.size();
         }
