@@ -335,11 +335,11 @@ private:
     void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
-        std::string service_name);
+        std::string serviceName);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql,
         std::string src, std::string dst, std::string vo, int filesNum,
-        std::set<std::string> & default_activities);
+        std::set<std::string> & defaultActivities);
 
     std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src,
         std::string dst, std::string vo);
@@ -353,13 +353,13 @@ private:
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string jobId, int fileId,
         std::string newState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string status, int pid);
 
-    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times);
+    bool resetForRetryStaging(soci::session& sql, int fileId, const std::string & jobId, bool retry, int& times);
 
-    bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+    bool resetForRetryDelete(soci::session& sql, int fileId, const std::string & jobId, bool retry);
 
-    int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
+    int getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName);
 
     std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 
