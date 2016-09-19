@@ -1060,6 +1060,7 @@ bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, std::pa
     return i.second < j.second;
 }
 
+
 int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName)
 {
     //for now consider only the less queued transfers, later add throughput and success rate
@@ -1074,7 +1075,7 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
         //get available pairs
         soci::rowset<soci::row> rs = (
                                          sql.prepare <<
-                                         "select distinct source_se, dest_se from t_file where jobId=:jobId and file_state='NOT_USED'",
+                                         "select distinct source_se, dest_se from t_file where job_id=:jobId and file_state='NOT_USED'",
                                          soci::use(jobId)
                                      );
 
@@ -1088,7 +1089,7 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
             //get queued for this link and vo
             sql << " select count(*) from t_file where file_state='SUBMITTED' and "
                 " source_se=:source_se and dest_se=:dest_se and "
-                " voName=:voName ",
+                " vo_name=:voName ",
                 soci::use(source_se), soci::use(dest_se),soci::use(voName), soci::into(queued);
 
             //get distinct source_se / dest_se
@@ -1117,7 +1118,7 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
             bestDestination = (minValue.first).second;
 
             //finally get the next-best file_id to be processed
-            sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and jobId=:jobId",
+            sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and job_id=:jobId",
                 soci::use(bestSource), soci::use(bestDestination), soci::use(jobId), soci::into(bestFileId, ind);
 
             if (ind != soci::i_ok)
@@ -4637,7 +4638,7 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int fileId, const std::st
             sql <<
                 " SELECT retry, vo_name, retry_delay "
                 " FROM t_job "
-                " WHERE jobId = :jobId ",
+                " WHERE job_id = :jobId ",
                 soci::use(jobId),
                 soci::into(nRetries, isNull),
                 soci::into(vo_name),
@@ -4660,7 +4661,7 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int fileId, const std::st
             int nRetriesTimes = 0;
             soci::indicator isNull2 = soci::i_ok;
 
-            sql << "SELECT retry FROM t_dm WHERE fileId = :fileId AND jobId = :jobId ",
+            sql << "SELECT retry FROM t_dm WHERE file_id = :fileId AND job_id = :jobId ",
                 soci::use(fileId), soci::use(jobId), soci::into(nRetriesTimes, isNull2);
 
 
@@ -4679,7 +4680,8 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int fileId, const std::st
                     sql.begin();
 
                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
-                        " WHERE  fileId = :fileId AND  jobId = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
+                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE',"
+                        "'FAILED','CANCELED')",
                         soci::use(tTime), soci::use(nRetries+1), soci::use(fileId), soci::use(jobId);
 
                     willBeRetried = true;
@@ -4696,7 +4698,8 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int fileId, const std::st
                     sql.begin();
 
                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
-                        " WHERE  fileId = :fileId AND  jobId = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED',"
+                        "'FAILED','CANCELED')",
                         soci::use(tTime), soci::use(nRetries+1), soci::use(fileId), soci::use(jobId);
 
                     willBeRetried = true;
