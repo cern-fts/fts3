@@ -69,186 +69,151 @@ public:
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
 
+    /// Initialize database connection by providing information from fts3config file
+    /// @param nPooledConnections   The number connections to pool
     virtual void init(const std::string& username, const std::string& password,
-            const std::string& connectString, int pooledConn);
+        const std::string& connectString, int nPooledConnections);
 
+    /// Recover from the DB transfers marked as ACTIVE for the host 'host'
     virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host);
 
-    virtual void submitDelete(const std::string & jobId,
-            const std::map<std::string, std::string>& urlsHost,
-            const std::string & DN, const std::string & voName,
-            const std::string & credID);
+    /// Get a list of transfers ready to go for the given queues
+    /// When session reuse is enabled for a job, all the files belonging to that job should run at once
+    /// @param queues       Queues for which to check (see getQueuesWithSessionReusePending)
+    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
+    virtual void getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
+        std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile>>>>& files);
 
-    virtual void submitPhysical(const std::string & jobId,
-            std::list<SubmittedTransfer>& src_dest_pair, const std::string & DN,
-            const std::string & cred, const std::string & voName,
-            const std::string & myProxyServer, const std::string & delegationID,
-            const std::string & sourceSe, const std::string & destinationSe,
-            const fts3::common::JobParameterHandler & params);
-
-    virtual boost::optional<Job> getJob(const std::string & jobId, bool archive);
-
-    virtual void getTransferStatuses(const std::string& requestID,
-            bool archive, unsigned offset, unsigned limit,
-            std::vector<FileTransferStatus>& files);
-
-    virtual void getDmStatuses(const std::string& requestID, bool archive,
-            unsigned offset, unsigned limit,
-            std::vector<FileTransferStatus>& files);
-
-    virtual void listJobs(const std::vector<std::string>& inGivenStates,
-            const std::string& forDN, const std::string& voName,
-            const std::string& src, const std::string& dst,
-            std::vector<JobStatus>& jobs);
-
-    virtual void listDmJobs(const std::vector<std::string>& inGivenStates,
-            const std::string& forDN, const std::string& voName,
-            const std::string& src, const std::string& dst,
-            std::vector<JobStatus>& jobs);
-
-    virtual void getReadySessionReuseTransfers(
-            const std::vector<QueueId>& queues,
-            std::map<std::string,std::queue<std::pair<std::string, std::list<TransferFile>>>>& files);
-
+    /// Get a list of transfers ready to go for the given queues
+    /// @param queues       Queues for which to check (see getQueuesWithPending)
+    /// @param[out] files   A map where the key is the VO. The value is a list of transfers belonging to that VO
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
-            std::map< std::string, std::list<TransferFile>>& files);
+        std::map< std::string, std::list<TransferFile>>& files);
 
-    virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files);
+    /// Get a list of multihop jobs ready to go
+    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
+    virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files);
 
-    virtual boost::optional<StorageElement> getStorageElement(const std::string& seName);
-
-    virtual void addStorageElement(const std::string& seName, const std::string& state);
-
-    virtual void updateStorageElement(const std::string& seName, const std::string& state);
-
+    /// Update the status of a transfer
+    /// @param jobId            The job ID
+    /// @param fileId           The file ID
+    /// @param throughput       Transfer throughput
+    /// @param transferState    Transfer statue
+    /// @param errorReason      For failed states, the error message
+    /// @param processId        fts_url_copy process ID running the transfer
+    /// @param filesize         Actual filesize reported by the storage
+    /// @param duration         How long (in seconds) took to transfer the file
+    /// @param retry            If the error is considered recoverable by fts_url_copy
+    /// @return                 true if an updated was done into the DB, false otherwise
+    ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
+    /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
+    ///                         which transfers to update
     virtual bool updateTransferStatus(const std::string& jobId, int fileId, double throughput,
-            const std::string& transferState, const std::string& errorReason,
-            int processId, double filesize, double duration, bool retry);
+        const std::string& transferState, const std::string& errorReason,
+        int processId, double filesize, double duration, bool retry);
 
+    /// Update the status of a job
+    /// @param jobId            The job ID
+    /// @param jobState         The job state
+    /// @param pid              The PID of the fts_url_copy process
+    /// @note                   If jobId is empty, the pid will be used to decide which job to update
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
 
-    virtual void cancelJob(const std::vector<std::string>& jobIds);
-
-    virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
-
-    virtual bool insertCredentialCache(const std::string& delegationId, const std::string& userDn,
-            const std::string& certRequest, const std::string& privateKey, const std::string& vomsAttrs);
-
-    virtual boost::optional<UserCredentialCache> findCredentialCache(const std::string& delegationId, const std::string& userDn);
-
-    virtual void deleteCredentialCache(const std::string& delegationId, const std::string& userDn);
-
-    virtual void insertCredential(const std::string& delegationId, const std::string& userDn,
-            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime);
-
-    virtual void updateCredential(const std::string& delegationId, const std::string& userDn,
-            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime);
-
+    /// Get the credentials associated with the given delegation ID and user
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @return                 The delegated credentials, if any
     virtual boost::optional<UserCredential> findCredential(const std::string& delegationId, const std::string& userDn);
 
-    virtual void deleteCredential(const std::string& delegationId, const std::string& userDn);
+    /// Check if the credential for the given delegation id and user is expired or not
+    /// @param delegationId     Delegation ID. See insertCredentialCache
+    /// @param userDn           The user's DN
+    /// @return                 true if the stored credentials expired or do not exist
+    virtual bool isCredentialExpired(const std::string& delegationId, const std::string &userDn);
 
+    /// Get the debug level for the given pair
+    /// @param sourceStorage    The source storage as protocol://host
+    /// @param destStorage      The destination storage as protocol://host
+    /// @return                 An integer with the debug level configured for the pair. 0 = no debug.
     virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage);
 
-    virtual void setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level);
+    /// Check whether submission is allowed for the given storage
+    /// @param storage          The storage to blacklist (as protocol://host)
+    /// @param voName           The submitting VO
+    virtual bool allowSubmit(const std::string& storage, const std::string& voName);
 
-    virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
+    /// Check is the user has been banned
+    virtual bool isDnBlacklisted(const std::string& userDn);
 
-    virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
-
+    /// Optimizer data source
     virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource();
 
-    virtual bool isTrAllowed(const std::string& sourceStorage,
-            const std::string & destStorage, int &currentActive);
+    /// Checks if there are available slots to run transfers for the given pair
+    /// @param sourceStorage        The source storage  (as protocol://host)
+    /// @param destStorage          The destination storage  (as protocol://host)
+    /// @param[out] currentActive   The current number of running transfers is put here
+    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive);
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
+    /// Mark a reuse or multihop job (and its files) as failed
+    /// @param jobId    The job id
+    /// @param pid      The PID of the fts_url_copy
+    /// @param message  The error message
+    /// @note           If jobId is empty, the implementation may look for the job bound to the pid.
+    ///                 Note that I am not completely sure you can get an empty jobId.
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
+    /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
+    /// @param[out] collectJobs A map of fileId with its corresponding jobId that have been cancelled
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs);
 
+    /// Set the PID for all the files inside a reuse or multihop job
+    /// @param jobId    The job id for which the files will be updated
+    /// @param pid      The process ID
+    /// @note           Transfers within reuse and multihop jobs go all together to a single fts_url_copy process
     virtual void setPidForJob(const std::string& jobId, int pid);
 
+    /// Search for transfers stuck in 'READY' state and revert them to 'SUBMITTED'
+    /// @note   AFAIK 'READY' only applies for reuse and multihop, but inside
+    ///         MySQL reuse seems to be explicitly filtered out, so I am not sure
+    ///         how much is this method actually doing
     virtual void revertToSubmitted();
 
+    /// Moves old transfer and job records to the archive tables
+    /// Delete old entries in other tables (i.e. t_optimize_evolution)
+    /// @param[in]          How many jobs per iteration must be processed
+    /// @param[out] nJobs   How many jobs have been moved
+    /// @param[out] nFiles  How many files have been moved
     virtual void backup(long bulkSize, long* nJobs, long* nFiles);
 
+    /// Mark all the transfers as failed because the process fork failed
+    /// @param jobId    The job id for which url copy failed to fork
+    /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId);
 
+    /// Mark the files contained in 'messages' as stalled (FAILED)
+    /// @param messages Only file_id, job_id and process_id from this is used
+    /// @param diskFull Set to true if there are no messages because the disk is full
     virtual bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull);
 
-    virtual void blacklistSe(const std::string& storage, const std::string& voName,
-            const std::string& status, int timeout,
-            const std::string& msg, const std::string& adminDn);
+    /// Return true if the group 'groupName' exists
+    virtual bool checkGroupExists(const std::string & groupName);
 
-    virtual void blacklistDn(const std::string& userDn,
-            const std::string& msg, const std::string& adminDn);
-
-    virtual void unblacklistSe(const std::string& storage);
-
-    virtual void unblacklistDn(const std::string& userDn);
-
-    virtual bool allowSubmit(const std::string& storage, const std::string& voName);
-
-    virtual boost::optional<int> getTimeoutForSe(const std::string& storage);
-
-    virtual bool isDnBlacklisted(const std::string& userDn);
-
-    //t_group_members
-    virtual  bool checkGroupExists(const std::string & groupName);
-
-    virtual void getGroupMembers(const std::string & groupName,
-            std::vector<std::string>& groupMembers);
-
-    virtual void addMemberToGroup(const std::string & groupName,
-            const std::vector<std::string>& groupMembers);
-
-    virtual void deleteMembersFromGroup(const std::string & groupName,
-            const std::vector<std::string>& groupMembers);
-
-    virtual std::string getGroupForSe(const std::string se);
+    /// @return the group to which storage belong
+    /// @note   It will be the empty string if there is no group
+    virtual std::string getGroupForSe(const std::string storage);
 
     //t_config_symbolic
-    virtual void addLinkConfig(const LinkConfig& cfg);
-    virtual void updateLinkConfig(const LinkConfig& cfg);
-    virtual void deleteLinkConfig(std::string source, std::string destination);
     virtual std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination);
-    virtual std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name);
-    virtual bool isGrInPair(std::string group);
-    virtual bool isShareOnly(std::string se);
 
     virtual void addShareConfig(const ShareConfig& cfg);
-    virtual void updateShareConfig(const ShareConfig& cfg);
-    virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
-    virtual void deleteShareConfig(std::string source, std::string destination);
     virtual std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo);
     virtual std::vector<ShareConfig> getShareConfig(std::string source, std::string destination);
 
-    virtual void addActivityConfig(std::string vo, std::string shares, bool active);
-    virtual void updateActivityConfig(std::string vo, std::string shares, bool active);
-    virtual void deleteActivityConfig(std::string vo);
-    virtual bool isActivityConfigActive(std::string vo);
-    virtual std::map< std::string, double > getActivityConfig(std::string vo);
-
-    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
-
     virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
-
-    virtual void getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out);
-
-    virtual void getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out);
-
-    virtual void delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
-
-    virtual void delFileShareConfig(std::string groupd, std::string se);
-
-    virtual bool hasStandAloneSeCfgAssigned(int file_id, std::string vo);
-
-    virtual bool hasPairSeCfgAssigned(int file_id, std::string vo);
-
-    virtual bool hasPairGrCfgAssigned(int file_id, std::string vo);
 
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo);
 
@@ -258,51 +223,15 @@ public:
 
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
 
-    virtual void setPriority(std::string jobId, int priority);
-
-    virtual void setSeProtocol(std::string protocol, std::string se, std::string state);
-
-    virtual void setRetry(int retry, const std::string & vo);
-
     virtual int getRetry(const std::string & jobId);
 
     virtual int getRetryTimes(const std::string & jobId, int fileId);
 
-    virtual int getMaxTimeInQueue();
-
-    virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
-
-    virtual void authorize(bool add, const std::string& op, const std::string& dn);
-
-    virtual void setMaxTimeInQueue(int afterXHours);
-
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
-
-    virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se);
-
-    virtual std::vector<std::string> getAllStandAlloneCfgs();
-
-    virtual std::vector<std::string> getAllShareOnlyCfgs();
-
-    virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
-
-    virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
 
     virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol);
 
-    virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
-
-    virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
-
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int file_id);
-
-    virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
-
-    virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files);
-
-    virtual void setFilesToWaiting(const std::string& se, const std::string& vo, int timeout);
-
-    virtual void setFilesToWaiting(const std::string& dn, int timeout);
 
     virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
@@ -312,46 +241,29 @@ public:
 
     virtual void checkSchemaLoaded();
 
-    virtual void setOptimizerMode(int mode);
-
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
         int errcode);
-
-    virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries);
-
-    bool assignSanityRuns(soci::session& sql, struct SanityFlags &msg);
-
-    void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
-
-    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
-
-    std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
-
-    virtual std::vector<std::string> getAllActivityShareConf();
-
-    std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
-
-    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities);
 
     virtual void updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages);
 
     virtual void transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog);
 
-    unsigned int updateFileStatusReuse(TransferFile const & file, const std::string status);
+    /**
+     * Signals that the server is alive
+     * The total number of running (alive) servers is put in count
+     * The index of this specific machine is put in index
+     * A default implementation is provided, as this is used for optimization,
+     * so it is not mandatory.
+     * start and end are set to the interval of hash values this host will process
+     */
+    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end,
+        std::string service_name);
 
-    void getCancelJob(std::vector<int>& requestIDs);
+    virtual unsigned int updateFileStatusReuse(TransferFile const & file, const std::string status);
 
-    void snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint,  std::stringstream & result);
+    virtual void getCancelJob(std::vector<int>& requestIDs);
 
     virtual bool getDrain();
-
-    virtual void setDrain(bool drain);
-
-    virtual void setShowUserDn(bool show);
-
-    virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
-
-    virtual std::string getBandwidthLimit();
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
@@ -361,42 +273,55 @@ public:
 
     virtual int getGlobalTimeout();
 
-    virtual void setGlobalTimeout(int timeout);
-
     virtual int getSecPerMb();
-
-    virtual void setSecPerMb(int seconds);
-
-    virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive);
-
-    virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive);
-
-    virtual void setFixActive(const std::string & source, const std::string & destination, int active);
 
     virtual int getBufferOptimization();
 
     virtual void getQueuesWithPending(std::vector<QueueId>& queues);
 
-    virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
+    virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queued);
 
+    /// Updates the status for delete operations
+    /// @param delOpsStatus  Update for files in delete or started
     virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus);
 
+    /// Gets a list of delete operations in the queue
+    /// @params[out] delOps A list of namespace operations (deletion)
     virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps);
 
+    /// Revert namespace operations already in 'STARTED' back to the 'DELETE'
+    /// state, so they re-enter the queue
     virtual void requeueStartedDeletes();
 
-    virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus);
+    /// Updates the status for staging operations
+    /// @param stagingOpStatus  Update for files in staging or started
+    virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus);
 
-    virtual void updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);
+    //  job_id / file_id / token
+    virtual void updateBringOnlineToken(std::map< std::string,
+        std::map<std::string, std::vector<int> > > const & jobs, std::string const & token);
 
+    /// Get staging operations ready to be started
+    /// @params[out] stagingOps The list of staging operations will be put here
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps);
+
+    /// Get staging operations already started
+    /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
+    /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
+    virtual bool getCloudStorageCredentials(const std::string& userDn,
+        const std::string& voName,
+        const std::string& cloudName,
+        CloudStorageAuth& auth);
+
+    /// Get if the user dn should be visible or not in the logs
     virtual bool getUserDnVisible();
 
+private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
@@ -406,7 +331,29 @@ public:
     Producer           producer;
     Consumer           consumer;
 
-    void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
+    bool assignSanityRuns(soci::session& sql, struct SanityFlags &msg);
+    void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
+
+    void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
+        std::string service_name);
+
+    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql,
+        std::string src, std::string dst, std::string vo, int filesNum,
+        std::set<std::string> & default_activities);
+
+    std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src,
+        std::string dst, std::string vo);
+
+    std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
+
+    void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
+
+    void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
+
+    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string jobId, int fileId,
+        std::string newState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
+
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
 
     void transferLogFileVectorInternal(soci::session& sql, std::map<int, fts3::events::MessageLog>& messagesLog);
 
@@ -414,50 +361,37 @@ public:
 
     bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 
-    void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
-
-    void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
-
-    bool getDrainInternal(soci::session& sql);
-
-    std::string getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
-
-    int getCredits(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
-
-    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string jobId, int fileId, std::string newState,
-                                          std::string transferMessage, int processId, double filesize, double duration, bool retry);
-
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
-
-    void useFileReplica(soci::session& sql, std::string jobId, int fileId);
-
-    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
-                                         const fts3::events::MessageBringonline& msg);
-
-    std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
+    void setRetryTransferInternal(soci::session &sql, const std::string &jobId, int fileId, int retry,
+        const std::string &reason, int errcode);
 
     int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
 
+    std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
+
     std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
-    void setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry,
-        const std::string& reason, int errcode);
+    void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    void cancelJobInternal(soci::session& sql, const std::vector<std::string>& requestIDs);
+    int getCredits(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
 
-    bool getCloudStorageCredentials(const std::string& user_dn, const std::string& vo,
-                             const std::string& cloud_name, CloudStorageAuth& auth);
+    bool getDrainInternal(soci::session& sql);
 
-    void setCloudStorageCredentials(std::string const &dn, std::string const &vo, std::string const &storage,
-        std::string const &accessKey, std::string const &secretKey);
-
-    void setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl);
-
-    bool isDmJob(std::string const & job);
-
-    void cancelDmJobs(std::vector<std::string> const & jobs);
+    int getMaxTimeInQueue();
 
     bool getUserDnVisibleInternal(soci::session& sql);
 
-    int getStreamsOptimizationInternal(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
+    int getStreamsOptimizationInternal(soci::session &sql, const std::string &sourceSe,
+        const std::string &destSe);
+
+
+    // Sanity checks
+    void fixJobNonTerminallAllFilesTerminal(soci::session &sql);
+    void fixJobTerminalFileNonTerminal(soci::session &sql);
+    void fixDeleteInconsistencies(soci::session &sql);
+    void recoverFromDeadHosts(soci::session &sql);
+    void recoverStalledStaging(soci::session &sql);
+
+    void fixEmptyJob(soci::session &sql, const std::string &jobId);
+    void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
+        uint64_t filesInJob, uint64_t cancelCount, uint64_t finishedCount, uint64_t failedCount);
 };

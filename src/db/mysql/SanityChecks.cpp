@@ -218,7 +218,7 @@ void MySqlAPI::resetSanityRuns(soci::session &sql, struct SanityFlags &msg)
 }
 
 
-static void fixEmptyJob(soci::session &sql, const std::string &jobId)
+void MySqlAPI::fixEmptyJob(soci::session &sql, const std::string &jobId)
 {
     sql << "UPDATE t_job SET "
     " job_finished = UTC_TIMESTAMP(), "
@@ -230,7 +230,7 @@ static void fixEmptyJob(soci::session &sql, const std::string &jobId)
 }
 
 
-static void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
+void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
     uint64_t filesInJob, uint64_t cancelCount, uint64_t finishedCount, uint64_t failedCount)
 {
     const std::string failed = "One or more files failed. Please have a look at the details for more information";
@@ -272,7 +272,7 @@ static void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
 
 
 /// Search for jobs in non terminal state for which all transfers are in terminal
-static void fixJobNonTerminallAllFilesTerminal(soci::session &sql)
+void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check non terminal jobs with all transfers terminal" << commit;
 
@@ -411,7 +411,7 @@ static void fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 }
 
 /// Search for jobs in terminal state with files still in non terminal
-static void fixJobTerminalFileNonTerminal(soci::session &sql)
+void MySqlAPI::fixJobTerminalFileNonTerminal(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check job terminal with transfers not terminal" << commit;
 
@@ -439,7 +439,7 @@ static void fixJobTerminalFileNonTerminal(soci::session &sql)
 }
 
 /// Search for DELETE tasks that are still running, but belong to a job marked as terminal
-static void fixDeleteInconsistencies(soci::session &sql)
+void MySqlAPI::fixDeleteInconsistencies(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check delete jobs" << commit;
 
@@ -468,7 +468,7 @@ static void fixDeleteInconsistencies(soci::session &sql)
 
 /// Search for hosts that haven't updated their status for more than two hours.
 /// For those matches, mark assigned transfers as CANCELED
-static void recoverFromDeadHosts(soci::session &sql, MySqlAPI *mysql)
+void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check from dead hosts" << commit;
 
@@ -498,17 +498,17 @@ static void recoverFromDeadHosts(soci::session &sql, MySqlAPI *mysql)
             const std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost +
                                              " is offline and the transfer is still assigned to it";
 
-            mysql->updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "CANCELED", errorMessage, 0, 0, 0, false);
-            mysql->updateJobTransferStatusInternal(sql, jobId, "CANCELED", 0);
+            updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "CANCELED", errorMessage, 0, 0, 0, false);
+            updateJobTransferStatusInternal(sql, jobId, "CANCELED", 0);
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling assigned transfer " << jobId << " / " << fileId
                << commit;
 
             //send state monitoring message for the state transition
-            const std::vector<TransferState> files = mysql->getStateOfTransferInternal(sql, jobId, fileId);
+            const std::vector<TransferState> files = getStateOfTransferInternal(sql, jobId, fileId);
             for (auto it = files.begin(); it != files.end(); ++it) {
                 TransferState tmp = (*it);
-                MsgIfce::getInstance()->SendTransferStatusChange(mysql->producer, tmp);
+                MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
             }
         }
     }
@@ -516,7 +516,7 @@ static void recoverFromDeadHosts(soci::session &sql, MySqlAPI *mysql)
 
 /// Search for staging operations in STARTED, for which their bring online timeout
 /// has expired.
-static void recoverStalledStaging(soci::session &sql, MySqlAPI *mysql)
+void MySqlAPI::recoverStalledStaging(soci::session &sql)
 {
     std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
 
@@ -546,8 +546,8 @@ static void recoverStalledStaging(soci::session &sql, MySqlAPI *mysql)
         int diffInt = boost::lexical_cast<int>(diff);
 
         if (diffInt > (bringOnline + 800)) {
-            mysql->updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
-            mysql->updateJobTransferStatusInternal(sql, jobId, "FAILED", 0);
+            updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
+            updateJobTransferStatusInternal(sql, jobId, "FAILED", 0);
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
 
@@ -571,8 +571,8 @@ void MySqlAPI::checkSanityState()
         fixJobNonTerminallAllFilesTerminal(sql);
         fixJobTerminalFileNonTerminal(sql);
         fixDeleteInconsistencies(sql);
-        recoverFromDeadHosts(sql, this);
-        recoverStalledStaging(sql, this);
+        recoverFromDeadHosts(sql);
+        recoverStalledStaging(sql);
     }
     catch (std::exception &e) {
         sql.rollback();

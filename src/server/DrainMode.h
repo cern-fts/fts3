@@ -61,19 +61,6 @@ class DrainMode : public fts3::common::Singleton<DrainMode>
 public:
 
     /**
-     * Assign operator for converting boolean value into FtsDrain
-     *
-     * @param drain - the value tht has to be converted
-     *
-     * @return reference to this
-     */
-    DrainMode& operator= (const bool drain)
-    {
-        DBSingleton::instance().getDBObjectInstance()->setDrain(drain);
-        return *this;
-    }
-
-    /**
      * boolean casting
      *  casts the FtsDrain instance to bool value
      *

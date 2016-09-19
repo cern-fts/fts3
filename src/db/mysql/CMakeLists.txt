@@ -32,7 +32,6 @@ set(fts_db_mysql_SOURCES
         Credentials.cpp
         OptimizerDataSource.cpp
         SanityChecks.cpp
-        Snapshot.cpp
 )
 add_library(fts_db_mysql SHARED ${fts_db_mysql_SOURCES})
 target_link_libraries(fts_db_mysql

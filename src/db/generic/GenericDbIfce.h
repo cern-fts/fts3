@@ -92,88 +92,6 @@ public:
     /// Recover from the DB transfers marked as ACTIVE for the host 'host'
     virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host) = 0;
 
-    /// Submit a delete job
-    /// @param jobID        The job id
-    /// @param urlsHost     A map where the key is the SURL to delete, and the value the storage element
-    /// @param userDn       The user DN (Distinguished Name)
-    /// @param voName       The user VO
-    /// @param delegationId The delegation id of the proxy to be used
-    virtual void submitDelete(const std::string& jobId,
-            const std::map<std::string, std::string>& urlsHost,
-            const std::string& userDn, const std::string& voName,
-            const std::string& delegationId) = 0;
-
-    /// Submit a transfer request to be stored in the database
-    /// @param jobId        The job id
-    /// @param[in,out] transfers    The list of submitted transfers. Some fields may be updated after this (i.e. activity, hashedId)
-    /// @param userDn       The user DN (Distinguished Name)
-    /// @param cred         To be used if credentials other than the proxy is to be used (i.e. S3 or Dropbox keys)
-    /// @param voName       The user VO
-    /// @param myProxyServer Stored, but unused
-    /// @param delegationID The delegation id of the proxy to be used
-    /// @param sourceSe     Source storage element. Should be empty when not all transfers share the source SE
-    /// @param destSe       Destination storage element. Should be empty when not all transfers share the source SE
-    /// @param params       Stores optional transfer parameters, as buffer size, checksum algorithm, etc...
-    virtual void submitPhysical(const std::string & jobId,
-            std::list<SubmittedTransfer>& transfers, const std::string& userDn,
-            const std::string& cred, const std::string& voName,
-            const std::string& myProxyServer, const std::string& delegationID,
-            const std::string& sourceSe, const std::string& destSe,
-            const fts3::common::JobParameterHandler& params) = 0;
-
-    /// Return the job with the given jobId
-    /// @param jobId    The job id
-    /// @param archive  If true, look for the job into the archive tables
-    virtual boost::optional<Job> getJob(const std::string & jobId, bool archive) = 0;
-
-    /// Get the status of the transfers associated with the given job id
-    /// @param jobId        The job id
-    /// @param archive      If true, look for the transfers into the archive tables
-    /// @param offset       Where to start the listing
-    /// @param limit        Limit the return to 'limit' elements. If 0, all entries are retrieved.
-    /// @param files[out]   The files belonging to the job are put here
-    virtual void getTransferStatuses(const std::string& jobId, bool archive,
-            unsigned offset, unsigned limit,
-            std::vector<FileTransferStatus>& files) = 0;
-
-    /// Get the status of the data management operations associated with the given job id
-    /// @param jobId        The job id
-    /// @param archive      If true, look for the data management operations into the archive tables
-    /// @param offset       Where to start the listing
-    /// @param limit        Limit the return to 'limit' elements. If 0, all entries are retrieved.
-    /// @param files[out]   The files belonging to the job are put here
-    virtual void getDmStatuses(const std::string& requestID, bool archive,
-            unsigned offset, unsigned limit,
-            std::vector<FileTransferStatus>& files) = 0;
-
-    /// Get a list of jobs that match the filtering options
-    /// @param inGivenStates    Filter by state. By default, if empty, only non-terminal jobs are retrieves
-    /// @param forDn            Filter by user DN
-    /// @param voName           Filter by VO
-    /// @param sourceSe         Filter by source storage
-    /// @param destSe           Filter by destination storage
-    /// @param[out] jobs        The list of jobs that match the filter
-    virtual void listJobs(const std::vector<std::string>& inGivenStates,
-            const std::string& forDn, const std::string& voName,
-            const std::string& sourceSe, const std::string& destSe,
-            std::vector<JobStatus>& jobs) = 0;
-
-    /// Return truw if the job is a data management job
-    /// Jobs can only be either data management or transfer, *not* both
-    virtual bool isDmJob(const std::string& jobId) = 0;
-
-    /// Get a list of jobs with data management ops that match the filtering options
-    /// @param inGivenStates    Filter by state. By default, if empty, only non-terminal jobs are retrieves
-    /// @param forDn            Filter by user DN
-    /// @param voName           Filter by VO
-    /// @param sourceSe         Filter by source storage
-    /// @param destSe           Filter by destination storage
-    /// @param[out] jobs        The list of jobs that match the filter
-    virtual void listDmJobs(const std::vector<std::string>& inGivenStates,
-            const std::string& forDN, const std::string& voName,
-            const std::string& src, const std::string& dst,
-            std::vector<JobStatus>& jobs) = 0;
-
     /// Get a list of transfers ready to go for the given queues
     /// When session reuse is enabled for a job, all the files belonging to that job should run at once
     /// @param queues       Queues for which to check (see getQueuesWithSessionReusePending)
@@ -216,84 +134,11 @@ public:
     /// @note                   If jobId is empty, the pid will be used to decide which job to update
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid) = 0;
 
-    /// Mark a set of jobs as canceled
-    /// @param jobIds           Set of job IDs to cancel
-    virtual void cancelJob(const std::vector<std::string>& jobIds) = 0;
-
-    /// Mark all jobs belonging to voName as canceled
-    /// @param voName           The VO that wants all its jobs canceled
-    /// @param[out] canceledJobs Job IDS that have been canceled
-    virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs) = 0;
-
-    /// Cancel data management jobs
-    virtual void cancelDmJobs(const std::vector<std::string> & jobIds) = 0;
-
-    /// Get the storage element with the label seName
-    /// @param seName   The storage name
-    /// @note           Only the storage name is actually used as a foreign key for the SE groups
-    virtual boost::optional<StorageElement> getStorageElement(const std::string& seName) = 0;
-
-    /// Add a new storage element
-    /// @param seName   The storage name. Must follow the form protocol://host
-    /// @param state    The storage state (on/off normally)
-    /// @note           Only the storage name is actually used as a foreign key for the SE groups
-    virtual void addStorageElement(const std::string& seName, const std::string& state) = 0;
-
-    /// Update the information stored about a storage element
-    /// @param seName   The storage name. Must follow the form protocol://host
-    /// @param state    The storage state (on/off normally)
-    /// @note           Only the storage name is actually used as a foreign key for the SE groups
-    virtual void updateStorageElement(const std::string& seName, const std::string& state) = 0;
-
-    /// Insert a new credential cache entry
-    /// A credential cache is a certificate request (to be signed by the user) and its associated private key
-    /// @param delegationId Delegation ID. Normally, a hash of some sort of the user's DN and VO extensions.
-    /// @param userDn           The user's DN
-    /// @param certRequest      A PEM-encoded certificate request
-    /// @param privateKey       A PEM-encoded private key, associated to the certificate request
-    /// @param vomsAttrs        Any VOMS extensions from the credentials used by the client
-    virtual bool insertCredentialCache(const std::string& delegationId, const std::string& userDn,
-            const std::string& certRequest, const std::string& privateKey, const std::string& vomsAttrs) = 0;
-
-    /// Get the credential cache (certificate request) associated with the given delegation ID
-    /// @param delegationId Delegation ID. See insertCredentialCache
-    /// @param userDn           The user's DN
-    /// @return                 The credential cache if it exists
-    virtual boost::optional<UserCredentialCache> findCredentialCache(const std::string& delegationId, const std::string& userDn) = 0;
-
-    /// Delete the certificate request from the database
-    /// @param delegationId     Delegation ID. See insertCredentialCache
-    /// @param userDn           The user's DN
-    virtual void deleteCredentialCache(const std::string& delegationId, const std::string& userDn) = 0;
-
-    /// Insert a new delegated credential
-    /// @param delegationId     Delegation ID. See insertCredentialCache
-    /// @param userDn           The user's DN
-    /// @param proxy            PEM-encoded proxy (cert request signed by the user)
-    /// @param vomsAttrs        Any VOMS extensions from the credentials used by the client
-    /// @param terminationTime  When does the proxy expire
-    virtual void insertCredential(const std::string& delegationId, const std::string& userDn,
-            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime) = 0;
-
-    /// Updated the delegated credentials
-    /// @param delegationId     Delegation ID. See insertCredentialCache
-    /// @param userDn           The user's DN
-    /// @param proxy            PEM-encoded proxy (cert request signed by the user)
-    /// @param vomsAttrs        Any VOMS extensions from the credentials used by the client
-    /// @param terminationTime  When does the proxy expire
-    virtual void updateCredential(const std::string& delegationId, const std::string& userDn,
-            const std::string& proxy, const std::string& vomsAttrs, time_t terminationTime) = 0;
-
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
     /// @param userDn           The user's DN
     /// @return                 The delegated credentials, if any
     virtual boost::optional<UserCredential> findCredential(const std::string& delegationId, const std::string& userDn) = 0;
-
-    /// Delete the delegated credentials
-    /// @param delegationId     Delegation ID. See insertCredentialCache
-    /// @param userDn           The user's DN
-    virtual void deleteCredential(const std::string& delegationId, const std::string& userDn) = 0;
 
     /// Check if the credential for the given delegation id and user is expired or not
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -307,51 +152,10 @@ public:
     /// @return                 An integer with the debug level configured for the pair. 0 = no debug.
     virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
-    /// Set the debug level for the given pair
-    /// @param sourceStorage    The source storage as protocol://host
-    /// @param destStorage      The destination storage as protocol://host
-    virtual void setDebugLevel(const std::string& sourceStorage, const std::string& destStorage, unsigned level) = 0;
-
-    /// Store a configuration audit entry
-    /// @param userDn           The user that performed the action
-    /// @param config           The configuration value change
-    /// @param action           Simpler representation of the configuration involved (i.e. debug)
-    virtual void auditConfiguration(const std::string& userDn, const std::string& config, const std::string& action) = 0;
-
-    /// Blacklist a storage element
-    /// @param storage          The storage to blacklist (as protocol://host)
-    /// @param voName           A VO name is the banning is only for one VO
-    /// @param status           Can be 'CANCEL', 'WAIT', 'WAIT_AS' (accept submission)
-    /// @param timeout          Any 'waiting' file will be canceled after this timeout if the ban is not removed
-    /// @param msg              A justification message for the banning
-    /// @param adminDn          Who did the banning
-    virtual void blacklistSe(const std::string& storage, const std::string& voName,
-            const std::string& status, int timeout,
-            const std::string& msg, const std::string& adminDn) = 0;
-
-    /// Blacklist a user
-    /// @param userDn           The user to ban
-    /// @param msg              A justification message for the banning
-    /// @param adminDn          Who did the banning
-    virtual void blacklistDn(const std::string& userDn, const std::string& msg, const std::string& adminDn) = 0;
-
-    /// Lift the banning of a storage
-    /// @param storage          The storage to blacklist (as protocol://host)
-    virtual void unblacklistSe(const std::string& storage) = 0;
-
-    /// Lift the banning of a user
-    /// @param userDn           The user to ban
-    virtual void unblacklistDn(const std::string& userDn) = 0;
-
     /// Check whether submission is allowed for the given storage
     /// @param storage          The storage to blacklist (as protocol://host)
     /// @param voName           The submitting VO
     virtual bool allowSubmit(const std::string& storage, const std::string& voName) = 0;
-
-    /// If the banning is putting files in 'WAITING' state, get the associated timeout
-    /// @param storage          The storage to blacklist (as protocol://host)
-    /// @return                 The timeout, in seconds, if any
-    virtual boost::optional<int> getTimeoutForSe(const std::string& storage) = 0;
 
     /// Check is the user has been banned
     virtual bool isDnBlacklisted(const std::string& userDn) = 0;
@@ -413,63 +217,18 @@ public:
     /// Return true if the group 'groupName' exists
     virtual bool checkGroupExists(const std::string & groupName) = 0;
 
-    /// Get the members that belong to the group 'groupName'
-    /// @param groupName            The group name
-    /// @param[out] groupMembers    A vector with the storages that belong to the group
-    virtual void getGroupMembers(const std::string & groupName,
-            std::vector<std::string>& groupMembers) = 0;
-
-    /// Add all entries in 'groupMembers' into the group
-    virtual void addMemberToGroup(const std::string & groupName,
-            const std::vector<std::string>& groupMembers) = 0;
-
-    /// Delete all entries in 'groupMemebrs' from the group
-    virtual void deleteMembersFromGroup(const std::string & groupName,
-            const std::vector<std::string>& groupMembers) = 0;
-
     /// @return the group to which storage belong
     /// @note   It will be the empty string if there is no group
     virtual std::string getGroupForSe(const std::string storage) = 0;
 
     //t_config_symbolic
-    virtual void addLinkConfig(const LinkConfig& cfg) = 0;
-    virtual void updateLinkConfig(const LinkConfig& cfg) = 0;
-    virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination) = 0;
-    virtual std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name) = 0;
-    virtual bool isGrInPair(std::string group) = 0;
-    virtual bool isShareOnly(std::string se) = 0;
 
     virtual void addShareConfig(const ShareConfig& cfg) = 0;
-    virtual void updateShareConfig(const ShareConfig& cfg) = 0;
-    virtual void deleteShareConfig(std::string source, std::string destination, std::string vo) = 0;
-    virtual void deleteShareConfig(std::string source, std::string destination) = 0;
     virtual std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo) = 0;
     virtual std::vector<ShareConfig> getShareConfig(std::string source, std::string destination) = 0;
 
-    virtual void addActivityConfig(std::string vo, std::string shares, bool active) = 0;
-    virtual void updateActivityConfig(std::string vo, std::string shares, bool active) = 0;
-    virtual void deleteActivityConfig(std::string vo) = 0;
-    virtual bool isActivityConfigActive(std::string vo) = 0;
-    virtual std::map< std::string, double > getActivityConfig(std::string vo) = 0;
-
-    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member) = 0;
-
     virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) = 0;
-
-    virtual void getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) = 0;
-
-    virtual void getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) = 0;
-
-    virtual void delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) = 0;
-
-    virtual void delFileShareConfig(std::string groupd, std::string se) = 0;
-
-    virtual bool hasStandAloneSeCfgAssigned(int file_id, std::string vo) = 0;
-
-    virtual bool hasPairSeCfgAssigned(int file_id, std::string vo) = 0;
-
-    virtual bool hasPairGrCfgAssigned(int file_id, std::string vo) = 0;
 
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo) = 0;
 
@@ -479,53 +238,15 @@ public:
 
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos) = 0;
 
-    virtual void setPriority(std::string jobId, int priority) = 0;
-
-    virtual void setSeProtocol(std::string protocol, std::string se, std::string state) = 0;
-
-    virtual void setRetry(int retry, const std::string & vo) = 0;
-
     virtual int getRetry(const std::string & jobId) = 0;
 
     virtual int getRetryTimes(const std::string & jobId, int fileId) = 0;
 
-    virtual void setMaxTimeInQueue(int afterXHours) = 0;
-
-    // If NULL, it will not be modified
-    virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe) = 0;
-
-    // If add is false, the entry will be removed
-    virtual void authorize(bool add, const std::string& op, const std::string& dn) = 0;
-
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
-
-    virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se) = 0;
-
-    virtual std::vector<std::string> getAllActivityShareConf() = 0;
-
-    virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
-
-    virtual std::vector<std::string> getAllShareOnlyCfgs() = 0;
-
-    virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
-
-    virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt) = 0;
 
     virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol) = 0;
 
-    virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs) = 0;
-
-    virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) = 0;
-
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
-
-    virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
-
-    virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files) = 0;
-
-    virtual void setFilesToWaiting(const std::string& se, const std::string& vo, int timeout) = 0;
-
-    virtual void setFilesToWaiting(const std::string& dn, int timeout) = 0;
 
     virtual void cancelWaitingFiles(std::set<std::string>& jobs) = 0;
 
@@ -535,12 +256,8 @@ public:
 
     virtual void checkSchemaLoaded() = 0;
 
-    virtual void setOptimizerMode(int mode) = 0;
-
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
         int errcode) = 0;
-
-    virtual void getTransferRetries(int fileId, std::vector<FileRetry>& retries) = 0;
 
     virtual void updateFileTransferProgressVector(std::vector<fts3::events::MessageUpdater>& messages) = 0;
 
@@ -567,15 +284,7 @@ public:
 
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 
-    virtual void snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint, std::stringstream & result) = 0;
-
     virtual bool getDrain() = 0;
-
-    virtual void setDrain(bool drain) = 0;
-
-    virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit) = 0;
-
-    virtual std::string getBandwidthLimit() = 0;
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname) = 0;
 
@@ -585,24 +294,13 @@ public:
 
     virtual int getGlobalTimeout() = 0;
 
-    virtual void setGlobalTimeout(int timeout) = 0;
-
     virtual int getSecPerMb() = 0;
-
-    virtual void setSecPerMb(int seconds) = 0;
-
-    virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive) = 0;
-
-    virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive) = 0;
-
-    virtual void setFixActive(const std::string & source, const std::string & destination, int active) = 0;
 
     virtual int getBufferOptimization() = 0;
 
     virtual void getQueuesWithPending(std::vector<QueueId>& queues) = 0;
 
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queued) = 0;
-
 
     /// Updates the status for delete operations
     /// @param delOpsStatus  Update for files in delete or started
@@ -639,27 +337,6 @@ public:
                                      const std::string& voName,
                                      const std::string& cloudName,
                                      CloudStorageAuth& auth) = 0;
-
-    /// Set the storage credentials for a given user or VO
-    /// For S3, accessKey is the access key, and secret key the secret key
-    /// For Dropbox, this step would be normally done by WebFTS, although it can be set manually as well
-    /// In any case, accessKey come from this OAuth authentication
-    virtual void setCloudStorageCredentials(const std::string& userDn,
-            const std::string& voName, const std::string& storage,
-            const std::string& accessKey, const std::string& secretKey) = 0;
-
-    /// Set the configuration for a cloud storage
-    /// For S3, service_api_url must be the storage endpoint (i.e cs3.cern.ch)
-    /// For Dropbox, appKey and appSecret are required for the OAuth authentication
-    /// @param storage      A symbolic name
-    /// @param appKey       Application key (empty for S3)
-    /// @param appSecret    Application secret (empty for S3)
-    /// @param apiUrl       API URL
-    virtual void setCloudStorage(const std::string& storage, const std::string& appKey,
-            const std::string& appSecret, const std::string& apiUrl) = 0;
-
-    /// Set if the user dn should be visible or not in the logs
-    virtual void setShowUserDn(bool show) = 0;
 
     /// Get if the user dn should be visible or not in the logs
     virtual bool getUserDnVisible() = 0;
