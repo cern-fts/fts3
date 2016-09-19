@@ -118,10 +118,6 @@ make install DESTDIR=%{buildroot}
 %defattr(-,root,root,-)
 %{_libdir}/libfts_common.so*
 %{_libdir}/libfts_cli_common.so*
-%{_libdir}/libfts_ws_ifce_client.so*
-%{_libdir}/libfts_ws_ifce_server.so*
-%{_libdir}/libfts_delegation_api_simple.so*
-%{_libdir}/libfts_delegation_api_cpp.so*
 %doc README.md
 %doc LICENSE
 

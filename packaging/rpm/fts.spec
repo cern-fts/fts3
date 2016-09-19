@@ -490,10 +490,6 @@ fi
 %{_libdir}/libfts_proxy.so*
 %{_libdir}/libfts_server_lib.so*
 %{_libdir}/libfts_cli_common.so*
-%{_libdir}/libfts_ws_ifce_client.so*
-%{_libdir}/libfts_ws_ifce_server.so*
-%{_libdir}/libfts_delegation_api_simple.so*
-%{_libdir}/libfts_delegation_api_cpp.so*
 %{_libdir}/libfts_msg_bus.so*
 %{_libdir}/libfts_url_copy.so*
 %doc README.md
