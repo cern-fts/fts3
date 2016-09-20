@@ -201,27 +201,13 @@ public:
         std::string activeFixedFlagStr;
         soci::indicator isNullFixedFlag, isNullMin, isNullMax, isNullActive;
 
-        try {
-            sql << "SELECT fixed, active, min_active, max_active FROM t_optimize_active "
-                "WHERE source_se = :source AND dest_se = :dest",
-                soci::use(pair.source), soci::use(pair.destination),
-                soci::into(activeFixedFlagStr, isNullFixedFlag),
-                soci::into(storedActive, isNullActive),
-                soci::into(range->min, isNullMin),
-                soci::into(range->max, isNullMax);
-        }
-        catch (...) {
-            // Compat for old schema
-            // See FTS-630
-            sql << "SELECT fixed, active, fixed FROM t_optimize_active "
-               "WHERE source_se = :source AND dest_se = :dest",
-                soci::use(pair.source), soci::use(pair.destination),
-                soci::into(activeFixedFlagStr, isNullFixedFlag),
-                soci::into(storedActive, isNullActive);
-
-            isNullMin = soci::i_null;
-            isNullMax = soci::i_null;
-        }
+        sql << "SELECT fixed, active, min_active, max_active FROM t_optimize_active "
+            "WHERE source_se = :source AND dest_se = :dest",
+            soci::use(pair.source), soci::use(pair.destination),
+            soci::into(activeFixedFlagStr, isNullFixedFlag),
+            soci::into(storedActive, isNullActive),
+            soci::into(range->min, isNullMin),
+            soci::into(range->max, isNullMax);
 
         if (isNullFixedFlag != soci::i_null && activeFixedFlagStr == "on") {
             if (isNullMin == soci::i_null) {
