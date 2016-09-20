@@ -54,7 +54,3 @@ specific user.
   * num_failures
   * catalog_failures
   * prestage_failures
-
-## t_turl
-Mentioned in one query that is never executed, because we have the
-typical problem of a table growing too much.
