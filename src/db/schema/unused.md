@@ -7,16 +7,10 @@ Update this document when they become used, or are dropped/renamed.
   * timeout
   * buffer
   * filesize
-  
-## t_credential_vers
-Not used at all.
 
 ## t_se
 The name is a foreign key of t_group_member, but not a single field
 of the t_se table seems to be used at all.
-
-## t_se_acl
-Not used.
 
 ## t_link_config
 placeholder1, 2 and 3, obviously.
@@ -25,9 +19,6 @@ NO_TX_ACTIVITY_TO is not really used anywhere either
 (actually there are comments saying it is not used)
 
 I don't even know what does it mean.
-
-## t_se_pair_acl
-Unused
 
 ## t_vo_acl
 Seems used, but would have to be modified directly on the DB.
