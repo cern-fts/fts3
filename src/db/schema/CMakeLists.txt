@@ -16,12 +16,12 @@
 cmake_minimum_required(VERSION 2.8)
 
 if (MYSQLBUILD STREQUAL "ON")
-	install(FILES       mysql/fts-schema-1.0.0.sql
+	file(GLOB mysql_scripts
+        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "mysql/*.sql"
+	)
+	install(FILES       ${mysql_scripts}
 			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
-    install(FILES       mysql/fts-diff-1.0.1.sql
-            DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
-    install(FILES       mysql/fts-diff-2.0.0.sql
-            DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
 endif ()
 
 if (SERVERBUILD STREQUAL "ON")
