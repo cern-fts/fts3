@@ -1,0 +1,15 @@
+image: docker:latest
+
+before_script:
+    - docker info
+    - docker login -p "${REGISTRY_PASSWD}" -u "${REGISTRY_USER}" gitlab-registry.cern.ch
+    
+after_script:
+    - docker logout gitlab-registry.cern.ch
+
+job1:
+    script:
+        - docker build -t  gitlab-registry.cern.ch/fts/fts3 packaging/docker
+        - docker push gitlab-registry.cern.ch/fts/fts3
+    tags:
+        - docker 
