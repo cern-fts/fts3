@@ -42,7 +42,7 @@ RUN /usr/bin/yum install -y voms-config-wlcg  voms-config-vo-dteam
 #install supervisor
 RUN yum install -y supervisor
 
-COPY "packaging/docker/supervisord.conf" "/etc/supervisor/conf.d/supervisord.conf"
+COPY "supervisord" "/etc/supervisor/conf.d/supervisord.conf"
 
 #expose ports
 
