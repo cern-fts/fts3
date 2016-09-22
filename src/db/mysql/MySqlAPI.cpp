@@ -719,7 +719,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             }
             else
             {
-                // we are allways checking empty string
+                // we are always checking empty string
                 std::string def_act = " (''";
                 if (!default_activities.empty())
                 {
