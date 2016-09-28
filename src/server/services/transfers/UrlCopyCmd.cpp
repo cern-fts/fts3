@@ -176,8 +176,6 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
     setOption("vo", transfer.voName);
     if (!transfer.checksumMethod.empty())
         setOption("compare-checksum", transfer.checksumMethod);
-    if (transfer.pinLifetime > 0)
-        setOption("pin-lifetime", transfer.pinLifetime);
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", !transfer.overwriteFlag.empty());
     setOption("dest-token-desc", transfer.destinationSpaceToken);
