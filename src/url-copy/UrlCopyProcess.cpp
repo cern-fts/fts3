@@ -108,7 +108,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             break;
     }
 
-    params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
+    if (!transfer.checksumValue.empty()) {
+        params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
+    }
 
     // Additional metadata
     gfal2.addClientInfo("job-id", transfer.jobId);
