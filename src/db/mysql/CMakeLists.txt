@@ -37,6 +37,7 @@ set(fts_db_mysql_SOURCES
 add_library(fts_db_mysql SHARED ${fts_db_mysql_SOURCES})
 target_link_libraries(fts_db_mysql
     fts_common
+    fts_msg_ifce
     soci_core
     soci_mysql
     ${MYSQL_LIBRARIES}
