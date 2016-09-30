@@ -89,18 +89,18 @@ class Fts3SlsPlus(object):
             bytes_key = dashb['transfers']['key']['bytes_xs']
             transfers_key = dashb['transfers']['key']['files_xs']
             errors_key = dashb['transfers']['key']['errors_xs']
-    
-            rows = dashb['transfers']['rows']
-	    n_transfers = 0
-	    n_errors = 0
-	    throughput = 0
-	    if rows:
-		row = rows[0]
-            	transferred = row[bytes_key]
-            	n_transfers = row[transfers_key]
-	    	n_errors = row[errors_key]
 
-            	throughput = transferred / (self.interval * 60)
+            rows = dashb['transfers']['rows']
+            n_transfers = 0
+            n_errors = 0
+            throughput = 0
+            if rows:
+                row = rows[0]
+                transferred = row[bytes_key]
+                n_transfers = row[transfers_key]
+                n_errors = row[errors_key]
+
+                throughput = transferred / (self.interval * 60)
 
             _add_numeric(data_elm, '%s_finished' % vo, n_transfers)
             _add_numeric(data_elm, '%s_errors' % vo, n_errors)
