@@ -1442,7 +1442,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             query << ", JOB_FINISHED = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
         }
-        if (newState == "ACTIVE")
+        if (newState == "ACTIVE" || newState == "READY")
         {
             query << ", START_TIME = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
