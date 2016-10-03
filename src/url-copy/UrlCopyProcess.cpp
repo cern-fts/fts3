@@ -108,7 +108,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             break;
     }
 
-    if (!transfer.checksumValue.empty()) {
+    if (!transfer.checksumAlgorithm.empty()) {
         params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
     }
 
