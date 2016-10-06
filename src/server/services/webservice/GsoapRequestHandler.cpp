@@ -113,7 +113,6 @@ void GSoapRequestHandler::run(boost::any&)
                             size_t len=2048;
 
                             soap_sprint_fault(ctx, buf, len);
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << buf << commit;
                             soap_send_fault(ctx);
                         }
                 }
