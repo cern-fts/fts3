@@ -914,13 +914,22 @@ int fts3::impltns__prioritySet(soap* ctx, string jobId, int priority, impltns__p
 
             if (!job)
             {
-                throw UserError("Job ID <" + jobId + "> was not found");
+                std::string error = "Job ID <" + jobId + "> was not found";
+
+                FTS3_COMMON_LOGGER_NEWLOG (INFO) << error << commit;
+                soap_receiver_fault(ctx, error.c_str(), "TransferException");
+                return SOAP_FAULT;
             }
 
             // check if the job is not finished already
             if (JobStatusHandler::instance().isTransferFinished(job->jobState))
             {
-                throw UserError("The transfer job is in " + job->jobState + " state, it is not possible to set the priority");
+                std::string error = "The transfer job is in " + job->jobState +
+                    " state, it is not possible to set the priority";
+
+                FTS3_COMMON_LOGGER_NEWLOG (INFO) << error << commit;
+                soap_receiver_fault(ctx, error.c_str(), "TransferException");
+                return SOAP_FAULT;
             }
 
             std::string cmd = "fts-set-priority " + jobId + " " + boost::lexical_cast<std::string>(priority);
