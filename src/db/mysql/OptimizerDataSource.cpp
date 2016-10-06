@@ -346,11 +346,12 @@ public:
             "WHERE "
             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
             "      ( "
-            "          (t_file.job_finished is NULL and current_failures > 0) OR "
+            "          (t_file.job_finished IS NULL AND current_failures > 0 AND retry_timestamp > (UTC_TIMESTAMP() - interval :calculateTimeFrame second)) OR "
             "          (t_file.job_finished > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND)) "
             "      ) AND "
             "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-            soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds())
+            soci::use(pair.source), soci::use(pair.destination),
+            soci::use(interval.total_seconds()), soci::use(interval.total_seconds())
         )
         :
         (
