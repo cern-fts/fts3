@@ -181,8 +181,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
 
-    if (!hide_user_dn)
-        setOption("user-dn", prepareMetadataString(transfer.userDn));
+    setOption("user-dn", prepareMetadataString(transfer.userDn));
 
     setFlag("job_m_replica", transfer.reuseJob == "R");
     setFlag("last_replica", transfer.lastReplica);
