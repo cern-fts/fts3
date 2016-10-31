@@ -37,6 +37,8 @@
 #include <cms/ExceptionListener.h>
 #include <cms/MessageListener.h>
 #include "msg-bus/producer.h"
+#include "BrokerConfig.h"
+
 
 class MsgProducer : public decaf::lang::Runnable, public cms::ExceptionListener
 {
@@ -51,20 +53,13 @@ private:
     cms::MessageProducer* producer_transfer_state;
     cms::Destination* destination_transfer_state;
 
-    std::string brokerURI;
-    std::string broker;
-    std::string startqueueName;
-    std::string completequeueName;
-    std::string statequeueName;
     std::string FTSEndpoint;
+    const BrokerConfig& brokerConfig;
 
-    std::string logfilename;
-    std::string logfilepath;
     bool getConnection();
-    void readConfig();
 
 public:
-    MsgProducer(const std::string &localBaseDir);
+    MsgProducer(const std::string &localBaseDir, const BrokerConfig& config);
     virtual ~MsgProducer();
     void sendMessage(std::string &text);
     virtual void run();

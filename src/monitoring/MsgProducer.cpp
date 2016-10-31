@@ -21,14 +21,11 @@
 #include <json.h>
 #include <memory>
 #include "MsgProducer.h"
-#include <signal.h>
 #include "common/Logger.h"
-#include <sstream>
 
 #include "config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
-#include "UtilityRoutines.h"
 
 using namespace fts3::config;
 
@@ -59,8 +56,8 @@ void find_and_replace(std::string &source, const std::string &find, std::string 
 }
 
 
-MsgProducer::MsgProducer(const std::string &localBaseDir):
-    localProducer(localBaseDir)
+MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& config):
+    brokerConfig(config), localProducer(localBaseDir)
 {
     connection = NULL;
     session = NULL;
@@ -71,7 +68,6 @@ MsgProducer::MsgProducer(const std::string &localBaseDir):
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
     FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
-    readConfig();
     connected = false;
 }
 
@@ -169,11 +165,11 @@ bool MsgProducer::getConnection()
     try {
         // Create a ConnectionFactory
         std::unique_ptr<cms::ConnectionFactory> connectionFactory(
-        cms::ConnectionFactory::createCMSConnectionFactory(brokerURI));
+        cms::ConnectionFactory::createCMSConnectionFactory(brokerConfig.GetBrokerURI()));
 
         // Create a Connection
-        if (true == getUSE_BROKER_CREDENTIALS())
-            connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
+        if (brokerConfig.UseBrokerCredentials())
+            connection = connectionFactory->createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
         else
             connection = connectionFactory->createConnection();
 
@@ -183,18 +179,18 @@ bool MsgProducer::getConnection()
         session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
 
         // Create the destination (Topic or Queue)
-        if (getTOPIC()) {
-            destination_transfer_started = session->createTopic(startqueueName);
-            destination_transfer_completed = session->createTopic(completequeueName);
-            destination_transfer_state = session->createTopic(statequeueName);
+        if (brokerConfig.UseTopics()) {
+            destination_transfer_started = session->createTopic(brokerConfig.GetStartDestination());
+            destination_transfer_completed = session->createTopic(brokerConfig.GetCompleteDestination());
+            destination_transfer_state = session->createTopic(brokerConfig.GetStateDestination());
         }
         else {
-            destination_transfer_started = session->createQueue(startqueueName);
-            destination_transfer_completed = session->createQueue(completequeueName);
-            destination_transfer_state = session->createQueue(statequeueName);
+            destination_transfer_started = session->createQueue(brokerConfig.GetStartDestination());
+            destination_transfer_completed = session->createQueue(brokerConfig.GetCompleteDestination());
+            destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
         }
 
-        int ttl = GetIntVal(getTTL());
+        int ttl = brokerConfig.GetTTL();
 
         // Create a message producer
         producer_transfer_started = session->createProducer(destination_transfer_started);
@@ -226,27 +222,6 @@ bool MsgProducer::getConnection()
     return true;
 }
 
-
-void MsgProducer::readConfig()
-{
-    bool fileExists = get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
-
-    if ((fileExists == false) || (false == getACTIVE())) {
-        FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false");
-        exit(0);
-    }
-
-    this->broker = getBROKER();
-    this->startqueueName = getSTART();
-    this->completequeueName = getCOMPLETE();
-    this->statequeueName = getSTATE();
-
-    this->logfilename = getLOGFILENAME();
-    this->logfilepath = getLOGFILEDIR();
-
-    this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
-}
-
 // If something bad happens you see it here as this class is also been
 // registered as an ExceptionListener with the connection.
 void MsgProducer::onException(const cms::CMSException &ex AMQCPP_UNUSED)
@@ -254,11 +229,10 @@ void MsgProducer::onException(const cms::CMSException &ex AMQCPP_UNUSED)
     FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
     stopThreads = true;
     std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-    std::string ret;
     while (!myQueue.empty()) {
-        ret = myQueue.front();
+        std::string msg = myQueue.front();
         myQueue.pop();
-        restoreMessageToDisk(localProducer, ret);
+        localProducer.runProducerMonitoring(msg);
     }
     connected = false;
     sleep(5);
@@ -292,13 +266,13 @@ void MsgProducer::run()
             usleep(100);
         }
         catch (cms::CMSException &e) {
-            restoreMessageToDisk(localProducer, msgBk);
+            localProducer.runProducerMonitoring(msgBk);
             FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
             connected = false;
             sleep(5);
         }
         catch (...) {
-            restoreMessageToDisk(localProducer, msgBk);
+            localProducer.runProducerMonitoring(msgBk);
             FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
             connected = false;
             sleep(5);

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <activemq/library/ActiveMQCPP.h>
 
 #include "common/ConcurrentQueue.h"
@@ -26,7 +27,7 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 
-#include "UtilityRoutines.h"
+#include "BrokerConfig.h"
 #include "MsgPipe.h"
 #include "MsgProducer.h"
 
@@ -37,12 +38,9 @@ using namespace fts3::config;
 static void DoServer(bool isDaemon) throw()
 {
     try {
-        if (!get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"))) {
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the monitoring configuration file");
-            return;
-        }
+        BrokerConfig config(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
 
-        std::string logFile = getLOGFILEDIR() + "" + getLOGFILENAME();
+        std::string logFile = config.GetLogFilePath();
         if (isDaemon) {
             if (theLogger().redirect(logFile, logFile) != 0) {
                 FTS3_COMMON_LOGGER_LOG(CRIT, "Could not open the log file");
@@ -58,7 +56,7 @@ static void DoServer(bool isDaemon) throw()
         ConcurrentQueue::getInstance();
 
         MsgPipe pipeMsg1(ServerConfig::instance().get<std::string>("MessagingDirectory"));
-        MsgProducer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+        MsgProducer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"), config);
 
         // Start the pipe thread.
         decaf::lang::Thread pipeThread(&pipeMsg1);
