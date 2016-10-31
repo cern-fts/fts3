@@ -14,7 +14,6 @@
             <th style="width: 7%">Action</th>
             <th style="width: 45%">Configuration</th>
             <th style="width: 15%">Time</th>
-            <th style="width: 33%">User</th>
         </tr>
     </thead>
     <tbody>
@@ -22,7 +21,6 @@
             <td>{{c.action}}</td>
             <td>{{c.config}}</td>
             <td>{{c.datetime}}</td>
-            <td>{{c.dn}}</td>
         </tr>
     </tbody>
 </table>
@@ -52,9 +50,6 @@
                 <option>optimizer mode</option>
                 <option>queue-timeout</option>
             </select>
-
-            <label for="user">User:</label>
-            <input type="text" id="user" data-ng-model="filter.user"/>
 
             <label for="contains">Contains:</label>
             <input type="text" id="contains" data-ng-model="filter.contains"/>

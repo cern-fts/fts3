@@ -37,8 +37,6 @@ def get_audit(http_request):
 
     if http_request.GET.get('action', None):
         ca = ca.filter(action=http_request.GET['action'])
-    if http_request.GET.get('user', None):
-        ca = ca.filter(dn=http_request.GET['user'])
     if http_request.GET.get('contains', None):
         ca = ca.filter(config__icontains=http_request.GET['contains'])
 
