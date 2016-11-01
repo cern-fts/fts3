@@ -283,87 +283,47 @@ void MsgProducer::run()
 
 void MsgProducer::cleanup()
 {
-    // Destroy resources.
-    try {
-        if (destination_transfer_started != NULL) delete destination_transfer_started;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete destination_transfer_started;
     destination_transfer_started = NULL;
 
-    try {
-        if (producer_transfer_started != NULL) delete producer_transfer_started;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete producer_transfer_started;
     producer_transfer_started = NULL;
 
-    try {
-        if (destination_transfer_completed != NULL) delete destination_transfer_completed;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete destination_transfer_completed;
     destination_transfer_completed = NULL;
 
-    try {
-        if (producer_transfer_completed != NULL) delete producer_transfer_completed;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete producer_transfer_completed;
     producer_transfer_completed = NULL;
 
 
-    try {
-        if (destination_transfer_state != NULL) delete destination_transfer_state;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete destination_transfer_state;
     destination_transfer_state = NULL;
 
-    try {
-        if (producer_transfer_state != NULL) delete producer_transfer_state;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete producer_transfer_state;
     producer_transfer_state = NULL;
 
     // Close open resources.
     try {
-        if (session != NULL) session->close();
+        if (session != NULL) {
+            session->close();
+        }
     }
     catch (cms::CMSException &e) {
         e.printStackTrace();
     }
 
-    try {
-        if (session != NULL) delete session;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete session;
     session = NULL;
 
-
     try {
-        if (connection != NULL) connection->close();
+        if (connection != NULL) {
+            connection->close();
+        }
     }
     catch (cms::CMSException &e) {
         e.printStackTrace();
     }
 
-    try {
-        if (connection != NULL)
-            delete connection;
-    }
-    catch (cms::CMSException &e) {
-        e.getStackTraceString();
-    }
+    delete connection;
     connection = NULL;
 }
-
