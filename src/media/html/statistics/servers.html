@@ -17,7 +17,6 @@
             <th class="numeric" style="width: 12%">Active</th>
             <th class="numeric" style="width: 12%">Staging queued</th>
             <th class="numeric" style="width: 12%">Staging started</th>
-            <th>Logs</th>
         </tr>
     </thead>
     <tbody>
@@ -40,10 +39,6 @@
             <td class="numeric">{{s.active}}</td>
             <td class="numeric">{{s.staging}}</td>
             <td class="numeric">{{s.started}}</td>
-            <td>
-                <a href="{{s.fts3server_log}}" data-ng-if="s.services.hasOwnProperty('fts_server')">FTS3</a><br/>
-                <a href="{{s.fts3bringonline_log}}" data-ng-if="s.services.hasOwnProperty('fts_bringonline')">Bringonline</a>
-            </td>
         </tr>
     </tbody>
 </table>

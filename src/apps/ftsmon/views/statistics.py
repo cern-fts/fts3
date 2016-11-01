@@ -70,8 +70,6 @@ def _get_transfer_and_submission_per_host(timewindow, segments):
             'active': actives,
             'staging': staging,
             'started': started,
-            'fts3server_log': log_link(host, '/var/log/fts3/fts3server.log'),
-            'fts3bringonline_log': log_link(host, '/var/log/fts3/fts3bringonline.log'),
         }
 
     return servers
