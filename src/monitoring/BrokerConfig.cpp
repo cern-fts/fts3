@@ -16,6 +16,7 @@
 
 #include "BrokerConfig.h"
 #include <fstream>
+#include "config/ServerConfig.h"
 
 namespace po = boost::program_options;
 
@@ -90,6 +91,31 @@ BrokerConfig::BrokerConfig(const std::string &path)
         po::value<std::string>()->default_value("transfer.fts_monitoring_state"),
         "Destination for state messages"
     )
+    (
+        "SSL",
+        po::value<bool>()->default_value(false),
+        "Enable ssl for the messaging"
+    )
+    (
+        "SSL_VERIFY",
+        po::value<bool>()->default_value(true),
+        "Verify the peer certificate"
+    )
+    (
+        "SSL_ROOT_CA",
+        po::value<std::string>()->default_value(""),
+        "ROOT CA for the broker"
+    )
+    (
+        "SSL_CLIENT_KEYSTORE",
+        po::value<std::string>()->default_value(""),
+        "Pem file with client certificate and private key"
+    )
+    (
+        "SSL_CLIENT_KEYSTORE_PASSWORD",
+        po::value<std::string>()->default_value(""),
+        "Password for the client private key if encrypted"
+    )
     ;
 
     std::ifstream in(path.c_str());
@@ -108,7 +134,19 @@ std::string BrokerConfig::GetLogFilePath() const
 std::string BrokerConfig::GetBrokerURI() const
 {
     auto broker = vm["BROKER"].as<std::string>();
-    return "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
+    std::string proto = "tcp";
+    if (UseSSL()) {
+        proto = "ssl";
+    }
+
+    std::ostringstream str;
+    str << proto << "://" << broker << "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
+
+    if (fts3::config::ServerConfig::instance().get<std::string>("LogLevel") == "DEBUG") {
+        str << "&transport.commandTracingEnabled=true";
+    }
+
+    return str.str();
 }
 
 
@@ -157,4 +195,34 @@ std::string BrokerConfig::GetStateDestination() const
 int BrokerConfig::GetTTL() const
 {
     return vm["TTL"].as<int>();
+}
+
+
+bool BrokerConfig::UseSSL() const
+{
+    return vm["SSL"].as<bool>();
+}
+
+
+bool BrokerConfig::SslVerify() const
+{
+    return vm["SSL_VERIFY"].as<bool>();
+}
+
+
+std::string BrokerConfig::GetRootCA() const
+{
+    return vm["SSL_ROOT_CA"].as<std::string>();
+}
+
+
+std::string BrokerConfig::GetClientKeyStore() const
+{
+    return vm["SSL_CLIENT_KEYSTORE"].as<std::string>();
+}
+
+
+std::string BrokerConfig::GetClientKeyStorePassword() const
+{
+    return vm["SSL_CLIENT_KEYSTORE_PASSWORD"].as<std::string>();
 }

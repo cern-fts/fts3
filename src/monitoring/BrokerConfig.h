@@ -58,6 +58,21 @@ public:
 
     /// Messages time-to-live
     int GetTTL() const;
+
+    /// If true, enable SSL for the producer
+    bool UseSSL() const;
+
+    /// If true, verify broker certificate
+    bool SslVerify() const;
+
+    /// ROOT CA for the broker
+    std::string GetRootCA() const;
+
+    /// Bundle with the client cert and private key
+    std::string GetClientKeyStore() const;
+
+    /// Password for the client cert and private key
+    std::string GetClientKeyStorePassword() const;
 };
 
 

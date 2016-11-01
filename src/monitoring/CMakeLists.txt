@@ -23,8 +23,10 @@ cmake_minimum_required(VERSION 2.8)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
 find_package (Boost COMPONENTS filesystem thread system)
 find_package (JSONC REQUIRED)
+find_package (APR)
 
 include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
+include_directories (${APR_INCLUDE_DIR})
 include_directories (${JSONC_INCLUDE_DIRS})
 
 # libfts_msg_ifce

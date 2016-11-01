@@ -27,6 +27,8 @@
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
 
+#include <decaf/lang/System.h>
+
 using namespace fts3::config;
 
 
@@ -163,15 +165,39 @@ void MsgProducer::sendMessage(std::string &temp)
 bool MsgProducer::getConnection()
 {
     try {
+        // Set properties for SSL, if enabled
+        if (brokerConfig.UseSSL()) {
+            FTS3_COMMON_LOGGER_LOG(INFO, "Using SSL");
+            decaf::lang::System::setProperty("decaf.net.ssl.keyStore", brokerConfig.GetClientKeyStore());
+            if (!brokerConfig.GetClientKeyStorePassword().empty()) {
+                decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword",
+                    brokerConfig.GetClientKeyStorePassword());
+            }
+            decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
+            if (brokerConfig.SslVerify()) {
+                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
+            }
+            else {
+                FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
+                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
+            }
+        }
+        else {
+            FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
+        }
+        FTS3_COMMON_LOGGER_LOG(DEBUG, brokerConfig.GetBrokerURI());
+
         // Create a ConnectionFactory
         std::unique_ptr<cms::ConnectionFactory> connectionFactory(
         cms::ConnectionFactory::createCMSConnectionFactory(brokerConfig.GetBrokerURI()));
 
         // Create a Connection
-        if (brokerConfig.UseBrokerCredentials())
+        if (brokerConfig.UseBrokerCredentials()) {
             connection = connectionFactory->createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
-        else
+        }
+        else {
             connection = connectionFactory->createConnection();
+        }
 
         //connection->setExceptionListener(this);
         connection->start();
@@ -211,15 +237,13 @@ bool MsgProducer::getConnection()
     catch (cms::CMSException &e) {
         FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
         connected = false;
-        sleep(10);
     }
     catch (...) {
         FTS3_COMMON_LOGGER_LOG(ERR, "Unknown exception");
         connected = false;
-        sleep(10);
     }
 
-    return true;
+    return connected;
 }
 
 // If something bad happens you see it here as this class is also been
@@ -268,6 +292,12 @@ void MsgProducer::run()
         catch (cms::CMSException &e) {
             localProducer.runProducerMonitoring(msgBk);
             FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
+            connected = false;
+            sleep(5);
+        }
+        catch (std::exception &e) {
+            localProducer.runProducerMonitoring(msgBk);
+            FTS3_COMMON_LOGGER_LOG(ERR, e.what());
             connected = false;
             sleep(5);
         }
