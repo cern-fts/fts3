@@ -382,9 +382,6 @@ private:
     std::string username_;
     std::map<std::string, int> queuedStagingFiles;
 
-    Producer           producer;
-    Consumer           consumer;
-
     bool assignSanityRuns(soci::session& sql, struct SanityFlags &msg);
     void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
 

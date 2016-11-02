@@ -471,6 +471,7 @@ void MySqlAPI::fixDeleteInconsistencies(soci::session &sql)
 void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check from dead hosts" << commit;
+    Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
 
     soci::rowset<std::string> deadHosts = (
         sql.prepare <<

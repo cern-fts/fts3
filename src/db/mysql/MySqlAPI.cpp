@@ -86,9 +86,7 @@ static unsigned int get_affected_rows(soci::session& sql)
 }
 
 
-MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname()),
-    producer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
-    consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
+MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname())
 {
     // Pass
 }
@@ -3730,6 +3728,7 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vecto
         sql.commit();
 
         //now send monitoring messages
+        Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         for (auto i = delOpsStatus.begin(); i < delOpsStatus.end(); ++i)
         {
             //send state message
@@ -3765,6 +3764,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
     std::vector<fts3::events::MessageBringonline> messages;
     std::vector<MinFileStatus> filesState;
 
+    Consumer consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
 
     try
     {
@@ -3919,6 +3919,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
             }
             catch(...)
             {
+                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
                 //save state and restore afterwards
                 if(!filesState.empty())
                 {
@@ -3983,6 +3984,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
     std::vector<MinFileStatus> filesState;
     std::vector<fts3::events::MessageBringonline> messages;
 
+    Consumer consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
     int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
     int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
     int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
@@ -4206,6 +4208,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             }
             catch(...)
             {
+                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
                 //save state and restore afterwards
                 if(!filesState.empty())
                 {
@@ -4450,6 +4453,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
             filesMsg = getStateOfTransferInternal(sql, i->jobId, i->fileId);
             if(!filesMsg.empty())
             {
+                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
                 for (auto it = filesMsg.begin(); it != filesMsg.end(); ++it)
                 {
                     TransferState tmp = (*it);
