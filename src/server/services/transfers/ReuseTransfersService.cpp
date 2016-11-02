@@ -203,7 +203,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     // Set parameters from the "representative", without using the source and destination url, and other data
     // that is per transfer
     TransferFile const & representative = files.front();
-    cmd_builder.setFromTransfer(representative, true, db->getUserDnVisible());
+    cmd_builder.setFromTransfer(representative, true, db->publishUserDn(representative.voName));
 
     // Generate the file containing the list of transfers
     std::map<int, std::string> fileIds = generateJobFile(representative.jobId, files);

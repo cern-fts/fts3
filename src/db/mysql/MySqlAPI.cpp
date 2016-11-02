@@ -2904,7 +2904,6 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                                          soci::use(fileId)
                                      );
 
-        bool show_user_dn = getUserDnVisibleInternal(sql);
 
         soci::rowset<soci::row>::const_iterator it;
         struct tm aux_tm;
@@ -2970,7 +2969,8 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.source_se = it->get<std::string>("source_se");
             ret.dest_se = "";
 
-            if(!show_user_dn)
+            bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
+            if(!publishUserDn)
                 ret.user_dn = std::string("");
             else
                 ret.user_dn = it->get<std::string>("user_dn","");
@@ -3031,7 +3031,6 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                      );
 
 
-        bool show_user_dn = getUserDnVisibleInternal(sql);
 
         soci::rowset<soci::row>::const_iterator it;
 
@@ -3074,7 +3073,8 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.source_se = it->get<std::string>("source_se");
             ret.dest_se = it->get<std::string>("dest_se");
 
-            if(!show_user_dn)
+            bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
+            if(!publishUserDn)
                 ret.user_dn = std::string("");
             else
                 ret.user_dn = it->get<std::string>("user_dn","");

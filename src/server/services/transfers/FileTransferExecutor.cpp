@@ -157,7 +157,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             }
 
             // Update from the transfer
-            cmd_builder.setFromTransfer(tf, false, db->getUserDnVisible());
+            cmd_builder.setFromTransfer(tf, false, db->publishUserDn(tf.voName));
 
             // OAuth credentials
             std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);

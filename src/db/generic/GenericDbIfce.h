@@ -392,8 +392,8 @@ public:
                                      const std::string& cloudName,
                                      CloudStorageAuth& auth) = 0;
 
-    /// Get if the user dn should be visible or not in the logs
-    virtual bool getUserDnVisible() = 0;
+    /// Get if the user dn should be visible or not in the messaging
+    virtual bool publishUserDn(const std::string &vo) = 0;
 };
 
 #endif // GENERICDBIFCE_H_

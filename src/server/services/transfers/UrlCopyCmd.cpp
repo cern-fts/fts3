@@ -165,7 +165,7 @@ void UrlCopyCmd::setGlobalTimeout(long timeout)
 }
 
 
-void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool hide_user_dn)
+void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool publishUserDn)
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
@@ -181,7 +181,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
 
-    if (!hide_user_dn)
+    if (publishUserDn)
         setOption("user-dn", prepareMetadataString(transfer.userDn));
 
     setFlag("job_m_replica", transfer.reuseJob == "R");

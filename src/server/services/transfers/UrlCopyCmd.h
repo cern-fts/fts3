@@ -70,7 +70,7 @@ public:
 
     void setGlobalTimeout(long);
 
-    void setFromTransfer(const TransferFile&, bool is_multiple, bool hide_user_dn);
+    void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn);
 
     void setFromProtocol(const ProtocolResolver::protocol& protocol);
     void setSecondsPerMB(long);

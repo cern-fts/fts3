@@ -718,31 +718,19 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
 }
 
 
-bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
+bool MySqlAPI::publishUserDnInternal(soci::session& sql, const std::string &vo)
 {
-    std::string show_user_dn;
-    soci::indicator isNullShow = soci::i_ok;
+    std::string publish;
+    soci::indicator isNullPublish = soci::i_ok;
 
     try
     {
-        sql << "select show_user_dn from t_server_config", soci::into(show_user_dn, isNullShow);
+        sql << "SELECT show_user_dn FROM t_server_config WHERE vo_name = :vo", soci::use(vo), soci::into(publish, isNullPublish);
 
-        if (isNullShow == soci::i_null)
-        {
-            return true;
-        }
-        else if(show_user_dn == "on")
-        {
-            return true;
-        }
-        else if(show_user_dn == "off")
-        {
+        if (isNullPublish == soci::i_null) {
             return false;
         }
-        else
-        {
-            return true;
-        }
+        return publish == "on";
     }
     catch (std::exception& e)
     {
@@ -752,18 +740,16 @@ bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
     {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-
-    return true;
 }
 
 
-bool MySqlAPI::getUserDnVisible()
+bool MySqlAPI::publishUserDn(const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        return getUserDnVisibleInternal(sql);
+        return publishUserDnInternal(sql, vo);
     }
     catch (std::exception& e)
     {

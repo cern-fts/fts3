@@ -371,8 +371,8 @@ public:
         const std::string& cloudName,
         CloudStorageAuth& auth);
 
-    /// Get if the user dn should be visible or not in the logs
-    virtual bool getUserDnVisible();
+    /// Get if the user dn should be visible or not in the messaging 
+    virtual bool publishUserDn(const std::string &vo);
 
 private:
     size_t                poolSize;
@@ -426,8 +426,7 @@ private:
 
     int getMaxTimeInQueue();
 
-    bool getUserDnVisibleInternal(soci::session& sql);
-
+    bool publishUserDnInternal(soci::session& sql, const std::string &vo);
 
     // Sanity checks
     void fixJobNonTerminallAllFilesTerminal(soci::session &sql);
