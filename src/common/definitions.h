@@ -78,9 +78,5 @@ const int mode_1[] = {2,4,3,5};
 const int mode_2[] = {4,6,5,8};
 const int mode_3[] = {6,8,7,10};
 
-// Default params
-#define DEFAULT_TIMEOUT 4000
-#define DEFAULT_NOSTREAMS 1
-#define DEFAULT_BUFFSIZE 0
-
 #endif // DEFINITIONS_H
+

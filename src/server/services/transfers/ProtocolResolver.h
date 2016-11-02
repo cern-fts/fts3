@@ -53,7 +53,7 @@ public:
      */
     struct protocol
     {
-        protocol() : nostreams(DEFAULT_NOSTREAMS), tcp_buffer_size(DEFAULT_BUFFSIZE), urlcopy_tx_to(DEFAULT_TIMEOUT),
+        protocol() : nostreams(0), tcp_buffer_size(0), urlcopy_tx_to(0),
                      strict_copy(false)
         { }
 

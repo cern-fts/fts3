@@ -121,14 +121,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                 ProtocolResolver::protocol protocol;
 
                 protocol.nostreams = db->getStreamsOptimization(tf.voName, source_hostname, destin_hostname);
-                if (protocol.nostreams == 0)
-                    protocol.nostreams = DEFAULT_NOSTREAMS;
-
                 protocol.urlcopy_tx_to = db->getGlobalTimeout(tf.voName);
-                if (protocol.urlcopy_tx_to == 0) {
-                    protocol.urlcopy_tx_to = DEFAULT_TIMEOUT;
-                }
-                else {
+                if (protocol.urlcopy_tx_to > 0) {
                     cmd_builder.setGlobalTimeout(protocol.urlcopy_tx_to);
                 }
 

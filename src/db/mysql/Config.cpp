@@ -593,12 +593,7 @@ int MySqlAPI::getStreamsOptimization(const std::string &voName, const std::strin
             soci::use(sourceSe), soci::use(destSe),
             soci::into(streams, isNullStreams);
 
-        if (isNullStreams == soci::i_ok) {
-            return streams;
-        }
-        else {
-            return DEFAULT_NOSTREAMS;
-        }
+        return streams;
     }
     catch (std::exception& e)
     {
