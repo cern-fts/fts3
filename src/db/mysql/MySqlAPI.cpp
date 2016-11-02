@@ -2687,80 +2687,101 @@ int MySqlAPI::sumUpVoShares(const std::string &source, const std::string &destin
 }
 
 
-void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
+void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo)
 {
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";
-
-    // Only first host takes care of this task
-    if (hashSegment.start != 0)
-        return;
-
-    int maxTime = getMaxTimeInQueue();
-
-    // Acquire the session after calling getMaxTimeInQueue to avoid
-    // deadlocks (sql acquired and getMaxTimeInQueue locked
-    // waiting for a session we have)
     soci::session sql(*connectionPool);
 
-    try
-    {
+    try {
         // Prepare common statements
-        std::string job_id;
-
+        std::string job_id;    
         soci::statement stmtCancelFile = (sql.prepare <<
-                "UPDATE t_file SET "
-                "   job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                "   file_state = 'CANCELED', reason = :reason "
-                "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED')",
-                soci::use(message), soci::use(job_id));
-
+            "UPDATE t_file SET "
+            "   job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "   file_state = 'CANCELED', reason = :reason "
+            "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED')",
+            soci::use(message), soci::use(job_id));
+        
         // Cancel jobs using global timeout
         if(maxTime > 0)
         {
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
-                                            "    job_state = 'SUBMITTED' AND job_finished IS NULL ",
-                                            soci::use(maxTime));
-
+                "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
+                "    job_state = 'SUBMITTED' AND job_finished IS NULL AND vo_name = :vo ",
+                soci::use(maxTime), soci::use(vo));
+            
             sql.begin();
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
             {
                 job_id = (*i);
-
+                
                 stmtCancelFile.execute(true);
                 updateJobTransferStatusInternal(sql, job_id, "CANCELED", 0);
-
+                
                 jobs.push_back(*i);
             }
             sql.commit();
         }
-
+        
         // Cancel jobs using their own timeout
         soci::rowset<std::string> rs = (sql.prepare
-                << "SELECT job_id FROM t_job WHERE "
-                   "    max_time_in_queue IS NOT NULL AND max_time_in_queue < unix_timestamp() "
-                   "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') and job_finished is NULL ");
-        sql.begin();
+            << "SELECT job_id FROM t_job WHERE "
+            "    max_time_in_queue IS NOT NULL AND max_time_in_queue < unix_timestamp() AND vo_name = :vo "
+            "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') and job_finished is NULL ", soci::use(vo));
+            sql.begin();
         for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
         {
             job_id = (*i);
-
+            
             stmtCancelFile.execute(true);
             updateJobTransferStatusInternal(sql, job_id, "CANCELED", 0);
-
+            
             jobs.push_back(*i);
         }
         sql.commit();
     }
-    catch (std::exception& e)
-    {
+    catch (std::exception& e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception ");
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+}
+
+
+std::vector<std::string> MySqlAPI::getVos(void)
+{
+    try {
+        soci::session sql(*connectionPool);
+        std::vector<std::string> vos;
+        soci::rowset<std::string> query = (sql.prepare << "SELECT DISTINCT vo_name FROM t_job");
+        for (auto i = query.begin(); i != query.end(); ++i) {
+            vos.push_back(*i);
+        }
+        return vos;
+    }
+    catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+ 
+}
+
+
+void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
+{
+    // Only first host takes care of this task
+    if (hashSegment.start != 0)
+        return;
+
+    auto vos = getVos();
+    for (auto i = vos.begin(); i != vos.end(); ++i) {
+      int maxTime = getMaxTimeInQueue(*i);
+      cancelExpiredJobsForVo(jobs, maxTime, *i);
     }
 }
 

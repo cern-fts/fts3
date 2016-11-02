@@ -313,13 +313,14 @@ public:
     virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe);
 
     /// Returns how many streams must be used for the given link
-    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);
+    virtual int getStreamsOptimization(const std::string &voName,
+        const std::string &sourceSe, const std::string &destSe);
 
     /// Returns the globally configured transfer timeout
-    virtual int getGlobalTimeout();
+    virtual int getGlobalTimeout(const std::string &voName);
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
-    virtual int getSecPerMb();
+    virtual int getSecPerMb(const std::string &voName);
 
     /// Returns the optimizer level for the TCP buffersize
     virtual int getBufferOptimization();
@@ -424,7 +425,7 @@ private:
 
     bool getDrainInternal(soci::session& sql);
 
-    int getMaxTimeInQueue();
+    int getMaxTimeInQueue(const std::string &voName);
 
     bool publishUserDnInternal(soci::session& sql, const std::string &vo);
 
@@ -438,4 +439,7 @@ private:
     void fixEmptyJob(soci::session &sql, const std::string &jobId);
     void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
         uint64_t filesInJob, uint64_t cancelCount, uint64_t finishedCount, uint64_t failedCount);
+
+    std::vector<std::string> getVos(void);
+    void cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo);
 };

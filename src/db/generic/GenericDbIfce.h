@@ -334,13 +334,14 @@ public:
     virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe) = 0;
 
     /// Returns how many streams must be used for the given link
-    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)= 0;
+    virtual int getStreamsOptimization(const std::string &voName,
+        const std::string &sourceSe, const std::string &destSe)= 0;
 
     /// Returns the globally configured transfer timeout
-    virtual int getGlobalTimeout() = 0;
+    virtual int getGlobalTimeout(const std::string &voName) = 0;
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
-    virtual int getSecPerMb() = 0;
+    virtual int getSecPerMb(const std::string &voName) = 0;
 
     /// Returns the optimizer level for the TCP buffersize
     virtual int getBufferOptimization() = 0;

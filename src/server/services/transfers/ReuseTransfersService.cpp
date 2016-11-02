@@ -231,12 +231,12 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 
         int level = db->getBufferOptimization();
         cmd_builder.setOptimizerLevel(level);
-        protocol.nostreams = db->getStreamsOptimization(representative.sourceSe, representative.destSe);
+        protocol.nostreams = db->getStreamsOptimization(representative.voName, representative.sourceSe, representative.destSe);
         if (protocol.nostreams == 0) {
             protocol.nostreams = DEFAULT_NOSTREAMS;
         }
 
-        protocol.urlcopy_tx_to = db->getGlobalTimeout();
+        protocol.urlcopy_tx_to = db->getGlobalTimeout(representative.voName);
         if (protocol.urlcopy_tx_to == 0)
         {
             protocol.urlcopy_tx_to = DEFAULT_TIMEOUT;
@@ -245,7 +245,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         {
             cmd_builder.setGlobalTimeout(protocol.urlcopy_tx_to);
         }
-        int secPerMB = db->getSecPerMb();
+        int secPerMB = db->getSecPerMb(representative.voName);
         if (secPerMB > 0)
         {
             cmd_builder.setSecondsPerMB(secPerMB);
