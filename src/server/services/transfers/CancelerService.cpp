@@ -74,6 +74,7 @@ void CancelerService::markAsStalled()
         }
 
         for (auto i = messages.begin(); i != messages.end(); ++i) {
+            kill(i->process_id(), SIGKILL);
             bool updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
                 "FAILED", reason, i->process_id(),
                 0, 0, false);
