@@ -53,29 +53,41 @@ CancelerService::~CancelerService()
 
 void CancelerService::markAsStalled()
 {
+    auto db = DBSingleton::instance().getDBObjectInstance();
     std::vector<fts3::events::MessageUpdater> messages;
     messages.reserve(500);
     ThreadSafeList::get_instance().checkExpiredMsg(messages);
+
     if (!messages.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Reaping stalled transfers" << commit;
 
         boost::filesystem::path p(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         boost::filesystem::space_info s = boost::filesystem::space(p);
         bool diskFull = (s.free <= 0 || s.available <= 0);
-        bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
-        if (updated) {
-            for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
-                if ((*iter).file_id() > 0 && (*iter).job_id().length() > 0) {
-                    SingleTrStateInstance::instance().sendStateMessage((*iter).job_id(), (*iter).file_id());
-                }
-            }
+        std::string reason;
+
+        if (diskFull) {
+            reason = "No space left on device";
         }
         else {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
-                << messages.size() << " messages affected" << commit;
+            reason = "No FTS server has updated the transfer status. Probably stalled";
+        }
+
+        for (auto i = messages.begin(); i != messages.end(); ++i) {
+            bool updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
+                "FAILED", reason, i->process_id(),
+                0, 0, false);
+            db->updateJobStatus(i->job_id(), "FAILED", i->process_id());
+
+            if (updated) {
+                SingleTrStateInstance::instance().sendStateMessage(i->job_id(), i->file_id());
+            }
+            else {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
+                    << i->job_id() << "/" << i->file_id() << commit;
+            }
         }
         ThreadSafeList::get_instance().deleteMsg(messages);
-        messages.clear();
     }
 }
 

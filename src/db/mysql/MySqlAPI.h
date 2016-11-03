@@ -200,11 +200,6 @@ public:
     /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId);
 
-    /// Mark the files contained in 'messages' as stalled (FAILED)
-    /// @param messages Only file_id, job_id and process_id from this is used
-    /// @param diskFull Set to true if there are no messages because the disk is full
-    virtual bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull);
-
     /// Return true if the group 'groupName' exists
     virtual bool checkGroupExists(const std::string & groupName);
 

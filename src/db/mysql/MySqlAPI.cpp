@@ -2442,59 +2442,6 @@ void MySqlAPI::forkFailed(const std::string& jobId)
 }
 
 
-bool MySqlAPI::markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull)
-{
-    soci::session sql(*connectionPool);
-
-    bool ok = false;
-    std::string transfer_message;
-    if(diskFull)
-    {
-        transfer_message = "No space left on device in " + hostname;
-    }
-    else
-    {
-        transfer_message = "no FTS server had updated the transfer status the last 600 seconds, probably stalled in " + hostname;
-    }
-
-    try
-    {
-        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-        {
-
-            soci::rowset<int> rs = (
-                                       sql.prepare <<
-                                       " SELECT file_id FROM t_file "
-                                       " WHERE file_id = :fileId AND job_id = :jobId AND "
-                                       "    file_state IN ('ACTIVE', 'READY') AND"
-                                       " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                                       soci::use(iter->file_id()),
-                                       soci::use(iter->job_id()),
-                                       soci::use(hashSegment.start),
-                                       soci::use(hashSegment.end));
-
-            if (rs.begin() != rs.end())
-            {
-                ok = true;
-                updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id(),
-                        (*iter).file_id(), "FAILED", transfer_message,
-                        (*iter).process_id(), 0, 0, false);
-                updateJobTransferStatusInternal(sql, (*iter).job_id(), "FAILED", 0);
-            }
-        }
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return ok;
-}
-
-
 void MySqlAPI::addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
     const std::string &vo)
 {
