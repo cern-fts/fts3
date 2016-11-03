@@ -102,29 +102,5 @@ inline time_t getUTC(int advance)
     return timegm(utc);
 }
 
-
-/**
- * From a transfer parameters string, return the timeout
- */
-inline int extractTimeout(std::string & str)
-{
-    size_t found;
-    found = str.find("timeout:");
-    if (found != std::string::npos)
-        {
-            str = str.substr(found, str.length());
-            size_t found2;
-            found2 = str.find(",buffersize:");
-            if (found2 != std::string::npos)
-                {
-                    str = str.substr(0, found2);
-                    str = str.substr(8, str.length());
-                    return atoi(str.c_str());
-                }
-
-        }
-    return 0;
-}
-
 }
 
