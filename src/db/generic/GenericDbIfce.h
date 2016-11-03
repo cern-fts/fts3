@@ -188,8 +188,8 @@ public:
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
-    /// @param[out] collectJobs A map of fileId with its corresponding jobId that have been cancelled
-    virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
+    /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
+    virtual void reapStalledTransfers(std::vector<TransferFile>& transfers) = 0;
 
     /// Set the PID for all the files inside a reuse or multihop job
     /// @param jobId    The job id for which the files will be updated

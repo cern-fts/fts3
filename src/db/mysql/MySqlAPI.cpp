@@ -2083,79 +2083,58 @@ int MySqlAPI::getCredits(soci::session& sql, const std::string &sourceSe, const 
 }
 
 
-void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
+void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        std::string jobId, params, tHost,reuse;
-        int fileId=0, pid=0, timeout=0;
+        TransferFile transfer;
         struct tm startTimeSt;
         time_t startTime;
-        double diff = 0.0;
         soci::indicator isNull = soci::i_ok;
         soci::indicator isNullParams = soci::i_ok;
         soci::indicator isNullPid = soci::i_ok;
 
-        soci::statement stmt = (
-                                   sql.prepare <<
-                                   " SELECT f.job_id, f.file_id, f.start_time, f.pid, f.internal_file_params, "
-                                   " j.reuse_job "
-                                   " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                   " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and f.job_finished is NULL "
-                                   " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
-                                   soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                   soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
-                                   soci::into(pid, isNullPid), soci::into(params, isNullParams), soci::into(reuse, isNull)
-                               );
+        soci::statement stmt = (sql.prepare <<
+            " SELECT f.job_id, f.file_id, f.start_time, f.pid, f.internal_file_params, "
+            " j.reuse_job "
+            " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+            " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and f.job_finished is NULL "
+            " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+            soci::use(hashSegment.start), soci::use(hashSegment.end),
+            soci::into(transfer.jobId), soci::into(transfer.fileId), soci::into(startTimeSt),
+            soci::into(transfer.pid, isNullPid), soci::into(transfer.internalFileParams, isNullParams),
+            soci::into(transfer.reuseJob, isNull)
+        );
 
-        if (stmt.execute(true))
-        {
-
-            do
-            {
-                startTime = timegm(&startTimeSt); //from db
+        if (stmt.execute(true)) {
+            do {
+                startTime = timegm(&startTimeSt);
                 time_t now2 = getUTC(0);
+                int timeout = 7200;
 
-                if (isNullParams != soci::i_null)
-                {
-                    timeout = extractTimeout(params);
-                    if(timeout == 0)
+                if (isNullParams != soci::i_null) {
+                    timeout = transfer.getProtocolParameters().timeout;
+                    if(timeout != 0) {
                         timeout = 7200;
-                    else
-                        timeout += 3600;
-                }
-                else
-                {
-                    timeout = 7200;
-                }
-
-                diff = difftime(now2, startTime);
-                if (diff > timeout)
-                {
-                    if(isNullPid != soci::i_null && pid > 0)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
-                        kill(pid, SIGKILL);
                     }
-                    collectJobs.insert(std::make_pair(fileId, jobId));
-                    updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
-                                                     "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                     pid, 0, 0, false);
-                    updateJobTransferStatusInternal(sql, jobId, "FAILED",0);
+                    else {
+                        timeout += 3600;
+                    }
                 }
 
-            }
-            while (stmt.fetch());
+                double diff = difftime(now2, startTime);
+                if (diff > timeout) {
+                    transfers.emplace_back(transfer);
+                }
+            } while (stmt.fetch());
         }
     }
-    catch (std::exception& e)
-    {
+    catch (std::exception& e) {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }

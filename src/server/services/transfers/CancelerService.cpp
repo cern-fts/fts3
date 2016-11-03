@@ -123,19 +123,21 @@ void CancelerService::applyQueueTimeouts()
 
 void CancelerService::applyActiveTimeouts()
 {
-    std::map<int, std::string> collectJobs;
-    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
-    if (!collectJobs.empty())
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Applying ACTIVE timeouts" << commit;
-        std::map<int, std::string>::const_iterator iterCollectJobs;
-        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
-        {
-            SingleTrStateInstance::instance().sendStateMessage(
-                    (*iterCollectJobs).second,
-                    (*iterCollectJobs).first);
-        }
-        collectJobs.clear();
+    std::vector<TransferFile> stalled;
+    auto db = DBSingleton::instance().getDBObjectInstance();
+
+    db->reapStalledTransfers(stalled);
+
+    for (auto i = stalled.begin(); i != stalled.end(); ++i) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << i->pid
+            << ", jobid:" << i->jobId << ", fileid:" << i->fileId
+            << " because it was stalled" << commit;
+        kill(i->pid, SIGKILL);
+        db->updateTransferStatus(i->jobId, i->fileId, 0.0,
+            "FAILED", "Transfer has been forced-killed because it was stalled",
+            i->pid, 0, 0, false);
+        db->updateJobStatus(i->jobId, "FAILED", i->pid);
+        SingleTrStateInstance::instance().sendStateMessage(i->jobId, i->fileId);
     }
 }
 

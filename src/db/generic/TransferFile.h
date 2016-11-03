@@ -125,6 +125,7 @@ public:
     std::string userCredentials;
     std::string reuseJob;
     int lastReplica;
+    pid_t pid;
 
     ProtocolParameters getProtocolParameters(void) const {
         return ProtocolParameters(internalFileParams);
