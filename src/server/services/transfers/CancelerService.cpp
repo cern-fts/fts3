@@ -267,7 +267,7 @@ void CancelerService::runService()
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught uknown exception" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught unknown exception" << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
