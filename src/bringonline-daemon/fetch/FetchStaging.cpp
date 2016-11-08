@@ -57,14 +57,14 @@ void FetchStaging::fetch()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
+
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::milliseconds(60000));
                 continue;
             }
 
-            boost::this_thread::sleep(boost::posix_time::seconds(10));
 
             std::map<GroupByType, StagingContext> tasks;
             std::vector<StagingOperation> files;
