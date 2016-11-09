@@ -326,7 +326,7 @@ public:
 
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
         int *retryCount) {
-        soci::rowset<soci::row> rs = (isRetryEnabled() > 0) ?
+        soci::rowset<soci::row> rs = isRetryEnabled() ?
         (
             sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
             "WHERE "
