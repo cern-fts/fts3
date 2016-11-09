@@ -204,12 +204,6 @@ private:
     TransferFile const & file;
 
     std::vector< std::shared_ptr<ShareConfig> >& cfgs;
-
-    /// -1 indicates that for the given protocol parameter the value obtained from auto-tuner should be used
-    static const int automatic = -1;
-
-    /// true if auto tuner was used
-    bool auto_tuned;
 };
 
 } // end namespace server

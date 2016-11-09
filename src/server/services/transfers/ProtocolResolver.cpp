@@ -30,8 +30,7 @@ using namespace boost::assign;
 ProtocolResolver::ProtocolResolver(TransferFile const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
-    cfgs(cfgs),
-    auto_tuned(false)
+    cfgs(cfgs)
 {
 
     std::vector< std::shared_ptr<ShareConfig> >::iterator it;
@@ -129,9 +128,6 @@ boost::optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(boo
 
     // set the timeout
     ret.urlcopy_tx_to = cfg->transferTimeout;
-
-    if(cfg->autoTuning == "on")
-        auto_tuned = true;
 
     return ret;
 }
