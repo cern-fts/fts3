@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/test_tools.hpp>
 
 #include "common/Uri.h"
 
