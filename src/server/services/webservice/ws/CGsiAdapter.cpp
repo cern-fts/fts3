@@ -168,7 +168,9 @@ std::string CGsiAdapter::initHostDn()
     if (!cert)
         return std::string();
 
-    dn = cert->name;
+    char namebuf[2048];
+    X509_NAME *name = X509_get_subject_name(cert);
+    dn = X509_NAME_oneline(name, namebuf, sizeof(namebuf));
     X509_free(cert);
 
     return dn;
