@@ -65,17 +65,5 @@ BOOST_AUTO_TEST_CASE(lanTransfer)
 }
 
 
-BOOST_AUTO_TEST_CASE(hostname)
-{
-    char hostname[512];
-    FILE *hostnameFile = popen("/bin/hostname -f", "r");
-    fgets(hostname, sizeof(hostname), hostnameFile);
-    pclose(hostnameFile);
-    hostname[strlen(hostname) - 1] = '\0';
-
-    BOOST_CHECK_EQUAL(getFullHostname(), hostname);
-}
-
-
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
