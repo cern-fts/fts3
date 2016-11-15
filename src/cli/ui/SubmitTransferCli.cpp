@@ -38,9 +38,6 @@ SubmitTransferCli::SubmitTransferCli()
 {
     delegate = true;
 
-    /// 8 housrs in seconds
-    static const int eight_hours = 28800;
-
     // by default we don't use checksum
     checksum = false;
 
@@ -58,9 +55,9 @@ SubmitTransferCli::SubmitTransferCli()
         ("source-token,S", po::value<std::string>(),
             "The source space token or its description (for SRM 2.2 transfers).")
         ("compare-checksums,K", "Compare checksums between source and destination.")
-        ("copy-pin-lifetime", po::value<int>()->implicit_value(eight_hours)->default_value(-1),
+        ("copy-pin-lifetime", po::value<int>()->default_value(-1),
             "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
-        ("bring-online", po::value<int>()->implicit_value(eight_hours)->default_value(-1),
+        ("bring-online", po::value<int>()->default_value(-1),
             "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
         ("reuse,r", "enable session reuse for the transfer job")
         ("multi-hop,m", "enable multi-hopping")
