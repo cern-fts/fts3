@@ -17,11 +17,11 @@ License:    ASL 2.0
 URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.5.0
-#  cd fts-3.5.0
-#  git checkout v3.5.0
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.6.0
+#  cd fts-3.6.0
+#  git checkout v3.6.0
 #  cd ..
-#  tar --exclude-vcs -vczf fts-3.5.0.tar.gz fts-3.5.0
+#  tar --exclude-vcs -vczf fts-3.6.0.tar.gz fts-3.6.0
 Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -34,6 +34,8 @@ BuildRequires:  boost-devel
 %else
 BuildRequires:  boost148-devel
 %endif
+
+BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
 
 BuildRequires:  cmake
@@ -62,7 +64,6 @@ BuildRequires:	systemd
 
 # Required for some unit tests
 BuildRequires:  gfal2-plugin-mock
-
 Requires(pre):  shadow-utils
 
 %description
@@ -117,7 +118,6 @@ Summary:    File Transfer Service version 3 libraries
 Group:      System Environment/Libraries
 
 Obsoletes:  fts-mysql-debuginfo < %{version}
-Obsoletes:  fts-oracle-debuginfo < %{version}
 
 %description libs
 FTS common libraries used across the client and
@@ -504,13 +504,23 @@ fi
 %{_libdir}/libfts_db_mysql.so.*
 %{_datadir}/fts-mysql
 
-
 %check
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
-./build/test/unit/unit --log_level=all --log_format=XML --log_sink=/tmp/tests.xml --report_level=detailed
-
+./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Nov 14 2016 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.5.7-1
+- New upstream release
+
+* Fri Aug 26 2016 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.4.3-5
+- Rebuilt for new voms
+
+* Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.4.3-4
+- https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
+
+* Tue May 17 2016 Jonathan Wakely <jwakely@redhat.com> - 3.4.3-3
+- Rebuilt for linker errors in boost (#1331983)
+
 * Mon Apr 18 2016 Alejandro Alvarez <aalvarez@cern.ch> - 3.4.3-2
 - Patch gsoap find module
 - Patch url_copy for boost scoped ptr
