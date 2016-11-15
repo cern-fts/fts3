@@ -18,7 +18,8 @@
  * limitations under the License.
  */
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/test_tools.hpp>
 
 #include "cli/ui/SetCfgCli.h"
 
@@ -33,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(SetCfgCliTest)
 BOOST_AUTO_TEST_CASE (SetCfgCliOverflow)
 {
     SetCfgCli cli;
-    std::vector<std::string> argv{
+    std::vector<const char*> argv{
         "prog_name",
         "-s",
         "https://fts3-server:8080",
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE (SetCfgCliOverflow)
 BOOST_AUTO_TEST_CASE (SetCfgCliBadLexicalCast)
 {
     SetCfgCli cli;
-    std::vector<std::string> argv2 {
+    std::vector<const char*> argv2 {
         "prog_name",
         "-s",
         "https://fts3-server:8080",

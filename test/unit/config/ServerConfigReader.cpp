@@ -18,8 +18,10 @@
  * limitations under the License.
  */
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
+#include <fstream>
 
 #include "common/Exceptions.h"
 #include "config/ServerConfigReader.h"

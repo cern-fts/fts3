@@ -17,7 +17,9 @@
 #include <grp.h>
 #include <pwd.h>
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/test_tools.hpp>
+#include <fstream>
 
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"

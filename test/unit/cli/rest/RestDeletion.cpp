@@ -15,7 +15,9 @@
  */
 
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/test_tools.hpp>
+#include <set>
 
 #include "cli/rest/RestDeletion.h"
 
