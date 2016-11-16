@@ -23,12 +23,6 @@ ADD http://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/repos/fts3-conti
 
 ADD http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/repos/dmc-ci-el7.repo /etc/yum.repos.d/dmc.repo
 
-# add trustanchors
-ADD http://repository.egi.eu/sw/production/cas/1/current/repo-files/EGI-trustanchors.repo /etc/yum.repos.d/EGI-trustanchors.repo
-
-#add install certificates ( they will go then in a separate volume)
-RUN /usr/bin/yum install -y ca-policy-egi-core fetch-crl
-
 #install fts packages
 RUN /usr/bin/yum install -y fts-server fts-client fts-mysql fts-server-selinux fts-msg fts-infosys
 
