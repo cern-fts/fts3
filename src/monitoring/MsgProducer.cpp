@@ -216,20 +216,22 @@ bool MsgProducer::getConnection()
             destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
         }
 
-        int ttl = brokerConfig.GetTTL();
+        // setTimeToLive expects milliseconds
+        // GetTTL gives hours
+        int ttlMs = brokerConfig.GetTTL() * 3600000;
 
         // Create a message producer
         producer_transfer_started = session->createProducer(destination_transfer_started);
         producer_transfer_started->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_started->setTimeToLive(ttl);
+        producer_transfer_started->setTimeToLive(ttlMs);
 
         producer_transfer_completed = session->createProducer(destination_transfer_completed);
         producer_transfer_completed->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_completed->setTimeToLive(ttl);
+        producer_transfer_completed->setTimeToLive(ttlMs);
 
         producer_transfer_state = session->createProducer(destination_transfer_state);
         producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_state->setTimeToLive(ttl);
+        producer_transfer_state->setTimeToLive(ttlMs);
 
         connected = true;
 

@@ -56,7 +56,7 @@ public:
     /// Destination for queue state messages
     std::string GetStateDestination() const;
 
-    /// Messages time-to-live
+    /// Messages time-to-live, in hours
     int GetTTL() const;
 
     /// If true, enable SSL for the producer
