@@ -181,7 +181,16 @@ bool PollTask::timeout_occurred()
     // first check if bring-online timeout was exceeded
     if (!ctx.hasTimeoutExpired()) return false;
     // get URLs
-    auto urls = ctx.getUrls();
+    std::set<std::string> urls = ctx.getUrls();
+    // Log the event per file
+    for (auto i = urls.begin(); i != urls.end(); ++i) {
+        auto ids = ctx.getIDs(*i);
+        for (auto j = ids.begin(); j != ids.end(); ++j) {
+            FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "BRINGONLINE timeout triggered for "
+                << j->first << "/" << j->second
+                << commit;
+        }
+    }
     // and abort the bring-online operation
     abort(urls, false);
     // set the state
@@ -220,7 +229,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                 {
                     bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                     for (auto it = ids.begin(); it != ids.end(); ++it)
-                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                        ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
                 }
                 g_clear_error(&errors[i]);
             }
@@ -232,7 +241,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                 if (report)
                 {
                     for (auto it = ids.begin(); it != ids.end(); ++it)
-                    ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                        ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                 }
             }
         }
