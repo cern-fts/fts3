@@ -216,6 +216,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Check for stalled transfers"
     )
     (
+        "CheckStalledTimeout",
+        po::value<std::string>( &(_vars["CheckStalledTimeout"]) )->default_value("360"),
+        "Timeout for stalled transfers, in seconds"
+    )
+    (
         "MinRequiredFreeRAM",
         po::value<std::string>( &(_vars["MinRequiredFreeRAM"]) )->default_value("50"),
         "Minimum amount of free RAM in MB required for FTS3 to not go into auto-drain mode"

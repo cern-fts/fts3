@@ -59,18 +59,19 @@ void ThreadSafeList::clear()
 }
 
 
-void ThreadSafeList::checkExpiredMsg(std::vector<fts3::events::MessageUpdater> &messages)
+void ThreadSafeList::checkExpiredMsg(std::vector<fts3::events::MessageUpdater> &messages,
+    boost::posix_time::time_duration timeout)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);
-    boost::posix_time::time_duration::tick_type timestamp1;
-    boost::posix_time::time_duration::tick_type timestamp2;
-    boost::posix_time::time_duration::tick_type n_milliseconds = 0;
+    static const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+
     for (auto iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        timestamp1 = milliseconds_since_epoch();
-        timestamp2 = iter->timestamp();
-        n_milliseconds = timestamp1 - timestamp2;
-        if (n_milliseconds > 300000) //5min
-        {
+        auto nowTime = boost::posix_time::microsec_clock::universal_time();
+        auto lastMsgTime = epoch + boost::posix_time::milliseconds(iter->timestamp());
+
+        auto age = nowTime - lastMsgTime;
+
+        if (age > timeout) {
             messages.push_back(*iter);
         }
     }

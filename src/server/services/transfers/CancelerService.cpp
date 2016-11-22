@@ -54,9 +54,11 @@ CancelerService::~CancelerService()
 void CancelerService::markAsStalled()
 {
     auto db = DBSingleton::instance().getDBObjectInstance();
+    const boost::posix_time::seconds timeout(ServerConfig::instance().get<int>("CheckStalledTimeout"));
+
     std::vector<fts3::events::MessageUpdater> messages;
     messages.reserve(500);
-    ThreadSafeList::get_instance().checkExpiredMsg(messages);
+    ThreadSafeList::get_instance().checkExpiredMsg(messages, timeout);
 
     if (!messages.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Reaping stalled transfers" << commit;
@@ -64,19 +66,21 @@ void CancelerService::markAsStalled()
         boost::filesystem::path p(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         boost::filesystem::space_info s = boost::filesystem::space(p);
         bool diskFull = (s.free <= 0 || s.available <= 0);
-        std::string reason;
+        std::stringstream reason;
 
         if (diskFull) {
-            reason = "No space left on device";
+            reason << "No space left on device";
         }
         else {
-            reason = "No FTS server has updated the transfer status. Probably stalled";
+            reason << "No FTS server has updated the transfer status the last "
+                << timeout.total_seconds() << " seconds"
+                << ". Probably stalled";
         }
 
         for (auto i = messages.begin(); i != messages.end(); ++i) {
             kill(i->process_id(), SIGKILL);
             bool updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
-                "FAILED", reason, i->process_id(),
+                "FAILED", reason.str(), i->process_id(),
                 0, 0, false);
             db->updateJobStatus(i->job_id(), "FAILED", i->process_id());
 
