@@ -556,7 +556,7 @@ CREATE TABLE `t_job_backup` (
   `bring_online` int(11) DEFAULT NULL,
   `retry` int(11) DEFAULT '0',
   `retry_delay` int(11) DEFAULT '0',
-  `job_metadata` varchar(1024) DEFAULT NULL,
+  `job_metadata` varchar(1024) DEFAULT NULL
 ) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
