@@ -180,7 +180,6 @@ struct type_conversion<SeProtocolConfig>
     {
         protoConfig.tcpBufferSize = v.get<int>("tcp_buffer_size", 0);
         protoConfig.numberOfStreams = v.get<int>("nostreams", 0);
-        //protoConfig.unused = v.get<int>("no_tx_activity_to", 0);
         protoConfig.transferTimeout = v.get<int>("URLCOPY_TX_TO", 0);
     }
 };
@@ -374,7 +373,6 @@ struct type_conversion<LinkConfig>
         lnk.numberOfStreams         = v.get<int>("nostreams");
         lnk.tcpBufferSize   = v.get<int>("tcp_buffer_size");
         lnk.transferTimeout     = v.get<int>("urlcopy_tx_to");
-        //lnk.NO_TX_ACTIVITY_TO = v.get<int>("no_tx_activity_to");
         lnk.autoTuning     = v.get<std::string>("auto_tuning");
     }
 };

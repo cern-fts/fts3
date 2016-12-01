@@ -185,7 +185,8 @@ ALTER TABLE t_file
     ADD INDEX idx_waittimeout (wait_timeout),
     ADD INDEX idx_activity (vo_name, activity),
     ADD INDEX idx_state_host (file_state, transfer_host),
-    ADD INDEX idx_link_state_vo (source_se, dest_se, file_state, vo_name);
+    ADD INDEX idx_link_state_vo (source_se, dest_se, file_state, vo_name),
+    ADD INDEX idx_finish_time (finish_time);
 
 --
 -- Need to re-create also t_file_retry_errors pointing to the new table
