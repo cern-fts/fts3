@@ -1203,7 +1203,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
             std::string job;
 
             sql <<
-                "select distinct j.job_id "
+                "select distinct j.job_id, j.priority, j.submit_time "
                 "from t_job j inner join t_file f on j.job_id = f.job_id "
                 "where j.source_se=:source_se and j.dest_se=:dest_se and "
                 "      j.vo_name=:vo_name and j.reuse_job = 'Y' and "
