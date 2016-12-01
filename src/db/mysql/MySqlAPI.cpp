@@ -889,7 +889,7 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
                     sql.prepare <<
                     " SELECT SQL_NO_CACHE "
                     "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                    "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id "
+                    "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
                     "       f.checksum, j.checksum_method, j.source_space_token, "
                     "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                     "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
@@ -2857,7 +2857,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 
 
             ret.retry_max = it->get<int>("retry_max",0);
-            ret.file_id = it->get<unsigned long long>("file_id");
+            ret.file_id = it->get<int>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             if(ret.file_state == "SUBMITTED")
             {
@@ -3817,7 +3817,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    int file_id = row.get<unsigned long long>("file_id");
+                    int file_id = row.get<int>("file_id");
                     user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
 
