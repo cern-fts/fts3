@@ -296,7 +296,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         }
 
         std::string mreplica;
-        sql << "SELECT reuse_job FROM t_job WHERE job_id = :job_id",
+        sql << "SELECT job_type FROM t_job WHERE job_id = :job_id",
             soci::use(jobId), soci::into(mreplica);
 
         //check if the file belongs to a multiple replica job
@@ -329,7 +329,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         } else {
             // Fix inconsistencies on the flag
             if (mreplica != "R") {
-                sql << "UPDATE t_job set reuse_job='R' where job_id = :job_id", soci::use(jobId);
+                sql << "UPDATE t_job set job_type='R' where job_id = :job_id", soci::use(jobId);
                 logInconsistency(jobId, "Multireplica job with an incorrect flag: " + mreplica);
             }
 
@@ -352,7 +352,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
                 // TODO: job_finished be NULL?
                 if (jobState == "CANCELED") {
                     sql << "UPDATE t_file SET "
-                        "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                        "    file_state = 'CANCELED', finish_time = UTC_TIMESTAMP(), "
                         "    reason = 'Job canceled by the user' "
                         "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(jobId);
 
@@ -364,7 +364,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
                 if (fileState == "FINISHED")
                 {
                     sql << "UPDATE t_file SET "
-                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                        "    file_state = 'NOT_USED', finish_time = NULL, "
                         "    reason = '' "
                         "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
                         soci::use(jobId);
@@ -399,7 +399,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
                         soci::use(jobId), soci::into(countNotUsed);
                     if (countNotUsed > 0) {
                         sql << "UPDATE t_file SET "
-                            "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
+                            "    file_state = 'SUBMITTED', finish_time = NULL, "
                             "    reason = '' "
                             "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(jobId);
                     }
@@ -428,7 +428,7 @@ void MySqlAPI::fixJobTerminalFileNonTerminal(soci::session &sql)
         const std::string jobId = i->get<std::string>("job_id");
 
         sql << "UPDATE t_file SET "
-            "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), "
             "    reason = 'Force failure due to file state inconsistency' "
             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ",
             soci::use(jobId);
@@ -490,7 +490,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
             sql.prepare <<
                 "SELECT file_id, job_id FROM t_file "
                 "WHERE file_state  = 'ACTIVE' "
-                "   AND transferHost = :transferHost ",
+                "   AND transfer_host = :transferHost ",
                 soci::use(deadHost)
         );
         for (auto active = transfersActiveInHost.begin(); active != transfersActiveInHost.end(); ++active) {
