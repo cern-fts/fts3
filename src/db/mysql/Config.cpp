@@ -362,10 +362,11 @@ int MySqlAPI::getRetry(const std::string & jobId)
         //do not retry multiple replica jobs
         if(nRetries > 0)
         {
-            std::string mreplica;
-            sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
-            if(mreplica == "R" || mreplica == "H")
+            Job::JobType mreplica;
+            sql << "select job_type from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
+            if(mreplica == Job::kTypeMultipleReplica || mreplica == Job::kTypeMultiHop) {
                 nRetries = 0;
+            }
         }
     }
     catch (std::exception& e)

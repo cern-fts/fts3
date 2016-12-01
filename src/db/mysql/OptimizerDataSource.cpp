@@ -256,12 +256,12 @@ public:
             "       (finish_time IS NULL OR finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND))",
         soci::use(pair.source),soci::use(pair.destination), soci::use(interval.total_seconds()));
 
-        double totalBytes = 0.0;
-        std::vector<double> filesizes;
+        int64_t totalBytes = 0.0;
+        std::vector<int64_t> filesizes;
 
         for (auto j = transfers.begin(); j != transfers.end(); ++j) {
-            auto transferred = j->get<double>("transferred", 0.0);
-            auto filesize = j->get<double>("filesize", 0.0);
+            auto transferred = j->get<long long>("transferred", 0.0);
+            auto filesize = j->get<long long>("filesize", 0.0);
             auto starttm = j->get<struct tm>("start_time");
             auto endtm = j->get<struct tm>("finish_time", nulltm);
 
@@ -275,7 +275,7 @@ public:
                 periodInWindow = now - std::max(start, windowStart);
                 long duration = now - start;
                 if (duration > 0) {
-                    bytesInWindow = (transferred / duration) * periodInWindow;
+                    bytesInWindow = double(transferred / duration) * periodInWindow;
                 }
             }
             // Finished
@@ -283,7 +283,7 @@ public:
                 periodInWindow = end - std::max(start, windowStart);
                 long duration = end - start;
                 if (duration > 0 && filesize > 0) {
-                    bytesInWindow = (filesize / duration) * periodInWindow;
+                    bytesInWindow = double(filesize / duration) * periodInWindow;
                 }
             }
 

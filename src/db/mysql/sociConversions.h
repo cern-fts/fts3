@@ -44,6 +44,29 @@ inline time_t timeUTC()
 
 namespace soci
 {
+
+template <>
+struct type_conversion<Job::JobType>
+{
+    typedef std::string base_type;
+
+    static void from_base(const std::string &c, indicator ind, Job::JobType &type)
+    {
+        if (ind == i_null || c.empty()) {
+            type = Job::kTypeRegular;
+        }
+        else {
+            type = static_cast<Job::JobType>(c[0]);
+        }
+    }
+
+    static void to_base(const Job::JobType &type, std::string &c, indicator &ind)
+    {
+        c = std::string(1, static_cast<char>(type));
+        ind = i_ok;
+    }
+};
+
 template <>
 struct type_conversion<UserCredential>
 {
@@ -106,13 +129,7 @@ struct type_conversion<Job>
         aux_tm = v.get<struct tm>("submit_time");
         job.submitTime = timegm(&aux_tm);
 
-        try
-            {
-                job.reuse = v.get<std::string>("reuse_job");
-            }
-        catch (...)
-            {
-            }
+        job.jobType = v.get<Job::JobType>("job_type", Job::kTypeRegular);
     }
 };
 
@@ -128,7 +145,7 @@ struct type_conversion<TransferFile>
         file.destSurl   = v.get<std::string>("dest_surl");
         file.jobId      = v.get<std::string>("job_id");
         file.voName     = v.get<std::string>("vo_name");
-        file.fileId     = v.get<int>("file_id");
+        file.fileId     = v.get<unsigned long long>("file_id");/////xxxx
         file.overwriteFlag   = v.get<std::string>("overwrite_flag","");
         file.userDn          = v.get<std::string>("user_dn");
         file.credId     = v.get<std::string>("cred_id");
@@ -140,7 +157,7 @@ struct type_conversion<TransferFile>
         file.pinLifetime  = v.get<int>("copy_pin_lifetime",0);
         file.fileMetadata = v.get<std::string>("file_metadata", "");
         file.jobMetadata  = v.get<std::string>("job_metadata", "");
-        file.userFilesize = v.get<double>("user_filesize", 0);
+        file.userFilesize = v.get<long long>("user_filesize", 0);
         file.fileIndex    = v.get<int>("file_index", 0);
         file.bringOnlineToken = v.get<std::string>("bringonline_token", "");
         file.sourceSe = v.get<std::string>("source_se", "");
@@ -148,14 +165,12 @@ struct type_conversion<TransferFile>
         file.selectionStrategy = v.get<std::string>("selection_strategy", "");
         file.internalFileParams = v.get<std::string>("internal_job_params", "");
 
-        try
-            {
-                file.reuseJob = v.get<std::string>("reuse_job", "");
-            }
-        catch(...)
-            {
-                // optional
-            }
+        try {
+            file.jobType = v.get<Job::JobType>("job_type", Job::kTypeRegular);
+        }
+        catch (...) {
+            // optional
+        }
 
         // filesize and reason are NOT queried by any method that uses this
         // type
@@ -231,7 +246,7 @@ struct type_conversion<FileTransferStatus>
     static void from_base(values const& v, indicator, FileTransferStatus& transfer)
     {
         struct tm aux_tm;
-        transfer.fileId            = v.get<int>("file_id");
+        transfer.fileId            = v.get<unsigned long long>("file_id");
         transfer.sourceSurl        = v.get<std::string>("source_surl");
         transfer.destSurl          = v.get<std::string>("dest_surl", "");
         transfer.fileState = v.get<std::string>("file_state");
@@ -358,14 +373,14 @@ struct type_conversion<LinkConfig>
 
     static void from_base(values const& v, indicator, LinkConfig& lnk)
     {
-        lnk.source            = v.get<std::string>("source");
-        lnk.destination       = v.get<std::string>("destination");
-        lnk.state             = v.get<std::string>("state");
-        lnk.symbolicName     = v.get<std::string>("symbolicName");
-        lnk.numberOfStreams         = v.get<int>("nostreams");
+        lnk.source          = v.get<std::string>("source");
+        lnk.destination     = v.get<std::string>("destination");
+        lnk.state           = v.get<std::string>("state");
+        lnk.symbolicName    = v.get<std::string>("symbolicName");
+        lnk.numberOfStreams = v.get<int>("nostreams");
         lnk.tcpBufferSize   = v.get<int>("tcp_buffer_size");
-        lnk.transferTimeout     = v.get<int>("urlcopy_tx_to");
-        lnk.autoTuning     = v.get<std::string>("auto_tuning");
+        lnk.transferTimeout = v.get<int>("urlcopy_tx_to");
+        lnk.autoTuning      = v.get<std::string>("auto_tuning");
     }
 };
 
@@ -376,7 +391,7 @@ struct type_conversion<FileRetry>
 
     static void from_base(values const& v, indicator, FileRetry& retry)
     {
-        retry.fileId   = v.get<int>("file_id");
+        retry.fileId   = v.get<unsigned long long>("file_id");
         retry.attempt  = v.get<int>("attempt");
         retry.reason   = v.get<std::string>("reason");
 

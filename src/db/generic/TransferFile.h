@@ -28,6 +28,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/logic/tribool.hpp>
 
+#include "Job.h"
+
 /**
  * Describes the status of one file in a transfer job.
  */
@@ -91,7 +93,7 @@ public:
     {
     }
 
-    int fileId;
+    uint64_t fileId;
     int fileIndex;
     std::string jobId;
     std::string fileState;
@@ -102,7 +104,7 @@ public:
     std::string agentDn;
     std::string reason;
     unsigned numFailures;
-    double filesize;
+    int64_t filesize;
     time_t finishTime;
     std::string internalFileParams;
     time_t jobFinished;
@@ -117,11 +119,11 @@ public:
     std::string selectionStrategy;
     int pinLifetime;
     int bringOnline;
-    double userFilesize;
+    int64_t userFilesize;
     std::string fileMetadata;
     std::string jobMetadata;
     std::string bringOnlineToken;
-    std::string reuseJob;
+    Job::JobType jobType; // See Job constants
     int lastReplica;
     pid_t pid;
 

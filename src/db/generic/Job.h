@@ -38,6 +38,13 @@ public:
     {
     }
 
+    enum JobType {
+        kTypeMultipleReplica = 'R',
+        kTypeMultiHop = 'H',
+        kTypeSessionReuse = 'Y',
+        kTypeRegular = 'N'
+    };
+
     std::string jobId;
     std::string jobState;
     std::string jobParams;
@@ -60,7 +67,7 @@ public:
     int copyPinLifetime;
     std::string checksumMethod;
     int bringOnline;
-    std::string reuse;
+    JobType jobType;
 
     std::string getUserDn() const
     {

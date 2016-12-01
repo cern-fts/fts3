@@ -169,8 +169,21 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
-    setFlag("reuse", transfer.reuseJob == "Y");
-    setFlag("multi-hop", transfer.reuseJob == "H");
+
+    switch (transfer.jobType) {
+        case Job::kTypeSessionReuse:
+            setFlag("reuse", true);
+            break;
+        case Job::kTypeMultiHop:
+            setFlag("multi-hop", true);
+            break;
+        case Job::kTypeMultipleReplica:
+            setFlag("job_m_replica", true);
+            break;
+    }
+
+
+
     // setOption("source-site", std::string());
     // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
@@ -184,7 +197,6 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
     if (publishUserDn)
         setOption("user-dn", prepareMetadataString(transfer.userDn));
 
-    setFlag("job_m_replica", transfer.reuseJob == "R");
     setFlag("last_replica", transfer.lastReplica);
 
     // On multiple jobs, this data is per transfer and is passed via a file

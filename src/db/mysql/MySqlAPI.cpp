@@ -264,7 +264,7 @@ std::list<fts3::events::MessageUpdater> MySqlAPI::getActiveInHost(const std::str
             fts3::events::MessageUpdater msg;
 
             msg.set_job_id(i->get<std::string>("job_id"));
-            msg.set_file_id(i->get<int>("file_id"));
+            msg.set_file_id(i->get<unsigned long long>("file_id"));
             msg.set_process_id(i->get<int>("pid"));
             msg.set_timestamp(milliseconds_since_epoch());
 
@@ -666,37 +666,36 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             if (activityFilesNum.empty())
             {
                 soci::rowset<TransferFile> rs = (sql.prepare <<
-                                                  " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                                  "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                                  "       f.checksum, j.checksum_method, j.source_space_token, "
-                                                  "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
-                                                  " FROM t_file f, t_job j "
-                                                  " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
-                                                  "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
-                                                  "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
-                                                  "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                  "     (j.job_type = 'N' OR j.job_type = 'R') AND "
-                                                  "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                  "     j.priority = :maxPriority "
-                                                  " ORDER BY file_id ASC "
-                                                  " LIMIT :filesNum",
-                                                  soci::use(it->sourceSe),
-                                                  soci::use(it->destSe),
-                                                  soci::use(it->voName),
-                                                  soci::use(tTime),
-                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                  soci::use(maxPriority),
-                                                  soci::use(filesNum));
-
+                      " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                      "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                      "       f.checksum, j.checksum_method, j.source_space_token, "
+                      "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                      "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                      "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
+                      " FROM t_file f, t_job j "
+                      " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
+                      "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
+                      "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
+                      "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                      "     (j.job_type = 'N' OR j.job_type = 'R') AND "
+                      "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+                      "     j.priority = :maxPriority "
+                      " ORDER BY file_id ASC "
+                      " LIMIT :filesNum",
+                      soci::use(it->sourceSe),
+                      soci::use(it->destSe),
+                      soci::use(it->voName),
+                      soci::use(tTime),
+                      soci::use(hashSegment.start), soci::use(hashSegment.end),
+                      soci::use(maxPriority),
+                      soci::use(filesNum));
 
 
                 for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                 {
                     TransferFile& tfile = *ti;
 
-                    if(tfile.reuseJob == "R")
+                    if(tfile.jobType == Job::kTypeMultipleReplica)
                     {
                         int total = 0;
                         int remain = 0;
@@ -775,7 +774,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     {
                         TransferFile& tfile = *ti;
 
-                        if(tfile.reuseJob == "R")
+                        if(tfile.jobType == Job::kTypeMultipleReplica)
                         {
                             int total = 0;
                             int remain = 0;
@@ -1710,12 +1709,12 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 sql.begin();
                 // Update job
                 soci::statement stmt6 = (
-                                            sql.prepare << "UPDATE t_job SET "
-                                            "    job_state = :state, job_finished = UTC_TIMESTAMP() "
-                                            "    reason = :reason, source_se = :source_se "
-                                            "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
-                                            soci::use(state, "state"), soci::use(reason, "reason"), soci::use(source_se, "source_se"),
-                                            soci::use(jobId, "jobId"));
+                    sql.prepare << "UPDATE t_job SET "
+                    "    job_state = :state, job_finished = UTC_TIMESTAMP(), "
+                    "    reason = :reason, source_se = :source_se "
+                    "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
+                    soci::use(state, "state"), soci::use(reason, "reason"), soci::use(source_se, "source_se"),
+                    soci::use(jobId, "jobId"));
                 stmt6.execute(true);
                 sql.commit();
             }
@@ -1724,12 +1723,12 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 sql.begin();
                 // Update job
                 soci::statement stmt6 = (
-                                            sql.prepare << "UPDATE t_job SET "
-                                            "    job_state = :state, job_finished = UTC_TIMESTAMP() "
-                                            "    reason = :reason "
-                                            "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
-                                            soci::use(state, "state"), soci::use(reason, "reason"),
-                                            soci::use(jobId, "jobId"));
+                    sql.prepare << "UPDATE t_job SET "
+                    "    job_state = :state, job_finished = UTC_TIMESTAMP(), "
+                    "    reason = :reason "
+                    "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
+                    soci::use(state, "state"), soci::use(reason, "reason"),
+                    soci::use(jobId, "jobId"));
                 stmt6.execute(true);
                 sql.commit();
 
@@ -1854,7 +1853,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
         {
             soci::row const& row = *i2;
             pid = row.get<int>("pid",0);
-            file_id = row.get<int>("file_id");
+            file_id = row.get<unsigned long long>("file_id");
 
             if(pid > 0)
                 requestIDs.push_back(pid);
@@ -2096,7 +2095,7 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
             soci::use(hashSegment.start), soci::use(hashSegment.end),
             soci::into(transfer.jobId), soci::into(transfer.fileId), soci::into(startTimeSt),
             soci::into(transfer.pid, isNullPid), soci::into(transfer.internalFileParams, isNullParams),
-            soci::into(transfer.reuseJob, isNull)
+            soci::into(transfer.jobType, isNull)
         );
 
         if (stmt.execute(true)) {
@@ -2858,7 +2857,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 
 
             ret.retry_max = it->get<int>("retry_max",0);
-            ret.file_id = it->get<int>("file_id");
+            ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             if(ret.file_state == "SUBMITTED")
             {
@@ -2978,7 +2977,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.vo_name = it->get<std::string>("vo_name");
             ret.job_metadata = it->get<std::string>("job_metadata","");
             ret.retry_max = it->get<int>("retry_max",0);
-            ret.file_id = it->get<int>("file_id");
+            ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             if(ret.file_state == "SUBMITTED")
             {
@@ -3087,7 +3086,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                 " UPDATE t_file "
                 " SET file_state = 'CANCELED', finish_time = UTC_TIMESTAMP() "
                 " WHERE file_id = :fileId AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')",
-                soci::use(it->get<int>("file_id"))
+                soci::use(it->get<unsigned long long>("file_id"))
                 ;
         }
 
@@ -3818,7 +3817,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    int file_id = row.get<int>("file_id");
+                    int file_id = row.get<unsigned long long>("file_id");
                     user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
 
@@ -4088,7 +4087,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    int file_id = row.get<int>("file_id");
+                    int file_id = row.get<unsigned long long>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                     int bring_online = row.get<int>("bring_online",0);
 
@@ -4195,7 +4194,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             std::string vo_name = row.get<std::string>("vo_name");
             std::string source_url = row.get<std::string>("source_surl");
             std::string job_id = row.get<std::string>("job_id");
-            int file_id = row.get<int>("file_id");
+            int file_id = row.get<unsigned long long>("file_id");
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
             int bring_online = row.get<int>("bring_online",0);
 
@@ -4420,7 +4419,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
         {
             soci::row const& row = *i2;
             job_id  = row.get<std::string>("job_id", "");
-            file_id = row.get<int>("file_id",0);
+            file_id = row.get<unsigned long long>("file_id",0);
             source_surl = row.get<std::string>("source_surl","");
             token = row.get<std::string>("bringonline_token","");
             boost::tuple<std::string, int, std::string, std::string> record(job_id, file_id, source_surl, token);
