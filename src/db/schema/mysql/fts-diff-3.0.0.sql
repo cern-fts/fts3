@@ -95,7 +95,7 @@ CREATE TABLE t_job_new (
   `bring_online`        INT(11) DEFAULT NULL,
   `retry`               INT(11) DEFAULT '0',
   `retry_delay`         INT(11) DEFAULT '0',
-  `job_metadata`        JSON,                   -- Was varchar(1024), already hit problems before because of size
+  `job_metadata`        TEXT,                   -- Was varchar(1024), already hit problems before because of size
   PRIMARY KEY (`job_id`)
 )
 AS
@@ -150,7 +150,7 @@ CREATE TABLE t_file_new (
   `throughput`          FLOAT DEFAULT NULL,
   `retry`               INT(11) DEFAULT '0',
   `user_filesize`       BIGINT DEFAULT NULL,        -- Was DOUBLE
-  `file_metadata`       JSON,                       -- Was file_metadata VARCHAR(1024)
+  `file_metadata`       TEXT,                       -- Was file_metadata VARCHAR(1024)
   `selection_strategy`  CHAR(32) DEFAULT NULL,      -- Was VARCHAR(255)
   `staging_start`       TIMESTAMP NULL DEFAULT NULL,
   `staging_finished`    TIMESTAMP NULL DEFAULT NULL,
