@@ -238,7 +238,7 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
 
     if (cancelCount > 0) {
         sql << "UPDATE t_job SET "
-            "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
             "    reason = :canceledMessage "
             "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ",
             soci::use(canceledMessage), soci::use(jobId);
@@ -246,14 +246,14 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
     else if (filesInJob == finishedCount)  // All files finished
     {
         sql << "UPDATE t_job SET "
-            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP() "
             "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ",
             soci::use(jobId);
     }
     else if (filesInJob == failedCount)  // All files failed
     {
         sql << "UPDATE t_job SET "
-            "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(),"
             "    reason = :failed "
             "    WHERE job_id = :jobId and  job_state <> 'FAILED' ",
             soci::use(failed), soci::use(jobId);
@@ -261,7 +261,7 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
     else   // Otherwise it is FINISHEDDIRTY
     {
         sql << "UPDATE t_job SET "
-            "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), "
             "    reason = :failed "
             "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'",
             soci::use(failed), soci::use(jobId);
@@ -371,7 +371,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 
                     if (jobState != "FINISHED") {
                         sql << "UPDATE t_job SET "
-                            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP()"
                             "    WHERE job_id = :jobId",
                             soci::use(jobId);
 

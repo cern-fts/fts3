@@ -92,17 +92,14 @@ struct type_conversion<Job>
         job.submitHost    = v.get<std::string>("submit_host", "");
         job.source        = v.get<std::string>("source_se", "");
         job.destination   = v.get<std::string>("dest_se", "");
-        job.agentDn       = v.get<std::string>("agent_dn", "");
         job.submitHost    = v.get<std::string>("submit_host");
         job.userDn        = v.get<std::string>("user_dn");
-        job.userCred      = v.get<std::string>("user_cred", "");
         job.credId        = v.get<std::string>("cred_id", "");
         job.spaceToken    = v.get<std::string>("space_token", "");
         job.storageClass  = v.get<std::string>("storage_class", "");
         job.internalJobParams = v.get<std::string>("job_params", "");
         job.overwriteFlag = v.get<std::string>("overwrite_flag", "N");
         job.sourceSpaceToken = v.get<std::string>("source_space_token", "");
-        job.sourceSpaceTokenDescription = v.get<std::string>("source_token_description", "");
         job.copyPinLifetime = v.get<int>("copy_pin_lifetime", -1);
         job.bringOnline     = v.get<int>("bring_online", -1);
         job.checksumMethod  = v.get<std::string>("checksum_method", "");
@@ -116,9 +113,6 @@ struct type_conversion<Job>
         catch (...)
             {
             }
-
-        // No method that uses this type asks for finish_time
-        job.finishTime = 0;
     }
 };
 
@@ -153,8 +147,6 @@ struct type_conversion<TransferFile>
         file.destSe = v.get<std::string>("dest_se", "");
         file.selectionStrategy = v.get<std::string>("selection_strategy", "");
         file.internalFileParams = v.get<std::string>("internal_job_params", "");
-        file.userCredentials = v.get<std::string>("user_cred", "");
-        file.vomsAttrs = v.get<std::string>("voms_cred", "");
 
         try
             {

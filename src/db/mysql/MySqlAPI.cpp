@@ -667,11 +667,11 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             {
                 soci::rowset<TransferFile> rs = (sql.prepare <<
                                                   " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                                  "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
+                                                  "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
                                                   "       f.checksum, j.checksum_method, j.source_space_token, "
                                                   "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                   "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
+                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.reuse_job "
                                                   " FROM t_file f, t_job j "
                                                   " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
                                                   "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
@@ -736,11 +736,11 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     if (it_act->second == 0) continue;
 
                     std::string select = " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred,"
+                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id,"
                                          "       f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
+                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.reuse_job "
                                          " FROM t_file f, t_job j "
                                          " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
                                          "      f.source_se = :source_se AND f.dest_se = :dest_se AND "
@@ -892,12 +892,12 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
                     sql.prepare <<
                     " SELECT SQL_NO_CACHE "
                     "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                    "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
+                    "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id "
                     "       f.checksum, j.checksum_method, j.source_space_token, "
                     "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                     "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
                     "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
-                    "       j.internal_job_params, j.user_cred, j.reuse_job "
+                    "       j.internal_job_params, j.reuse_job "
                     " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
                     " WHERE j.job_id = :job_id "
                     " ORDER BY f.file_id ASC",
@@ -1229,12 +1229,12 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         sql.prepare <<
                         " SELECT SQL_NO_CACHE "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, j.voms_cred, "
+                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
                         "       f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
-                        "       j.internal_job_params, j.user_cred, j.reuse_job "
+                        "       j.internal_job_params, j.reuse_job "
                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
                         " WHERE j.job_id = :job_id AND "
                         "       f.file_state = 'SUBMITTED'",
@@ -1701,7 +1701,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 // Update job
                 soci::statement stmt6 = (
                                             sql.prepare << "UPDATE t_job SET "
-                                            "    job_state = :state, job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                            "    job_state = :state, job_finished = UTC_TIMESTAMP() "
                                             "    reason = :reason, source_se = :source_se "
                                             "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
                                             soci::use(state, "state"), soci::use(reason, "reason"), soci::use(source_se, "source_se"),
@@ -1715,7 +1715,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 // Update job
                 soci::statement stmt6 = (
                                             sql.prepare << "UPDATE t_job SET "
-                                            "    job_state = :state, job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                            "    job_state = :state, job_finished = UTC_TIMESTAMP() "
                                             "    reason = :reason "
                                             "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
                                             soci::use(state, "state"), soci::use(reason, "reason"),
@@ -2401,7 +2401,7 @@ void MySqlAPI::forkFailed(const std::string& jobId)
                 soci::use(hostname), soci::use(jobId);
 
         sql << "UPDATE t_job "
-               " SET job_state='FAILED', job_finished=UTC_TIMESTAMP(), finish_time= UTC_TIMESTAMP(),"
+               " SET job_state='FAILED', job_finished=UTC_TIMESTAMP(), "
                "     reason='Transfer failed to fork, check fts3server.log for more details'"
                " WHERE job_id=:job_id",
                soci::use(jobId);
@@ -3604,19 +3604,19 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vecto
             if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
             {
                 sql << " UPDATE t_job SET "
-                    " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                    " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP() "
                     " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
             {
                 sql << " UPDATE t_job SET "
-                    " job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
+                    " job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
                     " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
             {
                 sql << " UPDATE t_job SET "
-                    " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
+                    " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
                     " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if (numberOfFilesStarted >= 1 &&  numberOfFilesDelete >= 1) //one file STARTED FILE/ JOB ACTIVE
@@ -3637,13 +3637,13 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, const std::vecto
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
             {
                 sql << " UPDATE t_job SET "
-                    " job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
+                    " job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
                     " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
             {
                 sql << " UPDATE t_job SET "
-                    " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job canceled, check files for more details' "
+                    " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), reason='Job canceled, check files for more details' "
                     " WHERE job_id = :jobId ", soci::use(i->jobId);
             }
             else

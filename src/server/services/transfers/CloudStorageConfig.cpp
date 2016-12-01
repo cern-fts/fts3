@@ -118,16 +118,9 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
 
 std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
-    std::string csName;
     char errDescr[128];
 
-    if (!tf.userCredentials.empty()) {
-        csName = tf.userCredentials;
-    }
-    else {
-        csName = generateCloudStorageNames(tf);
-    }
-
+    std::string csName = generateCloudStorageNames(tf);
     if (csName.empty()) {
         return "";
     }
@@ -149,9 +142,14 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     }
 
     // For each different VO role, group, ...
+    auto cred = db->findCredential(tf.credId, tf.userDn);
+    if (!cred) {
+        return "";
+    }
+
     std::vector<std::string> vomsAttrs;
     vomsAttrs.push_back(tf.voName);
-    boost::split(vomsAttrs, tf.vomsAttrs, boost::is_any_of(" "), boost::token_compress_on);
+    boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
 
     // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
     std::vector<std::string> csVector;

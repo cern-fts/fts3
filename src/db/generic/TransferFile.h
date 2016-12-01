@@ -107,7 +107,6 @@ public:
     std::string internalFileParams;
     time_t jobFinished;
     std::string voName;
-    std::string vomsAttrs;
     std::string overwriteFlag;
     std::string userDn;
     std::string credId;
@@ -122,7 +121,6 @@ public:
     std::string fileMetadata;
     std::string jobMetadata;
     std::string bringOnlineToken;
-    std::string userCredentials;
     std::string reuseJob;
     int lastReplica;
     pid_t pid;
