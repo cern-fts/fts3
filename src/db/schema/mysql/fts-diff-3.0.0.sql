@@ -174,7 +174,7 @@ SELECT file_id, file_index, job_id, file_state,
     pid, tx_duration, throughput, retry, user_filesize,
     file_metadata, selection_strategy, staging_start, staging_finished,
     bringonline_token, retry_timestamp, wait_timestamp, wait_timeout,
-    t_log_file, t_log_file_debug, hashed_id, vo_name, activity, transferred
+    t_log_file AS log_file, t_log_file_debug AS t_log_file_debug, hashed_id, vo_name, activity, transferred
 FROM t_file;
 
 RENAME TABLE t_file TO t_file_old;

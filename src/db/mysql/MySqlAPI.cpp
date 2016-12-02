@@ -2763,7 +2763,7 @@ void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& me
 
     try
     {
-        soci::statement stmt = (sql.prepare << " update t_file set t_log_file=:filePath, t_log_file_debug=:debugFile where file_id=:fileId ",
+        soci::statement stmt = (sql.prepare << " update t_file set log_file=:filePath, log_file_debug=:debugFile where file_id=:fileId ",
                                 soci::use(filePath),
                                 soci::use(debugFile),
                                 soci::use(fileId));
@@ -3268,8 +3268,8 @@ void MySqlAPI::setRetryTransfer(const std::string &jobId, int fileId, int retry,
         else
         {
             sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, "
-                "transfer_host=NULL, t_log_file=NULL,"
-                " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                "transfer_host=NULL, log_file=NULL,"
+                " log_file_debug=NULL, throughput = 0, current_failures = 1 "
                 " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                 soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
 
@@ -4508,8 +4508,8 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int fileId, const std::s
 
                     sql.begin();
 
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, staging_start=NULL, transfer_host=NULL, t_log_file=NULL,"
-                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, staging_start=NULL, transfer_host=NULL, log_file=NULL,"
+                        " log_file_debug=NULL, throughput = 0, current_failures = 1 "
                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','STAGING','FAILED','CANCELED')",
                         soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(fileId), soci::use(jobId);
 
@@ -4530,7 +4530,7 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int fileId, const std::s
 
                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', "
                         "   staging_start=NULL, start_time=NULL, transfer_Host=NULL, "
-                        "   t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
+                        "   log_file=NULL, log_file_debug=NULL, throughput = 0,  current_failures = 1 "
                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','STAGING','FAILED','CANCELED')",
                         soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(fileId), soci::use(jobId);
 
