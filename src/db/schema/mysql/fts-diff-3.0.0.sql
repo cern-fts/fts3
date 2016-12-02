@@ -169,7 +169,7 @@ CREATE TABLE t_file_new (
 AS
 SELECT file_id, file_index, job_id, file_state,
     transferHost AS transfer_host, source_surl, dest_surl, source_se, dest_se,
-    agent_dn, reason, current_failures, filesize, checksum,
+    agent_dn AS staging_host, reason, current_failures, filesize, checksum,
     finish_time, start_time, internal_file_params,
     pid, tx_duration, throughput, retry, user_filesize,
     file_metadata, selection_strategy, staging_start, staging_finished,

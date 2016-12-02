@@ -4247,7 +4247,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
             {
                 sql <<
                     " UPDATE t_file "
-                    " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), agent_dn=:thost, "
+                    " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), staging_host=:thost, "
                     "   transfer_host=:thost, file_state='STARTED' "
                     " WHERE  "
                     "   file_id= :fileId "
