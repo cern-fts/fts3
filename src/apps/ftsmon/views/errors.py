@@ -35,7 +35,7 @@ def get_errors(http_request):
         time_window = timedelta(hours=1)
 
     not_before = datetime.utcnow() - time_window
-    errors = File.objects.filter(file_state='FAILED', job_finished__gte=not_before)
+    errors = File.objects.filter(file_state='FAILED', finish_time__gte=not_before)
 
     if http_request.GET.get('source_se', None):
         errors = errors.filter(source_se=http_request.GET['source_se'])
@@ -48,7 +48,7 @@ def get_errors(http_request):
 
     errors = errors.values('source_se', 'dest_se') \
         .annotate(count=Count('file_state')) \
-        .order_by('-count', '-job_finished')
+        .order_by('-count', '-finish_time')
     # Fetch all first to avoid 'count' query
     return list(errors.all())
 
@@ -70,14 +70,14 @@ def get_errors_for_pair(http_request):
 
     not_before = datetime.utcnow() - time_window
     transfers = File.objects.filter(file_state='FAILED',
-                                    job_finished__gte=not_before,
+                                    finish_time__gte=not_before,
                                     source_se=source_se, dest_se=dest_se)
     if reason:
         transfers = transfers.filter(reason__icontains=reason)
 
     transfers = transfers.values('vo_name', 'reason')
     transfers = transfers.annotate(count=Count('reason'))
-    transfers = transfers.order_by('-count', '-job_finished')
+    transfers = transfers.order_by('-count', '-finish_time')
     # Trigger query to fetch all
     transfers = list(transfers)
 

@@ -80,7 +80,7 @@ def _get_retried_stats(timewindow, hostname):
 
     retried_objs = File.objects.filter(file_state__in=['FAILED', 'FINISHED'], finish_time__gte=not_before, retry__gt=0)
     if hostname:
-        retried_objs = retried_objs.filter(transferHost=hostname)
+        retried_objs = retried_objs.filter(transfer_host=hostname)
     retried_objs = retried_objs.values('file_state').annotate(number=Count('file_state'))
 
     retried = {}

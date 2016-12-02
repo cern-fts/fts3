@@ -128,7 +128,7 @@ class DmFile(models.Model):
     file_id       = models.IntegerField(primary_key=True)
     job           = models.ForeignKey('Job', db_column = 'job_id', related_name = '+', null = True)
     file_state    = models.CharField(max_length=32)
-    transferHost  = models.CharField(max_length=150, db_column='dmHost')
+    transfer_host = models.CharField(max_length=150, db_column='dmHost')
     source_surl   = models.CharField(max_length=900)
     dest_surl     = models.CharField(max_length=900)
     source_se     = models.CharField(max_length=150)

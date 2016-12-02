@@ -172,8 +172,8 @@
         <tr style="background: #CCC" data-ng-show="file.show">
             <td colspan="10">
                 <ul>
-                    <li>Transfer host: {{file.transferHost}}</li>
-                    <li>Staging host: {{file.stagingHost}}</li>
+                    <li>Transfer host: {{file.transfer_host}}</li>
+                    <li>Staging host: {{file.staging_host}}</li>
                     <li>PID: {{file.pid}}</li>
                     <li>Hash: {{file.hashed_id|hex}}</li>
                     <li>Activity: {{file.activity}}</li>
@@ -184,7 +184,6 @@
                     <li>User specified size: {{file.user_filesize}}</li>
                     <li>Configuration: {{file.symbolicname}}</li>
                     <li>Parameters: {{file.internal_file_params}}</li>
-                    <li>Job finished: {{file.job_finished}}</li>
                     <li>Finished time: {{file.finish_time}}</li>
                     <li>Error reason: {{file.reason}}</li>
                     <li>Log file:

@@ -99,7 +99,7 @@ class JobListDecorator(object):
         job['space_token'] = job_desc[6]
         job['job_finished'] = job_desc[7]
         self.cursor.execute(
-            """SELECT file_state, COUNT(file_id), SUM(t_log_file_debug), MAX(file_index)
+            """SELECT file_state, COUNT(file_id), SUM(log_file_debug), MAX(file_index)
                FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL
             """,
             [job_id])
@@ -166,7 +166,10 @@ def get_job_list(http_request):
 
     if filters['time_window']:
         not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
-        job_ids = job_ids.filter(Q(job_finished__gte=not_before) | Q(job_finished=None))
+        if filters['with_file']:
+            job_ids = job_ids.filter(Q(finish_time__gte=not_before) | Q(finish_time=None))
+        else:
+            job_ids = job_ids.filter(Q(job_finished__gte=not_before) | Q(job_finished=None))
 
     if filters['vo']:
         job_ids = job_ids.filter(vo_name=filters['vo'])
@@ -259,7 +262,7 @@ class LogLinker(object):
     def __getitem__(self, i):
         for f in self.files[i]:
             if hasattr(f, 'log_file') and f.log_file:
-                f.log_file = log_link(f.transferHost, f.log_file)
+                f.log_file = log_link(f.transfer_host, f.log_file)
             yield f
 
 
@@ -380,7 +383,7 @@ def get_transfer_list(http_request):
     if filters['activity']:
         transfers = transfers.filter(activity=filters['activity'])
     if filters['hostname']:
-        transfers = transfers.filter(transferHost=filters['hostname'])
+        transfers = transfers.filter(transfer_host=filters['hostname'])
     if filters['reason']:
         transfers = transfers.filter(reason=filters['reason'])
 

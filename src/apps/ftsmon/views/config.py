@@ -176,7 +176,7 @@ def get_activities(http_request):
 @require_certificate
 @jsonify
 def get_actives_per_activity(http_request, vo):
-    active = File.objects.filter(vo_name = vo, job_finished__isnull=True)\
+    active = File.objects.filter(vo_name = vo, finish_time__isnull=True)\
 
     if http_request.GET.get('source_se', None):
         active = active.filter(source_se = http_request.GET['source_se'])
