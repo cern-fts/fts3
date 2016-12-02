@@ -24,8 +24,13 @@ from jsonify import jsonify
 
 @jsonify
 def get_unique_activities(http_request):
-    activities = File.objects.values('activity').distinct()
-    return [row['activity'] for row in activities]
+    activities = File.objects.values('activity', 'vo_name').distinct()
+    per_vo = {}
+    for row in activities:
+        if row['vo_name'] not in per_vo:
+            per_vo[row['vo_name']] = []
+    per_vo[row['vo_name']].append(row['activity'])
+    return per_vo
 
 
 @jsonify
