@@ -38,9 +38,9 @@ def _get_count_per_state(age, hostname):
     for state in STATES:
         query = File.objects
         if state not in ACTIVE_STATES:
-            query = query.filter(job_finished__gte=not_before)
+            query = query.filter(finish_time__gte=not_before)
         if hostname:
-            query = query.filter(transferHost=hostname)
+            query = query.filter(transfer_host=hostname)
         query = query.filter(file_state=state)
 
         count[state.lower()] = query.count()
@@ -60,10 +60,10 @@ def _get_transfer_and_submission_per_host(timewindow, segments):
 
     for host in map(lambda h: h['hostname'], hosts):
         submissions = Job.objects.filter(submit_time__gte=not_before, submit_host=host).count()
-        transfers = File.objects.filter(job_finished__gte=not_before, transferHost=host).count()
-        actives = File.objects.filter(file_state='ACTIVE', transferHost=host).count()
-        staging =  File.objects.filter(file_state='STAGING', stagingHost=host).count()
-        started =  File.objects.filter(file_state='STARTED', stagingHost=host).count()
+        transfers = File.objects.filter(finish_time__gte=not_before, transfer_host=host).count()
+        actives = File.objects.filter(file_state='ACTIVE', transfer_host=host).count()
+        staging =  File.objects.filter(file_state='STAGING', staging_host=host).count()
+        started =  File.objects.filter(file_state='STARTED', staging_host=host).count()
         servers[host] = {
             'submissions': submissions,
             'transfers': transfers,
@@ -78,7 +78,7 @@ def _get_transfer_and_submission_per_host(timewindow, segments):
 def _get_retried_stats(timewindow, hostname):
     not_before = datetime.utcnow() - timewindow
 
-    retried_objs = File.objects.filter(file_state__in=['FAILED', 'FINISHED'], job_finished__gte=not_before, retry__gt=0)
+    retried_objs = File.objects.filter(file_state__in=['FAILED', 'FINISHED'], finish_time__gte=not_before, retry__gt=0)
     if hostname:
         retried_objs = retried_objs.filter(transferHost=hostname)
     retried_objs = retried_objs.values('file_state').annotate(number=Count('file_state'))
@@ -293,7 +293,7 @@ def get_pervo(http_request):
 
     # Terminal first
     terminal = File.objects.values('file_state', 'vo_name') \
-        .filter(job_finished__gte=not_before).annotate(count=Count('file_state'))
+        .filter(finish_time__gte=not_before).annotate(count=Count('file_state'))
 
     if http_request.GET.get('source_se', None):
         terminal = terminal.filter(source_se=http_request.GET['source_se'])
@@ -343,7 +343,7 @@ class CalculateVolume(object):
                 dest_se=triplet['dest_se'],
                 vo_name=triplet['vo'],
                 file_state='FINISHED',
-                job_finished__gte=self.not_before
+                finish_time__gte=self.not_before
             ).aggregate(vol=Sum('filesize'))
             triplet['volume'] = pair_volume['vol']
             yield triplet
@@ -370,7 +370,7 @@ def get_transfer_volume(http_request):
             pairs = pairs.filter(source_se=http_request.GET['source_se'])
         if http_request.GET.get('dest_se', None):
             pairs = pairs.filter(dest_se=http_request.GET['dest_se'])
-        pairs = pairs.filter(vo_name=vo, file_state='FINISHED', job_finished__gte=not_before)
+        pairs = pairs.filter(vo_name=vo, file_state='FINISHED', finish_time__gte=not_before)
 
         for pair in pairs:
             source = pair['source_se']

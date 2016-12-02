@@ -298,8 +298,8 @@ def get_job_transfers(http_request, job_id):
     # Build up stats
     now = datetime.utcnow()
     first_start_time = min(map(lambda f: f.get_start_time() if f.get_start_time() else now, files))
-    if files[0].job_finished:
-        running_time = files[0].job_finished - first_start_time
+    if files[0].finish_time:
+        running_time = files[0].finish_time - first_start_time
     else:
         running_time = now - first_start_time
     running_time = (running_time.seconds + running_time.days * 24 * 3600)
@@ -374,9 +374,9 @@ def get_transfer_list(http_request):
         not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
         # Avoid querying for job_finished is NULL if there are no active states
         if _contains_active_state(filters['state']):
-            transfers = transfers.filter(Q(job_finished__isnull=True) | (Q(job_finished__gte=not_before)))
+            transfers = transfers.filter(Q(finish_time__isnull=True) | (Q(finish_time__gte=not_before)))
         else:
-            transfers = transfers.filter(Q(job_finished__gte=not_before))
+            transfers = transfers.filter(Q(finish_time__gte=not_before))
     if filters['activity']:
         transfers = transfers.filter(activity=filters['activity'])
     if filters['hostname']:
@@ -399,6 +399,6 @@ def get_transfer_list(http_request):
     elif order_by == 'finish_time':
         transfers = transfers.order_by(ordered_field('finish_time', order_desc))
     else:
-        transfers = transfers.order_by('-job_finished')
+        transfers = transfers.order_by('-finish_time')
 
     return transfers

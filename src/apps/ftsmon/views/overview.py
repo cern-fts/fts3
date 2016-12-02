@@ -86,7 +86,7 @@ class OverviewExtended(object):
         Get the most frequent error for the pair + vo
         """
         reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
-            .filter(job_finished__gte=self.not_before, file_state='FAILED') \
+            .filter(finish_time__gte=self.not_before, file_state='FAILED') \
             .values('reason').annotate(count=Count('reason')).values('reason', 'count').order_by('-count')[:1]
         if len(reason) > 0:
             return "[%(count)d] %(reason)s" % reason[0]
@@ -116,7 +116,7 @@ class OverviewExtended(object):
             .values('job_id', 'file_id', 'filesize', 'finish_time', 'start_time', 'transferred') \
             .filter(file_state__in=['FINISHED', 'ACTIVE', 'FAILED', 'CANCELED']) \
             .filter(start_time__isnull=False) \
-            .filter(Q(job_finished__gte=window_start) | Q(job_finished__isnull=True))
+            .filter(Q(finish_time__gte=window_start) | Q(finish_time__isnull=True))
 
         # Calculate bytes transferred, proportional to the time these transfers were inside the window
         total_bytes = 0.0
@@ -203,7 +203,7 @@ def get_overview(http_request):
     SELECT COUNT(file_state) as count, file_state, source_se, dest_se, vo_name
     FROM t_file
     WHERE file_state in ('FINISHED', 'FAILED', 'CANCELED') %s
-        AND job_finished > %s
+        AND finish_time > %s
     GROUP BY file_state, source_se, dest_se, vo_name  order by NULL
     """ % (pairs_filter, db_to_date())
     cursor.execute(query, se_params + [not_before])

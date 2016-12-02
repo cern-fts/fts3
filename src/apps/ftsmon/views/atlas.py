@@ -109,7 +109,7 @@ def get_overview(http_request):
     SELECT COUNT(file_state) as count, file_state, source_se, dest_se, vo_name, activity
     FROM t_file
     WHERE file_state in ('FINISHED', 'FAILED', 'CANCELED') %s
-        AND job_finished > %s
+        AND finish_time > %s
     GROUP BY file_state, source_se, dest_se, vo_name, activity  order by NULL
     """ % (pairs_filter, db_to_date())
     cursor.execute(query, se_params + [not_before])
