@@ -46,7 +46,7 @@ def get_errors(http_request):
     if http_request.GET.get('reason', None):
         errors = errors.filter(reason__icontains=http_request.GET['reason'])
 
-    errors = errors.values('source_se', 'dest_se') \
+    errors = errors.values('source_se', 'dest_se', 'finish_time') \
         .annotate(count=Count('file_state')) \
         .order_by('-count', '-finish_time')
     # Fetch all first to avoid 'count' query
@@ -75,7 +75,7 @@ def get_errors_for_pair(http_request):
     if reason:
         transfers = transfers.filter(reason__icontains=reason)
 
-    transfers = transfers.values('vo_name', 'reason')
+    transfers = transfers.values('vo_name', 'reason', 'finish_time')
     transfers = transfers.annotate(count=Count('reason'))
     transfers = transfers.order_by('-count', '-finish_time')
     # Trigger query to fetch all
