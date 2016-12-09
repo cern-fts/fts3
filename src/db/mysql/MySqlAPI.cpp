@@ -3111,68 +3111,6 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
 }
 
 
-void MySqlAPI::revertNotUsedFiles()
-{
-
-    soci::session sql(*connectionPool);
-    std::string notUsed;
-
-    try
-    {
-        soci::rowset<std::string> rs = (
-                                           sql.prepare <<
-                                           "select distinct f.job_id from t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                           " WHERE file_state = 'NOT_USED' "
-                                           "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                                           soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                       );
-
-
-        soci::statement st((sql.prepare << " UPDATE t_file f1 "
-                            " SET f1.file_state = 'SUBMITTED' "
-                            " WHERE f1.file_state = 'NOT_USED' "
-                            "   AND NOT EXISTS ( "
-                            "       SELECT NULL "
-                            "       FROM ( "
-                            "           SELECT job_id, file_index, file_state "
-                            "           FROM t_file f2 "
-                            "           WHERE f2.job_id = :notUsed AND EXISTS ( "
-                            "                   SELECT NULL "
-                            "                   FROM t_file f3 "
-                            "                   WHERE f2.job_id = f3.job_id "
-                            "                       AND f3.file_index = f2.file_index "
-                            "                       AND f3.file_state = 'NOT_USED' "
-                            "               ) "
-                            "               AND f2.file_state <> 'NOT_USED' "
-                            "               AND f2.file_state <> 'CANCELED' "
-                            "               AND f2.file_state <> 'FAILED' "
-                            "       ) AS t_file_tmp "
-                            "       WHERE t_file_tmp.job_id = f1.job_id "
-                            "           AND t_file_tmp.file_index = f1.file_index "
-                            "   ) ", soci::use(notUsed)
-                           ));
-
-        sql.begin();
-        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            notUsed = *i;
-            st.execute(true);
-        }
-        sql.commit();
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-}
-
-
 void MySqlAPI::checkSchemaLoaded()
 {
     soci::session sql(*connectionPool);

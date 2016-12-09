@@ -23,11 +23,8 @@
 #include <soci/soci.h>
 #include "db/generic/GenericDbIfce.h"
 #include "db/generic/StoragePairState.h"
-#include "db/generic/SanityFlags.h"
 #include "msg-bus/consumer.h"
 #include "msg-bus/producer.h"
-
-#define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
 
 class MySqlAPI : public GenericDbIfce
@@ -35,31 +32,6 @@ class MySqlAPI : public GenericDbIfce
 public:
     MySqlAPI();
     virtual ~MySqlAPI();
-
-    class CleanUpSanityChecks
-    {
-    public:
-        CleanUpSanityChecks(MySqlAPI *instanceLocal, soci::session &sql, struct SanityFlags &msg) :
-            instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
-        {
-            returnValue = instanceLocal->assignSanityRuns(sql, msg);
-        }
-
-        ~CleanUpSanityChecks()
-        {
-            instanceLocal->resetSanityRuns(sql, msg);
-        }
-
-        bool getCleanUpSanityCheck()
-        {
-            return returnValue;
-        }
-
-        MySqlAPI* instanceLocal;
-        soci::session& sql;
-        struct SanityFlags &msg;
-        bool returnValue;
-    };
 
     struct HashSegment
     {
@@ -258,9 +230,6 @@ public:
     /// @param jobs An output parameter, where the set of expired job ids is stored
     virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
-    // TODO: UNUSED
-    virtual void revertNotUsedFiles();
-
     /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
     virtual void checkSanityState();
 
@@ -376,9 +345,6 @@ private:
     std::string           hostname;
     std::string username_;
     std::map<std::string, int> queuedStagingFiles;
-
-    bool assignSanityRuns(soci::session& sql, struct SanityFlags &msg);
-    void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
         std::string serviceName);

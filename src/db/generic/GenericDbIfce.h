@@ -273,10 +273,7 @@ public:
     /// @param jobs An output parameter, where the set of expired job ids is stored
     virtual void cancelWaitingFiles(std::set<std::string>& jobs) = 0;
 
-    // TODO: UNUSED
-    virtual void revertNotUsedFiles() = 0;
-
-    /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
+    /// Run a set of sanity checks over the database, fixing potential inconsistencies and logging them
     virtual void checkSanityState() = 0;
 
     /// Checks if the database schema has been loaded

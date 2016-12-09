@@ -242,5 +242,10 @@ ALTER TABLE t_dm
 -- DROP TABLE t_file_old;
 -- DROP TABLE t_job_old;
 
+--
+-- Unused
+--
+DROP TABLE t_server_sanity;
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (3, 0, 0, 'FTS-599, FTS-815 diff');
+VALUES (3, 0, 0, 'FTS-599, FTS-815, FTS-824 diff');
