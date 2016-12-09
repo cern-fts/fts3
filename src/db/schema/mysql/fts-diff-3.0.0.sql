@@ -72,7 +72,9 @@ RENAME TABLE t_credential_new TO t_credential;
 
 CREATE TABLE t_job_new (
   `job_id`              CHAR(36) NOT NULL,
-  `job_state`           CHAR(13) NOT NULL,      -- Was job_state varchar(32), char(32) in pilot
+  `job_state`           ENUM(
+    'STAGING', 'SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FAILED', 'FINISHEDDIRTY', 'CANCELED', 'DELETE'
+  ) NOT NULL,                                   -- Was job_state varchar(32)
   `job_type`            CHAR(1) DEFAULT NULL,   -- Was reuse_job varchar(3)
   `cancel_job`          CHAR(1) DEFAULT NULL,
   `source_se`           VARCHAR(255) DEFAULT NULL,
@@ -131,7 +133,9 @@ CREATE TABLE t_file_new (
   `file_id`             BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT, -- Was file_id INT(11), as of today, 31 bits are required for a file_id
   `file_index`          INT(11) DEFAULT NULL,
   `job_id`              CHAR(36) NOT NULL,
-  `file_state`          CHAR(10) NOT NULL,          -- Was file_state VARCHAR(32)
+  `file_state`          ENUM(
+    'STAGING', 'STARTED', 'SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FAILED', 'CANCELED', 'NOT_USED'
+  ) NOT NULL,          -- Was file_state VARCHAR(32)
   `transfer_host`       VARCHAR(255) DEFAULT NULL,  -- Was transferHost
   `source_surl`         VARCHAR(1100) DEFAULT NULL,
   `dest_surl`           VARCHAR(1100) DEFAULT NULL,
