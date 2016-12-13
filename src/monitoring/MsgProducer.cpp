@@ -32,8 +32,15 @@
 using namespace fts3::config;
 
 
-// End-Of-Transmission character
-static const char EOT = 0x04;
+// Originally, this was a End-Of-Transmission character (0x04)
+// which makes the messages invalid json.
+// Starting with FTS 3.6, we replace this with a space, so code that explicitly
+// strips the last byte regardless of its value (i.e. Rucio) still works, but
+// making the message now a valid json.
+// See https://its.cern.ch/jira/browse/FTS-827
+// Of course, it would be nicer to get rid of this trailing byte altogether, but need to keep
+// compatibility until people stops dropping the last byte.
+static const char EOT = ' ';
 
 
 bool stopThreads = false;
