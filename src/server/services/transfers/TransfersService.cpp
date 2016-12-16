@@ -78,6 +78,8 @@ void TransfersService::runService()
 
         try
         {
+            boost::this_thread::sleep(boost::posix_time::seconds(2));
+
             if (DrainMode::instance())
             {
                 if (!drainMode)
@@ -94,7 +96,6 @@ void TransfersService::runService()
             }
 
             executeUrlcopy();
-            boost::this_thread::sleep(boost::posix_time::seconds(2));
         }
         catch (boost::thread_interrupted&)
         {

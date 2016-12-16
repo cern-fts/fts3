@@ -165,28 +165,38 @@ void UrlCopyCmd::setGlobalTimeout(long timeout)
 }
 
 
-void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool hide_user_dn)
+void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool publishUserDn)
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
-    setFlag("reuse", transfer.reuseJob == "Y");
-    setFlag("multi-hop", transfer.reuseJob == "H");
+
+    switch (transfer.jobType) {
+        case Job::kTypeSessionReuse:
+            setFlag("reuse", true);
+            break;
+        case Job::kTypeMultiHop:
+            setFlag("multi-hop", true);
+            break;
+        case Job::kTypeMultipleReplica:
+            setFlag("job_m_replica", true);
+            break;
+    }
+
+
+
     // setOption("source-site", std::string());
     // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
     if (!transfer.checksumMethod.empty())
         setOption("compare-checksum", transfer.checksumMethod);
-    if (transfer.pinLifetime > 0)
-        setOption("pin-lifetime", transfer.pinLifetime);
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", !transfer.overwriteFlag.empty());
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
 
-    if (!hide_user_dn)
+    if (publishUserDn)
         setOption("user-dn", prepareMetadataString(transfer.userDn));
 
-    setFlag("job_m_replica", transfer.reuseJob == "R");
     setFlag("last_replica", transfer.lastReplica);
 
     // On multiple jobs, this data is per transfer and is passed via a file
@@ -209,27 +219,17 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
 
 void UrlCopyCmd::setFromProtocol(const ProtocolResolver::protocol &protocol)
 {
-    if (protocol.nostreams >= 0) {
+    if (protocol.nostreams > 0) {
         setOption("nstreams", protocol.nostreams);
     }
-    else {
-        setOption("nstreams", DEFAULT_NOSTREAMS);
-    }
 
-    if (protocol.urlcopy_tx_to >= 0) {
+    if (protocol.urlcopy_tx_to > 0) {
         setOption("timeout", protocol.urlcopy_tx_to);
-    }
-    else {
-        setOption("timeout", DEFAULT_TIMEOUT);
     }
 
     if (protocol.tcp_buffer_size > 0) {
         setOption("tcp-buffersize", protocol.tcp_buffer_size);
     }
-    else {
-        setOption("tcp-buffersize", DEFAULT_BUFFSIZE);
-    }
-
 
     if (!indeterminate(protocol.ipv6)) {
         this->setIPv6(protocol.ipv6);

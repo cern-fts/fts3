@@ -19,6 +19,7 @@
  */
 
 #include <iostream>
+#include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
 
 #include "common/Exceptions.h"
@@ -71,11 +72,16 @@ int main(int argc, char **argv)
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting with bulk size of " << bulkSize << commit;
 
         long nJobs = 0, nFiles = 0;
+        auto start = boost::chrono::steady_clock::now();
         db::DBSingleton::instance().getDBObjectInstance()->backup(bulkSize, &nJobs, &nFiles);
+        auto end = boost::chrono::steady_clock::now();
+
+        auto duration = boost::chrono::duration_cast<boost::chrono::seconds>(end - start);
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending: "
         << nJobs << " jobs and "
-        << nFiles << " files affected"
+        << nFiles << " files affected after "
+        << duration.count() << " seconds"
         << commit;
 
     }

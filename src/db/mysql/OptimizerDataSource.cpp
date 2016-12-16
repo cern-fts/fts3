@@ -87,17 +87,17 @@ static int getCountInState(soci::session &sql, const Pair &pair, const std::stri
 
     if (pair.source.empty()) {
         sql << "SELECT count(*) FROM t_file "
-            "WHERE dest_se = :dest_se AND file_state = :state AND job_finished IS NULL",
+            "WHERE dest_se = :dest_se AND file_state = :state",
             soci::use(pair.destination), soci::use(state), soci::into(count);
     }
     else if (pair.destination.empty()) {
         sql << "SELECT count(*) FROM t_file "
-            "WHERE source_se = :source AND file_state = :state AND job_finished IS NULL",
+            "WHERE source_se = :source AND file_state = :state",
             soci::use(pair.source), soci::use(state), soci::into(count);
     }
     else {
         sql << "SELECT count(*) FROM t_file "
-            "WHERE source_se = :source AND dest_se = :dest_se AND file_state = :state AND job_finished IS NULL",
+            "WHERE source_se = :source AND dest_se = :dest_se AND file_state = :state",
             soci::use(pair.source), soci::use(pair.destination), soci::use(state), soci::into(count);
     }
 
@@ -125,7 +125,7 @@ public:
             "FROM t_optimize_active o "
             " INNER JOIN t_file f ON (o.source_se = f.source_se) "
             " WHERE o.dest_se = f.dest_se AND "
-            "     f.file_state IN ('ACTIVE','SUBMITTED') AND f.job_finished IS NULL");
+            "     f.file_state IN ('ACTIVE','SUBMITTED')");
 
         for (auto i = rs.begin(); i != rs.end(); ++i) {
             result.push_back(Pair(i->get<std::string>("source_se"), i->get<std::string>("dest_se")));
@@ -253,15 +253,15 @@ public:
             " WHERE source_se = :source AND dest_se = :dest AND "
             "       file_state  in ('ACTIVE','FINISHED') AND "
             "       transferred > 0 AND "
-            "       (job_finished IS NULL OR job_finished >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND))",
+            "       (finish_time IS NULL OR finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND))",
         soci::use(pair.source),soci::use(pair.destination), soci::use(interval.total_seconds()));
 
-        double totalBytes = 0.0;
-        std::vector<double> filesizes;
+        int64_t totalBytes = 0.0;
+        std::vector<int64_t> filesizes;
 
         for (auto j = transfers.begin(); j != transfers.end(); ++j) {
-            auto transferred = j->get<double>("transferred", 0.0);
-            auto filesize = j->get<double>("filesize", 0.0);
+            auto transferred = j->get<long long>("transferred", 0.0);
+            auto filesize = j->get<long long>("filesize", 0.0);
             auto starttm = j->get<struct tm>("start_time");
             auto endtm = j->get<struct tm>("finish_time", nulltm);
 
@@ -275,7 +275,7 @@ public:
                 periodInWindow = now - std::max(start, windowStart);
                 long duration = now - start;
                 if (duration > 0) {
-                    bytesInWindow = (transferred / duration) * periodInWindow;
+                    bytesInWindow = double(transferred / duration) * periodInWindow;
                 }
             }
             // Finished
@@ -283,7 +283,7 @@ public:
                 periodInWindow = end - std::max(start, windowStart);
                 long duration = end - start;
                 if (duration > 0 && filesize > 0) {
-                    bytesInWindow = (filesize / duration) * periodInWindow;
+                    bytesInWindow = double(filesize / duration) * periodInWindow;
                 }
             }
 
@@ -317,7 +317,7 @@ public:
         sql << "SELECT AVG(tx_duration) FROM t_file "
             " WHERE source_se = :source AND dest_se = :dest AND file_state = 'FINISHED' AND "
             "   tx_duration > 0 AND tx_duration IS NOT NULL AND "
-            "   job_finished > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) LIMIT 1",
+            "   finish_time > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) LIMIT 1",
             soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds()),
             soci::into(avgDuration, isNullAvg);
 
@@ -326,24 +326,25 @@ public:
 
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
         int *retryCount) {
-        soci::rowset<soci::row> rs = (isRetryEnabled() > 0) ?
+        soci::rowset<soci::row> rs = isRetryEnabled() ?
         (
             sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
             "WHERE "
             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
             "      ( "
-            "          (t_file.job_finished is NULL and current_failures > 0) OR "
-            "          (t_file.job_finished > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND)) "
+            "          (t_file.finish_time IS NULL AND current_failures > 0 AND retry_timestamp > (UTC_TIMESTAMP() - interval :calculateTimeFrame second)) OR "
+            "          (t_file.finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND)) "
             "      ) AND "
             "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-            soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds())
+            soci::use(pair.source), soci::use(pair.destination),
+            soci::use(interval.total_seconds()), soci::use(interval.total_seconds())
         )
         :
         (
             sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
             " WHERE "
             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-            "      t_file.job_finished > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
+            "      t_file.finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
             "file_state <> 'NOT_USED' ",
             soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds())
         );

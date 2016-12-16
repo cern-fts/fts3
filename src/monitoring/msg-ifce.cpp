@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-
+#include <chrono>
 #include <iomanip>
 #include <fstream>
 #include <cajun/json/elements.h>
@@ -31,6 +31,34 @@ using fts3::config::ServerConfig;
 
 bool MsgIfce::instanceFlag = false;
 MsgIfce *MsgIfce::single = NULL;
+
+
+static uint64_t getTimestampMillisecs()
+{
+    std::chrono::milliseconds timestamp =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now().time_since_epoch()
+        );
+
+    return timestamp.count();
+}
+
+
+static std::string ReplaceNonPrintableCharacters(const std::string &s)
+{
+    std::string result;
+    for (size_t i = 0; i < s.length(); i++) {
+        char c = s[i];
+        int AsciiValue = static_cast<int> (c);
+        if (AsciiValue < 32 || AsciiValue > 127) {
+            result.append(" ");
+        }
+        else {
+            result += s.at(i);
+        }
+    }
+    return result;
+}
 
 
 MsgIfce *MsgIfce::getInstance()

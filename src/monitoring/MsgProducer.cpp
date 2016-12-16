@@ -21,20 +21,26 @@
 #include <json.h>
 #include <memory>
 #include "MsgProducer.h"
-#include <signal.h>
 #include "common/Logger.h"
-#include <sstream>
 
 #include "config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
-#include "UtilityRoutines.h"
+
+#include <decaf/lang/System.h>
 
 using namespace fts3::config;
 
 
-// End-Of-Transmission character
-static const char EOT = 0x04;
+// Originally, this was a End-Of-Transmission character (0x04)
+// which makes the messages invalid json.
+// Starting with FTS 3.6, we replace this with a space, so code that explicitly
+// strips the last byte regardless of its value (i.e. Rucio) still works, but
+// making the message now a valid json.
+// See https://its.cern.ch/jira/browse/FTS-827
+// Of course, it would be nicer to get rid of this trailing byte altogether, but need to keep
+// compatibility until people stops dropping the last byte.
+static const char EOT = ' ';
 
 
 bool stopThreads = false;
@@ -59,8 +65,8 @@ void find_and_replace(std::string &source, const std::string &find, std::string 
 }
 
 
-MsgProducer::MsgProducer(const std::string &localBaseDir):
-    localProducer(localBaseDir)
+MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& config):
+    brokerConfig(config), localProducer(localBaseDir)
 {
     connection = NULL;
     session = NULL;
@@ -71,7 +77,6 @@ MsgProducer::MsgProducer(const std::string &localBaseDir):
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
     FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
-    readConfig();
     connected = false;
 }
 
@@ -167,15 +172,39 @@ void MsgProducer::sendMessage(std::string &temp)
 bool MsgProducer::getConnection()
 {
     try {
+        // Set properties for SSL, if enabled
+        if (brokerConfig.UseSSL()) {
+            FTS3_COMMON_LOGGER_LOG(INFO, "Using SSL");
+            decaf::lang::System::setProperty("decaf.net.ssl.keyStore", brokerConfig.GetClientKeyStore());
+            if (!brokerConfig.GetClientKeyStorePassword().empty()) {
+                decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword",
+                    brokerConfig.GetClientKeyStorePassword());
+            }
+            decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
+            if (brokerConfig.SslVerify()) {
+                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
+            }
+            else {
+                FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
+                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
+            }
+        }
+        else {
+            FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
+        }
+        FTS3_COMMON_LOGGER_LOG(DEBUG, brokerConfig.GetBrokerURI());
+
         // Create a ConnectionFactory
         std::unique_ptr<cms::ConnectionFactory> connectionFactory(
-        cms::ConnectionFactory::createCMSConnectionFactory(brokerURI));
+        cms::ConnectionFactory::createCMSConnectionFactory(brokerConfig.GetBrokerURI()));
 
         // Create a Connection
-        if (true == getUSE_BROKER_CREDENTIALS())
-            connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
-        else
+        if (brokerConfig.UseBrokerCredentials()) {
+            connection = connectionFactory->createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
+        }
+        else {
             connection = connectionFactory->createConnection();
+        }
 
         //connection->setExceptionListener(this);
         connection->start();
@@ -183,31 +212,33 @@ bool MsgProducer::getConnection()
         session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
 
         // Create the destination (Topic or Queue)
-        if (getTOPIC()) {
-            destination_transfer_started = session->createTopic(startqueueName);
-            destination_transfer_completed = session->createTopic(completequeueName);
-            destination_transfer_state = session->createTopic(statequeueName);
+        if (brokerConfig.UseTopics()) {
+            destination_transfer_started = session->createTopic(brokerConfig.GetStartDestination());
+            destination_transfer_completed = session->createTopic(brokerConfig.GetCompleteDestination());
+            destination_transfer_state = session->createTopic(brokerConfig.GetStateDestination());
         }
         else {
-            destination_transfer_started = session->createQueue(startqueueName);
-            destination_transfer_completed = session->createQueue(completequeueName);
-            destination_transfer_state = session->createQueue(statequeueName);
+            destination_transfer_started = session->createQueue(brokerConfig.GetStartDestination());
+            destination_transfer_completed = session->createQueue(brokerConfig.GetCompleteDestination());
+            destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
         }
 
-        int ttl = GetIntVal(getTTL());
+        // setTimeToLive expects milliseconds
+        // GetTTL gives hours
+        int ttlMs = brokerConfig.GetTTL() * 3600000;
 
         // Create a message producer
         producer_transfer_started = session->createProducer(destination_transfer_started);
         producer_transfer_started->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_started->setTimeToLive(ttl);
+        producer_transfer_started->setTimeToLive(ttlMs);
 
         producer_transfer_completed = session->createProducer(destination_transfer_completed);
         producer_transfer_completed->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_completed->setTimeToLive(ttl);
+        producer_transfer_completed->setTimeToLive(ttlMs);
 
         producer_transfer_state = session->createProducer(destination_transfer_state);
         producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_state->setTimeToLive(ttl);
+        producer_transfer_state->setTimeToLive(ttlMs);
 
         connected = true;
 
@@ -215,36 +246,13 @@ bool MsgProducer::getConnection()
     catch (cms::CMSException &e) {
         FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
         connected = false;
-        sleep(10);
     }
     catch (...) {
         FTS3_COMMON_LOGGER_LOG(ERR, "Unknown exception");
         connected = false;
-        sleep(10);
     }
 
-    return true;
-}
-
-
-void MsgProducer::readConfig()
-{
-    bool fileExists = get_mon_cfg_file(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
-
-    if ((fileExists == false) || (false == getACTIVE())) {
-        FTS3_COMMON_LOGGER_LOG(CRIT, "Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false");
-        exit(0);
-    }
-
-    this->broker = getBROKER();
-    this->startqueueName = getSTART();
-    this->completequeueName = getCOMPLETE();
-    this->statequeueName = getSTATE();
-
-    this->logfilename = getLOGFILENAME();
-    this->logfilepath = getLOGFILEDIR();
-
-    this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
+    return connected;
 }
 
 // If something bad happens you see it here as this class is also been
@@ -254,11 +262,10 @@ void MsgProducer::onException(const cms::CMSException &ex AMQCPP_UNUSED)
     FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
     stopThreads = true;
     std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-    std::string ret;
     while (!myQueue.empty()) {
-        ret = myQueue.front();
+        std::string msg = myQueue.front();
         myQueue.pop();
-        restoreMessageToDisk(localProducer, ret);
+        localProducer.runProducerMonitoring(msg);
     }
     connected = false;
     sleep(5);
@@ -292,13 +299,19 @@ void MsgProducer::run()
             usleep(100);
         }
         catch (cms::CMSException &e) {
-            restoreMessageToDisk(localProducer, msgBk);
+            localProducer.runProducerMonitoring(msgBk);
             FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
             connected = false;
             sleep(5);
         }
+        catch (std::exception &e) {
+            localProducer.runProducerMonitoring(msgBk);
+            FTS3_COMMON_LOGGER_LOG(ERR, e.what());
+            connected = false;
+            sleep(5);
+        }
         catch (...) {
-            restoreMessageToDisk(localProducer, msgBk);
+            localProducer.runProducerMonitoring(msgBk);
             FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
             connected = false;
             sleep(5);
@@ -309,87 +322,47 @@ void MsgProducer::run()
 
 void MsgProducer::cleanup()
 {
-    // Destroy resources.
-    try {
-        if (destination_transfer_started != NULL) delete destination_transfer_started;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete destination_transfer_started;
     destination_transfer_started = NULL;
 
-    try {
-        if (producer_transfer_started != NULL) delete producer_transfer_started;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete producer_transfer_started;
     producer_transfer_started = NULL;
 
-    try {
-        if (destination_transfer_completed != NULL) delete destination_transfer_completed;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete destination_transfer_completed;
     destination_transfer_completed = NULL;
 
-    try {
-        if (producer_transfer_completed != NULL) delete producer_transfer_completed;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete producer_transfer_completed;
     producer_transfer_completed = NULL;
 
 
-    try {
-        if (destination_transfer_state != NULL) delete destination_transfer_state;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete destination_transfer_state;
     destination_transfer_state = NULL;
 
-    try {
-        if (producer_transfer_state != NULL) delete producer_transfer_state;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete producer_transfer_state;
     producer_transfer_state = NULL;
 
     // Close open resources.
     try {
-        if (session != NULL) session->close();
+        if (session != NULL) {
+            session->close();
+        }
     }
     catch (cms::CMSException &e) {
         e.printStackTrace();
     }
 
-    try {
-        if (session != NULL) delete session;
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
+    delete session;
     session = NULL;
 
-
     try {
-        if (connection != NULL) connection->close();
+        if (connection != NULL) {
+            connection->close();
+        }
     }
     catch (cms::CMSException &e) {
         e.printStackTrace();
     }
 
-    try {
-        if (connection != NULL)
-            delete connection;
-    }
-    catch (cms::CMSException &e) {
-        e.getStackTraceString();
-    }
+    delete connection;
     connection = NULL;
 }
-

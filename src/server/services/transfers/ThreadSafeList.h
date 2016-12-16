@@ -44,7 +44,8 @@ public:
     void push_back(fts3::events::MessageUpdater &msg);
     void clear();
     void updateMsg(fts3::events::MessageUpdater &msg);
-    void checkExpiredMsg(std::vector<fts3::events::MessageUpdater>& messages);
+    void checkExpiredMsg(std::vector<fts3::events::MessageUpdater>& messages,
+        boost::posix_time::time_duration timeout);
     void deleteMsg(std::vector<fts3::events::MessageUpdater>& messages);
     void removeFinishedTr(std::string job_id, uint64_t file_id);
 

@@ -23,14 +23,15 @@ cmake_minimum_required(VERSION 2.8)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
 find_package (Boost COMPONENTS filesystem thread system)
 find_package (JSONC REQUIRED)
+find_package (APR)
 
 include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
+include_directories (${APR_INCLUDE_DIR})
 include_directories (${JSONC_INCLUDE_DIRS})
 
 # libfts_msg_ifce
 set(fts_msg_ifce_SOURCES
     msg-ifce.cpp
-    UtilityRoutines.cpp
 )
 
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
@@ -47,10 +48,10 @@ set_target_properties(fts_msg_ifce PROPERTIES
 
 # fts_msg_bulk binary
 set(fts_msg_bulk_SOURCES
-    UtilityRoutines.cpp
     msg-bulk-send.cpp
     MsgPipe.cpp
     MsgProducer.cpp
+        BrokerConfig.cpp
 )
 
 add_executable(fts_msg_bulk ${fts_msg_bulk_SOURCES})

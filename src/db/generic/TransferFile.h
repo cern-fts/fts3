@@ -28,6 +28,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/logic/tribool.hpp>
 
+#include "Job.h"
+
 /**
  * Describes the status of one file in a transfer job.
  */
@@ -83,7 +85,7 @@ public:
     TransferFile() :
             fileId(0), fileIndex(0),  numFailures(0),filesize(0.0),
             finishTime(0), jobFinished(0), pinLifetime(0),
-            bringOnline(0), userFilesize(0.0), lastReplica(0)
+            bringOnline(0), userFilesize(0.0), lastReplica(0), pid(0)
     {
     }
 
@@ -91,7 +93,7 @@ public:
     {
     }
 
-    int fileId;
+    uint64_t fileId;
     int fileIndex;
     std::string jobId;
     std::string fileState;
@@ -102,12 +104,11 @@ public:
     std::string agentDn;
     std::string reason;
     unsigned numFailures;
-    double filesize;
+    int64_t filesize;
     time_t finishTime;
     std::string internalFileParams;
     time_t jobFinished;
     std::string voName;
-    std::string vomsAttrs;
     std::string overwriteFlag;
     std::string userDn;
     std::string credId;
@@ -118,13 +119,13 @@ public:
     std::string selectionStrategy;
     int pinLifetime;
     int bringOnline;
-    double userFilesize;
+    int64_t userFilesize;
     std::string fileMetadata;
     std::string jobMetadata;
     std::string bringOnlineToken;
-    std::string userCredentials;
-    std::string reuseJob;
+    Job::JobType jobType; // See Job constants
     int lastReplica;
+    pid_t pid;
 
     ProtocolParameters getProtocolParameters(void) const {
         return ProtocolParameters(internalFileParams);

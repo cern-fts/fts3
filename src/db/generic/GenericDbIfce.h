@@ -188,8 +188,8 @@ public:
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
-    /// @param[out] collectJobs A map of fileId with its corresponding jobId that have been cancelled
-    virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
+    /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
+    virtual void reapStalledTransfers(std::vector<TransferFile>& transfers) = 0;
 
     /// Set the PID for all the files inside a reuse or multihop job
     /// @param jobId    The job id for which the files will be updated
@@ -214,11 +214,6 @@ public:
     /// @param jobId    The job id for which url copy failed to fork
     /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId) = 0;
-
-    /// Mark the files contained in 'messages' as stalled (FAILED)
-    /// @param messages Only file_id, job_id and process_id from this is used
-    /// @param diskFull Set to true if there are no messages because the disk is full
-    virtual bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull) = 0;
 
     /// Return true if the group 'groupName' exists
     virtual bool checkGroupExists(const std::string & groupName) = 0;
@@ -278,10 +273,7 @@ public:
     /// @param jobs An output parameter, where the set of expired job ids is stored
     virtual void cancelWaitingFiles(std::set<std::string>& jobs) = 0;
 
-    // TODO: UNUSED
-    virtual void revertNotUsedFiles() = 0;
-
-    /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
+    /// Run a set of sanity checks over the database, fixing potential inconsistencies and logging them
     virtual void checkSanityState() = 0;
 
     /// Checks if the database schema has been loaded
@@ -334,13 +326,14 @@ public:
     virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe) = 0;
 
     /// Returns how many streams must be used for the given link
-    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)= 0;
+    virtual int getStreamsOptimization(const std::string &voName,
+        const std::string &sourceSe, const std::string &destSe)= 0;
 
     /// Returns the globally configured transfer timeout
-    virtual int getGlobalTimeout() = 0;
+    virtual int getGlobalTimeout(const std::string &voName) = 0;
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
-    virtual int getSecPerMb() = 0;
+    virtual int getSecPerMb(const std::string &voName) = 0;
 
     /// Returns the optimizer level for the TCP buffersize
     virtual int getBufferOptimization() = 0;
@@ -392,8 +385,8 @@ public:
                                      const std::string& cloudName,
                                      CloudStorageAuth& auth) = 0;
 
-    /// Get if the user dn should be visible or not in the logs
-    virtual bool getUserDnVisible() = 0;
+    /// Get if the user dn should be visible or not in the messaging
+    virtual bool publishUserDn(const std::string &vo) = 0;
 };
 
 #endif // GENERICDBIFCE_H_

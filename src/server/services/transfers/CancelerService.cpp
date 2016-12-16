@@ -53,29 +53,46 @@ CancelerService::~CancelerService()
 
 void CancelerService::markAsStalled()
 {
+    auto db = DBSingleton::instance().getDBObjectInstance();
+    const boost::posix_time::seconds timeout(ServerConfig::instance().get<int>("CheckStalledTimeout"));
+
     std::vector<fts3::events::MessageUpdater> messages;
     messages.reserve(500);
-    ThreadSafeList::get_instance().checkExpiredMsg(messages);
+    ThreadSafeList::get_instance().checkExpiredMsg(messages, timeout);
+
     if (!messages.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Reaping stalled transfers" << commit;
 
         boost::filesystem::path p(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         boost::filesystem::space_info s = boost::filesystem::space(p);
         bool diskFull = (s.free <= 0 || s.available <= 0);
-        bool updated = DBSingleton::instance().getDBObjectInstance()->markAsStalled(messages, diskFull);
-        if (updated) {
-            for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
-                if ((*iter).file_id() > 0 && (*iter).job_id().length() > 0) {
-                    SingleTrStateInstance::instance().sendStateMessage((*iter).job_id(), (*iter).file_id());
-                }
-            }
+        std::stringstream reason;
+
+        if (diskFull) {
+            reason << "No space left on device";
         }
         else {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
-                << messages.size() << " messages affected" << commit;
+            reason << "No FTS server has updated the transfer status the last "
+                << timeout.total_seconds() << " seconds"
+                << ". Probably stalled";
+        }
+
+        for (auto i = messages.begin(); i != messages.end(); ++i) {
+            kill(i->process_id(), SIGKILL);
+            bool updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
+                "FAILED", reason.str(), i->process_id(),
+                0, 0, false);
+            db->updateJobStatus(i->job_id(), "FAILED", i->process_id());
+
+            if (updated) {
+                SingleTrStateInstance::instance().sendStateMessage(i->job_id(), i->file_id());
+            }
+            else {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
+                    << i->job_id() << "/" << i->file_id() << commit;
+            }
         }
         ThreadSafeList::get_instance().deleteMsg(messages);
-        messages.clear();
     }
 }
 
@@ -111,19 +128,21 @@ void CancelerService::applyQueueTimeouts()
 
 void CancelerService::applyActiveTimeouts()
 {
-    std::map<int, std::string> collectJobs;
-    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
-    if (!collectJobs.empty())
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Applying ACTIVE timeouts" << commit;
-        std::map<int, std::string>::const_iterator iterCollectJobs;
-        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
-        {
-            SingleTrStateInstance::instance().sendStateMessage(
-                    (*iterCollectJobs).second,
-                    (*iterCollectJobs).first);
-        }
-        collectJobs.clear();
+    std::vector<TransferFile> stalled;
+    auto db = DBSingleton::instance().getDBObjectInstance();
+
+    db->reapStalledTransfers(stalled);
+
+    for (auto i = stalled.begin(); i != stalled.end(); ++i) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << i->pid
+            << ", jobid:" << i->jobId << ", fileid:" << i->fileId
+            << " because it was stalled" << commit;
+        kill(i->pid, SIGKILL);
+        db->updateTransferStatus(i->jobId, i->fileId, 0.0,
+            "FAILED", "Transfer has been forced-killed because it was stalled",
+            i->pid, 0, 0, false);
+        db->updateJobStatus(i->jobId, "FAILED", i->pid);
+        SingleTrStateInstance::instance().sendStateMessage(i->jobId, i->fileId);
     }
 }
 
@@ -252,7 +271,7 @@ void CancelerService::runService()
         }
         catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught uknown exception" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught unknown exception" << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;

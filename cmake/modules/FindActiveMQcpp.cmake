@@ -87,9 +87,6 @@ else()
 ENDIF()
 
 
-
-
-
 # Find the libs, by giving priority to ACTIVEMQCPP_ALTLOCATION, if set
 IF (ACTIVEMQCPP_ALTLOCATION)
   find_library(ACTIVEMQCPP_LIBRARIES NAMES activemq-cpp DOC "Path to the activemq-cpp library"
@@ -118,10 +115,6 @@ else()
 ENDIF()
 
 
-
-
-
-
 #
 # Version checking
 #
@@ -138,8 +131,6 @@ if(ActiveMQcpp_FIND_VERSION AND ACTIVEMQCPP_VERSION)
         endif()
     endif()
 endif()
-
-
 
 
 

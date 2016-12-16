@@ -23,11 +23,8 @@
 #include <soci/soci.h>
 #include "db/generic/GenericDbIfce.h"
 #include "db/generic/StoragePairState.h"
-#include "db/generic/SanityFlags.h"
 #include "msg-bus/consumer.h"
 #include "msg-bus/producer.h"
-
-#define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
 
 class MySqlAPI : public GenericDbIfce
@@ -35,31 +32,6 @@ class MySqlAPI : public GenericDbIfce
 public:
     MySqlAPI();
     virtual ~MySqlAPI();
-
-    class CleanUpSanityChecks
-    {
-    public:
-        CleanUpSanityChecks(MySqlAPI *instanceLocal, soci::session &sql, struct SanityFlags &msg) :
-            instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
-        {
-            returnValue = instanceLocal->assignSanityRuns(sql, msg);
-        }
-
-        ~CleanUpSanityChecks()
-        {
-            instanceLocal->resetSanityRuns(sql, msg);
-        }
-
-        bool getCleanUpSanityCheck()
-        {
-            return returnValue;
-        }
-
-        MySqlAPI* instanceLocal;
-        soci::session& sql;
-        struct SanityFlags &msg;
-        bool returnValue;
-    };
 
     struct HashSegment
     {
@@ -173,8 +145,8 @@ public:
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
-    /// @param[out] collectJobs A map of fileId with its corresponding jobId that have been cancelled
-    virtual void forceFailTransfers(std::map<int, std::string>& collectJobs);
+    /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
+    virtual void reapStalledTransfers(std::vector<TransferFile>& transfers);
 
     /// Set the PID for all the files inside a reuse or multihop job
     /// @param jobId    The job id for which the files will be updated
@@ -199,11 +171,6 @@ public:
     /// @param jobId    The job id for which url copy failed to fork
     /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId);
-
-    /// Mark the files contained in 'messages' as stalled (FAILED)
-    /// @param messages Only file_id, job_id and process_id from this is used
-    /// @param diskFull Set to true if there are no messages because the disk is full
-    virtual bool markAsStalled(const std::vector<fts3::events::MessageUpdater>& messages, bool diskFull);
 
     /// Return true if the group 'groupName' exists
     virtual bool checkGroupExists(const std::string & groupName);
@@ -263,9 +230,6 @@ public:
     /// @param jobs An output parameter, where the set of expired job ids is stored
     virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
-    // TODO: UNUSED
-    virtual void revertNotUsedFiles();
-
     /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
     virtual void checkSanityState();
 
@@ -313,13 +277,14 @@ public:
     virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe);
 
     /// Returns how many streams must be used for the given link
-    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);
+    virtual int getStreamsOptimization(const std::string &voName,
+        const std::string &sourceSe, const std::string &destSe);
 
     /// Returns the globally configured transfer timeout
-    virtual int getGlobalTimeout();
+    virtual int getGlobalTimeout(const std::string &voName);
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
-    virtual int getSecPerMb();
+    virtual int getSecPerMb(const std::string &voName);
 
     /// Returns the optimizer level for the TCP buffersize
     virtual int getBufferOptimization();
@@ -371,8 +336,8 @@ public:
         const std::string& cloudName,
         CloudStorageAuth& auth);
 
-    /// Get if the user dn should be visible or not in the logs
-    virtual bool getUserDnVisible();
+    /// Get if the user dn should be visible or not in the messaging 
+    virtual bool publishUserDn(const std::string &vo);
 
 private:
     size_t                poolSize;
@@ -380,12 +345,6 @@ private:
     std::string           hostname;
     std::string username_;
     std::map<std::string, int> queuedStagingFiles;
-
-    Producer           producer;
-    Consumer           consumer;
-
-    bool assignSanityRuns(soci::session& sql, struct SanityFlags &msg);
-    void resetSanityRuns(soci::session& sql, struct SanityFlags &msg);
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
         std::string serviceName);
@@ -424,10 +383,9 @@ private:
 
     bool getDrainInternal(soci::session& sql);
 
-    int getMaxTimeInQueue();
+    int getMaxTimeInQueue(const std::string &voName);
 
-    bool getUserDnVisibleInternal(soci::session& sql);
-
+    bool publishUserDnInternal(soci::session& sql, const std::string &vo);
 
     // Sanity checks
     void fixJobNonTerminallAllFilesTerminal(soci::session &sql);
@@ -439,4 +397,7 @@ private:
     void fixEmptyJob(soci::session &sql, const std::string &jobId);
     void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
         uint64_t filesInJob, uint64_t cancelCount, uint64_t finishedCount, uint64_t failedCount);
+
+    std::vector<std::string> getVos(void);
+    void cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo);
 };

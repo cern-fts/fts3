@@ -349,9 +349,9 @@ int MySqlAPI::getRetry(const std::string & jobId)
         {
             sql <<
                 " SELECT retry "
-                    " FROM t_server_config where vo_name=:vo_name LIMIT 1",
-                soci::use(vo_name), soci::into(nRetries)
-                ;
+                " FROM t_server_config WHERE vo_name IN (:vo_name, '*', NULL) "
+                " ORDER BY vo_name DESC LIMIT 1",
+                soci::use(vo_name), soci::into(nRetries);
         }
         else if (nRetries <= 0)
         {
@@ -362,10 +362,11 @@ int MySqlAPI::getRetry(const std::string & jobId)
         //do not retry multiple replica jobs
         if(nRetries > 0)
         {
-            std::string mreplica;
-            sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
-            if(mreplica == "R" || mreplica == "H")
+            Job::JobType mreplica;
+            sql << "select job_type from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
+            if(mreplica == Job::kTypeMultipleReplica || mreplica == Job::kTypeMultiHop) {
                 nRetries = 0;
+            }
         }
     }
     catch (std::exception& e)
@@ -407,7 +408,7 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId)
 }
 
 
-int MySqlAPI::getMaxTimeInQueue()
+int MySqlAPI::getMaxTimeInQueue(const std::string &voName)
 {
     soci::session sql(*connectionPool);
 
@@ -416,8 +417,10 @@ int MySqlAPI::getMaxTimeInQueue()
     {
         soci::indicator isNull = soci::i_ok;
 
-        sql << "SELECT max_time_queue FROM t_server_config WHERE vo_name IS NULL or vo_name = '*' LIMIT 1",
-            soci::into(maxTime, isNull);
+        sql << "SELECT max_time_queue "
+               " FROM t_server_config WHERE vo_name IN (:vo, '*', NULL) "
+               " ORDER BY vo_name DESC LIMIT 1",
+            soci::use(voName), soci::into(maxTime, isNull);
 
         //just in case soci it is reseting the value to NULL
         if(isNull != soci::i_null && maxTime > 0)
@@ -568,7 +571,7 @@ bool MySqlAPI::isProtocolIPv6(const std::string & source_hostname, const std::st
 }
 
 
-int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)
+int MySqlAPI::getStreamsOptimization(const std::string &voName, const std::string &sourceSe, const std::string &destSe)
 {
     soci::session sql(*connectionPool);
 
@@ -576,10 +579,10 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
     {
         int globalConfig = 0;
         sql << "SELECT global_tcp_stream "
-            " FROM t_server_config "
-            " WHERE (vo_name IS NULL OR vo_name = '*') AND "
-            "    global_tcp_stream > 0",
-            soci::into(globalConfig);
+               " FROM t_server_config "
+               " WHERE vo_name IN (:vo, '*', NULL) "
+               " ORDER BY vo_name DESC LIMIT 1",
+            soci::use(voName), soci::into(globalConfig);
         if(sql.got_data() && globalConfig > 0) {
             return globalConfig;
         }
@@ -591,12 +594,7 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
             soci::use(sourceSe), soci::use(destSe),
             soci::into(streams, isNullStreams);
 
-        if (isNullStreams == soci::i_ok) {
-            return streams;
-        }
-        else {
-            return DEFAULT_NOSTREAMS;
-        }
+        return streams;
     }
     catch (std::exception& e)
     {
@@ -611,21 +609,21 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
 }
 
 
-int MySqlAPI::getGlobalTimeout()
+int MySqlAPI::getGlobalTimeout(const std::string &voName)
 {
     soci::session sql(*connectionPool);
-    int timeout = 0;
 
     try
     {
+        int timeout = 0;
         soci::indicator isNullTimeout = soci::i_ok;
 
-        sql << "SELECT global_timeout FROM t_server_config WHERE vo_name IS NULL OR vo_name = '*'", soci::into(timeout, isNullTimeout);
+        sql << "SELECT global_timeout FROM t_server_config "
+               "WHERE vo_name IN (:vo, '*', NULL) "
+               "ORDER BY vo_name DESC LIMIT 1",
+               soci::use(voName), soci::into(timeout, isNullTimeout);
 
-        if(sql.got_data() && timeout > 0)
-        {
-            return timeout;
-        }
+        return timeout;
     }
     catch (std::exception& e)
     {
@@ -635,27 +633,24 @@ int MySqlAPI::getGlobalTimeout()
     {
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-
-    return timeout;
-
 }
 
 
-int MySqlAPI::getSecPerMb()
+int MySqlAPI::getSecPerMb(const std::string &voName)
 {
     soci::session sql(*connectionPool);
-    int seconds = 0;
 
     try
     {
+        int seconds = 0;
         soci::indicator isNullSeconds = soci::i_ok;
 
-        sql << "SELECT sec_per_mb FROM t_server_config WHERE vo_name IS NULL OR vo_name = '*'", soci::into(seconds, isNullSeconds);
+        sql << "SELECT sec_per_mb FROM t_server_config "
+               "WHERE vo_name IN (:vo, '*', NULL) "
+               "ORDER BY vo_name DESC LIMIT 1",
+               soci::use(voName), soci::into(seconds, isNullSeconds);
 
-        if(sql.got_data() && seconds > 0)
-        {
-            return seconds;
-        }
+        return seconds;
     }
     catch (std::exception& e)
     {
@@ -665,9 +660,6 @@ int MySqlAPI::getSecPerMb()
     {
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-
-    return seconds;
-
 }
 
 
@@ -699,10 +691,18 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
 
     try
     {
-        sql << "SELECT * "
-            "FROM t_cloudStorage cs, t_cloudStorageUser cu "
-            "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-            soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(auth);
+        sql <<
+            " SELECT * "
+            " FROM t_cloudStorage cs "
+            " JOIN t_cloudStorageUser cu ON cs.cloudStorage_name = cu.cloudStorage_name "
+            " WHERE"
+            "   cs.cloudStorage_name=:cs_name AND ("
+            "       (cu.user_dn=:user_dn AND cu.vo_name=:vo) OR "
+            "       (cu.user_dn='*' AND cu.vo_name=:vo) OR "
+            "       (cu.user_dn=:user_dn AND cu.vo_name='*')"
+            "   )",
+            soci::use(cloud_name, "cs_name"), soci::use(user_dn, "user_dn"), soci::use(vo, "vo"),
+            soci::into(auth);
         if (!sql.got_data())
             return false;
     }
@@ -718,31 +718,20 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
 }
 
 
-bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
+bool MySqlAPI::publishUserDnInternal(soci::session& sql, const std::string &vo)
 {
-    std::string show_user_dn;
-    soci::indicator isNullShow = soci::i_ok;
+    std::string publish;
+    soci::indicator isNullPublish = soci::i_ok;
 
     try
     {
-        sql << "select show_user_dn from t_server_config", soci::into(show_user_dn, isNullShow);
+        sql << "SELECT show_user_dn FROM t_server_config WHERE vo_name = :vo",
+          soci::use(vo), soci::into(publish, isNullPublish);
 
-        if (isNullShow == soci::i_null)
-        {
-            return true;
-        }
-        else if(show_user_dn == "on")
-        {
-            return true;
-        }
-        else if(show_user_dn == "off")
-        {
+        if (isNullPublish == soci::i_null) {
             return false;
         }
-        else
-        {
-            return true;
-        }
+        return publish == "on";
     }
     catch (std::exception& e)
     {
@@ -752,18 +741,16 @@ bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
     {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-
-    return true;
 }
 
 
-bool MySqlAPI::getUserDnVisible()
+bool MySqlAPI::publishUserDn(const std::string &vo)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        return getUserDnVisibleInternal(sql);
+        return publishUserDnInternal(sql, vo);
     }
     catch (std::exception& e)
     {

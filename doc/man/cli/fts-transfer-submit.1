@@ -9,63 +9,51 @@ fts-transfer-submit [options] SOURCE DEST [CHECKSUM]
 fts-transfer-submit is a tool for submitting transfer-jobs using the GRID File Transfer Service 3. The user has to specify the source and destination, optionally the checksum may be specified (Algorithm:Value) 
 .SH OPTIONS
   -h [ --help ]         Print this help text and exit.
-  -q [ --quite ]        Quiet operation.
+  -q [ --quiet ]        Quiet operation.
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
+  --proxy arg           Path to the proxy certificate (e.g. /tmp/x509up_u500).
   -V [ --version ]      Print the version number and exit.
   -j [ --json ]         The output should be printed in JSON format
 
-  --source arg                             Specify source site name.
-  --destination arg                        Specify destination site name.
-  --rest                                   Use the RESTful interface.
-  --capath arg                             Path to the GRID security 
-                                           certificates (e.g. 
-                                           /etc/grid-security/certificates).
-  --proxy arg                              Path to the proxy certificate (e.g. 
-                                           /tmp/x509up_u500).
-  -I [ --id ] arg                          Delegation with ID as the delegation
-                                           identifier.
-  -e [ --expire ] arg                      Expiration time of the delegation in
-                                           minutes.
-  -b [ --blocking ]                        Blocking mode, wait until the 
-                                           operation completes.
-  -f [ --file ] arg                        Name of a the bulk submission file.
-  -g [ --gparam ] arg                      Gridftp parameters.
-  -i [ --interval ] arg                    Interval between two poll operations
-                                           in blocking mode.
-  -o [ --overwrite ]                       Overwrite files.
-  -t [ --dest-token ] arg                  The destination space token or its 
-                                           description (for SRM 2.2 transfers).
-  -S [ --source-token ] arg                The source space token or its 
-                                           description (for SRM 2.2 transfers).
-  -K [ --compare-checksum ]                Compare checksums between source and
-                                           destination.
-  --copy-pin-lifetime [=arg(=28800)] (=-1) Pin lifetime of the copy of the file
-                                           (seconds), if the argument is not 
-                                           specified a default value of 28800 
-                                           seconds (8 hours) is used.
-  --bring-online [=arg(=28800)] (=-1)      Bring online timeout expressed in 
-                                           seconds, if the argument is not 
-                                           specified a default value of 28800 
-                                           seconds (8 hours) is used.
-  -r [ --reuse ]                           enable session reuse for the 
-                                           transfer job
-  -m [ --multi-hop ]                       enable multi-hopping
-  --job-metadata arg                       transfer-job metadata
-  --file-metadata arg                      file metadata
-  --file-size arg                          file size (in Bytes)
-  --json-submission                        The bulk submission file will be 
-                                           expected in JSON format
-  --retry arg                              Number of retries. If 0, the server 
-                                           default will be used. If negative, 
-                                           there will be no retries.
-  --retry-delay arg (=0)                   Retry delay in seconds
-  --nostreams arg                          number of streams that will be used 
-                                           for the given transfer-job
-  --timeout arg                            timeout (expressed in seconds) that 
-                                           will be used for the given job
-  --buff-size arg                          buffer size (expressed in bytes) 
-                                           that will be used for the given 
-                                           transfer-job
+  --capath arg          Path to the GRID security certificates 
+
+  --source arg          Specify source site name.
+  --destination arg     Specify destination site name.
+  -I [ --id ] arg       Delegation with ID as the delegation identifier.
+  -e [ --expire ] arg   Expiration time of the delegation in minutes.
+  -b [ --blocking ]     Blocking mode, wait until the operation completes.
+  -f [ --file ] arg     Name of a the bulk submission file.
+  -g [ --gparam ] arg   Deprecated. For compatibility only.
+  -i [ --interval ] arg Interval between two poll operations in blocking mode.
+  -o [ --overwrite ]    Overwrite files.
+
+  -t [ --dest-token ] arg    The destination space token
+  -S [ --source-token ] arg  The source space token
+
+  -K [ --compare-checksums ] Compare checksums between source and destination.
+
+  --copy-pin-lifetime (=-1) Pin lifetime of the copy of the file (seconds).
+  --bring-online (=-1)      Bring online timeout expressed in seconds.
+
+  -r [ --reuse ]            Enable session reuse for the transfer job
+  -m [ --multi-hop ]        Enable multi-hop
+
+  --job-metadata arg        Job metadata
+  --file-metadata arg       File metadata
+
+  --file-size arg           File size (in Bytes)
+
+  --json-submission         The bulk submission file will be expected in JSON format
+
+  --retry arg               Number of retries. If 0, the server default will be used. If negative, there will be no retries.
+  --retry-delay arg (=0)    Retry delay in seconds
+
+  --nostreams arg           Number of streams.
+  --timeout arg             Timeout (expressed in seconds)
+  --buff-size arg           Buffer size (expressed in bytes)
+  --strict-copy             Disable all checks, just copy the file
+  --credentials arg         Additional credentials for the transfer (i.e. S3)
+
 .SH SEE ALSO
 http://fts3-service.web.cern.ch/

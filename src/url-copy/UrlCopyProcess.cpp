@@ -108,7 +108,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             break;
     }
 
-    params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
+    if (!transfer.checksumAlgorithm.empty()) {
+        params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
+    }
 
     // Additional metadata
     gfal2.addClientInfo("job-id", transfer.jobId);
@@ -159,7 +161,6 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     else {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running without proxy" << commit;
     }
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User DN: " << opts.userDn << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO: " << opts.voName << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << transfer.jobId << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << transfer.fileId << commit;

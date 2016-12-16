@@ -76,183 +76,70 @@ void MessageProcessingService::runService()
             {
                 db::DBSingleton::instance().getDBObjectInstance()->getDrain();
             }
-            catch (...)
-            {
+            catch (...) {
                 boost::this_thread::sleep(boost::posix_time::seconds(10));
                 continue;
             }
 
+            // update statuses
             if (consumer.runConsumerStatus(messages) != 0)
             {
                 char buffer[128] = {0};
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                continue;
             }
 
             if (!messages.empty())
             {
                 executeUpdate(messages);
-
-                //now update the protocol
                 db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);
-
-                //finally clear store
                 messages.clear();
             }
 
-            //update log file path
+            // update log file path
             if (consumer.runConsumerLog(messagesLog) != 0)
             {
                 char buffer[128] = { 0 };
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                continue;
             }
 
-            try
-            {
-                if (!messagesLog.empty())
-                {
-                    db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                    messagesLog.clear();
-                }
-            }
-            catch (std::exception& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-
-                //try again
-                try
-                {
-                    db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                    messagesLog.clear();
-                }
-                catch(...)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 1" << commit;
-                    std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
-                    for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
-                    {
-                        fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
-                        producer.runProducerLog( msgLogBreak );
-                    }
-                }
-            }
-            catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 2" << commit;
-                //try again
-                try
-                {
-                    db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                    messagesLog.clear();
-                }
-                catch(...)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 3" << commit;
-                    std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
-                    for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
-                    {
-                        fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
-                        producer.runProducerLog( msgLogBreak );
-                    }
-                }
+            if (!messagesLog.empty()) {
+                db::DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                messagesLog.clear();
             }
 
-            //update heartbeat and progress vector
-            try
+            // update heartbeat and progress vector
+            if (consumer.runConsumerStall(messagesUpdater) != 0)
             {
-                if (consumer.runConsumerStall(messagesUpdater) != 0)
+                char buffer[128] = { 0 };
+                FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                continue;
+            }
+
+            if(!messagesUpdater.empty())
+            {
+                std::vector<fts3::events::MessageUpdater>::iterator iterUpdater;
+                for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
                 {
-                    char buffer[128] = { 0 };
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                    std::string job = std::string((*iterUpdater).job_id()).substr(0, 36);
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                        << "\nJob id: " << job
+                        << "\nFile id: " << (*iterUpdater).file_id()
+                        << "\nPid: " << (*iterUpdater).process_id()
+                        << "\nTimestamp: " << (*iterUpdater).timestamp()
+                        << "\nThroughput: " << (*iterUpdater).throughput()
+                        << "\nTransferred: " << (*iterUpdater).transferred()
+                        << commit;
+                    ThreadSafeList::get_instance().updateMsg(*iterUpdater);
                 }
 
-                if(!messagesUpdater.empty())
-                {
-                    std::vector<fts3::events::MessageUpdater>::iterator iterUpdater;
-                    for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
-                    {
-                        std::string job = std::string((*iterUpdater).job_id()).substr(0, 36);
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
-                            << "\nJob id: " << job
-                            << "\nFile id: " << (*iterUpdater).file_id()
-                            << "\nPid: " << (*iterUpdater).process_id()
-                            << "\nTimestamp: " << (*iterUpdater).timestamp()
-                            << "\nThroughput: " << (*iterUpdater).throughput()
-                            << "\nTransferred: " << (*iterUpdater).transferred()
-                            << commit;
-                        ThreadSafeList::get_instance().updateMsg(*iterUpdater);
-                    }
-
-                    //now update the progress markers in a "bulk fashion"
-                    try
-                    {
-                        db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
-                    }
-                    catch (std::exception& e)
-                    {
-                        try
-                        {
-                            boost::this_thread::sleep(boost::posix_time::seconds(1));
-                            db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
-                        }
-                        catch (std::exception& e)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-                        }
-                        catch (...)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        }
-                    }
-                    catch (...)
-                    {
-                        try
-                        {
-                            boost::this_thread::sleep(boost::posix_time::seconds(1));
-                            db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
-                        }
-                        catch (std::exception& e)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-                        }
-                        catch (...)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        }
-                    }
-                }
+                db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                 messagesUpdater.clear();
             }
-            catch (const fs::filesystem_error& ex)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            }
-            catch (BaseException& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            }
-            catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-            }
         }
-        catch (const fs::filesystem_error& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-
-            for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
-            {
-                producer.runProducerStatus(*iterBreak);
-            }
-
-            for (auto iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
-            {
-                fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
-                producer.runProducerLog( msgLogBreak );
-            }
-        }
-        catch (std::exception& ex2)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << commit;
+        catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
 
             for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
             {
@@ -266,8 +153,7 @@ void MessageProcessingService::runService()
                 producer.runProducerLog( msgLogBreak );
             }
         }
-        catch (...)
-        {
+        catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
 
             for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)

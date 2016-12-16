@@ -33,10 +33,17 @@ class Job: public OwnedResource
 {
 public:
 
-    Job(): submitTime(0), finishTime(0), priority(3), maxTimeInQueue(0),
+    Job(): submitTime(0), priority(3), maxTimeInQueue(0),
            jobFinished(0), copyPinLifetime(0), bringOnline(0)
     {
     }
+
+    enum JobType {
+        kTypeMultipleReplica = 'R',
+        kTypeMultiHop = 'H',
+        kTypeSessionReuse = 'Y',
+        kTypeRegular = 'N'
+    };
 
     std::string jobId;
     std::string jobState;
@@ -44,13 +51,10 @@ public:
     std::string source;
     std::string destination;
     std::string userDn;
-    std::string agentDn;
-    std::string userCred;
     std::string credId;
     std::string voName;
     std::string reason;
     time_t submitTime;
-    time_t finishTime;
     int priority;
     std::string submitHost;
     int maxTimeInQueue;
@@ -60,11 +64,10 @@ public:
     std::string overwriteFlag;
     time_t jobFinished;
     std::string sourceSpaceToken;
-    std::string sourceSpaceTokenDescription;
     int copyPinLifetime;
     std::string checksumMethod;
     int bringOnline;
-    std::string reuse;
+    JobType jobType;
 
     std::string getUserDn() const
     {

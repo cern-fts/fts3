@@ -19,22 +19,13 @@
  */
 
 #include "MsgPipe.h"
-#include <iostream>
-#include <string>
-#include <errno.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+
 #include <signal.h>
-#include <vector>
+#include <iostream>
 #include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "common/Logger.h"
 #include "common/ConcurrentQueue.h"
-#include "UtilityRoutines.h"
 
 extern bool stopThreads;
 static bool signalReceived = false;
@@ -115,10 +106,9 @@ void MsgPipe::run()
 void MsgPipe::cleanup()
 {
     std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-    std::string ret;
     while (!myQueue.empty()) {
-        ret = myQueue.front();
+        std::string msg = myQueue.front();
         myQueue.pop();
-        restoreMessageToDisk(producer, ret);
+        producer.runProducerMonitoring(msg);
     }
 }

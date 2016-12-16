@@ -136,6 +136,7 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
 {
     static const unsigned long MB = 1 << 20;
+    static const unsigned long metadataTime = 600;
 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
@@ -146,5 +147,5 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
         timeoutPerMBLocal = 2;
 
     // Final timeout adjusted considering transfer timeout
-    return ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
+    return 600 + ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
 }

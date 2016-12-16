@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/test_tools.hpp>
 
 #include "common/Uri.h"
 
@@ -61,18 +62,6 @@ BOOST_AUTO_TEST_CASE(lanTransfer)
     BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain2.domain.com"), true);
     BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain.somewhere.com"), false);
     BOOST_CHECK_EQUAL(isLanTransfer("subdomain.domain.com", "subdomain.domain.es"), false);
-}
-
-
-BOOST_AUTO_TEST_CASE(hostname)
-{
-    char hostname[512];
-    FILE *hostnameFile = popen("/bin/hostname -f", "r");
-    fgets(hostname, sizeof(hostname), hostnameFile);
-    pclose(hostnameFile);
-    hostname[strlen(hostname) - 1] = '\0';
-
-    BOOST_CHECK_EQUAL(getFullHostname(), hostname);
 }
 
 

@@ -35,189 +35,6 @@ static void logInconsistency(const std::string &jobId, const std::string &messag
 }
 
 
-bool MySqlAPI::assignSanityRuns(soci::session &sql, struct SanityFlags &msg)
-{
-    long long rows = 0;
-
-    try {
-        if (msg.checkSanityState) {
-            sql.begin();
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = UTC_TIMESTAMP() "
-                    "where checkSanityState=0"
-                    " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) "));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.checkSanityState = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.checkSanityState;
-        }
-        else if (msg.setToFailOldQueuedJobs) {
-            sql.begin();
-            soci::statement st((sql.prepare
-                << "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = UTC_TIMESTAMP() "
-                    " where setToFailOldQueuedJobs=0"
-                    " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
-            ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.setToFailOldQueuedJobs = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.setToFailOldQueuedJobs;
-        }
-        else if (msg.forceFailTransfers) {
-            sql.begin();
-            soci::statement st((sql.prepare
-                << "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = UTC_TIMESTAMP() "
-                    " where forceFailTransfers=0"
-                    " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
-            ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.forceFailTransfers = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.forceFailTransfers;
-        }
-        else if (msg.revertToSubmitted) {
-            sql.begin();
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = UTC_TIMESTAMP() "
-                    " where revertToSubmitted=0"
-                    " AND (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
-                ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.revertToSubmitted = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.revertToSubmitted;
-        }
-        else if (msg.cancelWaitingFiles) {
-            sql.begin();
-            soci::statement st((sql.prepare
-                << "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = UTC_TIMESTAMP() "
-                    "  where cancelWaitingFiles=0"
-                    " AND (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
-            ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.cancelWaitingFiles = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.cancelWaitingFiles;
-        }
-        else if (msg.revertNotUsedFiles) {
-            sql.begin();
-            soci::statement st((sql.prepare
-                << "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = UTC_TIMESTAMP() "
-                    " where revertNotUsedFiles=0"
-                    " AND (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
-            ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.revertNotUsedFiles = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.revertNotUsedFiles;
-        }
-        else if (msg.cleanUpRecords) {
-            sql.begin();
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = UTC_TIMESTAMP() "
-                    " where cleanUpRecords=0"
-                    " AND (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '3' day)) "
-                ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.cleanUpRecords = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.cleanUpRecords;
-        }
-        else if (msg.msgCron) {
-            sql.begin();
-            soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = UTC_TIMESTAMP() "
-                " where msgcron=0"
-                " AND (t_msgcron < (UTC_TIMESTAMP() - INTERVAL '1' day)) "
-            ));
-            st.execute(true);
-            rows = st.get_affected_rows();
-            msg.msgCron = (rows > 0 ? true : false);
-            sql.commit();
-            return msg.msgCron;
-        }
-    }
-    catch (std::exception &e) {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...) {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-
-    return false;
-}
-
-
-void MySqlAPI::resetSanityRuns(soci::session &sql, struct SanityFlags &msg)
-{
-    try {
-        sql.begin();
-        if (msg.checkSanityState) {
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
-                    " OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
-            st.execute(true);
-        }
-        else if (msg.setToFailOldQueuedJobs) {
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=0 where (setToFailOldQueuedJobs=1 "
-                    " OR (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
-            st.execute(true);
-        }
-        else if (msg.forceFailTransfers) {
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set forceFailTransfers=0 where (forceFailTransfers=1 "
-                    " OR (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
-            st.execute(true);
-        }
-        else if (msg.revertToSubmitted) {
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set revertToSubmitted=0 where (revertToSubmitted=1  "
-                    " OR (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
-            st.execute(true);
-        }
-        else if (msg.cancelWaitingFiles) {
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set cancelWaitingFiles=0 where (cancelWaitingFiles=1  "
-                    " OR (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
-            st.execute(true);
-        }
-        else if (msg.revertNotUsedFiles) {
-            soci::statement st(
-                (sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where (revertNotUsedFiles=1  "
-                    " OR (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
-            st.execute(true);
-        }
-        else if (msg.cleanUpRecords) {
-            soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=0 where (cleanUpRecords=1  "
-                " OR (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '4' day)))  "));
-            st.execute(true);
-        }
-        else if (msg.msgCron) {
-            soci::statement st((sql.prepare << "update t_server_sanity set msgcron=0 where msgcron=1"));
-            st.execute(true);
-        }
-        sql.commit();
-    }
-    catch (std::exception &e) {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...) {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-}
-
-
 void MySqlAPI::fixEmptyJob(soci::session &sql, const std::string &jobId)
 {
     sql << "UPDATE t_job SET "
@@ -238,7 +55,7 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
 
     if (cancelCount > 0) {
         sql << "UPDATE t_job SET "
-            "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
             "    reason = :canceledMessage "
             "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ",
             soci::use(canceledMessage), soci::use(jobId);
@@ -246,14 +63,14 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
     else if (filesInJob == finishedCount)  // All files finished
     {
         sql << "UPDATE t_job SET "
-            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP() "
             "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ",
             soci::use(jobId);
     }
     else if (filesInJob == failedCount)  // All files failed
     {
         sql << "UPDATE t_job SET "
-            "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(),"
             "    reason = :failed "
             "    WHERE job_id = :jobId and  job_state <> 'FAILED' ",
             soci::use(failed), soci::use(jobId);
@@ -261,7 +78,7 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
     else   // Otherwise it is FINISHEDDIRTY
     {
         sql << "UPDATE t_job SET "
-            "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), "
             "    reason = :failed "
             "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'",
             soci::use(failed), soci::use(jobId);
@@ -296,7 +113,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         }
 
         std::string mreplica;
-        sql << "SELECT reuse_job FROM t_job WHERE job_id = :job_id",
+        sql << "SELECT job_type FROM t_job WHERE job_id = :job_id",
             soci::use(jobId), soci::into(mreplica);
 
         //check if the file belongs to a multiple replica job
@@ -329,7 +146,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         } else {
             // Fix inconsistencies on the flag
             if (mreplica != "R") {
-                sql << "UPDATE t_job set reuse_job='R' where job_id = :job_id", soci::use(jobId);
+                sql << "UPDATE t_job set job_type='R' where job_id = :job_id", soci::use(jobId);
                 logInconsistency(jobId, "Multireplica job with an incorrect flag: " + mreplica);
             }
 
@@ -352,7 +169,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
                 // TODO: job_finished be NULL?
                 if (jobState == "CANCELED") {
                     sql << "UPDATE t_file SET "
-                        "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                        "    file_state = 'CANCELED', finish_time = UTC_TIMESTAMP(), "
                         "    reason = 'Job canceled by the user' "
                         "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(jobId);
 
@@ -364,14 +181,14 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
                 if (fileState == "FINISHED")
                 {
                     sql << "UPDATE t_file SET "
-                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                        "    file_state = 'NOT_USED', finish_time = NULL, "
                         "    reason = '' "
                         "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
                         soci::use(jobId);
 
                     if (jobState != "FINISHED") {
                         sql << "UPDATE t_job SET "
-                            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP()"
                             "    WHERE job_id = :jobId",
                             soci::use(jobId);
 
@@ -399,7 +216,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
                         soci::use(jobId), soci::into(countNotUsed);
                     if (countNotUsed > 0) {
                         sql << "UPDATE t_file SET "
-                            "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
+                            "    file_state = 'SUBMITTED', finish_time = NULL, "
                             "    reason = '' "
                             "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(jobId);
                     }
@@ -428,7 +245,7 @@ void MySqlAPI::fixJobTerminalFileNonTerminal(soci::session &sql)
         const std::string jobId = i->get<std::string>("job_id");
 
         sql << "UPDATE t_file SET "
-            "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            "    file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), "
             "    reason = 'Force failure due to file state inconsistency' "
             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ",
             soci::use(jobId);
@@ -471,6 +288,7 @@ void MySqlAPI::fixDeleteInconsistencies(soci::session &sql)
 void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check from dead hosts" << commit;
+    Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
 
     soci::rowset<std::string> deadHosts = (
         sql.prepare <<
@@ -489,7 +307,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
             sql.prepare <<
                 "SELECT file_id, job_id FROM t_file "
                 "WHERE file_state  = 'ACTIVE' "
-                "   AND transferHost = :transferHost ",
+                "   AND transfer_host = :transferHost ",
                 soci::use(deadHost)
         );
         for (auto active = transfersActiveInHost.begin(); active != transfersActiveInHost.end(); ++active) {

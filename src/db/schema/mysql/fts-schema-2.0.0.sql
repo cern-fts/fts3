@@ -270,7 +270,7 @@ CREATE TABLE `t_dm_backup` (
   `wait_timeout` int(11) DEFAULT NULL,
   `hashed_id` int(10) unsigned DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -392,7 +392,7 @@ CREATE TABLE `t_file_backup` (
   `t_log_file_debug` int(11) DEFAULT NULL,
   `hashed_id` int(10) unsigned DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -556,9 +556,8 @@ CREATE TABLE `t_job_backup` (
   `bring_online` int(11) DEFAULT NULL,
   `retry` int(11) DEFAULT '0',
   `retry_delay` int(11) DEFAULT '0',
-  `job_metadata` varchar(1024) DEFAULT NULL,
-  KEY `t_job_backup_job_id` (`job_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `job_metadata` varchar(1024) DEFAULT NULL
+) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
