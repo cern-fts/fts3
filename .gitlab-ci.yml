@@ -7,9 +7,20 @@ before_script:
 after_script:
     - docker logout gitlab-registry.cern.ch
 
-job1:
+master:
+    only:
+        - master
     script:
-        - docker build -t  gitlab-registry.cern.ch/fts/fts3 packaging/docker
+        - docker build -t  gitlab-registry.cern.ch/fts/fts3:master packaging/docker
         - docker push gitlab-registry.cern.ch/fts/fts3
     tags:
         - docker 
+
+develop:
+    only:
+        - develop
+    script:
+        - docker build -t  gitlab-registry.cern.ch/fts/fts3:develop packaging/docker
+        - docker push gitlab-registry.cern.ch/fts/fts3
+    tags:
+        - docker
