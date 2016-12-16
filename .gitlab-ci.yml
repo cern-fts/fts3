@@ -15,12 +15,3 @@ master:
         - docker push gitlab-registry.cern.ch/fts/fts3
     tags:
         - docker 
-
-develop:
-    only:
-        - develop
-    script:
-        - docker build -t  gitlab-registry.cern.ch/fts/fts3:develop packaging/docker
-        - docker push gitlab-registry.cern.ch/fts/fts3
-    tags:
-        - docker
