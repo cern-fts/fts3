@@ -96,8 +96,8 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     completed.vo = opts.voName;
     completed.source_url = transfer.source.fullUri;
     completed.dest_url = transfer.destination.fullUri;
-    completed.source_hostname = transfer.source.getSeName();
-    completed.dest_hostname = transfer.destination.getSeName();
+    completed.source_hostname = transfer.source.host;
+    completed.dest_hostname = transfer.destination.host;
     completed.t_channel = transfer.getChannel();
     completed.channel_type = "urlcopy";
     completed.user_dn = replaceMetadataString(opts.userDn);
@@ -198,8 +198,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.vo = opts.voName;
     completed.source_url = transfer.source.fullUri;
     completed.dest_url = transfer.destination.fullUri;
-    completed.source_hostname = transfer.source.getSeName();
-    completed.dest_hostname = transfer.destination.getSeName();
+    completed.source_hostname = transfer.source.host;
+    completed.dest_hostname = transfer.destination.host;
     completed.t_channel = transfer.getChannel();
     completed.channel_type = "urlcopy";
     completed.user_dn = replaceMetadataString(opts.userDn);
