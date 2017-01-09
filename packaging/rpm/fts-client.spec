@@ -23,7 +23,6 @@ BuildRequires:  boost-devel
 BuildRequires:  cmake
 BuildRequires:  libcurl-devel
 BuildRequires:  libuuid-devel
-BuildRequires:  python2-devel
 %else
 BuildRequires:  boost148-devel
 BuildRequires:  cmake28

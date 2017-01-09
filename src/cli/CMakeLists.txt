@@ -28,9 +28,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(GLOBUS)
 include_directories(${GLOBUS_INCLUDE_DIRS})
 
-find_package(PythonLibs REQUIRED)
-include_directories(${PYTHON_INCLUDE_PATH})
-
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 
 # Require soap headers

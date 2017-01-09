@@ -55,7 +55,6 @@ BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
-BuildRequires:  python2-devel
 BuildRequires:  voms-devel
 BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc 
 %if %systemd
