@@ -2859,38 +2859,8 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.retry_max = it->get<int>("retry_max",0);
             ret.file_id = it->get<int>("file_id");
             ret.file_state = it->get<std::string>("file_state");
-            if(ret.file_state == "SUBMITTED")
-            {
-                aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = (timegm(&aux_tm) * 1000);
-            }
-            else if(ret.file_state == "STAGING")
-            {
-                aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = (timegm(&aux_tm) * 1000);
-            }
-            else if(ret.file_state == "DELETE")
-            {
-                aux_tm = it->get<struct tm>("submit_time");
-                ret.timestamp = (timegm(&aux_tm) * 1000);
-            }
-            else if(ret.file_state == "ACTIVE")
-            {
-                soci::indicator isNull3 = it->get_indicator("start_time");
-                if (isNull3 == soci::i_ok)
-                {
-                    aux_tm = it->get<struct tm>("start_time");
-                    ret.timestamp = (timegm(&aux_tm) * 1000);
-                }
-                else
-                {
-                    ret.timestamp = 0;
-                }
-            }
-            else
-            {
-                ret.timestamp = milliseconds_since_epoch();
-            }
+            ret.timestamp = milliseconds_since_epoch();
+
             ret.retry_counter = it->get<int>("retry_counter",0);
 
             soci::indicator isNull2 = it->get_indicator("file_metadata");
