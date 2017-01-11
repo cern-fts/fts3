@@ -74,7 +74,7 @@ void BringOnlineTask::run(const boost::any &)
 
                 bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+errors[i]->message, retry);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+std::string(errors[i]->message), retry);
                 }
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
@@ -140,7 +140,7 @@ void BringOnlineTask::run(const boost::any &)
 
                 bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+errors[i]->message, retry);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+std::string(errors[i]->message), retry);
                 }
             }
         }
