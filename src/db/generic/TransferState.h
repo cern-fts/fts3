@@ -44,6 +44,7 @@ struct TransferState
     std::string user_dn;
     std::string source_url;
     std::string dest_url;
+    std::string reason;
 
 };
 

@@ -2816,7 +2816,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                                          " SELECT "
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, f.reason, "
                                          "  f.source_se, f.start_time , f.source_surl, f.staging_start, f.staging_finished "
                                          " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
@@ -2829,7 +2829,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                                          " SELECT "
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, f.reason, "
                                          "  f.source_se, f.start_time , f.source_surl, f.staging_start, f.staging_finished "
                                          " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
@@ -2866,9 +2866,8 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             aux_tm = it->get<struct tm>("staging_finished");
             ret.staging_finished = (timegm(&aux_tm) * 1000);
 
-            if(ret.staging_start != 0){
+            if(ret.staging_start != 0)
             	ret.staging = true;
-            }
 
             ret.retry_counter = it->get<int>("retry_counter",0);
 
@@ -2877,7 +2876,6 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                 ret.file_metadata = it->get<std::string>("file_metadata","");
             else
                 ret.file_metadata = "";
-
 
 
             ret.source_se = it->get<std::string>("source_se");
@@ -2891,6 +2889,10 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = "";
+            if (ret.job_state == "FAILED")
+            	ret.reason = it->get<std::string>("reason");
+            else
+            	ret.reason = std::string("");
 
             temp.push_back(ret);
         }
@@ -2921,7 +2923,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                          " SELECT "
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, f.reason, "
                                          "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, f.staging_start, f.staging_finished "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
@@ -2934,7 +2936,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                          " SELECT "
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                         "  f.file_state, f.retry AS retry_counter, f.file_metadata, f.reason, "
                                          "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, f.staging_start, f.staging_finished "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
@@ -2966,9 +2968,9 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             aux_tm = it->get<struct tm>("staging_finished");
             ret.staging_finished = (timegm(&aux_tm) * 1000);
 
-            if(ret.staging_start != 0){
+            if(ret.staging_start != 0)
             	ret.staging = true;
-            }
+
             ret.retry_counter = it->get<int>("retry_counter",0);
             ret.file_metadata = it->get<std::string>("file_metadata","");
             ret.source_se = it->get<std::string>("source_se");
@@ -2983,6 +2985,11 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = it->get<std::string>("dest_surl","");
+
+            if (ret.job_state == "FAILED")
+            	ret.reason = it->get<std::string>("reason");
+            else
+                ret.reason = std::string("");
 
             temp.push_back(ret);
         }
