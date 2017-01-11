@@ -2858,7 +2858,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.file_id = it->get<int>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = milliseconds_since_epoch();
-            aux_tm = it->get<struct tm>("submit_time");
+            auto aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
             aux_tm = it->get<struct tm>("staging_start");
             ret.staging_start = (timegm(&aux_tm) * 1000);
