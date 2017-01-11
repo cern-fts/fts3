@@ -252,12 +252,12 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "StagingBulkSize",
-        po::value<std::string>( &(_vars["StagingBulkSize"]) )->default_value("1000"),
+        po::value<std::string>( &(_vars["StagingBulkSize"]) )->default_value("200"),
         "Staging bulk size"
     )
     (
         "StagingConcurrentRequests",
-        po::value<std::string>( &(_vars["StagingConcurrentRequests"]) )->default_value("200"),
+        po::value<std::string>( &(_vars["StagingConcurrentRequests"]) )->default_value("1000"),
         "Maximum number of staging concurrent requests"
     )
     (

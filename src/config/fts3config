@@ -74,6 +74,19 @@ LogLevel=INFO
 # 0 disables the check (default)
 # MaxUrlCopyProcesses = 400
 
+# Parameters for Bring Online
+# Maximum bulk size.
+# If the size is too large, it will take more resources (memory and CPU) to generate the requests and
+# parse the responses. Some servers may reject the requests if they are too big.
+# If it is too small, performance will be reduced.
+# Keep it to a sensible size (between 100 and 1k)
+# StagingBulkSize=400
+# Maximum number of concurrent requests. This gives a maximum of files sent to the storage system
+# (StagingBulkSize*StagingConcurrentRequests). The larger the number, the more requests will FTS need to keep track of.
+# StagingConcurrentRequests=500
+# The lower the value, the less time FTS3 waits to fill a bulk request.
+# StagingWaitingFactor=30
+
 # In seconds, interval between heartbeats
 #HeartBeatInterval=60
 # I seconds, after this interval a host is considered down
