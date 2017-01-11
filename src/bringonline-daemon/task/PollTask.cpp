@@ -62,7 +62,7 @@ void PollTask::run(const boost::any&)
 
                 bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+errors[i]->message, retry);
                 }
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
@@ -84,7 +84,7 @@ void PollTask::run(const boost::any&)
                     << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: Error not set by gfal2", false);
                 }
             }
             g_clear_error(&errors[i]);
@@ -138,7 +138,7 @@ void PollTask::run(const boost::any&)
 
                 bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+errors[i]->message, retry);
                 }
                 ctx.removeUrl(urls[i]);
 

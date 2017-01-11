@@ -74,7 +74,7 @@ void BringOnlineTask::run(const boost::any &)
 
                 bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+errors[i]->message, retry);
                 }
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
@@ -93,7 +93,7 @@ void BringOnlineTask::run(const boost::any &)
                     << "BRINGONLINE FAILED for " << urls[i] << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: Error not set by gfal2", false);
                 }
             }
         }
@@ -140,7 +140,7 @@ void BringOnlineTask::run(const boost::any &)
 
                 bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+errors[i]->message, retry);
                 }
             }
         }
