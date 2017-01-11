@@ -2841,7 +2841,6 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 
 
         soci::rowset<soci::row>::const_iterator it;
-        struct tm aux_tm;
 
         for (it = rs.begin(); it != rs.end(); ++it)
         {
@@ -3817,7 +3816,8 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
         if(exitCode != 0)
         {
             char buffer[128]= {0};
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:"
+                << strerror_r(errno, buffer, sizeof(buffer)) << commit;
         }
 
         if(!messages.empty())
@@ -3834,15 +3834,15 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
         //now get frash states/files from the database
         soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                       " SELECT DISTINCT vo_name, source_se "
-                                       " FROM t_file "
-                                       " WHERE "
-                                       "      file_state = 'STAGING' AND "
-                                       "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-                                       soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                      );
+            " SELECT DISTINCT vo_name, source_se "
+            " FROM t_file "
+            " WHERE "
+            "      file_state = 'STAGING' AND "
+            "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+            soci::use(hashSegment.start), soci::use(hashSegment.end)
+        );
 
-        for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
         {
             soci::row const& r = *i2;
             std::string source_se = r.get<std::string>("source_se","");
@@ -3853,20 +3853,20 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             int limit = 0;
 
             //check max configured
-            sql <<  "SELECT concurrent_ops from t_stage_req "
-                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
+            sql <<  "SELECT concurrent_ops FROM t_stage_req "
+                "WHERE vo_name=:vo_name AND host = :endpoint AND operation='staging' AND concurrent_ops IS NOT NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
             if (maxValueConfig <= 0) {
-                sql <<  "SELECT concurrent_ops from t_stage_req "
-                    "WHERE vo_name=:vo_name and host = '*' and operation='staging' and concurrent_ops is NOT NULL ",
+                sql <<  "SELECT concurrent_ops FROM t_stage_req "
+                    "WHERE vo_name=:vo_name AND host = '*' AND operation='staging' AND concurrent_ops IS NOT NULL ",
                     soci::use(vo_name), soci::into(maxValueConfig);
             }
 
             if(maxValueConfig > 0)
             {
                 //check current staging
-                sql <<  "SELECT count(*) from t_file "
-                    "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED'",
+                sql <<  "SELECT count(*) FROM t_file "
+                    "WHERE vo_name=:vo_name AND source_se = :endpoint AND file_state='STARTED'",
                     soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
 
                 if(currentStagingActive > 0)
@@ -3892,8 +3892,8 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
             //now check for max concurrent active requests, must no exceed the limit
             int countActiveRequests = 0;
-            sql << " select count(distinct bringonline_token) from t_file where "
-                " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
+            sql << " SELECT COUNT(distinct bringonline_token) FROM t_file where "
+                " vo_name=:vo_name AND file_state='STARTED' AND source_se=:source_se AND bringonline_token IS NOT NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
 
             if(countActiveRequests > maxStagingConcurrentRequests)
@@ -3901,7 +3901,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
             //now make sure there are enough files to put in a single request
             int countQueuedFiles = 0;
-            sql << " SELECT count(*) from t_file where vo_name=:vo_name and source_se=:source_se and file_state='STAGING' ",
+            sql << " SELECT COUNT(*) FROM t_file WHERE vo_name=:vo_name AND source_se=:source_se AND file_state='STAGING' ",
                 soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles);
 
 
@@ -3934,12 +3934,10 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT distinct f.source_se, j.user_dn "
+                                             " SELECT DISTINCT f.source_se, j.cred_id "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
-                                             "  (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
-                                             "  AND f.file_state = 'STAGING' "
-                                             "  AND f.start_time IS NULL "
+                                             "  f.file_state = 'STAGING' "
                                              "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                              "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -3951,37 +3949,24 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 soci::row const& row = *i;
 
                 source_se = row.get<std::string>("source_se");
-                std::string user_dn = row.get<std::string>("user_dn");
+                std::string cred_id = row.get<std::string>("cred_id");
 
-
-                soci::rowset<soci::row> rs3 = (
-                                                  sql.prepare <<
-                                                  " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online,"
-                                                  "   j.user_dn, j.cred_id, j.source_space_token "
-                                                  " FROM t_file f, t_job j "
-                                                  " WHERE f.job_id = j.job_id "
-                                                  "   AND (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
-                                                  "   AND f.start_time IS NULL AND f.file_state = 'STAGING'"
-                                                  "   AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                                  "   AND f.source_se = :source_se "
-                                                  "   AND j.user_dn = :user_dn "
-                                                  "   AND j.vo_name = :vo_name "
-                                                  "   AND f.vo_name = j.vo_name "
-                                                  "   AND NOT EXISTS ( "
-                                                  "       SELECT "
-                                                  "           1 FROM t_file f1 "
-                                                  "       WHERE "
-                                                  "           f1.source_surl = f.source_surl AND f1.file_state='STARTED' "
-                                                  "           AND f1.vo_name = f.vo_name "
-                                                  "           AND f1.source_se = f.source_se"
-                                                  "   ) "
-                                                  "  LIMIT :limit",
-                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                  soci::use(source_se),
-                                                  soci::use(user_dn),
-                                                  soci::use(vo_name),
-                                                  soci::use(limit)
-                                              );
+                soci::rowset<soci::row> rs3 = (sql.prepare <<
+                    "SELECT f.source_surl, f.job_id, f.file_id,"
+                    "   j.copy_pin_lifetime, j.bring_online, j.cred_id, j.user_dn, j.source_space_token "
+                    "FROM v_staging f JOIN t_job j ON f.job_id = j.job_id "
+                    "WHERE "
+                    "   f.hashed_id BETWEEN :hStart AND :hEnd "
+                    "   AND f.source_se=:source_se "
+                    "   AND j.cred_id=:cred_id "
+                    "   AND j.vo_name=:vo_name "
+                    "LIMIT :limit",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end),
+                    soci::use(source_se),
+                    soci::use(cred_id),
+                    soci::use(vo_name),
+                    soci::use(limit)
+                );
 
                 std::string initState = "STARTED";
                 std::string reason;
@@ -4000,9 +3985,9 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     else if (bring_online > 0 && copy_pin_lifetime <= 0)
                         copy_pin_lifetime = 28800;
 
-                    user_dn = row.get<std::string>("user_dn");
+                    std::string user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
-                    std::string source_space_token = row.get<std::string>("source_space_token","");
+                    std::string source_space_token = row.get<std::string>("source_space_token", "");
 
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,

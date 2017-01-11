@@ -238,6 +238,16 @@ ALTER TABLE t_dm
 ALTER TABLE t_dm
     ADD CONSTRAINT `fk_job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`);
 
+--
+-- View for files that are to be staged, but haven't been requested
+--
+CREATE VIEW v_staging AS
+    SELECT q.job_id, q.file_id, q.hashed_id, q.vo_name, q.source_se, q.file_state, q.source_surl
+    FROM t_file q LEFT JOIN t_file s ON
+        q.source_surl = s.source_surl AND q.vo_name = s.vo_name AND s.source_se = q.source_se AND
+        s.file_state='STARTED'
+    WHERE q.file_state='STAGING' AND s.file_state IS NULL;
+
 -- DROP TABLE t_file_share_config_old;
 -- DROP TABLE t_file_retry_errors_old;
 -- DROP TABLE t_file_old;
@@ -249,4 +259,4 @@ ALTER TABLE t_dm
 DROP TABLE t_server_sanity;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (3, 0, 0, 'FTS-599, FTS-815, FTS-824 diff');
+VALUES (3, 0, 0, 'FTS-599, FTS-815, FTS-824, FTS-629 diff');
