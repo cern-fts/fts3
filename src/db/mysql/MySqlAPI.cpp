@@ -1409,7 +1409,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         }
 
         // query for the file state in DB
-        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId LOCK IN SHARE MODE",
+        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId",
             soci::use(fileId),
             soci::use(jobId),
             soci::into(storedState);
@@ -1513,18 +1513,23 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         }
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-              "WHERE file_id = :fileId ";
+              "WHERE file_id = :fileId AND file_state = :oldState";
         stmt.exchange(soci::use(processId, "pid"));
         stmt.exchange(soci::use(filesize, "filesize"));
         stmt.exchange(soci::use(duration, "duration"));
         stmt.exchange(soci::use(throughput, "throughput"));
         stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
         stmt.exchange(soci::use(fileId, "fileId"));
+        stmt.exchange(soci::use(storedState, "oldState"));
         stmt.alloc();
         stmt.prepare(query.str());
         stmt.define_and_bind();
 
         stmt.execute(true);
+
+        if (get_affected_rows(sql) == 0) {
+            return false;
+        }
 
         sql.commit();
 
