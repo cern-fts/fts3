@@ -2967,10 +2967,15 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.timestamp = milliseconds_since_epoch();
             aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
-            aux_tm = it->get<struct tm>("staging_start");
-            ret.staging_start = (timegm(&aux_tm) * 1000);
-            aux_tm = it->get<struct tm>("staging_finished");
-            ret.staging_finished = (timegm(&aux_tm) * 1000);
+
+            if (it->get_indicator("staging_start") == soci::i_ok) {
+                aux_tm = it->get<struct tm>("staging_start");
+                ret.staging_start = (timegm(&aux_tm) * 1000);
+            }
+            if (it->get_indicator("staging_finished") == soci::i_ok) {
+                aux_tm = it->get<struct tm>("staging_finished");
+                ret.staging_finished = (timegm(&aux_tm) * 1000);
+            }
 
             if(ret.staging_start != 0)
             	ret.staging = true;
