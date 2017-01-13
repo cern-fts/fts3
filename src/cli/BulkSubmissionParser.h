@@ -133,6 +133,24 @@ boost::optional<T> BulkSubmissionParser::get(pt::ptree &item, std::string path) 
     }
 }
 
+template <>
+inline boost::optional<std::string> BulkSubmissionParser::get(pt::ptree &item, std::string path) {
+    try {
+        boost::optional<std::string> value = item.get_optional<std::string>(path);
+        // Type information is lost, and null is stored as the literal "null"
+        if (value.is_initialized() && value.get() == "null") {
+            value.reset();
+        }
+        return value;
+    }
+    catch (pt::ptree_bad_path &ex) {
+        throw cli_exception("The " + path + " has to be specified!");
+    }
+    catch (pt::ptree_bad_data &ex) {
+        throw cli_exception("Wrong value type of " + path);
+    }
+}
+
 template<>
 inline boost::optional<std::vector<std::string> >
 BulkSubmissionParser::get<std::vector<std::string> >(pt::ptree &item, std::string path) {
