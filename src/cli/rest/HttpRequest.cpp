@@ -45,8 +45,9 @@ static int debug_callback(CURL*, curl_infotype type, char *data, size_t size, vo
             std::cerr << "> ";
             std::cerr.write(data, size);
             break;
-        // Silence warnings
         default:
+            std::cerr << "* ";
+            std::cerr.write(data, size);
             break;
     }
     return 0;
