@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-#include <json.h>
 #include <memory>
 #include "MsgProducer.h"
 #include "common/Logger.h"
@@ -27,6 +26,7 @@
 #include "common/ConcurrentQueue.h"
 #include "common/Exceptions.h"
 
+#include <cajun/json/reader.h>
 #include <decaf/lang/System.h>
 
 using namespace fts3::config;
@@ -87,22 +87,19 @@ MsgProducer::~MsgProducer()
 
 static std::string _getVoFromMessage(const std::string &msg, const char *key)
 {
-    enum json_tokener_error error;
-    json_object *jobj = json_tokener_parse_verbose(msg.c_str(), &error);
-    if (!jobj) {
-        throw SystemError(json_tokener_error_desc(error));
+    std::stringstream input(msg);
+    json::Object root;
+    json::Reader::Read(root, input);
+
+    auto node = root.Find(key);
+    if (node == root.End()) {
+        std::stringstream err;
+        err << "Could not find " << key << " in the message";
+        throw SystemError(err.str());
     }
 
-    struct json_object *vo_name_obj = NULL;
-    if (!json_object_object_get_ex(jobj, key, &vo_name_obj)) {
-        json_object_put(jobj);
-        throw SystemError("Could not find vo_name in the message");
-    }
-
-    std::string vo_name = json_object_get_string(vo_name_obj);
-    json_object_put(jobj);
-
-    return vo_name;
+    json::String value = node->element;
+    return value.Value();
 }
 
 

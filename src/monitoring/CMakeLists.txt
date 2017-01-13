@@ -22,12 +22,10 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
 find_package (Boost COMPONENTS filesystem thread system)
-find_package (JSONC REQUIRED)
 find_package (APR)
 
 include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
 include_directories (${APR_INCLUDE_DIR})
-include_directories (${JSONC_INCLUDE_DIRS})
 
 # libfts_msg_ifce
 set(fts_msg_ifce_SOURCES
@@ -62,7 +60,6 @@ target_link_libraries(fts_msg_bulk
 	fts_msg_bus
     rt
     ${Boost_LIBRARIES}
-    ${JSONC_LIBRARIES}
 )
 
 # Artifacts
