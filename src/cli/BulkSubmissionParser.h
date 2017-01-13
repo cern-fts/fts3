@@ -121,65 +121,54 @@ private:
 };
 
 template <typename T>
-boost::optional<T> BulkSubmissionParser::get(pt::ptree& item, std::string path)
-{
-    try
-        {
-            // return the value under the given path
-            return item.get_optional<T>(path);
-            // in case of exception handle them: ...
-        }
-    catch (pt::ptree_bad_path& ex)
-        {
-            // if the value does not exist throw an exception
-            throw cli_exception("The " + path + " has to be specified!");
-        }
-    catch (pt::ptree_bad_data& ex)
-        {
-            // if the type of the value is wrong throw an exception
-            throw cli_exception("Wrong value type of " + path);
-        }
+boost::optional<T> BulkSubmissionParser::get(pt::ptree &item, std::string path) {
+    try {
+        return item.get_optional<T>(path);
+    }
+    catch (pt::ptree_bad_path &ex) {
+        throw cli_exception("The " + path + " has to be specified!");
+    }
+    catch (pt::ptree_bad_data &ex) {
+        throw cli_exception("Wrong value type of " + path);
+    }
 }
 
-template <>
-inline boost::optional< std::vector<std::string> > BulkSubmissionParser::get< std::vector<std::string> >(pt::ptree& item, std::string path)
-{
+template<>
+inline boost::optional<std::vector<std::string> >
+BulkSubmissionParser::get<std::vector<std::string> >(pt::ptree &item, std::string path) {
     // check if the value was specified
-    boost::optional<pt::ptree&> value = item.get_child_optional(path);
-    if (!value.is_initialized())
-        {
-            // the vector member was not specified in the configuration
-            return boost::optional< std::vector<std::string> >();
-        }
-    pt::ptree& array = value.get();
+    boost::optional<pt::ptree &> value = item.get_child_optional(path);
+    if (!value.is_initialized()) {
+        // the vector member was not specified in the configuration
+        return boost::optional<std::vector<std::string> >();
+    }
+    pt::ptree &array = value.get();
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
-    if (!wrong.empty())
-        {
-            throw cli_exception("Wrong value: '" + wrong + "'");
-        }
+    if (!wrong.empty()) {
+        throw cli_exception("Wrong value: '" + wrong + "'");
+    }
     // iterate over the nodes
     std::vector<std::string> ret;
     pt::ptree::iterator it;
-    for (it = array.begin(); it != array.end(); it++)
-        {
-            std::pair<std::string, pt::ptree> v = *it;
-            // check if the node has a name,
-            // accordingly to boost it should be empty if object weren't
-            // members of the array (our case)
-            if (!v.first.empty())
-                {
-                    throw cli_exception("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
-                }
-            // check if the node has children, it should only have a value!
-            if (!v.second.empty())
-                {
-                    throw cli_exception("Unexpected object in array '" + path + "' (only a list of values was expected)");
-                }
-            // put the value into the vector
-            ret.push_back(v.second.get_value<std::string>());
+    for (it = array.begin(); it != array.end(); it++) {
+        std::pair<std::string, pt::ptree> v = *it;
+        // check if the node has a name,
+        // accordingly to boost it should be empty if object weren't
+        // members of the array (our case)
+        if (!v.first.empty()) {
+            throw cli_exception(
+                    "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first +
+                    "')");
         }
+        // check if the node has children, it should only have a value!
+        if (!v.second.empty()) {
+            throw cli_exception("Unexpected object in array '" + path + "' (only a list of values was expected)");
+        }
+        // put the value into the vector
+        ret.push_back(v.second.get_value<std::string>());
+    }
 
     return ret;
 }
