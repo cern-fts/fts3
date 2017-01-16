@@ -57,7 +57,7 @@ void FetchStaging::fetch()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            boost::this_thread::sleep(boost::posix_time::seconds(10));
+            boost::this_thread::sleep(boost::posix_time::seconds(60));
 
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
