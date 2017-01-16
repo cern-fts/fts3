@@ -36,7 +36,7 @@
 void FetchStaging::fetch()
 {
     // VO, user dn, storage, space token
-    typedef std::tuple<std::string, std::string, std::string, std::string> GroupByType;
+    typedef std::tuple<std::string, std::string, std::string> GroupByType;
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting" << commit;
 
@@ -65,7 +65,6 @@ void FetchStaging::fetch()
                 continue;
             }
 
-
             std::map<GroupByType, StagingContext> tasks;
             std::vector<StagingOperation> files;
 
@@ -74,7 +73,7 @@ void FetchStaging::fetch()
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
                 std::string storage = Uri::parse(it_f->surl).host;
-                GroupByType key(it_f->voName, it_f->userDn, storage, it_f->spaceToken);
+                GroupByType key(it_f->credId, storage, it_f->spaceToken);
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
                     tasks.insert(std::make_pair(
