@@ -52,7 +52,6 @@ ConfigurationAssigner::ConfigurationAssigner(TransferFile const & file) :
 
 ConfigurationAssigner::~ConfigurationAssigner()
 {
-
 }
 
 void ConfigurationAssigner::assign(std::vector< std::shared_ptr<ShareConfig> >& out)
@@ -78,12 +77,15 @@ void ConfigurationAssigner::assign(std::vector< std::shared_ptr<ShareConfig> >& 
 
     // possible configuration for SE group
     std::list<cfg_type> gr_cfgs;
-    if (!sourceGr.empty() && !destinationGr.empty())
-        gr_cfgs.push_back( cfg_type( share(sourceGr, destinationGr, vo), content(true, true) ) );
-    if (!sourceGr.empty())
-        gr_cfgs.push_back( cfg_type( share(sourceGr, ConfigurationAssigner::any, vo), content(true, false) ) );
-    if (!destinationGr.empty())
-        gr_cfgs.push_back( cfg_type( share(ConfigurationAssigner::any, destinationGr, vo), content(false, true) ) );
+    if (!sourceGr.empty() && !destinationGr.empty()) {
+        gr_cfgs.push_back(cfg_type(share(sourceGr, destinationGr, vo), content(true, true)));
+    }
+    if (!sourceGr.empty()) {
+        gr_cfgs.push_back(cfg_type(share(sourceGr, ConfigurationAssigner::any, vo), content(true, false)));
+    }
+    if (!destinationGr.empty()) {
+        gr_cfgs.push_back(cfg_type(share(ConfigurationAssigner::any, destinationGr, vo), content(false, true)));
+    }
 
     assignShareCfg(gr_cfgs, out);
 }
@@ -92,68 +94,34 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
 {
     content both (false, false);
 
-    for (auto it = arg.begin(); it != arg.end(); ++it)
-        {
-            share s = boost::get<SHARE>(*it);
-            content c = boost::get<CONTENT>(*it);
+    for (auto it = arg.begin(); it != arg.end(); ++it) {
+        share s = boost::get<SHARE>(*it);
+        content c = boost::get<CONTENT>(*it);
 
-            // check if configuration for the given side has not been assigned already
-            if ( (c.first && both.first) || (c.second && both.second) ) continue;
+        // check if configuration for the given side has not been assigned already
+        if ((c.first && both.first) || (c.second && both.second)) {
+            continue;
+        }
 
-            std::string source = boost::get<SOURCE>(s);
-            std::string destination = boost::get<DESTINATION>(s);
-            std::string vo = boost::get<VO>(s);
+        std::string source = boost::get<SOURCE>(s);
+        std::string destination = boost::get<DESTINATION>(s);
+        std::string vo = boost::get<VO>(s);
 
-            // get the link configuration
-            std::unique_ptr<LinkConfig> link (db->getLinkConfig(source, destination));
+        // get the link configuration
+        std::unique_ptr<LinkConfig> link(db->getLinkConfig(source, destination));
 
-            // if there is no link there will be no share
-            // (also if the link configuration state is 'off' we don't care about the share)
-            if (!link.get() || link->state == ConfigurationAssigner::off) continue;
+        // if there is no link there will be no share
+        // (also if the link configuration state is 'off' we don't care about the share)
+        if (!link.get() || link->state == ConfigurationAssigner::off) {
+            continue;
+        }
 
-            // check if there is a VO share
-            std::shared_ptr<ShareConfig> ptr (
+        // check if there is a VO share
+        std::shared_ptr<ShareConfig> ptr(
                 db->getShareConfig(source, destination, vo)
-            );
+        );
 
-            if (ptr.get())
-                {
-                    // set the share only status
-                    ptr->shareOnly = link->autoTuning == ConfigurationAssigner::share_only;
-                    // add to out
-                    out.push_back(ptr);
-                    // add to DB
-                    db->addFileShareConfig(file.fileId, ptr->source, ptr->destination, ptr->vo);
-                    // a configuration has been assigned
-                    assign_count++;
-                    // set the respective flags
-                    both.first |= c.first;
-                    both.second |= c.second;
-                    // if both source and destination are covert break;
-                    if (both.first && both.second) break;
-                    // otherwise continue
-                    continue;
-                }
-
-            // check if there is a public share
-            ptr = db->getShareConfig(source, destination, ConfigurationAssigner::pub);
-
-            // if not create a public share with 0 active transfer (equivalent)
-            if (!ptr.get())
-                {
-                    // create the object
-                    ptr.reset(
-                        new ShareConfig
-                    );
-                    // fill in the respective values
-                    ptr->source = source;
-                    ptr->destination = destination;
-                    ptr->vo = ConfigurationAssigner::pub;
-                    ptr->activeTransfers = 0;
-                    // insert into DB
-                    db->addShareConfig(*ptr.get());
-                }
-
+        if (ptr.get()) {
             // set the share only status
             ptr->shareOnly = link->autoTuning == ConfigurationAssigner::share_only;
             // add to out
@@ -167,7 +135,42 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
             both.second |= c.second;
             // if both source and destination are covert break;
             if (both.first && both.second) break;
+            // otherwise continue
+            continue;
         }
+
+        // check if there is a public share
+        ptr = db->getShareConfig(source, destination, ConfigurationAssigner::pub);
+
+        // if not create a public share with 0 active transfer (equivalent)
+        if (!ptr.get()) {
+            // create the object
+            ptr.reset(
+                    new ShareConfig
+            );
+            // fill in the respective values
+            ptr->source = source;
+            ptr->destination = destination;
+            ptr->vo = ConfigurationAssigner::pub;
+            ptr->activeTransfers = 0;
+            // insert into DB
+            db->addShareConfig(*ptr.get());
+        }
+
+        // set the share only status
+        ptr->shareOnly = link->autoTuning == ConfigurationAssigner::share_only;
+        // add to out
+        out.push_back(ptr);
+        // add to DB
+        db->addFileShareConfig(file.fileId, ptr->source, ptr->destination, ptr->vo);
+        // a configuration has been assigned
+        assign_count++;
+        // set the respective flags
+        both.first |= c.first;
+        both.second |= c.second;
+        // if both source and destination are covert break;
+        if (both.first && both.second) break;
+    }
 }
 
 } /* namespace server */
