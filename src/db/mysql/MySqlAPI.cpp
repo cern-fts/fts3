@@ -20,6 +20,7 @@
 
 #include <sys/time.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/range/algorithm/transform.hpp>
 
 #include <cstdlib>
 #include <map>
@@ -3351,6 +3352,11 @@ void MySqlAPI::updateStagingState(const std::vector<MinFileStatus>& stagingOpsSt
 }
 
 
+static std::string int2str(int v) {
+    return boost::lexical_cast<std::string>(v);
+}
+
+
 void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
 {
     soci::session sql(*connectionPool);
@@ -3359,24 +3365,26 @@ void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::strin
         sql.begin();
         for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
-            std::string const & job_id = it_j->first;
-            std::string file_ids = "(";
-            auto const & urls = it_j->second;
-            for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
-            {
-                auto it_f = it_u->second.begin();
-                file_ids += boost::lexical_cast<std::string>(*it_f);
-                for(; it_f != it_u->second.end(); ++it_f)
-                    file_ids += ", " + boost::lexical_cast<std::string>(*it_f);
+            const std::string &jobId = it_j->first;
+            const auto &urls = it_j->second;
+            std::list<std::string> fileIdsStrList;
+
+            for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {
+                std::vector<int> subFileIds = it_u->second;
+                boost::range::transform(
+                        subFileIds, std::back_inserter(fileIdsStrList),
+                        int2str
+                );
             }
-            file_ids += ")";
+
+            const std::string fileIdsStr = boost::algorithm::join(fileIdsStrList, ", ");
 
             std::stringstream query;
-            query << "update t_file set bringonline_token = :token where job_id = :jobId and file_id IN " << file_ids;
+            query << "update t_file set bringonline_token = :token where job_id = :jobId and file_id IN (" << fileIdsStr << ")";
 
             sql << query.str(),
                 soci::use(token),
-                soci::use(job_id);
+                soci::use(jobId);
         }
         sql.commit();
     }

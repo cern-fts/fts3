@@ -99,7 +99,7 @@ void BringOnlineTask::run(const boost::any &)
         }
     }
     else if (status == 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << " "
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << ": "
         << ctx.getLogMsg() << commit;
 
         ctx.updateState(token);
