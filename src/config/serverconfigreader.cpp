@@ -262,8 +262,8 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "StagingWaitingFactor",
-        po::value<std::string>( &(_vars["StagingWaitingFactor"]) )->default_value("30"),
-        "The lower the value, the less time FTS3 waits to fill a bulk request"
+        po::value<std::string>( &(_vars["StagingWaitingFactor"]) )->default_value("300"),
+        "Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk"
     )
     (
         "HeartBeatInterval",

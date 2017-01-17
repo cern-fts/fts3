@@ -3926,24 +3926,21 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             // requests to arrive
             if(countQueuedFiles < maxStagingBulkSize)
             {
-                std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
+                auto now = boost::posix_time::second_clock::local_time();
+                auto itQueue = queuedStagingFiles.find(source_se);
+
                 if(itQueue != queuedStagingFiles.end())
                 {
-                    int counter = itQueue->second;
+                    auto nextSubmission = itQueue->second;
 
-                    if(counter < stagingWaitingFactor)
-                    {
-                        queuedStagingFiles[source_se] = counter + 1;
+                    if(nextSubmission > now) {
                         continue;
                     }
-                    else
-                    {
-                        queuedStagingFiles.erase (itQueue);
-                    }
+                    queuedStagingFiles.erase(itQueue);
                 }
                 else
                 {
-                    queuedStagingFiles[source_se] = 1;
+                    queuedStagingFiles[source_se] = now + boost::posix_time::seconds(stagingWaitingFactor);
                     continue;
                 }
             }

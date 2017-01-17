@@ -84,8 +84,9 @@ LogLevel=INFO
 # Maximum number of concurrent requests. This gives a maximum of files sent to the storage system
 # (StagingBulkSize*StagingConcurrentRequests). The larger the number, the more requests will FTS need to keep track of.
 # StagingConcurrentRequests=500
-# The lower the value, the less time FTS3 waits to fill a bulk request.
-# StagingWaitingFactor=30
+# Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk.
+# Note that the resolution is 60 seconds.
+# StagingWaitingFactor=300
 
 # In seconds, interval between heartbeats
 #HeartBeatInterval=60

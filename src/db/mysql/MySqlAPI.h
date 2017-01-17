@@ -344,7 +344,7 @@ private:
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::string username_;
-    std::map<std::string, int> queuedStagingFiles;
+    std::map<std::string, boost::posix_time::ptime> queuedStagingFiles;
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
         std::string serviceName);
