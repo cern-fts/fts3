@@ -112,7 +112,8 @@ void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector<
 
         // if there is no link there will be no share
         // (also if the link configuration state is 'off' we don't care about the share)
-        if (!link.get() || link->state == ConfigurationAssigner::off) {
+        // If autotuning is on, we skip the shares as well, as they disabled effectively the autotuner
+        if (!link.get() || link->state == ConfigurationAssigner::off  || link->autoTuning == ConfigurationAssigner::on) {
             continue;
         }
 
