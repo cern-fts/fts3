@@ -2822,7 +2822,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
                                          "  f.file_state, f.retry AS retry_counter, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.start_time , f.source_surl, f.staging_start, f.staging_finished "
+                                         "  f.source_se, f.start_time , f.source_surl "
                                          " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
                                          "  j.job_id = :jobId ",
@@ -2835,7 +2835,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
                                          "  f.file_state, f.retry AS retry_counter, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.start_time , f.source_surl, f.staging_start, f.staging_finished "
+                                         "  f.source_se, f.start_time , f.source_surl "
                                          " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
                                          "  j.job_id = :jobId "
@@ -2865,13 +2865,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.timestamp = milliseconds_since_epoch();
             auto aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
-            aux_tm = it->get<struct tm>("staging_start");
-            ret.staging_start = (timegm(&aux_tm) * 1000);
-            aux_tm = it->get<struct tm>("staging_finished");
-            ret.staging_finished = (timegm(&aux_tm) * 1000);
-
-            if(ret.staging_start != 0)
-            	ret.staging = true;
+            ret.staging = false;
 
             ret.retry_counter = it->get<int>("retry_counter",0);
 
