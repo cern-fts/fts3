@@ -25,7 +25,7 @@ build:
     tags:
       - docker
 tag:
-    stage: release
+    stage: tag
     only:
         - tags
     script:
