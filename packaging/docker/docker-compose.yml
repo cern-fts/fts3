@@ -1,0 +1,8 @@
+fts-mon:
+    build: .
+    volumes:
+     - /etc/fts3:/etc/fts3
+     - /var/log/fts3:/var/log/fts3
+    entrypoint: /usr/sbin/apachectl -DFOREGROUND
+    ports:
+     - "8449:8449"
