@@ -1,8 +1,10 @@
 fts-mon:
     build: .
+    #image: gitlab-registry.cern.ch/fts/fts-monitoring:latest
     volumes:
      - /etc/fts3:/etc/fts3
      - /var/log/fts3:/var/log/fts3
+     - /etc/grid-security:/etc/grid-security
     entrypoint: /usr/sbin/apachectl -DFOREGROUND
     ports:
      - "8449:8449"

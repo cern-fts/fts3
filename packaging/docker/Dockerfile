@@ -27,7 +27,7 @@ ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN /usr/bin/yum clean all
 
 #install fts packages
-RUN /usr/bin/yum install -y fts-monitoring fts-monitoring-selinux mod_ssl
+RUN /usr/bin/yum install -y fts-monitoring fts-monitoring-selinux mod_ssl gridsite
 
 RUN /usr/bin/yum install -y voms-config-wlcg  voms-config-vo-dteam
 
