@@ -38,3 +38,5 @@ RUN usermod -a -G fts3 apache
 #expose ports
 
 EXPOSE 8449
+
+CMD ["/usr/sbin/apachectl","-DFOREGROUND"]
