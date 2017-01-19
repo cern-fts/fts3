@@ -1,0 +1,21 @@
+[supervisord]
+nodaemon=true
+
+[program:bringonline]
+command=/usr/sbin/fts_bringonline -t 25 
+autostart=true
+autorestart=false
+priority=50
+
+[program:fts-server]
+command=/usr/sbin/fts_server -t 25 
+autostart=true
+autorestart=false
+priority=50
+
+[program:fts-msg-bulk]
+command=/usr/sbin/fts_msg_bulk 
+autostart=true
+autorestart=false
+priority=50
+

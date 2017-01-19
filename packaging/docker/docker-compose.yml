@@ -1,0 +1,7 @@
+fts-server:
+    build: .
+    volumes:
+     - /etc/fts3:/etc/fts3
+     - /var/log/fts3:/var/log/fts3
+    ports:
+     - "2170:2170"
