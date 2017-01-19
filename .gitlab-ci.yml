@@ -29,7 +29,7 @@ tag:
     only:
         - tags
     script:
-        - docker build  -t $CONTAINER_RELEASE_IMAGE --build-arg ftsrepo=http://fts-repo.web.cern.ch/fts-repo/fts3-prod-el7.repo   packaging/docker
+        - docker build  -t $CONTAINER_RELEASE_IMAGE --build-arg ftsrepo=http://fts-repo.web.cern.ch/fts-repo/fts3-prod-el7.repo --build-arg dmcrepo=http://dmc-repo.web.cern.ch/dmc-repo/dmc-el7.repo  packaging/docker
         - docker push $CONTAINER_RELEASE_IMAGE  
     tags:
        - docker
