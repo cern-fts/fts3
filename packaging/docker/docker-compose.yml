@@ -1,7 +1,7 @@
 fts-server:
+    #image: gitlab-registry.cern.ch/fts/fts3:latest
     build: .
     volumes:
      - /etc/fts3:/etc/fts3
-     - /var/log/fts3:/var/log/fts3
     ports:
      - "2170:2170"

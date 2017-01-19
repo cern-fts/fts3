@@ -41,9 +41,11 @@ RUN yum install -y supervisor
 
 COPY "supervisord" "/etc/supervisor/conf.d/supervisord.conf"
 
+#log folder
+RUN mkdir -p /var/log/fts3 && chown fts3:fts3 /var/log/fts3
+
 #expose ports
 
-EXPOSE 8443
 EXPOSE 2170
 
 # Start supervisor
