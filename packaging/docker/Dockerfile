@@ -24,6 +24,7 @@ ADD $ftsrepo /etc/yum.repos.d/fts.repo
 ARG dmcrepo=http://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo
 ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 
+RUN /usr/bin/yum clean all
 
 #install fts packages
 RUN /usr/bin/yum install -y fts-monitoring fts-monitoring-selinux mod_ssl
