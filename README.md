@@ -7,6 +7,6 @@ FTS3 is the service responsible for globally distributing the majority of the LH
 * Documentation: http://fts3-docs.web.cern.ch/fts3-docs/docs/cli.html
 * Developers guide: http://fts3-docs.web.cern.ch/fts3-docs/docs/developers.html
 * Ticket handling in [JIRA](https://its.cern.ch/jira/browse/FTS/?selectedTab=com.atlassian.jira.jira-projects-plugin:summary-panel)
-* Continuous integration in [Jenkins](https://jenkins.cern.ch/fts-dmc/)
+* Continuous integration in [Jenkins](https://jenkins-fts-dmc.web.cern.ch/)
 * Monitored by the [Dashboard](http://dashb-fts-transfers.cern.ch/ui/)
 * For help, contact fts-support@cern.ch, or fts-devel@cern.ch
