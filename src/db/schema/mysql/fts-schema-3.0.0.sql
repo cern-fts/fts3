@@ -940,6 +940,9 @@ CREATE TABLE `t_schema_vers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+INSERT INTO t_schema_vers (major, minor, patch, message)
+VALUES (3, 0, 0, 'Schema 3.0.0');
+
 --
 -- Table structure for table `t_se`
 --

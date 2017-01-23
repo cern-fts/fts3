@@ -40,9 +40,6 @@ using namespace fts3::common;
 using namespace fts3::config;
 using namespace fts3::server; 
 
-const char *HOST_CERT = "/etc/grid-security/fts3hostcert.pem";
-const char *HOST_KEY = "/etc/grid-security/fts3hostkey.pem";
-
 
 /// Initialize the database backend
 /// @param test If set to true, do not use full pool size
@@ -87,8 +84,6 @@ static void shutdownCallback(int signum, void*)
 /// The configuration should have been loaded already
 static void doServer(void)
 {
-    setenv("X509_USER_CERT", HOST_CERT, 1);
-    setenv("X509_USER_KEY", HOST_KEY, 1);
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
     bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
@@ -184,11 +179,6 @@ static void runEnvironmentChecks()
 
     std::string logsDir = ServerConfig::instance().get<std::string> ("ServerLogDirectory");
     std::string monDir = ServerConfig::instance().get<std::string> ("MessagingDirectory");
-
-    if (!ServerConfig::instance().get<bool>("WithoutSoap")) {
-        checkPath(HOST_CERT, R_OK, fs::regular_file);
-        checkPath(HOST_KEY, R_OK, fs::regular_file);
-    }
 
     checkPath(logsDir, R_OK, fs::directory_file);
     checkPath(monDir, R_OK | W_OK, fs::directory_file);
