@@ -13,8 +13,8 @@ License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git 
-#  tar -czvf fts-3.3.0-1.tar.gz fts3
+#  git clone https://gitlab.cern.ch/fts/fts3.git
+#  tar -czvf fts-3.5.8.tar.gz fts3
 Source0:   https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
