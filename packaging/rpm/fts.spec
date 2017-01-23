@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.5.7
+Version:    3.5.8
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -17,11 +17,11 @@ License:    ASL 2.0
 URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.5.0
-#  cd fts-3.5.0
-#  git checkout v3.5.0
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.5.8
+#  cd fts-3.5.8
+#  git checkout v3.5.8
 #  cd ..
-#  tar --exclude-vcs -vczf fts-3.5.0.tar.gz fts-3.5.0
+#  tar --exclude-vcs -vczf fts-3.5.8.tar.gz fts-3.5.8
 Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -57,7 +57,7 @@ BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
 BuildRequires:  python2-devel
 BuildRequires:  voms-devel
-BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc 
+BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 %if %systemd
 BuildRequires:	systemd
 %endif
@@ -79,7 +79,7 @@ Group: Applications/Internet
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 
 %description devel
-This package contains development files 
+This package contains development files
 (e.g. header files) for File Transfer Service V3.
 
 %package server
@@ -426,7 +426,7 @@ fi
 %if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-server.service
 %attr(0644,root,root) %{_unitdir}/fts-bringonline.service
-%attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service 
+%attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %else
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-bringonline
@@ -587,7 +587,7 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 * Tue Oct 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.33-1
   - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
-  - no longer linking explicitly to boost libraries with '-mt' sufix 
+  - no longer linking explicitly to boost libraries with '-mt' sufix
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
   - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 * Sat Jul 27 2013 Petr Machata <pmachata@redhat.com> - 3.1.0-2
