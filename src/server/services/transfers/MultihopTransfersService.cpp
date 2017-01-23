@@ -42,8 +42,6 @@ MultihopTransfersService::MultihopTransfersService()
 
 void MultihopTransfersService::runService()
 {
-    static bool drainMode = false;
-
     while (!boost::this_thread::interruption_requested())
     {
         retrieveRecords = time(0);
@@ -52,20 +50,17 @@ void MultihopTransfersService::runService()
         {
             if (DrainMode::instance())
             {
-                if (!drainMode)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
-                    drainMode = true;
-                    boost::this_thread::sleep(boost::posix_time::seconds(15));
-                    continue;
-                }
-            }
-            else
-            {
-                drainMode = false;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
+                boost::this_thread::sleep(boost::posix_time::seconds(15));
+                continue;
             }
 
             executeUrlcopy();
+        }
+        catch (boost::thread_interrupted&)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            break;
         }
         catch (std::exception& e)
         {

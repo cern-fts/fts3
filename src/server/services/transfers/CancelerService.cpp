@@ -240,6 +240,11 @@ void CancelerService::runService()
                 counterQueueTimeouts = 0;
             }
         }
+        catch (boost::thread_interrupted&)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            break;
+        }
         catch (const std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught exception " << e.what() << commit;
