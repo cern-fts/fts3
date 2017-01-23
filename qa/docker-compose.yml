@@ -1,0 +1,28 @@
+fts3-qa-mysql:
+  image: fts3-qa-mysql:latest
+  env_file: qa.env
+  ports:
+    - "33060:3306"
+
+fts3-qa:
+  image: fts3-qa:latest
+  env_file: qa.env
+  environment:
+    - FTS3_USER
+    - FTS3_GROUP
+    - STOMP_PASSWORD
+    - PROXY_PASSWD
+    - FTS3_HOST
+  links:
+    - fts3-qa-mysql
+  volumes:
+    - "/tmp/fts3qa/logs:/logs"
+    - "/tmp/fts3qa/coverage:/coverage"
+    - "/etc/grid-security/hostcert.pem:/etc/grid-security/hostcert.pem"
+    - "/etc/grid-security/hostkey.pem:/etc/grid-security/hostkey.pem"
+    - "/etc/passwd:/etc/passwd"
+    - "/etc/group:/etc/group"
+    - "$HOME/.globus:/.globus"
+  ports:
+    - "8446:8446"
+    - "8449:8449"

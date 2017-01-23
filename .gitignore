@@ -2,9 +2,9 @@
 .cproject
 .project
 .settings
+.sonar
 *.rpm
 *.tar.gz
 *.pyc
 *.xml
 *.info
-*.conf

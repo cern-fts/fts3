@@ -19,7 +19,7 @@ if [ $? -ne 0 ]; then
     echo "vera++ not installed"
 else
     if [ ! -e "/tmp/vera++Report2checkstyleReport.perl" ]; then
-        wget "https://raw.githubusercontent.com/wenns/sonar-cxx/master/sonar-cxx-plugin/src/tools/vera%2B%2BReport2checkstyleReport.perl" -O "/tmp/vera++Report2checkstyleReport.perl"
+        curl "https://raw.githubusercontent.com/wenns/sonar-cxx/master/sonar-cxx-plugin/src/tools/vera%2B%2BReport2checkstyleReport.perl" > "/tmp/vera++Report2checkstyleReport.perl"
         chmod a+x "/tmp/vera++Report2checkstyleReport.perl"
     fi
     echo "Runnign vera++"
@@ -34,6 +34,3 @@ else
     echo "Running rats"
     rats -w 3 --xml "${SOURCE_DIR}/src" > ${OUTPUT_DIR}/rats.xml
 fi
-
-# Done
-echo "Ready to run sonar-runner"
