@@ -4,8 +4,9 @@ set -ex
 export HOME=/
 export X509_USER_CERT=${HOME}/.globus/usercert.pem
 export X509_USER_KEY=${HOME}/.globus/userkey.pem
+export X509_USER_KEY_PASSWORD=${PROXY_PASSWD}
 
-echo $PROXY_PASSWD | voms-proxy-init -voms dteam -rfc -pwstdin
+echo ${PROXY_PASSWD} | voms-proxy-init -voms dteam -rfc -pwstdin
 
 mkdir -p /tmp/tests
 pushd /tmp/tests
