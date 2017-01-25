@@ -17,7 +17,7 @@ pushd fts-tests
     export CLIENT_IMPL=lib.cli
     export PATH=$PATH:/usr/src/fts3/src/cli
     export FTS3_HOST=${FTS3_HOST:-`hostname -f`}
-    ./run-helper.sh
+    ./run-helper.sh || true
     cp -v results.xml /coverage
 popd
 popd
