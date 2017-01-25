@@ -32,8 +32,10 @@ class RestDelegator : public ProxyCertificateDelegator
 {
 
 public:
-    RestDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime, std::string const & capath, std::string const & proxy) :
-        ProxyCertificateDelegator(endpoint, delegationId, userRequestedDelegationExpTime, proxy), capath(capath)
+    RestDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime,
+        std::string const & capath, std::string const & proxy, bool insecure) :
+        ProxyCertificateDelegator(endpoint, delegationId, userRequestedDelegationExpTime, proxy), capath(capath),
+        insecure(insecure)
     {
 
     }
@@ -54,6 +56,7 @@ private:
     void doDelegation(time_t requestProxyDelegationTime, bool renew) const;
 
     std::string const capath;
+    bool insecure;
 };
 
 } /* namespace cli */

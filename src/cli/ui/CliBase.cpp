@@ -48,6 +48,7 @@ CliBase::CliBase() : visible("Allowed options")
         ("verbose,v", "Be more verbose.")
         ("service,s", po::value<std::string>(), "Use the transfer service at the specified URL.")
         ("proxy", po::value<std::string>(), "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
+        ("insecure", "Disable the verification of the peer certificate.")
         ("version,V", "Print the version number and exit.");
 
     version = getCliVersion();
@@ -174,6 +175,11 @@ bool CliBase::isVerbose() const
 bool CliBase::isQuiet() const
 {
     return vm.count("quiet");
+}
+
+bool CliBase::isInsecure() const
+{
+    return vm.count("insecure");
 }
 
 std::string CliBase::proxy() const

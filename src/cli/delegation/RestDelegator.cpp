@@ -38,7 +38,7 @@ boost::optional<time_t> RestDelegator::getExpirationTime()
             std::string const whoami = endpoint + "/whoami";
 
             std::stringstream ss;
-            HttpRequest http (whoami, capath, proxy, ss);
+            HttpRequest http (whoami, capath, proxy, insecure, ss);
             http.get();
 
             ResponseParser parser(ss);
@@ -48,7 +48,7 @@ boost::optional<time_t> RestDelegator::getExpirationTime()
     std::string const delegation = endpoint + "/delegation/" + delegationId;
 
     std::stringstream ss;
-    HttpRequest http (delegation, capath, proxy, ss);
+    HttpRequest http (delegation, capath, proxy, insecure, ss);
     http.get();
 
     if (ss.str() == "null") return boost::none;
@@ -81,7 +81,7 @@ void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool /*renew
         }
 
     std::stringstream ss;
-    HttpRequest(request, capath, proxy, ss).get();
+    HttpRequest(request, capath, proxy, insecure, ss).get();
     std::string certreq = ss.str();
 
     if (certreq.empty()) throw cli_exception("The delegation request failed!");
@@ -101,7 +101,7 @@ void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool /*renew
     std::string const put = endpoint + "/delegation/" + delegationId + "/credential";
     ss << certtxt;
 
-    HttpRequest(put, capath, proxy, ss).put();
+    HttpRequest(put, capath, proxy, insecure, ss).put();
 }
 
 } /* namespace cli */

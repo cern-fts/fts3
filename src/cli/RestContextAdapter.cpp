@@ -48,7 +48,7 @@ namespace cli
 void RestContextAdapter::getInterfaceDetails()
 {
     std::stringstream ss;
-    HttpRequest http (endpoint, capath, proxy, ss);
+    HttpRequest http (endpoint, capath, proxy, insecure, ss);
 
     try {
         http.get();
@@ -79,11 +79,11 @@ void RestContextAdapter::blacklistDn(std::string subject, std::string status, in
 {
     std::stringstream ss;
     RestBanning ban(subject, "", status, timeout, mode, true);
-    
+
     ss << ban.body();
 
     std::string url = endpoint + ban.resource();
-    HttpRequest http (url, capath, proxy, ss, "affected");
+    HttpRequest http (url, capath, proxy, insecure, ss, "affected");
 
     try {
         ban.do_http_action(http);
@@ -104,11 +104,11 @@ void RestContextAdapter::blacklistSe(std::string name, std::string vo, std::stri
 {
     std::stringstream ss;
     RestBanning ban(name, vo, status, timeout, mode, false);
-    
+
     ss << ban.body();
 
     std::string url = endpoint + ban.resource();
-    HttpRequest http (url, capath, proxy, ss, "affected");
+    HttpRequest http (url, capath, proxy, insecure, ss, "affected");
 
     try {
         ban.do_http_action(http);
@@ -150,7 +150,7 @@ void RestContextAdapter::debugSet(std::string source, std::string destination, u
     ss.clear();
     ss.str(std::string());
 
-    HttpRequest http (url, capath, proxy, ss);
+    HttpRequest http (url, capath, proxy, insecure, ss);
 
     try {
         http.post();
@@ -171,11 +171,11 @@ void RestContextAdapter::prioritySet(std::string jobId, int priority)
 {
     std::stringstream ss;
     RestModifyJob modify(jobId, priority);
-    
+
     ss << modify.body();
 
     std::string url = endpoint + modify.resource();
-    HttpRequest http (url, capath, proxy, ss);
+    HttpRequest http (url, capath, proxy, insecure, ss);
 
     try {
         modify.do_http_action(http);
@@ -222,7 +222,7 @@ std::vector<JobStatus> RestContextAdapter::listRequests (
         {
             std::stringstream ss;
             std::string urlwhoami = endpoint + "/whoami";
-            HttpRequest http (urlwhoami, capath, proxy, ss);
+            HttpRequest http (urlwhoami, capath, proxy, insecure, ss);
 
             try {
                 http.get();
@@ -255,7 +255,7 @@ std::vector<JobStatus> RestContextAdapter::listRequests (
         }
 
     std::stringstream ss;
-    HttpRequest http (url, capath, proxy, ss, "jobs");
+    HttpRequest http (url, capath, proxy, insecure, ss, "jobs");
 
     try {
         http.get();
@@ -295,7 +295,7 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
         {
             std::stringstream ss;
             std::string url = endpoint + "/jobs/" + *itr;
-            HttpRequest http (url, capath, proxy, ss);
+            HttpRequest http (url, capath, proxy, insecure, ss);
             bool isLast = (itr+1 == jobIds.end());
 
             try {
@@ -308,7 +308,7 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
                 } else {
                     std::string msg = "Error canceling job " + *itr + ": "
                                       + std::string(ex.what()) + ".";
-                    if (!isLast) { 
+                    if (!isLast) {
                         msg += " Not proceeding with remaining jobs.";
                     }
                     throw cli_exception(msg);
@@ -337,7 +337,7 @@ boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string &vo)
     }
 
     std::stringstream ss;
-    HttpRequest http (url, capath, proxy, ss);
+    HttpRequest http (url, capath, proxy, insecure, ss);
 
     boost::tuple<int, int> result;
 
@@ -365,7 +365,7 @@ std::string RestContextAdapter::transferSubmit (std::vector<File> const & files,
     ss << RestSubmission(files, parameters, extraParams);
 
     std::string url = endpoint + "/jobs";
-    HttpRequest http (url, capath, proxy, ss);
+    HttpRequest http (url, capath, proxy, insecure, ss);
 
     try {
         http.put();
@@ -389,7 +389,7 @@ std::string RestContextAdapter::deleteFile (const std::vector<std::string>& file
     ss << RestDeletion(filesForDelete);
 
     std::string url = endpoint + "/jobs";
-    HttpRequest http (url, capath, proxy, ss);
+    HttpRequest http (url, capath, proxy, insecure, ss);
 
     try {
         http.put();
@@ -419,7 +419,7 @@ JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, b
     url += jobId;
 
     std::stringstream ss;
-    HttpRequest http (url, capath, proxy, ss);
+    HttpRequest http (url, capath, proxy, insecure, ss);
 
     try {
         http.get();
@@ -462,7 +462,7 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
     // information for each file. archive jobs will return the job info plus
     // a "files" entry containing the array
     std::stringstream ss_files;
-    HttpRequest http_files (url_files, capath, proxy, ss_files, "files");
+    HttpRequest http_files (url_files, capath, proxy, insecure, ss_files, "files");
 
     std::stringstream ss(ss_files.str());
 
@@ -487,7 +487,7 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
             ss.clear();
             ss.str(std::string());
             std::string url = endpoint + "/jobs/" + jobId;
-            HttpRequest http (url, capath, proxy, ss);
+            HttpRequest http (url, capath, proxy, insecure, ss);
             http.get();
         }
 
@@ -531,7 +531,7 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
         // for non-archive jobs this will return an array at top level containing
         // information for each file. archive jobs will return the job info plus
         // a "files" entry containing the array
-        HttpRequest http (url, capath, proxy, ss, "files");
+        HttpRequest http (url, capath, proxy, insecure, ss, "files");
         http.get();
         ResponseParser response(ss);
         results = response.getFiles("files");
@@ -541,7 +541,7 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
             url = endpoint + "/jobs/" + jobId + "/dm";
             ss.str(std::string());
             ss.clear();
-            HttpRequest httpDm (url, capath, proxy, ss, "files");
+            HttpRequest httpDm (url, capath, proxy, insecure, ss, "files");
             httpDm.get();
             ResponseParser responseDm(ss);
             results = responseDm.getFiles("files");
@@ -578,7 +578,7 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
             ss.clear();
             ss.str(std::string());
             try {
-                HttpRequest http (url, capath, proxy, ss, "retries");
+                HttpRequest http (url, capath, proxy, insecure, ss, "retries");
                 http.get();
                 ResponseParser response(ss);
                 response.setRetries("retries",*itr);
@@ -626,7 +626,7 @@ std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, st
         }
 
     std::stringstream ss;
-    HttpRequest http (url, capath, proxy, ss, "snapshot");
+    HttpRequest http (url, capath, proxy, insecure, ss, "snapshot");
 
     try {
         http.get();
@@ -645,13 +645,13 @@ std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, st
 void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
 {
     // delegate Proxy Certificate
-    RestDelegator delegator(endpoint, delegationId, expirationTime, capath, proxy);
+    RestDelegator delegator(endpoint, delegationId, expirationTime, capath, proxy, insecure);
     delegator.delegate();
 }
 
 long RestContextAdapter::isCertValid()
 {
-    RestDelegator delegator(endpoint, std::string(), 0, capath, proxy);
+    RestDelegator delegator(endpoint, std::string(), 0, capath, proxy, insecure);
     return delegator.isCertValid();
 }
 

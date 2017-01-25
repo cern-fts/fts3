@@ -124,6 +124,12 @@ public:
     bool isQuiet() const;
 
     /**
+     * Checks whether the --insecure flag was used
+     * @return
+     */
+    bool isInsecure() const;
+
+    /**
      * @return the path to the proxy certificate
      */
     std::string proxy() const;

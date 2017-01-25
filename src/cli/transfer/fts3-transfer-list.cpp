@@ -47,7 +47,7 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy(), cli.isInsecure());
 
             // print API details if verbose
             cli.printApiDetails(ctx);

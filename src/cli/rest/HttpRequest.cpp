@@ -53,7 +53,7 @@ static int debug_callback(CURL*, curl_infotype type, char *data, size_t size, vo
     return 0;
 }
 
-HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy,
+HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, bool insecure,
     std::iostream& stream, std::string const &topname /* = std::string() */) : stream(stream), curl(curl_easy_init()), topname(topname)
 {
     if (!curl) throw cli_exception("failed to initialise curl context (curl_easy_init)");
@@ -75,6 +75,10 @@ HttpRequest::HttpRequest(std::string const & url, std::string const & capath, st
     else if (access("/etc/grid-security/hostcert.pem", F_OK) == 0) {
         curl_easy_setopt(curl, CURLOPT_SSLKEY, "/etc/grid-security/hostkey.pem");
         curl_easy_setopt(curl, CURLOPT_SSLCERT, "/etc/grid-security/hostcert.pem");
+    }
+
+    if (insecure) {
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     }
 
     // the write callback function

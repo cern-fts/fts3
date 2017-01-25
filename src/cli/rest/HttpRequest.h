@@ -40,7 +40,7 @@ class HttpRequest
 
 public:
 
-    HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy,
+    HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, bool insecure,
                 std::iostream& stream, std::string const &topname = std::string());
     virtual ~HttpRequest();
 
@@ -81,7 +81,7 @@ protected:
     // indicates if a top level object name has been added to the request
     // result during result fetching. Required if the result is an array.
     bool addedTopLevel;
-    
+
     // list of headers received
     std::vector<std::string> headlines;
 

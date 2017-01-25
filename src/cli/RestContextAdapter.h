@@ -44,10 +44,11 @@ class RestContextAdapter : public ServiceAdapter
 {
 
 public:
-    RestContextAdapter(std::string const & endpoint, std::string const & capath, std::string const & proxy):
+    RestContextAdapter(std::string const & endpoint, std::string const & capath, std::string const & proxy, bool insecure):
         ServiceAdapter(removeTrailingSlash(endpoint)),
         capath(capath),
-        proxy(proxy)
+        proxy(proxy),
+        insecure(insecure)
     {
      	if (this->capath.empty()) {
             const char *x509_cert_dir = getenv("X509_CERT_DIR");
@@ -124,6 +125,7 @@ private:
 
     std::string capath;
     std::string proxy;
+    bool insecure;
 };
 
 } /* namespace cli */

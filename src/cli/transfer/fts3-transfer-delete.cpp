@@ -56,7 +56,7 @@ int main(int ac, char* av[])
                     return 1;
                 }
 
-            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy(), cli.isInsecure());
             cli.printApiDetails(ctx);
 
             // delegate Proxy Certificate

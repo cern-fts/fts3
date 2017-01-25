@@ -42,7 +42,7 @@ int main(int ac, char* av[])
             cli.validate();
 
             // validate command line options, and return service context
-            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy(), cli.isInsecure());
             cli.printApiDetails(ctx);
 
             ctx.prioritySet(
@@ -55,7 +55,7 @@ int main(int ac, char* av[])
         {
             MsgPrinter::instance().print(ex);
             return 1;
-        }        
+        }
     catch(std::exception& ex)
         {
             MsgPrinter::instance().print(ex);

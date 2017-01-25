@@ -39,7 +39,7 @@ int main(int ac, char* av[])
             cli.validate();
 
             // validate command line options, and return service context
-            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy(), cli.isInsecure());
             cli.printApiDetails(ctx);
 
             // submit the job
