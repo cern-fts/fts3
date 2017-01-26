@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -x
 
-export SHORT_RUN=1
-
 # Recover unit test coverage and static analysis
 cp -v /usr/src/fts3/*.xml /usr/src/fts3/*.info "/coverage"
 
