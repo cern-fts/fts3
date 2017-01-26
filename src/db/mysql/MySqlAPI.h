@@ -226,10 +226,6 @@ public:
     /// Get the state the transfer identified by jobId/fileId
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int fileId);
 
-    /// Cancel files that have been set to wait, but the wait time expired
-    /// @param jobs An output parameter, where the set of expired job ids is stored
-    virtual void cancelWaitingFiles(std::set<std::string>& jobs);
-
     /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
     virtual void checkSanityState();
 
@@ -336,7 +332,7 @@ public:
         const std::string& cloudName,
         CloudStorageAuth& auth);
 
-    /// Get if the user dn should be visible or not in the messaging 
+    /// Get if the user dn should be visible or not in the messaging
     virtual bool publishUserDn(const std::string &vo);
 
 private:

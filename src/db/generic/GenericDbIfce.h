@@ -269,10 +269,6 @@ public:
     /// Get the state the transfer identified by jobId/fileId
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int fileId) = 0;
 
-    /// Cancel files that have been set to wait, but the wait time expired
-    /// @param jobs An output parameter, where the set of expired job ids is stored
-    virtual void cancelWaitingFiles(std::set<std::string>& jobs) = 0;
-
     /// Run a set of sanity checks over the database, fixing potential inconsistencies and logging them
     virtual void checkSanityState() = 0;
 

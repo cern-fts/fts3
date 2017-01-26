@@ -134,7 +134,7 @@ CREATE TABLE t_file_new (
   `file_index`          INT(11) DEFAULT NULL,
   `job_id`              CHAR(36) NOT NULL,
   `file_state`          ENUM(
-    'STAGING', 'STARTED', 'SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FAILED', 'CANCELED', 'NOT_USED'
+    'STAGING', 'STARTED', 'SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FAILED', 'CANCELED', 'NOT_USED', 'ON_HOLD', 'ON_HOLD_STAGING'
   ) NOT NULL,          -- Was file_state VARCHAR(32)
   `transfer_host`       VARCHAR(255) DEFAULT NULL,  -- Was transferHost
   `source_surl`         VARCHAR(1100) DEFAULT NULL,
@@ -160,8 +160,6 @@ CREATE TABLE t_file_new (
   `staging_finished`    TIMESTAMP NULL DEFAULT NULL,
   `bringonline_token`   VARCHAR(255) DEFAULT NULL,
   `retry_timestamp`     TIMESTAMP NULL DEFAULT NULL,
-  `wait_timestamp`      TIMESTAMP NULL DEFAULT NULL,
-  `wait_timeout`        INT(11) DEFAULT NULL,
   `log_file`            VARCHAR(2048) DEFAULT NULL,
   `log_file_debug`      TINYINT(1) DEFAULT NULL,   -- Was INT
   `hashed_id`           INT(10) unsigned DEFAULT '0',
@@ -177,7 +175,7 @@ SELECT file_id, file_index, job_id, file_state,
     finish_time, start_time, internal_file_params,
     pid, tx_duration, throughput, retry, user_filesize,
     file_metadata, selection_strategy, staging_start, staging_finished,
-    bringonline_token, retry_timestamp, wait_timestamp, wait_timeout,
+    bringonline_token, retry_timestamp
     t_log_file AS log_file, t_log_file_debug AS t_log_file_debug, hashed_id, vo_name, activity, transferred
 FROM t_file;
 
@@ -186,7 +184,6 @@ RENAME TABLE t_file_new TO t_file;
 
 ALTER TABLE t_file
     ADD INDEX idx_job_id (job_id),
-    ADD INDEX idx_waittimeout (wait_timeout),
     ADD INDEX idx_activity (vo_name, activity),
     ADD INDEX idx_state_host (file_state, transfer_host),
     ADD INDEX idx_link_state_vo (source_se, dest_se, file_state, vo_name),

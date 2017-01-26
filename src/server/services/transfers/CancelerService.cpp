@@ -147,21 +147,6 @@ void CancelerService::applyActiveTimeouts()
 }
 
 
-void CancelerService::applyWaitingTimeouts()
-{
-    std::set<std::string> canceled;
-    DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
-    if (!canceled.empty())
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Canceling expired waiting files" << commit;
-        for (auto iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
-        {
-            SingleTrStateInstance::instance().sendStateMessage((*iterCan), -1);
-        }
-        canceled.clear();
-    }
-}
-
 /// Get a list of processes belonging to this host from the DB
 /// To be called on start
 static void recoverProcessesFromDb()
@@ -181,7 +166,6 @@ void CancelerService::runService()
     unsigned int counterActiveTimeouts = 0;
     unsigned int counterQueueTimeouts = 0;
     unsigned int countReverted = 0;
-    unsigned int counterWaitingTimeouts = 0;
     unsigned int counterCanceled = 0;
 
     recoverProcessesFromDb();
@@ -227,17 +211,6 @@ void CancelerService::runService()
             if (boost::this_thread::interruption_requested())
                 return;
 
-            /*this routine is called periodically every 300 seconds*/
-            counterWaitingTimeouts++;
-            if (counterWaitingTimeouts == 300)
-            {
-                applyWaitingTimeouts();
-                counterWaitingTimeouts = 0;
-            }
-
-            if (boost::this_thread::interruption_requested())
-                return;
-
             /*force-fail stalled ACTIVE transfers*/
             if (ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
                 counterActiveTimeouts++;
@@ -271,7 +244,6 @@ void CancelerService::runService()
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
             countReverted = 0;
-            counterWaitingTimeouts = 0;
             counterCanceled = 0;
         }
         catch (...)
@@ -281,7 +253,6 @@ void CancelerService::runService()
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
             countReverted = 0;
-            counterWaitingTimeouts = 0;
             counterCanceled = 0;
         }
         boost::this_thread::sleep(boost::posix_time::seconds(1));

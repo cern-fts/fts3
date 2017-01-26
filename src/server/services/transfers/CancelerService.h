@@ -49,7 +49,6 @@ private:
     void killCanceledByUser();
     void applyQueueTimeouts();
     void applyActiveTimeouts();
-    void applyWaitingTimeouts();
 };
 
 } // end namespace server

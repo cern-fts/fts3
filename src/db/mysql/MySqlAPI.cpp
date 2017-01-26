@@ -306,7 +306,6 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                          "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                          "  f.source_se = :source AND f.dest_se = :dest AND "
                                          "  f.vo_name = :vo_name AND j.vo_name = f.vo_name AND "
-                                         "  f.wait_timestamp IS NULL AND "
                                          "  (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                          "  (j.job_type = 'N' OR j.job_type = 'R' OR j.job_type IS NULL) "
                                          " GROUP BY activity ORDER BY NULL ",
@@ -676,7 +675,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                       " FROM t_file f, t_job j "
                       " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
                       "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
-                      "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
+                      "     f.vo_name = :vo_name AND "
                       "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                       "     (j.job_type = 'N' OR j.job_type = 'R') AND "
                       "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
@@ -744,7 +743,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                                          " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
                                          "      f.source_se = :source_se AND f.dest_se = :dest_se AND "
                                          "      (j.job_type = 'N' OR j.job_type = 'R') AND  "
-                                         "      f.vo_name = :vo_name AND f.wait_timestamp IS NULL AND"
+                                         "      f.vo_name = :vo_name AND "
                                          "      (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND ";
                     select +=
                         it_act->first == "default" ?
@@ -862,7 +861,7 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
         time_t now = time(NULL);
         struct tm tTime;
         gmtime_r(&now, &tTime);
-       
+
 
         soci::rowset<soci::row> jobs_rs = (sql.prepare <<
                                            " SELECT DISTINCT t_file.vo_name, t_file.job_id "
@@ -872,7 +871,6 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
                                            "      t_file.file_state = 'SUBMITTED' AND "
                                            "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
                                            "      t_job.job_type = 'H' AND "
-                                           "      t_file.wait_timestamp is null AND "
                                            "      (t_file.retry_timestamp IS NULL OR t_file.retry_timestamp < :tTime) ",
                                            soci::use(hashSegment.start), soci::use(hashSegment.end),
                                            soci::use(tTime)
@@ -1207,7 +1205,6 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                 "      j.vo_name=:vo_name and j.job_type = 'Y' and "
                 "      j.job_state in ('SUBMITTED', 'ACTIVE') and "
                 "      (f.hashed_id >= :hStart and f.hashed_id <= :hEnd) and "
-                "      f.wait_timestamp is null and "
                 "      (f.retry_timestamp is null or f.retry_timestamp < :tTime) "
                 "order by j.priority DESC, j.submit_time "
                 "limit 1 ",
@@ -2614,35 +2611,35 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
 
     try {
         // Prepare common statements
-        std::string job_id;    
+        std::string job_id;
         soci::statement stmtCancelFile = (sql.prepare <<
             "UPDATE t_file SET "
             "   finish_time = UTC_TIMESTAMP(), "
             "   file_state = 'CANCELED', reason = :reason "
-            "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED')",
+            "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')",
             soci::use(message), soci::use(job_id));
-        
+
         // Cancel jobs using global timeout
         if(maxTime > 0)
         {
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                 "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
-                "    job_state = 'SUBMITTED' AND job_finished IS NULL AND vo_name = :vo ",
+                "    job_state IN ('SUBMITTED', 'STAGING') AND job_finished IS NULL AND vo_name = :vo ",
                 soci::use(maxTime), soci::use(vo));
-            
+
             sql.begin();
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
             {
                 job_id = (*i);
-                
+
                 stmtCancelFile.execute(true);
                 updateJobTransferStatusInternal(sql, job_id, "CANCELED", 0);
-                
+
                 jobs.push_back(*i);
             }
             sql.commit();
         }
-        
+
         // Cancel jobs using their own timeout
         soci::rowset<std::string> rs = (sql.prepare
             << "SELECT job_id FROM t_job WHERE "
@@ -2652,10 +2649,10 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
         for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
         {
             job_id = (*i);
-            
+
             stmtCancelFile.execute(true);
             updateJobTransferStatusInternal(sql, job_id, "CANCELED", 0);
-            
+
             jobs.push_back(*i);
         }
         sql.commit();
@@ -2688,7 +2685,7 @@ std::vector<std::string> MySqlAPI::getVos(void)
     catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
- 
+
 }
 
 
@@ -3030,61 +3027,6 @@ std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId
     }
 
     return temp;
-}
-
-
-void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
-{
-
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        soci::rowset<soci::row> rs = (
-                                         sql.prepare <<
-                                         " SELECT file_id, job_id "
-                                         " FROM t_file "
-                                         " WHERE wait_timeout <> 0 "
-                                         "  AND TIMESTAMPDIFF(SECOND, wait_timestamp, UTC_TIMESTAMP()) > wait_timeout "
-                                         "  AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')"
-                                         "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                                         soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                     );
-
-        soci::rowset<soci::row>::iterator it;
-
-        sql.begin();
-        for (it = rs.begin(); it != rs.end(); ++it)
-        {
-
-            jobs.insert(it->get<std::string>("job_id"));
-
-            sql <<
-                " UPDATE t_file "
-                " SET file_state = 'CANCELED', finish_time = UTC_TIMESTAMP() "
-                " WHERE file_id = :fileId AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')",
-                soci::use(it->get<unsigned long long>("file_id"))
-                ;
-        }
-
-        sql.commit();
-
-        std::set<std::string>::iterator job_it;
-        for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
-        {
-            updateJobTransferStatusInternal(sql, *job_it, std::string(),0);
-        }
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
 }
 
 
