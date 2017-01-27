@@ -16,19 +16,11 @@
 
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/test_tools.hpp>
+#include <boost/chrono.hpp>
 
 #include "common/ConcurrentQueue.h"
 
 using fts3::common::ConcurrentQueue;
-
-namespace std {
-    std::ostream &operator<<(std::ostream &os, const boost::posix_time::time_duration &sec)
-    {
-        os << sec.total_milliseconds() << "ms";
-        return os;
-    }
-}
-
 
 BOOST_AUTO_TEST_SUITE(common)
 BOOST_AUTO_TEST_SUITE(ConcurrentQueueTest)
@@ -53,22 +45,22 @@ BOOST_AUTO_TEST_CASE (simple)
 
 BOOST_AUTO_TEST_CASE (blocking)
 {
-    boost::posix_time::ptime start, end;
+    boost::chrono::steady_clock::time_point start, end;
 
     ConcurrentQueue *queue = ConcurrentQueue::getInstance();
     queue->push("abcde");
 
-    start = boost::posix_time::microsec_clock::universal_time();
+    start = boost::chrono::steady_clock::now();
     std::string str = queue->pop(5);
-    end = boost::posix_time::microsec_clock::universal_time();
-    BOOST_CHECK_LT((end - start), boost::posix_time::seconds(2));
+    end = boost::chrono::steady_clock::now();
+    BOOST_CHECK_LT((end - start), boost::chrono::seconds(2));
     BOOST_CHECK_EQUAL(str, "abcde");
 
-    start = boost::posix_time::microsec_clock::universal_time();
+    start = boost::chrono::steady_clock::now();
     str = queue->pop(3);
-    end = boost::posix_time::microsec_clock::universal_time();
+    end = boost::chrono::steady_clock::now();
 
-    BOOST_CHECK_GE((end - start), boost::posix_time::seconds(3));
+    BOOST_CHECK_GE((end - start), boost::chrono::seconds(3));
     BOOST_CHECK_EQUAL(str, "");
 }
 
