@@ -21,6 +21,14 @@
 
 using fts3::common::ConcurrentQueue;
 
+namespace std {
+    std::ostream &operator<<(std::ostream &os, const boost::posix_time::time_duration &sec)
+    {
+        os << sec.total_milliseconds() << "ms";
+        return os;
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE(common)
 BOOST_AUTO_TEST_SUITE(ConcurrentQueueTest)
@@ -45,21 +53,22 @@ BOOST_AUTO_TEST_CASE (simple)
 
 BOOST_AUTO_TEST_CASE (blocking)
 {
-    time_t start, end;
+    boost::posix_time::ptime start, end;
+
     ConcurrentQueue *queue = ConcurrentQueue::getInstance();
     queue->push("abcde");
 
-    start = time(NULL);
+    start = boost::posix_time::microsec_clock::universal_time();
     std::string str = queue->pop(5);
-    end = time(NULL);
-    BOOST_CHECK_LT((end - start), 2);
+    end = boost::posix_time::microsec_clock::universal_time();
+    BOOST_CHECK_LT((end - start), boost::posix_time::seconds(2));
     BOOST_CHECK_EQUAL(str, "abcde");
 
-    start = time(NULL);
+    start = boost::posix_time::microsec_clock::universal_time();
     str = queue->pop(3);
-    end = time(NULL);
+    end = boost::posix_time::microsec_clock::universal_time();
 
-    BOOST_CHECK_GE((end - start), 3);
+    BOOST_CHECK_GE((end - start), boost::posix_time::seconds(3));
     BOOST_CHECK_EQUAL(str, "");
 }
 
