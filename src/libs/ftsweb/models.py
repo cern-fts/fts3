@@ -21,10 +21,10 @@
 from django.db import models
 
 
-STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
 ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED', 'NOT_USED']
-
+ON_HOLD_STATES         = ['ON_HOLD', 'ON_HOLD_STAGING']
+STATES = ACTIVE_STATES + FILE_TERMINAL_STATES + ON_HOLD_STATES
 
 class JobBase(models.Model):
     job_id          = models.CharField(max_length = 36, primary_key = True)
@@ -145,8 +145,6 @@ class DmFile(models.Model):
     activity      = models.CharField(max_length=255)
     dm_token      = models.CharField(max_length=255)
     retry_timestamp = models.DateTimeField()
-    wait_timestamp	= models.DateTimeField()
-    wait_timeout    = models.IntegerField()
     hashed_id       = models.IntegerField()
     vo_name         = models.CharField(max_length=100)
 

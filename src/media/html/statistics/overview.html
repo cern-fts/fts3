@@ -34,6 +34,9 @@
                 <tr>
                     <td>
                         <a href="#/transfers?hostname={{host|escape}}&state=SUBMITTED">{{stats.lasthour.submitted}}</a>
+                        <span data-ng-show="{{stats.lasthour.on_hold}}">
+                            (<a href="#/transfers?hostname={{host|escape}}&state=ON_HOLD" title="On hold">{{stats.lasthour.on_hold}}</a>)
+                        </span>
                     </td>
                     <td>
                         <a href="#/transfers?hostname={{host|escape}}&state=READY">{{stats.lasthour.ready}}</a>
@@ -43,6 +46,9 @@
                     </td>
                     <td>
                         <a href="#/transfers?hostname={{host|escape}}&state=STAGING">{{stats.lasthour.staging}}</a>
+                        <span data-ng-show="{{stats.lasthour.on_hold_staging}}">
+                            (<a href="#/transfers?hostname={{host|escape}}&state=ON_HOLD_STAGING" title="On hold">{{stats.lasthour.on_hold_staging}}</a>)
+                        </span>
                     </td>
                 </tr>
             </tbody>

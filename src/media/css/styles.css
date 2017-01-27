@@ -127,6 +127,16 @@ tr.nested td {
      background: #990099;
 }
 
+.ON_HOLD_STAGING {
+    background: repeating-linear-gradient(
+        45deg,
+        #990099,
+        #990099 10px,
+        #835b99 10px,
+        #835b99 20px
+    );
+}
+
 .STARTED {
     background: #BA56B0;
 }
@@ -134,6 +144,17 @@ tr.nested td {
 td.SUBMITTED, .SUBMITTED {
     color: black;
     background: #FFFF88;
+}
+
+td.ON_HOLD, .ON_HOLD {
+    color: black;
+    background: repeating-linear-gradient(
+        45deg,
+        #FFFF88,
+        #FFFF88 10px,
+        #ffd98c 10px,
+        #ffd98c 20px
+    );
 }
 
 .NOT_USED {

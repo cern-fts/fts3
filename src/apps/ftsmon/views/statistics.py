@@ -23,7 +23,7 @@ from django.db.models import Q, Count, Sum
 from django.db.utils import DatabaseError
 
 from ftsweb.models import Job, File, Host
-from ftsweb.models import ACTIVE_STATES, STATES
+from ftsweb.models import ACTIVE_STATES, STATES, FILE_TERMINAL_STATES
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged, as_json
 from slsfy import slsfy, slsfy_error
@@ -37,7 +37,7 @@ def _get_count_per_state(age, hostname):
     not_before = datetime.utcnow() - age
     for state in STATES:
         query = File.objects
-        if state not in ACTIVE_STATES:
+        if state in FILE_TERMINAL_STATES:
             query = query.filter(finish_time__gte=not_before)
         if hostname:
             query = query.filter(transfer_host=hostname)

@@ -23,7 +23,7 @@ from django.http import Http404
 from datetime import datetime, timedelta
 
 from jsonify import jsonify, jsonify_paged
-from ftsweb.models import Job, File, RetryError, DmFile, ACTIVE_STATES
+from ftsweb.models import Job, File, RetryError, DmFile, ACTIVE_STATES, ON_HOLD_STATES
 from util import get_order_by, ordered_field, paged, log_link
 from diagnosis import JobDiagnosis
 
@@ -352,7 +352,7 @@ def _contains_active_state(state_filer):
     # Consider empty a list with active states (because all are in)
     if not state_filer:
         return True
-    return reduce(bool.__or__, map(lambda s: s in state_filer, ACTIVE_STATES))
+    return reduce(bool.__or__, map(lambda s: s in state_filer, ACTIVE_STATES+ON_HOLD_STATES))
 
 @jsonify_paged
 def get_transfer_list(http_request):
