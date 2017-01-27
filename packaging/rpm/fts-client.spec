@@ -105,7 +105,6 @@ make install DESTDIR=%{buildroot}
 %{_bindir}/fts-transfer-submit
 %{_bindir}/fts-transfer-delete
 %{_bindir}/fts-transfer-cancel
-%{_bindir}/fts-transfer-snapshot
 %{_bindir}/fts-delegation-init
 
 %{_mandir}/man1/fts*

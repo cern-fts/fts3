@@ -85,7 +85,6 @@ public:
     std::string getBandwidthLimit() { throw rest_client_not_implemented("getBandwidthLimit"); }
     std::vector<std::string> getConfiguration (std::string, std::string, std::string, std::string) { throw rest_client_not_implemented("getConfiguration"); }
     std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
-    std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst);
     long isCertValid();
     JobStatus getTransferJobStatus (std::string const & jobId, bool archive);
     JobStatus getTransferJobSummary (std::string const & jobId, bool archive);

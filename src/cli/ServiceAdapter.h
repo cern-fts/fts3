@@ -86,7 +86,7 @@ public:
 
     /**
      * Remote call to debugSet
-     * 
+     *
      * set the debug mode to on/off for
      * a given pair of SEs or a single SE
      *
@@ -118,7 +118,7 @@ public:
 
     /**
      * Remote call to doDrain
-     * 
+     *
      * switches the drain mode
      *
      * @param  drain - on/off
@@ -153,7 +153,7 @@ public:
 
     /**
      * Remote call to getConfiguration
-     * 
+     *
      * @param vo - vo name that will be used to filter the response
      * @param name - SE or SE group name that will be used to filter the response
      */
@@ -171,15 +171,6 @@ public:
      * @return The number of files returned
      */
     virtual std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries) = 0;
-
-    /**
-     * @param vo : user VO name
-     * @param src : source SE
-     * @param dst : destination SE
-     *
-     * @return the snapshot
-     */
-    virtual std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst) = 0;
 
     /**
      * Remote call to getTransferJobStatus

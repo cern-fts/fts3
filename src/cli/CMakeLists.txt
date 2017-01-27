@@ -90,31 +90,24 @@ add_executable(fts-delegation-init
 )
 target_link_libraries(fts-delegation-init fts_cli_common)
 
-# fts-transfer-snapshot
-add_executable(fts-transfer-snapshot
-    transfer/fts3-transfer-snapshot.cpp
-    ui/SnapshotCli.cpp
-)
-target_link_libraries(fts-transfer-snapshot fts_cli_common)
-
 # fts-transfer-status
 add_executable(fts-transfer-status
     transfer/fts3-transfer-status.cpp
-    ui/TransferStatusCli.cpp 
+    ui/TransferStatusCli.cpp
 )
 target_link_libraries(fts-transfer-status fts_cli_common)
 
 # fts-transfer-delete
 add_executable(fts-transfer-delete
     transfer/fts3-transfer-delete.cpp
-    ui/SrcDelCli.cpp 
+    ui/SrcDelCli.cpp
 )
 target_link_libraries(fts-transfer-delete fts_cli_common)
 
 # fts-transfer-list
 add_executable(fts-transfer-list
     transfer/fts3-transfer-list.cpp
-    ui/ListTransferCli.cpp 
+    ui/ListTransferCli.cpp
 )
 target_link_libraries(fts-transfer-list fts_cli_common)
 
@@ -125,19 +118,19 @@ add_executable(fts-transfer-cancel
 target_link_libraries(fts-transfer-cancel fts_cli_common)
 
 # fts-set-debug command
-add_executable(fts-set-debug 
+add_executable(fts-set-debug
     set/fts3-set-debug.cpp
 )
 target_link_libraries(fts-set-debug fts_cli_common)
 
 # fts-set-blacklist command
-add_executable(fts-set-blacklist 
+add_executable(fts-set-blacklist
     set/fts3-set-blk.cpp
 )
 target_link_libraries(fts-set-blacklist fts_cli_common)
 
 # fts-set-priority command
-add_executable(fts-set-priority 
+add_executable(fts-set-priority
     set/fts3-set-priority.cpp
 )
 target_link_libraries(fts-set-priority fts_cli_common)
@@ -145,18 +138,17 @@ target_link_libraries(fts-set-priority fts_cli_common)
 
 # Man pages
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/cli")
- 
+
 install(FILES "${MAN_INPUT_DIR}/fts-config-del.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-config-set.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-config-get.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-transfer-cancel.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-transfer-list.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-transfer-status.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
-install(FILES "${MAN_INPUT_DIR}/fts-transfer-submit.1" DESTINATION ${MAN_INSTALL_DIR}/man1/) 
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-submit.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-set-priority.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-set-debug.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-set-blacklist.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
-install(FILES "${MAN_INPUT_DIR}/fts-transfer-snapshot.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-transfer-delete.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-delegation-init.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 
@@ -169,13 +161,12 @@ install(TARGETS
 	fts-set-debug
 	fts-set-blacklist
 	fts-set-priority
-	fts-transfer-snapshot
 	fts-transfer-delete
 	fts-delegation-init
 	RUNTIME DESTINATION ${BIN_INSTALL_DIR}
 )
 
-install(TARGETS fts_cli_common 
-	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
+install(TARGETS fts_cli_common
+	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
 )

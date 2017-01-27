@@ -597,51 +597,6 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
     return results;
 }
 
-std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, std::string const & src, std::string const & dst)
-{
-    char prefix = '?';
-    std::string url = endpoint + "/snapshot";
-
-    if (!vo.empty())
-        {
-            url += prefix;
-            url += "vo_name=";
-            url += HttpRequest::urlencode(vo);
-            prefix = '&';
-        }
-
-    if (!dst.empty())
-        {
-            url += prefix;
-            url += "dest_se=";
-            url += HttpRequest::urlencode(dst);
-            prefix = '&';
-        }
-
-    if (!src.empty())
-        {
-            url += prefix;
-            url += "source_se=";
-            url += HttpRequest::urlencode(src);
-        }
-
-    std::stringstream ss;
-    HttpRequest http (url, capath, proxy, insecure, ss, "snapshot");
-
-    try {
-        http.get();
-        return ResponseParser(ss).getSnapshot();
-    } catch(rest_failure const &ex) {
-        std::string msg = "Error getting the snapshot: "
-                          + std::string(ex.what());
-        throw cli_exception(msg);
-    } catch(rest_invalid const &ex) {
-        std::string msg = "Error reading server's reply with the snapshot: "
-                          + std::string(ex.what());
-        throw cli_exception(msg);
-    }
-}
-
 void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
 {
     // delegate Proxy Certificate
