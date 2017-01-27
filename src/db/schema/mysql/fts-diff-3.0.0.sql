@@ -245,6 +245,13 @@ CREATE VIEW v_staging AS
         s.file_state='STARTED'
     WHERE q.file_state='STAGING' AND s.file_state IS NULL;
 
+--
+-- Change t_bas_ses primary key
+--
+ALTER TABLE t_bad_ses
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY(se, vo);
+
 -- DROP TABLE t_file_share_config_old;
 -- DROP TABLE t_file_retry_errors_old;
 -- DROP TABLE t_file_old;
@@ -256,4 +263,4 @@ CREATE VIEW v_staging AS
 DROP TABLE t_server_sanity;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (3, 0, 0, 'FTS-599, FTS-815, FTS-824, FTS-629 diff');
+VALUES (3, 0, 0, 'FTS-599, FTS-815, FTS-824, FTS-629, FTS-859 diff');
