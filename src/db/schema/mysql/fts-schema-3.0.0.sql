@@ -260,7 +260,7 @@ CREATE TABLE `t_dm` (
   PRIMARY KEY (`file_id`),
   KEY `dm_job_id` (`job_id`),
   CONSTRAINT `fk_job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=534226 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -310,7 +310,7 @@ CREATE TABLE `t_file` (
   `file_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `file_index` int(11) DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED') NOT NULL,
+  `file_state` enum('STAGING','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
@@ -335,8 +335,6 @@ CREATE TABLE `t_file` (
   `staging_finished` timestamp NULL DEFAULT NULL,
   `bringonline_token` varchar(255) DEFAULT NULL,
   `retry_timestamp` timestamp NULL DEFAULT NULL,
-  `wait_timestamp` timestamp NULL DEFAULT NULL,
-  `wait_timeout` int(11) DEFAULT NULL,
   `log_file` varchar(2048) DEFAULT NULL,
   `t_log_file_debug` int(11) DEFAULT NULL,
   `hashed_id` int(10) unsigned DEFAULT '0',
@@ -345,14 +343,13 @@ CREATE TABLE `t_file` (
   `transferred` bigint(20) DEFAULT '0',
   PRIMARY KEY (`file_id`),
   KEY `idx_job_id` (`job_id`),
-  KEY `idx_waittimeout` (`wait_timeout`),
   KEY `idx_activity` (`vo_name`,`activity`),
   KEY `idx_link_state_vo` (`source_se`,`dest_se`,`file_state`,`vo_name`),
   KEY `idx_finish_time` (`finish_time`),
   KEY `idx_staging` (`file_state`,`vo_name`,`source_se`),
   KEY `idx_state_host` (`file_state`,`transfer_host`),
   CONSTRAINT `job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4442981 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -474,7 +471,7 @@ CREATE TABLE `t_file_old` (
   KEY `file_tr_host` (`transferHost`,`file_state`),
   KEY `t_file_activity` (`activity`),
   CONSTRAINT `t_file_old_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `t_job_old` (`job_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3770788 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -813,7 +810,7 @@ CREATE TABLE `t_optimize` (
   `ipv6` varchar(3) DEFAULT NULL,
   PRIMARY KEY (`auto_number`),
   KEY `optimize_source_a` (`source_se`,`dest_se`)
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -939,7 +936,6 @@ CREATE TABLE `t_schema_vers` (
   `message` text
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (3, 0, 0, 'Schema 3.0.0');
 
@@ -965,7 +961,7 @@ CREATE TABLE `t_se` (
   `gocdb_id` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`name`),
   KEY `se_id_info` (`se_id_info`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1120,4 +1116,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-01-23  9:44:58
+-- Dump completed on 2017-01-30  9:17:55
