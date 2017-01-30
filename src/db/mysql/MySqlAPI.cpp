@@ -932,11 +932,11 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
     try
     {
-        soci::indicator ind = soci::i_ok;
-        std::string selection_strategy;
+        soci::indicator selectionStrategyInd = soci::i_ok;
+        std::string selectionStrategy;
         std::string vo_name;
         int nextReplica = 0, alreadyActive;
-        soci::indicator indNull = soci::i_ok;
+        soci::indicator nextReplicaInd = soci::i_ok;
 
         //check if the file belongs to a multiple replica job
         std::string mreplica;
@@ -959,74 +959,31 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 
             //check if it's auto or manual
             sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
-                soci::use(fileId), soci::into(selection_strategy, ind), soci::into(vo_name);
+                soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name);
+            // default is orderly
+            if (selectionStrategyInd == soci::i_null) {
+                selectionStrategy = "orderly";
+            }
 
             sql << "select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ",
-                soci::use(jobId), soci::into(nextReplica, indNull);
+                soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
 
-            if (ind != soci::i_null)
-            {
-                if(selection_strategy == "auto") //pick the "best-next replica to process"
-                {
-                    int bestFileId = getBestNextReplica(sql, jobId, vo_name);
-                    if(bestFileId > 0) //use the one recommended
-                    {
-                        sql <<
-                            " UPDATE t_file "
-                            " SET file_state = 'SUBMITTED', finish_time=NULL "
-                            " WHERE job_id = :jobId AND file_id = :file_id  "
-                            " AND file_state = 'NOT_USED' ",
-                            soci::use(jobId), soci::use(bestFileId);
-                    }
-                    else //something went wrong, use orderly fashion
-                    {
-                        if(indNull != soci::i_null)
-                        {
-                            sql <<
-                                " UPDATE t_file "
-                                " SET file_state = 'SUBMITTED', finish_time=NULL "
-                                " WHERE job_id = :jobId "
-                                " AND file_state = 'NOT_USED' and file_id=:file_id ",
-                                soci::use(jobId), soci::use(nextReplica);
-                        }
-                    }
-                }
-                else if (selection_strategy == "orderly")
-                {
-                    if(indNull != soci::i_null)
-                    {
-                        sql <<
-                            " UPDATE t_file "
-                            " SET file_state = 'SUBMITTED', finish_time=NULL "
-                            " WHERE job_id = :jobId "
-                            " AND file_state = 'NOT_USED' and file_id=:file_id ",
-                            soci::use(jobId), soci::use(nextReplica);
-                    }
-                }
-                else
-                {
-                    if(indNull != soci::i_null)
-                    {
-                        sql <<
-                            " UPDATE t_file "
-                            " SET file_state = 'SUBMITTED', finish_time=NULL "
-                            " WHERE job_id = :jobId "
-                            " AND file_state = 'NOT_USED' and file_id=:file_id ",
-                            soci::use(jobId), soci::use(nextReplica);
-                    }
-                }
+            if (selectionStrategy == "auto") {
+                int bestFileId = getBestNextReplica(sql, jobId, vo_name);
+                sql <<
+                    " UPDATE t_file "
+                    " SET file_state = 'SUBMITTED', finish_time=NULL "
+                    " WHERE job_id = :jobId AND file_id = :file_id  "
+                    " AND file_state = 'NOT_USED' ",
+                    soci::use(jobId), soci::use(bestFileId);
             }
-            else //it's NULL, default is orderly
-            {
-                if(indNull != soci::i_null)
-                {
-                    sql <<
-                        " UPDATE t_file "
-                        " SET file_state = 'SUBMITTED', finish_time=NULL "
-                        " WHERE job_id = :jobId "
-                        " AND file_state = 'NOT_USED' and file_id=:file_id ",
-                        soci::use(jobId), soci::use(nextReplica);
-                }
+            else {
+                sql <<
+                    " UPDATE t_file "
+                    " SET file_state = 'SUBMITTED', finish_time=NULL "
+                    " WHERE job_id = :jobId "
+                    " AND file_state = 'NOT_USED' and file_id=:file_id ",
+                    soci::use(jobId), soci::use(nextReplica);
             }
         }
     }
@@ -1060,11 +1017,10 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
     try
     {
         //get available pairs
-        soci::rowset<soci::row> rs = (
-                                         sql.prepare <<
-                                         "select distinct source_se, dest_se from t_file where job_id=:jobId and file_state='NOT_USED'",
-                                         soci::use(jobId)
-                                     );
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "select distinct source_se, dest_se from t_file where job_id=:jobId and file_state='NOT_USED'",
+            soci::use(jobId)
+        );
 
         soci::rowset<soci::row>::const_iterator it;
         for (it = rs.begin(); it != rs.end(); ++it)
@@ -1108,17 +1064,22 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
             sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and job_id=:jobId",
                 soci::use(bestSource), soci::use(bestDestination), soci::use(jobId), soci::into(bestFileId, ind);
 
-            if (ind != soci::i_ok)
+            if (ind != soci::i_ok) {
                 bestFileId = 0;
+            }
         }
     }
     catch (std::exception& e)
     {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+        throw SystemError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
-        throw UserError(std::string(__func__) + ": Caught exception " );
+        throw SystemError(std::string(__func__) + ": Caught exception " );
+    }
+
+    if (bestFileId <= 0) {
+        throw SystemError(std::string(__func__) + ": Best file id can not be 0");
     }
 
     return bestFileId;
