@@ -125,8 +125,7 @@ void FetchStaging::recoverStartedTasks()
     std::vector<StagingOperation> startedStagingOps;
 
     try {
-        db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(
-            startedStagingOps);
+        db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(startedStagingOps);
     }
     catch (UserError const & ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
@@ -152,6 +151,11 @@ void FetchStaging::recoverStartedTasks()
 
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
         try {
+            std::set<std::string> urls = it_t->second.getUrls();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered with token " << it_t->first << commit;
+            for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
+            }
             threadpool.start(new PollTask(it_t->second, it_t->first));
         }
         catch (UserError const & ex) {
