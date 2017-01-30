@@ -1,4 +1,4 @@
 .git
 qa/Dockerfile*
-*/*/*.hh
-*/*/*.cc
+**/*.hh
+**/*.cc
