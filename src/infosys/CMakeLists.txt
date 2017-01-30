@@ -26,12 +26,10 @@ find_package (Boost COMPONENTS thread)
 set(fts_infosys_sources
     BdiiBrowser.cpp
     SiteNameCacheRetriever.cpp
-    SiteNameRetriever.cpp
 )
 
 if(PUGIXML_FOUND)
     list(APPEND fts_infosys_sources BdiiCacheParser.cpp)
-    list(APPEND fts_infosys_sources OsgParser.cpp)
 endif(PUGIXML_FOUND)
 
 
@@ -62,8 +60,8 @@ endif()
 
 # Artifacts
 if(SERVERBUILD)
-    install(TARGETS fts_infosys 
-    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
+    install(TARGETS fts_infosys
+    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
     	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
     )
 endif()

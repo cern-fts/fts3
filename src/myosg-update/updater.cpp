@@ -40,7 +40,7 @@ using namespace boost::property_tree;
 /**
  * Function that writes the file down
  *
- * It has to be complaint with the libcurl requirements.
+ * It has to be compliant with the libcurl requirements.
  */
 size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {

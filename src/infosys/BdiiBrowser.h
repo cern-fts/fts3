@@ -75,25 +75,6 @@ public:
     /// destructor
     virtual ~BdiiBrowser();
 
-    /**
-     * Checks if given VO is allowed for the given SE
-     *
-     * @param se - SE name
-     * @param vo - VO name
-     *
-     * @return true if the VO is allowed, flase otherwise
-     */
-    bool isVoAllowed(std::string se, std::string vo);
-
-    /**
-     * Checks if the SE status allows for submitting a transfer
-     *
-     * @param se - SE name
-     *
-     * @return true if yes, otherwise false
-     */
-    bool getSeStatus(std::string se);
-
     // if we want all available attributes we leave attr = 0
     /**
      * Allows to browse the BDII

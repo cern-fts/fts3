@@ -217,28 +217,6 @@ std::string BdiiBrowser::parseForeingKey(std::list<std::string> values, const ch
 }
 
 
-bool BdiiBrowser::getSeStatus(std::string se)
-{
-    std::list<std::map<std::string, std::string> > rs = browse<std::string>(GLUE1, FIND_SE_STATUS(se),
-        FIND_SE_STATUS_ATTR);
-
-    if (rs.empty())
-        return true;
-
-    std::string status = rs.front()[ATTR_STATUS];
-
-    return status == "Production" || status == "Online";
-}
-
-
-bool BdiiBrowser::isVoAllowed(std::string se, std::string vo)
-{
-    se = std::string();
-    vo = std::string();
-    return true;
-}
-
-
 std::string BdiiBrowser::baseToStr(const std::string& base)
 {
     if (base == GLUE1) return "glue1";
