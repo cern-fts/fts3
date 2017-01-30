@@ -23,6 +23,7 @@
 #include "common/Logger.h"
 #include "db/generic/DbUtils.h"
 #include "monitoring/msg-ifce.h"
+#include "sociConversions.h"
 
 
 using namespace fts3::common;
@@ -95,132 +96,75 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 
     sql.begin();
 
-    soci::rowset<std::string> notFinishedJobIds = (
+    soci::rowset<soci::row> notFinishedJobIds = (
         sql.prepare <<
-            "SELECT SQL_BUFFER_RESULT job_id FROM t_job WHERE job_finished IS NULL"
+            "SELECT SQL_BUFFER_RESULT job_id, job_type, job_state FROM t_job WHERE job_finished IS NULL"
     );
 
     for (auto i = notFinishedJobIds.begin(); i != notFinishedJobIds.end(); ++i) {
-        const std::string jobId = (*i);
+        const std::string jobId = i->get<std::string>("job_id");
+        const std::string jobState = i->get<std::string>("job_state");
+        const Job::JobType jobType = i->get<Job::JobType>("job_type");
 
-        uint64_t filesInJob;
-        sql << "SELECT COUNT(*) FROM t_file WHERE job_id = :jobId",
-            soci::use(jobId), soci::into(filesInJob);
+        // Get file state count
+        int filesInJob = 0;
+        std::map<std::string, int> stateCount;
 
+        soci::rowset<soci::row> fileStates = (sql.prepare <<
+            "SELECT file_state, COUNT(file_state) AS cnt "
+            "FROM t_file "
+            "WHERE job_id = :job_id "
+            "GROUP BY file_state "
+            "ORDER BY NULL",
+            soci::use(jobId)
+        );
+
+        for (auto i = fileStates.begin(); i != fileStates.end(); ++i) {
+            stateCount[i->get<std::string>("file_state")] = i->get<int>("cnt");
+            filesInJob += i->get<int>("cnt");
+        }
+
+        // Fix empty jobs
         if (filesInJob == 0) {
             fixEmptyJob(sql, jobId);
             continue;
         }
 
-        std::string mreplica;
-        sql << "SELECT job_type FROM t_job WHERE job_id = :job_id",
-            soci::use(jobId), soci::into(mreplica);
-
-        //check if the file belongs to a multiple replica job
-        uint64_t replicaJob = 0;
-        uint64_t replicaJobCountAll = 0;
-        sql << "SELECT count(*), COUNT(distinct file_index) FROM t_file WHERE job_id=:job_id",
-            soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
-
-
-        // If the job is *NOT* a multiple replica job
-        if (mreplica != "R" && !(replicaJobCountAll > 1 && replicaJob == 1)) {
-            uint64_t finishedCount;
-            sql << "SELECT COUNT(*) FROM t_file WHERE job_id = :jobId AND file_state = 'FINISHED'",
-                soci::use(jobId), soci::into(finishedCount);
-
-            uint64_t cancelCount;
-            sql << "SELECT count(*) FROM t_file f1 WHERE f1.job_id = :jobId AND f1.file_state = 'CANCELED'",
-                soci::use(jobId), soci::into(cancelCount);
-
-            uint64_t failedCount;
-            sql << "SELECT count(*) FROM t_file f1 WHERE f1.job_id = :jobId AND f1.file_state = 'FAILED'",
-                soci::use(jobId), soci::into(failedCount);
-
-            uint64_t terminalCount = finishedCount + cancelCount + failedCount;
-
+        // For non-multiple replica, a job is terminal if *all* files are terminal
+        if (jobType != Job::kTypeMultipleReplica) {
+            int terminalCount = stateCount["FINISHED"] + stateCount["FAILED"] + stateCount["CANCEL"];
             if (filesInJob == terminalCount) {
-                fixNonTerminalJob(sql, jobId, filesInJob, cancelCount, finishedCount, failedCount);
+                fixNonTerminalJob(sql, jobId, filesInJob,
+                    stateCount["CANCEL"], stateCount["FINISHED"], stateCount["FAILED"]);
             }
-        // If the job IS a multiple replica job
-        } else {
-            // Fix inconsistencies on the flag
-            if (mreplica != "R") {
-                sql << "UPDATE t_job set job_type='R' where job_id = :job_id", soci::use(jobId);
-                logInconsistency(jobId, "Multireplica job with an incorrect flag: " + mreplica);
+        }
+        // For multiple replica jobs, a job is terminal if there is one FINISHED, or if all are FAILED/CANCEL
+        else {
+            if (stateCount["FINISHED"] >= 1) {
+                sql << "UPDATE t_file SET "
+                    "    file_state = 'NOT_USED', finish_time = NULL, "
+                    "    reason = '' "
+                    "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
+                    soci::use(jobId);
+                sql << "UPDATE t_job SET "
+                    "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP()"
+                    "    WHERE job_id = :jobId",
+                    soci::use(jobId);
+                logInconsistency(jobId, "Multireplica job with a finished replica not marked as terminal");
             }
-
-            std::string jobState;
-            sql << "SELECT job_state FROM t_job WHERE job_id = :job_id", soci::use(jobId), soci::into(jobState);
-
-            soci::rowset<soci::row> replicas = (sql.prepare <<
-                "SELECT file_state, COUNT(file_state) "
-                "FROM t_file "
-                "WHERE job_id = :job_id "
-                "GROUP BY file_state "
-                "ORDER BY NULL",
-                soci::use(jobId)
-            );
-
-            for (auto iRep = replicas.begin(); iRep != replicas.end(); ++iRep) {
-                const std::string fileState = iRep->get<std::string>("file_state");
-
-                // TODO: I am concerned about this check. jobState is supposed to be terminal, so... why would
-                // TODO: job_finished be NULL?
-                if (jobState == "CANCELED") {
-                    sql << "UPDATE t_file SET "
-                        "    file_state = 'CANCELED', finish_time = UTC_TIMESTAMP(), "
-                        "    reason = 'Job canceled by the user' "
-                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(jobId);
-
-                    logInconsistency(jobId, "Multireplica job canceled, but the files weren't");
-                    break;
-                }
-
-                // If at least one is finished, reset the rest
-                if (fileState == "FINISHED")
-                {
-                    sql << "UPDATE t_file SET "
-                        "    file_state = 'NOT_USED', finish_time = NULL, "
-                        "    reason = '' "
-                        "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
-                        soci::use(jobId);
-
-                    if (jobState != "FINISHED") {
-                        sql << "UPDATE t_job SET "
-                            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP()"
-                            "    WHERE job_id = :jobId",
-                            soci::use(jobId);
-
-                        logInconsistency(jobId, "Multireplica job with a finished replica not marked as FINISHED");
-
-                    }
-
-                    logInconsistency(jobId, "Multireplica job with a finished replica not marked as terminal");
-                    break;
-                }
+            else if (stateCount["FAILED"] + stateCount["CANCEL"] >= filesInJob) {
+                sql << "UPDATE t_job SET "
+                    "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Inconsistent state found'"
+                    "    WHERE job_id = :jobId",
+                    soci::use(jobId);
+                logInconsistency(jobId, "Multireplica job with no available replicas not marked as terminal");
             }
-
-            //do some more sanity checks for m-replica jobs to avoid state inconsistencies
-            if (jobState == "ACTIVE" || jobState == "READY") {
-                uint64_t countSubmittedActiveReady = 0;
-                sql << " SELECT count(*) "
-                    "FROM t_file "
-                    "WHERE file_state IN ('ACTIVE','SUBMITTED') "
-                    "   AND job_id = :job_id",
-                    soci::use(jobId), soci::into(countSubmittedActiveReady);
-
-                if (countSubmittedActiveReady == 0) {
-                    uint64_t countNotUsed = 0;
-                    sql << " SELECT count(*) FROM t_file WHERE file_state = 'NOT_USED' AND job_id = :job_id",
-                        soci::use(jobId), soci::into(countNotUsed);
-                    if (countNotUsed > 0) {
-                        sql << "UPDATE t_file SET "
-                            "    file_state = 'SUBMITTED', finish_time = NULL, "
-                            "    reason = '' "
-                            "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(jobId);
-                    }
-                }
+            else if ((jobState == "ACTIVE" || jobState == "READY") && (stateCount["ACTIVE"] + stateCount["SUBMITTED"]) == 0) {
+                sql << "UPDATE t_job SET "
+                    "     job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Inconsistent state found' "
+                    "     WHERE job_id = :jobId",
+                    soci::use(jobId);
+                logInconsistency(jobId, "Multireplica job marked as active, but has no queued transfers");
             }
         }
     }
