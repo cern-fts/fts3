@@ -22,7 +22,6 @@
 #define MSGPRINTER_H_
 
 #include "JobStatus.h"
-#include "Snapshot.h"
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
 
@@ -107,9 +106,6 @@ private:
     void print_ostr(JobStatus const & j);
     void print_json(JobStatus const & j);
 
-    void print_ostr(Snapshot const & snapshot);
-    void print_json(Snapshot const & snapshot);
-
     template<typename T>
     void print_ostr() {}
 
@@ -154,18 +150,6 @@ template<>
 inline void MsgPrinter::print_json<JobStatus>()
 {
     jout.print("job", "[]");
-}
-
-template<>
-inline void MsgPrinter::print_ostr<Snapshot>()
-{
-    (*ostr) << "No data have been found." << std::endl;
-}
-
-template<>
-inline void MsgPrinter::print_json<Snapshot>()
-{
-    jout.print("snapshot", "[]");
 }
 
 } /* namespace server */

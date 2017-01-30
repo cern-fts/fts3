@@ -27,7 +27,6 @@
 #include "ServiceAdapter.h"
 #include "exception/rest_client_not_implemented.h"
 
-#include "Snapshot.h"
 #include "JobStatus.h"
 
 #include <string>

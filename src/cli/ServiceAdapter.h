@@ -26,7 +26,6 @@
 
 #include "JobStatus.h"
 #include "File.h"
-#include "Snapshot.h"
 
 #include <string>
 #include <vector>

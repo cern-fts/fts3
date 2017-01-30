@@ -121,48 +121,6 @@ BOOST_AUTO_TEST_CASE(CountNumberOfStates)
 }
 
 
-BOOST_AUTO_TEST_CASE(ParseSnapshot)
-{
-    ResponseParser parser(
-"{\"snapshot\": [{\
-    \"avg_throughput\": {\
-        \"60\": 0.52,\
-        \"5\": 0.46,\
-        \"30\": 0.50,\
-        \"15\": 0.47\
-    },\
-    \"dest_se\": \"srm://ppshead.lcg.triumf.ca\",\
-    \"limits\": {},\
-    \"success_ratio\": 1.0,\
-    \"submitted\": 0,\
-    \"failed\": 0,\
-    \"finished\": 22,\
-    \"frequent_error\": null,\
-    \"max_active\": 12,\
-    \"avg_queued\": null,\
-    \"active\": 0,\
-    \"source_se\": \"gsiftp://eosatlassftp.cern.ch\",\
-    \"vo_name\": \"atlas\"\
-}]}");
-
-    auto snapshot = parser.getSnapshot(true);
-    BOOST_CHECK_EQUAL(snapshot.size(), 1);
-    BOOST_CHECK_EQUAL(snapshot[0].active, 0);
-    BOOST_CHECK_EQUAL(snapshot[0].max_active, 12);
-    BOOST_CHECK_EQUAL(snapshot[0].vo, "atlas");
-    BOOST_CHECK_EQUAL(snapshot[0].src_se, "gsiftp://eosatlassftp.cern.ch");
-    BOOST_CHECK_EQUAL(snapshot[0].dst_se, "srm://ppshead.lcg.triumf.ca");
-    BOOST_CHECK_EQUAL(snapshot[0].avg_queued, 0);
-    BOOST_CHECK_EQUAL(snapshot[0].success_ratio, 1);
-    BOOST_CHECK_EQUAL(snapshot[0].finished, 22);
-    BOOST_CHECK_EQUAL(snapshot[0].failed, 0);
-    BOOST_CHECK_EQUAL(snapshot[0]._5, 0.46);
-    BOOST_CHECK_EQUAL(snapshot[0]._15, 0.47);
-    BOOST_CHECK_EQUAL(snapshot[0]._30, 0.50);
-    BOOST_CHECK_EQUAL(snapshot[0]._60, 0.52);
-}
-
-
 BOOST_AUTO_TEST_CASE(DetailesFiles)
 {
     ResponseParser parser(

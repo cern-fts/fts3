@@ -300,17 +300,5 @@ void MsgPrinter::print_json(JobStatus const & status)
     jout.printArray("job", job);
 }
 
-void MsgPrinter::print_ostr(Snapshot const & snapshot)
-{
-    print_json(snapshot);
-}
-
-void MsgPrinter::print_json(Snapshot const & snapshot)
-{
-    pt::ptree out;
-    snapshot.print(out);
-    jout.printArray("snapshot", out);
-}
-
 } /* namespace server */
 } /* namespace fts3 */

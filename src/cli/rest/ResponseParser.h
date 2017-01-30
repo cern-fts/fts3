@@ -22,7 +22,6 @@
 #define RESPONSEPARSER_H_
 
 #include "../JobStatus.h"
-#include "../Snapshot.h"
 
 #include <istream>
 #include <string>
@@ -63,8 +62,6 @@ public:
 
     int getNb(std::string const & path, std::string const & state) const;
 
-    std::vector<Snapshot> getSnapshot(bool rest = true) const;
-
     std::vector<DetailedFileStatus> getDetailedFiles(std::string const & path) const;
 
     void setRetries(std::string const &path, FileInfo &fi);
@@ -72,10 +69,6 @@ public:
     static std::string restGmtToLocal(std::string gmt);
 
 private:
-
-    std::vector<Snapshot> get_snapshot_for_rest() const;
-    std::vector<Snapshot> get_snapshot_for_soap() const;
-
     /// The object that contains the response
     pt::ptree response;
 };
