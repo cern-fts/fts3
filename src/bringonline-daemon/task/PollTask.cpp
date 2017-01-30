@@ -23,7 +23,6 @@
 
 #include "BringOnlineTask.h"
 #include "PollTask.h"
-#include "WaitingRoom.h"
 
 
 void PollTask::run(const boost::any&)
@@ -155,7 +154,7 @@ void PollTask::run(const boost::any&)
             << "BRINGONLINE polling " << ctx.getLogMsg() << token << commit;
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
-        WaitingRoom<PollTask>::instance().add(new PollTask(std::move(*this)));
+        ctx.getWaitingRoom().add(new PollTask(std::move(*this)));
     }
 
     // Issue a preventive abort for those that failed

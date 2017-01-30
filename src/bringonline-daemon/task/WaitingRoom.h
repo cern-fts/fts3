@@ -39,13 +39,10 @@ class WaitingRoom
 public:
 
     /**
-     * Singleton instance
+     * Default constructor
      */
-    static WaitingRoom& instance()
-    {
-        static WaitingRoom instance;
-        return instance;
-    }
+    WaitingRoom(): pool(NULL) {}
+
 
     /**
      * Puts new task into the waiting room
@@ -66,8 +63,6 @@ public:
     void attach(ThreadPool<BASE>& pool)
     {
         this->pool = &pool;
-        // now we can start the thread
-        t.reset(new boost::thread(run));
     }
 
     /**
@@ -75,17 +70,12 @@ public:
      */
     virtual ~WaitingRoom() {}
 
-private:
-
     /**
      * This routine is executed in a separate thread
      */
-    static void run();
+    void run();
 
-    /**
-     * Default constructor
-     */
-    WaitingRoom(): pool(NULL) {}
+private:
 
     /**
      * Copy constructor
@@ -101,8 +91,6 @@ private:
     boost::ptr_list<TASK> tasks;
     /// the mutex preventing concurrent access
     boost::mutex m;
-    /// the worker thread
-    std::unique_ptr<boost::thread> t;
     /// the threadpool items are waiting for
     ThreadPool<BASE> * pool;
 };
@@ -110,8 +98,6 @@ private:
 template <typename TASK, typename BASE>
 void WaitingRoom<TASK, BASE>::run()
 {
-    WaitingRoom<TASK, BASE>& me = WaitingRoom<TASK, BASE>::instance();
-
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "WaitingRoom starting" << commit;
 
     while (!boost::this_thread::interruption_requested()) {
@@ -119,12 +105,12 @@ void WaitingRoom<TASK, BASE>::run()
             boost::this_thread::sleep(boost::posix_time::seconds(1));
 
             // lock the mutex
-            boost::mutex::scoped_lock lock(me.m);
+            boost::mutex::scoped_lock lock(this->m);
             // get current time
             time_t now = time(NULL);
             // iterate over all all tasks
-            typename boost::ptr_list<TASK>::iterator it, next = me.tasks.begin();
-            while ((it = next) != me.tasks.end()) {
+            typename boost::ptr_list<TASK>::iterator it, next = this->tasks.begin();
+            while ((it = next) != this->tasks.end()) {
                 if (boost::this_thread::interruption_requested())
                     return;
                 // next item to check
@@ -133,7 +119,7 @@ void WaitingRoom<TASK, BASE>::run()
                 if (it->waiting(now))
                     continue;
                 // otherwise start the task
-                me.pool->start(me.tasks.release(it).release());
+                this->pool->start(this->tasks.release(it).release());
             }
         }
         catch (const boost::thread_interrupted&) {

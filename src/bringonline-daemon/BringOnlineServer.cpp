@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+#include <bringonline-daemon/task/PollTask.h>
+#include <bringonline-daemon/task/WaitingRoom.h>
 #include "BringOnlineServer.h"
 
 #include "common/Logger.h"
@@ -109,6 +111,8 @@ void BringOnlineServer::start(void)
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
 
+    waitingRoom.attach(threadpool);
+    systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
     systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
@@ -121,6 +125,7 @@ void BringOnlineServer::start(void)
 void BringOnlineServer::wait(void)
 {
     systemThreads.join_all();
+    threadpool.join();
 }
 
 

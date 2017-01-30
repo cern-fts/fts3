@@ -27,7 +27,9 @@
 #include "state/DeletionStateUpdater.h"
 #include "state/StagingStateUpdater.h"
 #include "task/Gfal2Task.h"
+#include "task/WaitingRoom.h"
 
+class PollTask;
 
 class BringOnlineServer: public fts3::common::Singleton<BringOnlineServer>
 {
@@ -47,9 +49,14 @@ public:
         return stagingStateUpdater;
     }
 
+    WaitingRoom<PollTask>& getWaitingRoom() {
+        return waitingRoom;
+    }
+
 private:
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
+    WaitingRoom<PollTask> waitingRoom;
 
     DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;

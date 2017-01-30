@@ -22,15 +22,12 @@
 #include <map>
 
 #include "common/Uri.h"
-#include "cred/CredUtility.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/DrainMode.h"
 
 #include "FetchStaging.h"
-#include "../BringOnlineServer.h"
 #include "../task/BringOnlineTask.h"
 #include "../task/PollTask.h"
-#include "../task/WaitingRoom.h"
 
 
 void FetchStaging::fetch()
@@ -39,8 +36,6 @@ void FetchStaging::fetch()
     typedef std::tuple<std::string, std::string, std::string> GroupByType;
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting" << commit;
-
-    WaitingRoom<PollTask>::instance().attach(threadpool);
 
     // we want to be sure that this won't break our fetching thread
     try

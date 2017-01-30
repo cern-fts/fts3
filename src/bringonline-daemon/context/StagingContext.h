@@ -44,7 +44,7 @@ public:
 
     StagingContext(BringOnlineServer &bringOnlineServer, const StagingOperation &stagingOp):
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
-        stateUpdater(bringOnlineServer.getStagingStateUpdater()),
+        stateUpdater(bringOnlineServer.getStagingStateUpdater()), waitingRoom(bringOnlineServer.getWaitingRoom()),
         pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
     {
         add(stagingOp);
@@ -52,12 +52,12 @@ public:
     }
 
     StagingContext(const StagingContext &copy) :
-        JobContext(copy), stateUpdater(copy.stateUpdater),
+        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
     {}
 
     StagingContext(StagingContext && copy) :
-        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater),
+        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
     {}
 
@@ -97,8 +97,13 @@ public:
 
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
 
+    WaitingRoom<PollTask>& getWaitingRoom() {
+        return waitingRoom;
+    }
+
 private:
     StagingStateUpdater &stateUpdater;
+    WaitingRoom<PollTask> &waitingRoom;
     int pinLifetime;
     int bringonlineTimeout;
     time_t startTime;
