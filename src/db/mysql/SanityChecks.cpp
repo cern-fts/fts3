@@ -336,7 +336,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
 /// has expired.
 void MySqlAPI::recoverStalledStaging(soci::session &sql)
 {
-    std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+    const std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check stalled staging" << commit;
 
@@ -349,7 +349,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
 
     sql.begin();
     for (auto iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging) {
-        int fileId = iStaging->get<int>("file_id");
+        int fileId = iStaging->get<unsigned long long>("file_id");
         const std::string jobId = iStaging->get<std::string>("job_id");
         int bringOnline = iStaging->get<int>("bring_online", 0);
 
