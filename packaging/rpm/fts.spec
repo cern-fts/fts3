@@ -305,7 +305,6 @@ exit 0
     /bin/systemctl daemon-reload > /dev/null 2>&1 || :
 %else
     /sbin/chkconfig --add fts-info-publisher
-    /sbin/chkconfig --add fts-myosg-updater
     /sbin/chkconfig --add fts-bdii-cache-updater
 %endif
 exit 0
@@ -314,17 +313,13 @@ exit 0
 if [ $1 -eq 0 ] ; then
 %if %systemd
     /bin/systemctl stop fts-info-publisher.service > /dev/null 2>&1 || :
-    /bin/systemctl stop fts-myosg-updater.service > /dev/null 2>&1 || :
     /bin/systemctl stop fts-bdii-cache-updater.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable fts-info-publisher.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-myosg-updater.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable fts-bdii-cache-updater.service > /dev/null 2>&1 || :
 %else
     /sbin/service fts-info-publisher stop >/dev/null 2>&1
-    /sbin/service fts-myosg-updater stop >/dev/null 2>&1
     /sbin/service fts-bdii-cache-updater stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-info-publisher
-    /sbin/chkconfig --del fts-myosg-updater
     /sbin/chkconfig --del fts-bdii-cache-updater
 %endif
 fi
@@ -334,11 +329,11 @@ exit 0
 if [ "$1" -ge "1" ] ; then
 %if %systemd
     /bin/systemctl try-restart fts-info-publisher.service > /dev/null 2>&1 || :
-    /bin/systemctl try-restart fts-myosg-updater.service > /dev/null 2>&1 || :
+    /bin/systemctl stop fts-myosg-updater.service > /dev/null 2>&1 || :
     /bin/systemctl try-restart fts-bdii-cache-updater.service > /dev/null 2>&1 || :
 %else
     /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-myosg-updater condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-myosg-updater stop >/dev/null 2>&1 || :
     /sbin/service fts-bdii-cache-updater condrestart >/dev/null 2>&1 || :
 %endif
 fi
@@ -442,26 +437,20 @@ fi
 %files infosys
 %{_sbindir}/fts_bdii_cache_updater
 %{_sbindir}/fts_info_publisher
-%{_sbindir}/fts_myosg_updater
 %config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
-%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
 
 %if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-info-publisher.service
-%attr(0644,root,root) %{_unitdir}/fts-myosg-updater.service
 %attr(0644,root,root) %{_unitdir}/fts-bdii-cache-updater.service
 %else
 %attr(0755,root,root) %{_initddir}/fts-info-publisher
-%attr(0755,root,root) %{_initddir}/fts-myosg-updater
 %attr(0755,root,root) %{_initddir}/fts-bdii-cache-updater
 %endif
 
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
-%attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-myosg-updater
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
 %{_mandir}/man8/fts_bdii_cache_updater.8.gz
 %{_mandir}/man8/fts_info_publisher.8.gz
-%{_mandir}/man8/fts_myosg_updater.8.gz
 
 %files msg
 %{_sbindir}/fts_msg_bulk
