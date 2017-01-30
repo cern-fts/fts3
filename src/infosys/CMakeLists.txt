@@ -28,11 +28,6 @@ set(fts_infosys_sources
     SiteNameCacheRetriever.cpp
 )
 
-if(PUGIXML_FOUND)
-    list(APPEND fts_infosys_sources BdiiCacheParser.cpp)
-endif(PUGIXML_FOUND)
-
-
 add_library(fts_infosys SHARED ${fts_infosys_sources})
 target_link_libraries(fts_infosys
     fts_common
@@ -40,10 +35,6 @@ target_link_libraries(fts_infosys
     ${Boost_LIBRARIES}
     -lldap_r
 )
-if (PUGIXML_FOUND)
-    target_link_libraries(fts_infosys -lpugixml)
-endif (PUGIXML_FOUND)
-
 
 set_target_properties(fts_infosys PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/infosys
