@@ -29,7 +29,7 @@ Alias=replacethis
 #Infosys, either the fqdn:port of a BDII instance or false to disable BDII access
 Infosys=lcg-bdii.cern.ch:2170
 
-#Query the info systems specified in the order given, e.g. glue1;myosg;glue2
+#Query the info systems specified in the order given, e.g. glue1;glue2
 InfoProviders=glue1
 
 #List of authorized VOs, separated by ;
