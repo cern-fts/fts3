@@ -134,6 +134,7 @@ void WaitingRoom<TASK, BASE>::run()
         }
     }
 
+    tasks.clear();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "WaitingRoom exiting" << commit;
 }
 
