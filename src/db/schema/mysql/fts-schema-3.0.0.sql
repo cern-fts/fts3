@@ -583,7 +583,7 @@ CREATE TABLE `t_optimizer_evolution` (
   `ema` double DEFAULT NULL,
   `filesize_avg` double DEFAULT NULL,
   `filesize_stddev` double DEFAULT NULL,
-  KEY `t_optimizer_source_and_dest` (`source_se`,`dest_se`)
+  KEY `idx_optimizer_evolution` (`source_se`, `dest_se`, `datetime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

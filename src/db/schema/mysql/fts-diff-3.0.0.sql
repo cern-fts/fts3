@@ -14,6 +14,11 @@ ALTER TABLE t_link_config
     DROP COLUMN `placeholder3`,
     DROP COLUMN `NO_TX_ACTIVITY_TO`;
 
+-- For better performance on the web overview
+ALTER TABLE t_optimizer_evolution
+    DROP INDEX t_optimizer_source_and_dest,
+    ADD INDEX idx_optimizer_evolution(`source_se`, `dest_se`, `datetime`);
+
 -- Reduce size of dlg_id
 CREATE TABLE t_credential_cache_new (
     `dlg_id`        CHAR(16) NOT NULL,
