@@ -22,7 +22,7 @@ from django.db import connection
 from django.db.models import Count, Q
 import types
 
-from ftsweb.models import Job, File, OptimizeActive
+from ftsweb.models import Job, File, OptimizeActive, OptimizerEvolution
 from authn import require_certificate
 from jobs import setup_filters
 from jsonify import jsonify
@@ -108,39 +108,17 @@ class OverviewExtended(object):
         Calculate throughput (in MB) over this pair + vo over the last minute
         """
         now = datetime.utcnow()
-        window_size = 60
-        window_start = now - timedelta(seconds=window_size)
+        window_size = 30
+        window_start = now - timedelta(minutes=window_size)
 
-        # Get all transfers than were running during the time window
-        transfers = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo)\
-            .values('job_id', 'file_id', 'filesize', 'finish_time', 'start_time', 'transferred') \
-            .filter(file_state__in=['FINISHED', 'ACTIVE', 'FAILED', 'CANCELED']) \
-            .filter(start_time__isnull=False) \
-            .filter(Q(finish_time__gte=window_start) | Q(finish_time__isnull=True))
+        oe = OptimizerEvolution.objects.filter(source_se=source, dest_se=destination)\
+            .values('throughput', 'filesize_avg', 'active')\
+            .filter(datetime__gte=window_start)\
+            .order_by('-datetime')[0:1]
+        if len(oe) == 0:
+            return 0, 0
 
-        # Calculate bytes transferred, proportional to the time these transfers were inside the window
-        total_bytes = 0.0
-        for transfer in transfers:
-            if transfer['finish_time'] is None:
-                period_in_window = now - max(transfer['start_time'], window_start)
-            else:
-                period_in_window = transfer['finish_time'] - max(transfer['start_time'], window_start)
-
-            bytes_in_window = 0
-            if period_in_window > timedelta(seconds=0):
-                if transfer['finish_time'] is None:
-                    duration = _seconds(now - transfer['start_time'])
-                    if duration > 0:
-                        bytes_in_window = (float(transfer['transferred']) / duration) * _seconds(period_in_window)
-                else:
-                    # tx_duration may be 0 in case of FAILED, CANCELED, so calculate ourselves
-                    duration = _seconds(transfer['finish_time'] - transfer['start_time'])
-                    if duration > 0 and transfer['filesize']:
-                        bytes_in_window = (float(transfer['filesize']) / duration) * _seconds(period_in_window)
-
-            total_bytes += bytes_in_window
-
-        return total_bytes, (total_bytes / window_size) / 1024**2
+        return oe[0]['active'] * oe[0]['filesize_avg'], oe[0]['throughput'] / 1024**2
 
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
