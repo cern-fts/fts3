@@ -106,6 +106,8 @@ void TransfersService::runService()
 
 void TransfersService::getFiles(const std::vector<QueueId>& queues)
 {
+    ThreadPool<FileTransferExecutor> execPool(execPoolSize);
+
     try
     {
         if (queues.empty())
@@ -123,9 +125,6 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
 
         // create transfer-file handler
         TransferFileHandler tfh(voQueues);
-
-        // the worker thread pool
-        ThreadPool<FileTransferExecutor> execPool(execPoolSize);
 
         std::map<std::pair<std::string, std::string>, std::string> proxies;
 
@@ -183,15 +182,18 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                 << " have been scheduled)" << commit;
 
     }
+    catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;
+        execPool.interrupt();
+        execPool.join();
+    }
     catch (std::exception& e)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
-        throw;
     }
     catch (...)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
-        throw;
     }
 }
 
@@ -199,24 +201,20 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
 void TransfersService::executeUrlcopy()
 {
     std::vector<QueueId> queues;
+    boost::thread_group g;
 
-    try
-    {
-        boost::thread_group g;
+    try {
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
         std::random_shuffle(queues.begin(), queues.end());
 
-        if (queues.empty())
-        {
+        if (queues.empty()) {
             return;
         }
-        else if (1 == queues.size())
-        {
+        else if (1 == queues.size()) {
             getFiles(queues);
         }
-        else
-        {
+        else {
             std::size_t const half_size1 = queues.size() / 2;
             std::vector<QueueId> split_1(queues.begin(), queues.begin() + half_size1);
             std::vector<QueueId> split_2(queues.begin() + half_size1, queues.end());
@@ -230,22 +228,28 @@ void TransfersService::executeUrlcopy()
             std::vector<QueueId> split_22(split_2.begin() + half_size3, split_2.end());
 
             // create threads only when needed
-            if(!split_11.empty()) {
+            if (!split_11.empty()) {
                 g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_11)));
             }
-            if(!split_21.empty()) {
+            if (!split_21.empty()) {
                 g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_21)));
             }
-            if(!split_12.empty()) {
+            if (!split_12.empty()) {
                 g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_12)));
             }
-            if(!split_22.empty()) {
+            if (!split_22.empty()) {
                 g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_22)));
             }
 
             // wait for them
             g.join_all();
         }
+    }
+    catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;
+        g.interrupt_all();
+        g.join_all();
+        throw;
     }
     catch (std::exception& e)
     {
