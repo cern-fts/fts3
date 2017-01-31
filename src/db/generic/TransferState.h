@@ -21,7 +21,8 @@
 
 struct TransferState
 {
-    TransferState() : file_id(0), retry_counter(0), retry_max(0), timestamp(0), staging_start(0), staging_finished(0), staging(false) 
+    TransferState() : file_id(0), retry_counter(0), retry_max(0), timestamp(0),
+        submit_time(0), staging_start(0), staging_finished(0), staging(false)
     {
     }
 

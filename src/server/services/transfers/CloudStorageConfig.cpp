@@ -144,6 +144,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     // For each different VO role, group, ...
     auto cred = db->findCredential(tf.credId, tf.userDn);
     if (!cred) {
+        fclose(f);
         return "";
     }
 
