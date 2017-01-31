@@ -90,7 +90,7 @@ void FetchStaging::fetch()
                 }
                 catch(UserError const & ex)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << ex.what() << commit;
                 }
                 catch(...)
                 {
