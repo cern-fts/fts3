@@ -107,8 +107,8 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         const Job::JobType jobType = i->get<Job::JobType>("job_type");
 
         // Get file state count
-        int filesInJob = 0;
-        std::map<std::string, int> stateCount;
+        long long filesInJob = 0;
+        std::map<std::string, long long> stateCount;
 
         soci::rowset<soci::row> fileStates = (sql.prepare <<
             "SELECT file_state, COUNT(file_state) AS cnt "
@@ -120,8 +120,10 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         );
 
         for (auto i = fileStates.begin(); i != fileStates.end(); ++i) {
-            stateCount[i->get<std::string>("file_state")] = i->get<int>("cnt");
-            filesInJob += i->get<int>("cnt");
+            const std::string fileState = i->get<std::string>("file_state");
+            long long count = i->get<long long>("cnt");
+            stateCount[fileState] = count;
+            filesInJob += count;
         }
 
         // Fix empty jobs
@@ -132,7 +134,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 
         // For non-multiple replica, a job is terminal if *all* files are terminal
         if (jobType != Job::kTypeMultipleReplica) {
-            int terminalCount = stateCount["FINISHED"] + stateCount["FAILED"] + stateCount["CANCEL"];
+            long long terminalCount = stateCount["FINISHED"] + stateCount["FAILED"] + stateCount["CANCEL"];
             if (filesInJob == terminalCount) {
                 fixNonTerminalJob(sql, jobId, filesInJob,
                     stateCount["CANCEL"], stateCount["FINISHED"], stateCount["FAILED"]);
