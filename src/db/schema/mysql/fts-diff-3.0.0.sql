@@ -241,6 +241,17 @@ ALTER TABLE t_dm
     ADD CONSTRAINT `fk_job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`);
 
 --
+-- Archive tables need to match the new schema
+--
+RENAME TABLE t_file_backup TO t_file_backup_old;
+RENAME TABLE t_dm_backup TO t_dm_backup_old;
+RENAME TABLE t_job_backup TO t_job_backup_old;
+
+CREATE TABLE t_file_backup ENGINE = ARCHIVE AS (SELECT * FROM t_file WHERE NULL);
+CREATE TABLE t_dm_backup ENGINE = ARCHIVE AS (SELECT * FROM t_dm WHERE NULL);
+CREATE TABLE t_job_backup ENGINE = ARCHIVE AS (SELECT * FROM t_job WHERE NULL);
+
+--
 -- View for files that are to be staged, but haven't been requested
 --
 CREATE VIEW v_staging AS
