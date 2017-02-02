@@ -50,7 +50,7 @@ public:
 
 private:
     std::list<fts3::events::MessageUpdater> m_list;
-    mutable boost::recursive_mutex _mutex;
+    mutable boost::recursive_timed_mutex _mutex;
 };
 
 #endif /*THREADSAFELIST_H_*/

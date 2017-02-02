@@ -20,11 +20,14 @@
 
 #include <iostream>
 #include <ctime>
+#include <common/Exceptions.h>
 
 #include "common/definitions.h"
 #include "common/Logger.h"
 #include "common/PidTools.h"
 #include "ThreadSafeList.h"
+
+using fts3::common::SystemError;
 
 
 ThreadSafeList::ThreadSafeList()
@@ -39,68 +42,124 @@ ThreadSafeList::~ThreadSafeList()
 
 void ThreadSafeList::push_back(fts3::events::MessageUpdater &msg)
 {
-    boost::recursive_mutex::scoped_lock lock(_mutex);
+    if (!_mutex.timed_lock(boost::posix_time::seconds(10))) {
+        throw SystemError(std::string(__func__) + ": Mutex timeout expired");
+    }
     m_list.push_back(msg);
+    _mutex.unlock();
 }
 
 
 void ThreadSafeList::clear()
 {
-    boost::recursive_mutex::scoped_lock lock(_mutex);
+    if (!_mutex.timed_lock(boost::posix_time::seconds(10))) {
+        throw SystemError(std::string(__func__) + ": Mutex timeout expired");
+    }
     m_list.clear();
+    _mutex.unlock();
 }
 
 
 void ThreadSafeList::checkExpiredMsg(std::vector<fts3::events::MessageUpdater> &messages,
     boost::posix_time::time_duration timeout)
 {
-    boost::recursive_mutex::scoped_lock lock(_mutex);
     static const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
 
-    for (auto iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        auto nowTime = boost::posix_time::microsec_clock::universal_time();
-        auto lastMsgTime = epoch + boost::posix_time::milliseconds(iter->timestamp());
+    if (!_mutex.timed_lock(boost::posix_time::seconds(10))) {
+        throw SystemError(std::string(__func__) + ": Mutex timeout expired");
+    }
 
-        auto age = nowTime - lastMsgTime;
+    try {
+        for (auto iter = m_list.begin(); iter != m_list.end(); ++iter) {
+            auto nowTime = boost::posix_time::microsec_clock::universal_time();
+            auto lastMsgTime = epoch + boost::posix_time::milliseconds(iter->timestamp());
 
-        if (age > timeout) {
-            messages.push_back(*iter);
+            auto age = nowTime - lastMsgTime;
+
+            if (age > timeout) {
+                messages.push_back(*iter);
+            }
         }
     }
+    catch (...) {
+        _mutex.unlock();
+        throw;
+    }
+    _mutex.unlock();
 }
 
 
 void ThreadSafeList::updateMsg(fts3::events::MessageUpdater &msg)
 {
-    boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<fts3::events::MessageUpdater>::iterator iter;
-    uint64_t pidStartTime = fts3::common::getPidStartime(msg.process_id());
-    pidStartTime *= 1000; // timestamp() is in milliseconds
-    for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
+    if (!_mutex.timed_lock(boost::posix_time::seconds(10))) {
+        throw SystemError(std::string(__func__) + ": Mutex timeout expired");
+    }
 
-        if (msg.process_id() == iter->process_id()) {
-            if (pidStartTime > 0 && msg.timestamp() >= pidStartTime) {
-                iter->set_timestamp(msg.timestamp());
-            }
-            else if (pidStartTime > 0){
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING)
-                    << "Found a matching pid, but start time is more recent than last known message"
-                    << "(" << pidStartTime << " vs " << msg.timestamp() << " for " << msg.process_id() << ")"
-                    << fts3::common::commit;
+    try {
+        std::list<fts3::events::MessageUpdater>::iterator iter;
+        uint64_t pidStartTime = fts3::common::getPidStartime(msg.process_id());
+        pidStartTime *= 1000; // timestamp() is in milliseconds
+        for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
+
+            if (msg.process_id() == iter->process_id()) {
+                if (pidStartTime > 0 && msg.timestamp() >= pidStartTime) {
+                    iter->set_timestamp(msg.timestamp());
+                }
+                else if (pidStartTime > 0) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                        << "Found a matching pid, but start time is more recent than last known message"
+                        << "(" << pidStartTime << " vs " << msg.timestamp() << " for " << msg.process_id() << ")"
+                        << fts3::common::commit;
+                }
             }
         }
     }
+    catch (...) {
+        _mutex.unlock();
+        throw;
+    }
+    _mutex.unlock();
 }
 
 
 void ThreadSafeList::deleteMsg(std::vector<fts3::events::MessageUpdater> &messages)
 {
-    boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<fts3::events::MessageUpdater>::iterator i = m_list.begin();
-    for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
-        i = m_list.begin();
+    if (!_mutex.timed_lock(boost::posix_time::seconds(10))) {
+        throw SystemError(std::string(__func__) + ": Mutex timeout expired");
+    }
+
+    try {
+        std::list<fts3::events::MessageUpdater>::iterator i = m_list.begin();
+        for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
+            i = m_list.begin();
+            while (i != m_list.end()) {
+                if ((*iter).file_id() == i->file_id() && (*iter).job_id().compare(i->job_id()) == 0) {
+                    m_list.erase(i++);
+                }
+                else {
+                    ++i;
+                }
+            }
+        }
+    }
+    catch (...) {
+        _mutex.unlock();
+        throw;
+    }
+    _mutex.unlock();
+}
+
+
+void ThreadSafeList::removeFinishedTr(std::string job_id, uint64_t file_id)
+{
+    if (!_mutex.timed_lock(boost::posix_time::seconds(10))) {
+        throw SystemError(std::string(__func__) + ": Mutex timeout expired");
+    }
+
+    try {
+        std::list<fts3::events::MessageUpdater>::iterator i = m_list.begin();
         while (i != m_list.end()) {
-            if ((*iter).file_id() == i->file_id() && (*iter).job_id().compare(i->job_id()) == 0) {
+            if (file_id == i->file_id() && job_id == i->job_id()) {
                 m_list.erase(i++);
             }
             else {
@@ -108,19 +167,9 @@ void ThreadSafeList::deleteMsg(std::vector<fts3::events::MessageUpdater> &messag
             }
         }
     }
-}
-
-
-void ThreadSafeList::removeFinishedTr(std::string job_id, uint64_t file_id)
-{
-    boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<fts3::events::MessageUpdater>::iterator i = m_list.begin();
-    while (i != m_list.end()) {
-        if (file_id == i->file_id() && job_id == i->job_id()) {
-            m_list.erase(i++);
-        }
-        else {
-            ++i;
-        }
+    catch (...) {
+        _mutex.unlock();
+        throw;
     }
+    _mutex.unlock();
 }
