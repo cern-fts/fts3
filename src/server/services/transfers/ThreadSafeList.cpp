@@ -37,14 +37,6 @@ ThreadSafeList::~ThreadSafeList()
 }
 
 
-std::list<fts3::events::MessageUpdater> ThreadSafeList::getList()
-{
-    boost::recursive_mutex::scoped_lock lock(_mutex);
-    std::list<fts3::events::MessageUpdater> tempList = m_list;
-    return tempList;
-}
-
-
 void ThreadSafeList::push_back(fts3::events::MessageUpdater &msg)
 {
     boost::recursive_mutex::scoped_lock lock(_mutex);

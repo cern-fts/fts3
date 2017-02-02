@@ -40,7 +40,6 @@ public:
     ThreadSafeList();
     ~ThreadSafeList();
 
-    std::list<fts3::events::MessageUpdater> getList();
     void push_back(fts3::events::MessageUpdater &msg);
     void clear();
     void updateMsg(fts3::events::MessageUpdater &msg);
