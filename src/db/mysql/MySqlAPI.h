@@ -155,9 +155,6 @@ public:
     virtual void setPidForJob(const std::string& jobId, int pid);
 
     /// Search for transfers stuck in 'READY' state and revert them to 'SUBMITTED'
-    /// @note   AFAIK 'READY' only applies for reuse and multihop, but inside
-    ///         MySQL reuse seems to be explicitly filtered out, so I am not sure
-    ///         how much is this method actually doing
     virtual void revertToSubmitted();
 
     /// Moves old transfer and job records to the archive tables

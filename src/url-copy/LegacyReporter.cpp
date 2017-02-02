@@ -65,19 +65,17 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     producer.runProducerLog(log);
 
     // Status
-    if (opts.isSessionReuse || opts.isMultihop) {
-        events::Message status;
+    events::Message status;
 
-        status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
-        status.set_job_id(transfer.jobId);
-        status.set_file_id(transfer.fileId);
-        status.set_source_se(transfer.source.host);
-        status.set_dest_se(transfer.destination.host);
-        status.set_process_id(getpid());
-        status.set_transfer_status("ACTIVE");
+    status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    status.set_job_id(transfer.jobId);
+    status.set_file_id(transfer.fileId);
+    status.set_source_se(transfer.source.host);
+    status.set_dest_se(transfer.destination.host);
+    status.set_process_id(getpid());
+    status.set_transfer_status("ACTIVE");
 
-        producer.runProducerStatus(status);
-    }
+    producer.runProducerStatus(status);
 
     // Transfer completed
     TransferCompleted completed;

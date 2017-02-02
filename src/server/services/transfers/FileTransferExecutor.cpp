@@ -257,8 +257,8 @@ void FileTransferExecutor::run(boost::any & ctx)
             }
             else {
                 db->updateTransferStatus(
-                    tf.jobId, tf.fileId, 0.0, "ACTIVE", "",
-                    (int) pr.getPid(), 0, 0, false
+                    tf.jobId, tf.fileId, 0.0, "READY", "",
+                    pr.getPid(), 0, 0, false
                 );
             }
 
