@@ -1487,6 +1487,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         stmt.execute(true);
 
         if (get_affected_rows(sql) == 0) {
+            sql.rollback();
             return false;
         }
 
