@@ -57,9 +57,10 @@ BOOST_AUTO_TEST_CASE (blocking)
     BOOST_CHECK_EQUAL(str, "abcde");
 
     start = boost::chrono::steady_clock::now();
-    str = queue->pop(3);
+    str = queue->pop(5);
     end = boost::chrono::steady_clock::now();
 
+    // Boost CV implementation does not use a monotonic clock, so be generous
     BOOST_CHECK_GE((end - start), boost::chrono::seconds(3));
     BOOST_CHECK_EQUAL(str, "");
 }
