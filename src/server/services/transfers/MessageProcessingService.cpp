@@ -241,18 +241,20 @@ void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
         }
 
         //update file/job state
-        bool updated = db::DBSingleton::instance().getDBObjectInstance()->updateTransferStatus(
-            msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
-            msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry());
+        boost::tuple<bool, std::string> updated = db::DBSingleton::instance()
+            .getDBObjectInstance()->updateTransferStatus(
+                msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
+                msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry()
+        );
 
         db::DBSingleton::instance().getDBObjectInstance()->updateJobStatus(
             msg.job_id(), msg.transfer_status(), msg.process_id());
 
-        if (!updated && msg.transfer_status() != "CANCELED") {
+        if (!updated.get<0>() && msg.transfer_status() != "CANCELED") {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Entry in the database not updated for "
                 << msg.job_id() << " " << msg.file_id()
-                << ". Probably already in a different terminal state"
-                << commit;
+                << ". Probably already in a different terminal state. Tried to set "
+                << msg.transfer_status() << " over " << updated.get<1>() << commit;
         }
         else if (!msg.job_id().empty() && msg.file_id() > 0) {
             SingleTrStateInstance::instance().sendStateMessage(msg.job_id(), msg.file_id());

@@ -80,7 +80,7 @@ public:
     ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
     /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
     ///                         which transfers to update
-    virtual bool updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, int fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
         int processId, double filesize, double duration, bool retry);
 
@@ -355,7 +355,8 @@ private:
 
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
 
-    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string jobId, int fileId,
+    boost::tuple<bool, std::string>  updateFileTransferStatusInternal(soci::session& sql, double throughput,
+        std::string jobId, int fileId,
         std::string newState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
 
     bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string status, int pid);

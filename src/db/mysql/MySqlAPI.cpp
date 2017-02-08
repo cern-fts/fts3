@@ -1221,7 +1221,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 }
 
 
-bool MySqlAPI::updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, int fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
         int processId, double filesize, double duration, bool retry)
 {
@@ -1348,7 +1348,8 @@ void MySqlAPI::revertToSubmitted()
 }
 
 
-bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string jobId, int fileId,
+boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn,
+        std::string jobId, int fileId,
         std::string newState, std::string transferMessage,
         int processId, double filesize, double duration, bool retry)
 {
@@ -1380,19 +1381,19 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         if(storedState == "FAILED" || storedState == "FINISHED" || storedState == "CANCELED" )
         {
             sql.rollback();
-            return false;
+            return boost::tuple<bool, std::string>(false, storedState);
         }
 
         // If trying to go from ACTIVE back to READY, do nothing either
         if (storedState == "ACTIVE" && newState == "READY") {
             sql.rollback();
-            return false;
+            return boost::tuple<bool, std::string>(false, storedState);
         }
 
         // If the file already in the same state, don't do anything either
         if (storedState == newState) {
             sql.rollback();
-            return false;
+            return boost::tuple<bool, std::string>(false, storedState);
         }
 
         soci::statement stmt(sql);
@@ -1489,7 +1490,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
         if (get_affected_rows(sql) == 0) {
             sql.rollback();
-            return false;
+            return boost::tuple<bool, std::string>(false, storedState);
         }
 
         sql.commit();

@@ -79,17 +79,17 @@ void CancelerService::markAsStalled()
 
         for (auto i = messages.begin(); i != messages.end(); ++i) {
             kill(i->process_id(), SIGKILL);
-            bool updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
+            boost::tuple<bool, std::string> updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
                 "FAILED", reason.str(), i->process_id(),
                 0, 0, false);
             db->updateJobStatus(i->job_id(), "FAILED", i->process_id());
 
-            if (updated) {
+            if (updated.get<0>()) {
                 SingleTrStateInstance::instance().sendStateMessage(i->job_id(), i->file_id());
             }
             else {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
-                    << i->job_id() << "/" << i->file_id() << commit;
+                    << i->job_id() << "/" << i->file_id() << " "  << updated.get<1>() << commit;
             }
         }
         ThreadSafeList::get_instance().deleteMsg(messages);

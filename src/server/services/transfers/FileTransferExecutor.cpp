@@ -209,8 +209,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             scheduled += 1;
 
-            bool fileUpdated;
-            fileUpdated = db->updateTransferStatus(
+            boost::tuple<bool, std::string> fileUpdated = db->updateTransferStatus(
                 tf.jobId, tf.fileId, 0.0, "READY", "",
                 0, 0, 0, false
             );
@@ -218,7 +217,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // If fileUpdated == false, the transfer was *not* updated, which means we got
             // probably a collision with some other node
-            if (!fileUpdated) {
+            if (!fileUpdated.get<0>()) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                     << "Transfer " << tf.jobId << " " << tf.fileId
                     << " not updated. Probably picked by another node" << commit;
