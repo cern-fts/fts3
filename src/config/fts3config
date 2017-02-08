@@ -17,7 +17,7 @@ DbUserName=replacethis
 #db password
 DbPassword=replacethis
 
-#For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db") 
+#For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
 DbConnectString=replacethis
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
@@ -36,7 +36,7 @@ InfoProviders=glue1
 #Leave * to authorize any VO
 AuthorizedVO=*
 
-# site name 
+# site name
 SiteName=replacethis
 
 #Enable/Disable monitoring using messaging monitoring (disabled=false / enabled=true)
@@ -95,6 +95,11 @@ LogLevel=INFO
 
 # Seconds between optimizer runs
 # OptimizerInterval = 60
+
+# Set the bulk size, in number of jobs, used for cleaning the old records
+#CleanBulkSize=5000
+# In days. Entries older than this will be purged.
+#CleanInterval=7
 
 [roles]
 Public = transfer

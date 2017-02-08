@@ -29,7 +29,7 @@
 
 
 namespace fs = boost::filesystem;
-using namespace fts3::config; 
+using namespace fts3::config;
 using namespace fts3::common;
 using namespace db;
 
@@ -68,12 +68,14 @@ int main(int argc, char **argv)
         initializeDbBackend();
 
         long bulkSize = ServerConfig::instance().get<long>("CleanBulkSize");
+        int cleanInterval = ServerConfig::instance().get<int>("CleanInterval");
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting with bulk size of " << bulkSize << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting with bulk size of " << bulkSize
+            << " and an interval of " << cleanInterval << " days" << commit;
 
         long nJobs = 0, nFiles = 0;
         auto start = boost::chrono::steady_clock::now();
-        db::DBSingleton::instance().getDBObjectInstance()->backup(bulkSize, &nJobs, &nFiles);
+        db::DBSingleton::instance().getDBObjectInstance()->backup(cleanInterval, bulkSize, &nJobs, &nFiles);
         auto end = boost::chrono::steady_clock::now();
 
         auto duration = boost::chrono::duration_cast<boost::chrono::seconds>(end - start);

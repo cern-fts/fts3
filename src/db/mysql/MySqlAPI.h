@@ -159,10 +159,11 @@ public:
 
     /// Moves old transfer and job records to the archive tables
     /// Delete old entries in other tables (i.e. t_optimize_evolution)
-    /// @param[in]          How many jobs per iteration must be processed
+    /// @param[in] intervalDays Jobs older than this many days will be purged
+    /// @param[in] bulkSize How many jobs per iteration must be processed
     /// @param[out] nJobs   How many jobs have been moved
     /// @param[out] nFiles  How many files have been moved
-    virtual void backup(long bulkSize, long* nJobs, long* nFiles);
+    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles);
 
     /// Mark all the transfers as failed because the process fork failed
     /// @param jobId    The job id for which url copy failed to fork

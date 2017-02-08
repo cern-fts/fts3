@@ -2183,7 +2183,7 @@ void MySqlAPI::setPidForJob(const std::string& jobId, int pid)
 }
 
 
-void MySqlAPI::backup(long bulkSize, long* nJobs, long* nFiles)
+void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles)
 {
 
     soci::session sql(*connectionPool);
@@ -2240,7 +2240,8 @@ void MySqlAPI::backup(long bulkSize, long* nJobs, long* nFiles)
         {
             soci::rowset<soci::row> rs = (
                  sql.prepare <<
-                 "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '7' DAY ) "
+                 "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval :days DAY ) ",
+                 soci::use(intervalDays)
              );
 
             std::ostringstream jobIdStmt;

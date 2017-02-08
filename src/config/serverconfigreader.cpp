@@ -211,6 +211,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Set the bulk size, in number of jobs, used for cleaning the old records"
     )
     (
+        "CleanInterval",
+        po::value<std::string>( &(_vars["CleanInterval"]) )->default_value("7"),
+        "In days. Entries older than this will be purged"
+    )
+    (
         "CheckStalledTransfers",
         po::value<std::string>( &(_vars["CheckStalledTransfers"]) )->default_value("true"),
         "Check for stalled transfers"
