@@ -52,12 +52,12 @@ public:
     }
 
     StagingContext(const StagingContext &copy) :
-        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
         pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
     {}
 
     StagingContext(StagingContext && copy) :
-        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
         pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
     {}
 
@@ -101,9 +101,14 @@ public:
         return waitingRoom;
     }
 
+    int incrementErrorCountForSurl(const std::string &surl) {
+        return (errorCount[surl] += 1);
+    }
+
 private:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
+    std::map<std::string, int> errorCount;
     int pinLifetime;
     int bringonlineTimeout;
     time_t startTime;

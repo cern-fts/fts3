@@ -87,6 +87,8 @@ LogLevel=INFO
 # Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk.
 # Note that the resolution is 60 seconds.
 # StagingWaitingFactor=300
+# Retry this number of times if a staging poll fails with ECOMM
+# StagingPollRetries=3
 
 # In seconds, interval between heartbeats
 #HeartBeatInterval=60

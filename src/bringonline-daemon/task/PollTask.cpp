@@ -32,6 +32,9 @@ void PollTask::run(const boost::any&)
     // handle cancelled jobs/files
     handle_canceled();
 
+    int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+    bool forcePoll = false;
+
     std::set<std::string> urlSet = ctx.getUrls();
     if (urlSet.empty())
         return;
@@ -51,7 +54,14 @@ void PollTask::run(const boost::any&)
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);
 
-            if (errors[i] && errors[i]->code != EOPNOTSUPP) {
+            if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                    << "BRINGONLINE NOT FINISHED for " << urls[i]
+                    << ". Communication error, soft failure: " << errors[i]->message
+                    << commit;
+                forcePoll = true;
+            }
+            else if (errors[i] && errors[i]->code != EOPNOTSUPP) {
                 failedUrls.push_back(urls[i]);
 
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -114,6 +124,13 @@ void PollTask::run(const boost::any&)
                     << ": " << errors[i]->message
                     << commit;
             }
+            else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                    << "BRINGONLINE NOT FINISHED for " << urls[i]
+                    << ". Communication error, soft failure: " << errors[i]->message
+                    << commit;
+                forcePoll = true;
+            }
             else if (errors[i]->code == EOPNOTSUPP)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -147,7 +164,7 @@ void PollTask::run(const boost::any&)
     }
 
     // If status was 0, not everything is terminal, so schedule a new poll
-    if (status == 0) {
+    if (status == 0 || forcePoll) {
         time_t interval = getPollInterval(++nPolls), now = time(NULL);
         wait_until = now + interval;
         FTS3_COMMON_LOGGER_NEWLOG(INFO)

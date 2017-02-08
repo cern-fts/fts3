@@ -271,6 +271,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk"
     )
     (
+        "StagingPollRetries",
+        po::value<std::string>( &(_vars["StagingPollRetries"]) )->default_value("3"),
+        "Retry this number of times if a staging poll fails with ECOMM"
+    )
+    (
         "HeartBeatInterval",
         po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
         "Interval in seconds between beats"
