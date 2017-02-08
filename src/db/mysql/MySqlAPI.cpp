@@ -970,12 +970,17 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 
             if (selectionStrategy == "auto") {
                 int bestFileId = getBestNextReplica(sql, jobId, vo_name);
-                sql <<
-                    " UPDATE t_file "
-                    " SET file_state = 'SUBMITTED', finish_time=NULL "
-                    " WHERE job_id = :jobId AND file_id = :file_id  "
-                    " AND file_state = 'NOT_USED' ",
-                    soci::use(jobId), soci::use(bestFileId);
+                if (bestFileId > 0) {
+                    sql <<
+                        " UPDATE t_file "
+                            " SET file_state = 'SUBMITTED', finish_time=NULL "
+                            " WHERE job_id = :jobId AND file_id = :file_id  "
+                            " AND file_state = 'NOT_USED' ",
+                        soci::use(jobId), soci::use(bestFileId);
+                }
+                else {
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
+                }
             }
             else {
                 sql <<
@@ -1076,10 +1081,6 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
     catch (...)
     {
         throw SystemError(std::string(__func__) + ": Caught exception " );
-    }
-
-    if (bestFileId <= 0) {
-        throw SystemError(std::string(__func__) + ": Best file id can not be 0");
     }
 
     return bestFileId;
