@@ -197,9 +197,6 @@ public:
     /// @note           Transfers within reuse and multihop jobs go all together to a single fts_url_copy process
     virtual void setPidForJob(const std::string& jobId, int pid) = 0;
 
-    /// Search for transfers stuck in 'READY' state and revert them to 'SUBMITTED'
-    virtual void revertToSubmitted() = 0;
-
     /// Moves old transfer and job records to the archive tables
     /// Delete old entries in other tables (i.e. t_optimize_evolution)
     /// @param[in] intervalDays Jobs older than this many days will be purged

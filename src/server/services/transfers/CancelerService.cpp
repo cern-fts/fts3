@@ -165,7 +165,6 @@ void CancelerService::runService()
 {
     unsigned int counterActiveTimeouts = 0;
     unsigned int counterQueueTimeouts = 0;
-    unsigned int countReverted = 0;
     unsigned int counterCanceled = 0;
 
     recoverProcessesFromDb();
@@ -195,17 +194,6 @@ void CancelerService::runService()
             {
                 killCanceledByUser();
                 counterCanceled = 0;
-            }
-
-            if (boost::this_thread::interruption_requested())
-                return;
-
-            /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
-            countReverted++;
-            if (countReverted == 300)
-            {
-                DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
-                countReverted = 0;
             }
 
             if (boost::this_thread::interruption_requested())
@@ -243,7 +231,6 @@ void CancelerService::runService()
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
-            countReverted = 0;
             counterCanceled = 0;
         }
         catch (...)
@@ -252,7 +239,6 @@ void CancelerService::runService()
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
-            countReverted = 0;
             counterCanceled = 0;
         }
         boost::this_thread::sleep(boost::posix_time::seconds(1));
