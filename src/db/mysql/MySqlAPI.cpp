@@ -1956,7 +1956,7 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
 
                 if (isNullParams != soci::i_null) {
                     timeout = transfer.getProtocolParameters().timeout;
-                    if(timeout != 0) {
+                    if(timeout == 0) {
                         timeout = 7200;
                     }
                     else {
