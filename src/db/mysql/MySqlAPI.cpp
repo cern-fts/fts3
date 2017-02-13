@@ -1416,6 +1416,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         int numberOfFilesCanceled = 0;
         int numberOfFilesFinished = 0;
         int numberOfFilesFailed = 0;
+        int numberOfStaging = 0;
 
         int numberOfFilesNotCanceled = 0;
         int numberOfFilesNotCanceledNorFailed = 0;
@@ -1435,7 +1436,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
 
         soci::statement stmt1 = (
-                                    sql.prepare << " SELECT job_state, job_type from t_job  "
+                                    sql.prepare << " SELECT job_state, job_type FROM t_job  "
                                     " WHERE job_id = :job_id ",
                                     soci::use(jobId),
                                     soci::into(currentState),
@@ -1500,6 +1501,14 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             soci::use(jobId),
             soci::into(numberOfFilesFinished);
 
+        // number of files still staging
+        sql << " SELECT COUNT(DISTINCT file_index) "
+            " FROM t_file "
+            " WHERE job_id = :jobId "
+            "   AND file_state IN ('STAGING', 'STARTED') ",
+            soci::use(jobId),
+            soci::into(numberOfStaging);
+
         // number of files that were not canceled nor failed
         sql << " SELECT COUNT(DISTINCT file_index) "
             " FROM t_file "
@@ -1553,7 +1562,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             if(currentState == state)
                 return true;
 
-
             if(source_se.length() > 0)
             {
                 sql.begin();
@@ -1587,14 +1595,20 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         // Job not finished yet
         else
         {
-            if (status == "ACTIVE" || status == "STAGING" || status == "SUBMITTED")
+            if (status == "ACTIVE" || status == "STAGING" || status == "SUBMITTED" || (currentState == "STAGING" && numberOfStaging == 0))
             {
+                std::string newState = status;
+
                 //re-execute here just in case
                 stmt1.execute(true);
 
                 if(currentState == status)
                     return true;
 
+                // Move from staging to SUBMITTED if the job is session reuse and there are none in staging
+                if (currentState == "STAGING" && numberOfStaging == 0) {
+                    newState = "SUBMITTED";
+                }
 
                 sql.begin();
 
@@ -1602,7 +1616,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                             sql.prepare << "UPDATE t_job "
                                             "SET job_state = :state "
                                             "WHERE job_id = :jobId AND job_state NOT IN ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ",
-                                            soci::use(status, "state"), soci::use(jobId, "jobId"));
+                                            soci::use(newState, "state"), soci::use(jobId, "jobId"));
                 stmt8.execute(true);
 
                 sql.commit();
