@@ -1748,7 +1748,7 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
         currentActive = 0;
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT internal_file_params FROM t_file "
-            "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE'",
+            "WHERE source_se = :source AND dest_se = :dest_se and file_state IN ('ACTIVE', 'READY')",
             soci::use(sourceStorage), soci::use(destStorage)
         );
         for (auto i = rs.begin(); i != rs.end(); ++i) {
@@ -1790,7 +1790,7 @@ int MySqlAPI::getSeOut(const std::string &source, const std::set<std::string> &d
 
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT internal_file_params FROM t_file "
-            "WHERE source_se = :source AND file_state = 'ACTIVE'",
+            "WHERE source_se = :source AND file_state IN ('ACTIVE', 'READY')",
             soci::use(source)
         );
         for (auto i = rs.begin(); i != rs.end(); ++i) {
@@ -1838,7 +1838,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> &sources, const std::string &d
 
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT internal_file_params FROM t_file "
-            "WHERE dest_se = :dest AND file_state = 'ACTIVE' ",
+            "WHERE dest_se = :dest AND file_state IN ('ACTIVE', 'READY') ",
             soci::use(destination)
         );
         for (auto i = rs.begin(); i != rs.end(); ++i) {
