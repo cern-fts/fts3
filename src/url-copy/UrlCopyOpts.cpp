@@ -21,6 +21,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fstream>
+#include <boost/filesystem.hpp>
 #include "Transfer.h"
 #include "UrlCopyOpts.h"
 
@@ -143,7 +144,14 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
     }
 
     infile.close();
-    unlink(path.c_str());
+
+    try {
+        boost::filesystem::remove(path.c_str());
+    }
+    catch (const boost::filesystem::filesystem_error &ex) {
+        std::cerr << "Failed to clean up the bulk file! " << ex.what() << std::endl;
+    }
+
     return list;
 }
 
