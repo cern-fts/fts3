@@ -68,8 +68,6 @@ public:
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
 
-    void setGlobalTimeout(long);
-
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn);
 
     void setFromProtocol(const ProtocolResolver::protocol& protocol);
