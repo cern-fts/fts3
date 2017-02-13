@@ -122,10 +122,6 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                 protocol.nostreams = db->getStreamsOptimization(tf.voName, source_hostname, destin_hostname);
                 protocol.urlcopy_tx_to = db->getGlobalTimeout(tf.voName);
-                if (protocol.urlcopy_tx_to > 0) {
-                    cmd_builder.setGlobalTimeout(protocol.urlcopy_tx_to);
-                }
-
                 int secPerMB = db->getSecPerMb(tf.voName);
                 if (secPerMB > 0) {
                     cmd_builder.setSecondsPerMB(secPerMB);

@@ -155,16 +155,6 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 }
 
 
-void UrlCopyCmd::setGlobalTimeout(long timeout)
-{
-    // I have no clue why is this done in this way, but that's how it was before the refactoring
-    // Need to figure it out, eventually
-    // Have a look at url-copy/heuristics.cpp, it is used as a flag for actually using the value of --timeout,
-    // but I do not know why
-    setFlag("global-timeout", timeout > 0);
-}
-
-
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool publishUserDn)
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
