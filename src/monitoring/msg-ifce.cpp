@@ -267,7 +267,7 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
     message["retry_counter"] = json::Number(tr_state.retry_counter);
     message["retry_max"] = json::Number(tr_state.retry_max);
     message["timestamp"] = json::Number(tr_state.timestamp);
-    message["staging"] = json::Boolean(tr_state.staging)
+    message["staging"] = json::Boolean(tr_state.staging);
     message["staging_start"] = json::Number(tr_state.staging_start);
     message["staging_finished"] = json::Number(tr_state.staging_finished);
 
