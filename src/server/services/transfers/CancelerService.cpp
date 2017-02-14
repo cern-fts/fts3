@@ -133,6 +133,8 @@ void CancelerService::applyActiveTimeouts()
 
     db->reapStalledTransfers(stalled);
 
+    std::vector<fts3::events::MessageUpdater> messages;
+
     for (auto i = stalled.begin(); i != stalled.end(); ++i) {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << i->pid
             << ", jobid:" << i->jobId << ", fileid:" << i->fileId
@@ -143,7 +145,14 @@ void CancelerService::applyActiveTimeouts()
             i->pid, 0, 0, false);
         db->updateJobStatus(i->jobId, "FAILED", i->pid);
         SingleTrStateInstance::instance().sendStateMessage(i->jobId, i->fileId);
+
+        fts3::events::MessageUpdater msg;
+        msg.set_job_id(i->jobId);
+        msg.set_file_id(i->fileId);
+
+        messages.emplace_back(msg);
     }
+    ThreadSafeList::get_instance().deleteMsg(messages);
 }
 
 
