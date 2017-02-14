@@ -136,13 +136,20 @@ public:
 
 // Optimizer implementation
 class Optimizer: public boost::noncopyable {
+public:
+    typedef enum {
+        kConservative = 1, // One by one
+        kNormal = 2,       // Increment faster
+        kAggressive = 3    // Optimize streams too
+    } OptimizerMode;
+
 protected:
     std::map<Pair, PairState> inMemoryStore;
     OptimizerDataSource *dataSource;
     int optimizerSteadyInterval;
     int maxNumberOfStreams;
     int globalMaxPerLink, globalMaxPerStorage;
-    int optimizerMode;
+    OptimizerMode optimizerMode;
 
     // Run the optimization algorithm for the number of connections.
     void optimizeConnectionsForPair(const Pair &);

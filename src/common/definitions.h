@@ -26,16 +26,6 @@
 #include <cstddef>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-
-#define JOB_ID_LEN 36+1
-#define FILE_ID_LEN 36
-#define TRANFER_STATUS_LEN 50
-#define TRANSFER_MESSAGE 1024
-#define MAX_NUM_MSGS 50000
-#define SOURCE_SE_ 100
-#define DEST_SE_ 100
-
-
 /**
  * Return MegaBytes per second from the given transferred bytes and duration
  */
@@ -72,11 +62,6 @@ inline uint64_t milliseconds_since_epoch()
     static ptime const epoch(date(1970, 1, 1));
     return (microsec_clock::universal_time() - epoch).total_milliseconds();
 }
-
-/*low active / high active / jobs / files*/
-const int mode_1[] = {2,4,3,5};
-const int mode_2[] = {4,6,5,8};
-const int mode_3[] = {6,8,7,10};
 
 #endif // DEFINITIONS_H
 

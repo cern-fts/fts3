@@ -133,7 +133,7 @@ static int optimizeNotEnoughInformation(const PairState &, const PairState &, in
 
 // To be called when the success rate is good
 static int optimizeGoodSuccessRate(const PairState &current, const PairState &previous, int previousValue,
-    int optimizerMode, std::stringstream& rationale)
+    Optimizer::OptimizerMode optimizerMode, std::stringstream& rationale)
 {
     int decision;
 
@@ -150,7 +150,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
         }
     }
     else if (current.ema > previous.ema) {
-        if (optimizerMode >= 2) {
+        if (optimizerMode >= Optimizer::kNormal) {
             decision = previousValue + 2;
         }
         else {
@@ -305,14 +305,14 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     // If stream optimize is enabled, push forward and let those extra connections
     // go into streams.
     // Otherwise, stop pushing.
-    if (optimizerMode <= 1) {
+    if (optimizerMode == kConservative) {
         if (decision > previousValue && current.queueSize < decision) {
             decision = previousValue;
             rationale << ". Not enough files in the queue";
         }
     }
     // Do not go too far with the number of connections
-    if (optimizerMode >= 1) {
+    if (optimizerMode >= kNormal) {
         if (decision > current.queueSize * maxNumberOfStreams) {
             decision = std::max(current.queueSize, 1) * maxNumberOfStreams;
             rationale << ". Too many streams";

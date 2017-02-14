@@ -112,7 +112,7 @@ public:
     BaseOptimizerFixture(): Optimizer(this) {
         globalMaxPerStorage = DEFAULT_MAX_ACTIVE_ENDPOINT_LINK;
         globalMaxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
-        optimizerMode = 1;
+        optimizerMode = kConservative;
     }
 
     std::list<Pair> getActivePairs(void) {
@@ -448,7 +448,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
 // enough queued. Optimizer mode is 1, so should stay stable.
 BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
 {
-    optimizerMode = 1;
+    optimizerMode = kConservative;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
@@ -482,7 +482,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
 // enough queued. Optimizer mode is 2, so streams should be increased.
 BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
 {
-    optimizerMode = 2;
+    optimizerMode = kAggressive;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
@@ -558,7 +558,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 2);
 
     setMaxNumberOfStreams(4);
-    optimizerMode = 1;
+    optimizerMode = kAggressive;
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);

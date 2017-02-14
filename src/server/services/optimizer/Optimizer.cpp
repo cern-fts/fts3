@@ -34,7 +34,7 @@ Optimizer::Optimizer(OptimizerDataSource *ds):
     dataSource(ds), optimizerSteadyInterval(60), maxNumberOfStreams(10),
     globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
     globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK),
-    optimizerMode(1)
+    optimizerMode(kConservative)
 {
 }
 
@@ -71,10 +71,14 @@ void Optimizer::run(void)
         globalMaxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
     }
 
-    optimizerMode = dataSource->getOptimizerMode();
-    if (optimizerMode <= 0) {
-        optimizerMode = 1;
+    int rawOptMode = dataSource->getOptimizerMode();
+    if (rawOptMode < kConservative) {
+        rawOptMode = static_cast<int>(kConservative);
     }
+    if (rawOptMode > kAggressive) {
+        rawOptMode = static_cast<int>(kAggressive);
+    }
+    optimizerMode = static_cast<OptimizerMode>(rawOptMode);
 
     try {
         std::list<Pair> pairs = dataSource->getActivePairs();

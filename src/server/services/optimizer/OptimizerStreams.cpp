@@ -36,7 +36,7 @@ namespace optimizer {
 void Optimizer::optimizeStreamsForPair(const Pair &pair)
 {
     // No optimization for streams, so go for 1
-    if (optimizerMode == 1) {
+    if (optimizerMode == kConservative) {
         dataSource->storeOptimizerStreams(pair, 1);
         return;
     }
