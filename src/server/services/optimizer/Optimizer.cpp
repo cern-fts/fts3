@@ -31,7 +31,7 @@ namespace optimizer {
 
 
 Optimizer::Optimizer(OptimizerDataSource *ds):
-    dataSource(ds), optimizerSteadyInterval(60),
+    dataSource(ds), optimizerSteadyInterval(60), maxNumberOfStreams(10),
     globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
     globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK),
     optimizerMode(1)
@@ -47,6 +47,12 @@ Optimizer::~Optimizer()
 void Optimizer::setSteadyInterval(int newValue)
 {
     optimizerSteadyInterval = newValue;
+}
+
+
+void Optimizer::setMaxNumberOfStreams(int newValue)
+{
+    maxNumberOfStreams = newValue;
 }
 
 

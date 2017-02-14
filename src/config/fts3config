@@ -97,6 +97,8 @@ LogLevel=INFO
 
 # Seconds between optimizer runs
 # OptimizerInterval = 60
+# Maximum number of streams per file
+# OptimizerMaxStreams = 16
 
 # Set the bulk size, in number of jobs, used for cleaning the old records
 #CleanBulkSize=5000

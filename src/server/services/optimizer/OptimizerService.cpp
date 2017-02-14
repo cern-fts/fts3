@@ -41,9 +41,11 @@ void OptimizerService::runService()
 {
     auto optimizerInterval = config::ServerConfig::instance().get<int>("OptimizerInterval");
     auto optimizerSteadyInterval = config::ServerConfig::instance().get<int>("OptimizerSteadyInterval");
+    auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
 
     Optimizer optimizer(db::DBSingleton::instance().getDBObjectInstance()->getOptimizerDataSource());
     optimizer.setSteadyInterval(optimizerSteadyInterval);
+    optimizer.setMaxNumberOfStreams(maxNumberOfStreams);
 
     while (!boost::this_thread::interruption_requested()) {
         try {

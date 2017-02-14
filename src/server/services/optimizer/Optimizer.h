@@ -140,6 +140,7 @@ protected:
     std::map<Pair, PairState> inMemoryStore;
     OptimizerDataSource *dataSource;
     int optimizerSteadyInterval;
+    int maxNumberOfStreams;
     int globalMaxPerLink, globalMaxPerStorage;
     int optimizerMode;
 
@@ -163,6 +164,7 @@ public:
     ~Optimizer();
 
     void setSteadyInterval(int);
+    void setMaxNumberOfStreams(int);
     void run(void);
     void runOptimizerForPair(const Pair&);
 };

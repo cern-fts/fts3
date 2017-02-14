@@ -538,6 +538,34 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
     BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
 }
 
+// Success rate is good, better throughput, keep streams sane
+BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
+{
+    const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+
+    // Feed just a few of successes
+    populateTransfers(pair, "FINISHED", 5, false, 100, 1024*1024);
+    populateTransfers(pair, "FAILED", 5, false, 0, 1024*1024);
+
+    // Run once
+    runOptimizerForPair(pair);
+
+    // Patch decision, so there would be multiple streams
+    setOptimizerValue(pair, 40);
+
+    // Add queued, and more successes with better throughput
+    populateTransfers(pair, "FINISHED", 5, false, 200, 1024*1024);
+    populateTransfers(pair, "SUBMITTED", 2);
+
+    setMaxNumberOfStreams(4);
+    optimizerMode = 1;
+    runOptimizerForPair(pair);
+
+    auto lastEntry = getLastEntry(pair);
+
+    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 8);
+}
+
 // NOTE: I am not sure it is worth to add more tests. At the end, we will basically be
 //       writing tests that set the parameters to fit the implementation at the time.
 //       They do not prove that the optimizer optimizes.

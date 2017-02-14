@@ -296,6 +296,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Seconds between optimizer runs"
     )
     (
+        "OptimizerMaxStreams",
+        po::value<std::string>( &(_vars["OptimizerMaxStreams"]) )->default_value("16"),
+        "Maximum number of streams per file"
+    )
+    (
         "MaxUrlCopyProcesses",
         po::value<std::string>( &(_vars["MaxUrlCopyProcesses"]) )->default_value("0"),
         "Maximum number of url copy processes to run"

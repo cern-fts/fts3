@@ -311,6 +311,13 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             rationale << ". Not enough files in the queue";
         }
     }
+    // Do not go too far with the number of connections
+    if (optimizerMode >= 1) {
+        if (decision > current.queueSize * maxNumberOfStreams) {
+            decision = std::max(current.queueSize, 1) * maxNumberOfStreams;
+            rationale << ". Too many streams";
+        }
+    }
 
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
