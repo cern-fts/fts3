@@ -111,6 +111,7 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
             case ENAMETOOLONG:    //  File name too long
             case E2BIG:           //  Argument list too long
             case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
+            case EEXIST:          // Destination file exists
                 return false;
         }
     }
