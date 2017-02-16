@@ -45,7 +45,7 @@ static const char EOT = ' ';
 
 bool stopThreads = false;
 
-using namespace fts3::common; 
+using namespace fts3::common;
 
 
 static std::string replaceMetadataString(std::string text)
@@ -192,15 +192,17 @@ bool MsgProducer::getConnection()
         FTS3_COMMON_LOGGER_LOG(DEBUG, brokerConfig.GetBrokerURI());
 
         // Create a ConnectionFactory
-        std::unique_ptr<cms::ConnectionFactory> connectionFactory(
-        cms::ConnectionFactory::createCMSConnectionFactory(brokerConfig.GetBrokerURI()));
+        activemq::core::ActiveMQConnectionFactory connectionFactory(brokerConfig.GetBrokerURI());
+
+        // Disable advisories
+        connectionFactory.setWatchTopicAdvisories(false);
 
         // Create a Connection
         if (brokerConfig.UseBrokerCredentials()) {
-            connection = connectionFactory->createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
+            connection = connectionFactory.createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
         }
         else {
-            connection = connectionFactory->createConnection();
+            connection = connectionFactory.createConnection();
         }
 
         //connection->setExceptionListener(this);
