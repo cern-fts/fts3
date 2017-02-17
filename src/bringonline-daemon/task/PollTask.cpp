@@ -163,6 +163,30 @@ void PollTask::run(const boost::any&)
         }
     }
 
+    // Issue a preventive abort for those that failed
+    // For instance, Castor may give a failure saying the timeout expired, but the request will remain
+    // on the queue until we explicitly cancel them.
+    if (!failedUrls.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing an abort for staging requests that failed"
+                                        << commit;
+        std::vector<GError*> abortErrors(failedUrls.size(), NULL);
+        int abort_status = gfal2_abort_files(
+            gfal2_ctx, static_cast<int>(failedUrls.size()), failedUrls.data(),
+            token.c_str(), abortErrors.data()
+        );
+        // Only log errors for postmortem, do not mark anything on the database
+        if (abort_status < 0) {
+            for (auto i = abortErrors.begin(); i != abortErrors.end(); ++i) {
+                if (*i != NULL) {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE got an error from the staging abort "
+                                                    << (*i)->code << " " << (*i)->message
+                                                    << commit;
+                    g_clear_error(&(*i));
+                }
+            }
+        }
+    }
+
     // If status was 0, not everything is terminal, so schedule a new poll
     if (status == 0 || forcePoll) {
         time_t interval = getPollInterval(++nPolls), now = time(NULL);
@@ -172,30 +196,6 @@ void PollTask::run(const boost::any&)
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
         ctx.getWaitingRoom().add(new PollTask(std::move(*this)));
-    }
-
-    // Issue a preventive abort for those that failed
-    // For instance, Castor may give a failure saying the timeout expired, but the request will remain
-    // on the queue until we explicitly cancel them.
-    if (!failedUrls.empty()) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing an abort for staging requests that failed"
-            << commit;
-        std::vector<GError*> abortErrors(failedUrls.size(), NULL);
-        status = gfal2_abort_files(
-            gfal2_ctx, static_cast<int>(failedUrls.size()), failedUrls.data(),
-            token.c_str(), abortErrors.data()
-        );
-        // Only log errors for postmortem, do not mark anything on the database
-        if (status < 0) {
-            for (auto i = abortErrors.begin(); i != abortErrors.end(); ++i) {
-                if (*i != NULL) {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE got an error from the staging abort "
-                        << (*i)->code << " " << (*i)->message
-                        << commit;
-                    g_clear_error(&(*i));
-                }
-            }
-        }
     }
 }
 
