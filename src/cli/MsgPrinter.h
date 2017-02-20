@@ -25,6 +25,7 @@
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <ostream>
