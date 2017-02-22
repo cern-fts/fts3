@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.6.3
+Version:    3.6.4
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
