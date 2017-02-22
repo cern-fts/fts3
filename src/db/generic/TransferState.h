@@ -21,7 +21,7 @@
 
 struct TransferState
 {
-    TransferState() : file_id(0), retry_counter(0), retry_max(0), timestamp(0),
+    TransferState() : file_id(0), retry_counter(0), retry_max(0), user_filesize(0), timestamp(0),
         submit_time(0), staging_start(0), staging_finished(0), staging(false)
     {
     }
@@ -35,6 +35,7 @@ struct TransferState
     std::string file_state;
     int retry_counter;
     int retry_max;
+    int user_filesize;
     std::string job_metadata;
     std::string file_metadata;
     uint64_t    timestamp;
