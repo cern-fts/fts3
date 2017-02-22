@@ -2817,6 +2817,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.vo_name = it->get<std::string>("vo_name");
             ret.job_metadata = it->get<std::string>("job_metadata","");
             ret.retry_max = it->get<int>("retry_max",0);
+            ret.user_filesize = it->get<int>("user_filesize", 0);
             ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = milliseconds_since_epoch();
