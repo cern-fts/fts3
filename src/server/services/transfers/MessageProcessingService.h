@@ -36,7 +36,6 @@ class MessageProcessingService: public BaseService
 {
 private:
     std::vector<fts3::events::Message> messages;
-    std::string enableOptimization;
     std::map<int, fts3::events::MessageLog> messagesLog;
     std::vector<fts3::events::MessageUpdater> messagesUpdater;
 

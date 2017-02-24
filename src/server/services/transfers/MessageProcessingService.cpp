@@ -45,7 +45,6 @@ MessageProcessingService::MessageProcessingService(): BaseService("MessageProces
     consumer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
     producer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
-    enableOptimization = config::ServerConfig::instance().get<std::string > ("Optimizer");
     messages.reserve(600);
 }
 
