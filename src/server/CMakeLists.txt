@@ -23,7 +23,11 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(GLIB2)
-include_directories(${GLIB2_INCLUDE_DIRS})
+find_package(ZMQ)
+include_directories(
+	${GLIB2_INCLUDE_DIRS}
+	${ZMQ_INCLUDE_DIRS}
+)
 
 # Server lib
 find_package(Boost COMPONENTS thread regex filesystem)
@@ -40,9 +44,10 @@ target_link_libraries(fts_server_lib
     fts_db_generic
 	fts_msg_bus
     fts_proxy
-	${GLIB2_LIBRARIES} 
-	gridsite
+    gridsite
+	${GLIB2_LIBRARIES}
 	${Boost_LIBRARIES}
+    ${ZMQ_LIBRARIES}
 )
 set_target_properties(fts_server_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/server
@@ -77,10 +82,10 @@ install(FILES "${MAN_INPUT_DIR}/fts_info_publisher.8" DESTINATION ${MAN_INSTALL_
 
 # Artifacts
 install(TARGETS fts_server_lib
-	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
 )
 
-install(TARGETS fts_server 
+install(TARGETS fts_server
 	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )

@@ -59,6 +59,11 @@ BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 %if %systemd
 BuildRequires:	systemd
 %endif
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
+BuildRequires:  cppzmq-devel
+%else
+BuildRequires:  zeromq-devel
+%endif
 
 # Required for some unit tests
 BuildRequires:  gfal2-plugin-mock

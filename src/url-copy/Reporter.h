@@ -28,7 +28,7 @@
 /// Virtual interface for reporting transfer statuses back to FTS
 class Reporter {
 public:
-    virtual ~Reporter();
+    virtual ~Reporter(){};
 
     /// Notify the start of the transfer process
     virtual void sendTransferStart(const Transfer&, Gfal2TransferParams&) = 0;
@@ -43,24 +43,6 @@ public:
 
     /// Periodic notifications
     virtual void sendPing(const Transfer&) = 0;
-};
-
-/// Implements reporter using MsgBus and newer message types
-class DefaultReporter: public Reporter {
-private:
-    Producer producer;
-    UrlCopyOpts opts;
-
-public:
-    DefaultReporter(const UrlCopyOpts &opts);
-
-    virtual void sendTransferStart(const Transfer&, Gfal2TransferParams&);
-
-    virtual void sendProtocol(const Transfer&, Gfal2TransferParams&);
-
-    virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&);
-
-    virtual void sendPing(const Transfer&);
 };
 
 #endif // FTS3_REPORTER_H

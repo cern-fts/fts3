@@ -45,8 +45,6 @@ public:
 
     int runProducerStatus(const fts3::events::Message &msg);
 
-    int runProducerStall(const fts3::events::MessageUpdater &msg);
-
     int runProducerLog(const fts3::events::MessageLog &msg);
 
     int runProducerDeletions(const fts3::events::MessageBringonline &msg);

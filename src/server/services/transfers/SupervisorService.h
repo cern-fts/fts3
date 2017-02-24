@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2017
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,34 @@
  * limitations under the License.
  */
 
-#ifndef FTS3_LEGACYREPORTER_H
-#define FTS3_LEGACYREPORTER_H
+#ifndef FTS3_SUPERVISORSERVICE_H
+#define FTS3_SUPERVISORSERVICE_H
 
-#include "Reporter.h"
+#include "../BaseService.h"
 #include <zmq.hpp>
 
-/// Implements reporter using MsgBus
-class LegacyReporter: public Reporter {
-private:
-    Producer producer;
-    UrlCopyOpts opts;
+namespace fts3 {
+namespace server {
+
+/**
+ * The supervisor service consumes ping messages from fts_url_copy transfers to mark them as
+ * alive. After a given amount of time passes without signal of life, CancelerService will reap
+ * those stalled processes
+ */
+class SupervisorService: public BaseService {
+protected:
     zmq::context_t zmqContext;
     zmq::socket_t zmqPingSocket;
 
 public:
-    LegacyReporter(const UrlCopyOpts &opts);
+    /// Constructor
+    SupervisorService();
 
-    virtual void sendTransferStart(const Transfer&, Gfal2TransferParams&);
-
-    virtual void sendProtocol(const Transfer&, Gfal2TransferParams&);
-
-    virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&);
-
-    virtual void sendPing(const Transfer&);
+    /// Service code
+    void runService();
 };
 
-#endif // FTS3_LEGACYREPORTER_H
+}
+}
+
+#endif //FTS3_SUPERVISORSERVICE_H

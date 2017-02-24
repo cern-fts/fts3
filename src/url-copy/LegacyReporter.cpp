@@ -15,7 +15,6 @@
  */
 
 #include "LegacyReporter.h"
-#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
@@ -45,8 +44,11 @@ static std::string replaceMetadataString(std::string text)
 }
 
 
-LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), opts(opts)
+LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), opts(opts),
+    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PUSH)
 {
+    std::string address = std::string("ipc://") + opts.msgDir + "/url_copy-ping.ipc";
+    zmqPingSocket.bind(address.c_str());
 }
 
 
@@ -302,5 +304,13 @@ void LegacyReporter::sendPing(const Transfer &transfer)
     ping.set_source_turl("gsiftp:://fake");
     ping.set_dest_turl("gsiftp:://fake");
 
-    producer.runProducerStall(ping);
+    try {
+        std::string serialized = ping.SerializeAsString();
+        zmq::message_t message(serialized.size());
+        memcpy(message.data(), serialized.c_str(), serialized.size());
+        zmqPingSocket.send(message, 0);
+    }
+    catch (const std::exception &error) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;
+    }
 }

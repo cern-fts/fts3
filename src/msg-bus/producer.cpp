@@ -77,12 +77,6 @@ int Producer::runProducerStatus(const fts3::events::Message &msg)
 }
 
 
-int Producer::runProducerStall(const fts3::events::MessageUpdater &msg)
-{
-    return writeMessage(stalledQueue, msg);
-}
-
-
 int Producer::runProducerLog(const fts3::events::MessageLog &msg)
 {
     return writeMessage(logQueue, msg);

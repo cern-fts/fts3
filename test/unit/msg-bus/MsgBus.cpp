@@ -147,47 +147,6 @@ BOOST_FIXTURE_TEST_CASE (simpleMonitoring, MsgBusFixture)
 }
 
 
-BOOST_FIXTURE_TEST_CASE (simpleStalled, MsgBusFixture)
-{
-    Producer producer(TEST_PATH);
-    Consumer consumer(TEST_PATH);
-
-    MessageUpdater original;
-
-    original.set_job_id("1906cc40-b915-11e5-9a03-02163e006dd0");
-    original.set_file_id(44);
-    original.set_process_id(385);
-    original.set_throughput(0.06);
-    original.set_transferred(50689);
-    original.set_source_surl("mock://matrioska/thing");
-    original.set_dest_surl("mock://manhattan4/thing");
-    original.set_source_turl("gsiftp://matrioska/thing");
-    original.set_dest_turl("gsiftp://manhattan4/thing");
-    original.set_transfer_status("FINISHED");
-    original.set_timestamp(time(NULL));
-
-    BOOST_CHECK_EQUAL(0, producer.runProducerStall(original));
-
-    // Make sure the messages don't get messed up
-    expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
-    expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerDeletions, consumer);
-    expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerStaging, consumer);
-    expectZeroMessages<std::map<int, MessageLog>>(&Consumer::runConsumerLog, consumer);
-    expectZeroMessages<std::vector<std::string>>(&Consumer::runConsumerMonitoring, consumer);
-
-    // First attempt must return the single message
-    std::vector<MessageUpdater> stalled;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerStall(stalled));
-    BOOST_CHECK_EQUAL(1, stalled.size());
-    BOOST_CHECK_EQUAL(stalled[0], original);
-
-    // Second attempt must return empty (already consumed)
-    stalled.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerStall(stalled));
-    BOOST_CHECK_EQUAL(0, stalled.size());
-}
-
-
 BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
 {
     Producer producer(TEST_PATH);
