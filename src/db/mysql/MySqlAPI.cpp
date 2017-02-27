@@ -2798,7 +2798,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                          "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
                                          "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, f.staging_start, f.staging_finished "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-i                                         " WHERE "
+                                         " WHERE "
                                          "  j.job_id = :jobId "
                                          "  AND f.file_id = :fileId ",
                                          soci::use(jobId),
