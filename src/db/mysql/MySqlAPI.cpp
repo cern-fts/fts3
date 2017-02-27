@@ -2735,7 +2735,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             else
                 ret.file_metadata = "";
 
-            ret.user_filesize = it->get<int>("user_filesize", 0);
+            ret.user_filesize = it->get<long long>("user_filesize", 0);
 
             ret.source_se = it->get<std::string>("source_se");
             ret.dest_se = "";
@@ -2798,7 +2798,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                          "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
                                          "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, f.staging_start, f.staging_finished "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
+i                                         " WHERE "
                                          "  j.job_id = :jobId "
                                          "  AND f.file_id = :fileId ",
                                          soci::use(jobId),
@@ -2817,6 +2817,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.vo_name = it->get<std::string>("vo_name");
             ret.job_metadata = it->get<std::string>("job_metadata","");
             ret.retry_max = it->get<int>("retry_max",0);
+            ret.user_filesize = it->get<long long>("user_filesize", 0);
             ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = milliseconds_since_epoch();

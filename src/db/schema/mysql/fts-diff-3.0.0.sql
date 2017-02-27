@@ -1,5 +1,8 @@
 SET default_storage_engine=InnoDB;
 
+ALTER TABLE t_activity_share_config
+    CHANGE COLUMN `activity_share` `activity_share` VARCHAR(1024) NOT NULL; 
+
 -- Per https://gitlab.cern.ch/fts/fts3/blob/develop/src/db/schema/unused.md
 -- These tables are fairly small, so an in-place modification is reasonable
 ALTER TABLE t_optimize

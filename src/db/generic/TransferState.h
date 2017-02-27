@@ -35,7 +35,7 @@ struct TransferState
     std::string file_state;
     int retry_counter;
     int retry_max;
-    int user_filesize;
+    int64_t user_filesize;
     std::string job_metadata;
     std::string file_metadata;
     uint64_t    timestamp;
