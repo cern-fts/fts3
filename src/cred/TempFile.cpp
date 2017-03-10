@@ -47,7 +47,7 @@ TempFile::TempFile(const std::string& prefix, const std::string& dir)
         std::string reason = (std::string) "Cannot create temporary file <"+ tmp_proxy + ">.    Error is: " + strerror(errno);
         throw fts3::common::SystemError(reason);
     }
-    fchmod(fd, 0660);
+    fchmod(fd, 0600);
     m_filename = tmp_proxy;
     close(fd);
 }
