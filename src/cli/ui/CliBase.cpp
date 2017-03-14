@@ -82,12 +82,15 @@ void CliBase::parse(int ac, char *av[])
     // parse the options that have been used
     po::store(po::command_line_parser(ac, av).options(all).positional(p).style(style).run(), vm);
     notify(vm);
-
+   
     // check is the output is verbose
     MsgPrinter::instance().setVerbose(vm.count("verbose"));
     // check if the output is in json format
     MsgPrinter::instance().setJson(vm.count("json"));
+}
 
+void CliBase::validate()
+{ 
     // check whether the -s option has been used
     const char *fts3_env;
 
@@ -110,10 +113,7 @@ void CliBase::parse(int ac, char *av[])
     else {
         throw bad_option("service", "Missing --service option");
     }
-}
 
-void CliBase::validate()
-{
     // if endpoint could not be determined, we cannot do anything
     if (endpoint.empty()) {
         throw bad_option("service", "failed to determine the endpoint");
