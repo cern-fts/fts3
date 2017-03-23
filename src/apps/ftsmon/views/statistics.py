@@ -40,7 +40,10 @@ def _get_count_per_state(age, hostname):
         if state in FILE_TERMINAL_STATES:
             query = query.filter(finish_time__gte=not_before)
         if hostname:
-            query = query.filter(transfer_host=hostname)
+            if state in ('STAGING', 'STARTED'):
+                query = query.filter(staging_host=hostname)
+            else:
+                query = query.filter(transfer_host=hostname)
         query = query.filter(file_state=state)
 
         count[state.lower()] = query.count()
