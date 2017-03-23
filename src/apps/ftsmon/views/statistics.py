@@ -65,13 +65,11 @@ def _get_transfer_and_submission_per_host(timewindow, segments):
         submissions = Job.objects.filter(submit_time__gte=not_before, submit_host=host).count()
         transfers = File.objects.filter(finish_time__gte=not_before, transfer_host=host).count()
         actives = File.objects.filter(file_state='ACTIVE', transfer_host=host).count()
-        staging =  File.objects.filter(file_state='STAGING', staging_host=host).count()
         started =  File.objects.filter(file_state='STARTED', staging_host=host).count()
         servers[host] = {
             'submissions': submissions,
             'transfers': transfers,
             'active': actives,
-            'staging': staging,
             'started': started,
         }
 
