@@ -7,6 +7,11 @@ cp -v /usr/src/fts3/*.xml /usr/src/fts3/*.info "/coverage"
 # Set the permissions properly, so the user and cov tools can access the artifacts
 chown ${FTS3_USER}.${FTS3_GROUP} -R "/coverage" "/logs" "/usr/src/fts3"
 
+# For some reason, from inside the container, host:port is not reachable
+# so do this trick
+# May have something to do? https://github.com/docker/docker/issues/98
+echo "127.0.0.1 ${FTS3_HOST}" >> /etc/hosts
+
 # Prepare configuration files
 mkdir -p "/var/lib/fts3"
 chown root.${FTS3_GROUP} "/var/lib/fts3"
