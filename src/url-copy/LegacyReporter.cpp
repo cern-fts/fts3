@@ -161,7 +161,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     if (transfer.error) {
         std::stringstream fullErrMsg;
-        fullErrMsg << transfer.error->scope() << " " << transfer.error->what();
+        fullErrMsg << transfer.error->scope() << " [" << transfer.error->code() << "] " << transfer.error->what();
         if (transfer.error->code() == ECANCELED) {
             status.set_transfer_status("CANCELED");
         }
