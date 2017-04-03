@@ -348,7 +348,7 @@ void UrlCopyProcess::run(void)
             }
         }
         else {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer finished succesfully" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer finished successfully" << commit;
         }
 
         // Archive log
