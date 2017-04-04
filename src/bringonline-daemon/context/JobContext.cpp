@@ -29,6 +29,68 @@
 
 #include "JobContext.h"
 
+JobError::JobError(): error(NULL)
+{
+}
+
+
+JobError::JobError(const std::string &operation, const GError *error):
+    operation(operation), error(g_error_copy(error))
+{
+}
+
+
+JobError::JobError(const std::string &operation, int code, const std::string &error):
+    operation(operation), error(g_error_new_literal(g_quark_from_static_string(""), code, error.c_str()))
+{
+}
+
+
+JobError::JobError(const JobError &e): operation(e.operation), error(g_error_copy(e.error))
+{
+
+}
+
+
+JobError::~JobError()
+{
+    if (error != NULL) {
+        g_error_free(error);
+    }
+}
+
+
+std::string JobError::String() const
+{
+    if (error == NULL) {
+       return std::string();
+    }
+
+    std::stringstream s;
+    s << operation << " [" << error->code << "] " << error->message;
+    return s.str();
+}
+
+
+bool JobError::IsRecoverable() const
+{
+    if (error == NULL) {
+        return false;
+    }
+    switch (error->code)
+    {
+        case ETIMEDOUT:
+        case ECONNABORTED:
+        case ECONNREFUSED:
+        case ECONNRESET:
+        case EAGAIN:
+        case EBUSY:
+            return true;
+        default:
+            return false;
+    }
+}
+
 
 JobContext::JobContext(const std::string &dn, const std::string &vo,
     const std::string &delegationId, const std::string &spaceToken) :

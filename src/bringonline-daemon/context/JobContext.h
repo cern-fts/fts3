@@ -27,6 +27,24 @@
 #include <set>
 #include <unordered_map>
 #include <map>
+#include <glib.h>
+
+class JobError {
+public:
+    JobError();
+    JobError(const std::string &operation, const GError *error);
+    JobError(const std::string &operation, int code, const std::string &error);
+    JobError(const JobError&);
+
+    ~JobError();
+
+    std::string String() const;
+    virtual bool IsRecoverable() const;
+
+private:
+    std::string operation;
+    GError *error;
+};
 
 /**
  * Most generic Job (Deletion, Bring-online, etc.) context
@@ -83,10 +101,9 @@ public:
      * Updates the state of the job (pure virtual)
      *
      * @param state : new state
-     * @param reason : reason for changing the state
-     * @param retry : if true the job will be retried
+     * @param error : cause of failure, if any
      */
-    virtual void updateState(const std::string &state, const std::string &reason, bool retry) const = 0;
+    virtual void updateState(const std::string &state, const JobError &error) const = 0;
 
     /**
      * Checks if the proxy is valid

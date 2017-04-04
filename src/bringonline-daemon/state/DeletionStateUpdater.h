@@ -32,7 +32,7 @@
 
 #include "StateUpdater.h"
 
-using namespace fts3::common; 
+using namespace fts3::common;
 
 
 /**
@@ -58,12 +58,14 @@ public:
      * @param reason : reason for changing the state
      * @param retry : true is the file requires retry, false otherwise
      */
-    void operator()(const std::string &jobId, int fileId, const std::string &state, const std::string &reason, bool retry)
+    void operator()(const std::string &jobId, int fileId, const std::string &state, const JobError &error)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
-        updates.emplace_back(jobId, fileId, state, reason, retry);
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Update : " << fileId << "  " << state << "  " << reason << " " << jobId << " " << retry << commit;
+        updates.emplace_back(jobId, fileId, state, error.String(), error.IsRecoverable());
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Update : "
+                << fileId << "  " << state << "  " << error.String() << " " << jobId << " " << error.IsRecoverable()
+                << commit;
     }
 
     using StateUpdater::recover;

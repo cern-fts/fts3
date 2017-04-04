@@ -29,14 +29,13 @@ void DeletionContext::add(const DeleteOperation &nsOp)
 
 
 void DeletionContext::updateState(const std::string &jobId, int fileId, const std::string &state,
-    const std::string &reason, bool retry) const
+    const JobError &error) const
 {
-    stateUpdater(jobId, fileId, state, reason, retry);
+    stateUpdater(jobId, fileId, state, error);
 }
 
 
-void DeletionContext::updateState(const std::string &state, const std::string &reason,
-    bool retry) const
+void DeletionContext::updateState(const std::string &state, const JobError &error) const
 {
-    stateUpdater(jobs, state, reason, retry);
+    stateUpdater(jobs, state, error);
 }

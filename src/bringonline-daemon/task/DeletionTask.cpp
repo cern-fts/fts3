@@ -67,14 +67,15 @@ void DeletionTask::run_impl()
                 << error[i]->code << " " << error[i]->message
                 << commit;
 
-                bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
-                for (auto it = ids.begin(); it != ids.end(); ++it)
-                ctx.updateState(it->first, it->second, "FAILED", error[i]->message, retry);
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FAILED", JobError("DELETION", error[i]));
+                }
             }
             else {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "DELETION FINISHED for " << urls[i] << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it)
-                ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
+                }
             }
             g_clear_error(&error[i]);
         }
@@ -82,6 +83,6 @@ void DeletionTask::run_impl()
     else {
         FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
             << "DELETION FINISHED " << ctx.getLogMsg() << commit;
-        ctx.updateState("FINISHED", "", false);
+        ctx.updateState("FINISHED", JobError());
     }
 }
