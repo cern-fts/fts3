@@ -59,14 +59,13 @@ def connect_database(config):
     return conn
 
 
-def get_schema_version(config):
+def get_schema_version(conn):
     """
     Get the schema version
-    :param config: FTS3 config file parsed
+    :param conn: Database connection
     :return: Schema version, None if not found
     """
     try:
-        conn = connect_database(config)
         result = conn.execute(
             'SELECT major, minor, patch FROM t_schema_vers ORDER BY major DESC, minor DESC, patch DESC')
         row = result.fetchone()
@@ -76,6 +75,20 @@ def get_schema_version(config):
     except ProgrammingError:
         return None
 
+
+def get_running_services(conn):
+    """
+    Return a list of tuples (host, service) of services that are still alive
+    :param conn: Database connection
+    :return: List of tuples
+    """
+    result = conn.execute(
+        'SELECT hostname, service_name FROM t_hosts WHERE beat >= UTC_TIMESTAMP() - INTERVAL 2 MINUTE'
+    )
+    services = []
+    for row in result.fetchall():
+        services.append((row['hostname'], row['service_name']))
+    return services
 
 def ask_confirmation(question):
     """
@@ -188,14 +201,25 @@ def populate_schema(config, sql_location):
     upgrade_schema(config, current_version, sql_location)
 
 
-def upgrade_schema(config, current_version, sql_location):
+def upgrade_schema(conn, config, current_version, sql_location):
     """
     Run the upgrade scripts if needed
+    :param conn: Database connection
     :param config: FTS3 config file parsed
     :param current_version: Version present in the database
     :param sql_location: Location of the SQL scripts
     """
     log.info('Current schema version is %s', current_version)
+
+    running_services = get_running_services(conn)
+    if len(running_services) > 0:
+        log.warning('There are services still running')
+        for service in running_services:
+            log.warning("%s: %s" % service)
+        if not ask_confirmation('Do you want to continue anyway?'):
+            log.error('Abort')
+            return
+
     upgrade_scripts = get_upgrade_scripts(current_version, sql_location)
     if len(upgrade_scripts) == 0:
         log.info('No upgrades pending')
@@ -226,11 +250,13 @@ def prepare_schema(config, sql_location):
     log.info('Database: %s' % config['fts3.DbConnectString'])
     log.info('User: %s' % config['fts3.DbUserName'])
 
-    current_version = get_schema_version(config)
+    conn = connect_database(config)
+
+    current_version = get_schema_version(conn)
     if current_version is None:
         populate_schema(config, sql_location)
     else:
-        upgrade_schema(config, current_version, sql_location)
+        upgrade_schema(conn, config, current_version, sql_location)
 
 
 if __name__ == '__main__':
