@@ -72,9 +72,10 @@ void BringOnlineTask::run(const boost::any &)
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
 
-                bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+std::string(errors[i]->message), retry);
+                    ctx.updateState(it->first, it->second,
+                        "FAILED", JobError("STAGING", errors[i])
+                    );
                 }
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
@@ -84,7 +85,7 @@ void BringOnlineTask::run(const boost::any &)
                     << urls[i] << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
             }
             else
@@ -93,7 +94,9 @@ void BringOnlineTask::run(const boost::any &)
                     << "BRINGONLINE FAILED for " << urls[i] << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: Error not set by gfal2", false);
+                    ctx.updateState(it->first, it->second,
+                        "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
+                    );
                 }
             }
         }
@@ -117,7 +120,7 @@ void BringOnlineTask::run(const boost::any &)
                     << urls[i] << " , got token " << token
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
             }
             else if (errors[i]->code == EOPNOTSUPP) {
@@ -127,7 +130,7 @@ void BringOnlineTask::run(const boost::any &)
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
                 ctx.removeUrl(urls[i]);
             }
@@ -138,9 +141,10 @@ void BringOnlineTask::run(const boost::any &)
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
 
-                bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+std::string(errors[i]->message), retry);
+                    ctx.updateState(it->first, it->second,
+                        "FAILED", JobError("STAGING", errors[i])
+                    );
                 }
             }
         }

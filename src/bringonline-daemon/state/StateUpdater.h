@@ -33,7 +33,7 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "msg-bus/producer.h"
-
+#include "../context/JobContext.h"
 
 /**
  * A base class for carrying out asynchronous state updates,
@@ -61,11 +61,10 @@ public:
      * @param job_id : job ID
      * @param file_id : file ID
      * @param state : the new state
-     * @param reason : reason for changing the state
-     * @param retry : true is the file requires retry, false otherwise
+     * @param error : cause of failure, if any
      */
     void operator()(const std::map<std::string, std::map<std::string, std::vector<int> > > &jobs,
-        const std::string &state, const std::string &reason, bool retry)
+        const std::string &state, const JobError &error)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
@@ -75,7 +74,7 @@ public:
             // iterate over files
             for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u) {
                 for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f) {
-                    updates.emplace_back(job_id, *it_f, state, reason, retry);
+                    updates.emplace_back(job_id, *it_f, state, error.String(), error.IsRecoverable());
                 }
             }
         }

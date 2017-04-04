@@ -32,7 +32,7 @@
 
 #include "StateUpdater.h"
 
-using namespace fts3::common; 
+using namespace fts3::common;
 
 /**
  * A utility for carrying out asynchronous state updates,
@@ -68,12 +68,13 @@ public:
     /**
      * Updates status per file
      */
-    void operator()(const std::string &jobId, int fileId, const std::string &state, const std::string &reason, bool retry)
+    void operator()(const std::string &jobId, int fileId, const std::string &state, const JobError &error)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
-        updates.emplace_back(jobId, fileId, state, reason, retry);
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "STAGING Update : " << fileId << "  " << state << "  " << reason << " " << jobId << " " << retry << commit;
+        updates.emplace_back(jobId, fileId, state, error.String(), error.IsRecoverable());
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "STAGING Update : "
+                << fileId << "  " << state << "  " << error.String() << " " << jobId << " " << error.IsRecoverable() << commit;
     }
 
     /// Destructor

@@ -52,7 +52,7 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(const StagingContext &ctx) : Gfal2Task("BRINGONLINE"), ctx(ctx)
+    BringOnlineTask(const StagingContext &ctx) : Gfal2Task("STAGING"), ctx(ctx)
     {
         // set up the space token
         setSpaceToken(ctx.getSpaceToken());

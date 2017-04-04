@@ -86,12 +86,12 @@ public:
      * Asynchronous update of a single transfer-file within a job
      */
     void updateState(const std::string &jobId, int fileId, const std::string &state,
-        const std::string &reason, bool retry) const;
+        const JobError &error) const;
 
     /**
      * Bulk state update implementation for srm endpoints
      */
-    void updateState(const std::string &state, const std::string &reason, bool retry) const;
+    void updateState(const std::string &state, const JobError &error) const;
 
 private:
     DeletionStateUpdater &stateUpdater;

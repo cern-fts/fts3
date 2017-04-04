@@ -69,9 +69,10 @@ void PollTask::run(const boost::any&)
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
 
-                bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+std::string(errors[i]->message), retry);
+                    ctx.updateState(it->first, it->second,
+                        "FAILED", JobError("STAGING", errors[i])
+                    );
                 }
             }
             else if (errors[i] && errors[i]->code == EOPNOTSUPP)
@@ -81,7 +82,9 @@ void PollTask::run(const boost::any&)
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                  for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                    ctx.updateState(it->first, it->second,
+                        "FINISHED", JobError()
+                    );
                  }
             }
             else
@@ -93,7 +96,9 @@ void PollTask::run(const boost::any&)
                     << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: Error not set by gfal2", false);
+                    ctx.updateState(it->first, it->second,
+                        "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
+                    );
                 }
             }
             g_clear_error(&errors[i]);
@@ -113,7 +118,7 @@ void PollTask::run(const boost::any&)
                     << urls[i]
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
                 ctx.removeUrl(urls[i]);
             }
@@ -139,7 +144,7 @@ void PollTask::run(const boost::any&)
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", "", false);
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
                 ctx.removeUrl(urls[i]);
             }
@@ -152,9 +157,10 @@ void PollTask::run(const boost::any&)
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
 
-                bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", "STAGING: "+ std::string(errors[i]->message), retry);
+                    ctx.updateState(it->first, it->second,
+                        "FAILED", JobError("STAGING", errors[i])
+                    );
                 }
                 ctx.removeUrl(urls[i]);
 
@@ -241,7 +247,9 @@ bool PollTask::timeout_occurred()
     // and abort the bring-online operation
     abort(urls, false);
     // set the state
-    ctx.updateState("FAILED", "bring-online timeout has been exceeded", true);
+    ctx.updateState("FAILED",
+        JobError("STAGING", ETIMEDOUT, "bring-online timeout has been exceeded")
+    );
     // confirm the timeout
     return true;
 }
@@ -274,9 +282,11 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                 << commit;
                 if (report)
                 {
-                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.updateState(it->first, it->second, "FAILED", errors[i]->message, retry);
+                    for (auto it = ids.begin(); it != ids.end(); ++it) {
+                        ctx.updateState(it->first, it->second,
+                            "FAILED", JobError("STAGING", errors[i])
+                        );
+                    }
                 }
                 g_clear_error(&errors[i]);
             }
@@ -288,7 +298,9 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                 if (report)
                 {
                     for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.updateState(it->first, it->second, "FAILED", "STAGING: Error not set by gfal2", false);
+                        ctx.updateState(it->first, it->second,
+                            "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
+                        );
                 }
             }
         }

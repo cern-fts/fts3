@@ -76,16 +76,6 @@ public:
      */
     void setSpaceToken(std::string const & spaceToken);
 
-
-    /**
-     * checks if it makes sense to retry the failed job
-     *
-     * @param errorNo : error code
-     * @param category : error category
-     * @param message : error message
-     */
-    bool static doRetry(int errorNo, const std::string& category, const std::string& message);
-
 protected:
     /**
      * gfal2 context wrapper so we can benefit from RAII
