@@ -202,26 +202,6 @@ def _query_worrying_level(time_elapsed, state):
         return float(time_elapsed) / max_time
 
 
-def _get_database():
-    cursor = connection.cursor()
-    cursor.execute("""
-      SELECT Id, Host, Command, Time, State, Info
-      FROM INFORMATION_SCHEMA.PROCESSLIST
-      WHERE State != ''
-      ORDER BY State ASC, TIME DESC
-    """)
-    for row in cursor.fetchall():
-        query = str(row[5])
-        # Try not to show user dn on the query
-        if query:
-            where_index = query.lower().find('where')
-            user_dn_index = query[where_index:].find('user_dn')
-            if user_dn_index > -1:
-                query = query[0:where_index + user_dn_index + 7] + ' ....'
-        yield row[0], row[1], row[2], row[3], row[4],\
-              query, _query_worrying_level(row[3], row[4])
-
-
 def _get_server(time_window):
     segments = _get_host_service_and_segment()
     transfers = _get_transfer_and_submission_per_host(time_window, segments)
