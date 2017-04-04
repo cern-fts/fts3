@@ -27,6 +27,8 @@
 #include <boost/scoped_array.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <bits/local_lim.h>
+#include <boost/filesystem/operations.hpp>
+#include <common/Exceptions.h>
 #include "version.h"
 
 #include "exception/bad_option.h"
@@ -82,7 +84,7 @@ void CliBase::parse(int ac, char *av[])
     // parse the options that have been used
     po::store(po::command_line_parser(ac, av).options(all).positional(p).style(style).run(), vm);
     notify(vm);
-   
+
     // check is the output is verbose
     MsgPrinter::instance().setVerbose(vm.count("verbose"));
     // check if the output is in json format
@@ -90,7 +92,7 @@ void CliBase::parse(int ac, char *av[])
 }
 
 void CliBase::validate()
-{ 
+{
     // check whether the -s option has been used
     const char *fts3_env;
 
@@ -184,18 +186,28 @@ bool CliBase::isInsecure() const
 
 std::string CliBase::proxy() const
 {
+    std::string path;
+
     if (vm.count("proxy")) {
-        return vm["proxy"].as<std::string>();
+        path = vm["proxy"].as<std::string>();
+    }
+    else if (const char *x509_user_proxy = getenv("X509_USER_PROXY")) {
+        path = x509_user_proxy;
+    }
+    else {
+        std::ostringstream proxy_path;
+        proxy_path << "/tmp/x509up_u" << geteuid();
+        path = proxy_path.str();
     }
 
-    const char *x509_user_proxy = getenv("X509_USER_PROXY");
-    if (x509_user_proxy) {
-        return x509_user_proxy;
+    try {
+        return boost::filesystem::canonical(path).string();
     }
-
-    std::ostringstream proxy_path;
-    proxy_path << "/tmp/x509up_u" << geteuid();
-    return proxy_path.str();
+    catch (const boost::filesystem::filesystem_error &e) {
+        std::ostringstream errmsg;
+        errmsg << "Failed to set the proxy: " << e.code().message() << ": " << e.path1();
+        throw fts3::common::UserError(errmsg.str());
+    }
 }
 
 
