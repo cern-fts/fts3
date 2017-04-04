@@ -2149,6 +2149,10 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
 
                 if(countBeat == 1000)
                 {
+                    // Give some progress
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup progress: "
+                        << *nJobs << " jobs and " << *nFiles << " files affected" << commit;
+
                     //reset
                     countBeat = 0;
 
