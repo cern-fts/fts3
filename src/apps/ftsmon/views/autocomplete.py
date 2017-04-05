@@ -41,8 +41,9 @@ def get_unique_sources(http_request):
 
 @jsonify
 def get_unique_destinations(http_request):
-    destinations = Job.objects.values('dest_se').distinct()
-    return filter(lambda h: h, map(lambda r: r['dest_se'], destinations))
+    # Since there is no index prefix with dest_se, get unique pairs and then do the 'uniqueness' ourselves
+    pairs = Job.objects.values('source_se', 'dest_se').distinct()
+    return set(filter(lambda h: h, map(lambda r: r['dest_se'], pairs)))
 
 
 @jsonify
