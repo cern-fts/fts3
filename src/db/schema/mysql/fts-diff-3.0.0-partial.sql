@@ -4,7 +4,7 @@ SET default_storage_engine=InnoDB;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 
 ALTER TABLE t_activity_share_config
-    CHANGE COLUMN `activity_share` `activity_share` VARCHAR(1024) NOT NULL; 
+    CHANGE COLUMN `activity_share` `activity_share` VARCHAR(1024) NOT NULL;
 
 -- Per https://gitlab.cern.ch/fts/fts3/blob/develop/src/db/schema/unused.md
 -- These tables are fairly small, so an in-place modification is reasonable
@@ -118,7 +118,9 @@ SELECT job_id, job_state, reuse_job AS job_type, cancel_job,
     max_time_in_queue, space_token, internal_job_params,
     overwrite_flag, job_finished, source_space_token, copy_pin_lifetime,
     checksum_method, bring_online, retry, retry_delay, job_metadata
-FROM t_job;
+FROM t_job
+WHERE job_finished IS NULL;
+
 
 RENAME TABLE t_job TO t_job_old;
 RENAME TABLE t_job_new TO t_job;
@@ -188,7 +190,8 @@ SELECT file_id, file_index, job_id, file_state,
     file_metadata, selection_strategy, staging_start, staging_finished,
     bringonline_token, retry_timestamp,
     t_log_file AS log_file, t_log_file_debug AS t_log_file_debug, hashed_id, vo_name, activity, transferred
-FROM t_file;
+FROM t_file
+WHERE job_finished IS NULL;
 
 RENAME TABLE t_file TO t_file_old;
 RENAME TABLE t_file_new TO t_file;
@@ -211,10 +214,7 @@ CREATE TABLE t_file_retry_errors_new (
     `reason`    VARCHAR(2048),
     CONSTRAINT PRIMARY KEY (`file_id`, `attempt`),
     CONSTRAINT FOREIGN KEY (`file_id`) REFERENCES `t_file` (`file_id`) ON DELETE CASCADE
-)
-AS
-SELECT file_id, attempt, datetime, reason
-FROM  t_file_retry_errors;
+);
 
 RENAME TABLE t_file_retry_errors TO t_file_retry_errors_old;
 RENAME TABLE t_file_retry_errors_new TO t_file_retry_errors;
@@ -230,10 +230,7 @@ CREATE TABLE t_file_share_config_new (
     CONSTRAINT PRIMARY KEY (`file_id`, `source`, `destination`, `vo`),
     CONSTRAINT FOREIGN KEY (`source`, `destination`, `vo`) REFERENCES `t_share_config` (`source`, `destination`, `vo`) ON DELETE CASCADE,
     CONSTRAINT FOREIGN KEY (`file_id`) REFERENCES `t_file` (`file_id`) ON DELETE CASCADE
-)
-AS
-SELECT file_id, source, destination, vo
-FROM t_file_share_config;
+);
 
 RENAME TABLE t_file_share_config TO t_file_share_config_old;
 RENAME TABLE t_file_share_config_new TO t_file_share_config;
@@ -289,3 +286,5 @@ VALUES (3, 0, 0, 'FTS-599, FTS-815, FTS-824, FTS-629, FTS-859 diff');
 
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+
+
