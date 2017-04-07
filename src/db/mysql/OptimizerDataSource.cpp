@@ -34,9 +34,13 @@ static void setNewOptimizerValue(soci::session &sql,
     const Pair &pair, int optimizerDecision, double ema)
 {
     sql.begin();
-    sql << "UPDATE t_optimize_active SET active = :active, ema = :ema, datetime = UTC_TIMESTAMP() "
-        "WHERE source_se = :source AND dest_se = :dest ",
-        soci::use(optimizerDecision), soci::use(ema), soci::use(pair.source), soci::use(pair.destination);
+    sql <<
+        "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) "
+        "VALUES (:source, :dest, :active, :ema, UTC_TIMESTAMP()) "
+        "ON DUPLICATE KEY UPDATE "
+        "   active = :active, ema = :ema, datetime = UTC_TIMESTAMP()",
+        soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
+        soci::use(optimizerDecision, "active"), soci::use(ema, "ema");
     sql.commit();
 }
 
@@ -121,11 +125,12 @@ public:
         std::list<Pair> result;
 
         soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT DISTINCT o.source_se, o.dest_se "
-            "FROM t_optimize_active o "
-            " INNER JOIN t_file f ON (o.source_se = f.source_se) "
-            " WHERE o.dest_se = f.dest_se AND "
-            "     f.file_state IN ('ACTIVE','SUBMITTED')");
+            "SELECT DISTINCT source_se, dest_se "
+            "FROM t_file "
+            "WHERE file_state IN ('ACTIVE', 'SUBMITTED') "
+            "GROUP BY source_se, dest_se, file_state "
+            "ORDER BY NULL"
+        );
 
         for (auto i = rs.begin(); i != rs.end(); ++i) {
             result.push_back(Pair(i->get<std::string>("source_se"), i->get<std::string>("dest_se")));
@@ -224,7 +229,7 @@ public:
 
     int getOptimizerValue(const Pair &pair) {
         soci::indicator isCurrentNull;
-        int currentActive;
+        int currentActive = 0;
 
         sql << "SELECT active FROM t_optimize_active "
             "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1",

@@ -171,7 +171,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // the total number of connections between storages.
 // If the success rate is good, and the throughput improves, it will increase the number
 // of connections.
-void Optimizer::optimizeConnectionsForPair(const Pair &pair)
+bool Optimizer::optimizeConnectionsForPair(const Pair &pair)
 {
     // Optimizer working values
     Range range;
@@ -200,7 +200,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Store first feedback from " << pair << commit;
-        return;
+        return false;
     }
 
     const PairState previous = inMemoryStore[pair];
@@ -211,7 +211,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     // If we have no range, leave it here
     if (range.min == range.max) {
         storeOptimizerDecision(pair, range.min, current, 0, "Range fixed");
-        return;
+        return true;
     }
 
     // New decision
@@ -225,11 +225,11 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             rationale << "No information. Use configured range max.";
         } else {
             decision = range.min;
-            rationale << "No information. Use to default min.";
+            rationale << "No information. Use default min.";
         }
 
         storeOptimizerDecision(pair, decision, current, decision, rationale.str());
-        return;
+        return true;
     }
 
     // Apply bandwidth limits
@@ -239,7 +239,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             decision = previousValue - 1;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
             storeOptimizerDecision(pair, decision, current, 0, rationale.str());
-            return;
+            return true;
         }
     }
     if (limits.throughputDestination > 0) {
@@ -248,7 +248,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             decision = previousValue - 1;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
             storeOptimizerDecision(pair, decision, current, 0, rationale.str());
-            return;
+            return true;
         }
     }
 
@@ -262,7 +262,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
             << "Optimizer for " << pair
             << ": Same success rate and throughput EMA, not enough time passed since last update. Skip"
             << commit;
-        return;
+        return false;
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
@@ -323,6 +323,7 @@ void Optimizer::optimizeConnectionsForPair(const Pair &pair)
     BOOST_ASSERT(!rationale.str().empty());
 
     storeOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str());
+    return true;
 }
 
 

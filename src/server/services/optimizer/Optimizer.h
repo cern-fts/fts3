@@ -152,7 +152,8 @@ protected:
     OptimizerMode optimizerMode;
 
     // Run the optimization algorithm for the number of connections.
-    void optimizeConnectionsForPair(const Pair &);
+    // Returns true if a decision is stored
+    bool optimizeConnectionsForPair(const Pair &);
 
     // Run the optimization algorithm for the number of streams.
     void optimizeStreamsForPair(const Pair &);

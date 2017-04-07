@@ -98,8 +98,10 @@ void Optimizer::run(void)
 
 void Optimizer::runOptimizerForPair(const Pair &pair)
 {
-    optimizeConnectionsForPair(pair);
-    optimizeStreamsForPair(pair);
+    if(optimizeConnectionsForPair(pair)) {
+        // Optimize streams only if optimizeConnectionsForPair did store something
+        optimizeStreamsForPair(pair);
+    }
 }
 
 }
