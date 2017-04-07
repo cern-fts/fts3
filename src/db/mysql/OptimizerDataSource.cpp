@@ -50,27 +50,25 @@ static void updateOptimizerEvolution(soci::session &sql,
     const Pair &pair, int active, int diff, const std::string &rationale, const PairState &newState)
 {
     try {
-        if (newState.throughput > 0 && newState.successRate > 0) {
-            sql.begin();
-            sql << " INSERT INTO t_optimizer_evolution "
-                " (datetime, source_se, dest_se, "
-                "  ema, active, throughput, success, "
-                "  filesize_avg, filesize_stddev, "
-                "  actual_active, queue_size, "
-                "  rationale, diff) "
-                " VALUES "
-                " (UTC_TIMESTAMP(), :source, :dest, "
-                "  :ema, :active, :throughput, :success, "
-                "  :filesize_avg, :filesize_stddev, "
-                "  :actual_active, :queue_size, "
-                "  :rationale, :diff)",
-                soci::use(pair.source), soci::use(pair.destination),
-                soci::use(newState.ema), soci::use(active), soci::use(newState.throughput), soci::use(newState.successRate),
-                soci::use(newState.filesizeAvg), soci::use(newState.filesizeStdDev),
-                soci::use(newState.activeCount), soci::use(newState.queueSize),
-                soci::use(rationale), soci::use(diff);
-            sql.commit();
-        }
+        sql.begin();
+        sql << " INSERT INTO t_optimizer_evolution "
+            " (datetime, source_se, dest_se, "
+            "  ema, active, throughput, success, "
+            "  filesize_avg, filesize_stddev, "
+            "  actual_active, queue_size, "
+            "  rationale, diff) "
+            " VALUES "
+            " (UTC_TIMESTAMP(), :source, :dest, "
+            "  :ema, :active, :throughput, :success, "
+            "  :filesize_avg, :filesize_stddev, "
+            "  :actual_active, :queue_size, "
+            "  :rationale, :diff)",
+            soci::use(pair.source), soci::use(pair.destination),
+            soci::use(newState.ema), soci::use(active), soci::use(newState.throughput), soci::use(newState.successRate),
+            soci::use(newState.filesizeAvg), soci::use(newState.filesizeStdDev),
+            soci::use(newState.activeCount), soci::use(newState.queueSize),
+            soci::use(rationale), soci::use(diff);
+        sql.commit();
     }
     catch (std::exception &e) {
         sql.rollback();
