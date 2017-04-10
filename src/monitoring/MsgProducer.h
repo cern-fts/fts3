@@ -61,7 +61,7 @@ private:
 public:
     MsgProducer(const std::string &localBaseDir, const BrokerConfig& config);
     virtual ~MsgProducer();
-    void sendMessage(std::string &text);
+    void sendMessage(const std::string &rawMsg);
     virtual void run();
     void cleanup();
     virtual void onException(const cms::CMSException& ex AMQCPP_UNUSED);

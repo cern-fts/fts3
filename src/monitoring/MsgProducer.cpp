@@ -27,6 +27,7 @@
 #include "common/Exceptions.h"
 
 #include <cajun/json/reader.h>
+#include <cajun/json/writer.h>
 #include <decaf/lang/System.h>
 
 using namespace fts3::config;
@@ -46,23 +47,6 @@ static const char EOT = ' ';
 bool stopThreads = false;
 
 using namespace fts3::common;
-
-
-static std::string replaceMetadataString(std::string text)
-{
-    text = boost::replace_all_copy(text, "\\\"","\"");
-    return text;
-}
-
-
-//utility routine private to this file
-void find_and_replace(std::string &source, const std::string &find, std::string &replace)
-{
-    size_t j;
-    for (; (j = source.find(find)) != std::string::npos;) {
-        source.replace(j, find.length(), replace);
-    }
-}
 
 
 MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& config):
@@ -85,83 +69,63 @@ MsgProducer::~MsgProducer()
 }
 
 
-static std::string _getVoFromMessage(const std::string &msg, const char *key)
+void MsgProducer::sendMessage(const std::string &rawMsg)
 {
-    std::stringstream input(msg);
-    json::Object root;
-    json::Reader::Read(root, input);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << rawMsg << commit;
 
-    auto node = root.Find(key);
-    if (node == root.End()) {
-        std::stringstream err;
-        err << "Could not find " << key << " in the message";
-        throw SystemError(err.str());
+    std::string type = rawMsg.substr(0, 2);
+
+    // Modify on the fly to add the endpoint
+    std::istringstream input(rawMsg.substr(2));
+    json::Object msg;
+    json::Reader::Read(msg, input);
+
+    msg["endpnt"] = json::String(FTSEndpoint);
+
+    std::ostringstream output;
+    json::Writer::Write(msg, output);
+    output << EOT;
+
+    // Create message and set VO attribute if available
+    std::unique_ptr<cms::TextMessage> message(session->createTextMessage(output.str()));
+    auto iVo = msg.Find("vo_name");
+    if (iVo != msg.End()) {
+        message->setStringProperty("vo", json::String(iVo->element).Value());
     }
 
-    json::String value = node->element;
-    return value.Value();
-}
+    // Route
+    if (type == "ST") {
+        producer_transfer_started->send(message.get());
 
-
-void MsgProducer::sendMessage(std::string &temp)
-{
-    std::string tempFTS("");
-
-    if (temp.compare(0, 2, "ST") == 0) {
-        temp = temp.substr(2, temp.length()); //remove message prefix
-        tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
-        find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
-        temp += EOT;
-        cms::TextMessage *message = session->createTextMessage(temp);
-        producer_transfer_started->send(message);
-        FTS3_COMMON_LOGGER_LOG(DEBUG, temp);
-        delete message;
+        auto transferId = msg.Find("transfer_id");
+        if (transferId != msg.End()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message: "
+                << json::String(transferId->element).Value()
+                << commit;
+        }
     }
-    else if (temp.compare(0, 2, "CO") == 0) {
-        temp = temp.substr(2, temp.length()); //remove message prefix
-        tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
-        find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
-
-        temp = replaceMetadataString(temp);
-
-        std::string vo;
-        try {
-            vo = _getVoFromMessage(temp, "vo");
+    else if (type == "CO") {
+        producer_transfer_completed->send(message.get());
+        auto transferId = msg.Find("tr_id");
+        if (transferId != msg.End()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Completion message: "
+                << json::String(transferId->element).Value()
+                << commit;
         }
-        catch (const std::exception &e) {
-            std::ostringstream error_message;
-            error_message << "(" << e.what() << ") " << temp;
-            FTS3_COMMON_LOGGER_LOG(WARNING, error_message.str());
-        }
-
-        temp += EOT;
-        cms::TextMessage *message = session->createTextMessage(temp);
-        message->setStringProperty("vo", vo);
-        producer_transfer_completed->send(message);
-        FTS3_COMMON_LOGGER_LOG(DEBUG, temp);
-        delete message;
     }
-    else if (temp.compare(0, 2, "SS") == 0) {
-        temp = temp.substr(2, temp.length()); //remove message prefix
+    else if (type == "SS") {
+        producer_transfer_state->send(message.get());
 
-        temp = replaceMetadataString(temp);
-
-        std::string vo;
-        try {
-            vo = _getVoFromMessage(temp, "vo_name");
+        auto state = msg.Find("file_state");
+        auto jobId = msg.Find("job_id");
+        auto fileId = msg.Find("file_id");
+        if (jobId != msg.End() && fileId != msg.End()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "State change: "
+                << json::String(state->element).Value() << " "
+                << json::String(jobId->element).Value() << "/"
+                << json::Number(fileId->element).Value()
+                << commit;
         }
-        catch (const std::exception &e) {
-            std::ostringstream error_message;
-            error_message << "(" << e.what() << ") " << temp;
-            FTS3_COMMON_LOGGER_LOG(WARNING, error_message.str());
-        }
-
-        temp += EOT;
-        cms::TextMessage *message = session->createTextMessage(temp);
-        message->setStringProperty("vo", vo);
-        producer_transfer_state->send(message);
-        FTS3_COMMON_LOGGER_LOG(DEBUG, temp);
-        delete message;
     }
 }
 
@@ -274,7 +238,7 @@ void MsgProducer::onException(const cms::CMSException &ex AMQCPP_UNUSED)
 void MsgProducer::run()
 {
     std::string msg("");
-    std::string msgBk("");
+
     while (stopThreads == false) {
         try {
             if (!connected) {
@@ -292,25 +256,25 @@ void MsgProducer::run()
 
             //send messages
             msg = ConcurrentQueue::getInstance()->pop();
-            msgBk = msg;
-            sendMessage(msg);
-            msg.clear();
+            if (!msg.empty()) {
+                sendMessage(msg);
+            }
             usleep(100);
         }
         catch (cms::CMSException &e) {
-            localProducer.runProducerMonitoring(msgBk);
+            localProducer.runProducerMonitoring(msg);
             FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
             connected = false;
             sleep(5);
         }
         catch (std::exception &e) {
-            localProducer.runProducerMonitoring(msgBk);
+            localProducer.runProducerMonitoring(msg);
             FTS3_COMMON_LOGGER_LOG(ERR, e.what());
             connected = false;
             sleep(5);
         }
         catch (...) {
-            localProducer.runProducerMonitoring(msgBk);
+            localProducer.runProducerMonitoring(msg);
             FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
             connected = false;
             sleep(5);
