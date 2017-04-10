@@ -699,7 +699,7 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
             "   cs.cloudStorage_name=:cs_name AND ("
             "       (cu.user_dn=:user_dn AND cu.vo_name=:vo) OR "
             "       (cu.user_dn='*' AND cu.vo_name=:vo) OR "
-            "       (cu.user_dn=:user_dn AND cu.vo_name='*')"
+            "       (cu.user_dn=:user_dn AND cu.vo_name IN ('*', '', NULL))"
             "   )",
             soci::use(cloud_name, "cs_name"), soci::use(user_dn, "user_dn"), soci::use(vo, "vo"),
             soci::into(auth);
