@@ -68,6 +68,9 @@ std::string getCloudStorageDefaultName(const Uri &storage)
 
         return cs_name;
     }
+    else if (prefix == "DROPBOX") {
+        return prefix;
+    }
     else {
         return prefix + ":" + storage.host;
     }
