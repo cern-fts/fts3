@@ -5,7 +5,7 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts-client
-Version: 3.6.7
+Version: 3.6.8
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: Applications/Internet
@@ -14,7 +14,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  git clone https://gitlab.cern.ch/fts/fts3.git
-#  tar -czvf fts-3.5.8.tar.gz fts3
+#  tar -czvf fts-3.6.8.tar.gz fts3
 Source0:   https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
