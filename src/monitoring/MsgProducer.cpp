@@ -123,7 +123,7 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "State change: "
                 << json::String(state->element).Value() << " "
                 << json::String(jobId->element).Value() << "/"
-                << json::Number(fileId->element).Value()
+                << uint64_t(json::Number(fileId->element).Value())
                 << commit;
         }
     }
