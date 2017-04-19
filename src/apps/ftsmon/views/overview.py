@@ -81,18 +81,6 @@ class OverviewExtended(object):
     def __len__(self):
         return len(self.objects)
 
-    def _get_frequent_error(self, source, destination, vo):
-        """
-        Get the most frequent error for the pair + vo
-        """
-        reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
-            .filter(finish_time__gte=self.not_before, file_state='FAILED') \
-            .values('reason').annotate(count=Count('reason')).values('reason', 'count').order_by('-count')[:1]
-        if len(reason) > 0:
-            return "[%(count)d] %(reason)s" % reason[0]
-        else:
-            return None
-
     def _get_fixed(self, source, destination):
         """
         Return true if the number of actives is fixed for this pair
@@ -124,8 +112,6 @@ class OverviewExtended(object):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
             for item in return_list:
-                item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
-                                                                       item['vo_name'])
                 item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
                 item['transferred'], item['current'] = self._get_throughput(item['source_se'], item['dest_se'], item['vo_name'])
             return return_list

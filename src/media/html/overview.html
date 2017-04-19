@@ -141,10 +141,10 @@
         </tr>
         <tr>
             <td colspan="13" style="background: #CCC" data-ng-show="o.show">
-                <dl>
-                    <dt>Most frequent error</dt>
-                    <dd>{{o.most_frequent_error}}</dd>
-                </dl>
+                <b>Most frequent error</b>
+                <a href="#/errors/list?source_se={{o.source_se|escape}}&dest_se={{o.dest_se|escape}}&vo={{o.vo_name|escape}}">
+                    <i class="icon-search"></i>
+                </a>
             </td>
         </tr>
     </tbody>

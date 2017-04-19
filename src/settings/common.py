@@ -163,16 +163,17 @@ SESSION_ENGINE='django.contrib.sessions.backends.cache'
 LOGGING = {
     'version': 1,
 # Uncomment this to log the queries
-#    'handlers': {
-#        'console': {
-#            'class': 'logging.StreamHandler',
-#            'level': 'DEBUG'
-#        }
-#    },
-#   'loggers': {
-#        'django.db': {
-#            'handlers': ['console'],
-#            'level': 'DEBUG'
-#        }
-#   }
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG'
+        }
+    },
+   'loggers': {
+        'django.db': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
+   }
 }
+
