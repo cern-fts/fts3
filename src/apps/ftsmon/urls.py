@@ -48,7 +48,6 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats$',            'statistics.get_overview'),
     url(r'^stats/servers$',    'statistics.get_servers'),
     url(r'^stats/vo$',         'statistics.get_pervo'),
-    url(r'^stats/volume$',     'statistics.get_transfer_volume'),
 
     url(r'^optimizer/$',         'optimizer.get_optimizer_pairs'),
     url(r'^optimizer/detailed$', 'optimizer.get_optimizer_details'),

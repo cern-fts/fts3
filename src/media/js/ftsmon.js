@@ -1,4 +1,4 @@
-angular.module('ftsmon', ['ngRoute', 'ftsmon.resources', 'ftsmon.plots', 'ftsmon.global_filter', 'ui.bootstrap']).
+angular.module('ftsmon', ['ngRoute', 'ftsmon.resources', 'ftsmon.global_filter', 'ui.bootstrap']).
 config(function($routeProvider) {
     $routeProvider.
         when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',
@@ -70,9 +70,6 @@ config(function($routeProvider) {
         when('/statistics/vos',       {templateUrl: STATIC_ROOT + 'html/statistics/vos.html',
                                        controller:  StatsVosCtrl,
                                        resolve:     StatsVosCtrl.resolve}).
-       when('/statistics/volume',     {templateUrl: STATIC_ROOT + 'html/statistics/volume.html',
-                                       controller:  TransferVolumeCtrl,
-                                       resolve:     TransferVolumeCtrl.resolve}).
 
         when('/overview/atlas',       {templateUrl: STATIC_ROOT + 'html/overview/atlas.html',
                                        controller:  OverviewAtlasCtrl,
