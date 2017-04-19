@@ -17,17 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import types
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Count, Q
-import types
+from django.db.models import Count
+from django.views.decorators.cache import cache_page
 
-from ftsweb.models import Job, File, OptimizeActive, OptimizerEvolution
 from authn import require_certificate
+from ftsweb.models import File, OptimizeActive, OptimizerEvolution
 from jobs import setup_filters
 from jsonify import jsonify
 from util import get_order_by, paged, db_to_date
-
 
 
 def _get_pair_limits(limits, source, destination):
@@ -134,6 +134,7 @@ class OverviewExtended(object):
 
 
 @require_certificate
+@cache_page(60)
 @jsonify
 def get_overview(http_request):
     filters = setup_filters(http_request)

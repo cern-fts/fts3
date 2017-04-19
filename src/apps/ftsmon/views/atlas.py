@@ -19,6 +19,7 @@
 
 from datetime import datetime, timedelta
 from django.db import connection
+from django.views.decorators.cache import cache_page
 
 from authn import require_certificate
 from jobs import setup_filters
@@ -59,6 +60,7 @@ def _get_pair_udt(udt_pairs, source, destination):
 
 
 @require_certificate
+@cache_page(60)
 @jsonify
 def get_overview(http_request):
     filters = setup_filters(http_request)

@@ -18,17 +18,14 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
-from django.db import connection
 from django.db.models import Q, Count, Sum
-from django.db.utils import DatabaseError
+from django.views.decorators.cache import cache_page
 
-from ftsweb.models import Job, File, Host
-from ftsweb.models import ACTIVE_STATES, STATES, FILE_TERMINAL_STATES
 from authn import require_certificate
+from ftsweb.models import Job, File, Host
+from ftsweb.models import STATES, FILE_TERMINAL_STATES
 from jsonify import jsonify, jsonify_paged, as_json
 from slsfy import slsfy, slsfy_error
-from util import get_order_by, ordered_field, log_link
-import settings
 
 
 def _get_count_per_state(age, hostname):
@@ -94,6 +91,7 @@ def _get_retried_stats(timewindow, hostname):
 
 
 @require_certificate
+@cache_page(300)
 @jsonify
 def get_overview(http_request):
     try:
@@ -221,6 +219,7 @@ def _get_server(time_window):
 
 
 # This one does not require certificate, so the Service Level can be still queried
+@cache_page(300)
 def get_servers(http_request):
     try:
         time_window = timedelta(hours=int(http_request.GET['time_window']))
@@ -257,12 +256,7 @@ def get_servers(http_request):
 
 
 @require_certificate
-@jsonify
-def get_database(http_request):
-    return _get_database()
-
-
-@require_certificate
+@cache_page(1200)
 @jsonify
 def get_pervo(http_request):
     try:
@@ -331,6 +325,7 @@ class CalculateVolume(object):
 
 
 @require_certificate
+@cache_page(1200)
 @jsonify_paged
 def get_transfer_volume(http_request):
     try:

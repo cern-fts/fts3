@@ -1,9 +1,6 @@
 # Copyright notice:
 #
-# Copyright (C) CERN 2013-2015
-#
-# Copyright (C) Members of the EMI Collaboration, 2010-2013.
-#   See www.eu-emi.eu for details on the copyright holders
+# Copyright (C) CERN 2017
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cache import *
-from common import *
-from database import *
-from format import *
-from site import *
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/fts3webmon_cache',
+        'TIMEOUT': 120,
+        'MAX_ENTRIES': 100,
+    }
+}
