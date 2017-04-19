@@ -229,23 +229,8 @@ def get_servers(http_request):
     format = http_request.GET.get('format', None)
     try:
         if format == 'sls':
-            # For SLS, poll the DB load first. If it is way too high, do not bother querying for the servers
-            database = _get_database()
-            waiting_times = map(
-                lambda d: d[3],
-                filter(lambda d: d[4].lower().startswith('waiting'), database)
-            )
-            if len(waiting_times):
-                avg_waiting_time = reduce(int.__add__, waiting_times, 0) / len(waiting_times)
-            else:
-                avg_waiting_time = 0
-
-            if avg_waiting_time > 120 and len(waiting_times) > 5:
-                servers = dict()
-            else:
-                servers = _get_server(time_window)
-
-            return  slsfy(servers, id_tail='Server Info')
+            servers = _get_server(time_window)
+            return slsfy(servers, id_tail='Server Info')
         else:
             return as_json(_get_server(time_window))
     except Exception, e:
