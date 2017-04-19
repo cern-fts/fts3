@@ -50,9 +50,6 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats/vo$',         'statistics.get_pervo'),
     url(r'^stats/volume$',     'statistics.get_transfer_volume'),
 
-    url(r'^plot/pie',   'plots.draw_pie'),
-    url(r'^plot/lines', 'plots.draw_lines'),
-
     url(r'^optimizer/$',         'optimizer.get_optimizer_pairs'),
     url(r'^optimizer/detailed$', 'optimizer.get_optimizer_details'),
     url(r'^optimizer/streams',   'optimizer.get_optimizer_streams'),
