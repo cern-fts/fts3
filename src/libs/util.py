@@ -77,15 +77,6 @@ def paged(elements, http_request):
     }
 
 
-def db_to_date():
-    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-        return 'TO_TIMESTAMP(%s, \'YYYY-MM-DD HH24:MI:SS.FF\')'
-    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
-        return 'STR_TO_DATE(%s, \'%%Y-%%m-%%d %%H:%%i:%%S\')'
-    else:
-        return '%s'
-
-
 def db_limit(sql, limit):
     if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
         return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
@@ -93,7 +84,6 @@ def db_limit(sql, limit):
         return sql + " LIMIT %d" % limit
     else:
         return sql
-
 
 
 def log_link(host, log):

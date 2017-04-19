@@ -25,7 +25,7 @@ from authn import require_certificate
 from jobs import setup_filters
 from jsonify import jsonify
 from overview import OverviewExtended
-from util import get_order_by, paged, db_to_date
+from util import get_order_by, paged
 
 
 def _get_pair_limits(limits, source, destination):
@@ -111,10 +111,10 @@ def get_overview(http_request):
     SELECT COUNT(file_state) as count, file_state, source_se, dest_se, vo_name, activity
     FROM t_file
     WHERE file_state in ('FINISHED', 'FAILED', 'CANCELED') %s
-        AND finish_time > %s
+        AND finish_time > %%s
     GROUP BY file_state, source_se, dest_se, vo_name, activity  order by NULL
-    """ % (pairs_filter, db_to_date())
-    cursor.execute(query, se_params + [not_before])
+    """ % pairs_filter
+    cursor.execute(query, se_params + [not_before.strftime('%Y-%m-%d %H:%M:%S')])
     for row in cursor.fetchall():
         triplet_key = (row[2], row[3], row[4],row[5])
         triplet = triplets.get(triplet_key, dict())
