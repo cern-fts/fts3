@@ -27,12 +27,7 @@ ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN /usr/bin/yum clean all
 
 #install fts packages
-<<<<<<< HEAD
 RUN /usr/bin/yum install -y fts-monitoring fts-monitoring-selinux mod_ssl gridsite
-=======
-RUN /usr/bin/yum install -y fts-monitoring fts-monitoring-selinux mod_ssl
->>>>>>> master
-
 RUN /usr/bin/yum install -y voms-config-wlcg  voms-config-vo-dteam
 
 #add user
@@ -43,7 +38,5 @@ RUN usermod -a -G fts3 apache
 
 EXPOSE 8449
 
-<<<<<<< HEAD
 CMD ["/usr/sbin/apachectl","-DFOREGROUND"]
-=======
->>>>>>> master
+
