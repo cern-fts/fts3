@@ -186,12 +186,13 @@ bool Optimizer::optimizeConnectionsForPair(const Pair &pair)
     // Initialize current state
     PairState current;
     current.timestamp = time(NULL);
-    dataSource->getThroughputInfo(pair, boost::posix_time::minutes(1), &current.throughput,
-        &current.filesizeAvg,
-        &current.filesizeStdDev);
     current.avgDuration = dataSource->getAverageDuration(pair, boost::posix_time::minutes(30));
-    current.successRate = dataSource->getSuccessRateForPair(pair,
-        calculateTimeFrame(current.avgDuration), &current.retryCount);
+
+    boost::posix_time::time_duration timeFrame = calculateTimeFrame(current.avgDuration);
+
+    dataSource->getThroughputInfo(pair, timeFrame,
+        &current.throughput, &current.filesizeAvg, &current.filesizeStdDev);
+    current.successRate = dataSource->getSuccessRateForPair(pair, timeFrame, &current.retryCount);
     current.activeCount = dataSource->getActive(pair);
     current.queueSize = dataSource->getSubmitted(pair);
 
