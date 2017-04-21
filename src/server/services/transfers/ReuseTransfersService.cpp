@@ -59,6 +59,8 @@ void ReuseTransfersService::runService()
 
         try
         {
+            boost::this_thread::sleep(schedulingInterval);
+
             if (DrainMode::instance())
             {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO)
@@ -83,7 +85,6 @@ void ReuseTransfersService::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
 }
 

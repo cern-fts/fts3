@@ -56,10 +56,14 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
     std::string monitoringMessagesStr = config::ServerConfig::instance().get<std::string>("MonitoringMessaging");
-    if (monitoringMessagesStr == "false")
+    if (monitoringMessagesStr == "false") {
         monitoringMessages = false;
-    else
+    }
+    else {
         monitoringMessages = true;
+    }
+
+    schedulingInterval = boost::posix_time::seconds(config::ServerConfig::instance().get<int>("SchedulingInterval"));
 }
 
 
@@ -76,7 +80,7 @@ void TransfersService::runService()
 
         try
         {
-            boost::this_thread::sleep(boost::posix_time::seconds(2));
+            boost::this_thread::sleep(schedulingInterval);
 
             if (DrainMode::instance())
             {

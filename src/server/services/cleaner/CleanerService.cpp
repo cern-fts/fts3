@@ -68,6 +68,8 @@ void CleanerService::runService()
     int counter = 0;
 
     std::string msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+    int purgeMsgDirs = ServerConfig::instance().get<int>("PurgeMessagingDirectoryInterval");
+    int checkSanityState = ServerConfig::instance().get<int>("CheckSanityStateInterval");
 
     while (!boost::this_thread::interruption_requested())
     {
@@ -76,12 +78,12 @@ void CleanerService::runService()
         try
         {
             // Every hour
-            if (counter % 3600 == 0) {
+            if (checkSanityState >0 && counter % checkSanityState == 0) {
                 db::DBSingleton::instance().getDBObjectInstance()->checkSanityState();
             }
 
             // Every 10 minutes
-            if (counter % 600 == 0) {
+            if (purgeMsgDirs > 0 && counter % purgeMsgDirs == 0) {
                 Consumer consumer(msgDir);
                 consumer.purgeAll();
             }

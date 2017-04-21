@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <common/Singleton.h>
 #include "MultihopTransfersService.h"
 
 #include "common/DaemonTools.h"
@@ -48,6 +49,7 @@ void MultihopTransfersService::runService()
 
         try
         {
+            boost::this_thread::sleep(schedulingInterval);
             if (DrainMode::instance())
             {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
@@ -70,7 +72,6 @@ void MultihopTransfersService::runService()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_multihop_handler!" << commit;
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(2));
     }
 }
 

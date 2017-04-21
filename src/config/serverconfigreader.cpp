@@ -305,6 +305,41 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["MaxUrlCopyProcesses"]) )->default_value("0"),
         "Maximum number of url copy processes to run"
     )
+    (
+        "PurgeMessagingDirectoryInterval",
+        po::value<std::string>( &(_vars["PurgeMessagingDirectoryInterval"]) )->default_value("600"),
+        "In seconds, how often to purge the messaging directory"
+    )
+    (
+        "CheckSanityStateInterval",
+        po::value<std::string>( &(_vars["CheckSanityStateInterval"]) )->default_value("3600"),
+        "In seconds, how often to run sanity checks"
+    )
+    (
+        "CancelCheckInterval",
+        po::value<std::string>( &(_vars["CancelCheckInterval"]) )->default_value("10"),
+        "In seconds, how often to check for canceled transfers"
+    )
+    (
+        "QueueTimeoutCheckInterval",
+        po::value<std::string>( &(_vars["QueueTimeoutCheckInterval"]) )->default_value("300"),
+        "In seconds, how often to check for expired queued transfers"
+    )
+    (
+        "ActiveTimeoutCheckInterval",
+        po::value<std::string>( &(_vars["ActiveTimeoutCheckInterval"]) )->default_value("300"),
+        "In seconds, how often to check for stalled transfers"
+    )
+    (
+        "SchedulingInterval",
+        po::value<std::string>( &(_vars["SchedulingInterval"]) )->default_value("2"),
+        "In seconds, how often to schedule new transfers"
+    )
+    (
+        "MessagingConsumeInterval",
+        po::value<std::string>( &(_vars["MessagingConsumeInterval"]) )->default_value("1"),
+        "In seconds, how often to check for messages"
+    )
     ;
     return config;
 }

@@ -59,6 +59,8 @@ void MessageProcessingService::runService()
 {
     namespace fs = boost::filesystem;
 
+    int msgCheckInterval = config::ServerConfig::instance().get<int>("MessagingConsumeInterval");
+
     while (!boost::this_thread::interruption_requested())
     {
         updateRecords = time(0);
@@ -168,7 +170,7 @@ void MessageProcessingService::runService()
                 producer.runProducerLog( msgLogBreak );
             }
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(1));
+        boost::this_thread::sleep(boost::posix_time::seconds(msgCheckInterval));
     }
 }
 

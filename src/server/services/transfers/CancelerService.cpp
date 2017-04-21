@@ -176,6 +176,11 @@ void CancelerService::runService()
     unsigned int counterQueueTimeouts = 0;
     unsigned int counterCanceled = 0;
 
+    int cancelInterval = ServerConfig::instance().get<int>("CancelCheckInterval");
+    int queueTimeoutInterval = ServerConfig::instance().get<int>("QueueTimeoutCheckInterval");
+    int activeTimeoutInterval = ServerConfig::instance().get<int>("ActiveTimeoutCheckInterval");
+    bool checkStalledTransfers = ServerConfig::instance().get<bool>("CheckStalledTransfers");
+
     recoverProcessesFromDb();
 
 
@@ -199,7 +204,7 @@ void CancelerService::runService()
 
             /*also get jobs which have been canceled by the client*/
             counterCanceled++;
-            if (counterCanceled == 10)
+            if (cancelInterval > 0 && counterCanceled >= cancelInterval)
             {
                 killCanceledByUser();
                 counterCanceled = 0;
@@ -209,9 +214,9 @@ void CancelerService::runService()
                 return;
 
             /*force-fail stalled ACTIVE transfers*/
-            if (ServerConfig::instance().get<bool>("CheckStalledTransfers")) {
+            if (checkStalledTransfers && activeTimeoutInterval > 0) {
                 counterActiveTimeouts++;
-                if (counterActiveTimeouts == 300)
+                if (counterActiveTimeouts >= activeTimeoutInterval)
                 {
                     applyActiveTimeouts();
                     counterActiveTimeouts = 0;
@@ -223,7 +228,7 @@ void CancelerService::runService()
 
             /*set to fail all old queued jobs which have exceeded max queue time*/
             counterQueueTimeouts++;
-            if (counterQueueTimeouts == 300)
+            if (queueTimeoutInterval > 0 && counterQueueTimeouts >= queueTimeoutInterval)
             {
                 applyQueueTimeouts();
                 counterQueueTimeouts = 0;
