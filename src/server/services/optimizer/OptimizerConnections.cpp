@@ -258,7 +258,7 @@ bool Optimizer::optimizeConnectionsForPair(const Pair &pair)
 
     if (current.successRate == previous.successRate &&
         current.ema == previous.ema &&
-        timeSinceLastUpdate < optimizerSteadyInterval) {
+        timeSinceLastUpdate < optimizerSteadyInterval.total_seconds()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
             << "Optimizer for " << pair
             << ": Same success rate and throughput EMA, not enough time passed since last update. Skip"

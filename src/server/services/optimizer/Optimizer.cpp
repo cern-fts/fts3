@@ -31,7 +31,7 @@ namespace optimizer {
 
 
 Optimizer::Optimizer(OptimizerDataSource *ds):
-    dataSource(ds), optimizerSteadyInterval(60), maxNumberOfStreams(10),
+    dataSource(ds), optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
     globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
     globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK),
     optimizerMode(kConservative)
@@ -44,7 +44,7 @@ Optimizer::~Optimizer()
 }
 
 
-void Optimizer::setSteadyInterval(int newValue)
+void Optimizer::setSteadyInterval(boost::posix_time::time_duration newValue)
 {
     optimizerSteadyInterval = newValue;
 }

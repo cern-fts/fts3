@@ -44,10 +44,12 @@ HeartBeat::HeartBeat(): BaseService("HeartBeat"), index(0), count(0), start(0), 
 
 void HeartBeat::runService()
 {
-    int heartBeatInterval, heartBeatGraceInterval;
+    typedef boost::posix_time::time_duration TDuration;
+    TDuration heartBeatInterval, heartBeatGraceInterval;
+
     try {
-        heartBeatInterval = ServerConfig::instance().get<int>("HeartBeatInterval");
-        heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
+        heartBeatInterval = ServerConfig::instance().get<TDuration>("HeartBeatInterval");
+        heartBeatGraceInterval = ServerConfig::instance().get<TDuration>("HeartBeatGraceInterval");
         if (heartBeatInterval >= heartBeatGraceInterval) {
             FTS3_COMMON_LOGGER_NEWLOG(CRIT)
                 << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
@@ -96,7 +98,7 @@ void HeartBeat::runService()
 
             // It the update was successful, we sleep here
             // If it wasn't, only one second will pass until the next retry
-            boost::this_thread::sleep(boost::posix_time::seconds(heartBeatInterval));
+            boost::this_thread::sleep(heartBeatInterval);
         }
         catch (const boost::thread_interrupted&)
         {

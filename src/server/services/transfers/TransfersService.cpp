@@ -63,7 +63,7 @@ TransfersService::TransfersService(): BaseService("TransfersService")
         monitoringMessages = true;
     }
 
-    schedulingInterval = boost::posix_time::seconds(config::ServerConfig::instance().get<int>("SchedulingInterval"));
+    schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
 }
 
 

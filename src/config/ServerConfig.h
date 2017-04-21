@@ -33,6 +33,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include "common/Singleton.h"
 
@@ -144,6 +145,17 @@ inline bool ServerConfig::get<bool> (const std::string& aVariable /**< A config 
     // otherwise return true (it may be 'true' or other string containing respective value)
     else return true;
 }
+
+
+template <>
+inline boost::posix_time::time_duration ServerConfig::get<boost::posix_time::time_duration> (const std::string& aVariable /**< A config variable name. */)
+{
+    waitIfReading();
+    std::string str = _get_str(aVariable);
+    notifyReaders();
+    return boost::posix_time::seconds(boost::lexical_cast<int>(str));
+}
+
 
 template <>
 inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (const std::string& aVariable /**< A config variable name. */)

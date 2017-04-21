@@ -39,8 +39,10 @@ OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerServi
 
 void OptimizerService::runService()
 {
-    auto optimizerInterval = config::ServerConfig::instance().get<int>("OptimizerInterval");
-    auto optimizerSteadyInterval = config::ServerConfig::instance().get<int>("OptimizerSteadyInterval");
+    typedef boost::posix_time::time_duration TDuration;
+
+    auto optimizerInterval = config::ServerConfig::instance().get<TDuration>("OptimizerInterval");
+    auto optimizerSteadyInterval = config::ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
     auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
 
     Optimizer optimizer(db::DBSingleton::instance().getDBObjectInstance()->getOptimizerDataSource());
@@ -60,7 +62,7 @@ void OptimizerService::runService()
         catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService unknown" << fts3::common::commit;
         }
-        boost::this_thread::sleep(boost::posix_time::seconds(optimizerInterval));
+        boost::this_thread::sleep(optimizerInterval);
     }
 }
 
