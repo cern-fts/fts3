@@ -20,17 +20,15 @@
 
 #include "RestContextAdapter.h"
 
-#include "File.h"
-
 #include "ui/SubmitTransferCli.h"
 #include "rest/HttpRequest.h"
-#include "common/JobStatusHandler.h"
-#include "exception/cli_exception.h"
-
-#include <memory>
 
 using namespace fts3::cli;
-using namespace fts3::common;
+
+static bool isJobFinished(const std::string &state)
+{
+    return state == "FAILED" || state == "FINISHED" || state == "FINISHEDDIRTY" || state == "CANCELED";
+}
 
 /**
  * This is the entry point for the fts3-transfer-submit command line tool.
@@ -73,7 +71,7 @@ int main(int ac, char* av[])
                             sleep(2);
                             status = ctx.getTransferJobStatus(jobId, false).getStatus();
                         }
-                    while (!JobStatusHandler::instance().isTransferFinished(status));
+                    while (!isJobFinished(status));
                 }
 
         }

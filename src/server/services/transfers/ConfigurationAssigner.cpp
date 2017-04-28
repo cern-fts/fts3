@@ -20,8 +20,6 @@
 
 #include "ConfigurationAssigner.h"
 
-#include "common/JobStatusHandler.h"
-
 #include <boost/assign.hpp>
 #include <boost/regex.hpp>
 

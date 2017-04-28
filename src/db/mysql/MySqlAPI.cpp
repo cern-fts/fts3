@@ -40,7 +40,6 @@
 #include "common/definitions.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "common/JobStatusHandler.h"
 #include "common/Uri.h"
 #include "monitoring/msg-ifce.h"
 

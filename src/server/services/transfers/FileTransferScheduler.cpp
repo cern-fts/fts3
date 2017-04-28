@@ -21,7 +21,6 @@
 #include <boost/lexical_cast.hpp>
 
 #include "common/Logger.h"
-#include "common/JobStatusHandler.h"
 
 #include "ConfigurationAssigner.h"
 #include "FileTransferScheduler.h"
@@ -136,12 +135,12 @@ bool FileTransferScheduler::schedule(int &currentActive)
                             // set file status to failed
                             db->updateTransferStatus(
                                 file.jobId, file.fileId, 0.0,
-                                JobStatusHandler::FTS3_STATUS_FAILED, msg,
+                                "FAILED", msg,
                                 0, 0.0, 0.0, false
                             );
                             // set job states if necessary
                             db->updateJobStatus(
-                                file.jobId, JobStatusHandler::FTS3_STATUS_FAILED, 0
+                                file.jobId, "FAILED", 0
                             );
                             // log it
                             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << msg << commit;
