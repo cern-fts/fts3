@@ -21,7 +21,7 @@
 #include "SubmitTransferCli.h"
 #include "BulkSubmissionParser.h"
 
-#include "common/JobParameterHandler.h"
+#include "JobParameterHandler.h"
 #include <termios.h>
 
 #include <boost/algorithm/string.hpp>

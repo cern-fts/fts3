@@ -30,7 +30,7 @@
 
 namespace fts3
 {
-namespace common
+namespace cli
 {
 
 /**

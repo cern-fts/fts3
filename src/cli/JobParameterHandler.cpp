@@ -21,7 +21,7 @@
 #include "JobParameterHandler.h"
 #include <cassert>
 
-using namespace fts3::common;
+using namespace fts3::cli;
 
 const std::string JobParameterHandler::GRIDFTP = "gridftp";
 const std::string JobParameterHandler::DELEGATIONID = "delegationid";

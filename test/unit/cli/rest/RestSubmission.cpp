@@ -23,11 +23,11 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "cli/rest/RestSubmission.h"
-#include "common/JobParameterHandler.h"
+#include "cli/JobParameterHandler.h"
 
 using fts3::cli::File;
 using fts3::cli::RestSubmission;
-using fts3::common::JobParameterHandler;
+using fts3::cli::JobParameterHandler;
 namespace pt = boost::property_tree;
 
 

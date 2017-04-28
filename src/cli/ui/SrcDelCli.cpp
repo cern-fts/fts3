@@ -22,7 +22,7 @@
 #include "SrcDelCli.h"
 #include "BulkSubmissionParser.h"
 
-#include "common/JobParameterHandler.h"
+#include "JobParameterHandler.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>

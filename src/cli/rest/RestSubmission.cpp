@@ -20,7 +20,7 @@
 
 #include "RestSubmission.h"
 
-#include "common/JobParameterHandler.h"
+#include "JobParameterHandler.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
@@ -32,8 +32,6 @@ namespace fts3
 {
 namespace cli
 {
-
-using namespace fts3::common;
 
 
 void RestSubmission::to_array(std::vector<std::string> const & v, pt::ptree & t)

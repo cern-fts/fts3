@@ -22,7 +22,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include "cli/ui/SubmitTransferCli.h"
-#include "common/JobParameterHandler.h"
+#include "cli/JobParameterHandler.h"
 
 #include <fstream>
 
@@ -30,7 +30,7 @@ using fts3::cli::SubmitTransferCli;
 using fts3::cli::File;
 using fts3::cli::bad_option;
 using fts3::cli::cli_exception;
-using fts3::common::JobParameterHandler;
+using fts3::cli::JobParameterHandler;
 
 
 BOOST_AUTO_TEST_SUITE(cli)
