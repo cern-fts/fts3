@@ -92,7 +92,7 @@ public:
     // File size
     uint64_t fileSize;
 
-    // Progress makers
+    // Progress markers
     double throughput;
     uint64_t transferredBytes;
 
