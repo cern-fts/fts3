@@ -21,9 +21,9 @@
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include "common/CfgParser.h"
+#include "cli/ui/CfgParser.h"
 
-using fts3::common::CfgParser;
+using fts3::cli::CfgParser;
 using fts3::common::UserError;
 
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE (constructor)
     // it must not use invalid tokens
     BOOST_CHECK_THROW(CfgParser p("{\"invalid token\" : 8}"), UserError);
     // try parsing share only config
-    fts3::common::CfgParser share_only_cfg (SHARE_ONLY_CFG_STR);
+    CfgParser share_only_cfg (SHARE_ONLY_CFG_STR);
     BOOST_CHECK_EQUAL(share_only_cfg.getCfgType(), CfgParser::SHARE_ONLY_CFG);
     // try parsing standalone se config
     CfgParser standalone_se_cfg(STANDALONE_SE_CFG_STR);

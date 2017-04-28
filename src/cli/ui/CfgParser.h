@@ -29,11 +29,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
-#include "Exceptions.h"
+#include "common/Exceptions.h"
 
 namespace fts3
 {
-namespace common
+namespace cli
 {
 
 
@@ -176,11 +176,11 @@ T CfgParser::get(std::string path)
         v = pt.get<T>(path);
     }
     catch (boost::property_tree::ptree_bad_path &ex) {
-        throw UserError("The " + path + " has to be specified!");
+        throw fts3::common::UserError("The " + path + " has to be specified!");
     }
     catch (boost::property_tree::ptree_bad_data &ex) {
         // if the type of the value is wrong throw an exception
-        throw UserError("Wrong value type of " + path);
+        throw fts3::common::UserError("Wrong value type of " + path);
     }
     return v;
 }
@@ -194,7 +194,7 @@ inline std::vector<std::string> CfgParser::get<std::vector<std::string> >(std::s
     boost::optional<boost::property_tree::ptree &> value = pt.get_child_optional(path);
     if (!value.is_initialized()) {
         // the vector member was not specified in the configuration
-        throw UserError("The " + path + " has to be specified!");
+        throw fts3::common::UserError("The " + path + " has to be specified!");
     }
     boost::property_tree::ptree &array = value.get();
 
@@ -202,7 +202,7 @@ inline std::vector<std::string> CfgParser::get<std::vector<std::string> >(std::s
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
     if (!wrong.empty()) {
-        throw UserError("Wrong value: '" + wrong + "'");
+        throw fts3::common::UserError("Wrong value: '" + wrong + "'");
     }
 
     for (auto it = array.begin(); it != array.end(); ++it) {
@@ -212,13 +212,13 @@ inline std::vector<std::string> CfgParser::get<std::vector<std::string> >(std::s
         // accordingly to boost it should be empty if object weren't
         // members of the array (our case)
         if (!v.first.empty()) {
-            throw UserError(
+            throw fts3::common::UserError(
                 "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
         }
 
         // check if the node has children, it should only have a value!
         if (!v.second.empty()) {
-            throw UserError("Unexpected object in array '" + path + "' (only a list of values was expected)");
+            throw fts3::common::UserError("Unexpected object in array '" + path + "' (only a list of values was expected)");
         }
 
         ret.push_back(v.second.get_value<std::string>());
@@ -235,14 +235,14 @@ inline std::map<std::string, int> CfgParser::get<std::map<std::string, int> >(st
 
     boost::optional<boost::property_tree::ptree &> value = pt.get_child_optional(path);
     if (!value.is_initialized())
-        throw UserError("The " + path + " has to be specified!");
+        throw fts3::common::UserError("The " + path + " has to be specified!");
     boost::property_tree::ptree &array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
     if (!wrong.empty()) {
-        throw UserError("Wrong value: '" + wrong + "'");
+        throw fts3::common::UserError("Wrong value: '" + wrong + "'");
     }
 
     for (auto it = array.begin(); it != array.end(); ++it) {
@@ -252,19 +252,19 @@ inline std::map<std::string, int> CfgParser::get<std::map<std::string, int> >(st
         // accordingly to boost it should be empty if object weren't
         // members of the array (our case)
         if (!v.first.empty()) {
-            throw UserError(
+            throw fts3::common::UserError(
                 "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
         }
 
         // check if there is a value,
         // the value should be empty because only a 'key:value' object should be specified
         if (!v.second.get_value<std::string>().empty()) {
-            throw UserError("'{key:value}' object was expected, not just the value");
+            throw fts3::common::UserError("'{key:value}' object was expected, not just the value");
         }
 
         // there should be only one child the 'key:value' object
         if (v.second.size() != 1) {
-            throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
+            throw fts3::common::UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
         }
 
         std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
@@ -279,14 +279,14 @@ inline std::map<std::string, int> CfgParser::get<std::map<std::string, int> >(st
                 // get the integer value
                 int value = kv.second.get_value<int>();
                 // make sure it's not negative
-                if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
+                if (value < 0) throw fts3::common::UserError("The value of " + kv.first + " cannot be negative!");
                 // std::set the value
                 ret[kv.first] = value;
             }
 
         }
         catch (boost::property_tree::ptree_bad_data &ex) {
-            throw UserError("Wrong value type of " + kv.first);
+            throw fts3::common::UserError("Wrong value type of " + kv.first);
         }
     }
 
@@ -301,14 +301,14 @@ inline std::map<std::string, double> CfgParser::get<std::map<std::string, double
 
     boost::optional<boost::property_tree::ptree &> value = pt.get_child_optional(path);
     if (!value.is_initialized())
-        throw UserError("The " + path + " has to be specified!");
+        throw fts3::common::UserError("The " + path + " has to be specified!");
     boost::property_tree::ptree &array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
     if (!wrong.empty()) {
-        throw UserError("Wrong value: '" + wrong + "'");
+        throw fts3::common::UserError("Wrong value: '" + wrong + "'");
     }
 
     for (auto it = array.begin(); it != array.end(); ++it) {
@@ -318,19 +318,19 @@ inline std::map<std::string, double> CfgParser::get<std::map<std::string, double
         // accordingly to boost it should be empty if object weren't
         // members of the array (our case)
         if (!v.first.empty()) {
-            throw UserError(
+            throw fts3::common::UserError(
                 "An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
         }
 
         // check if there is a value,
         // the value should be empty because only a 'key:value' object should be specified
         if (!v.second.get_value<std::string>().empty()) {
-            throw UserError("'{key:value}' object was expected, not just the value");
+            throw fts3::common::UserError("'{key:value}' object was expected, not just the value");
         }
 
         // there should be only one child the 'key:value' object
         if (v.second.size() != 1) {
-            throw UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
+            throw fts3::common::UserError("In array '" + path + "' only ('{key:value}' objects were expected)");
         }
 
         std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
@@ -345,14 +345,14 @@ inline std::map<std::string, double> CfgParser::get<std::map<std::string, double
                 // get the integer value
                 double value = kv.second.get_value<double>();
                 // make sure it's not negative
-                if (value < 0) throw UserError("The value of " + kv.first + " cannot be negative!");
+                if (value < 0) throw fts3::common::UserError("The value of " + kv.first + " cannot be negative!");
                 // Set the value
                 ret[kv.first] = value;
             }
 
         }
         catch (boost::property_tree::ptree_bad_data &ex) {
-            throw UserError("Wrong value type of " + kv.first);
+            throw fts3::common::UserError("Wrong value type of " + kv.first);
         }
     }
 

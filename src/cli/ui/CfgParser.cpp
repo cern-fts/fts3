@@ -32,7 +32,7 @@
 
 namespace fts3
 {
-namespace common
+namespace cli
 {
 
 using namespace boost::assign;
@@ -174,7 +174,7 @@ CfgParser::CfgParser(std::string configuration)
     size_t closing = count(configuration.begin(), configuration.end(), '}');
 
     if (opening != closing) {
-        throw UserError("The number of opening braces does not much the number of closing braces");
+        throw fts3::common::UserError("The number of opening braces does not much the number of closing braces");
     }
 
     // break into lines to give later better feedback to users
@@ -204,7 +204,7 @@ CfgParser::CfgParser(std::string configuration)
     catch (boost::property_tree::json_parser_error &ex) {
         // handle errors in JSON format
         std::string msg = ex.message() + "(around: '" + lines[ex.line() - 1] + "')";
-        throw UserError(msg);
+        throw fts3::common::UserError(msg);
     }
 
     if (validate(pt, shareOnlyCfgTokens)) {
@@ -267,7 +267,7 @@ bool CfgParser::validate(boost::property_tree::ptree pt, std::map<std::string, s
             if (!allTokens.count(p.first)) {
                 std::string msg = "unexpected identifier: " + p.first;
                 if (!path.empty()) msg += " in " + path + " object";
-                throw UserError(msg);
+                throw fts3::common::UserError(msg);
             }
             return false;
         }
@@ -275,7 +275,7 @@ bool CfgParser::validate(boost::property_tree::ptree pt, std::map<std::string, s
         if (p.second.empty()) {
             // check if it should be an object or a value
             if (allowed.find(p.first) != allowed.end()) {
-                throw UserError("A member object was expected in " + p.first);
+                throw fts3::common::UserError("A member object was expected in " + p.first);
             }
         }
         else {
@@ -298,7 +298,7 @@ boost::optional<std::string> CfgParser::get_opt(std::string path)
     }
     catch (boost::property_tree::ptree_bad_data &ex) {
         // if the type of the value is wrong throw an exception
-        throw UserError("Wrong value type of " + path);
+        throw fts3::common::UserError("Wrong value type of " + path);
     }
     return v;
 }
@@ -312,11 +312,11 @@ bool CfgParser::isAuto(std::string path)
     }
     catch (boost::property_tree::ptree_bad_path &ex) {
         // if the path is not correct throw en exception
-        throw UserError("The " + path + " has to be specified!");
+        throw fts3::common::UserError("The " + path + " has to be specified!");
     }
     catch (boost::property_tree::ptree_bad_data &ex) {
         // if the type of the value is wrong throw an exception
-        throw UserError("Wrong value type of " + path);
+        throw fts3::common::UserError("Wrong value type of " + path);
     }
 
     return v == auto_value;

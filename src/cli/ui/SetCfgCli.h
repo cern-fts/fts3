@@ -29,7 +29,7 @@
 
 #include <boost/optional.hpp>
 
-#include "common/CfgParser.h"
+#include "CfgParser.h"
 
 
 namespace fts3

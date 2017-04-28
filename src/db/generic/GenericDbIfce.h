@@ -30,7 +30,6 @@
 #include <vector>
 
 #include "JobStatus.h"
-#include "common/JobParameterHandler.h"
 #include "FileTransferStatus.h"
 #include "SeConfig.h"
 #include "SeGroup.h"
