@@ -26,7 +26,6 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-#include "common/definitions.h"
 #include "common/Uri.h"
 #include "UrlCopyError.h"
 
@@ -40,11 +39,6 @@ public:
     typedef std::list<Transfer> TransferList;
 
     struct Statistics {
-        static uint64_t timestampMilliseconds()
-        {
-            return milliseconds_since_epoch();
-        }
-
         struct Interval {
             uint64_t start, end;
         };

@@ -23,7 +23,6 @@
  */
 
 #include "UrlCopyCmd.h"
-#include "common/definitions.h"
 #include "config/ServerConfig.h"
 #include <boost/algorithm/string/replace.hpp>
 

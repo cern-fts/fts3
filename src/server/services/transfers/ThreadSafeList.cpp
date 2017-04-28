@@ -22,7 +22,6 @@
 #include <ctime>
 #include <common/Exceptions.h>
 
-#include "common/definitions.h"
 #include "common/Logger.h"
 #include "common/PidTools.h"
 #include "ThreadSafeList.h"

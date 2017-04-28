@@ -24,4 +24,20 @@
 #include "events/TransferStart.pb.h"
 #include "events/TransferCompleted.pb.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+/**
+ * To be used with the timestamp fields
+ * @return The timestamp in milliseconds
+ */
+inline uint64_t millisecondsSinceEpoch()
+{
+    using boost::gregorian::date;
+    using boost::posix_time::ptime;
+    using boost::posix_time::microsec_clock;
+
+    static ptime const epoch(date(1970, 1, 1));
+    return (microsec_clock::universal_time() - epoch).total_milliseconds();
+}
+
 #endif // EVENTS_H

@@ -24,7 +24,6 @@
 
 #include <vector>
 
-#include "common/definitions.h"
 #include "../BaseService.h"
 
 

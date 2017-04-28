@@ -340,7 +340,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         msg2.set_job_id(job_id);
         msg2.set_file_id(iterFileIds->first);
         msg2.set_process_id(pr.getPid());
-        msg2.set_timestamp(milliseconds_since_epoch());
+        msg2.set_timestamp(millisecondsSinceEpoch());
         ThreadSafeList::get_instance().push_back(msg2);
 
         events::Message protoMsg;

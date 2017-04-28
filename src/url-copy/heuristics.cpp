@@ -19,8 +19,6 @@
  */
 
 #include <errno.h>
-#include <limits.h>
-#include "common/definitions.h"
 #include "heuristics.h"
 #include "common/Logger.h"
 

@@ -22,25 +22,15 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/range/algorithm/transform.hpp>
 
-#include <cstdlib>
 #include <map>
 #include <soci/mysql/soci-mysql.h>
-#include <mysql/mysql.h>
-#include <signal.h>
-#include <stdint.h>
-#include <sys/param.h>
-#include <unistd.h>
 #include "MySqlAPI.h"
 #include "sociConversions.h"
 #include "db/generic/DbUtils.h"
 #include <random>
-#include <stdint.h>
-#include <unistd.h>
 
-#include "common/definitions.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "common/Uri.h"
 #include "monitoring/msg-ifce.h"
 
 
@@ -266,7 +256,7 @@ std::list<fts3::events::MessageUpdater> MySqlAPI::getActiveInHost(const std::str
             msg.set_job_id(i->get<std::string>("job_id"));
             msg.set_file_id(i->get<unsigned long long>("file_id"));
             msg.set_process_id(i->get<int>("pid"));
-            msg.set_timestamp(milliseconds_since_epoch());
+            msg.set_timestamp(millisecondsSinceEpoch());
 
             msgs.push_back(msg);
         }
@@ -2700,7 +2690,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.retry_max = it->get<int>("retry_max",0);
             ret.file_id = it->get<int>("file_id");
             ret.file_state = it->get<std::string>("file_state");
-            ret.timestamp = milliseconds_since_epoch();
+            ret.timestamp = millisecondsSinceEpoch();
             auto aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
             ret.staging = false;
@@ -2798,7 +2788,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.user_filesize = it->get<long long>("user_filesize", 0);
             ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
-            ret.timestamp = milliseconds_since_epoch();
+            ret.timestamp = millisecondsSinceEpoch();
             aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
 

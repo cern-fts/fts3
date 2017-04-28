@@ -21,7 +21,6 @@
 #ifndef PROTOCOLRESOLVER_H_
 #define PROTOCOLRESOLVER_H_
 
-#include "common/definitions.h"
 #include "db/generic/SingleDbInstance.h"
 
 #include <list>

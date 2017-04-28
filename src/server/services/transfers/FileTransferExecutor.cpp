@@ -20,13 +20,7 @@
 
 #include "FileTransferExecutor.h"
 
-#include <glib.h>
-
-#include "common/definitions.h"
 #include "common/Logger.h"
-#include "common/Uri.h"
-#include "cred/CredUtility.h"
-#include "cred/DelegCred.h"
 #include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "FileTransferScheduler.h"
@@ -263,7 +257,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             msg.set_job_id(tf.jobId);
             msg.set_file_id(tf.fileId);
             msg.set_process_id(pr.getPid());
-            msg.set_timestamp(milliseconds_since_epoch());
+            msg.set_timestamp(millisecondsSinceEpoch());
 
             // Only set watcher when the file has started
             if(!failed) {

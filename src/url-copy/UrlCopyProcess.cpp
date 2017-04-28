@@ -296,7 +296,7 @@ void UrlCopyProcess::run(void)
         setupTransferConfig(opts, transfer, gfal2, params);
 
         // Prepare logging
-        transfer.stats.process.start = Transfer::Statistics::timestampMilliseconds();
+        transfer.stats.process.start = millisecondsSinceEpoch();
         transfer.logFile = generateLogPath(opts.logDir, transfer);
         if (opts.debugLevel) {
             transfer.debugLogFile = transfer.logFile + ".debug";
@@ -355,7 +355,7 @@ void UrlCopyProcess::run(void)
         archiveLogs(transfer);
 
         // Notify back the final state
-        transfer.stats.process.end = Transfer::Statistics::timestampMilliseconds();
+        transfer.stats.process.end = millisecondsSinceEpoch();
         {
             boost::lock_guard<boost::mutex> lock(transfersMutex);
             doneTransfers.push_back(transfer);

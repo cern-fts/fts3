@@ -21,7 +21,6 @@
 #include "MySqlAPI.h"
 #include "sociConversions.h"
 
-#include "common/definitions.h"
 #include "common/Exceptions.h"
 
 #include <boost/tokenizer.hpp>

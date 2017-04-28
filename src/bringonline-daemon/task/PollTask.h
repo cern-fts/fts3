@@ -30,7 +30,6 @@
 
 #include <boost/thread.hpp>
 
-#include "common/definitions.h"
 #include "db/generic/SingleDbInstance.h"
 
 #include "BringOnlineTask.h"

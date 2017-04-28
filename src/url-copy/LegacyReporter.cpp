@@ -55,7 +55,7 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     // Log file
     events::MessageLog log;
 
-    log.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    log.set_timestamp(millisecondsSinceEpoch());
     log.set_job_id(transfer.jobId);
     log.set_file_id(transfer.fileId);
     log.set_host(fts3::common::getFullHostname());
@@ -67,7 +67,7 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     // Status
     events::Message status;
 
-    status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    status.set_timestamp(millisecondsSinceEpoch());
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
     status.set_source_se(transfer.source.host);
@@ -104,7 +104,7 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     completed.job_m_replica = transfer.isMultipleReplicaJob;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
-    completed.tr_timestamp_start = Transfer::Statistics::timestampMilliseconds();
+    completed.tr_timestamp_start = millisecondsSinceEpoch();
 
     if (opts.enableMonitoring) {
         std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, completed);
@@ -125,7 +125,7 @@ void LegacyReporter::sendProtocol(const Transfer &transfer, Gfal2TransferParams 
     status.set_nostreams(params.getNumberOfStreams());
     status.set_timeout(params.getTimeout());
     status.set_buffersize(params.getTcpBuffersize());
-    status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    status.set_timestamp(millisecondsSinceEpoch());
     status.set_transfer_status("UPDATE");
     status.set_process_id(getpid());
 
@@ -138,7 +138,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     // Log file
     events::MessageLog log;
 
-    log.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    log.set_timestamp(millisecondsSinceEpoch());
     log.set_job_id(transfer.jobId);
     log.set_file_id(transfer.fileId);
     log.set_host(fts3::common::getFullHostname());
@@ -150,7 +150,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     // Status
     events::Message status;
 
-    status.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    status.set_timestamp(millisecondsSinceEpoch());
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
     status.set_source_se(transfer.source.host);
@@ -289,7 +289,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 void LegacyReporter::sendPing(const Transfer &transfer)
 {
     events::MessageUpdater ping;
-    ping.set_timestamp(Transfer::Statistics::timestampMilliseconds());
+    ping.set_timestamp(millisecondsSinceEpoch());
     ping.set_job_id(transfer.jobId);
     ping.set_file_id(transfer.fileId);
     ping.set_transfer_status("ACTIVE");
