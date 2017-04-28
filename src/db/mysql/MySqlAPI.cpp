@@ -1233,7 +1233,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::strin
 }
 
 
-boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn,
+boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, int fileId,
         std::string newState, std::string transferMessage,
         int processId, double filesize, double duration, bool retry)
@@ -1242,7 +1242,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
     {
         sql.begin();
 
-        double throughput = 0.0;
         std::string storedState;
 
         time_t now = time(NULL);
@@ -1329,33 +1328,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
                 query << ", STAGING_START = :time1";
                 stmt.exchange(soci::use(tTime, "time1"));
             }
-        }
-
-        if (filesize > 0 && duration > 0 && newState == "FINISHED")
-        {
-            if(throughputIn != 0.0)
-            {
-                throughput = convertKbToMb(throughputIn);
-            }
-            else
-            {
-                throughput = convertBtoM(filesize, duration);
-            }
-        }
-        else if (filesize > 0 && duration <= 0 && newState == "FINISHED")
-        {
-            if(throughputIn != 0.0)
-            {
-                throughput = convertKbToMb(throughputIn);
-            }
-            else
-            {
-                throughput = convertBtoM(filesize, 1);
-            }
-        }
-        else
-        {
-            throughput = 0.0;
         }
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "

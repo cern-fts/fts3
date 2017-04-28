@@ -173,8 +173,18 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         status.set_errcode(transfer.error->code());
     }
     else {
-        status.set_errcode(01);
+        status.set_errcode(0);
         status.set_transfer_status("FINISHED");
+
+        // Throughput in MB/sec
+        if (transfer.throughput > 0) {
+            status.set_throughput(transfer.throughput / 1024.0);
+        }
+        else {
+            status.set_throughput(
+                (static_cast<double>(transfer.fileSize) / std::max(transfer.getTransferDurationInSeconds(), 1.0)) / (1048576.0)
+            );
+        }
     }
 
     producer.runProducerStatus(status);
@@ -286,7 +296,7 @@ void LegacyReporter::sendPing(const Transfer &transfer)
     ping.set_source_surl(transfer.source.fullUri);
     ping.set_dest_surl(transfer.destination.fullUri);
     ping.set_process_id(getpid());
-    ping.set_throughput(convertKbToMb(transfer.throughput));
+    ping.set_throughput(transfer.throughput / 1024.0);
     ping.set_transferred(transfer.transferredBytes);
     ping.set_source_turl("gsiftp:://fake");
     ping.set_dest_turl("gsiftp:://fake");
