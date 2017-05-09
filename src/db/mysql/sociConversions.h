@@ -25,9 +25,6 @@
 #include "db/generic/FileTransferStatus.h"
 #include "db/generic/JobStatus.h"
 #include "db/generic/LinkConfig.h"
-#include "db/generic/StorageElement.h"
-#include "db/generic/SeGroup.h"
-#include "db/generic/SeProtocolConfig.h"
 #include "db/generic/ShareConfig.h"
 #include "db/generic/CloudStorageAuth.h"
 #include <soci.h>
@@ -179,19 +176,6 @@ struct type_conversion<TransferFile>
 };
 
 template <>
-struct type_conversion<SeProtocolConfig>
-{
-    typedef values base_type;
-
-    static void from_base(values const& v, indicator, SeProtocolConfig& protoConfig)
-    {
-        protoConfig.tcpBufferSize = v.get<int>("tcp_buffer_size", 0);
-        protoConfig.numberOfStreams = v.get<int>("nostreams", 0);
-        protoConfig.transferTimeout = v.get<int>("URLCOPY_TX_TO", 0);
-    }
-};
-
-template <>
 struct type_conversion<JobStatus>
 {
     typedef values base_type;
@@ -302,43 +286,6 @@ struct type_conversion<FileTransferStatus>
 };
 
 template <>
-struct type_conversion<StorageElement>
-{
-    typedef values base_type;
-
-    static void from_base(values const& v, indicator, StorageElement& se)
-    {
-        se.endpoint = v.get<std::string>("endpoint");
-        se.seType  = v.get<std::string>("se_type");
-        se.site     = v.get<std::string>("site");
-        se.name     = v.get<std::string>("name");
-        se.state    = v.get<std::string>("state");
-        se.version  = v.get<std::string>("version");
-        se.host     = v.get<std::string>("host");
-        se.seTransferType     = v.get<std::string>("se_transfer_type");
-        se.seTransferProtocol = v.get<std::string>("se_transfer_protocol");
-        se.seControlProtocol  = v.get<std::string>("se_control_protocol");
-        se.gocdb_id = v.get<std::string>("gocdb_id");
-    }
-};
-
-template <>
-struct type_conversion<SeConfig>
-{
-    typedef values base_type;
-
-    static void from_base(values const& v, indicator, SeConfig& config)
-    {
-        config.source         = v.get<std::string>("source");
-        config.destination    = v.get<std::string>("dest");
-        config.vo             = v.get<std::string>("vo");
-        config.symbolicName   = v.get<std::string>("symbolicName");
-        config.state          = v.get<std::string>("state");
-    }
-
-};
-
-template <>
 struct type_conversion<ShareConfig>
 {
     typedef values base_type;
@@ -353,20 +300,6 @@ struct type_conversion<ShareConfig>
 };
 
 template <>
-struct type_conversion<SeGroup>
-{
-    typedef values base_type;
-
-    static void from_base(values const& v, indicator, SeGroup& grp)
-    {
-        grp.active       = v.get<int>("active", -1);
-        grp.groupName    = v.get<std::string>("groupName");
-        grp.member       = v.get<std::string>("member");
-        grp.symbolicName = v.get<std::string>("symbolicName");
-    }
-};
-
-template <>
 struct type_conversion<LinkConfig>
 {
     typedef values base_type;
@@ -375,12 +308,11 @@ struct type_conversion<LinkConfig>
     {
         lnk.source          = v.get<std::string>("source");
         lnk.destination     = v.get<std::string>("destination");
-        lnk.state           = v.get<std::string>("state");
-        lnk.symbolicName    = v.get<std::string>("symbolicName");
-        lnk.numberOfStreams = v.get<int>("nostreams");
-        lnk.tcpBufferSize   = v.get<int>("tcp_buffer_size");
-        lnk.transferTimeout = v.get<int>("urlcopy_tx_to");
-        lnk.autoTuning      = v.get<std::string>("auto_tuning");
+        lnk.minActive       = v.get<int>("min_active", 0);
+        lnk.maxActive       = v.get<int>("max_active", 0);
+        lnk.optimizerMode   = v.get<OptimizerMode>("optimizer_mode", kOptimizerDisabled);
+        lnk.tcpBufferSize   = v.get<int>("tcp_buffer_size", 0);
+        lnk.numberOfStreams = v.get<int>("nostreams", 0);
     }
 };
 
@@ -413,6 +345,44 @@ struct type_conversion<CloudStorageAuth>
         auth.accessToken = v.get<std::string>("access_token", "");
         auth.accessTokenSecret = v.get<std::string>("access_token_secret", "");
         auth.requestToken = v.get<std::string>("request_token", "");
+    }
+};
+
+template<>
+struct type_conversion<boost::logic::tribool>
+{
+    typedef int base_type;
+
+    static void from_base(int v, indicator ind, boost::logic::tribool& tribool)
+    {
+        if (ind == soci::i_null) {
+            tribool = boost::logic::indeterminate;
+        }
+        else {
+            tribool = (v != 0);
+        }
+    }
+};
+
+template<>
+struct type_conversion<OptimizerMode>
+{
+    typedef int base_type;
+
+    static void from_base(int v, indicator ind, OptimizerMode& mode)
+    {
+        if (ind == soci::i_null) {
+            mode = kOptimizerDisabled;
+        }
+        else if (v > kOptimizerAggressive) {
+            mode = kOptimizerAggressive;
+        }
+        else if (v < 0) {
+            mode = kOptimizerDisabled;
+        }
+        else {
+            mode = static_cast<OptimizerMode>(v);
+        }
     }
 };
 

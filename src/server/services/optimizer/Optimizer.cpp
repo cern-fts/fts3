@@ -31,10 +31,7 @@ namespace optimizer {
 
 
 Optimizer::Optimizer(OptimizerDataSource *ds):
-    dataSource(ds), optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
-    globalMaxPerLink(DEFAULT_MAX_ACTIVE_PER_LINK),
-    globalMaxPerStorage(DEFAULT_MAX_ACTIVE_ENDPOINT_LINK),
-    optimizerMode(kConservative)
+    dataSource(ds), optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10)
 {
 }
 
@@ -59,27 +56,6 @@ void Optimizer::setMaxNumberOfStreams(int newValue)
 void Optimizer::run(void)
 {
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
-
-    // Query global config once
-    globalMaxPerStorage = dataSource->getGlobalStorageLimit();
-    if (globalMaxPerStorage <= 0) {
-        globalMaxPerStorage = DEFAULT_MAX_ACTIVE_ENDPOINT_LINK;
-    }
-
-    globalMaxPerLink = dataSource->getGlobalLinkLimit();
-    if (globalMaxPerLink <= 0) {
-        globalMaxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
-    }
-
-    int rawOptMode = dataSource->getOptimizerMode();
-    if (rawOptMode < kConservative) {
-        rawOptMode = static_cast<int>(kConservative);
-    }
-    if (rawOptMode > kAggressive) {
-        rawOptMode = static_cast<int>(kAggressive);
-    }
-    optimizerMode = static_cast<OptimizerMode>(rawOptMode);
-
     try {
         std::list<Pair> pairs = dataSource->getActivePairs();
 
@@ -98,9 +74,10 @@ void Optimizer::run(void)
 
 void Optimizer::runOptimizerForPair(const Pair &pair)
 {
-    if(optimizeConnectionsForPair(pair)) {
+    OptimizerMode optMode = dataSource->getOptimizerMode(pair.source, pair.destination);
+    if(optimizeConnectionsForPair(optMode, pair)) {
         // Optimize streams only if optimizeConnectionsForPair did store something
-        optimizeStreamsForPair(pair);
+        optimizeStreamsForPair(optMode, pair);
     }
 }
 

@@ -26,6 +26,7 @@
 #include "msg-bus/consumer.h"
 #include "msg-bus/producer.h"
 
+OptimizerMode getOptimizerModeInner(soci::session &sql, const std::string &source, const std::string &dest);
 
 class MySqlAPI : public GenericDbIfce
 {
@@ -167,13 +168,6 @@ public:
     /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId);
 
-    /// Return true if the group 'groupName' exists
-    virtual bool checkGroupExists(const std::string & groupName);
-
-    /// @return the group to which storage belong
-    /// @note   It will be the empty string if there is no group
-    virtual std::string getGroupForSe(const std::string storage);
-
     /// Get the link configuration for the link defined by the source and destination given
     virtual std::unique_ptr<LinkConfig> getLinkConfig(const std::string &source, const std::string &destination);
 
@@ -186,20 +180,6 @@ public:
 
     /// Get the list of VO share configurations for the given link
     virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination);
-
-    /// Register in the DB that the given file ID has been scheduled for a share configuration
-    virtual void addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
-        const std::string &vo);
-
-    /// Returns how many active transfers there is for the given link and VO
-    virtual int countActiveTransfers(const std::string &source, const std::string &destination,
-        const std::string &vo);
-
-    /// Returns how many outbound transfers there is from the given storage and VO
-    virtual int countActiveOutboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo);
-
-    /// Returns how many inbound transfers there is towards the given storage for the given VO
-    virtual int countActiveInboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo);
 
     /// Returns the total value of all the shares for the given link and set of VO
     virtual int sumUpVoShares(const std::string &source, const std::string &destination,
@@ -259,23 +239,19 @@ public:
     virtual bool getDrain();
 
     /// Returns if for the given link, UDT has been enabled
-    virtual bool isProtocolUDT(const std::string &sourceSe, const std::string &destSe);
+    virtual bool isProtocolUDT(const std::string &source, const std::string &dest);
 
     /// Returns if for the given link, IPv6 has been enabled
-    virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe);
+    virtual bool isProtocolIPv6(const std::string &source, const std::string &dest);
 
     /// Returns how many streams must be used for the given link
-    virtual int getStreamsOptimization(const std::string &voName,
-        const std::string &sourceSe, const std::string &destSe);
+    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);
 
     /// Returns the globally configured transfer timeout
     virtual int getGlobalTimeout(const std::string &voName);
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
     virtual int getSecPerMb(const std::string &voName);
-
-    /// Returns the optimizer level for the TCP buffersize
-    virtual int getBufferOptimization();
 
     /// Puts into the vector queue the Queues for which there are pending transfers
     virtual void getQueuesWithPending(std::vector<QueueId>& queues);

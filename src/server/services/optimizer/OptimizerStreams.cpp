@@ -33,10 +33,10 @@ namespace optimizer {
 // This part of the algorithm will check how to split the number of connections
 // between the number of available transfers.
 // Basically, divide the number of connections between the number of queued+active
-void Optimizer::optimizeStreamsForPair(const Pair &pair)
+void Optimizer::optimizeStreamsForPair(OptimizerMode optMode, const Pair &pair)
 {
     // No optimization for streams, so go for 1
-    if (optimizerMode == kConservative) {
+    if (optMode <= kOptimizerConservative) {
         dataSource->storeOptimizerStreams(pair, 1);
         return;
     }

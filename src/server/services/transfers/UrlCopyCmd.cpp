@@ -206,25 +206,28 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
 }
 
 
-void UrlCopyCmd::setFromProtocol(const ProtocolResolver::protocol &protocol)
+void UrlCopyCmd::setFromProtocol(const TransferFile::ProtocolParameters &protocol)
 {
     if (protocol.nostreams > 0) {
         setOption("nstreams", protocol.nostreams);
     }
 
-    if (protocol.urlcopy_tx_to > 0) {
-        setOption("timeout", protocol.urlcopy_tx_to);
+    if (protocol.timeout > 0) {
+        setOption("timeout", protocol.timeout);
     }
 
-    if (protocol.tcp_buffer_size > 0) {
-        setOption("tcp-buffersize", protocol.tcp_buffer_size);
+    if (protocol.buffersize > 0) {
+        setOption("tcp-buffersize", protocol.buffersize);
     }
 
     if (!indeterminate(protocol.ipv6)) {
         this->setIPv6(protocol.ipv6);
     }
+    if (!indeterminate(protocol.udt)) {
+        this->setUDT(protocol.udt);
+    }
 
-    setFlag("strict-copy", protocol.strict_copy);
+    setFlag("strict-copy", protocol.strictCopy);
 }
 
 

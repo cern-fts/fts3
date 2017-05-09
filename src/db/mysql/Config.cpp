@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2016
+ * Copyright (c) CERN 2013-2017
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -23,7 +23,7 @@
 
 #include "common/Exceptions.h"
 
-#include <boost/tokenizer.hpp>
+#include <boost/logic/tribool.hpp>
 #include <boost/regex.hpp>
 
 using namespace fts3::common;
@@ -94,21 +94,22 @@ unsigned MySqlAPI::getDebugLevel(const std::string& sourceStorage, const std::st
     try
     {
         unsigned level = 0;
+        soci::indicator isLevelNull = soci::i_ok;
 
-        if(sourceStorage.empty() || destStorage.empty())
-            return 0;
-
-        soci::statement stmt =
-            (sql.prepare
-                << " SELECT debug_level "
-                    " FROM t_debug "
-                    " WHERE source_se = :source OR dest_se= :dest_se and debug_level is NOT NULL LIMIT 1 ", soci::use(
-                sourceStorage), soci::use(destStorage), soci::into(
-                level));
+        soci::statement stmt = (sql.prepare <<
+            " SELECT MAX(debug_level) "
+            " FROM t_se "
+            " WHERE storage IN (:source, :destination, '*') ",
+            soci::use(sourceStorage), soci::use(destStorage),
+            soci::into(level, isLevelNull)
+        );
         stmt.execute(true);
 
-        if(sql.got_data())
+        if(isLevelNull == soci::i_ok) {
             return level;
+        } else {
+            return 0;
+        }
     }
     catch (std::exception& e)
     {
@@ -118,7 +119,6 @@ unsigned MySqlAPI::getDebugLevel(const std::string& sourceStorage, const std::st
     {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-    return 0;
 }
 
 
@@ -167,54 +167,6 @@ bool MySqlAPI::isDnBlacklisted(const std::string& userDn)
 }
 
 
-bool MySqlAPI::checkGroupExists(const std::string & groupName)
-{
-    soci::session sql(*connectionPool);
-
-    bool exists = false;
-    try
-    {
-        std::string grp;
-        sql << "SELECT groupName FROM t_group_members WHERE groupName = :group",
-            soci::use(groupName), soci::into(grp);
-
-        exists = sql.got_data();
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return exists;
-}
-
-
-std::string MySqlAPI::getGroupForSe(const std::string se)
-{
-    soci::session sql(*connectionPool);
-
-    std::string group;
-    try
-    {
-        sql << "SELECT groupName FROM t_group_members "
-            "WHERE member = :member",
-            soci::use(se), soci::into(group);
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return group;
-}
-
-
 std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);
@@ -223,7 +175,8 @@ std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(const std::string &source, c
     {
         std::unique_ptr<LinkConfig> config(new LinkConfig);
 
-        sql << "SELECT * FROM t_link_config WHERE source = :source AND destination = :dest",
+        sql << "SELECT source_se, dest_se, min_active, max_active, optimizer_mode, tcp_buffer_size, nostreams "
+               "FROM t_link_config WHERE source = :source AND destination = :dest",
             soci::use(source), soci::use(destination),
             soci::into(*config);
 
@@ -437,24 +390,23 @@ int MySqlAPI::getMaxTimeInQueue(const std::string &voName)
 }
 
 
-int getOptimizerMode(soci::session &sql)
+OptimizerMode getOptimizerModeInner(soci::session &sql, const std::string &source, const std::string &dest)
 {
     try {
-        soci::indicator ind = soci::i_ok;
-        int mode = 0;
+        OptimizerMode mode = kOptimizerDisabled;
 
         sql <<
-            " select mode_opt "
-                " from t_optimize_mode LIMIT 1",
-            soci::into(mode, ind);
+            "SELECT optimizer_mode FROM ("
+            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
+            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
+            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
+            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = '*' AND dest_se = '*' UNION "
+            "   SELECT 1 FROM dual "
+            ") AS o LIMIT 1",
+            soci::use(source, "source"), soci::use(dest, "dest"),
+            soci::into(mode);
 
-        if (ind == soci::i_ok) {
-            if (mode <= 0)
-                return 1;
-            else
-                return mode;
-        }
-        return 1;
+        return mode;
     }
     catch (std::exception &e) {
         throw UserError(std::string(__func__) + ": Caught mode exception " + e.what());
@@ -512,86 +464,86 @@ bool MySqlAPI::getDrainInternal(soci::session& sql)
 }
 
 
-bool MySqlAPI::isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname)
+bool MySqlAPI::isProtocolUDT(const std::string &source, const std::string &dest)
 {
     soci::session sql(*connectionPool);
 
-    try
-    {
-        soci::indicator isNullUDT = soci::i_ok;
-        std::string udt;
+    try {
+        boost::logic::tribool srcEnabled, dstEnabled, starEnabled;
+        sql << "SELECT udt FROM t_se WHERE storage = :source", soci::use(source), soci::into(srcEnabled);
+        sql << "SELECT udt FROM t_se WHERE storage = :dest", soci::use(dest), soci::into(dstEnabled);
+        sql << "SELECT udt FROM t_se WHERE storage = '*'", soci::into(starEnabled);
 
-        sql << " select udt from t_optimize where (source_se = :source_se OR source_se = :dest_se) and udt is not NULL ",
-            soci::use(source_hostname), soci::use(destination_hostname), soci::into(udt, isNullUDT);
-
-        if(sql.got_data() && udt == "on")
+        // True if both are defined and true
+        if (srcEnabled && dstEnabled) {
             return true;
-
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-
-    return false;
-}
-
-
-bool MySqlAPI::isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        soci::indicator isNullUDT = soci::i_ok;
-        std::string ipv6;
-
-        sql << " select ipv6 from t_optimize where (source_se = :source_se OR source_se = :dest_se) and ipv6 is not NULL ",
-            soci::use(source_hostname), soci::use(destination_hostname), soci::into(ipv6, isNullUDT);
-
-        if(sql.got_data() && ipv6 == "on")
-            return true;
-
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-
-    return false;
-}
-
-
-int MySqlAPI::getStreamsOptimization(const std::string &voName, const std::string &sourceSe, const std::string &destSe)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        int globalConfig = 0;
-        sql << "SELECT global_tcp_stream "
-               " FROM t_server_config "
-               " WHERE vo_name IN (:vo, '*', NULL) "
-               " ORDER BY vo_name DESC LIMIT 1",
-            soci::use(voName), soci::into(globalConfig);
-        if(sql.got_data() && globalConfig > 0) {
-            return globalConfig;
         }
+        // True if either is defined and false
+        else if (!srcEnabled || !dstEnabled) {
+            return false;
+        }
+        // Otherwise (both undefined)
+        return bool(starEnabled);
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
 
+
+bool MySqlAPI::isProtocolIPv6(const std::string &source, const std::string &dest)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        boost::logic::tribool srcEnabled, dstEnabled, starEnabled;
+        sql << "SELECT ipv6 FROM t_se WHERE storage = :source", soci::use(source), soci::into(srcEnabled);
+        sql << "SELECT ipv6 FROM t_se WHERE storage = :dest", soci::use(dest), soci::into(dstEnabled);
+        sql << "SELECT ipv6 FROM t_se WHERE storage = '*'", soci::into(starEnabled);
+
+        // True if both are defined and true
+        if (srcEnabled && dstEnabled) {
+            return true;
+        }
+            // True if either is defined and false
+        else if (!srcEnabled || !dstEnabled) {
+            return false;
+        }
+        // Otherwise (both undefined)
+        return bool(starEnabled);
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
+int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
         int streams = 0;
-        soci::indicator isNullStreams = soci::i_ok;
-        sql << " SELECT nostreams FROM t_optimize_streams "
-            " WHERE source_se = :source_se AND dest_se = :dest_se",
-            soci::use(sourceSe), soci::use(destSe),
-            soci::into(streams, isNullStreams);
+        soci::indicator ind;
+
+        sql <<
+        "SELECT nostreams FROM ("
+        "   SELECT nostreams FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND nostreams IS NOT NULL UNION "
+        "   SELECT nostreams FROM t_optimizer WHERE source_se = :source AND dest_se = :dest"
+        ") AS cfg LIMIT 1",
+        soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
+        soci::into(streams, ind);
+
+        if (ind == soci::i_null) {
+            streams = 0;
+        }
 
         return streams;
     }
@@ -659,27 +611,6 @@ int MySqlAPI::getSecPerMb(const std::string &voName)
     {
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-}
-
-
-int MySqlAPI::getBufferOptimization()
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        return getOptimizerMode(sql);
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-
-    return 1; //default level
 }
 
 

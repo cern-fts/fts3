@@ -31,9 +31,6 @@
 
 #include "JobStatus.h"
 #include "FileTransferStatus.h"
-#include "SeConfig.h"
-#include "SeGroup.h"
-#include "SeProtocolConfig.h"
 #include "QueueId.h"
 #include "LinkConfig.h"
 #include "ShareConfig.h"
@@ -47,7 +44,6 @@
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
-#include "StorageElement.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -209,39 +205,18 @@ public:
     /// @note           This method is used only for reuse and multihop jobs
     virtual void forkFailed(const std::string& jobId) = 0;
 
-    /// Return true if the group 'groupName' exists
-    virtual bool checkGroupExists(const std::string & groupName) = 0;
-
-    /// @return the group to which storage belong
-    /// @note   It will be the empty string if there is no group
-    virtual std::string getGroupForSe(const std::string storage) = 0;
-
     /// Get the link configuration for the link defined by the source and destination given
     virtual std::unique_ptr<LinkConfig> getLinkConfig(const std::string &source, const std::string &destination) = 0;
 
     /// Register a new VO share configuration
-    virtual void addShareConfig(const ShareConfig& cfg) = 0;
+    //virtual void addShareConfig(const ShareConfig& cfg) = 0;
 
     /// Get the VO share configuration for the given link and VO
-    virtual std::unique_ptr<ShareConfig> getShareConfig(const std::string &source, const std::string &destination,
-        const std::string &vo) = 0;
+    //virtual std::unique_ptr<ShareConfig> getShareConfig(const std::string &source, const std::string &destination,
+    //    const std::string &vo) = 0;
 
     /// Get the list of VO share configurations for the given link
-    virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination) = 0;
-
-    /// Register in the DB that the given file ID has been scheduled for a share configuration
-    virtual void addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
-        const std::string &vo) = 0;
-
-    /// Returns how many active transfers there is for the given link and VO
-    virtual int countActiveTransfers(const std::string &source, const std::string &destination,
-        const std::string &vo) = 0;
-
-    /// Returns how many outbound transfers there is from the given storage and VO
-    virtual int countActiveOutboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo) = 0;
-
-    /// Returns how many inbound transfers there is towards the given storage for the given VO
-    virtual int countActiveInboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo) = 0;
+    //virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination) = 0;
 
     /// Returns the total value of all the shares for the given link and set of VO
     virtual int sumUpVoShares(const std::string &source, const std::string &destination,
@@ -313,17 +288,13 @@ public:
     virtual bool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe) = 0;
 
     /// Returns how many streams must be used for the given link
-    virtual int getStreamsOptimization(const std::string &voName,
-        const std::string &sourceSe, const std::string &destSe)= 0;
+    virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)= 0;
 
     /// Returns the globally configured transfer timeout
     virtual int getGlobalTimeout(const std::string &voName) = 0;
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
     virtual int getSecPerMb(const std::string &voName) = 0;
-
-    /// Returns the optimizer level for the TCP buffersize
-    virtual int getBufferOptimization() = 0;
 
     /// Puts into the vector queue the Queues for which there are pending transfers
     virtual void getQueuesWithPending(std::vector<QueueId>& queues) = 0;

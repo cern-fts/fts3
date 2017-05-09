@@ -26,7 +26,6 @@
 #include <string>
 
 #include "db/generic/TransferFile.h"
-#include "ProtocolResolver.h"
 
 namespace fts3 {
 namespace server {
@@ -70,7 +69,7 @@ public:
 
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn);
 
-    void setFromProtocol(const ProtocolResolver::protocol& protocol);
+    void setFromProtocol(const TransferFile::ProtocolParameters& protocol);
     void setSecondsPerMB(long);
 
     void setNumberOfActive(int);

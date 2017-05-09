@@ -27,6 +27,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <db/generic/LinkConfig.h>
 
 #include "common/Uri.h"
 
@@ -96,14 +97,12 @@ public:
     virtual std::list<Pair> getActivePairs(void) = 0;
 
     // Return the optimizer configuration value
-    virtual int getOptimizerMode(void) = 0;
+    virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
 
     // Return true if retry is enabled for this server
     virtual bool isRetryEnabled(void) = 0;
 
     // Get configured limits
-    virtual int getGlobalStorageLimit(void) = 0;
-    virtual int getGlobalLinkLimit(void) = 0;
     virtual void getPairLimits(const Pair &pair, Range *range, Limits *limits) = 0;
 
     // Get the stored optimizer value (current value)
@@ -136,27 +135,18 @@ public:
 
 // Optimizer implementation
 class Optimizer: public boost::noncopyable {
-public:
-    typedef enum {
-        kConservative = 1, // One by one
-        kNormal = 2,       // Increment faster
-        kAggressive = 3    // Optimize streams too
-    } OptimizerMode;
-
 protected:
     std::map<Pair, PairState> inMemoryStore;
     OptimizerDataSource *dataSource;
     boost::posix_time::time_duration optimizerSteadyInterval;
     int maxNumberOfStreams;
-    int globalMaxPerLink, globalMaxPerStorage;
-    OptimizerMode optimizerMode;
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
-    bool optimizeConnectionsForPair(const Pair &);
+    bool optimizeConnectionsForPair(OptimizerMode optMode, const Pair &);
 
     // Run the optimization algorithm for the number of streams.
-    void optimizeStreamsForPair(const Pair &);
+    void optimizeStreamsForPair(OptimizerMode optMode, const Pair &);
 
     // Stores into rangeActiveMin and rangeActiveMax the working range for the optimizer
     // Returns true if the range is configured, so the optimizer can start higher by default

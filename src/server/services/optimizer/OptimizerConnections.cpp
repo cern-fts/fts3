@@ -58,17 +58,6 @@ bool Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
     // Query specific limits
     dataSource->getPairLimits(pair, range, limits);
 
-    // If limits not set, use global
-    if (limits->source <= 0) {
-        limits->source = globalMaxPerStorage;
-    }
-    if (limits->destination == 0) {
-        limits->destination = globalMaxPerStorage;
-    }
-    if (limits->link == 0) {
-        limits->link = globalMaxPerLink;
-    }
-
     // If range not set, use defaults
     if (range->min <= 0) {
         if (pair.isLanTransfer()) {
@@ -133,7 +122,7 @@ static int optimizeNotEnoughInformation(const PairState &, const PairState &, in
 
 // To be called when the success rate is good
 static int optimizeGoodSuccessRate(const PairState &current, const PairState &previous, int previousValue,
-    Optimizer::OptimizerMode optimizerMode, std::stringstream& rationale)
+    OptimizerMode optMode, std::stringstream& rationale)
 {
     int decision;
 
@@ -150,7 +139,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
         }
     }
     else if (current.ema > previous.ema) {
-        if (optimizerMode >= Optimizer::kNormal) {
+        if (optMode >= kOptimizerNormal) {
             decision = previousValue + 2;
         }
         else {
@@ -171,7 +160,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // the total number of connections between storages.
 // If the success rate is good, and the throughput improves, it will increase the number
 // of connections.
-bool Optimizer::optimizeConnectionsForPair(const Pair &pair)
+bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
     // Optimizer working values
     Range range;
@@ -285,11 +274,11 @@ bool Optimizer::optimizeConnectionsForPair(const Pair &pair)
     else if ((current.successRate == MAX_SUCCESS_RATE ||
              (current.successRate >= MED_SUCCESS_RATE && current.successRate >= previous.successRate)) &&
              current.retryCount <= previous.retryCount)  {
-        decision = optimizeGoodSuccessRate(current, previous, previousValue, optimizerMode, rationale);
+        decision = optimizeGoodSuccessRate(current, previous, previousValue, optMode, rationale);
     }
     // Not enough information to take any decision
     else {
-        decision = optimizeGoodSuccessRate(current, previous, previousValue, optimizerMode, rationale);
+        decision = optimizeGoodSuccessRate(current, previous, previousValue, optMode, rationale);
     }
 
     // Apply margins to the decision
@@ -306,14 +295,14 @@ bool Optimizer::optimizeConnectionsForPair(const Pair &pair)
     // If stream optimize is enabled, push forward and let those extra connections
     // go into streams.
     // Otherwise, stop pushing.
-    if (optimizerMode == kConservative) {
+    if (optMode == kOptimizerConservative) {
         if (decision > previousValue && current.queueSize < decision) {
             decision = previousValue;
             rationale << ". Not enough files in the queue";
         }
     }
     // Do not go too far with the number of connections
-    if (optimizerMode >= kNormal) {
+    if (optMode >= kOptimizerNormal) {
         if (decision > current.queueSize * maxNumberOfStreams) {
             decision = std::max(current.queueSize, 1) * maxNumberOfStreams;
             rationale << ". Too many streams";

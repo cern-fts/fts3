@@ -66,6 +66,7 @@ protected:
     std::map<Pair, OptimizerRegister> registry;
     std::map<Pair, int> streamsRegistry;
     std::map<Pair, TransferList> transferStore;
+    OptimizerMode mockOptimizerMode;
 
     void populateTransfers(const Pair &pair, const std::string &state, int count,
         bool recoverable = false, double thr = 10, uint64_t filesize = 1024) {
@@ -110,9 +111,7 @@ protected:
 
 public:
     BaseOptimizerFixture(): Optimizer(this) {
-        globalMaxPerStorage = DEFAULT_MAX_ACTIVE_ENDPOINT_LINK;
-        globalMaxPerLink = DEFAULT_MAX_ACTIVE_PER_LINK;
-        optimizerMode = kConservative;
+        mockOptimizerMode = kOptimizerDisabled;
     }
 
     std::list<Pair> getActivePairs(void) {
@@ -121,20 +120,12 @@ public:
         return pairs;
     }
 
-    int getOptimizerMode(void) {
-        return 2;
+    OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
+        return mockOptimizerMode;
     }
 
     bool isRetryEnabled(void) {
         return false;
-    }
-
-    int getGlobalStorageLimit(void) {
-        return 0;
-    }
-
-    int getGlobalLinkLimit(void) {
-        return 0;
     }
 
     void getPairLimits(const Pair&, Range *range, Limits *limits) {
@@ -448,7 +439,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
 // enough queued. Optimizer mode is 1, so should stay stable.
 BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
 {
-    optimizerMode = kConservative;
+    mockOptimizerMode = kOptimizerConservative;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
@@ -482,7 +473,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
 // enough queued. Optimizer mode is 2, so streams should be increased.
 BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
 {
-    optimizerMode = kAggressive;
+    mockOptimizerMode = kOptimizerAggressive;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
@@ -558,7 +549,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 2);
 
     setMaxNumberOfStreams(4);
-    optimizerMode = kAggressive;
+    mockOptimizerMode = kOptimizerAggressive;
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);

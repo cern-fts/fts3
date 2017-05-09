@@ -43,6 +43,7 @@ public:
         int buffersize;
         bool strictCopy;
         boost::tribool ipv6;
+        boost::tribool udt;
         // If true, gfal2/davix must generate the S3 signature with the bucket on the path
         bool s3Alternate;
 

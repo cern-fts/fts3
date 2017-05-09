@@ -21,10 +21,7 @@
 #include "FileTransferExecutor.h"
 
 #include "common/Logger.h"
-#include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
-#include "FileTransferScheduler.h"
-#include "ProtocolResolver.h"
 #include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
@@ -74,122 +71,87 @@ void FileTransferExecutor::run(boost::any & ctx)
     }
 
     try {
-        std::string source_hostname = tf.sourceSe;
-        std::string destin_hostname = tf.destSe;
-        std::string params;
-
         // if the pair was already checked and not scheduled skip it
-        if (notScheduled.count(make_pair(source_hostname, destin_hostname))) {
+        if (notScheduled.count(make_pair(tf.sourceSe, tf.destSe))) {
             return;
         }
 
         // check if manual config exist for this pair and vo
-
         std::vector< std::shared_ptr<ShareConfig> > cfgs;
-
-        ConfigurationAssigner cfgAssigner(tf);
-        cfgAssigner.assign(cfgs);
-
-        FileTransferScheduler scheduler(
-            tf,
-            cfgs,
-            tfh.getDestinations(source_hostname),
-            tfh.getSources(destin_hostname),
-            tfh.getDestinationsVos(source_hostname),
-            tfh.getSourcesVos(destin_hostname)
-        );
 
         int currentActive = 0;
         // Set to READY state when true
-        if (scheduler.schedule(currentActive))
+        if (db->isTrAllowed(tf.sourceSe, tf.destSe, currentActive))
         {
-            SeProtocolConfig protocol;
-            UrlCopyCmd cmd_builder;
+            UrlCopyCmd cmdBuilder;
 
-            boost::optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(tf);
-
-            if (user_protocol.is_initialized()) {
-                cmd_builder.setFromProtocol(user_protocol.get());
-            }
-            else {
-                ProtocolResolver::protocol protocol;
-
-                protocol.nostreams = db->getStreamsOptimization(tf.voName, source_hostname, destin_hostname);
-                protocol.urlcopy_tx_to = db->getGlobalTimeout(tf.voName);
-                int secPerMB = db->getSecPerMb(tf.voName);
-                if (secPerMB > 0) {
-                    cmd_builder.setSecondsPerMB(secPerMB);
-                }
-
-                cmd_builder.setFromProtocol(protocol);
+            int secPerMB = db->getSecPerMb(tf.voName);
+            if (secPerMB > 0) {
+                cmdBuilder.setSecondsPerMB(secPerMB);
             }
 
-            if (!cfgs.empty()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " <<
-                destin_hostname << commit;
-                ProtocolResolver resolver(tf, cfgs);
-                bool protocolExists = resolver.resolve();
-                if (protocolExists) {
-                    ProtocolResolver::protocol protocol;
-                    protocol.nostreams = resolver.getNoStreams();
-                    protocol.tcp_buffer_size = resolver.getTcpBufferSize();
-                    protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
-                    protocol.strict_copy = resolver.getStrictCopy();
-                    protocol.ipv6 = resolver.getIPv6();
-                    cmd_builder.setFromProtocol(protocol);
-                }
+            TransferFile::ProtocolParameters protocolParams = tf.getProtocolParameters();
+
+            if (tf.internalFileParams.empty()) {
+                protocolParams.nostreams = db->getStreamsOptimization(tf.sourceSe, tf.destSe);
+                protocolParams.timeout = db->getGlobalTimeout(tf.voName);
+                protocolParams.ipv6 = db->isProtocolIPv6(tf.sourceSe, tf.destSe);
+                protocolParams.udt = db->isProtocolUDT(tf.sourceSe, tf.destSe);
+                //protocolParams.buffersize
             }
+
+            cmdBuilder.setFromProtocol(protocolParams);
 
             // Update from the transfer
-            cmd_builder.setFromTransfer(tf, false, db->publishUserDn(tf.voName));
+            cmdBuilder.setFromTransfer(tf, false, db->publishUserDn(tf.voName));
 
             // OAuth credentials
             std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);
             if (!cloudConfigFile.empty()) {
-                cmd_builder.setOAuthFile(cloudConfigFile);
+                cmdBuilder.setOAuthFile(cloudConfigFile);
             }
 
             // Debug level
-            cmd_builder.setDebugLevel(db->getDebugLevel(source_hostname, destin_hostname));
+            cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));
 
             // Enable monitoring
-            cmd_builder.setMonitoring(monitoringMsg);
+            cmdBuilder.setMonitoring(monitoringMsg);
 
             // Proxy
             if (!proxy.empty()) {
-                cmd_builder.setProxy(proxy);
+                cmdBuilder.setProxy(proxy);
             }
 
             // Info system
             if (!infosys.empty()) {
-                cmd_builder.setInfosystem(infosys);
+                cmdBuilder.setInfosystem(infosys);
             }
 
             // UDT and IPv6
-            cmd_builder.setUDT(db->isProtocolUDT(source_hostname, destin_hostname));
-            if (!cmd_builder.isIPv6Explicit()) {
-                cmd_builder.setIPv6(db->isProtocolIPv6(source_hostname, destin_hostname));
+            cmdBuilder.setUDT(db->isProtocolUDT(tf.sourceSe, tf.destSe));
+            if (!cmdBuilder.isIPv6Explicit()) {
+                cmdBuilder.setIPv6(db->isProtocolIPv6(tf.sourceSe, tf.destSe));
             }
 
             // FTS3 host name
-            cmd_builder.setFTSName(ftsHostName);
+            cmdBuilder.setFTSName(ftsHostName);
 
             // Pass the number of active transfers for this link to url_copy
-            cmd_builder.setNumberOfActive(currentActive);
+            cmdBuilder.setNumberOfActive(currentActive);
 
             // Number of retries and maximum number allowed
             int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);
-            cmd_builder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
+            cmdBuilder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
 
             int retry_max = db->getRetry(tf.jobId);
-            cmd_builder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
+            cmdBuilder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
 
             // Log directory
-            cmd_builder.setLogDir(logsDir);
+            cmdBuilder.setLogDir(logsDir);
 
             // Build the parameters
-            std::string params = cmd_builder.generateParameters();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd_builder << commit;
+            std::string params = cmdBuilder.generateParameters();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmdBuilder << commit;
             ExecuteProcess pr(UrlCopyCmd::Program, params);
 
             // check again here if the server has stopped - just in case
@@ -218,9 +180,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             events::Message protoMsg;
             protoMsg.set_transfer_status("UPDATE");
             protoMsg.set_file_id(tf.fileId);
-            protoMsg.set_buffersize(cmd_builder.getBuffersize());
-            protoMsg.set_nostreams(cmd_builder.getNoStreams());
-            protoMsg.set_timeout(cmd_builder.getTimeout());
+            protoMsg.set_buffersize(cmdBuilder.getBuffersize());
+            protoMsg.set_nostreams(cmdBuilder.getNoStreams());
+            protoMsg.set_timeout(cmdBuilder.getTimeout());
             db->updateProtocol(std::vector<events::Message>{protoMsg});
 
             // Spawn the fts_url_copy
@@ -265,7 +227,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             }
         }
         else {
-            notScheduled.insert(make_pair(source_hostname, destin_hostname));
+            notScheduled.insert(make_pair(tf.sourceSe, tf.destSe));
         }
     }
     catch (std::exception &e) {

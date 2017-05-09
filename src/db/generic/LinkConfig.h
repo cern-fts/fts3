@@ -23,23 +23,26 @@
 
 #include <string>
 
+enum OptimizerMode {
+    kOptimizerDisabled = 0,
+    kOptimizerConservative = 1,
+    kOptimizerNormal = 2,
+    kOptimizerAggressive = 3
+};
 
 class LinkConfig
 {
 public:
-    LinkConfig() : numberOfStreams(2), tcpBufferSize(0), transferTimeout(3600) {};
+    LinkConfig(): minActive(0), maxActive(0), optimizerMode(kOptimizerDisabled), tcpBufferSize(0), numberOfStreams(0) {}
     ~LinkConfig() {};
 
     std::string source;
     std::string destination;
-    std::string state;
-    std::string symbolicName;
-
-    int numberOfStreams;
+    int minActive;
+    int maxActive;
+    OptimizerMode optimizerMode;
     int tcpBufferSize;
-    int transferTimeout;
-
-    std::string autoTuning;
+    int numberOfStreams;
 };
 
 #endif // LINKCONFIG_H_

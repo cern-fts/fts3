@@ -35,7 +35,7 @@ static void setNewOptimizerValue(soci::session &sql,
 {
     sql.begin();
     sql <<
-        "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) "
+        "INSERT INTO t_optimizer (source_se, dest_se, active, ema, datetime) "
         "VALUES (:source, :dest, :active, :ema, UTC_TIMESTAMP()) "
         "ON DUPLICATE KEY UPDATE "
         "   active = :active, ema = :ema, datetime = UTC_TIMESTAMP()",
@@ -138,9 +138,8 @@ public:
     }
 
 
-    int getOptimizerMode(void) {
-        extern int getOptimizerMode(soci::session &sql);
-        return getOptimizerMode(sql);
+    OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) {
+        return getOptimizerModeInner(sql, source, dest);
     }
 
     bool isRetryEnabled(void) {
@@ -151,40 +150,6 @@ public:
         return isRetryNull != soci::i_null && retryValue;
     }
 
-    int getGlobalStorageLimit(void) {
-        int maxPerSe = 0;
-        soci::indicator isSeNull;
-
-        sql << "SELECT max_per_se "
-            "FROM t_server_config "
-            "WHERE max_per_se > 0 AND"
-            "   vo_name IS NULL OR vo_name = '*'",
-            soci::into(maxPerSe, isSeNull);
-
-        if (maxPerSe < 0 || isSeNull != soci::i_ok) {
-            maxPerSe = 0;
-        }
-
-        return maxPerSe;
-    }
-
-    int getGlobalLinkLimit(void) {
-        int linkLimit = 0;
-        soci::indicator isLinkNull;
-
-        sql << "SELECT max_per_link "
-            "FROM t_server_config "
-            "WHERE max_per_link > 0 AND"
-            "   vo_name IS NULL OR vo_name = '*'",
-            soci::into(linkLimit, isLinkNull);
-
-        if (linkLimit < 0 || isLinkNull != soci::i_ok) {
-            linkLimit = 0;
-        }
-
-        return linkLimit;
-    }
-
     void getPairLimits(const Pair &pair, Range *range, Limits *limits) {
         soci::indicator nullIndicator;
 
@@ -192,35 +157,36 @@ public:
         limits->throughputSource = 0;
         limits->throughputDestination = 0;
 
-        sql << "SELECT active, throughput FROM t_optimize WHERE source_se = :source_se AND active IS NOT NULL",
+        // Storage limits
+        sql <<
+            "SELECT outbound_max_throughput, outbound_max_active FROM ("
+            "   SELECT outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = :source UNION "
+            "   SELECT outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = '*' "
+            ") AS se LIMIT 1",
             soci::use(pair.source),
-            soci::into(limits->source), soci::into(limits->throughputSource, nullIndicator);
+            soci::into(limits->source, nullIndicator), soci::into(limits->throughputSource, nullIndicator);
 
-        sql << "SELECT active, throughput FROM t_optimize WHERE dest_se = :dest_se AND active IS NOT NULL",
-            soci::use(pair.destination),
-            soci::into(limits->destination), soci::into(limits->throughputDestination, nullIndicator);
+        sql <<
+            "SELECT inbound_max_throughput, inbound_max_active FROM ("
+            "   SELECT inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = :dest UNION "
+            "   SELECT inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = '*' "
+            ") AS se LIMIT 1",
+        soci::use(pair.destination),
+        soci::into(limits->destination, nullIndicator), soci::into(limits->throughputDestination, nullIndicator);
 
-        unsigned storedActive = 0;
-        std::string activeFixedFlagStr;
-        soci::indicator isNullFixedFlag, isNullMin, isNullMax, isNullActive;
+        // Link working range
+        soci::indicator isNullMin, isNullMax;
+        sql <<
+            "SELECT min_active, max_active FROM ("
+            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
+            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
+            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
+            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = '*' "
+            ") AS lc LIMIT 1",
+            soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
+            soci::into(range->min, isNullMin), soci::into(range->max, isNullMax);
 
-        sql << "SELECT fixed, active, min_active, max_active FROM t_optimize_active "
-            "WHERE source_se = :source AND dest_se = :dest",
-            soci::use(pair.source), soci::use(pair.destination),
-            soci::into(activeFixedFlagStr, isNullFixedFlag),
-            soci::into(storedActive, isNullActive),
-            soci::into(range->min, isNullMin),
-            soci::into(range->max, isNullMax);
-
-        if (isNullFixedFlag != soci::i_null && activeFixedFlagStr == "on") {
-            if (isNullMin == soci::i_null) {
-                range->min = storedActive;
-            }
-            if (isNullMax == soci::i_null) {
-                range->max = storedActive;
-            }
-        }
-        else {
+        if (isNullMin == soci::i_null || isNullMax == soci::i_null) {
             range->min = range->max = 0;
         }
     }
@@ -229,8 +195,8 @@ public:
         soci::indicator isCurrentNull;
         int currentActive = 0;
 
-        sql << "SELECT active FROM t_optimize_active "
-            "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1",
+        sql << "SELECT active FROM t_optimizer "
+            "WHERE source_se = :source AND dest_se = :dest_se",
             soci::use(pair.source),soci::use(pair.destination),
             soci::into(currentActive, isCurrentNull);
 
@@ -442,11 +408,9 @@ public:
     void storeOptimizerStreams(const Pair &pair, int streams) {
         sql.begin();
 
-        sql << "INSERT INTO t_optimize_streams (source_se, dest_se, nostreams, datetime) "
-               " VALUES(:source, :dest, :nostreams, UTC_TIMESTAMP()) "
-               " ON DUPLICATE KEY"
-               " UPDATE "
-               "    nostreams = :nostreams, datetime = UTC_TIMESTAMP()",
+        sql << "UPDATE t_optimizer "
+               "SET nostreams = :nostreams, datetime = UTC_TIMESTAMP() "
+               "WHERE source_se = :source AND dest_se = :dest",
             soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
             soci::use(streams, "nostreams");
 

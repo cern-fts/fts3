@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2017
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -532,19 +532,6 @@ void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
                 r.get<std::string>("dest_se",""),
                 r.get<std::string>("vo_name","")
             );
-
-            long long int linkExists = 0;
-            sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (UTC_TIMESTAMP() - interval '5' MINUTE)",
-                soci::use(source_se),
-                soci::use(dest_se),
-                soci::into(linkExists);
-            if(linkExists == 0) //for some reason does not exist, add it
-            {
-                sql.begin();
-                sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
-                    soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
-                sql.commit();
-            }
         }
     }
     catch (std::exception& e)
@@ -563,19 +550,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::list<TransferFile> >& files)
 {
     soci::session sql(*connectionPool);
-
     time_t now = time(NULL);
-    struct tm tTime;
-    int count = 0;
-    bool manualConfigExists = false;
-    int defaultFilesNum = 10;
-    int filesNum = defaultFilesNum;
-    int limit = 0;
-    int maxActive = 0;
-    soci::indicator isNull = soci::i_ok;
-    std::string vo_name;
-    std::string source_se;
-    std::string dest_se;
 
     try
     {
@@ -583,50 +558,30 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         // AND there are pending file transfers within the job
         for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            count = 0;
-            manualConfigExists = false;
-            filesNum = defaultFilesNum;
+            int activeCount = 0;
+            int maxActive = 0;
+            soci::indicator maxActiveNull = soci::i_ok;
+            int filesNum = 10;
 
-            //1st check if manual config exists
-            sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-                   soci::use(it->sourceSe), soci::use(it->destSe), soci::into(count);
-            if(count > 0)
-                manualConfigExists = true;
+            // How many are there running
+            sql << "SELECT COUNT(*) FROM t_file "
+                   " WHERE source_se = :source_se AND dest_se = :dest_se AND file_state = 'ACTIVE'",
+                   soci::use(it->sourceSe),
+                   soci::use(it->destSe),
+                   soci::into(activeCount);
 
-            //if 1st check is false, check 2nd time for manual config
-            if(!manualConfigExists)
+            // How many can we run
+            sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
+                   soci::use(it->sourceSe),
+                   soci::use(it->destSe),
+                   soci::into(maxActive, maxActiveNull);
+
+            // Calculate how many tops we should pick
+            if (maxActiveNull != soci::i_null && maxActive > 0)
             {
-                sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                       soci::use(it->sourceSe), soci::use(it->destSe), soci::into(count);
-                if(count > 0)
-                    manualConfigExists = true;
-            }
-
-            //both previously check returned false, you optimizer
-            if(!manualConfigExists)
-            {
-                limit = 0;
-                maxActive = 0;
-                isNull = soci::i_ok;
-
-                sql << "SELECT COUNT(*) FROM t_file "
-                       " WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE'",
-                       soci::use(it->sourceSe),
-                       soci::use(it->destSe),
-                       soci::into(limit);
-
-                sql << "SELECT active FROM t_optimize_active WHERE source_se=:source_se AND dest_se=:dest_se",
-                       soci::use(it->sourceSe),
-                       soci::use(it->destSe),
-                       soci::into(maxActive, isNull);
-
-                if (isNull != soci::i_null && maxActive > 0)
-                {
-                    filesNum = (maxActive - limit);
-                    if(filesNum <=0 )
-                    {
-                        continue;
-                    }
+                filesNum = (maxActive - activeCount);
+                if(filesNum <= 0 ) {
+                    continue;
                 }
             }
 
@@ -634,7 +589,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             // We then filter by this, and order by file_id
             // Doing this, we avoid a order by priority, which would trigger a filesort, which
             // can be pretty slow...
-            soci::indicator isMaxNull = soci::i_ok;
+            soci::indicator isMaxPriorityNull = soci::i_ok;
             int maxPriority = 3;
             sql << "SELECT MAX(priority) "
                    "FROM t_job, t_file "
@@ -643,8 +598,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest AND "
                    "    t_file.file_state = 'SUBMITTED'",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
-                   soci::into(maxPriority, isMaxNull);
-            if (isMaxNull == soci::i_null) {
+                   soci::into(maxPriority, isMaxPriorityNull);
+            if (isMaxPriorityNull == soci::i_null) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
                 continue;
             }
@@ -653,6 +608,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             std::map<std::string, int> activityFilesNum =
                 getFilesNumPerActivity(sql, it->sourceSe, it->destSe, it->voName, filesNum, default_activities);
 
+            struct tm tTime;
             gmtime_r(&now, &tTime);
 
             if (activityFilesNum.empty())
@@ -669,8 +625,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                       "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
                       "     f.vo_name = :vo_name AND "
                       "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                      "     (j.job_type = 'N' OR j.job_type = 'R') AND "
-                      "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+                      "     j.job_type IN ('N', 'R') AND "
+                      "     f.hashed_id BETWEEN :hStart AND :hEnd AND "
                       "     j.priority = :maxPriority "
                       " ORDER BY file_id ASC "
                       " LIMIT :filesNum",
@@ -682,8 +638,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                       soci::use(maxPriority),
                       soci::use(filesNum));
 
-
-                for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                for (auto ti = rs.begin(); ti != rs.end(); ++ti)
                 {
                     TransferFile& tfile = *ti;
 
@@ -719,9 +674,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 }
                 def_act += ") ";
 
-                std::map<std::string, int>::iterator it_act;
-
-                for (it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
+                for (auto it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
                 {
                     if (it_act->second == 0) continue;
 
@@ -750,19 +703,19 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
 
                     soci::rowset<TransferFile> rs = (
-                                                         sql.prepare <<
-                                                         select,
-                                                         soci::use(it->sourceSe),
-                                                         soci::use(it->destSe),
-                                                         soci::use(it->voName),
-                                                         soci::use(tTime),
-                                                         soci::use(it_act->first),
-                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                         soci::use(maxPriority),
-                                                         soci::use(it_act->second)
-                                                     );
+                         sql.prepare <<
+                         select,
+                         soci::use(it->sourceSe),
+                         soci::use(it->destSe),
+                         soci::use(it->voName),
+                         soci::use(tTime),
+                         soci::use(it_act->first),
+                         soci::use(hashSegment.start), soci::use(hashSegment.end),
+                         soci::use(maxPriority),
+                         soci::use(it_act->second)
+                    );
 
-                    for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                    for (auto ti = rs.begin(); ti != rs.end(); ++ti)
                     {
                         TransferFile& tfile = *ti;
 
@@ -804,33 +757,19 @@ static
 int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
                     const std::string& source_se, const std::string& dest_se)
 {
-    int count = 0;
-    int limit = 10;
+    int active = 0, max_active = 0, limit = 0;
+    soci::indicator is_active_null = soci::i_ok;
 
-    // Manual configuration
-    sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-        soci::use(source_se), soci::use(dest_se), soci::into(count);
-    if (count == 0)
-        sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-            soci::use(source_se), soci::use(dest_se), soci::into(count);
+    sql << "SELECT COUNT(*) FROM t_file WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE'",
+        soci::use(source_se), soci::use(dest_se), soci::into(active);
 
-    // No luck? Ask the optimizer
-    if (count == 0)
-    {
-        int active = 0, max_active = 0;
-        soci::indicator is_active_null = soci::i_ok;
+    sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
+        soci::use(source_se), soci::use(dest_se), soci::into(max_active, is_active_null);
 
-        sql << "SELECT COUNT(*) FROM t_file WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE'",
-            soci::use(source_se), soci::use(dest_se), soci::into(active);
-
-        sql << "SELECT active FROM t_optimize_active WHERE source_se=:source_se AND dest_se=:dest_se",
-            soci::use(source_se), soci::use(dest_se), soci::into(max_active, is_active_null);
-
-        if (!is_active_null)
-            limit = (max_active - active);
-        if (limit <= 0)
-            return 0;
-    }
+    if (!is_active_null)
+        limit = (max_active - active);
+    if (limit <= 0)
+        return 0;
 
     // This pair may have transfers already queued, so take them into account
     std::list<std::pair<std::string, std::string> >::iterator i;
@@ -1038,14 +977,6 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, 
 
             if(queued == 0) //pick the first one if the link is free
                 break;
-
-            //get success rate & throughput for this link, it is mapped to "filesize" column in t_optimizer_evolution table :)
-            /*
-            sql << " select filesize, throughput from t_optimizer_evolution where "
-                " source_se=:source_se and dest_se=:dest_se and filesize is not NULL and agrthroughput is not NULL "
-                " order by datetime desc limit 1 ",
-                soci::use(source_se), soci::use(dest_se),soci::into(successRate),soci::into(throughput);
-            */
 
         }
 
@@ -1713,7 +1644,7 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
 
     try
     {
-        sql << "SELECT active FROM t_optimize_active "
+        sql << "SELECT active FROM t_optimizer "
                "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
                soci::use(sourceStorage), soci::use(destStorage),
                soci::into(maxActive);
@@ -1721,7 +1652,7 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
             maxActive = DEFAULT_MIN_ACTIVE;
         }
 
-        // The trick here, is that t_optimize_active refers to the number of connections,
+        // The trick here, is that t_optimizer refers to the number of connections,
         // so we need to count the number of streams
         currentActive = 0;
         soci::rowset<soci::row> rs = (sql.prepare <<
@@ -1878,7 +1809,7 @@ int MySqlAPI::getCredits(soci::session& sql, const std::string &sourceSe, const 
 
         int maxActive = 0;
         soci::indicator isNull = soci::i_ok;
-        sql << "SELECT active FROM t_optimize_active "
+        sql << "SELECT active FROM t_optimizer "
                " WHERE source_se = :source_se AND dest_se = :dest_se",
             soci::use(sourceSe),
             soci::use(destSe),
@@ -2241,121 +2172,6 @@ void MySqlAPI::forkFailed(const std::string& jobId)
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-}
-
-
-void MySqlAPI::addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
-    const std::string &vo)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        sql.begin();
-
-        sql << " insert ignore into t_file_share_config (file_id, source, destination, vo) "
-            "  values(:file_id, :source, :destination, :vo)",
-            soci::use(fileId),
-            soci::use(source),
-            soci::use(destination),
-            soci::use(vo);
-
-        sql.commit();
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-int MySqlAPI::countActiveTransfers(const std::string &source, const std::string &destination, const std::string &vo)
-{
-    soci::session sql(*connectionPool);
-
-    int nActive = 0;
-    try
-    {
-        sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-            "WHERE t_file.file_state  = 'ACTIVE'  AND "
-            "      t_file_share_config.file_id = t_file.file_id AND "
-            "      t_file_share_config.source = :source AND "
-            "      t_file_share_config.destination = :dest AND "
-            "      t_file_share_config.vo = :vo",
-            soci::use(source), soci::use(destination), soci::use(vo),
-            soci::into(nActive);
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return nActive;
-}
-
-
-int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo)
-{
-    soci::session sql(*connectionPool);
-
-    int nActiveOutbound = 0;
-    try
-    {
-        sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-            "WHERE t_file.file_state  = 'ACTIVE'  AND "
-            "      t_file.source_se = :source AND "
-            "      t_file.file_id = t_file_share_config.file_id AND "
-            "      t_file_share_config.source = '(*)' AND "
-            "      t_file_share_config.destination = '*' AND "
-            "      t_file_share_config.vo = :vo",
-            soci::use(se), soci::use(vo), soci::into(nActiveOutbound);
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return nActiveOutbound;
-}
-
-
-int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(const std::string &se, const std::string &vo)
-{
-    soci::session sql(*connectionPool);
-
-    int nActiveInbound = 0;
-    try
-    {
-        sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-            "WHERE t_file.file_state  = 'ACTIVE' AND "
-            "      t_file.dest_se = :dest AND "
-            "      t_file.file_id = t_file_share_config.file_id AND "
-            "      t_file_share_config.source = '*' AND "
-            "      t_file_share_config.destination = '(*)' AND "
-            "      t_file_share_config.vo = :vo",
-            soci::use(se), soci::use(vo), soci::into(nActiveInbound);
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return nActiveInbound;
 }
 
 

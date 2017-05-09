@@ -25,13 +25,11 @@
 #include "common/DaemonTools.h"
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
-#include "ConfigurationAssigner.h"
 #include "ExecuteProcess.h"
 #include "server/DrainMode.h"
 #include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
-#include "FileTransferScheduler.h"
 #include "ThreadSafeList.h"
 
 
@@ -192,79 +190,51 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
 void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<TransferFile> const & files)
 {
     GenericDbIfce *db = DBSingleton::instance().getDBObjectInstance();
-    UrlCopyCmd cmd_builder;
+    UrlCopyCmd cmdBuilder;
 
     // Set log directory
     std::string logsDir = ServerConfig::instance().get<std::string>("TransferLogDirectory");;
-    cmd_builder.setLogDir(logsDir);
+    cmdBuilder.setLogDir(logsDir);
 
     // Set parameters from the "representative", without using the source and destination url, and other data
     // that is per transfer
     TransferFile const & representative = files.front();
-    cmd_builder.setFromTransfer(representative, true, db->publishUserDn(representative.voName));
+    cmdBuilder.setFromTransfer(representative, true, db->publishUserDn(representative.voName));
 
     // Generate the file containing the list of transfers
     std::map<int, std::string> fileIds = generateJobFile(representative.jobId, files);
 
-    // Check if manual config exist for this pair and vo
-    std::vector<std::shared_ptr<ShareConfig> > cfgs;
-    ConfigurationAssigner cfgAssigner(representative);
-    cfgAssigner.assign(cfgs);
-
-    FileTransferScheduler scheduler(representative, cfgs);
+    // Can we run?
     int currentActive = 0;
-    if (!scheduler.schedule(currentActive))
-        return; /*SET TO READY STATE WHEN TRUE*/
-
-    boost::optional<ProtocolResolver::protocol> user_protocol =
-            ProtocolResolver::getUserDefinedProtocol(representative);
-
-    if (user_protocol.is_initialized())
-    {
-        cmd_builder.setFromProtocol(user_protocol.get());
-    }
-    else
-    {
-        ProtocolResolver::protocol protocol;
-
-        int level = db->getBufferOptimization();
-        cmd_builder.setOptimizerLevel(level);
-        protocol.nostreams = db->getStreamsOptimization(representative.voName, representative.sourceSe, representative.destSe);
-        protocol.urlcopy_tx_to = db->getGlobalTimeout(representative.voName);
-        int secPerMB = db->getSecPerMb(representative.voName);
-        if (secPerMB > 0) {
-            cmd_builder.setSecondsPerMB(secPerMB);
-        }
-
-        cmd_builder.setFromProtocol(protocol);
+    if (!db->isTrAllowed(representative.sourceSe, representative.destSe, currentActive)) {
+        return;
     }
 
-    if (!cfgs.empty())
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: "
-                << representative.sourceSe << " -> "
-                << representative.destSe << commit;
-        ProtocolResolver resolver(representative, cfgs);
-        bool protocolExists = resolver.resolve();
-        if (protocolExists)
-        {
-            ProtocolResolver::protocol protocol;
-
-            protocol.nostreams = resolver.getNoStreams();
-            protocol.tcp_buffer_size = resolver.getTcpBufferSize();
-            protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
-
-            cmd_builder.setFromProtocol(protocol);
-        }
+    // Set parameters
+    int secPerMB = db->getSecPerMb(representative.voName);
+    if (secPerMB > 0) {
+        cmdBuilder.setSecondsPerMB(secPerMB);
     }
+
+    TransferFile::ProtocolParameters protocolParams = representative.getProtocolParameters();
+
+    if (representative.internalFileParams.empty()) {
+        protocolParams.nostreams = db->getStreamsOptimization(representative.sourceSe, representative.destSe);
+        protocolParams.timeout = db->getGlobalTimeout(representative.voName);
+        protocolParams.ipv6 = db->isProtocolIPv6(representative.sourceSe, representative.destSe);
+        protocolParams.udt = db->isProtocolUDT(representative.sourceSe, representative.destSe);
+        //protocolParams.buffersize
+    }
+
+    cmdBuilder.setFromProtocol(protocolParams);
 
     std::string proxy_file = DelegCred::getProxyFile(representative.userDn, representative.credId);
     if (!proxy_file.empty())
-        cmd_builder.setProxy(proxy_file);
+        cmdBuilder.setProxy(proxy_file);
 
     std::string cloudConfigFile = fts3::generateCloudStorageConfigFile(db, representative);
     if (!cloudConfigFile.empty()) {
-        cmd_builder.setOAuthFile(cloudConfigFile);
+        cmdBuilder.setOAuthFile(cloudConfigFile);
     }
 
     // Set all to ready, special case for session reuse
@@ -282,31 +252,31 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     unsigned debugLevel = db->getDebugLevel(representative.sourceSe, representative.destSe);
     if (debugLevel > 0)
     {
-        cmd_builder.setDebugLevel(debugLevel);
+        cmdBuilder.setDebugLevel(debugLevel);
     }
 
     // Enable monitoring?
-    cmd_builder.setMonitoring(monitoringMessages);
+    cmdBuilder.setMonitoring(monitoringMessages);
 
     // Infosystem
-    cmd_builder.setInfosystem(infosys);
+    cmdBuilder.setInfosystem(infosys);
 
     // FTS3 name
-    cmd_builder.setFTSName(ftsHostName);
+    cmdBuilder.setFTSName(ftsHostName);
 
     // Current number of actives
-    cmd_builder.setNumberOfActive(currentActive);
+    cmdBuilder.setNumberOfActive(currentActive);
 
     // Number of retries and maximum number allowed
     int retry_times = db->getRetryTimes(representative.jobId, representative.fileId);
-    cmd_builder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
+    cmdBuilder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
 
     int retry_max = db->getRetry(representative.jobId);
-    cmd_builder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
+    cmdBuilder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
 
     // Log and run
-    std::string params = cmd_builder.generateParameters();
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd_builder << commit;
+    std::string params = cmdBuilder.generateParameters();
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmdBuilder << commit;
     ExecuteProcess pr(cmd, params);
 
     // Check if fork failed , check if execvp failed
@@ -346,9 +316,9 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         events::Message protoMsg;
         protoMsg.set_file_id(iterFileIds->first);
         protoMsg.set_transfer_status("UPDATE");
-        protoMsg.set_timeout(cmd_builder.getTimeout());
-        protoMsg.set_buffersize(cmd_builder.getBuffersize());
-        protoMsg.set_nostreams(cmd_builder.getNoStreams());
+        protoMsg.set_timeout(cmdBuilder.getTimeout());
+        protoMsg.set_buffersize(cmdBuilder.getBuffersize());
+        protoMsg.set_nostreams(cmdBuilder.getNoStreams());
         protoMsgs.push_back(protoMsg);
     }
 
