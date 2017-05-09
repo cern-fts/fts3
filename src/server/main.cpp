@@ -38,7 +38,7 @@
 namespace fs = boost::filesystem;
 using namespace fts3::common;
 using namespace fts3::config;
-using namespace fts3::server; 
+using namespace fts3::server;
 
 
 /// Initialize the database backend
@@ -159,13 +159,6 @@ static void checkPath(const std::string& path, int mode, fs::file_type type)
     }
 }
 
-/// Validate database availability and schema
-void checkDbSchema()
-{
-    intializeDatabase(true);
-    db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
-    db::DBSingleton::destroy();
-}
 
 /// Check the environment is properly setup for FTS3 to run
 static void runEnvironmentChecks()
@@ -186,8 +179,6 @@ static void runEnvironmentChecks()
     checkPath(monDir + "/status", R_OK | W_OK, fs::directory_file);
     checkPath(monDir + "/stalled", R_OK | W_OK, fs::directory_file);
     checkPath(monDir + "/logs", R_OK | W_OK, fs::directory_file);
-
-    checkDbSchema();
 }
 
 

@@ -135,7 +135,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {3, 0};
+    static const unsigned expect[] = {4, 0};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
@@ -2859,31 +2859,6 @@ std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId
     }
 
     return temp;
-}
-
-
-void MySqlAPI::checkSchemaLoaded()
-{
-    soci::session sql(*connectionPool);
-
-    int count = 0;
-
-    try
-    {
-        sql <<
-            " select count(*) "
-            " from t_debug",
-            soci::into(count)
-            ;
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
 }
 
 

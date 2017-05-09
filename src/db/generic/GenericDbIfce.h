@@ -266,9 +266,6 @@ public:
     /// Run a set of sanity checks over the database, fixing potential inconsistencies and logging them
     virtual void checkSanityState() = 0;
 
-    /// Checks if the database schema has been loaded
-    virtual void checkSchemaLoaded() = 0;
-
     /// Add a new retry to the transfer identified by fileId
     /// @param jobId    Job identifier
     /// @param fileId   Transfer identifier
