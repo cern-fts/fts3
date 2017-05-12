@@ -147,14 +147,6 @@ public:
     /// @return                 An integer with the debug level configured for the pair. 0 = no debug.
     virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
-    /// Check whether submission is allowed for the given storage
-    /// @param storage          The storage to blacklist (as protocol://host)
-    /// @param voName           The submitting VO
-    virtual bool allowSubmit(const std::string& storage, const std::string& voName) = 0;
-
-    /// Check is the user has been banned
-    virtual bool isDnBlacklisted(const std::string& userDn) = 0;
-
     /// Optimizer data source
     virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource() = 0;
 

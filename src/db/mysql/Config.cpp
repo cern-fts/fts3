@@ -122,51 +122,6 @@ unsigned MySqlAPI::getDebugLevel(const std::string& sourceStorage, const std::st
 }
 
 
-bool MySqlAPI::allowSubmit(const std::string& storage, const std::string& voName)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        int count;
-        sql << "SELECT COUNT(*) FROM t_bad_ses "
-            "WHERE se = :se AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)",
-            soci::use(storage), soci::use(voName), soci::into(count);
-        return count == 0;
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-bool MySqlAPI::isDnBlacklisted(const std::string& userDn)
-{
-    soci::session sql(*connectionPool);
-
-    bool blacklisted = false;
-    try
-    {
-        sql << "SELECT dn FROM t_bad_dns WHERE dn = :dn", soci::use(userDn);
-        blacklisted = sql.got_data();
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return blacklisted;
-}
-
-
 std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);
