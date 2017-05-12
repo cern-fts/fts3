@@ -292,10 +292,10 @@ struct type_conversion<ShareConfig>
 
     static void from_base(values const& v, indicator, ShareConfig& config)
     {
-        config.source           = v.get<std::string>("source");
-        config.destination      = v.get<std::string>("destination");
-        config.vo               = v.get<std::string>("vo");
-        config.activeTransfers = v.get<int>("active");
+        config.source      = v.get<std::string>("source");
+        config.destination = v.get<std::string>("destination");
+        config.vo          = v.get<std::string>("vo");
+        config.weight      = v.get<int>("active");
     }
 };
 

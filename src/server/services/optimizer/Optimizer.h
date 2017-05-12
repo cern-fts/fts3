@@ -28,28 +28,13 @@
 #include <boost/noncopyable.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <db/generic/LinkConfig.h>
+#include <db/generic/Pair.h>
 
 #include "common/Uri.h"
 
 
 namespace fts3 {
 namespace optimizer {
-
-struct Pair {
-    std::string source, destination;
-
-    Pair(const std::string &s, const std::string &d): source(s), destination(d) {
-    }
-
-    bool isLanTransfer() const {
-        return common::isLanTransfer(source, destination);
-    }
-};
-
-// Required so it can be used as a key on a std::map
-inline bool operator < (const Pair &a, const Pair &b) {
-    return a.source < b.source || (a.source == b.source && a.destination < b.destination);
-}
 
 
 struct Range {
@@ -166,11 +151,6 @@ public:
     void run(void);
     void runOptimizerForPair(const Pair&);
 };
-
-
-inline std::ostream& operator << (std::ostream &os, const Pair &pair) {
-    return (os << pair.source << " => " << pair.destination);
-}
 
 
 inline std::ostream& operator << (std::ostream &os, const Range &range) {

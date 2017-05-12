@@ -1,9 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
- *
- * Copyright (c) Members of the EMI Collaboration. 2010-2013
- *  See  http://www.eu-emi.eu/partners for details on the copyright
- *  holders.
+ * Copyright (c) CERN 2017
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +14,25 @@
  * limitations under the License.
  */
 
-#pragma once
-#ifndef SHARECONFIG_H_
-#define SHARECONFIG_H_
+#ifndef VOSHARES_H
+#define VOSHARES_H
 
-#include <string>
+#include <vector>
+#include "db/generic/QueueId.h"
 
-class ShareConfig
-{
-public:
-    ShareConfig(): weight(0) {};
-    ~ShareConfig() {};
 
-    std::string source;
-    std::string destination;
-    std::string vo;
-    int weight;
-};
+namespace fts3 {
+namespace server {
 
-#endif // SHARECONFIG_H_
+/**
+ * Apply VO shares if required.
+ * @param queues Set of queues with queued transfers
+ * @return A set of queues where there is only one per unique source/dest.
+ *         Filtering is applied according to the configured relative weights.
+ */
+std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues);
+
+}
+}
+
+#endif // VOSHARES_H

@@ -19,6 +19,7 @@
  */
 
 #include "TransfersService.h"
+#include "VoShares.h"
 
 #include "config/ServerConfig.h"
 #include "common/DaemonTools.h"
@@ -211,6 +212,9 @@ void TransfersService::executeUrlcopy()
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
         std::random_shuffle(queues.begin(), queues.end());
+        // Apply VO shares at this level. Basically, if more than one VO is used the same link,
+        // pick one each time according to their respective weights
+        queues = applyVoShares(queues);
 
         if (queues.empty()) {
             return;

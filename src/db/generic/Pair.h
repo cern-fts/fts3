@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2017
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,21 +19,32 @@
  */
 
 #pragma once
-#ifndef SHARECONFIG_H_
-#define SHARECONFIG_H_
+#ifndef PAIR_H
+#define PAIR_H
 
+#include <iostream>
 #include <string>
+#include "common/Uri.h"
 
-class ShareConfig
-{
-public:
-    ShareConfig(): weight(0) {};
-    ~ShareConfig() {};
+struct Pair {
+    std::string source, destination;
 
-    std::string source;
-    std::string destination;
-    std::string vo;
-    int weight;
+    Pair(const std::string &s, const std::string &d): source(s), destination(d) {
+    }
+
+    bool isLanTransfer() const {
+        return fts3::common::isLanTransfer(source, destination);
+    }
 };
 
-#endif // SHARECONFIG_H_
+// Required so it can be used as a key on a std::map
+inline bool operator < (const Pair &a, const Pair &b) {
+    return a.source < b.source || (a.source == b.source && a.destination < b.destination);
+}
+
+inline std::ostream& operator << (std::ostream &os, const Pair &pair) {
+    return (os << pair.source << " => " << pair.destination);
+}
+
+
+#endif // PAIR_H
