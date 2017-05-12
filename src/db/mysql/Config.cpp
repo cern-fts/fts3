@@ -150,61 +150,6 @@ std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(const std::string &source, c
 }
 
 
-void MySqlAPI::addShareConfig(const ShareConfig& cfg)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        sql.begin();
-
-        sql << "INSERT IGNORE INTO t_share_config (source, destination, vo, active) "
-            "                    VALUES (:source, :destination, :vo, :active)",
-            soci::use(cfg.source), soci::use(cfg.destination), soci::use(cfg.vo),
-            soci::use(cfg.activeTransfers);
-
-        sql.commit();
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-std::unique_ptr<ShareConfig> MySqlAPI::getShareConfig(const std::string &source, const std::string &destination,
-    const std::string &vo)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        std::unique_ptr<ShareConfig> config(new ShareConfig);
-        sql << "SELECT * FROM t_share_config WHERE "
-            "  source = :source AND destination = :dest AND vo = :vo",
-            soci::use(source), soci::use(destination), soci::use(vo),
-            soci::into(*config);
-        if (sql.got_data())
-            return config;
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return std::unique_ptr<ShareConfig>();
-}
-
-
 std::vector<ShareConfig> MySqlAPI::getShareConfig(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);

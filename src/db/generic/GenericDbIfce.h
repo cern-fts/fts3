@@ -156,16 +156,6 @@ public:
     /// @param[out] currentActive   The current number of running transfers is put here
     virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive) = 0;
 
-    /// Returns how many outbound connections a storage has towards the given set of destinations
-    /// @param source       The origin of the connections
-    /// @param destination  A set of destinations for the connections
-    virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
-
-    /// Returns how many inbound connections a storage has from the given set of sources
-    /// @param source       A set of sources for the connections
-    /// @param destination  The destination of the connections
-    virtual int getSeIn(const std::set<std::string> & source, const std::string & destination) = 0;
-
     /// Mark a reuse or multihop job (and its files) as failed
     /// @param jobId    The job id
     /// @param pid      The PID of the fts_url_copy
@@ -200,19 +190,8 @@ public:
     /// Get the link configuration for the link defined by the source and destination given
     virtual std::unique_ptr<LinkConfig> getLinkConfig(const std::string &source, const std::string &destination) = 0;
 
-    /// Register a new VO share configuration
-    //virtual void addShareConfig(const ShareConfig& cfg) = 0;
-
-    /// Get the VO share configuration for the given link and VO
-    //virtual std::unique_ptr<ShareConfig> getShareConfig(const std::string &source, const std::string &destination,
-    //    const std::string &vo) = 0;
-
     /// Get the list of VO share configurations for the given link
-    //virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination) = 0;
-
-    /// Returns the total value of all the shares for the given link and set of VO
-    virtual int sumUpVoShares(const std::string &source, const std::string &destination,
-        const std::set<std::string> &vos) = 0;
+    virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination) = 0;
 
     /// Returns how many retries there is configured for the given jobId
     virtual int getRetry(const std::string & jobId) = 0;
