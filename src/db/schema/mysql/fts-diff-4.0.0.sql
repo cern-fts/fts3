@@ -46,21 +46,27 @@ RENAME TABLE t_link_config TO t_link_config_old;
 CREATE TABLE t_link_config (
     source_se       VARCHAR(150) NOT NULL,
     dest_se         VARCHAR(150) NOT NULL,
-    min_active      INT DEFAULT 2,
-    max_active      INT DEFAULT 60,
-    optimizer_mode  INT DEFAULT 1,
+    symbolic_name   VARCHAR(150) NOT NULL UNIQUE,
+    min_active      INT NULL,
+    max_active      INT NULL,
+    optimizer_mode  INT NULL,
     tcp_buffer_size INT,
     nostreams       INT,
     PRIMARY KEY(source_se, dest_se)
 )
 AS
-    SELECT o.source_se AS source_se, o.dest_se AS dest_se,
+    SELECT o.source_se AS source_se, o.dest_se AS dest_se, CONCAT(source_se, "-", dest_se) AS symbolic_name,
         o.min_active AS min_active, o.max_active AS max_active, om.mode_opt AS optimizer_mode,
         l.tcp_buffer_size AS tcp_buffer_size, l.nostreams AS nostreams
     FROM t_optimize_mode om, t_optimize_active o
     LEFT JOIN t_link_config_old l ON l.source = o.source_se AND l.destination = o.dest_se
 UNION
-    (SELECT '*', '*', 2, s.max_per_link, om.mode_opt, NULL, s.global_tcp_stream
+    (SELECT l.source, l.destination, l.symbolicName, NULL, NULL, NULL, l.tcp_buffer_size, l.nostreams
+    FROM t_link_config_old l
+    WHERE NOT EXISTS (SELECT 1 FROM t_optimize_active oa WHERE oa.source_se = l.source AND oa.dest_se = l.destination)
+    )
+UNION
+    (SELECT '*', '*', '*', 2, s.max_per_link, om.mode_opt, NULL, s.global_tcp_stream
     FROM t_optimize_mode om, t_server_config s
     WHERE vo_name IN (NULL, '*', '')
     LIMIT 1);
@@ -97,6 +103,8 @@ ALTER TABLE t_server_config
 DROP TABLE t_file_share_config;
 ALTER TABLE t_share_config
     DROP FOREIGN KEY t_share_config_fk;
+ALTER TABLE t_share_config
+    ADD CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source_se, dest_se);
 
 --
 -- Cleanup
