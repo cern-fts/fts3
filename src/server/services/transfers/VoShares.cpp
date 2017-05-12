@@ -61,7 +61,9 @@ static QueueId selectQueueForPair(const Pair &pair,
             ++publicCount;
         }
     }
-    publicWeight /= static_cast<double>(publicCount);
+    if (publicCount > 0) {
+        publicWeight /= static_cast<double>(publicCount);
+    }
 
     // Second pass, fill up the weights
     int pos = 0;
