@@ -60,6 +60,7 @@ AS
         l.tcp_buffer_size AS tcp_buffer_size, l.nostreams AS nostreams
     FROM t_optimize_mode om, t_optimize_active o
     LEFT JOIN t_link_config_old l ON l.source = o.source_se AND l.destination = o.dest_se
+    WHERE o.fixed='on'
 UNION
     (SELECT l.source, l.destination, l.symbolicName, NULL, NULL, NULL, l.tcp_buffer_size, l.nostreams
     FROM t_link_config_old l
@@ -68,7 +69,7 @@ UNION
 UNION
     (SELECT '*', '*', '*', 2, s.max_per_link, om.mode_opt, NULL, s.global_tcp_stream
     FROM t_optimize_mode om, t_server_config s
-    WHERE vo_name IN (NULL, '*', '')
+    WHERE vo_name IN ('*', '') OR vo_name IS NULL
     LIMIT 1);
 
 --
