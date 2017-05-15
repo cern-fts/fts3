@@ -130,7 +130,8 @@ public:
 
     void getPairLimits(const Pair&, Range *range, Limits *limits) {
         range->min = range->max = 0;
-        memset(limits, 0, sizeof(*limits));
+        limits->destination = limits->source = limits->link = 200;
+        limits->throughputDestination = limits->throughputSource = 0;
     }
 
     int getOptimizerValue(const Pair &pair) {
@@ -330,9 +331,10 @@ class OptimizerRangeSeFixture: public BaseOptimizerFixture {
 public:
     void getPairLimits(const Pair&, Range *range, Limits *limits) {
         range->min = range->max = 0;
-        limits->destination = 40;
-        limits->source = 20;
+        limits->destination = 60;
+        limits->source = 60;
         limits->link = 60;
+        limits->throughputDestination = limits->throughputSource = 0;
     }
 };
 
@@ -431,6 +433,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
+    BOOST_TEST_MESSAGE(lastEntry->rationale);
     BOOST_CHECK_GT(lastEntry->activeDecision, 20);
     BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
 }
@@ -465,6 +468,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
+    BOOST_TEST_MESSAGE(lastEntry->rationale);
     BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
     BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
 }
@@ -499,6 +503,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
+    BOOST_TEST_MESSAGE(lastEntry->rationale);
     BOOST_CHECK_GT(lastEntry->activeDecision, 40);
     BOOST_CHECK_GT(streamsRegistry[pair], 1);
 }

@@ -47,6 +47,9 @@ struct Range {
 struct Limits {
     int source, destination, link;
     double throughputSource, throughputDestination;
+
+    Limits(): source(0), destination(0), link(0),
+              throughputSource(0), throughputDestination(0) {}
 };
 
 struct PairState {
