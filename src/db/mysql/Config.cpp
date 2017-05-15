@@ -94,22 +94,17 @@ unsigned MySqlAPI::getDebugLevel(const std::string& sourceStorage, const std::st
     try
     {
         unsigned level = 0;
-        soci::indicator isLevelNull = soci::i_ok;
+        soci::indicator levelIndicator = soci::i_ok;
 
-        soci::statement stmt = (sql.prepare <<
-            " SELECT MAX(debug_level) "
-            " FROM t_se "
-            " WHERE storage IN (:source, :destination, '*') ",
-            soci::use(sourceStorage), soci::use(destStorage),
-            soci::into(level, isLevelNull)
-        );
-        stmt.execute(true);
+        sql << "SELECT MAX(debug_level) FROM t_se WHERE storage IN (:source, :destination)",
+            soci::use(sourceStorage), soci::use(destStorage), soci::into(level, levelIndicator);
 
-        if(isLevelNull == soci::i_ok) {
+        if (levelIndicator == soci::i_ok) {
             return level;
-        } else {
-            return 0;
         }
+
+        sql << "SELECT debug_level FROM t_se WHERE storage = '*'", soci::into(level, levelIndicator);
+        return level;
     }
     catch (std::exception& e)
     {
