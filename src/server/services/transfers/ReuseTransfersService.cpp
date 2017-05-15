@@ -166,8 +166,7 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
             if (!vo_jobs.empty())
             {
                 empty = false; //< if we are here there are still some data
-                std::pair<std::string, std::list<TransferFile> > const job =
-                        vo_jobs.front();
+                std::pair<std::string, std::list<TransferFile> > const job = vo_jobs.front();
                 vo_jobs.pop();
 
                 if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
@@ -325,15 +324,54 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 }
 
 
+/**
+ * Transfers in uneschedulable queues must be set to fail
+ */
+static void failUnschedulable(const std::vector<QueueId> &unschedulable)
+{
+    Producer producer(config::ServerConfig::instance().get<std::string>("MessagingDirectory"));
+
+    std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > > voQueues;
+    DBSingleton::instance().getDBObjectInstance()->getReadySessionReuseTransfers(unschedulable, voQueues);
+
+    for (auto mapIter = voQueues.begin(); mapIter != voQueues.end(); ++mapIter) {
+        std::queue<std::pair<std::string, std::list<TransferFile>>> &queues = mapIter->second;
+
+        while (!queues.empty()) {
+            std::pair<std::string, std::list<TransferFile>> &job = queues.front();
+            for (auto iterTransfer = job.second.begin(); iterTransfer != job.second.end(); ++iterTransfer) {
+                events::Message status;
+
+                status.set_transfer_status("FAILED");
+                status.set_timestamp(millisecondsSinceEpoch());
+                status.set_process_id(0);
+                status.set_job_id(job.first);
+                status.set_file_id(iterTransfer->fileId);
+                status.set_source_se(iterTransfer->sourceSe);
+                status.set_dest_se(iterTransfer->destSe);
+                status.set_transfer_message("No share configured for this VO");
+                status.set_retry(false);
+                status.set_errcode(EPERM);
+
+                producer.runProducerStatus(status);
+            }
+            queues.pop();
+        }
+    }
+}
+
+
 void ReuseTransfersService::executeUrlcopy()
 {
     try
     {
-        std::vector<QueueId> queues;
+        std::vector<QueueId> queues, unschedulable;
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
         std::random_shuffle(queues.begin(), queues.end());
-        queues = applyVoShares(queues);
+        queues = applyVoShares(queues, unschedulable);
+        // Fail all that are unschedulable
+        failUnschedulable(unschedulable);
 
         if (queues.empty()) {
             return;

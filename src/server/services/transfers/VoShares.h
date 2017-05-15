@@ -18,7 +18,10 @@
 #define VOSHARES_H
 
 #include <vector>
-#include "db/generic/QueueId.h"
+#include <db/generic/Pair.h>
+#include <map>
+#include <db/generic/QueueId.h>
+#include <boost/optional.hpp>
 
 
 namespace fts3 {
@@ -27,10 +30,24 @@ namespace server {
 /**
  * Apply VO shares if required.
  * @param queues Set of queues with queued transfers
+ * @param unschedulable Set of queues that are impossible to schedule, due to empty shares
  * @return A set of queues where there is only one per unique source/dest.
  *         Filtering is applied according to the configured relative weights.
  */
-std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues);
+std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues, std::vector<QueueId> &unschedulable);
+
+/**
+ * Select a single QueueId for a pair, given a list of waiting VOs and the configured shares
+ * @param pair Source => Destination pair
+ * @param vos  List of VO waiting for this link
+ * @param weights Map with the weights given for the VOs. 'public' is split among those not explictly configured.
+ * @param unschedulable If there is no share for a given link/vo combination, it will be put here
+ * @return One single link/vo combination, with the probability given by the weights
+ */
+boost::optional<QueueId> selectQueueForPair(const Pair &pair,
+    const std::vector<std::string> &vos,
+    const std::map<std::string, double> &weights,
+    std::vector<QueueId> &unschedulable);
 
 }
 }

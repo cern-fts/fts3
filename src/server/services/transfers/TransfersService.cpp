@@ -23,7 +23,6 @@
 
 #include "config/ServerConfig.h"
 #include "common/DaemonTools.h"
-#include "common/Logger.h"
 #include "common/ThreadPool.h"
 
 #include "cred/DelegCred.h"
@@ -35,8 +34,7 @@
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"
 
-#include <algorithm>
-
+#include <msg-bus/producer.h>
 
 using namespace fts3::common;
 
@@ -203,9 +201,41 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
 }
 
 
+/**
+ * Transfers in uneschedulable queues must be set to fail
+ */
+static void failUnschedulable(const std::vector<QueueId> &unschedulable)
+{
+    Producer producer(config::ServerConfig::instance().get<std::string>("MessagingDirectory"));
+
+    std::map<std::string, std::list<TransferFile> > voQueues;
+    DBSingleton::instance().getDBObjectInstance()->getReadyTransfers(unschedulable, voQueues);
+
+    for (auto iterList = voQueues.begin(); iterList != voQueues.end(); ++iterList) {
+        const std::list<TransferFile> &transferList = iterList->second;
+        for (auto iterTransfer = transferList.begin(); iterTransfer != transferList.end(); ++iterTransfer) {
+            events::Message status;
+
+            status.set_transfer_status("FAILED");
+            status.set_timestamp(millisecondsSinceEpoch());
+            status.set_process_id(0);
+            status.set_job_id(iterTransfer->jobId);
+            status.set_file_id(iterTransfer->fileId);
+            status.set_source_se(iterTransfer->sourceSe);
+            status.set_dest_se(iterTransfer->destSe);
+            status.set_transfer_message("No share configured for this VO");
+            status.set_retry(false);
+            status.set_errcode(EPERM);
+
+            producer.runProducerStatus(status);
+        }
+    }
+}
+
+
 void TransfersService::executeUrlcopy()
 {
-    std::vector<QueueId> queues;
+    std::vector<QueueId> queues, unschedulable;
     boost::thread_group g;
 
     try {
@@ -214,7 +244,9 @@ void TransfersService::executeUrlcopy()
         std::random_shuffle(queues.begin(), queues.end());
         // Apply VO shares at this level. Basically, if more than one VO is used the same link,
         // pick one each time according to their respective weights
-        queues = applyVoShares(queues);
+        queues = applyVoShares(queues, unschedulable);
+        // Fail all that are unschedulable
+        failUnschedulable(unschedulable);
 
         if (queues.empty()) {
             return;

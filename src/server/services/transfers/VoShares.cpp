@@ -35,11 +35,14 @@ namespace server {
  * @note If a VO is not on the map, it will fallback to 'public', if it is there
  * @note If the weight for a VO/public is 0, it will never be picked!
  */
-static QueueId selectQueueForPair(const Pair &pair,
-    const std::vector<std::string> &vos, const std::map<std::string, double> &weights)
+boost::optional<QueueId> selectQueueForPair(const Pair &pair,
+    const std::vector<std::string> &vos,
+    const std::map<std::string, double> &weights,
+    std::vector<QueueId> &unschedulable)
 {
     // Weights per position in vos vector
     std::vector<double> finalWeights(vos.size());
+    int unschedulableCount = 0;
 
     // Get the public (catchall weight)
     // If there is no config, this is the only weight!
@@ -75,6 +78,14 @@ static QueueId selectQueueForPair(const Pair &pair,
         else {
             finalWeights[pos] = wIter->second;
         }
+        if (finalWeights[pos] <= 0) {
+            unschedulable.emplace_back(pair.source, pair.destination, *i);
+            ++unschedulableCount;
+        }
+    }
+
+    if (unschedulableCount == vos.size()) {
+        return boost::optional<QueueId>();
     }
 
     // And pick one at random
@@ -84,7 +95,7 @@ static QueueId selectQueueForPair(const Pair &pair,
 }
 
 
-std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues)
+std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues, std::vector<QueueId> &unschedulable)
 {
     // Vo list for each pair
     std::map<Pair, std::vector<std::string>> vosPerPair;
@@ -104,19 +115,23 @@ std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues)
             weights[k->vo] = k->weight;
         }
 
-        QueueId chosen = selectQueueForPair(p, vos, weights);
+        boost::optional<QueueId> chosen = selectQueueForPair(p, vos, weights, unschedulable);
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Chosen " << chosen.voName << " for " << p << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Options were " << commit;
-        for (auto i = vos.begin(); i != vos.end(); ++i) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "\t" << *i << commit;
+        if (chosen) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Chosen " << chosen->voName << " for " << p << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Options were " << commit;
+            for (auto i = vos.begin(); i != vos.end(); ++i) {
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "\t" << *i << commit;
+            }
+
+            result.emplace_back(chosen.get());
         }
-
-        result.emplace_back(chosen);
+        else {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "None chosen for " << p << commit;
+        }
     }
     return result;
 }
-
 
 }
 }
