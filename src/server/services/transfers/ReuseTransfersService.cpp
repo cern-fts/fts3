@@ -31,6 +31,7 @@
 
 #include "CloudStorageConfig.h"
 #include "ThreadSafeList.h"
+#include "VoShares.h"
 
 
 using namespace fts3::common;
@@ -151,9 +152,6 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
     std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > > voQueues;
     DBSingleton::instance().getDBObjectInstance()->getReadySessionReuseTransfers(queues, voQueues);
 
-    std::map<std::string,
-            std::queue<std::pair<std::string, std::list<TransferFile> > > >::iterator vo_it;
-
     bool empty = false;
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     int urlCopyCount = countProcessesWithName("fts_url_copy");
@@ -161,7 +159,7 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
     while (!empty)
     {
         empty = true;
-        for (vo_it = voQueues.begin(); vo_it != voQueues.end(); ++vo_it)
+        for (auto vo_it = voQueues.begin(); vo_it != voQueues.end(); ++vo_it)
         {
             std::queue<std::pair<std::string, std::list<TransferFile> > > & vo_jobs =
                     vo_it->second;
@@ -335,6 +333,7 @@ void ReuseTransfersService::executeUrlcopy()
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
         std::random_shuffle(queues.begin(), queues.end());
+        queues = applyVoShares(queues);
 
         if (queues.empty()) {
             return;
