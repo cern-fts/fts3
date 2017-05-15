@@ -126,10 +126,10 @@ class FTS3Troubleshooter(object):
         List of rpms
         """
         rpm_list = [
-            "fts-libs", "fts-server", "fts-msg", "fts-mysql", "fts-oracle", "fts-infosys",
+            "fts-libs", "fts-server", "fts-msg", "fts-mysql", "fts-infosys",
             "fts-rest", "python-fts",
-            "gfal2-core", "gfal2-transfer", "gfal2-plugin-gridftp", "gfal2-plugin-srm",
-            "srm-ifce", "is-ifce",
+            "gfal2", "gfal2-plugin-gridftp", "gfal2-plugin-srm",
+            "srm-ifce",
             "fetch-crl"
         ]
         ts = rpm.TransactionSet()
