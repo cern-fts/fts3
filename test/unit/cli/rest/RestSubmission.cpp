@@ -221,7 +221,7 @@ struct RestSubmissionFixture : public RestSubmission
 
         boost::optional <std::string> verify_checksum = json.get_optional<std::string>("params.verify_checksum");
         if (verify_checksum)
-            ret[JobParameterHandler::CHECKSUM_METHOD] = "compare";
+            ret[JobParameterHandler::CHECKSUM_METHOD] = "both";
 
         boost::optional <std::string> reuse = json.get_optional<std::string>("params.reuse");
         if (reuse)

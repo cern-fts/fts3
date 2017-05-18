@@ -56,12 +56,20 @@ public:
         Statistics();
     };
 
-    enum CompareChecksum
-    {
-        kChecksumDoNotCheck = 0, // Do not check checksum
-        kChecksumStrict,         // Strict comparison
-        kChecksumRelaxed         // Relaxed comparision. i.e. do not fail on empty checksum on source
-    };
+    /**
+     * Checksum verification mode
+     */
+    typedef enum {
+        /// Don't verify checksum
+        CHECKSUM_NONE    = 0x00,
+        /// Compare user provided checksum vs source
+        CHECKSUM_SOURCE  = 0x01,
+        /// Compare user provided checksum vs destination
+        CHECKSUM_TARGET  = 0x02,
+        /// Compare user provided checksum vs both, *or* source checksum vs target checksum
+        CHECKSUM_BOTH = (CHECKSUM_SOURCE | CHECKSUM_TARGET)
+    } Checksum_mode;
+
 
     std::string jobId;
     uint64_t    fileId;
@@ -81,7 +89,7 @@ public:
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
 
-    CompareChecksum checksumMethod;
+    Checksum_mode checksumMode;
 
     // File size
     uint64_t fileSize;
@@ -109,6 +117,6 @@ public:
     std::string getChannel(void) const;
 };
 
-std::ostream& operator << (std::ostream& out, const Transfer::CompareChecksum& c);
+std::ostream& operator << (std::ostream& out, const Transfer::Checksum_mode& c);
 
 #endif // TRANSFER_H_

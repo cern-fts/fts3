@@ -176,8 +176,8 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
     // setOption("source-site", std::string());
     // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
-    if (!transfer.checksumMethod.empty())
-        setOption("compare-checksum", transfer.checksumMethod);
+    if (!transfer.checksumMode.empty())
+        setOption("checksum-mode", transfer.checksumMode);
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", !transfer.overwriteFlag.empty());
     setOption("dest-token-desc", transfer.destinationSpaceToken);

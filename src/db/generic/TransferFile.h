@@ -113,7 +113,7 @@ public:
     std::string overwriteFlag;
     std::string userDn;
     std::string credId;
-    std::string checksumMethod;
+    std::string checksumMode;
     std::string checksum;
     std::string sourceSpaceToken;
     std::string destinationSpaceToken;

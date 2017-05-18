@@ -89,27 +89,23 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     if (!transfer.destTokenDescription.empty()) {
         params.setDestSpacetoken(transfer.destTokenDescription);
     }
-
-    switch (transfer.checksumMethod) {
-        case Transfer::kChecksumStrict:
-            params.enableChecksum(true);
-            gfal2.set("SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", false);
-            gfal2.set("GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", false);
-            gfal2.set("XROOTD PLUGIN", "COPY_CHECKSUM_MODE", "end2end");
-            break;
-        case Transfer::kChecksumRelaxed:
-            params.enableChecksum(true);
-            gfal2.set("SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", true);
-            gfal2.set("GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", true);
-            gfal2.set("XROOTD PLUGIN", "COPY_CHECKSUM_MODE", "target");
-            break;
-        case Transfer::kChecksumDoNotCheck:
-            params.enableChecksum(false);
-            break;
-    }
-
     if (!transfer.checksumAlgorithm.empty()) {
-        params.setUserDefinedChecksum(transfer.checksumAlgorithm, transfer.checksumValue);
+    	try	{
+    		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
+    		if (transfer.checksumMode == Transfer::CHECKSUM_NONE){
+    			params.enableChecksum(false);
+    		}
+    	}
+    	catch (const Gfal2Exception &ex) {
+    		if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {
+    			throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, ex);
+    		}
+    		else if (transfer.checksumMode == Transfer::CHECKSUM_TARGET) {
+    			throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+    		}
+    		else
+    		    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+    	}
     }
 
     // Additional metadata
@@ -170,7 +166,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled: " << transfer.checksumMethod << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled: " << transfer.checksumMode << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize: " << transfer.userFileSize << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata: " << transfer.fileMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata: " << opts.jobMetadata << commit;
@@ -293,7 +289,12 @@ void UrlCopyProcess::run(void)
 
         // Prepare gfal2 transfer parameters
         Gfal2TransferParams params;
-        setupTransferConfig(opts, transfer, gfal2, params);
+        try {
+        	setupTransferConfig(opts, transfer, gfal2, params);
+        }
+        catch (const UrlCopyError &ex) {
+        	transfer.error.reset(new UrlCopyError(ex));
+        }
 
         // Prepare logging
         transfer.stats.process.start = millisecondsSinceEpoch();
