@@ -116,7 +116,7 @@ ALTER TABLE t_share_config
 -- DROP TABLE t_debug;
 -- DROP TABLE t_optimize_mode;
 -- DROP TABLE t_optimize;
--- DROP TABLE t_optimizer_streams;
+-- DROP TABLE t_optimize_streams;
 -- DROP TABLE t_optimize_active;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
