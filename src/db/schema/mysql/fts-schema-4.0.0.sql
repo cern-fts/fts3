@@ -839,51 +839,14 @@ CREATE TABLE `t_vo_acl` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `v_staging`
+-- View `v_staging`
 --
 
-DROP TABLE IF EXISTS `v_staging`;
-/*!50001 DROP VIEW IF EXISTS `v_staging`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `v_staging` (
- `job_id` tinyint NOT NULL,
-  `file_id` tinyint NOT NULL,
-  `hashed_id` tinyint NOT NULL,
-  `vo_name` tinyint NOT NULL,
-  `source_se` tinyint NOT NULL,
-  `file_state` tinyint NOT NULL,
-  `source_surl` tinyint NOT NULL,
-  `dest_surl` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+DROP VIEW IF EXISTS `v_staging`;
+CREATE VIEW v_staging AS
+    SELECT q.job_id, q.file_id, q.hashed_id, q.vo_name, q.source_se, q.file_state, q.source_surl
+    FROM t_file q LEFT JOIN t_file s ON
+        q.source_surl = s.source_surl AND q.vo_name = s.vo_name AND s.source_se = q.source_se AND
+        s.file_state='STARTED'
+    WHERE q.file_state='STAGING' AND s.file_state IS NULL;
 
---
--- Final view structure for view `v_staging`
---
-
-/*!50001 DROP TABLE IF EXISTS `v_staging`*/;
-/*!50001 DROP VIEW IF EXISTS `v_staging`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`admin`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `v_staging` AS select `q`.`job_id` AS `job_id`,`q`.`file_id` AS `file_id`,`q`.`hashed_id` AS `hashed_id`,`q`.`vo_name` AS `vo_name`,`q`.`source_se` AS `source_se`,`q`.`file_state` AS `file_state`,`q`.`source_surl` AS `source_surl`,`q`.`dest_surl` AS `dest_surl` from (`t_file` `q` left join `t_file` `s` on(((`q`.`source_surl` = `s`.`source_surl`) and (`q`.`vo_name` = `s`.`vo_name`) and (`s`.`source_se` = `q`.`source_se`) and (`s`.`file_state` = 'STARTED')))) where ((`q`.`file_state` = 'STAGING') and isnull(`s`.`file_state`)) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2017-05-29 13:30:37

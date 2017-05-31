@@ -707,3 +707,4 @@ CREATE VIEW v_staging AS
         q.source_surl = s.source_surl AND q.vo_name = s.vo_name AND s.source_se = q.source_se AND
         s.file_state='STARTED'
     WHERE q.file_state='STAGING' AND s.file_state IS NULL;
+
