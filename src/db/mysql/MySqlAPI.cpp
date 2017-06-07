@@ -1753,7 +1753,7 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
             " SELECT f.job_id, f.file_id, f.start_time, f.pid, f.internal_file_params, "
             " j.job_type "
             " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-            " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL "
+            " WHERE f.file_state IN ('ACTIVE', 'READY') AND f.pid IS NOT NULL "
             " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
             soci::use(hashSegment.start), soci::use(hashSegment.end),
             soci::into(transfer.jobId), soci::into(transfer.fileId), soci::into(startTimeSt),
