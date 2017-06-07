@@ -163,7 +163,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             boost::tuple<bool, std::string> fileUpdated = db->updateTransferStatus(
                 tf.jobId, tf.fileId, 0.0, "READY", "",
-                0, 0, 0, false
+                0, 0.0, 0.0, false
             );
             db->updateJobStatus(tf.jobId, "ACTIVE",0);
 
@@ -209,7 +209,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             else {
                 db->updateTransferStatus(
                     tf.jobId, tf.fileId, 0.0, "READY", "",
-                    pr.getPid(), 0, 0, false
+                    pr.getPid(), 0.0, 0.0, false
                 );
             }
 

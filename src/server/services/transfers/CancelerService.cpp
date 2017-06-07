@@ -78,7 +78,10 @@ void CancelerService::markAsStalled()
         }
 
         for (auto i = messages.begin(); i != messages.end(); ++i) {
-            kill(i->process_id(), SIGKILL);
+            // Make sure we don't kill ourselves
+            if (i->process_id()) {
+                kill(i->process_id(), SIGKILL);
+            }
             boost::tuple<bool, std::string> updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
                 "FAILED", reason.str(), i->process_id(),
                 0, 0, false);

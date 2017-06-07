@@ -244,7 +244,7 @@ std::list<fts3::events::MessageUpdater> MySqlAPI::getActiveInHost(const std::str
     try {
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT job_id, file_id, pid FROM t_file "
-            " WHERE file_state = 'ACTIVE' AND transfer_host = :host",
+            " WHERE file_state IN ('ACTIVE', 'READY') AND transfer_host = :host",
             soci::use(host)
         );
 
@@ -1196,7 +1196,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         }
 
         // If the file already in the same state, don't do anything either
-        if (storedState == newState) {
+        if (storedState == newState && newState != "READY") {
             sql.rollback();
             return boost::tuple<bool, std::string>(false, storedState);
         }
