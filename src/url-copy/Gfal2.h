@@ -135,6 +135,13 @@ public:
         }
     }
 
+    void setChecksum(int mode, const std::string &type, const std::string &value){
+    	GError *error = NULL;
+    	if (gfalt_set_checksum(params, (gfalt_checksum_mode_t) mode, type.c_str(), value.c_str(), &error) < 0) {
+    		throw Gfal2Exception(error);
+    	}
+    }
+
     void enableChecksum(bool value)
     {
         GError *error = NULL;
@@ -143,12 +150,6 @@ public:
         }
     }
 
-    void setUserDefinedChecksum(const std::string &type, const std::string &value) {
-        GError *error = NULL;
-        if (gfalt_set_user_defined_checksum(params, type.c_str(), value.c_str(), &error) < 0) {
-            throw Gfal2Exception(error);
-        }
-    }
 
     void setTimeout(unsigned timeout)
     {

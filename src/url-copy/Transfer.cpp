@@ -32,7 +32,7 @@ Transfer::Statistics::Statistics()
 
 
 Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
-                       checksumMethod(Transfer::kChecksumDoNotCheck),
+                       checksumMode(Transfer::CHECKSUM_NONE),
                        fileSize(0), throughput(0.0), transferredBytes(0)
 {
 }
@@ -74,17 +74,20 @@ std::string Transfer::getChannel() const
 }
 
 
-std::ostream& operator << (std::ostream& out, const Transfer::CompareChecksum& c)
+std::ostream& operator << (std::ostream& out, const Transfer::Checksum_mode& c)
 {
     switch (c) {
-        case Transfer::kChecksumDoNotCheck:
+        case Transfer::CHECKSUM_NONE:
             out << "No checksum comparison";
             break;
-        case Transfer::kChecksumStrict:
-            out << "Strict comparison";
+        case Transfer::CHECKSUM_BOTH:
+            out << "Both checksum comparison";
             break;
-        case Transfer::kChecksumRelaxed:
-            out << "Relaxed comparison";
+        case Transfer::CHECKSUM_TARGET:
+            out << "Target comparison";
+            break;
+        case Transfer::CHECKSUM_SOURCE:
+            out << "Source comparison";
             break;
         default:
             out << "Uknown value!";

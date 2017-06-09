@@ -122,7 +122,7 @@ struct type_conversion<Job>
         job.sourceSpaceToken = v.get<std::string>("source_space_token", "");
         job.copyPinLifetime = v.get<int>("copy_pin_lifetime", -1);
         job.bringOnline     = v.get<int>("bring_online", -1);
-        job.checksumMethod  = v.get<std::string>("checksum_method", "");
+        job.checksumMode  = v.get<std::string>("checksum_method", "");
         aux_tm = v.get<struct tm>("submit_time");
         job.submitTime = timegm(&aux_tm);
 
@@ -147,7 +147,7 @@ struct type_conversion<TransferFile>
         file.userDn          = v.get<std::string>("user_dn");
         file.credId     = v.get<std::string>("cred_id");
         file.checksum    = v.get<std::string>("checksum","");
-        file.checksumMethod    = v.get<std::string>("checksum_method","");
+        file.checksumMode    = v.get<std::string>("checksum_method","");
         file.sourceSpaceToken = v.get<std::string>("source_space_token","");
         file.destinationSpaceToken   = v.get<std::string>("space_token","");
         file.bringOnline   = v.get<int>("bring_online",0);

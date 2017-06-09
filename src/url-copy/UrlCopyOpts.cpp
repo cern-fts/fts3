@@ -41,7 +41,7 @@ const option UrlCopyOpts::long_options[] =
     {"last_replica",      no_argument,       0, 203},
 
     {"checksum",          required_argument, 0, 300},
-    {"compare-checksum",  required_argument, 0, 301},
+    {"checksum-mode",     required_argument, 0, 301},
     {"strict-copy",       no_argument,       0, 302},
 
     {"token-bringonline", required_argument, 0, 400},
@@ -116,7 +116,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.fileId = boost::lexical_cast<uint64_t>(strArray[0]);
     t.source = Uri::parse(strArray[1]);
     t.destination = Uri::parse(strArray[2]);
-    t.checksumMethod = reference.checksumMethod;
+    t.checksumMode = reference.checksumMode;
     setChecksum(t, strArray[3]);
     t.userFileSize = boost::lexical_cast<uint64_t>(strArray[4]);
     t.fileMetadata = strArray[5];
@@ -240,15 +240,17 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     setChecksum(referenceTransfer, optarg);
                     break;
                 case 301:
-                    if (strncmp("relaxed", optarg, 7) == 0 || strncmp("r", optarg, 1) == 0) {
-                        referenceTransfer.checksumMethod = Transfer::kChecksumRelaxed;
+                    if (strncmp("target", optarg, strlen("target")) == 0 || strncmp("t", optarg, strlen("t")) == 0) {
+                        referenceTransfer.checksumMode = Transfer::CHECKSUM_TARGET;
                     }
-                    else if (strncmp("strict", optarg, 6) == 0 || strncmp("s", optarg, 1) == 0
-                    		|| strncmp("compare", optarg, 7) == 0 || strncmp("c", optarg, 1) == 0) {
-                        referenceTransfer.checksumMethod = Transfer::kChecksumStrict;
+                    else if (strncmp("source", optarg, strlen("source")) == 0 || strncmp("s", optarg, strlen("s")) == 0) {
+                        referenceTransfer.checksumMode = Transfer::CHECKSUM_SOURCE;
+                    }
+                    else if (strncmp("both", optarg, strlen("both")) == 0 || strncmp("b", optarg, strlen("b")) == 0) {
+                        referenceTransfer.checksumMode = Transfer::CHECKSUM_BOTH;
                     }
                     else {
-            			referenceTransfer.checksumMethod = Transfer::kChecksumDoNotCheck;
+            			referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
                     }
                     break;
                 case 302:

@@ -65,7 +65,7 @@ public:
     time_t jobFinished;
     std::string sourceSpaceToken;
     int copyPinLifetime;
-    std::string checksumMethod;
+    std::string checksumMode;
     int bringOnline;
     JobType jobType;
 
