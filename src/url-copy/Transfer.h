@@ -41,6 +41,7 @@ public:
     struct Statistics {
         struct Interval {
             uint64_t start, end;
+            Interval(): start(0), end(0) {}
         };
 
         Interval transfer;
@@ -52,8 +53,9 @@ public:
         Interval process;
 
         bool ipv6Used;
+        std::string transferType;
 
-        Statistics();
+        Statistics(): ipv6Used(false){};
     };
 
     /**

@@ -25,12 +25,6 @@
 #include "UrlCopyOpts.h"
 
 
-Transfer::Statistics::Statistics()
-{
-    memset(this, 0, sizeof(*this));
-}
-
-
 Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
                        checksumMode(Transfer::CHECKSUM_NONE),
                        fileSize(0), throughput(0.0), transferredBytes(0)

@@ -145,4 +145,7 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     else if (e->stage == IPV6_EVENT) {
         transfer->stats.ipv6Used = true;
     }
+    else if (e->stage == GFAL_EVENT_TRANSFER_TYPE) {
+        transfer->stats.transferType = e->description;
+    }
 }

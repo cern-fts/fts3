@@ -229,6 +229,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["job_state"] = json::String(tr_completed.job_state);
     message["is_recoverable"] = json::Boolean(tr_completed.is_recoverable);
     message["ipv6"] = json::Boolean(tr_completed.ipv6);
+    message["transfer_type"] = json::String(tr_completed.transfer_type);
 
     std::ostringstream stream;
 
