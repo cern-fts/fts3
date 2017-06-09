@@ -92,9 +92,6 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     if (!transfer.checksumAlgorithm.empty()) {
     	try	{
     		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
-    		if (transfer.checksumMode == Transfer::CHECKSUM_NONE){
-    			params.enableChecksum(false);
-    		}
     	}
     	catch (const Gfal2Exception &ex) {
     		if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {

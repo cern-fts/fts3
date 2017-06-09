@@ -142,15 +142,6 @@ public:
     	}
     }
 
-    void enableChecksum(bool value)
-    {
-        GError *error = NULL;
-        if (gfalt_set_checksum_check(params, value, &error) < 0) {
-            throw Gfal2Exception(error);
-        }
-    }
-
-
     void setTimeout(unsigned timeout)
     {
         GError *error = NULL;
