@@ -38,19 +38,13 @@ namespace cli
 
 long ProxyCertificateDelegator::isCertValid() const
 {
+    if (certkey.cert.empty()) {
+        return 0;
+    }
 
     // find user proxy certificate
     FILE* fp;
-    if (!proxy.empty())
-        {
-            fp = fopen(proxy.c_str(), "r");
-        }
-    else
-        {
-            char* user_proxy = GRSTx509FindProxyFileName();
-            fp = fopen(user_proxy , "r");
-            free (user_proxy);
-        }
+    fp = fopen(certkey.cert.c_str(), "r");
 
     // if file could not be opened return 0
     if (!fp) return 0;

@@ -22,6 +22,7 @@
 #define RESTDELEGATOR_H_
 
 #include "ProxyCertificateDelegator.h"
+#include "../CertKey.h"
 
 namespace fts3
 {
@@ -33,8 +34,8 @@ class RestDelegator : public ProxyCertificateDelegator
 
 public:
     RestDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime,
-        std::string const & capath, std::string const & proxy, bool insecure) :
-        ProxyCertificateDelegator(endpoint, delegationId, userRequestedDelegationExpTime, proxy), capath(capath),
+        std::string const & capath, CertKeyPair const & certkey, bool insecure) :
+        ProxyCertificateDelegator(endpoint, delegationId, userRequestedDelegationExpTime, certkey), capath(capath),
         insecure(insecure)
     {
 

@@ -21,6 +21,7 @@
 #include "MockHttpRequest.h"
 
 using fts3::cli::RestBanning;
+using fts3::cli::CertKeyPair;
 namespace pt = boost::property_tree;
 
 
@@ -37,7 +38,7 @@ BOOST_AUTO_TEST_CASE(StorageBanning)
 
     std::stringstream req(banner.body());
     MockHttpRequest http("https://fts3.nowhere.com" + resource, "/etc/grid-security/certificates",
-        "/tmp/myproxy.pem", req);
+        CertKeyPair("/tmp/myproxy.pem"), req);
     banner.do_http_action(http);
 
     pt::ptree tree;
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(StorageBanning)
 
 BOOST_AUTO_TEST_CASE(StorageUnBanning)
 {
-    RestBanning banner("gsiftp://whatnot.com", "dteam", std::string(), 0, false, false);
+    RestBanning banner("gsiftp://whatnot.com", "dteam", "", 0, false, false);
 
     std::string resource = banner.resource();
     BOOST_CHECK_EQUAL(resource, "/ban/se?storage=gsiftp%3A%2F%2Fwhatnot.com");
@@ -66,7 +67,7 @@ BOOST_AUTO_TEST_CASE(StorageUnBanning)
 
     std::stringstream req;
     MockHttpRequest http("https://fts3.nowhere.com" + resource, "/etc/grid-security/certificates",
-        "/tmp/myproxy.pem", req);
+        CertKeyPair("/tmp/myproxy.pem"), req);
     banner.do_http_action(http);
 
     BOOST_CHECK_EQUAL(http.method, "DELETE");
@@ -85,7 +86,7 @@ BOOST_AUTO_TEST_CASE(UserBanning)
 
     std::stringstream req(banner.body());
     MockHttpRequest http("https://fts3.nowhere.com" + resource, "/etc/grid-security/certificates",
-        "/tmp/myproxy.pem", req);
+        CertKeyPair("/tmp/myproxy.pem"), req);
     banner.do_http_action(http);
 
     pt::ptree tree;
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE(UserUnBanning)
 
     std::stringstream req;
     MockHttpRequest http("https://fts3.nowhere.com" + resource, "/etc/grid-security/certificates",
-        "/tmp/myproxy.pem", req);
+        CertKeyPair("/tmp/myproxy.pem"), req);
     banner.do_http_action(http);
 
     BOOST_CHECK_EQUAL(http.method, "DELETE");

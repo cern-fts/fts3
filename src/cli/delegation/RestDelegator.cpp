@@ -38,7 +38,7 @@ boost::optional<time_t> RestDelegator::getExpirationTime()
             std::string const whoami = endpoint + "/whoami";
 
             std::stringstream ss;
-            HttpRequest http (whoami, capath, proxy, insecure, ss);
+            HttpRequest http (whoami, capath, certkey, insecure, ss);
             http.get();
 
             ResponseParser parser(ss);
@@ -48,7 +48,7 @@ boost::optional<time_t> RestDelegator::getExpirationTime()
     std::string const delegation = endpoint + "/delegation/" + delegationId;
 
     std::stringstream ss;
-    HttpRequest http (delegation, capath, proxy, insecure, ss);
+    HttpRequest http (delegation, capath, certkey, insecure, ss);
     http.get();
 
     if (ss.str() == "null") return boost::none;
@@ -67,29 +67,24 @@ void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool /*renew
     // do the request
     std::string const request = endpoint + "/delegation/" + delegationId + "/request";
 
-    char * localproxy = NULL;
-    if (!proxy.empty())
-        {
-            localproxy = (char*)proxy.c_str();
-        }
-    else if (NULL == (localproxy = getenv("X509_USER_PROXY")))
-        {
-            if (GLOBUS_GSI_SYSCONFIG_GET_PROXY_FILENAME(&localproxy, GLOBUS_PROXY_FILE_INPUT))
-                {
-                    throw cli_exception("Unable to get user proxy filename!");
-                }
-        }
+    if (certkey.key.empty() || certkey.cert.empty()) {
+        throw cli_exception("Unable to get user proxy filename!");
+    }
 
     std::stringstream ss;
-    HttpRequest(request, capath, proxy, insecure, ss).get();
+    HttpRequest(request, capath, certkey, insecure, ss).get();
     std::string certreq = ss.str();
 
-    if (certreq.empty()) throw cli_exception("The delegation request failed!");
+    if (certreq.empty()) {
+        throw cli_exception("The delegation request failed!");
+    }
 
     char * certtxt;
     int ret = GRSTx509MakeProxyCert(
-                  &certtxt, stderr, (char*)certreq.c_str(), localproxy, localproxy, (int)(requestProxyDelegationTime/60)
-              );
+        &certtxt, stderr, (char*)certreq.c_str(),
+        (char*)certkey.cert.c_str(), (char*)certkey.key.c_str(),
+        (int)(requestProxyDelegationTime/60)
+    );
 
     if (ret) throw cli_exception("GRSTx509MakeProxyCert call failed");
 
@@ -101,7 +96,7 @@ void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool /*renew
     std::string const put = endpoint + "/delegation/" + delegationId + "/credential";
     ss << certtxt;
 
-    HttpRequest(put, capath, proxy, insecure, ss).put();
+    HttpRequest(put, capath, certkey, insecure, ss).put();
 }
 
 } /* namespace cli */

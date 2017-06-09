@@ -26,6 +26,7 @@
 
 #include "ServiceAdapter.h"
 #include "exception/rest_client_not_implemented.h"
+#include "CertKey.h"
 
 #include "JobStatus.h"
 
@@ -43,10 +44,10 @@ class RestContextAdapter : public ServiceAdapter
 {
 
 public:
-    RestContextAdapter(std::string const & endpoint, std::string const & capath, std::string const & proxy, bool insecure):
+    RestContextAdapter(std::string const & endpoint, std::string const & capath, CertKeyPair const & certkey, bool insecure):
         ServiceAdapter(removeTrailingSlash(endpoint)),
         capath(capath),
-        proxy(proxy),
+        certkey(certkey),
         insecure(insecure)
     {
      	if (this->capath.empty()) {
@@ -55,16 +56,6 @@ public:
                 this->capath = x509_cert_dir;
             } else {
                 this->capath = "/etc/grid-security/certificates";
-            }
-        }
-	if (this->proxy.empty()) {
-            const char *x509_user_proxy = getenv("X509_USER_PROXY");
-            if (x509_user_proxy) {
-                this->proxy = x509_user_proxy;
-            } else {
-                std::ostringstream proxy_path;
-                proxy_path << "/tmp/x509up_u" << geteuid();
-                this->proxy = proxy_path.str();
             }
         }
     }
@@ -122,7 +113,7 @@ private:
     }
 
     std::string capath;
-    std::string proxy;
+    CertKeyPair certkey;
     bool insecure;
 };
 

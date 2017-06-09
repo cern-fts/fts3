@@ -36,9 +36,9 @@ protected:
     }
 
 public:
-    MockHttpRequest(std::string const & url, std::string const & capath, std::string const & proxy,
+    MockHttpRequest(std::string const & url, std::string const & capath, fts3::cli::CertKeyPair const & certkey,
         std::iostream& stream, std::string const &topname = std::string()):
-        HttpRequest(url, capath, proxy, true, stream, topname)
+        HttpRequest(url, capath, certkey, true, stream, topname)
     {
     }
 

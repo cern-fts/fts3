@@ -98,5 +98,74 @@ BOOST_AUTO_TEST_CASE (CliBaseLongOptions)
 }
 
 
+BOOST_AUTO_TEST_CASE (CliBaseExplicitProxyCmdLine)
+{
+    // has to be const otherwise is deprecated
+    std::vector<const char*> argv {
+        "prog_name",
+        "--service",
+        "https://fts3-server:8080",
+        "--proxy", "/dev/null"
+    };
+
+    CliBaseTester cli;
+    cli.parse(argv.size(), (char**)argv.data());
+
+    fts3::cli::CertKeyPair certkey = cli.getCertAndKeyPair();
+
+    BOOST_CHECK_EQUAL("/dev/null", certkey.cert);
+    BOOST_CHECK_EQUAL(certkey.cert, certkey.key);
+}
+
+
+BOOST_AUTO_TEST_CASE (CliBaseExplicitProxyEnv)
+{
+    // has to be const otherwise is deprecated
+    std::vector<const char*> argv {
+        "prog_name",
+        "--service",
+        "https://fts3-server:8080",
+    };
+
+    CliBaseTester cli;
+    cli.parse(argv.size(), (char**)argv.data());
+
+    setenv("X509_USER_PROXY", "/dev/null", 1);
+
+    fts3::cli::CertKeyPair certkey = cli.getCertAndKeyPair();
+
+    unsetenv("X509_USER_PROXY");
+
+    BOOST_CHECK_EQUAL("/dev/null", certkey.cert);
+    BOOST_CHECK_EQUAL(certkey.cert, certkey.key);
+}
+
+
+BOOST_AUTO_TEST_CASE (CliBaseExplicitCertAndKey)
+{
+    // has to be const otherwise is deprecated
+    std::vector<const char*> argv {
+        "prog_name",
+        "--service",
+        "https://fts3-server:8080",
+    };
+
+    CliBaseTester cli;
+    cli.parse(argv.size(), (char**)argv.data());
+
+    unsetenv("X509_USER_PROXY");
+    setenv("X509_USER_CERT", "/dev/zero", 1);
+    setenv("X509_USER_KEY", "/dev/urandom", 1);
+
+    fts3::cli::CertKeyPair certkey = cli.getCertAndKeyPair();
+
+    unsetenv("X509_USER_CERT");
+    unsetenv("X509_USER_KEY");
+
+    BOOST_CHECK_EQUAL("/dev/zero", certkey.cert);
+    BOOST_CHECK_EQUAL("/dev/urandom", certkey.key);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

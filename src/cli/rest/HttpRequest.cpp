@@ -53,7 +53,7 @@ static int debug_callback(CURL*, curl_infotype type, char *data, size_t size, vo
     return 0;
 }
 
-HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, bool insecure,
+HttpRequest::HttpRequest(std::string const & url, std::string const & capath, CertKeyPair const & certkey, bool insecure,
     std::iostream& stream, std::string const &topname /* = std::string() */) : stream(stream), curl(curl_easy_init()), topname(topname)
 {
     if (!curl) throw cli_exception("failed to initialise curl context (curl_easy_init)");
@@ -64,18 +64,9 @@ HttpRequest::HttpRequest(std::string const & url, std::string const & capath, st
     // path to certificates (the '--capath' option)
     curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
 
-    if (!proxy.empty() && access(proxy.c_str(), F_OK) == 0) {
-        curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
-        curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
-    }
-    else if (getenv("X509_USER_CERT") != NULL) {
-        curl_easy_setopt(curl, CURLOPT_SSLKEY, getenv("X509_USER_KEY"));
-        curl_easy_setopt(curl, CURLOPT_SSLCERT, getenv("X509_USER_CERT"));
-    }
-    else if (access("/etc/grid-security/hostcert.pem", F_OK) == 0) {
-        curl_easy_setopt(curl, CURLOPT_SSLKEY, "/etc/grid-security/hostkey.pem");
-        curl_easy_setopt(curl, CURLOPT_SSLCERT, "/etc/grid-security/hostcert.pem");
-    }
+    curl_easy_setopt(curl, CURLOPT_SSLCERT, certkey.cert.c_str());
+    curl_easy_setopt(curl, CURLOPT_CAINFO, certkey.cert.c_str());
+    curl_easy_setopt(curl, CURLOPT_SSLKEY, certkey.key.c_str());
 
     if (insecure) {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);

@@ -40,7 +40,7 @@ int main(int ac, char* av[])
             cli.validate();
 
             // delegate Proxy Certificate
-            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.proxy(), cli.isInsecure());
+            RestContextAdapter ctx(cli.getService(), cli.capath(), cli.getCertAndKeyPair(), cli.isInsecure());
 
             ctx.delegate(cli.getDelegationId(), cli.getExpirationTime());
 

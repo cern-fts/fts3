@@ -33,6 +33,7 @@ using fts3::cli::cli_exception;
 using fts3::cli::rest_failure;
 using fts3::cli::rest_invalid;
 using fts3::cli::wrong_protocol;
+using fts3::cli::CertKeyPair;
 
 
 BOOST_AUTO_TEST_SUITE(cli)
@@ -67,9 +68,9 @@ BOOST_AUTO_TEST_CASE(UrlEncode)
 class HttpRequestMock: public HttpRequest
 {
 public:
-    HttpRequestMock(std::string const & url, std::string const & capath, std::string const & proxy,
+    HttpRequestMock(std::string const & url, std::string const & capath, CertKeyPair const & certkey,
     std::iostream& stream, std::string const &topname = std::string()):
-        HttpRequest(url, capath, proxy, true, stream, topname),
+        HttpRequest(url, capath, certkey, true, stream, topname),
         performCode(CURLE_OK), httpCode(0), expectBody(false)
     {
     }
@@ -122,7 +123,8 @@ BOOST_AUTO_TEST_CASE(simpleGet)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out);
 
     http.performCode = CURLE_OK;
     http.httpCode = 200;
@@ -139,7 +141,8 @@ BOOST_AUTO_TEST_CASE(simpleDel)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out);
 
     http.performCode = CURLE_OK;
     http.httpCode = 200;
@@ -159,7 +162,8 @@ BOOST_AUTO_TEST_CASE(simplePut)
     stream << req;
 
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", stream);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        stream);
 
     http.performCode = CURLE_OK;
     http.httpCode = 201;
@@ -183,7 +187,8 @@ BOOST_AUTO_TEST_CASE(simplePost)
     stream << req;
 
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", stream);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        stream);
 
     http.performCode = CURLE_OK;
     http.httpCode = 201;
@@ -204,7 +209,8 @@ BOOST_AUTO_TEST_CASE(withTopNode)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out, "top");
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out, "top");
 
     http.performCode = CURLE_OK;
     http.httpCode = 200;
@@ -221,7 +227,8 @@ BOOST_AUTO_TEST_CASE(canNotConnect)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out);
 
     http.performCode = CURLE_COULDNT_RESOLVE_HOST;
 
@@ -233,7 +240,8 @@ BOOST_AUTO_TEST_CASE(talkingToSoap)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out);
 
     http.performCode = CURLE_OK;
     http.httpCode = 200;
@@ -247,7 +255,8 @@ BOOST_AUTO_TEST_CASE(errorNoJson)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out);
 
     http.performCode = CURLE_OK;
     http.httpCode = 400;
@@ -262,7 +271,8 @@ BOOST_AUTO_TEST_CASE(errorWithJson)
 {
     std::stringstream out;
     HttpRequestMock http("https://nowhere.noplace.com",
-        "/etc/grid-security/certificates", "/tmp/myproxy.pem", out);
+        "/etc/grid-security/certificates", CertKeyPair("/tmp/myproxy.pem"),
+        out);
 
     http.performCode = CURLE_OK;
     http.httpCode = 400;

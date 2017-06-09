@@ -29,6 +29,8 @@
 #include <iostream>
 #include <vector>
 
+#include "../CertKey.h"
+
 
 namespace fts3
 {
@@ -40,7 +42,7 @@ class HttpRequest
 
 public:
 
-    HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, bool insecure,
+    HttpRequest(std::string const & url, std::string const & capath, CertKeyPair const & certkey, bool insecure,
                 std::iostream& stream, std::string const &topname = std::string());
     virtual ~HttpRequest();
 

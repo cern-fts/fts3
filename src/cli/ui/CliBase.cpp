@@ -184,30 +184,80 @@ bool CliBase::isInsecure() const
     return vm.count("insecure");
 }
 
-std::string CliBase::proxy() const
+bool CliBase::getProxyPath(CertKeyPair &pair) const
 {
-    std::string path;
+    std::string proxyPath;
 
+    // Explicit options take precedence
     if (vm.count("proxy")) {
-        path = vm["proxy"].as<std::string>();
+        proxyPath = vm["proxy"].as<std::string>();
     }
     else if (const char *x509_user_proxy = getenv("X509_USER_PROXY")) {
-        path = x509_user_proxy;
-    }
-    else {
-        std::ostringstream proxy_path;
-        proxy_path << "/tmp/x509up_u" << geteuid();
-        path = proxy_path.str();
+        proxyPath = x509_user_proxy;
     }
 
+    if (!proxyPath.empty()) {
+        pair.cert = pair.key = boost::filesystem::canonical(proxyPath).string();
+        return true;
+    }
+
+    // Try default proxy location otherwise
+    std::ostringstream proxyPathStr;
+    proxyPathStr << "/tmp/x509up_u" << geteuid();
+    proxyPath = proxyPathStr.str();
+
+    if (access(proxyPath.c_str(), R_OK) == 0) {
+        pair.cert = pair.key = boost::filesystem::canonical(proxyPath).string();
+        return true;
+    }
+    return false;
+}
+
+
+bool CliBase::getUserCertAndKey(CertKeyPair &pair) const
+{
+    const char *ucert = getenv("X509_USER_CERT");
+    const char *ukey = getenv("X509_USER_KEY");
+    if (ucert && ukey) {
+        pair.cert = boost::filesystem::canonical(ucert).string();
+        pair.key = boost::filesystem::canonical(ukey).string();
+        return true;
+    }
+    return false;
+}
+
+
+bool CliBase::getHostCertAndKey(CertKeyPair &pair) const
+{
+    static const char *hcert = "/etc/grid-security/hostcert.pem";
+    static const char *hkey = "/etc/grid-security/hostkey.pem";
+
+    if (geteuid() == 0 && access(hcert, R_OK) == 0 && access(hkey, R_OK) == 0) {
+        pair.cert = boost::filesystem::canonical(hcert).string();
+        pair.key = boost::filesystem::canonical(hkey).string();
+        return true;
+    }
+    return false;
+}
+
+
+CertKeyPair CliBase::getCertAndKeyPair(void) const
+{
+    CertKeyPair pair;
+    std::string proxyPath;
+
     try {
-        return boost::filesystem::canonical(path).string();
+        getProxyPath(pair) || getUserCertAndKey(pair) || getHostCertAndKey(pair);
+        MsgPrinter::instance().print_info("# User certificate", "user_cert", pair.cert);
+        MsgPrinter::instance().print_info("# User key", "user_key", pair.key);
     }
     catch (const boost::filesystem::filesystem_error &e) {
         std::ostringstream errmsg;
         errmsg << "Failed to set the proxy: " << e.code().message() << ": " << e.path1();
         throw fts3::common::UserError(errmsg.str());
     }
+
+    return pair;
 }
 
 

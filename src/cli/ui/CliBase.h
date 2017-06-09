@@ -23,6 +23,7 @@
 
 #include "../ServiceAdapter.h"
 #include "../MsgPrinter.h"
+#include "../CertKey.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
@@ -130,9 +131,9 @@ public:
     bool isInsecure() const;
 
     /**
-     * @return the path to the proxy certificate
+     * @return the path to the proxy certificate, or user cert and key
      */
-    std::string proxy() const;
+    CertKeyPair getCertAndKeyPair(void) const;
 
     /**
      * Gets the FTS3 service string
@@ -216,6 +217,24 @@ protected:
      * the name of the utility
      */
     std::string toolname;
+
+    /**
+     * Get proxy path, if exists
+     * @return true if found and accessible
+     */
+    bool getProxyPath(CertKeyPair&) const;
+
+    /**
+     * Get user certificate and key
+     * @return true if found and accessible
+     */
+    bool getUserCertAndKey(CertKeyPair&) const;
+
+    /**
+     * Get host cert and key
+     * @return true if found and accessible, and if running as root
+     */
+    bool getHostCertAndKey(CertKeyPair&) const;
 
 private:
 

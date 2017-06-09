@@ -22,6 +22,7 @@
 #define ProxyCertificateDelegator_H_
 
 #include "MsgPrinter.h"
+#include "../CertKey.h"
 
 #include <string>
 
@@ -56,10 +57,10 @@ public:
      */
     ProxyCertificateDelegator(std::string const & endpoint,
             std::string const & delegationId,
-            long userRequestedDelegationExpTime, std::string const & proxy) :
+            long userRequestedDelegationExpTime, CertKeyPair const & certkey) :
         delegationId(delegationId),
         endpoint(endpoint),
-        proxy(proxy),
+        certkey(certkey),
         userRequestedDelegationExpTime(userRequestedDelegationExpTime)
     {
 
@@ -99,8 +100,8 @@ protected:
     std::string delegationId;
     /// FTS3 service endpoint
     std::string const endpoint;
-    // proxy path
-    std::string proxy;
+    // cert and key path
+    CertKeyPair certkey;
     /// user defined proxy certificate expiration time
     long const userRequestedDelegationExpTime;
 

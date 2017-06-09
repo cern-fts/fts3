@@ -22,6 +22,7 @@
 #include "MockHttpRequest.h"
 
 using fts3::cli::RestModifyJob;
+using fts3::cli::CertKeyPair;
 namespace pt = boost::property_tree;
 
 
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(ModifyJob)
 
     std::stringstream req(modify.body());
     MockHttpRequest http("https://fts3.nowhere.com" + resource, "/etc/grid-security/certificates",
-        "/tmp/myproxy.pem", req);
+        CertKeyPair("/tmp/myproxy.pem"), req);
 
     modify.do_http_action(http);
 
