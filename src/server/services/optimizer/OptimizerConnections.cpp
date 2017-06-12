@@ -123,16 +123,23 @@ static int optimizeNotEnoughInformation(const PairState &, const PairState &, in
 static int optimizeGoodSuccessRate(const PairState &current, const PairState &previous, int previousValue,
     OptimizerMode optMode, std::stringstream& rationale)
 {
-    int decision;
+    int decision = previousValue;
 
-    if (round(log(current.ema)) < round(log(previous.ema))) {
+    if (current.ema < previous.ema) {
         // If the throughput is worsening, we need to look at the file sizes.
         // If the file sizes are decreasing, then it could be that the throughput deterioration is due to
         // this. Thus, decreasing the number of actives will be a bad idea.
         if (round(log(current.filesizeAvg)) < round(log(previous.filesizeAvg))) {
-            decision = previousValue;
+            decision = previousValue + 1;
             rationale << "Good link efficiency, throughput deterioration, avg. filesize decreasing";
-        } else {
+        }
+        // Compare on the logarithmic scale, to reduce sensitivity
+        else if(round(log(current.ema)) < round(log(previous.ema))) {
+            decision = previousValue;
+            rationale << "Good link efficiency, small throughput deterioration";
+        }
+        // We have lost an order of magnitude, so drop actives
+        else {
             decision = previousValue - 1;
             rationale << "Good link efficiency, throughput deterioration";
         }

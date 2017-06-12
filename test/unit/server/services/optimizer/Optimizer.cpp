@@ -532,7 +532,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
 }
 
 // Success rate is good, throughput worsens, but so does avg. filesize.
-// The value should remain stable.
+// The value should increase.
 BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
@@ -554,7 +554,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
+    BOOST_CHECK_GT(lastEntry->activeDecision, 40);
 }
 
 // Success rate is good, better throughput, keep streams sane
