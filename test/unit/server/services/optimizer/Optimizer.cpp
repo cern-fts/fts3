@@ -377,6 +377,28 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
     BOOST_CHECK_EQUAL(range.min, 150);
 }
 
+// No prior information
+BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
+{
+    const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+
+    // Feed successful and actives
+    populateTransfers(pair, "FINISHED", 100);
+    populateTransfers(pair, "ACTIVE", 20);
+
+    runOptimizerForPair(pair);
+
+    auto lastEntry = getLastEntry(pair);
+
+    Range range;
+    Limits limits;
+    getOptimizerWorkingRange(pair, &range, &limits);
+
+    BOOST_CHECK_LE(lastEntry->activeDecision, range.max);
+    BOOST_CHECK_GE(lastEntry->activeDecision, range.min);
+    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
+}
+
 // Success rate gets worse, so the number should be reduced
 BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
 {

@@ -162,6 +162,9 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // of connections.
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
+    int decision = 0;
+    std::stringstream rationale;
+
     // Optimizer working values
     Range range;
     Limits limits;
@@ -185,7 +188,25 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     current.activeCount = dataSource->getActive(pair);
     current.queueSize = dataSource->getSubmitted(pair);
 
-    // First time seen, store and exit
+    // There is no value yet. In this case, pick the high value if configured, mid-range otherwise.
+    if (previousValue == 0) {
+        if (isRangeConfigured) {
+            decision = range.max;
+            rationale << "No information. Use configured range max.";
+        } else {
+            decision = range.min + (range.max - range.min) / 2;
+            rationale << "No information. Start halfway.";
+        }
+
+        storeOptimizerDecision(pair, decision, current, decision, rationale.str());
+
+        current.ema = current.throughput;
+        inMemoryStore[pair] = current;
+
+        return true;
+    }
+
+    // There is information, but it is the first time seen since the restart
     if (inMemoryStore.find(pair) == inMemoryStore.end()) {
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
@@ -204,23 +225,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         return true;
     }
 
-    // New decision
-    int decision = 0;
-    std::stringstream rationale;
 
-    // There is no value yet. In this case, pick the high value if configured, low otherwise.
-    if (previousValue == 0) {
-        if (isRangeConfigured) {
-            decision = range.max;
-            rationale << "No information. Use configured range max.";
-        } else {
-            decision = range.min;
-            rationale << "No information. Use default min.";
-        }
-
-        storeOptimizerDecision(pair, decision, current, decision, rationale.str());
-        return true;
-    }
 
     // Apply bandwidth limits
     if (limits.throughputSource > 0) {
