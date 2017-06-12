@@ -125,7 +125,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 {
     int decision;
 
-    if (current.ema < previous.ema) {
+    if (round(log(current.ema)) < round(log(previous.ema))) {
         // If the throughput is worsening, we need to look at the file sizes.
         // If the file sizes are decreasing, then it could be that the throughput deterioration is due to
         // this. Thus, decreasing the number of actives will be a bad idea.
