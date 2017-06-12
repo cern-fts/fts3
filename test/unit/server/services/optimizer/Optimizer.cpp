@@ -317,9 +317,9 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
 
     Range range;
     Limits limits;
-    bool maxConfigured = getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK(!maxConfigured);
+    BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
     BOOST_CHECK_NE(range.min, 0);
     BOOST_CHECK_EQUAL(range.max, std::min({limits.link, limits.destination, limits.source}));
@@ -344,9 +344,9 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
 
     Range range;
     Limits limits;
-    bool maxConfigured = getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK(!maxConfigured);
+    BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
     BOOST_CHECK_NE(range.min, 0);
     BOOST_CHECK_EQUAL(range.max, limits.source);
@@ -359,6 +359,7 @@ public:
     void getPairLimits(const Pair&, Range *range, Limits *limits) {
         range->min = 150;
         range->max = 200;
+        range->specific = true;
         limits->destination = 40;
         limits->source = 20;
     }
@@ -370,9 +371,9 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
 
     Range range;
     Limits limits;
-    bool maxConfigured = getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK(maxConfigured);
+    BOOST_CHECK(range.specific);
     BOOST_CHECK_EQUAL(range.max, 200);
     BOOST_CHECK_EQUAL(range.min, 150);
 }

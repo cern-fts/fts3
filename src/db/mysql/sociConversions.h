@@ -365,6 +365,22 @@ struct type_conversion<boost::logic::tribool>
 };
 
 template<>
+struct type_conversion<bool>
+{
+    typedef int base_type;
+
+    static void from_base(int v, indicator ind, bool& boolean)
+    {
+        if (ind == soci::i_null) {
+            boolean = false;
+        }
+        else {
+            boolean = (v != 0);
+        }
+    }
+};
+
+template<>
 struct type_conversion<OptimizerMode>
 {
     typedef int base_type;

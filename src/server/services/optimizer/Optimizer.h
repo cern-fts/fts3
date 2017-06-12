@@ -39,8 +39,10 @@ namespace optimizer {
 
 struct Range {
     int min, max;
+    // Set to true if min,max is configured specifically, or is a *->* configuration
+    bool specific;
 
-    Range(): min(0), max(0) {}
+    Range(): min(0), max(0), specific(false) {}
 };
 
 
@@ -137,9 +139,7 @@ protected:
     void optimizeStreamsForPair(OptimizerMode optMode, const Pair &);
 
     // Stores into rangeActiveMin and rangeActiveMax the working range for the optimizer
-    // Returns true if the range is configured, so the optimizer can start higher by default
-    // Returns false if the range max is *not* configured, so the optimizer must be careful and start low
-    bool getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits);
+    void getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits);
 
     // Updates decision
     void storeOptimizerDecision(const Pair &pair, int decision, const PairState &current,

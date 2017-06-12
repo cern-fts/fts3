@@ -23,6 +23,7 @@
 #include "db/generic/DbUtils.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "sociConversions.h"
 
 using namespace db;
 using namespace fts3;
@@ -178,13 +179,13 @@ public:
         soci::indicator isNullMin, isNullMax;
         sql <<
             "SELECT min_active, max_active FROM ("
-            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
-            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
-            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
-            "   SELECT min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = '*' "
+            "   SELECT 1, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
+            "   SELECT 1, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
+            "   SELECT 1, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
+            "   SELECT 0, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = '*' "
             ") AS lc LIMIT 1",
             soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
-            soci::into(range->min, isNullMin), soci::into(range->max, isNullMax);
+            soci::into(range->specific), soci::into(range->min, isNullMin), soci::into(range->max, isNullMax);
 
         if (isNullMin == soci::i_null || isNullMax == soci::i_null) {
             range->min = range->max = 0;

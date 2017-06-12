@@ -53,7 +53,7 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 }
 
 
-bool Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits)
+void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits)
 {
     // Query specific limits
     dataSource->getPairLimits(pair, range, limits);
@@ -77,7 +77,6 @@ bool Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
     }
 
     BOOST_ASSERT(range->min > 0 && range->max >= range->min);
-    return isMaxConfigured;
 }
 
 // To be called for low success rates (<= LOW_SUCCESS_RATE)
@@ -168,7 +167,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Optimizer working values
     Range range;
     Limits limits;
-    bool isRangeConfigured = getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, &range, &limits);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
 
@@ -190,7 +189,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // There is no value yet. In this case, pick the high value if configured, mid-range otherwise.
     if (previousValue == 0) {
-        if (isRangeConfigured) {
+        if (range.specific) {
             decision = range.max;
             rationale << "No information. Use configured range max.";
         } else {
