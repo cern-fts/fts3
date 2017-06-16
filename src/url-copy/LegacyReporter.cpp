@@ -45,7 +45,7 @@ static std::string replaceMetadataString(std::string text)
 
 
 LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), opts(opts),
-    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PUSH)
+    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PUB)
 {
     std::string address = std::string("ipc://") + opts.msgDir + "/url_copy-ping.ipc";
     zmqPingSocket.bind(address.c_str());

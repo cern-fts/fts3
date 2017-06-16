@@ -28,11 +28,12 @@ namespace server {
 
 
 SupervisorService::SupervisorService(): BaseService("SupervisorService"),
-    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PULL)
+    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_SUB)
 {
     std::string messagingDirectory = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     std::string address = std::string("ipc://") + messagingDirectory + "/url_copy-ping.ipc";
     zmqPingSocket.connect(address.c_str());
+    zmqPingSocket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 }
 
 
