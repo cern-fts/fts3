@@ -19,17 +19,57 @@
  */
 
 #include <config/ServerConfig.h>
+#include <monitoring/msg-ifce.h>
 #include "OptimizerService.h"
 #include "Optimizer.h"
 
 #include "db/generic/SingleDbInstance.h"
-#include "common/Logger.h"
 
 
 namespace fts3 {
 namespace server {
 
 using optimizer::Optimizer;
+using optimizer::OptimizerCallbacks;
+using optimizer::PairState;
+
+
+class OptimizerNotifier : public OptimizerCallbacks {
+protected:
+    Producer msgProducer;
+
+public:
+    OptimizerNotifier(const std::string &msgDir) : msgProducer(msgDir)
+    {}
+
+    OptimizerNotifier(const OptimizerNotifier &) = delete;
+
+    void notifyDecision(const Pair &pair, int decision, const PairState &current,
+        int diff, const std::string &rationale)
+    {
+        // Broadcast the decision
+        OptimizerInfo msg;
+
+        msg.source_se = pair.source;
+        msg.dest_se = pair.destination;
+
+        msg.timestamp = millisecondsSinceEpoch();
+
+        msg.throughput = current.throughput;
+        msg.avgDuration = current.avgDuration;
+        msg.successRate = current.successRate;
+        msg.retryCount = current.retryCount;
+        msg.activeCount = current.activeCount;
+        msg.queueSize = current.queueSize;
+        msg.ema = current.ema;
+        msg.filesizeAvg = current.filesizeAvg;
+        msg.filesizeStdDev = current.filesizeStdDev;
+        msg.connections = decision;
+        msg.rationale = rationale;
+
+        MsgIfce::getInstance()->SendOptimizer(msgProducer, msg);
+    }
+};
 
 
 OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerService"), beat(beat)
@@ -45,7 +85,14 @@ void OptimizerService::runService()
     auto optimizerSteadyInterval = config::ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
     auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
 
-    Optimizer optimizer(db::DBSingleton::instance().getDBObjectInstance()->getOptimizerDataSource());
+    OptimizerNotifier optimizerCallbacks(
+        config::ServerConfig::instance().get<std::string>("MessagingDirectory")
+    );
+
+    Optimizer optimizer(
+        db::DBSingleton::instance().getDBObjectInstance()->getOptimizerDataSource(),
+        &optimizerCallbacks
+    );
     optimizer.setSteadyInterval(optimizerSteadyInterval);
     optimizer.setMaxNumberOfStreams(maxNumberOfStreams);
 

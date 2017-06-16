@@ -124,15 +124,21 @@ public:
     virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
 };
 
+// Used by the optimizer to notify decisions
+class OptimizerCallbacks {
+public:
+    virtual void notifyDecision(const Pair &pair, int decision, const PairState &current,
+        int diff, const std::string &rationale) = 0;
+};
+
 // Optimizer implementation
 class Optimizer: public boost::noncopyable {
 protected:
     std::map<Pair, PairState> inMemoryStore;
     OptimizerDataSource *dataSource;
+    OptimizerCallbacks *callbacks;
     boost::posix_time::time_duration optimizerSteadyInterval;
     int maxNumberOfStreams;
-
-    Producer msgProducer;
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
@@ -145,11 +151,11 @@ protected:
     void getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits);
 
     // Updates decision
-    void storeOptimizerDecision(const Pair &pair, int decision, const PairState &current,
+    void setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
         int diff, const std::string &rationale);
 
 public:
-    Optimizer(OptimizerDataSource *ds);
+    Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks);
     ~Optimizer();
 
     void setSteadyInterval(boost::posix_time::time_duration);

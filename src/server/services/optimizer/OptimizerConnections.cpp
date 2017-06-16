@@ -205,7 +205,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
             rationale << "No information. Start halfway.";
         }
 
-        storeOptimizerDecision(pair, decision, current, decision, rationale.str());
+        setOptimizerDecision(pair, decision, current, decision, rationale.str());
 
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
@@ -228,7 +228,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        storeOptimizerDecision(pair, range.min, current, 0, "Range fixed");
+        setOptimizerDecision(pair, range.min, current, 0, "Range fixed");
         return true;
     }
 
@@ -240,7 +240,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (throughput > limits.throughputSource) {
             decision = previousValue - 1;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            storeOptimizerDecision(pair, decision, current, 0, rationale.str());
+            setOptimizerDecision(pair, decision, current, 0, rationale.str());
             return true;
         }
     }
@@ -249,7 +249,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (throughput > limits.throughputDestination) {
             decision = previousValue - 1;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            storeOptimizerDecision(pair, decision, current, 0, rationale.str());
+            setOptimizerDecision(pair, decision, current, 0, rationale.str());
             return true;
         }
     }
@@ -324,39 +324,21 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    storeOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str());
+    setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str());
     return true;
 }
 
 
-void Optimizer::storeOptimizerDecision(const Pair &pair, int decision, const PairState &current,
+void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
     int diff, const std::string &rationale)
 {
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
     dataSource->storeOptimizerDecision(pair, decision, current, diff, rationale);
 
-    // Broadcast the decision
-    OptimizerInfo msg;
-
-    msg.source_se = pair.source;
-    msg.dest_se = pair.destination;
-
-    msg.timestamp = millisecondsSinceEpoch();
-
-    msg.throughput = current.throughput;
-    msg.avgDuration = current.avgDuration;
-    msg.successRate = current.successRate;
-    msg.retryCount = current.retryCount;
-    msg.activeCount = current.activeCount;
-    msg.queueSize = current.queueSize;
-    msg.ema = current.ema;
-    msg.filesizeAvg = current.filesizeAvg;
-    msg.filesizeStdDev = current.filesizeStdDev;
-    msg.connections = decision;
-    msg.rationale = rationale;
-
-    MsgIfce::getInstance()->SendOptimizer(msgProducer, msg);
+    if (callbacks) {
+        callbacks->notifyDecision(pair, decision, current, diff, rationale);
+    }
 }
 
 }

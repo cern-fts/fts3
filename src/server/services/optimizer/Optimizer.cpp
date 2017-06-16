@@ -31,9 +31,9 @@ namespace fts3 {
 namespace optimizer {
 
 
-Optimizer::Optimizer(OptimizerDataSource *ds):
-    dataSource(ds), optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
-    msgProducer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
+Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
+    dataSource(ds), callbacks(callbacks),
+    optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10)
 {
 }
 
