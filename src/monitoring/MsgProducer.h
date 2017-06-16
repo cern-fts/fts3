@@ -46,12 +46,16 @@ private:
 
     cms::Connection* connection;
     cms::Session* session;
+
     cms::Destination* destination_transfer_started;
     cms::Destination* destination_transfer_completed;
+    cms::Destination* destination_transfer_state;
+    cms::Destination* destination_optimizer;
+
     cms::MessageProducer* producer_transfer_started;
     cms::MessageProducer* producer_transfer_completed;
     cms::MessageProducer* producer_transfer_state;
-    cms::Destination* destination_transfer_state;
+    cms::MessageProducer* producer_optimizer;
 
     std::string FTSEndpoint;
     const BrokerConfig& brokerConfig;

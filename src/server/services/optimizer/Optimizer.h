@@ -29,6 +29,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <db/generic/LinkConfig.h>
 #include <db/generic/Pair.h>
+#include <msg-bus/producer.h>
 
 #include "common/Uri.h"
 
@@ -130,6 +131,8 @@ protected:
     OptimizerDataSource *dataSource;
     boost::posix_time::time_duration optimizerSteadyInterval;
     int maxNumberOfStreams;
+
+    Producer msgProducer;
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored

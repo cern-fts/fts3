@@ -56,6 +56,9 @@ public:
     /// Destination for queue state messages
     std::string GetStateDestination() const;
 
+    /// Destination for optimizer updates
+    std::string GetOptimizerDestination() const;
+
     /// Messages time-to-live, in hours
     int GetTTL() const;
 

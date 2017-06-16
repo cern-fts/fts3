@@ -127,6 +127,21 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
                 << commit;
         }
     }
+    else if (type == "OP") {
+        producer_optimizer->send(message.get());
+        auto sourceSe = msg.Find("source_se");
+        auto destSe = msg.Find("dest_se");
+
+        if (sourceSe != msg.End() && destSe != msg.End()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer update: "
+                << json::String(sourceSe->element).Value() << " => "
+                << json::String(destSe->element).Value()
+                << commit;
+        }
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Dropping unknown message type: " << type << commit;
+    }
 }
 
 
@@ -179,11 +194,13 @@ bool MsgProducer::getConnection()
             destination_transfer_started = session->createTopic(brokerConfig.GetStartDestination());
             destination_transfer_completed = session->createTopic(brokerConfig.GetCompleteDestination());
             destination_transfer_state = session->createTopic(brokerConfig.GetStateDestination());
+            destination_optimizer = session->createTopic(brokerConfig.GetOptimizerDestination());
         }
         else {
             destination_transfer_started = session->createQueue(brokerConfig.GetStartDestination());
             destination_transfer_completed = session->createQueue(brokerConfig.GetCompleteDestination());
             destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
+            destination_optimizer = session->createQueue(brokerConfig.GetOptimizerDestination());
         }
 
         // setTimeToLive expects milliseconds
@@ -202,6 +219,10 @@ bool MsgProducer::getConnection()
         producer_transfer_state = session->createProducer(destination_transfer_state);
         producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
         producer_transfer_state->setTimeToLive(ttlMs);
+
+        producer_optimizer = session->createProducer(destination_optimizer);
+        producer_optimizer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
+        producer_optimizer->setTimeToLive(ttlMs);
 
         connected = true;
 

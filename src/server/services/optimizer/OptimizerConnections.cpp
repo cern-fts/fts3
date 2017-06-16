@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <monitoring/msg-ifce.h>
 #include "Optimizer.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
@@ -334,6 +335,28 @@ void Optimizer::storeOptimizerDecision(const Pair &pair, int decision, const Pai
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
     dataSource->storeOptimizerDecision(pair, decision, current, diff, rationale);
+
+    // Broadcast the decision
+    OptimizerInfo msg;
+
+    msg.source_se = pair.source;
+    msg.dest_se = pair.destination;
+
+    msg.timestamp = millisecondsSinceEpoch();
+
+    msg.throughput = current.throughput;
+    msg.avgDuration = current.avgDuration;
+    msg.successRate = current.successRate;
+    msg.retryCount = current.retryCount;
+    msg.activeCount = current.activeCount;
+    msg.queueSize = current.queueSize;
+    msg.ema = current.ema;
+    msg.filesizeAvg = current.filesizeAvg;
+    msg.filesizeStdDev = current.filesizeStdDev;
+    msg.connections = decision;
+    msg.rationale = rationale;
+
+    MsgIfce::getInstance()->SendOptimizer(msgProducer, msg);
 }
 
 }

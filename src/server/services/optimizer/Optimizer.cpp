@@ -18,20 +18,22 @@
  * limitations under the License.
  */
 
+#include "config/ServerConfig.h"
 #include "Optimizer.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 
 using namespace fts3::common;
-
+using namespace fts3::config;
 
 namespace fts3 {
 namespace optimizer {
 
 
 Optimizer::Optimizer(OptimizerDataSource *ds):
-    dataSource(ds), optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10)
+    dataSource(ds), optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
+    msgProducer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
 }
 

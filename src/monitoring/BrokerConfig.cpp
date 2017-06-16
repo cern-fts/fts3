@@ -116,6 +116,11 @@ BrokerConfig::BrokerConfig(const std::string &path)
         po::value<std::string>()->default_value(""),
         "Password for the client private key if encrypted"
     )
+    (
+        "OPTIMIZER",
+        po::value<std::string>()->default_value("transfer.fts_monitoring_queue_state"),
+        "Destination for optimizer messages"
+    )
     ;
 
     std::ifstream in(path.c_str());
@@ -189,6 +194,12 @@ std::string BrokerConfig::GetCompleteDestination() const
 std::string BrokerConfig::GetStateDestination() const
 {
     return vm["STATE"].as<std::string>();
+}
+
+
+std::string BrokerConfig::GetOptimizerDestination() const
+{
+    return vm["OPTIMIZER"].as<std::string>();
 }
 
 

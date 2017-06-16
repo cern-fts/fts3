@@ -293,3 +293,48 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
         return strerror_r(errCode, buffer, sizeof(buffer));
     }
 }
+
+
+std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_info)
+{
+    std::string ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
+
+    json::Object message;
+
+    message["endpnt"] = json::String(ftsAlias);
+    message["source_se"] = json::String(opt_info.source_se);
+    message["dest_se"] = json::String(opt_info.dest_se);
+    message["timestamp"] = json::Number(opt_info.timestamp);
+
+    message["throughput"] = json::Number(opt_info.throughput);
+    message["throughput_ema"] = json::Number(opt_info.ema);
+
+    message["duration_avg"] = json::Number(opt_info.avgDuration);
+
+    message["filesize_avg"] = json::Number(opt_info.filesizeAvg);
+    message["filesize_stddev"] = json::Number(opt_info.filesizeAvg);
+
+    message["success_rate"] = json::Number(opt_info.successRate);
+    message["retry_count"] = json::Number(opt_info.retryCount);
+
+    message["active_count"] = json::Number(opt_info.activeCount);
+    message["submitted_count"] = json::Number(opt_info.queueSize);
+
+    message["connections"] = json::Number(opt_info.connections);
+    message["rationale"] = json::String(opt_info.rationale);
+
+    std::ostringstream stream;
+
+    stream << "OP ";
+    json::Writer::Write(message, stream);
+
+    std::string msgStr = stream.str();
+    int errCode = producer.runProducerMonitoring(msgStr);
+    if (errCode == 0) {
+        return msgStr;
+    }
+    else {
+        char buffer[512];
+        return strerror_r(errCode, buffer, sizeof(buffer));
+    }
+}
