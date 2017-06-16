@@ -22,6 +22,7 @@
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/test_tools.hpp>
+#include <config/ServerConfig.h>
 
 #include "server/services/optimizer/Optimizer.h"
 #include "server/services/optimizer/OptimizerConstants.h"
@@ -30,6 +31,15 @@ using namespace fts3::optimizer;
 
 BOOST_AUTO_TEST_SUITE(server)
 BOOST_AUTO_TEST_SUITE(OptimizerTestSuite)
+
+struct InitConfig {
+    InitConfig() {
+        fts3::config::ServerConfig::instance().read(0, NULL);
+    }
+};
+
+
+BOOST_GLOBAL_FIXTURE(InitConfig);
 
 
 struct OptimizerEntry {
