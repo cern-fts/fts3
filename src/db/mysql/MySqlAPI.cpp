@@ -516,7 +516,7 @@ void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
                                        " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
                                        " WHERE "
                                        "      t_file.file_state = 'SUBMITTED' AND "
-                                       "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
+                                       "      (t_file.hashed_id BETWEEN :hStart AND :hEnd) AND"
                                        "      t_job.job_type = 'Y' ",
                                        soci::use(hashSegment.start), soci::use(hashSegment.end)
                                       );
@@ -799,8 +799,7 @@ int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::st
     }
 
     // This pair may have transfers already queued, so take them into account
-    std::list<std::pair<std::string, std::string> >::iterator i;
-    for (i = visited.begin(); i != visited.end(); ++i)
+    for (auto i = visited.begin(); i != visited.end(); ++i)
     {
         if (i->first == source_se && i->second == dest_se) {
             --limit;
@@ -820,7 +819,6 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
         time_t now = time(NULL);
         struct tm tTime;
         gmtime_r(&now, &tTime);
-
 
         soci::rowset<soci::row> jobs_rs = (sql.prepare <<
                                            " SELECT DISTINCT t_file.vo_name, t_file.job_id "
@@ -1093,13 +1091,16 @@ unsigned int MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std
 void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files)
 {
-    if(queues.empty()) return;
+    if(queues.empty()) {
+        return;
+    }
 
     soci::session sql(*connectionPool);
 
     time_t now = time(NULL);
     struct tm tTime;
-    soci::indicator isNull;
+
+    gmtime_r(&now, &tTime);
 
     try
     {
@@ -1107,31 +1108,42 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
         // AND there are pending file transfers within the job
         for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            gmtime_r(&now, &tTime);
+            int maxActive;
+            soci::indicator maxActiveNull;
 
-            std::string job;
+            // How many already running
+            int activeCount = getActiveCount(sql, it->sourceSe, it->destSe);
 
-            sql <<
-                "select distinct j.job_id, j.priority, j.submit_time "
-                "from t_job j inner join t_file f on j.job_id = f.job_id "
-                "where j.source_se=:source_se and j.dest_se=:dest_se and "
-                "      j.vo_name=:vo_name and j.job_type = 'Y' and "
-                "      j.job_state in ('SUBMITTED', 'ACTIVE') and "
-                "      (f.hashed_id >= :hStart and f.hashed_id <= :hEnd) and "
-                "      (f.retry_timestamp is null or f.retry_timestamp < :tTime) "
-                "order by j.priority DESC, j.submit_time "
-                "limit 1 ",
+            // How many can we run
+            sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
                 soci::use(it->sourceSe),
                 soci::use(it->destSe),
-                soci::use(it->voName),
-                soci::use(hashSegment.start),
-                soci::use(hashSegment.end),
-                soci::use(tTime),
-                soci::into(job, isNull)
-                ;
+                soci::into(maxActive, maxActiveNull);
 
-            if (isNull != soci::i_null)
-            {
+            // This is what is left
+            int limit = maxActive - activeCount;
+            if (limit <= 0) {
+                continue;
+            }
+
+
+            soci::rowset<std::string> jobs = (sql.prepare <<
+                "SELECT job_id "
+                "FROM t_job "
+                "WHERE source_se=:source_se AND dest_se=:dest_se AND "
+                "      vo_name=:vo_name AND job_type = 'Y' AND "
+                "      job_state IN ('SUBMITTED', 'ACTIVE') AND "
+                "      EXISTS (SELECT 1 FROM t_file WHERE t_file.job_id = t_job.job_id AND file_state = 'SUBMITTED') "
+                "ORDER BY priority DESC, submit_time "
+                "LIMIT :limit ",
+                soci::use(it->sourceSe), soci::use(it->destSe),
+                soci::use(it->voName),
+                soci::use(limit)
+            );
+
+            for (auto ji = jobs.begin(); ji != jobs.end(); ++ji) {
+                std::string jobId = *ji;
+
                 soci::rowset<TransferFile> rs =
                     (
                         sql.prepare <<
@@ -1145,17 +1157,22 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         "       j.internal_job_params, j.job_type "
                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
                         " WHERE j.job_id = :job_id AND "
-                        "       f.file_state = 'SUBMITTED'",
-                        soci::use(job)
+                        "       f.file_state = 'SUBMITTED' AND "
+                        "       f.hashed_id BETWEEN :hStart AND :hEnd AND "
+                        "       (f.retry_timestamp is null or f.retry_timestamp < :tTime)",
+                        soci::use(jobId),
+                        soci::use(hashSegment.start), soci::use(hashSegment.end),
+                        soci::use(tTime)
                     );
 
                 std::list<TransferFile> tf;
-                for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                for (auto ti = rs.begin(); ti != rs.end(); ++ti)
                 {
                     tf.push_back(*ti);
                 }
-                if (!tf.empty())
-                    files[it->voName].push(std::make_pair(job, tf));
+                if (!tf.empty()) {
+                    files[it->voName].push(std::make_pair(jobId, tf));
+                }
             }
         }
     }
