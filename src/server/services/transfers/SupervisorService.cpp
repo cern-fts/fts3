@@ -32,8 +32,9 @@ SupervisorService::SupervisorService(): BaseService("SupervisorService"),
 {
     std::string messagingDirectory = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     std::string address = std::string("ipc://") + messagingDirectory + "/url_copy-ping.ipc";
-    zmqPingSocket.connect(address.c_str());
     zmqPingSocket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+
+    zmqPingSocket.bind(address.c_str());
 }
 
 

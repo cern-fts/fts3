@@ -48,7 +48,7 @@ LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), 
     zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PUB)
 {
     std::string address = std::string("ipc://") + opts.msgDir + "/url_copy-ping.ipc";
-    zmqPingSocket.bind(address.c_str());
+    zmqPingSocket.connect(address.c_str());
 }
 
 
