@@ -46,11 +46,15 @@ static void signalCallback(int signum, void *udata)
 
             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Stacktrace: " << stackTrace << commit;
 
-            urlCopyProcess->panic(errMsg.str());
+            if (urlCopyProcess) {
+                urlCopyProcess->panic(errMsg.str());
+            }
             break;
         // Termination signal. The process can continue once the cancellation has been triggered.
         case SIGINT: case SIGTERM:
-            urlCopyProcess->cancel();
+            if (urlCopyProcess) {
+                urlCopyProcess->cancel();
+            }
             break;
     }
 }
@@ -72,6 +76,9 @@ int main(int argc, char *argv[])
 
     clearEnvironment();
 
+    // Set the signal handler at least to log the traceback
+    panic::setup_signal_handlers(signalCallback, NULL);
+
     // Parse options and setup log levels
     UrlCopyOpts opts;
     opts.parse(argc, argv);
@@ -81,7 +88,7 @@ int main(int argc, char *argv[])
     LegacyReporter reporter(opts);
     UrlCopyProcess urlCopyProcess(opts, reporter);
 
-    // Set up signal handler
+    // Re-set signal handler to handle gracefully signals
     panic::setup_signal_handlers(signalCallback, &urlCopyProcess);
 
     // Run the transfer
