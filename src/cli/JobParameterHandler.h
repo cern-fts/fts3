@@ -79,6 +79,7 @@ public:
     static const std::string FAIL_NEARLINE;
     static const std::string OVERWRITEFLAG;
     static const std::string CHECKSUM_METHOD;
+    static const std::string CHECKSUM_MODE;
     static const std::string REUSE;
     static const std::string JOB_METADATA;
     static const std::string RETRY;

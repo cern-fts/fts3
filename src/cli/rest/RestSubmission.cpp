@@ -87,8 +87,8 @@ void RestSubmission::strip_values(std::string & json, std::string const & token)
 std::string RestSubmission::strip_values(std::string const & json)
 {
     static std::string tokens[] =
-    {"filesize", "verify_checksum", "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry"};
-    static int const size = 8;
+    {"filesize", "verify_checksum", "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry", "timeout"};
+    static int const size = 9;
 
     std::string ret = json;
     for (int index = 0; index < size; ++index)
@@ -150,6 +150,7 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
         {
             params.put("verify_checksum", true);
         }
+
     if (me.parameters.find(JobParameterHandler::REUSE) != me.parameters.end())
         {
             params.put("reuse", true);
@@ -158,6 +159,11 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
     if (param_itr != me.parameters.end())
         {
             params.put("spacetoken", param_itr->second);
+        }
+    param_itr = me.parameters.find(JobParameterHandler::CHECKSUM_MODE);
+    if (param_itr != me.parameters.end())
+        {
+            params.put("verify_checksum", param_itr->second);
         }
     param_itr = me.parameters.find(JobParameterHandler::BRING_ONLINE);
     if (param_itr != me.parameters.end() && param_itr->second != "-1")
@@ -169,6 +175,11 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
         {
             params.put("copy_pin_lifetime", param_itr->second);
         }
+    param_itr = me.parameters.find(JobParameterHandler::TIMEOUT);
+    if (param_itr != me.parameters.end() && param_itr->second != "-1")
+       {
+            params.put("timeout", param_itr->second);
+       }
     param_itr = me.parameters.find(JobParameterHandler::JOB_METADATA);
     if (param_itr != me.parameters.end())
         {

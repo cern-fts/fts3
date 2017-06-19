@@ -33,6 +33,7 @@ const std::string JobParameterHandler::LAN_CONNECTION = "lan_connection";
 const std::string JobParameterHandler::FAIL_NEARLINE = "fail_nearline";
 const std::string JobParameterHandler::OVERWRITEFLAG = "overwrite";
 const std::string JobParameterHandler::CHECKSUM_METHOD = "checksum_method";
+const std::string JobParameterHandler::CHECKSUM_MODE = "checksum_mode";
 const std::string JobParameterHandler::REUSE = "reuse";
 const std::string JobParameterHandler::JOB_METADATA = "job_metadata";
 const std::string JobParameterHandler::RETRY = "retry";
