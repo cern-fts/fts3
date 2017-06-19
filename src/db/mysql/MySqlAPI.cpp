@@ -546,6 +546,34 @@ void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
     }
 }
 
+/// Count how many transfers are running for the given pair
+/// @param source Source storage
+/// @param dest Destination storage
+/// @return Number of running (or scheduled) transfers
+static int getActiveCount(soci::session& sql, const std::string &source, const std::string &dest)
+{
+    int activeCount = 0, reuseCount = 0;
+
+    // Non-session reuse running
+    sql << "SELECT COUNT(*) FROM t_file f JOIN t_job j ON j.job_id = f.job_id "
+        " WHERE f.source_se = :source_se AND f.dest_se = :dest_se"
+        "    AND j.job_type NOT IN ('Y', 'H') "
+        "    AND f.file_state IN ('READY', 'ACTIVE')",
+        soci::use(source), soci::use(dest),
+        soci::into(activeCount);
+
+    // Session reuse running
+    sql << "SELECT COUNT(*) FROM t_job "
+        " WHERE source_se = :source_se AND dest_se = :dest_se "
+        "    AND job_type IN ('Y', 'H') "
+        "    AND job_state = 'ACTIVE'",
+        soci::use(source), soci::use(dest),
+        soci::into(reuseCount);
+
+    return activeCount + reuseCount;
+}
+
+
 void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::list<TransferFile> >& files)
 {
@@ -558,17 +586,11 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         // AND there are pending file transfers within the job
         for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            int activeCount = 0;
             int maxActive = 0;
             soci::indicator maxActiveNull = soci::i_ok;
             int filesNum = 10;
 
-            // How many are there running
-            sql << "SELECT COUNT(*) FROM t_file "
-                   " WHERE source_se = :source_se AND dest_se = :dest_se AND file_state = 'ACTIVE'",
-                   soci::use(it->sourceSe),
-                   soci::use(it->destSe),
-                   soci::into(activeCount);
+            int activeCount = getActiveCount(sql, it->sourceSe, it->destSe);
 
             // How many can we run
             sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
@@ -753,30 +775,36 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 }
 
 
+/// Return how many free slots there are for the given pair
+/// @param visited Transfers not yet updated on the DB, but scheduled by the caller
+/// @param source_se Source storage
+/// @param dest_se Destination storage
 static
 int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
                     const std::string& source_se, const std::string& dest_se)
 {
-    int active = 0, max_active = 0, limit = 0;
-    soci::indicator is_active_null = soci::i_ok;
+    int maxActive = 0, limit = 0;
+    soci::indicator activeIndicator = soci::i_ok;
 
-    sql << "SELECT COUNT(*) FROM t_file WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE'",
-        soci::use(source_se), soci::use(dest_se), soci::into(active);
+    int active = getActiveCount(sql, source_se, dest_se);
 
     sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
-        soci::use(source_se), soci::use(dest_se), soci::into(max_active, is_active_null);
+        soci::use(source_se), soci::use(dest_se), soci::into(maxActive, activeIndicator);
 
-    if (!is_active_null)
-        limit = (max_active - active);
-    if (limit <= 0)
+    if (!activeIndicator) {
+        limit = (maxActive - active);
+    }
+    if (limit <= 0) {
         return 0;
+    }
 
     // This pair may have transfers already queued, so take them into account
     std::list<std::pair<std::string, std::string> >::iterator i;
     for (i = visited.begin(); i != visited.end(); ++i)
     {
-        if (i->first == source_se && i->second == dest_se)
+        if (i->first == source_se && i->second == dest_se) {
             --limit;
+        }
     }
 
     return limit;
@@ -1639,11 +1667,10 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
 {
     soci::session sql(*connectionPool);
 
-    int maxActive = 0;
-    bool allowed = false;
-
     try
     {
+        int maxActive = 0;
+
         sql << "SELECT active FROM t_optimizer "
                "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
                soci::use(sourceStorage), soci::use(destStorage),
@@ -1652,27 +1679,9 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
             maxActive = DEFAULT_MIN_ACTIVE;
         }
 
-        // The trick here, is that t_optimizer refers to the number of connections,
-        // so we need to count the number of streams
-        currentActive = 0;
-        soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT internal_file_params FROM t_file "
-            "WHERE source_se = :source AND dest_se = :dest_se and file_state IN ('ACTIVE', 'READY')",
-            soci::use(sourceStorage), soci::use(destStorage)
-        );
-        for (auto i = rs.begin(); i != rs.end(); ++i) {
-            auto paramsStr = i->get<std::string>("internal_file_params", "");
+        int currentActive = getActiveCount(sql, sourceStorage, destStorage);
 
-            if (paramsStr.empty()) {
-                ++currentActive;
-            }
-            else {
-                TransferFile::ProtocolParameters params(paramsStr);
-                currentActive += params.nostreams;
-            }
-        }
-
-        allowed = (currentActive < maxActive);
+        return (currentActive < maxActive);
     }
     catch (std::exception& e)
     {
@@ -1682,7 +1691,6 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
     {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-    return allowed;
 }
 
 
