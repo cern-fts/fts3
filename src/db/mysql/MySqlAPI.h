@@ -315,8 +315,6 @@ private:
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    int getCredits(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
-
     bool getDrainInternal(soci::session& sql);
 
     int getMaxTimeInQueue(const std::string &voName);

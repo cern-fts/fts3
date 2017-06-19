@@ -1686,56 +1686,6 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
 }
 
 
-int MySqlAPI::getCredits(soci::session& sql, const std::string &sourceSe, const std::string &destSe)
-{
-    int freeCredits = 0;
-
-    try
-    {
-        int pairActiveCount = 0;
-
-        soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT internal_file_params FROM t_file "
-            " WHERE source_se = :source AND dest_se = :dest AND file_state = 'ACTIVE' ",
-            soci::use(sourceSe), soci::use(destSe)
-        );
-        for (auto i = rs.begin(); i != rs.end(); ++i) {
-            auto paramsStr = i->get<std::string>("internal_file_params", "");
-
-            if (paramsStr.empty()) {
-                ++pairActiveCount;
-            }
-            else {
-                TransferFile::ProtocolParameters params(paramsStr);
-                pairActiveCount += params.nostreams;
-            }
-        }
-
-        int maxActive = 0;
-        soci::indicator isNull = soci::i_ok;
-        sql << "SELECT active FROM t_optimizer "
-               " WHERE source_se = :source_se AND dest_se = :dest_se",
-            soci::use(sourceSe),
-            soci::use(destSe),
-            soci::into(maxActive, isNull);
-
-        if (isNull != soci::i_null) {
-            freeCredits = maxActive - pairActiveCount;
-        }
-
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-    return freeCredits;
-}
-
-
 void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
 {
     soci::session sql(*connectionPool);
