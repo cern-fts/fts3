@@ -10,7 +10,7 @@ RPMBUILD=/tmp/rpmbuild
 SRPMS=$(CWD)
 RPMS=$(CWD)/out
 
-MOCK_CHROOT=epel-6-cernonly-x86_64
+MOCK_CHROOT=epel-7-x86_64
 MOCK_FLAGS=--verbose
 
 
