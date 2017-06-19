@@ -43,6 +43,8 @@ namespace panic {
 
 static sem_t semaphore;
 static sig_atomic_t raised_signal = 0;
+static void (*_arg_shutdown_callback)(int, void*);
+static void *_arg_udata;
 
 void *stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
 int stack_backtrace_size = 0;
@@ -109,7 +111,7 @@ static void signal_handler(int signum)
 
 
 // Thread that logs, waits and kills
-static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
+static void signal_watchdog(void)
 {
     int r = 0;
     do
@@ -117,13 +119,11 @@ static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
             r = sem_wait(&semaphore);
         }
     while (r < 0);   // Semaphore may return spuriously with errno = EINTR
-    shutdown_callback(raised_signal, udata);
+    _arg_shutdown_callback(raised_signal, _arg_udata);
 }
 
 
 // Set up the callbacks, and launch the watchdog thread
-static void (*_arg_shutdown_callback)(int, void*);
-static void *_arg_udata;
 static void set_handlers(void)
 {
     static const int CATCH_SIGNALS[] =
@@ -153,7 +153,7 @@ static void set_handlers(void)
     // Unblock signals (daemon may have blocked some of them)
     sigprocmask(SIG_UNBLOCK, &proc_mask, NULL);
 
-    boost::thread watchdog(signal_watchdog, _arg_shutdown_callback, _arg_udata);
+    boost::thread watchdog(signal_watchdog);
 }
 
 
