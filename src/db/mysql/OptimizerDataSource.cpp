@@ -255,6 +255,9 @@ public:
                 if (duration > 0 && filesize > 0) {
                     bytesInWindow = double(filesize / duration) * periodInWindow;
                 }
+                else if (duration <= 0) {
+                    bytesInWindow = filesize;
+                }
             }
 
             totalBytes += bytesInWindow;
@@ -360,11 +363,14 @@ public:
         }
 
         // round up efficiency
-        if (nFinishedLastHour > 0) {
-            return ceil((nFinishedLastHour * 100.0) / (nFinishedLastHour + nFailedLastHour));
+        int nTotal = nFinishedLastHour + nFailedLastHour;
+        if (nTotal > 0) {
+            return ceil((nFinishedLastHour * 100.0) / nTotal);
         }
+        // If there are no terminal, use 100% success rate rather than 0 to avoid
+        // the optimizer stepping back
         else {
-            return 0.0;
+            return 1.0;
         }
     }
 

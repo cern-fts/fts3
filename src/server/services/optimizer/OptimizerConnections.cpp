@@ -232,8 +232,6 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         return true;
     }
 
-
-
     // Apply bandwidth limits
     if (limits.throughputSource > 0) {
         double throughput = dataSource->getThroughputAsSource(pair.source);
