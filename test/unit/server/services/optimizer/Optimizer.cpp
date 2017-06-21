@@ -538,7 +538,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed a bunch of successful with a big filesize
-    populateTransfers(pair, "FINISHED", 96, false, 100, 1024*1024*1024);
+    populateTransfers(pair, "FINISHED", 9, false, 100, 1024*1024*1024);
 
     // Run once
     runOptimizerForPair(pair);
