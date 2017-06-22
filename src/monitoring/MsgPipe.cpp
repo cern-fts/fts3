@@ -37,15 +37,7 @@ void handler(int)
 {
     if (!signalReceived) {
         signalReceived = true;
-
         stopThreads = true;
-        std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-        std::string ret;
-        while (!myQueue.empty()) {
-            ret = myQueue.front();
-            myQueue.pop();
-            //restoreMessageToDisk(ret);
-        }
         sleep(5);
         exit(0);
     }
