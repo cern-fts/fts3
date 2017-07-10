@@ -87,7 +87,7 @@ static int optimizeLowSuccessRate(const PairState &current, const PairState &pre
     int decision = previousValue;
 
     // If improving, keep it stable
-    if (current.successRate > previous.successRate && current.successRate >= BASE_SUCCESS_RATE &&
+    if (current.successRate > previous.successRate && current.successRate >= baseSuccessRate &&
         current.retryCount <= previous.retryCount) {
         rationale << "Bad link efficiency but progressively improving";
     }
@@ -269,11 +269,11 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         << "Optimizer max possible number of actives for " << pair << ": " << range.max << commit;
 
     // For low success rates, do not even care about throughput
-    if (current.successRate < LOW_SUCCESS_RATE) {
+    if (current.successRate < lowSuccessRate) {
         decision = optimizeLowSuccessRate(current, previous, previousValue, rationale);
     }
     // Success rate worsening
-    else if (current.successRate >= LOW_SUCCESS_RATE && current.successRate < previous.successRate) {
+    else if (current.successRate >= lowSuccessRate && current.successRate < previous.successRate) {
         decision = optimizeWorseningSuccessRate(current, previous, previousValue, rationale);
     }
     // No throughput info
@@ -281,8 +281,8 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         decision = optimizeNotEnoughInformation(current, previous, previousValue, rationale);
     }
     // Good success rate
-    else if ((current.successRate == MAX_SUCCESS_RATE ||
-             (current.successRate >= MED_SUCCESS_RATE && current.successRate >= previous.successRate)) &&
+    else if ((current.successRate == maxSuccessRate ||
+             (current.successRate >= medSuccessRate && current.successRate >= previous.successRate)) &&
              current.retryCount <= previous.retryCount)  {
         decision = optimizeGoodSuccessRate(current, previous, previousValue, optMode, rationale);
     }

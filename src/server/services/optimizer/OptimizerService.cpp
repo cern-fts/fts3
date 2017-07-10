@@ -84,6 +84,10 @@ void OptimizerService::runService()
     auto optimizerInterval = config::ServerConfig::instance().get<TDuration>("OptimizerInterval");
     auto optimizerSteadyInterval = config::ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
     auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
+    auto maxSuccessRate = config::ServerConfig::instance().get<int>("OptimizerMaxSuccessRate");
+    auto medSuccessRate = config::ServerConfig::instance().get<int>("OptimizerMedSuccessRate");
+    auto lowSuccessRate = config::ServerConfig::instance().get<int>("OptimizerLowSuccessRate");
+    auto baseSuccessRate = config::ServerConfig::instance().get<int>("OptimizerBaseSuccessRate");
 
     OptimizerNotifier optimizerCallbacks(
         config::ServerConfig::instance().get<std::string>("MessagingDirectory")

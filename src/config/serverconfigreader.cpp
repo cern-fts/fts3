@@ -42,7 +42,10 @@ using namespace fts3::config;
 #define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "mysql"
 #define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
 #define FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT "12500"
-
+#define FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE = 100
+#define FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE = 98
+#define FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE = 97
+#define FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE = 96
 /* ---------------------------------------------------------------------- */
 
 po::options_description ServerConfigReader::_defineGenericOptions()
@@ -340,7 +343,28 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["MessagingConsumeInterval"]) )->default_value("1"),
         "In seconds, how often to check for messages"
     )
+	(
+	    "OptimizerMaxSuccessRate",
+	     po::value<std::string>( &(_vars["OptimizerMaxSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE),
+	     "percentage of the max success rate considered by the optimizer"
+	)
+	(
+	  "OptimizerMedSuccessRate",
+	   po::value<std::string>( &(_vars["OptimizerMedSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE),
+	   "percentage of the med success rate considered by the optimizer"
+	)
+	(
+	   "OptimizerLowSuccessRate",
+	    po::value<std::string>( &(_vars["OptimizerLowSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE),
+	   "percentage of the low success rate considered by the optimizer"
+	)
+	(
+	   "OptimizerBaseSuccessRate",
+	    po::value<std::string>( &(_vars["OptimizerBaseSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE),
+	    "percentage of the base success rate considered by the optimizer"
+	)
     ;
+
     return config;
 }
 
