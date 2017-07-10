@@ -345,22 +345,22 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
 	(
 	    "OptimizerMaxSuccessRate",
-	     po::value<int>( &(_vars["OptimizerMaxSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
+	     po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
 	     "percentage of the max success rate considered by the optimizer"
 	)
 	(
 	  "OptimizerMedSuccessRate",
-	   po::value<int>( &(_vars["OptimizerMedSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
+	   po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
 	   "percentage of the med success rate considered by the optimizer"
 	)
 	(
 	   "OptimizerLowSuccessRate",
-	    po::value<int>( &(_vars["OptimizerLowSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT),
+	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT),
 	   "percentage of the low success rate considered by the optimizer"
 	)
 	(
 	   "OptimizerBaseSuccessRate",
-	    po::value<int>( &(_vars["OptimizerBaseSuccessRate"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT),
+	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT),
 	    "percentage of the base success rate considered by the optimizer"
 	)
     ;
