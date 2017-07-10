@@ -82,10 +82,9 @@ void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
 
 // To be called for low success rates (<= LOW_SUCCESS_RATE)
 static int optimizeLowSuccessRate(const PairState &current, const PairState &previous, int previousValue,
-    std::stringstream& rationale)
+    std::stringstream& rationale, int baseSuccessRate)
 {
     int decision = previousValue;
-
     // If improving, keep it stable
     if (current.successRate > previous.successRate && current.successRate >= baseSuccessRate &&
         current.retryCount <= previous.retryCount) {
@@ -270,7 +269,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // For low success rates, do not even care about throughput
     if (current.successRate < lowSuccessRate) {
-        decision = optimizeLowSuccessRate(current, previous, previousValue, rationale);
+        decision = optimizeLowSuccessRate(current, previous, previousValue, rationale, baseSuccessRate);
     }
     // Success rate worsening
     else if (current.successRate >= lowSuccessRate && current.successRate < previous.successRate) {
@@ -280,6 +279,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     else if (current.ema == 0) {
         decision = optimizeNotEnoughInformation(current, previous, previousValue, rationale);
     }
+
     // Good success rate
     else if ((current.successRate == maxSuccessRate ||
              (current.successRate >= medSuccessRate && current.successRate >= previous.successRate)) &&
