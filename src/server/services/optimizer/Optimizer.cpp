@@ -54,6 +54,23 @@ void Optimizer::setMaxNumberOfStreams(int newValue)
     maxNumberOfStreams = newValue;
 }
 
+void Optimizer::setMaxSuccessRate(int newValue)
+{
+    maxSuccessRate = newValue;
+}
+void Optimizer::setMedSuccessRate(int newValue)
+{
+    medSuccessRate = newValue;
+}
+void Optimizer::setLowSuccessRate(int newValue)
+{
+    lowSuccessRate = newValue;
+}
+void Optimizer::setBaseSuccessRate(int newValue)
+{
+    baseSuccessRate = newValue;
+}
+
 
 void Optimizer::run(void)
 {

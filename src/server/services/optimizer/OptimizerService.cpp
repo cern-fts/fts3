@@ -99,7 +99,10 @@ void OptimizerService::runService()
     );
     optimizer.setSteadyInterval(optimizerSteadyInterval);
     optimizer.setMaxNumberOfStreams(maxNumberOfStreams);
-
+    optimizer.setMaxSuccessRate(maxSuccessRate);
+    optimizer.setMedSuccessRate(medSuccessRate);
+    optimizer.setLowSuccessRate(lowSuccessRate);
+    optimizer.setBaseSuccessRate(baseSuccessRate);
     while (!boost::this_thread::interruption_requested()) {
         try {
             if (beat->isLeadNode()) {
