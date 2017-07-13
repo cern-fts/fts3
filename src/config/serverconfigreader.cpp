@@ -225,7 +225,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "CheckStalledTimeout",
-        po::value<std::string>( &(_vars["CheckStalledTimeout"]) )->default_value("360"),
+        po::value<std::string>( &(_vars["CheckStalledTimeout"]) )->default_value("900"),
         "Timeout for stalled transfers, in seconds"
     )
     (
