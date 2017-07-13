@@ -491,6 +491,10 @@ void ServerConfigReader::storeValuesAsStrings ()
 {
     storeAsString("Port");
     storeAsString("ThreadNum");
+    storeAsString("OptimizerMaxSuccessRate");
+    storeAsString("OptimizerMedSuccessRate");
+    storeAsString("OptimizerLowSuccessRate");
+    storeAsString("OptimizerBaseSuccessRate");
 }
 
 void ServerConfigReader::storeRoles ()
