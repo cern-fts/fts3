@@ -60,7 +60,7 @@ LogLevel=INFO
 # Check for fts_url_copy processes that do not give their progress back
 # CheckStalledTransfers = true
 # Stalled timeout, in seconds
-# CheckStalledTimeout = 360
+# CheckStalledTimeout = 900
 
 # Minimum required free RAM (in MB) for FTS3 to work normally
 # If the amount of free RAM goes below the limit, FTS3 will enter auto-drain mode
