@@ -25,9 +25,6 @@
 #include <cajun/json/writer.h>
 #include "msg-ifce.h"
 #include "common/Logger.h"
-#include "config/ServerConfig.h"
-
-using fts3::config::ServerConfig;
 
 bool MsgIfce::instanceFlag = false;
 MsgIfce *MsgIfce::single = NULL;
@@ -250,11 +247,8 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
 
 std::string MsgIfce::SendTransferStatusChange(Producer &producer, const TransferState &tr_state)
 {
-    std::string ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
-
     json::Object message;
 
-    message["endpnt"] = json::String(ftsAlias);
     message["user_dn"] = json::String(tr_state.user_dn);
     message["src_url"] = json::String(tr_state.source_url);
     message["dst_url"] = json::String(tr_state.dest_url);
@@ -297,11 +291,8 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
 
 std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_info)
 {
-    std::string ftsAlias = ServerConfig::instance().get<std::string > ("Alias");
-
     json::Object message;
 
-    message["endpnt"] = json::String(ftsAlias);
     message["source_se"] = json::String(opt_info.source_se);
     message["dest_se"] = json::String(opt_info.dest_se);
     message["timestamp"] = json::Number(opt_info.timestamp);

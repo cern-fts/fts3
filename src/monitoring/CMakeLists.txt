@@ -35,7 +35,6 @@ set(fts_msg_ifce_SOURCES
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
 target_link_libraries(fts_msg_ifce
     fts_common
-	fts_config
 )
 set_target_properties(fts_msg_ifce PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/monitoring
@@ -63,11 +62,11 @@ target_link_libraries(fts_msg_bulk
 )
 
 # Artifacts
-install(TARGETS fts_msg_bulk 
+install(TARGETS fts_msg_bulk
 	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )
 
-install(TARGETS fts_msg_ifce 
-	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
+install(TARGETS fts_msg_ifce
+	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
 )
