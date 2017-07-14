@@ -36,11 +36,10 @@ protobuf_generate_cpp (EVENTS_SOURCES EVENTS_HEADERS
     PROTOFILES
     ${EVENTS}
     PROTOROOT "${CMAKE_CURRENT_SOURCE_DIR}/events"
-    OUTPATH "${CMAKE_CURRENT_SOURCE_DIR}/events"
+    OUTPATH "${CMAKE_CURRENT_BINARY_DIR}/events"
 )
 
 # Sources
-include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
 file (GLOB msg_bus_sources "*.cpp")
 
 add_library(fts_msg_bus SHARED

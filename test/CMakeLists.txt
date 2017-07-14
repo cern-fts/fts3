@@ -22,6 +22,7 @@ find_package (GLIB2)
 include_directories (${Boost_INCLUDE_DIRS})
 include_directories (${GLIB2_INCLUDE_DIRS})
 include_directories (${CMAKE_SOURCE_DIR}/src)
+include_directories (${CMAKE_BINARY_DIR}/src)
 
 # Tests
 add_subdirectory (unit)

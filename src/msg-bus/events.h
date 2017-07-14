@@ -17,12 +17,12 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
-#include "events/Message.pb.h"
-#include "events/MessageBringonline.pb.h"
-#include "events/MessageLog.pb.h"
-#include "events/MessageUpdater.pb.h"
-#include "events/TransferStart.pb.h"
-#include "events/TransferCompleted.pb.h"
+#include <msg-bus/events/Message.pb.h>
+#include <msg-bus/events/MessageBringonline.pb.h>
+#include <msg-bus/events/MessageLog.pb.h>
+#include <msg-bus/events/MessageUpdater.pb.h>
+#include <msg-bus/events/TransferStart.pb.h>
+#include <msg-bus/events/TransferCompleted.pb.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 

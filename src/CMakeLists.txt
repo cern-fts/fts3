@@ -21,7 +21,10 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Set this directory as an include, since it is the root for the source
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 find_package (GLIB2 REQUIRED)
 include_directories(${GLIB2_INCLUDE_DIRS})
