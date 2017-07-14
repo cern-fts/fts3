@@ -1,10 +1,11 @@
-.idea
+*.info
+*.pyc
+*.rpm
+*.tar.gz
+*.xml
 .cproject
+.idea
 .project
 .settings
 .sonar
-*.rpm
-*.tar.gz
-*.pyc
-*.xml
-*.info
+.vagrant
