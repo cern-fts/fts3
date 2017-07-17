@@ -33,7 +33,8 @@ namespace optimizer {
 
 Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
     dataSource(ds), callbacks(callbacks),
-    optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10)
+    optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
+    maxSuccessRate(100), medSuccessRate(98), lowSuccessRate(97), baseSuccessRate(96)
 {
 }
 
