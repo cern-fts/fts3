@@ -60,6 +60,8 @@ MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& co
     producer_transfer_started = NULL;
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
+    producer_optimizer = NULL;
+    destination_optimizer = NULL;
     FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
     connected = false;
 }

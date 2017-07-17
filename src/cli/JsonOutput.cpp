@@ -74,13 +74,23 @@ JsonOutput::~JsonOutput()
 {
     if (!json_out.empty())
         {
-            // first write the output to a 'stringstream'
-            std::stringstream str_out;
-            boost::property_tree::write_json(str_out, json_out);
-            // then make sure symbols like null and true/false are not in double quotes
-            static const boost::regex exp(":\\s*\"(null|true|false|\\[\\]|[0-9]+(\\.[0-9]+)?)\"");
-            (*out) << boost::regex_replace(str_out.str(), exp, ": $1");
-            // the use of regex should be reconsidered because it exposes us to 'static deinitialization order fiasco' !!!
+            try {
+                // first write the output to a 'stringstream'
+                std::stringstream str_out;
+                boost::property_tree::write_json(str_out, json_out);
+                // then make sure symbols like null and true/false are not in double quotes
+                static const boost::regex exp(":\\s*\"(null|true|false|\\[\\]|[0-9]+(\\.[0-9]+)?)\"");
+                (*out) << boost::regex_replace(str_out.str(), exp, ": $1");
+                // the use of regex should be reconsidered because it exposes us to 'static deinitialization order fiasco' !!!
+            }
+            // The previous code could throw
+            // I don't think the writing should be done on a destructor, but anyway, at least avoid a crash
+            catch (std::exception const &e) {
+                (*out) << e.what() << std::endl;
+            }
+            catch (...) {
+                (*out) << "Unknown exception in ~JsonOutput" << std::endl;
+            }
         }
 }
 
