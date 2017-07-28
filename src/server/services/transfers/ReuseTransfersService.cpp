@@ -108,11 +108,11 @@ void ReuseTransfersService::writeJobFile(const std::string& jobId, const std::ve
 }
 
 
-std::map<int, std::string> ReuseTransfersService::generateJobFile(
+std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
         const std::string& jobId, const std::list<TransferFile>& files)
 {
     std::vector<std::string> urls;
-    std::map<int, std::string> fileIds;
+    std::map<uint64_t, std::string> fileIds;
     std::ostringstream line;
 
     for (auto it = files.begin(); it != files.end(); ++it)
@@ -203,7 +203,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     cmd_builder.setFromTransfer(representative, true, db->publishUserDn(representative.voName));
 
     // Generate the file containing the list of transfers
-    std::map<int, std::string> fileIds = generateJobFile(representative.jobId, files);
+    std::map<uint64_t, std::string> fileIds = generateJobFile(representative.jobId, files);
 
     // Check if manual config exist for this pair and vo
     std::vector<std::shared_ptr<ShareConfig> > cfgs;
@@ -331,7 +331,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         db->setPidForJob(job_id, pr.getPid());
     }
 
-    std::map<int, std::string>::const_iterator iterFileIds;
+    std::map<uint64_t, std::string>::const_iterator iterFileIds;
     std::vector<events::Message> protoMsgs;
     for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
     {

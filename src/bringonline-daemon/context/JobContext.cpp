@@ -101,7 +101,7 @@ JobContext::JobContext(const std::string &dn, const std::string &vo,
 }
 
 
-void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
+void JobContext::add(std::string const & surl, std::string const & jobId, uint64_t fileId)
 {
     if (!surl.empty() && !jobId.empty() && fileId > 0) {
         jobs[jobId][surl].push_back(fileId);

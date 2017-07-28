@@ -68,7 +68,7 @@ public:
     /**
      * Asynchronous update of a single transfer-file within a job
      */
-    void updateState(const std::string &jobId, int fileId, const std::string &state, const JobError &error) const
+    void updateState(const std::string &jobId, uint64_t fileId, const std::string &state, const JobError &error) const
     {
         stateUpdater(jobId, fileId, state, error);
     }

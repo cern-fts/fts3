@@ -80,7 +80,7 @@ public:
     ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
     /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
     ///                         which transfers to update
-    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
         int processId, double filesize, double duration, bool retry);
 
@@ -188,7 +188,7 @@ public:
     virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination);
 
     /// Register in the DB that the given file ID has been scheduled for a share configuration
-    virtual void addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
+    virtual void addFileShareConfig(uint64_t fileId, const std::string &source, const std::string &destination,
         const std::string &vo);
 
     /// Returns how many active transfers there is for the given link and VO
@@ -209,7 +209,7 @@ public:
     virtual int getRetry(const std::string & jobId);
 
     /// Returns how many thime the given file has been already retried
-    virtual int getRetryTimes(const std::string & jobId, int fileId);
+    virtual int getRetryTimes(const std::string & jobId, uint64_t fileId);
 
     /// Set to FAIL jobs that have been in the queue for more than its max in queue time
     /// @param jobs An output parameter, where the set of expired job ids is stored
@@ -219,7 +219,7 @@ public:
     virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol);
 
     /// Get the state the transfer identified by jobId/fileId
-    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int fileId);
+    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, uint64_t fileId);
 
     /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
     virtual void checkSanityState();
@@ -232,7 +232,7 @@ public:
     /// @param fileId   Transfer identifier
     /// @param reason   String representation of the failure
     /// @param errcode  An integer representing the failure
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
+    virtual void setRetryTransfer(const std::string & jobId, uint64_t fileId, int retry, const std::string& reason,
         int errcode);
 
     /// Bulk update of transfer progress
@@ -306,7 +306,7 @@ public:
     /// @param jobs     A map where the key is the job id, and the value another map where the key is a surl, and the
     ///                     value a file id
     /// @param token    The SRM token
-    virtual void updateBringOnlineToken(const std::map< std::string, std::map<std::string, std::vector<int> > > &jobs,
+    virtual void updateBringOnlineToken(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs,
         const std::string &token);
 
     /// Get staging operations ready to be started
@@ -354,22 +354,22 @@ private:
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
 
     boost::tuple<bool, std::string>  updateFileTransferStatusInternal(soci::session& sql, double throughput,
-        std::string jobId, int fileId,
+        std::string jobId, uint64_t fileId,
         std::string newState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
 
     bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string status, int pid);
 
-    bool resetForRetryStaging(soci::session& sql, int fileId, const std::string & jobId, bool retry, int& times);
+    bool resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times);
 
-    bool resetForRetryDelete(soci::session& sql, int fileId, const std::string & jobId, bool retry);
+    bool resetForRetryDelete(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry);
 
-    int getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName);
+    uint64_t getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName);
 
-    std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
+    std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
-    std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
+    std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
-    void useFileReplica(soci::session& sql, std::string jobId, int fileId);
+    void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId);
 
     int getCredits(soci::session& sql, const std::string & sourceSe, const std::string & destSe);
 

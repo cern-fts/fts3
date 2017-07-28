@@ -30,7 +30,7 @@ struct TransferState
     std::string source_se;
     std::string dest_se;
     std::string job_id;
-    int file_id;
+    uint64_t file_id;
     std::string job_state;
     std::string file_state;
     int retry_counter;

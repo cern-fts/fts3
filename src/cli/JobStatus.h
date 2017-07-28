@@ -46,7 +46,7 @@ class FileInfo
 public:
 
     FileInfo(boost::property_tree::ptree const & t) :
-        src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), fileId(t.get<int>("file_id")),
+        src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), fileId(t.get<uint64_t>("file_id")),
         fileIdAvail(true), state(t.get<std::string>("file_state")), reason(t.get<std::string>("reason")), duration(0),
         nbFailures(t.get<int>("retry")), stagingDuration(0)
     {
@@ -113,7 +113,7 @@ public:
         return dst;
     }
 
-    int getFileId() const
+    uint64_t getFileId() const
     {
         if (!fileIdAvail) {
             throw cli_exception("The file id is not available");
@@ -123,7 +123,7 @@ public:
 
     std::string src;
     std::string dst;
-    int fileId;
+    uint64_t fileId;
     bool fileIdAvail;
     std::string state;
     std::string reason;
@@ -138,7 +138,7 @@ class DetailedFileStatus
 public:
     DetailedFileStatus(boost::property_tree::ptree const & t) :
         jobId(t.get<std::string>("job_id")), src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")),
-        fileId(t.get<int>("file_id")), state(t.get<std::string>("file_state"))
+        fileId(t.get<uint64_t>("file_id")), state(t.get<std::string>("file_state"))
     {
 
     }
@@ -146,7 +146,7 @@ public:
     std::string jobId;
     std::string src;
     std::string dst;
-    int fileId;
+    uint64_t fileId;
     std::string state;
 };
 

@@ -60,7 +60,7 @@ void DeletionTask::run_impl()
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
-            std::vector<std::pair<std::string, int> > const ids = ctx.getIDs(urls[i]);
+            std::vector<std::pair<std::string, uint64_t> > const ids = ctx.getIDs(urls[i]);
 
             if (error[i]) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)<< "DELETION FAILED " << urls[i] << ": "

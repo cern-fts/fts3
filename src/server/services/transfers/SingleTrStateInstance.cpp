@@ -31,7 +31,7 @@
 
 using namespace db;
 using namespace fts3::common;
-using namespace fts3::config; 
+using namespace fts3::config;
 using namespace fts3::server;
 
 
@@ -55,7 +55,7 @@ SingleTrStateInstance::~SingleTrStateInstance()
 }
 
 
-void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileId)
+void SingleTrStateInstance::sendStateMessage(const std::string& jobId, uint64_t fileId)
 {
     if (!monitoringMessages)
         return;

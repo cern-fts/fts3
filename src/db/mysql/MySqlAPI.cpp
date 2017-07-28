@@ -456,7 +456,7 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
 void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
 {
     soci::session sql(*connectionPool);
-    int file_id = 0;
+    uint64_t file_id = 0;
     std::string source_se;
     std::string dest_se;
     std::string vo_name;
@@ -928,14 +928,14 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
 
 
 
-void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
+void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId)
 {
     try
     {
         soci::indicator selectionStrategyInd = soci::i_ok;
         std::string selectionStrategy;
         std::string vo_name;
-        int nextReplica = 0, alreadyActive;
+        uint64_t nextReplica = 0, alreadyActive;
         soci::indicator nextReplicaInd = soci::i_ok;
 
         //check if the file belongs to a multiple replica job
@@ -969,7 +969,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                 soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
 
             if (selectionStrategy == "auto") {
-                int bestFileId = getBestNextReplica(sql, jobId, vo_name);
+                uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
                 if (bestFileId > 0) {
                     sql <<
                         " UPDATE t_file "
@@ -1010,10 +1010,10 @@ bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, std::pa
 }
 
 
-int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName)
+uint64_t MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName)
 {
     //for now consider only the less queued transfers, later add throughput and success rate
-    int bestFileId = 0;
+    uint64_t bestFileId = 0;
     std::string bestSource;
     std::string bestDestination;
     std::map<std::pair<std::string, std::string>, int> pair;
@@ -1221,7 +1221,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 }
 
 
-boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
         int processId, double filesize, double duration, bool retry)
 {
@@ -1232,7 +1232,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::strin
 
 
 boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn,
-        std::string jobId, int fileId,
+        std::string jobId, uint64_t fileId,
         std::string newState, std::string transferMessage,
         int processId, double filesize, double duration, bool retry)
 {
@@ -1466,7 +1466,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         }
         else if ( (status == "FINISHED" || status == "FAILED") && reuseFlag == "N")
         {
-            int file_id = 0;
+            uint64_t file_id = 0;
             sql <<  " SELECT file_id from t_file where job_id=:job_id and file_state='SUBMITTED' LIMIT 1 ", soci::use(jobId), soci::into(file_id, isNullFileId);
             if(isNullFileId != soci::i_null && file_id > 0)
                 return true;
@@ -1646,7 +1646,7 @@ void MySqlAPI::updateFileTransferProgressVector(const std::vector<fts3::events::
     {
         double throughput = 0.0;
         double transferred = 0.0;
-        int file_id = 0;
+        uint64_t file_id = 0;
         std::string file_state;
 
         soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
@@ -1698,7 +1698,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
     int pid = 0;
-    int file_id = 0;
+    uint64_t file_id = 0;
 
     try
     {
@@ -2280,7 +2280,7 @@ void MySqlAPI::forkFailed(const std::string& jobId)
 }
 
 
-void MySqlAPI::addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
+void MySqlAPI::addFileShareConfig(uint64_t fileId, const std::string &source, const std::string &destination,
     const std::string &vo)
 {
     soci::session sql(*connectionPool);
@@ -2575,7 +2575,7 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
 
     std::stringstream internalParams;
     double filesize = 0;
-    int fileId = 0;
+    uint64_t fileId = 0;
     std::string params;
 
     soci::statement stmt = (
@@ -2628,7 +2628,7 @@ void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& me
 
     //soci doesn't access bool
     unsigned int debugFile = 0;
-    int fileId = 0;
+    uint64_t fileId = 0;
 
     try
     {
@@ -2673,7 +2673,7 @@ void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& me
 }
 
 
-std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId)
+std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId)
 {
     TransferState ret;
     std::vector<TransferState> temp;
@@ -2774,7 +2774,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 }
 
 
-std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId)
+std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, uint64_t fileId)
 {
     TransferState ret;
     std::vector<TransferState> temp;
@@ -2876,7 +2876,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
 
 }
 
-std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId, uint64_t fileId)
 {
     soci::session sql(*connectionPool);
     std::vector<TransferState> temp;
@@ -2923,7 +2923,7 @@ void MySqlAPI::checkSchemaLoaded()
 }
 
 
-void MySqlAPI::setRetryTransfer(const std::string &jobId, int fileId, int retry,
+void MySqlAPI::setRetryTransfer(const std::string &jobId, uint64_t fileId, int retry,
     const std::string &reason, int errcode)
 {
     soci::session sql(*connectionPool);
@@ -3167,7 +3167,7 @@ static std::string int2str(int v) {
 }
 
 
-void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
+void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<uint64_t> > > const & jobs, std::string const & token)
 {
     soci::session sql(*connectionPool);
     try
@@ -3180,7 +3180,7 @@ void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::strin
             std::list<std::string> fileIdsStrList;
 
             for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {
-                std::vector<int> subFileIds = it_u->second;
+                std::vector<uint64_t> subFileIds = it_u->second;
                 boost::range::transform(
                         subFileIds, std::back_inserter(fileIdsStrList),
                         int2str
@@ -3549,7 +3549,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    int file_id = row.get<int>("file_id");
+                    uint64_t file_id = row.get<unsigned long long>("file_id");
                     user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
 
@@ -3802,7 +3802,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    int file_id = row.get<unsigned long long>("file_id");
+                    uint64_t file_id = row.get<unsigned long long>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                     int bring_online = row.get<int>("bring_online",0);
 
@@ -3909,7 +3909,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             std::string vo_name = row.get<std::string>("vo_name");
             std::string source_url = row.get<std::string>("source_surl");
             std::string job_id = row.get<std::string>("job_id");
-            int file_id = row.get<unsigned long long>("file_id");
+            uint64_t file_id = row.get<unsigned long long>("file_id");
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
             int bring_online = row.get<int>("bring_online",0);
 
@@ -4113,7 +4113,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
 void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
-    int file_id = 0;
+    uint64_t file_id = 0;
     std::string source_surl;
     std::string token;
     std::string job_id;
@@ -4137,7 +4137,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
             file_id = row.get<unsigned long long>("file_id",0);
             source_surl = row.get<std::string>("source_surl","");
             token = row.get<std::string>("bringonline_token","");
-            boost::tuple<std::string, int, std::string, std::string> record(job_id, file_id, source_surl, token);
+            boost::tuple<std::string, uint64_t, std::string, std::string> record(job_id, file_id, source_surl, token);
             files.insert({job_id, source_surl});
 
             stmt1.execute(true);
@@ -4157,7 +4157,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
 }
 
 
-bool MySqlAPI::resetForRetryStaging(soci::session& sql, int fileId, const std::string & jobId, bool retry, int& times)
+bool MySqlAPI::resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times)
 {
     bool willBeRetried = false;
 
@@ -4273,7 +4273,7 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int fileId, const std::s
 }
 
 
-bool MySqlAPI::resetForRetryDelete(soci::session& sql, int fileId, const std::string & jobId, bool retry)
+bool MySqlAPI::resetForRetryDelete(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry)
 {
     bool willBeRetried = false;
 

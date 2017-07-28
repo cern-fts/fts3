@@ -95,7 +95,7 @@ public:
      * @param jobId : job ID
      * @param fileId : file ID
      */
-    void add(const std::string &surl, const std::string &jobId, int fileId);
+    void add(const std::string &surl, const std::string &jobId, uint64_t fileId);
 
     /**
      * Updates the state of the job (pure virtual)
@@ -154,9 +154,9 @@ public:
     /**
      * Get job and file ID for the given SURL
      */
-    std::vector< std::pair<std::string, int> > getIDs(const std::string &surl) const
+    std::vector< std::pair<std::string, uint64_t> > getIDs(const std::string &surl) const
     {
-        std::vector< std::pair<std::string, int> > ret;
+        std::vector< std::pair<std::string, uint64_t> > ret;
         auto range = urlToIDs.equal_range(surl);
         for (auto it = range.first; it != range.second; ++it) {
             ret.push_back(it->second);
@@ -167,13 +167,13 @@ public:
 protected:
 
     /// Job ID -> URL -> list of file IDs
-    std::map< std::string, std::map<std::string, std::vector<int> > > jobs;
+    std::map< std::string, std::map<std::string, std::vector<uint64_t> > > jobs;
     /// proxy-certificate file name
     std::string proxy;
     /// space token
     std::string spaceToken;
     /// URL -> (job_id, file_id)
-    std::unordered_multimap< std::string, std::pair<std::string, int> > urlToIDs;
+    std::unordered_multimap< std::string, std::pair<std::string, uint64_t> > urlToIDs;
 };
 
 #endif // JOBCONTEXT_H_

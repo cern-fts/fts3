@@ -63,7 +63,7 @@ public:
      * @param state : the new state
      * @param error : cause of failure, if any
      */
-    void operator()(const std::map<std::string, std::map<std::string, std::vector<int> > > &jobs,
+    void operator()(const std::map<std::string, std::map<std::string, std::vector<uint64_t> > > &jobs,
         const std::string &state, const JobError &error)
     {
         // lock the vector

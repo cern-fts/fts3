@@ -145,7 +145,7 @@ struct type_conversion<TransferFile>
         file.destSurl   = v.get<std::string>("dest_surl");
         file.jobId      = v.get<std::string>("job_id");
         file.voName     = v.get<std::string>("vo_name");
-        file.fileId     = v.get<unsigned long long>("file_id");/////xxxx
+        file.fileId     = v.get<unsigned long long>("file_id");
         file.overwriteFlag   = v.get<std::string>("overwrite_flag","");
         file.userDn          = v.get<std::string>("user_dn");
         file.credId     = v.get<std::string>("cred_id");

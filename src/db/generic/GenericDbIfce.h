@@ -123,7 +123,7 @@ public:
     ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
     /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
     ///                         which transfers to update
-    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, int fileId, double throughput,
+    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
             const std::string& transferState, const std::string& errorReason,
             int processId, double filesize, double duration, bool retry) = 0;
 
@@ -231,7 +231,7 @@ public:
     virtual std::vector<ShareConfig> getShareConfig(const std::string &source, const std::string &destination) = 0;
 
     /// Register in the DB that the given file ID has been scheduled for a share configuration
-    virtual void addFileShareConfig(int fileId, const std::string &source, const std::string &destination,
+    virtual void addFileShareConfig(uint64_t fileId, const std::string &source, const std::string &destination,
         const std::string &vo) = 0;
 
     /// Returns how many active transfers there is for the given link and VO
@@ -252,7 +252,7 @@ public:
     virtual int getRetry(const std::string & jobId) = 0;
 
     /// Returns how many thime the given file has been already retried
-    virtual int getRetryTimes(const std::string & jobId, int fileId) = 0;
+    virtual int getRetryTimes(const std::string & jobId, uint64_t fileId) = 0;
 
     /// Set to FAIL jobs that have been in the queue for more than its max in queue time
     /// @param jobs An output parameter, where the set of expired job ids is stored
@@ -262,7 +262,7 @@ public:
     virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol) = 0;
 
     /// Get the state the transfer identified by jobId/fileId
-    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, int fileId) = 0;
+    virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, uint64_t fileId) = 0;
 
     /// Run a set of sanity checks over the database, fixing potential inconsistencies and logging them
     virtual void checkSanityState() = 0;
@@ -275,7 +275,7 @@ public:
     /// @param fileId   Transfer identifier
     /// @param reason   String representation of the failure
     /// @param errcode  An integer representing the failure
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason,
+    virtual void setRetryTransfer(const std::string & jobId, uint64_t fileId, int retry, const std::string& reason,
         int errcode) = 0;
 
     /// Bulk update of transfer progress
@@ -355,7 +355,7 @@ public:
     /// @param jobs     A map where the key is the job id, and the value another map where the key is a surl, and the
     ///                     value a file id
     /// @param token    The SRM token
-    virtual void updateBringOnlineToken(const std::map< std::string, std::map<std::string, std::vector<int> > > &jobs,
+    virtual void updateBringOnlineToken(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs,
         const std::string &token) = 0;
 
     /// Get staging operations ready to be started

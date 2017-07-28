@@ -51,7 +51,7 @@ public:
      * @param jobs : jobs with respective files
      * @param token : the token that will be stored in DB
      */
-    void operator()(const std::map<std::string, std::map<std::string, std::vector<int> > > &jobs,
+    void operator()(const std::map<std::string, std::map<std::string, std::vector<uint64_t> > > &jobs,
         const std::string &token)
     {
         try {
@@ -68,7 +68,7 @@ public:
     /**
      * Updates status per file
      */
-    void operator()(const std::string &jobId, int fileId, const std::string &state, const JobError &error)
+    void operator()(const std::string &jobId, uint64_t fileId, const std::string &state, const JobError &error)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
