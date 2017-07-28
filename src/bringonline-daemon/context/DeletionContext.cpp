@@ -28,7 +28,7 @@ void DeletionContext::add(const DeleteOperation &nsOp)
 }
 
 
-void DeletionContext::updateState(const std::string &jobId, int fileId, const std::string &state,
+void DeletionContext::updateState(const std::string &jobId, uint64_t fileId, const std::string &state,
     const JobError &error) const
 {
     stateUpdater(jobId, fileId, state, error);

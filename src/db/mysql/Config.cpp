@@ -228,7 +228,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
 }
 
 
-int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId)
+int MySqlAPI::getRetryTimes(const std::string & jobId, uint64_t fileId)
 {
     soci::session sql(*connectionPool);
 

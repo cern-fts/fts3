@@ -56,7 +56,7 @@ public:
         return *i;
     }
 
-    void sendStateMessage(const std::string& jobId, int fileId);
+    void sendStateMessage(const std::string& jobId, uint64_t fileId);
 
 private:
     SingleTrStateInstance(); // Private so that it can  not be called

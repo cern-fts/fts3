@@ -257,7 +257,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
                 soci::use(deadHost)
         );
         for (auto active = transfersActiveInHost.begin(); active != transfersActiveInHost.end(); ++active) {
-            int fileId = active->get<int>("file_id");
+            uint64_t fileId = active->get<unsigned long long>("file_id");
             const std::string jobId = active->get<std::string>("job_id");
             const std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost +
                                              " is offline and the transfer is still assigned to it";
@@ -295,7 +295,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
 
     sql.begin();
     for (auto iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging) {
-        int fileId = iStaging->get<unsigned long long>("file_id");
+        uint64_t fileId = iStaging->get<unsigned long long>("file_id");
         const std::string jobId = iStaging->get<std::string>("job_id");
         int bringOnline = iStaging->get<int>("bring_online", 0);
 

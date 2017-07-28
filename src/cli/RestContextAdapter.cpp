@@ -571,7 +571,7 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
 
     if (retries && !archive) {
         for(itr=results.begin(); itr != results.end(); ++itr) {
-            int fileId = itr->getFileId();
+            uint64_t fileId = itr->getFileId();
             std::stringstream ss;
             ss << fileId;
             url = endpoint + "/jobs/" + jobId + "/files/" + ss.str() + "/retries";

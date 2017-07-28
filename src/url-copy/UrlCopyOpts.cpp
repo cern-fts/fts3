@@ -208,7 +208,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.jobId = optarg;
                     break;
                 case 101:
-                    referenceTransfer.fileId = boost::lexical_cast<unsigned>(optarg);
+                    referenceTransfer.fileId = boost::lexical_cast<unsigned long long>(optarg);
                     break;
                 case 102:
                     referenceTransfer.source = Uri::parse(optarg);

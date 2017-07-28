@@ -51,7 +51,7 @@ public:
     std::string reasonClass;
     std::string errorScope;
     std::string errorPhase;
-    int fileId;
+    uint64_t fileId;
     int fileIndex;
     double duration;
 };
@@ -63,7 +63,7 @@ public:
 class FileRetry
 {
 public:
-    int         fileId;
+    uint64_t    fileId;
     int         attempt;
     time_t      datetime;
     std::string reason;

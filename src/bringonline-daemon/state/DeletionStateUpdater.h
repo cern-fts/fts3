@@ -58,7 +58,7 @@ public:
      * @param reason : reason for changing the state
      * @param retry : true is the file requires retry, false otherwise
      */
-    void operator()(const std::string &jobId, int fileId, const std::string &state, const JobError &error)
+    void operator()(const std::string &jobId, uint64_t fileId, const std::string &state, const JobError &error)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
