@@ -165,7 +165,7 @@ public:
             "   SELECT outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = '*' "
             ") AS se LIMIT 1",
             soci::use(pair.source),
-            soci::into(limits->source, nullIndicator), soci::into(limits->throughputSource, nullIndicator);
+            soci::into(limits->throughputSource, nullIndicator), soci::into(limits->source, nullIndicator);
 
         sql <<
             "SELECT inbound_max_throughput, inbound_max_active FROM ("
@@ -173,7 +173,7 @@ public:
             "   SELECT inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = '*' "
             ") AS se LIMIT 1",
         soci::use(pair.destination),
-        soci::into(limits->destination, nullIndicator), soci::into(limits->throughputDestination, nullIndicator);
+        soci::into(limits->throughputDestination, nullIndicator), soci::into(limits->destination, nullIndicator);
 
         // Link working range
         soci::indicator isNullMin, isNullMax;
