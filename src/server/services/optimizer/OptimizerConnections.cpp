@@ -135,13 +135,13 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
         }
         // Compare on the logarithmic scale, to reduce sensitivity
         else if(round(log10(current.ema)) < round(log10(previous.ema))) {
-            decision = previousValue;
-            rationale << "Good link efficiency, small throughput deterioration";
+            decision = previousValue - 1;
+            rationale << "Good link efficiency, throughput deterioration";
         }
         // We have lost an order of magnitude, so drop actives
         else {
-            decision = previousValue - 1;
-            rationale << "Good link efficiency, throughput deterioration";
+            decision = previousValue;
+            rationale << "Good link efficiency, small throughput deterioration";
         }
     }
     else if (current.ema > previous.ema) {
