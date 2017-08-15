@@ -97,7 +97,6 @@ void ThreadSafeList::updateMsg(fts3::events::MessageUpdater &msg)
     try {
         std::list<fts3::events::MessageUpdater>::iterator iter;
         uint64_t pidStartTime = fts3::common::getPidStartime(msg.process_id());
-        pidStartTime *= 1000; // timestamp() is in milliseconds
         for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
 
             if (msg.process_id() == iter->process_id()) {

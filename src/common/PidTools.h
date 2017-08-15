@@ -18,13 +18,14 @@
 #define FTS3_PIDTOOLS_H
 
 #include <time.h>
+#include <cstdint>
 
 namespace fts3 {
 namespace common {
 
-/// Get the start time of the given PID
+/// Get the start time of the given PID, with a resolution of milliseconds
 /// On error, it will return 0
-time_t getPidStartime(pid_t);
+uint64_t getPidStartime(pid_t);
 
 }
 }

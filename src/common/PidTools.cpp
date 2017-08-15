@@ -70,7 +70,7 @@ struct ProcStatInfo {
 };
 
 
-static int parseProdStatFile(pid_t pid, ProcStatInfo *info)
+static int parseProcStatFile(pid_t pid, ProcStatInfo *info)
 {
     char fname[1024];
     snprintf(fname, sizeof(fname), "/proc/%d/stat", pid);
@@ -105,20 +105,21 @@ static time_t getSystemBootTime()
 }
 
 
-time_t getPidStartime(pid_t pid)
+uint64_t getPidStartime(pid_t pid)
 {
     ProcStatInfo info;
-    int ret = parseProdStatFile(pid, &info);
+    int ret = parseProcStatFile(pid, &info);
     if (ret < 0) {
         return 0;
     }
 
     // info.starttime has the start time of the process *in clock ticks since boot*
     // That means we still need to convert to seconds, and get the system boot time
-    long clocksPerSec = sysconf(_SC_CLK_TCK);
-    time_t bootTime = getSystemBootTime();
+    float clocksPerMilliSec = sysconf(_SC_CLK_TCK) / 1000.0;
+    uint64_t bootTime = getSystemBootTime() * 1000;
 
-    time_t procStartTime = bootTime + (info.starttime / clocksPerSec);
+    float runningTime = info.starttime / clocksPerMilliSec;
+    uint64_t procStartTime = bootTime + (uint64_t)runningTime;
 
     return procStartTime;
 }
