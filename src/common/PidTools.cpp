@@ -15,13 +15,13 @@
  */
 
 #include "PidTools.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
+#include <fstream>
 
 #include "Logger.h"
+#include "Exceptions.h"
 
 namespace fts3 {
 namespace common {
@@ -124,6 +124,20 @@ uint64_t getPidStartime(pid_t pid)
     return procStartTime;
 }
 
+
+std::string createPidFile(const std::string &dir, const std::string &name)
+{
+    std::string fullPath = dir + "/" + name;
+    std::ofstream fd(fullPath.c_str());
+    if (!fd.good()) {
+        throw SystemError("Failed to create the PID file");
+    }
+
+    fd << getpid() << std::endl;
+    fd.close();
+
+    return fullPath;
+}
 
 }
 }

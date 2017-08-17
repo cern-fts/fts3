@@ -9,6 +9,7 @@ Environment="CGSI_TRACE=0"
 EnvironmentFile=-/etc/sysconfig/fts-bringonline
 ExecStart=/usr/sbin/fts_bringonline -t 25
 KillMode=control-group
+PIDFile=/var/run/fts3/fts-bringonline.pid
 TimeoutStopSec=23
 KillSignal=SIGTERM
 SendSIGHUP=no

@@ -7,6 +7,7 @@ Type=forking
 EnvironmentFile=-/etc/sysconfig/fts-msg-bulk
 ExecStart=/usr/sbin/fts_msg_bulk
 KillMode=control-group
+PIDFile=/var/run/fts3/fts-msg-bulk.pid
 TimeoutStopSec=5
 KillSignal=SIGTERM
 SendSIGHUP=no

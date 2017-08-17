@@ -79,6 +79,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "File transfer listening port"
     )
     (
+        "PidDirectory",
+        po::value<std::string>( &(_vars["PidDirectory"]) )->default_value("/var/run/fts3"),
+        "Where to put the PID files"
+    )
+    (
         "DbThreadsNum,D",
         po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT),
         "Number of db connections in the db threads pool"

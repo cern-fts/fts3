@@ -10,6 +10,7 @@ Environment="X509_USER_KEY=/etc/grid-security/fts3hostkey.pem"
 EnvironmentFile=-/etc/sysconfig/fts-server
 ExecStart=/usr/sbin/fts_server -t 25
 KillMode=process
+PIDFile=/var/run/fts3/fts-server.pid
 TimeoutStopSec=23
 KillSignal=SIGTERM
 SendSIGHUP=no

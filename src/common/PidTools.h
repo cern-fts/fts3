@@ -17,7 +17,7 @@
 #ifndef FTS3_PIDTOOLS_H
 #define FTS3_PIDTOOLS_H
 
-#include <time.h>
+#include <string>
 #include <cstdint>
 
 namespace fts3 {
@@ -26,6 +26,10 @@ namespace common {
 /// Get the start time of the given PID, with a resolution of milliseconds
 /// On error, it will return 0
 uint64_t getPidStartime(pid_t);
+
+// Creates a PID file
+// Returns the full path
+std::string createPidFile(const std::string &dir, const std::string &name);
 
 }
 }

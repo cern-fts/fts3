@@ -20,6 +20,7 @@
 
 #include <cstdlib>
 #include <activemq/library/ActiveMQCPP.h>
+#include <common/PidTools.h>
 
 #include "common/ConcurrentQueue.h"
 #include "common/DaemonTools.h"
@@ -96,6 +97,7 @@ static void spawnServer(int argc, char **argv)
     ServerConfig::instance().read(argc, argv);
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
+    std::string pidDir = ServerConfig::instance().get<std::string>("PidDirectory");
 
     if (dropPrivileges(user, group)) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
@@ -108,6 +110,8 @@ static void spawnServer(int argc, char **argv)
             throw SystemError("Can't set daemon");
         }
     }
+
+    createPidFile(pidDir, "fts-msg-bulk.pid");
 
     DoServer(argc <= 1);
 }

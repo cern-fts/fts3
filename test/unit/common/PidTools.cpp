@@ -16,6 +16,7 @@
 
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/test_tools.hpp>
+#include <fstream>
 #include "common/PidTools.h"
 
 using namespace fts3::common;
@@ -31,6 +32,19 @@ BOOST_AUTO_TEST_CASE(basic)
 
     BOOST_CHECK_GT(selfStartTime, (time(NULL) - 120) * 1000);
     BOOST_CHECK_LT(selfStartTime, (time(NULL) + 1) * 1000);
+}
+
+
+BOOST_AUTO_TEST_CASE(pidfile)
+{
+    std::string path = createPidFile("/tmp/", "test.pid");
+
+    std::ifstream fd(path.c_str());
+    pid_t pid;
+    fd >> pid;
+
+    BOOST_CHECK_EQUAL(getpid(), pid);
+
 }
 
 

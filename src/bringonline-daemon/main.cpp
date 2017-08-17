@@ -19,6 +19,7 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <common/PidTools.h>
 
 #include "config/ServerConfig.h"
 #include "common/DaemonTools.h"
@@ -107,19 +108,21 @@ static void spawnServer(int argc, char** argv)
 
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
+    std::string pidDir = ServerConfig::instance().get<std::string>("PidDirectory");
 
     if (dropPrivileges(user, group)) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
     }
 
     bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
-
     if (isDaemon) {
         int d = daemon(0, 0);
         if (d < 0) {
             throw SystemError("Can't fork the daemon");
         }
     }
+
+    createPidFile(pidDir, "fts-bringonline.pid");
 
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
