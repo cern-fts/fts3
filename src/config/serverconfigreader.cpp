@@ -80,7 +80,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "PidDirectory",
-        po::value<std::string>( &(_vars["PidDirectory"]) )->default_value("/var/run/fts3"),
+        po::value<std::string>( &(_vars["PidDirectory"]) )->default_value("/var/lib/fts3"),
         "Where to put the PID files"
     )
     (

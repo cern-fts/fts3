@@ -241,7 +241,6 @@ mkdir -p %{buildroot}%{_var}/lib/fts3/status
 mkdir -p %{buildroot}%{_var}/lib/fts3/stalled
 mkdir -p %{buildroot}%{_var}/lib/fts3/logs
 mkdir -p %{buildroot}%{_var}/log/fts3
-mkdir -p %{buildroot}%{_var}/run/fts3
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
 make install DESTDIR=%{buildroot}
 
@@ -409,7 +408,6 @@ fi
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/stalled
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/logs
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
-%dir %attr(0755,fts3,root) %{_var}/run/fts3
 %dir %attr(0755,fts3,root) %{_sysconfdir}/fts3
 
 %{_sbindir}/fts_bringonline
