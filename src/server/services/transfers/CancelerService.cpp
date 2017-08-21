@@ -272,11 +272,23 @@ void CancelerService::runService()
 
 void CancelerService::killRunningJob(const std::vector<int>& pids)
 {
+    int sigKillDelay = ServerConfig::instance().get<int>("SigKillDelay");
+
     for (auto iter = pids.begin(); iter != pids.end(); ++iter)
     {
         int pid = *iter;
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
         kill(pid, SIGTERM);
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Giving " << sigKillDelay << " ms for graceful termination" << commit;
+    boost::this_thread::sleep(boost::posix_time::milliseconds(sigKillDelay));
+
+    for (auto iter = pids.begin(); iter != pids.end(); ++iter) {
+        int pid = *iter;
+        if (kill(pid, 0) == 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SIGKILL pid: " << pid << commit;
+        }
     }
 }
 

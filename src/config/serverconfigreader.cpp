@@ -388,6 +388,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<int>()->default_value(1),
         "Decrease step size when the optimizer considers the performance is bad"
     )
+    (
+        "SigKillDelay",
+        po::value<std::string>( &(_vars["SigKillDelay"]) )->default_value("500"),
+        "In milliseconds, delay between graceful SIGTERM and SIGKILL"
+    )
     ;
 
     return config;
