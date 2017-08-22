@@ -21,6 +21,8 @@
 
 using fts3::common::commit;
 
+static const GQuark GFAL_GRIDFTP_PASV_STAGE_QUARK = g_quark_from_static_string("PASV");
+
 
 void performanceCallback(gfalt_transfer_status_t h, const char*, const char*, gpointer udata)
 {
@@ -147,5 +149,8 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     }
     else if (e->stage == GFAL_EVENT_TRANSFER_TYPE) {
         transfer->stats.transferType = e->description;
+    }
+    else if (e->stage== GFAL_GRIDFTP_PASV_STAGE_QUARK) {
+        transfer->stats.finalDestination = e->description;
     }
 }

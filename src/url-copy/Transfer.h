@@ -53,6 +53,7 @@ public:
         Interval process;
 
         bool ipv6Used;
+        std::string finalDestination;
         std::string transferType;
 
         Statistics(): ipv6Used(false){};

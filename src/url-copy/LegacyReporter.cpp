@@ -280,6 +280,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.tr_timestamp_complete = transfer.stats.process.end;
 
     completed.ipv6 = transfer.stats.ipv6Used;
+    completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;
 
     if (opts.enableMonitoring) {
