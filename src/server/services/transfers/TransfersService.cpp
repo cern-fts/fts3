@@ -174,6 +174,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                         proxies[proxy_key], logDir);
 
                     execPool.start(exec);
+                    ++urlCopyCount;
                 }
             }
         }
