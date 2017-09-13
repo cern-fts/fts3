@@ -61,13 +61,17 @@ BulkSubmissionParser::~BulkSubmissionParser()
 
 void BulkSubmissionParser::parse()
 {
-    boost::optional<pt::ptree &> v = pt.get_child_optional("Files");
-    if (!v.is_initialized()) {
-        throw cli_exception("The array of files does not exist!");
+    boost::optional<pt::ptree &> v;
+    if (isArray(pt, "Files")) {
+        v = pt.get_child_optional("Files");
     }
-    if (!isArray(pt, "Files")) {
-        throw cli_exception("The 'Files' element is not an array");
+    else if (isArray(pt, "files")) {
+        v = pt.get_child_optional("files");
     }
+    else {
+        throw cli_exception("There is no array called 'Files' or 'files'");
+    }
+
 
     pt::ptree &root = v.get();
     for (auto it = root.begin(); it != root.end(); it++) {
@@ -78,6 +82,9 @@ void BulkSubmissionParser::parse()
     }
 
     jobParams = pt.get_child_optional("Params");
+    if (!jobParams.is_initialized()) {
+        jobParams = pt.get_child_optional("params");
+    }
 }
 
 void BulkSubmissionParser::parse_item(pt::ptree &item)
