@@ -74,5 +74,12 @@ BOOST_FIXTURE_TEST_CASE (getInt, fts3::config::ServerConfig)
 }
 
 
+BOOST_FIXTURE_TEST_CASE (getDouble, fts3::config::ServerConfig)
+{
+    _vars["key"] = "10.05";
+    BOOST_CHECK_EQUAL (get<double>("key"), 10.05);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

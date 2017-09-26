@@ -71,8 +71,8 @@ public:
      * they correspond to the required types (int, etc.), and stores them
      * converted to the type. But, we want to store all the values as string -
      * so, we convert them back. */
-    void storeAsString
-    (
+    template <typename T = int>
+    void storeAsString (
         const std::string& aName /**< Name of the config property */
     );
 

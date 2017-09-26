@@ -351,23 +351,43 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	(
 	    "OptimizerMaxSuccessRate",
 	     po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
-	     "percentage of the max success rate considered by the optimizer"
+	     "Percentage of the max success rate considered by the optimizer"
 	)
 	(
 	  "OptimizerMedSuccessRate",
 	   po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
-	   "percentage of the med success rate considered by the optimizer"
+	   "Percentage of the med success rate considered by the optimizer"
 	)
 	(
 	   "OptimizerLowSuccessRate",
 	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT),
-	   "percentage of the low success rate considered by the optimizer"
+	   "Percentage of the low success rate considered by the optimizer"
 	)
 	(
 	   "OptimizerBaseSuccessRate",
 	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT),
-	    "percentage of the base success rate considered by the optimizer"
+	    "Percentage of the base success rate considered by the optimizer"
 	)
+    (
+        "OptimizerEMAAlpha",
+        po::value<double>()->default_value(0.1),
+        "Optimizer: EMA Alpha factor to reduce the influence of fluctuations"
+    )
+    (
+        "OptimizerIncreaseStep",
+        po::value<int>()->default_value(1),
+        "Increase step size when the optimizer considers the performance is good"
+    )
+    (
+        "OptimizerAggressiveIncreaseStep",
+        po::value<int>()->default_value(2),
+        "Increase step size when the optimizer considers the performance is good, and set to aggressive or normal"
+    )
+    (
+        "OptimizerDecreaseStep",
+        po::value<int>()->default_value(1),
+        "Decrease step size when the optimizer considers the performance is bad"
+    )
     ;
 
     return config;
@@ -476,18 +496,15 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
 
 /* ========================================================================== */
 
-void ServerConfigReader::storeAsString
-(
-    const std::string& aName
-)
+template <typename T>
+void ServerConfigReader::storeAsString(const std::string& aName)
 {
     bool isFound = _vm.count(aName);
     assert(isFound);
 
-    if (isFound)
-        {
-            _vars[aName] = boost::lexical_cast<std::string>(_vm[aName].as<int>());
-        }
+    if (isFound) {
+        _vars[aName] = boost::lexical_cast<std::string>(_vm[aName].as<T>());
+    }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -500,6 +517,10 @@ void ServerConfigReader::storeValuesAsStrings ()
     storeAsString("OptimizerMedSuccessRate");
     storeAsString("OptimizerLowSuccessRate");
     storeAsString("OptimizerBaseSuccessRate");
+    storeAsString<double>("OptimizerEMAAlpha");
+    storeAsString("OptimizerIncreaseStep");
+    storeAsString("OptimizerAggressiveIncreaseStep");
+    storeAsString("OptimizerDecreaseStep");
 }
 
 void ServerConfigReader::storeRoles ()

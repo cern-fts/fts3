@@ -88,6 +88,11 @@ void OptimizerService::runService()
     auto lowSuccessRate = config::ServerConfig::instance().get<int>("OptimizerLowSuccessRate");
     auto baseSuccessRate = config::ServerConfig::instance().get<int>("OptimizerBaseSuccessRate");
 
+    auto emaAlpha = config::ServerConfig::instance().get<double>("OptimizerEMAAlpha");
+    auto increaseStep = config::ServerConfig::instance().get<int>("OptimizerIncreaseStep");
+    auto increaseAggressiveStep = config::ServerConfig::instance().get<int>("OptimizerAggressiveIncreaseStep");
+    auto decreaseStep = config::ServerConfig::instance().get<int>("OptimizerDecreaseStep");
+
     OptimizerNotifier optimizerCallbacks(
         config::ServerConfig::instance().get<std::string>("MessagingDirectory")
     );
@@ -101,6 +106,9 @@ void OptimizerService::runService()
     optimizer.setMaxSuccessRate(maxSuccessRate);
     optimizer.setLowSuccessRate(lowSuccessRate);
     optimizer.setBaseSuccessRate(baseSuccessRate);
+    optimizer.setEmaAlpha(emaAlpha);
+    optimizer.setStepSize(increaseStep, increaseAggressiveStep, decreaseStep);
+
     while (!boost::this_thread::interruption_requested()) {
         try {
             if (beat->isLeadNode()) {
