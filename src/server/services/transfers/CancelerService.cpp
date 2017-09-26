@@ -139,10 +139,17 @@ void CancelerService::applyActiveTimeouts()
     std::vector<fts3::events::MessageUpdater> messages;
 
     for (auto i = stalled.begin(); i != stalled.end(); ++i) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << i->pid
-            << ", jobid:" << i->jobId << ", fileid:" << i->fileId
-            << " because it was stalled" << commit;
-        kill(i->pid, SIGKILL);
+        if (i->pid > 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Killing pid:" << i->pid
+                << ", jobid:" << i->jobId << ", fileid:" << i->fileId
+                << " because it was stalled" << commit;
+            kill(i->pid, SIGKILL);
+        }
+        else {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Killing jobid:" << i->jobId << ", fileid:" << i->fileId
+                << " because it was stalled (no pid available!)" << commit;
+        }
         db->updateTransferStatus(i->jobId, i->fileId, 0.0,
             "FAILED", "Transfer has been forced-killed because it was stalled",
             i->pid, 0, 0, false);
