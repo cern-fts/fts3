@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2016
+# Copyright (c) CERN 2016-2017
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,3 +17,4 @@
 cmake_minimum_required(VERSION 2.8)
 
 define_test (VoShares fts_server_lib)
+define_test (UrlCopyCmd fts_server_lib)

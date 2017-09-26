@@ -51,6 +51,7 @@ protected:
     int execPoolSize;
     std::string cmd;
     std::string logDir;
+    std::string msgDir;
     boost::posix_time::time_duration schedulingInterval;
 
     void getFiles(const std::vector<QueueId>& queues);

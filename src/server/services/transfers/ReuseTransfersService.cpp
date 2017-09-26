@@ -190,13 +190,17 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     UrlCopyCmd cmdBuilder;
 
     // Set log directory
-    std::string logsDir = ServerConfig::instance().get<std::string>("TransferLogDirectory");;
+    std::string logsDir = ServerConfig::instance().get<std::string>("TransferLogDirectory");
     cmdBuilder.setLogDir(logsDir);
+
+    // Messaging
+    std::string msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+    cmdBuilder.setMonitoring(monitoringMessages, msgDir);
 
     // Set parameters from the "representative", without using the source and destination url, and other data
     // that is per transfer
     TransferFile const & representative = files.front();
-    cmdBuilder.setFromTransfer(representative, true, db->publishUserDn(representative.voName));
+    cmdBuilder.setFromTransfer(representative, true, db->publishUserDn(representative.voName), msgDir);
 
     // Generate the file containing the list of transfers
     std::map<uint64_t, std::string> fileIds = generateJobFile(representative.jobId, files);
@@ -251,9 +255,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     {
         cmdBuilder.setDebugLevel(debugLevel);
     }
-
-    // Enable monitoring?
-    cmdBuilder.setMonitoring(monitoringMessages);
 
     // Infosystem
     cmdBuilder.setInfosystem(infosys);

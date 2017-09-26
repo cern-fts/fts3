@@ -42,8 +42,9 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 
     gfal2.set("GRIDFTP PLUGIN", "SESSION_REUSE", true);
     gfal2.set("GRIDFTP PLUGIN", "ENABLE_UDT", opts.enableUdt);
-    if (opts.enableIpv6) {
-        gfal2.set("GRIDFTP PLUGIN", "IPV6", opts.enableIpv6);
+
+    if (!indeterminate(opts.enableIpv6)) {
+        gfal2.set("GRIDFTP PLUGIN", "IPV6", static_cast<bool>(opts.enableIpv6));
     }
 
     if (opts.infosys.compare("false") == 0) {

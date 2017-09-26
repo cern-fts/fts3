@@ -24,6 +24,7 @@
 #include <getopt.h>
 #include <iostream>
 #include <string>
+#include <boost/logic/tribool.hpp>
 
 
 class UrlCopyOpts
@@ -63,7 +64,7 @@ public:
     unsigned tcpBuffersize;
     unsigned timeout;
     bool     enableUdt;
-    bool     enableIpv6;
+    boost::tribool enableIpv6;
     unsigned addSecPerMb;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option

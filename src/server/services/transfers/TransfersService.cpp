@@ -50,6 +50,7 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     cmd = "fts_url_copy";
 
     logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
+    msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
     ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
@@ -171,7 +172,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                 } else {
                     FileTransferExecutor *exec = new FileTransferExecutor(tf,
                         tfh, monitoringMessages, infosys, ftsHostName,
-                        proxies[proxy_key], logDir);
+                        proxies[proxy_key], logDir, msgDir);
 
                     execPool.start(exec);
                     ++urlCopyCount;

@@ -38,7 +38,7 @@ namespace server
 
 FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
     TransferFileHandler &tfh, bool monitoringMsg, std::string infosys,
-    std::string ftsHostName, std::string proxy, std::string logDir) :
+    std::string ftsHostName, std::string proxy, std::string logDir, std::string msgDir) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
@@ -46,6 +46,7 @@ FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
     ftsHostName(ftsHostName),
     proxy(proxy),
     logsDir(logDir),
+    msgDir(msgDir),
     db(DBSingleton::instance().getDBObjectInstance())
 {
 }
@@ -103,7 +104,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setFromProtocol(protocolParams);
 
             // Update from the transfer
-            cmdBuilder.setFromTransfer(tf, false, db->publishUserDn(tf.voName));
+            cmdBuilder.setFromTransfer(tf, false, db->publishUserDn(tf.voName), msgDir);
 
             // OAuth credentials
             std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);
@@ -115,7 +116,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));
 
             // Enable monitoring
-            cmdBuilder.setMonitoring(monitoringMsg);
+            cmdBuilder.setMonitoring(monitoringMsg, msgDir);
 
             // Proxy
             if (!proxy.empty()) {

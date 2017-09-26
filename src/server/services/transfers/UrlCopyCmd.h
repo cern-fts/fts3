@@ -56,7 +56,7 @@ public:
     std::string generateParameters(void);
 
     void setLogDir(const std::string&);
-    void setMonitoring(bool);
+    void setMonitoring(bool, const std::string&);
     void setInfosystem(const std::string&);
     void setOptimizerLevel(int);
     void setDebugLevel(int);
@@ -67,7 +67,7 @@ public:
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
 
-    void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn);
+    void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn, const std::string &msgDir);
 
     void setFromProtocol(const TransferFile::ProtocolParameters& protocol);
     void setSecondsPerMB(long);

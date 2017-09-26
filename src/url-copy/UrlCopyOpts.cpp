@@ -69,6 +69,7 @@ const option UrlCopyOpts::long_options[] =
     {"udt",               no_argument,       0, 806},
     {"ipv6",              no_argument,       0, 807},
     {"sec-per-mb",        required_argument, 0, 808},
+    {"ipv4",              no_argument,       0, 809},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -160,7 +161,7 @@ UrlCopyOpts::UrlCopyOpts():
     isSessionReuse(false), isMultihop(false), isMultipleReplicaJob(false),
     strictCopy(false),
     optimizerLevel(0), overwrite(false), nStreams(0), tcpBuffersize(0),
-    timeout(0), enableUdt(false), enableIpv6(false), addSecPerMb(0),
+    timeout(0), enableUdt(false), enableIpv6(boost::tribool::indeterminate_value), addSecPerMb(0),
     enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
     debugLevel(0), logToStderr(false)
@@ -323,6 +324,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 808:
                     addSecPerMb = boost::lexical_cast<int>(optarg);
+                    break;
+                case 809:
+                    enableIpv6 = false;
                     break;
 
                 case 820:

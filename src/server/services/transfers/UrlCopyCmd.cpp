@@ -23,20 +23,16 @@
  */
 
 #include "UrlCopyCmd.h"
-#include "config/ServerConfig.h"
 #include <boost/algorithm/string/replace.hpp>
 
 namespace fts3 {
 namespace server {
-
-using fts3::config::ServerConfig;
 
 const std::string UrlCopyCmd::Program("fts_url_copy");
 
 
 UrlCopyCmd::UrlCopyCmd() : IPv6Explicit(false)
 {
-    setOption("msgDir", ServerConfig::instance().get<std::string>("MessagingDirectory"));
 }
 
 
@@ -93,8 +89,9 @@ void UrlCopyCmd::setLogDir(const std::string &path)
 }
 
 
-void UrlCopyCmd::setMonitoring(bool set)
+void UrlCopyCmd::setMonitoring(bool set, const std::string &msgDir)
 {
+    setOption("msgDir", msgDir);
     setFlag("monitoring", set);
 }
 
@@ -133,6 +130,7 @@ void UrlCopyCmd::setIPv6(bool set)
 {
     IPv6Explicit = true;
     setFlag("ipv6", set);
+    setFlag("ipv4", !set);
 }
 
 
@@ -154,7 +152,8 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 }
 
 
-void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple, bool publishUserDn)
+void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
+    bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
@@ -200,8 +199,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer, bool is_multiple,
         setOption("token-bringonline", transfer.bringOnlineToken);
     }
     else {
-        setOption("bulk-file",
-            ServerConfig::instance().get<std::string>("MessagingDirectory") + "/" + transfer.jobId);
+        setOption("bulk-file", msgDir + "/" + transfer.jobId);
     }
 }
 
