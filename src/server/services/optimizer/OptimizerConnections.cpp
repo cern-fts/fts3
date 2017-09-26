@@ -117,7 +117,10 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 {
     int decision = previousValue;
 
-    if (current.ema < previous.ema) {
+    if (current.queueSize < previousValue) {
+        rationale << "Queue emptying. Hold on.";
+    }
+    else if (current.ema < previous.ema) {
         // If the throughput is worsening, we need to look at the file sizes.
         // If the file sizes are decreasing, then it could be that the throughput deterioration is due to
         // this. Thus, decreasing the number of actives will be a bad idea.
@@ -295,7 +298,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Do not go too far with the number of connections
     if (optMode >= kOptimizerNormal) {
         if (decision > current.queueSize * maxNumberOfStreams) {
-            decision = std::max(current.queueSize, 1) * maxNumberOfStreams;
+            decision = previousValue;
             rationale << ". Too many streams";
         }
     }

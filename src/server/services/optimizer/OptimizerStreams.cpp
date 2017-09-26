@@ -48,9 +48,13 @@ void Optimizer::optimizeStreamsForPair(OptimizerMode optMode, const Pair &pair)
     int streamsDecision = 1;
 
     if (availableTransfers > 0) {
-        streamsDecision = std::max(
-            static_cast<int>(floor(connectionsAvailable/availableTransfers)),
-            1);
+        streamsDecision = static_cast<int>(floor(connectionsAvailable/availableTransfers));
+        if (streamsDecision <= 0) {
+            streamsDecision = 1;
+        }
+        else if (streamsDecision > maxNumberOfStreams) {
+            streamsDecision = maxNumberOfStreams;
+        }
     }
 
     dataSource->storeOptimizerStreams(pair, streamsDecision);

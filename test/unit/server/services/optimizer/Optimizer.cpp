@@ -408,6 +408,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     // Feed successful and actives
     populateTransfers(pair, "FINISHED", 100);
     populateTransfers(pair, "ACTIVE", 20);
+    populateTransfers(pair, "SUBMITTED", 100);
 
     // Run once (first time)
     runOptimizerForPair(pair);
@@ -496,9 +497,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
     BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
 }
 
-// Success rate gets better, so the number should be increased, but there aren't
-// enough queued. Optimizer mode is 2, so streams should be increased.
-BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
+// Success rate gets better, but the queue is emptying
+BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
 {
     mockOptimizerMode = kOptimizerAggressive;
 
@@ -508,7 +508,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 96, false, 100);
     populateTransfers(pair, "FAILED", 4, true);
     populateTransfers(pair, "ACTIVE", 20);
-    populateTransfers(pair, "SUBMITTED", 10);
+    populateTransfers(pair, "SUBMITTED", 30);
 
     // Run once (first time)
     runOptimizerForPair(pair);
@@ -527,8 +527,34 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode2, BaseOptimizerFixture)
     auto lastEntry = getLastEntry(pair);
 
     BOOST_TEST_MESSAGE(lastEntry->rationale);
-    BOOST_CHECK_GT(lastEntry->activeDecision, 40);
-    BOOST_CHECK_GT(streamsRegistry[pair], 1);
+    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
+}
+
+// Throughput gets worse, but the queue is emptying
+BOOST_FIXTURE_TEST_CASE (optimizerEmptyingWorseThr, BaseOptimizerFixture)
+{
+    const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+
+    // Feed a bunch of successful with a big filesize
+    populateTransfers(pair, "SUBMITTED", 10);
+    populateTransfers(pair, "FINISHED", 2, false, 100, 1024*1024);
+
+    // Run once
+    runOptimizerForPair(pair);
+
+    // Patch decision
+    setOptimizerValue(pair, 40);
+
+    // Another bunch, with smaller filesizes and less throughput
+    populateTransfers(pair, "FINISHED", 100, false, 10, 1024*1024);
+
+    // Run again
+    runOptimizerForPair(pair);
+
+    auto lastEntry = getLastEntry(pair);
+
+    BOOST_TEST_MESSAGE(lastEntry->rationale);
+    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
 }
 
 // Success rate is good, throughput worsens, but so does avg. filesize.
@@ -538,7 +564,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed a bunch of successful with a big filesize
-    populateTransfers(pair, "FINISHED", 9, false, 100, 1024*1024*1024);
+    populateTransfers(pair, "FINISHED", 2, false, 100, 1024*1024*1024);
 
     // Run once
     runOptimizerForPair(pair);
@@ -547,6 +573,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
     setOptimizerValue(pair, 40);
 
     // Another bunch, with smaller filesizes and less throughput
+    populateTransfers(pair, "SUBMITTED", 80);
     populateTransfers(pair, "FINISHED", 100, false, 10, 1024);
 
     // Run again
@@ -554,6 +581,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
+    BOOST_TEST_MESSAGE(lastEntry->rationale);
     BOOST_CHECK_GT(lastEntry->activeDecision, 40);
 }
 
@@ -561,6 +589,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    maxNumberOfStreams = 4;
 
     // Feed just a few of successes
     populateTransfers(pair, "FINISHED", 5, false, 100, 1024*1024);
@@ -580,9 +609,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
     mockOptimizerMode = kOptimizerAggressive;
     runOptimizerForPair(pair);
 
-    auto lastEntry = getLastEntry(pair);
-
-    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 8);
+    BOOST_CHECK_LE(streamsRegistry[pair], maxNumberOfStreams);
 }
 
 // NOTE: I am not sure it is worth to add more tests. At the end, we will basically be
