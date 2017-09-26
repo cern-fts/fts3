@@ -143,6 +143,10 @@ protected:
     int lowSuccessRate;
     int baseSuccessRate;
 
+    int decreaseStepSize;
+    int increaseStepSize, increaseAggressiveStepSize;
+    double emaAlpha;
+
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
     bool optimizeConnectionsForPair(OptimizerMode optMode, const Pair &);
@@ -166,6 +170,8 @@ public:
     void setMaxSuccessRate(int);
     void setLowSuccessRate(int);
     void setBaseSuccessRate(int);
+    void setStepSize(int increase, int increaseAggressive, int decrease);
+    void setEmaAlpha(double);
     void run(void);
     void runOptimizerForPair(const Pair&);
 };

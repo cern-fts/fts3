@@ -82,7 +82,7 @@ void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
 
 // To be called for low success rates (<= LOW_SUCCESS_RATE)
 static int optimizeLowSuccessRate(const PairState &current, const PairState &previous, int previousValue,
-    std::stringstream& rationale, int baseSuccessRate)
+    int baseSuccessRate, int decreaseStepSize, std::stringstream& rationale)
 {
     int decision = previousValue;
     // If improving, keep it stable
@@ -92,11 +92,11 @@ static int optimizeLowSuccessRate(const PairState &current, const PairState &pre
     }
         // If worse or the same, step back
     else if (current.successRate < previous.successRate) {
-        decision = previousValue - 2;
+        decision = previousValue - decreaseStepSize;
         rationale << "Bad link efficiency";
     }
     else {
-        decision = previousValue - 2;
+        decision = previousValue - decreaseStepSize;
         rationale << "Bad link efficiency, no changes";
     }
 
@@ -113,7 +113,7 @@ static int optimizeNotEnoughInformation(const PairState &, const PairState &, in
 
 // To be called when the success rate is good
 static int optimizeGoodSuccessRate(const PairState &current, const PairState &previous, int previousValue,
-    OptimizerMode optMode, std::stringstream& rationale)
+    int decreaseStepSize, int increaseStepSize, std::stringstream& rationale)
 {
     int decision = previousValue;
 
@@ -125,12 +125,12 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
         // If the file sizes are decreasing, then it could be that the throughput deterioration is due to
         // this. Thus, decreasing the number of actives will be a bad idea.
         if (round(log10(current.filesizeAvg)) < round(log10(previous.filesizeAvg))) {
-            decision = previousValue + 1;
+            decision = previousValue + increaseStepSize;
             rationale << "Good link efficiency, throughput deterioration, avg. filesize decreasing";
         }
         // Compare on the logarithmic scale, to reduce sensitivity
         else if(round(log10(current.ema)) < round(log10(previous.ema))) {
-            decision = previousValue - 1;
+            decision = previousValue - decreaseStepSize;
             rationale << "Good link efficiency, throughput deterioration";
         }
         // We have lost an order of magnitude, so drop actives
@@ -140,16 +140,11 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
         }
     }
     else if (current.ema > previous.ema) {
-        if (optMode >= kOptimizerNormal) {
-            decision = previousValue + 2;
-        }
-        else {
-            decision = previousValue + 1;
-        }
+        decision = previousValue + increaseStepSize;
         rationale << "Good link efficiency, current average throughput is larger than the preceding average";
     }
     else {
-        decision = previousValue + 1;
+        decision = previousValue + increaseStepSize;
         rationale << "Good link efficiency. Increment";
     }
 
@@ -218,7 +213,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     const PairState previous = inMemoryStore[pair];
 
     // Calculate new Exponential Moving Average
-    current.ema = exponentialMovingAverage(current.throughput, EMA_ALPHA, previous.ema);
+    current.ema = exponentialMovingAverage(current.throughput, emaAlpha, previous.ema);
 
     // If we have no range, leave it here
     if (range.min == range.max) {
@@ -230,7 +225,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     if (limits.throughputSource > 0) {
         double throughput = dataSource->getThroughputAsSource(pair.source);
         if (throughput > limits.throughputSource) {
-            decision = previousValue - 1;
+            decision = previousValue - decreaseStepSize;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
             setOptimizerDecision(pair, decision, current, 0, rationale.str());
             return true;
@@ -239,7 +234,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     if (limits.throughputDestination > 0) {
         double throughput = dataSource->getThroughputAsDestination(pair.destination);
         if (throughput > limits.throughputDestination) {
-            decision = previousValue - 1;
+            decision = previousValue - decreaseStepSize;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
             setOptimizerDecision(pair, decision, current, 0, rationale.str());
             return true;
@@ -264,7 +259,9 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // For low success rates, do not even care about throughput
     if (current.successRate < lowSuccessRate) {
-        decision = optimizeLowSuccessRate(current, previous, previousValue, rationale, baseSuccessRate);
+        decision = optimizeLowSuccessRate(current, previous, previousValue,
+            baseSuccessRate, decreaseStepSize,
+            rationale);
     }
     // No throughput info
     else if (current.ema == 0) {
@@ -272,7 +269,13 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     }
     // Good success rate, or not enough information to take any decision
     else {
-        decision = optimizeGoodSuccessRate(current, previous, previousValue, optMode, rationale);
+        int localIncreaseStep = increaseStepSize;
+        if (optMode >= kOptimizerNormal) {
+            localIncreaseStep = increaseAggressiveStepSize;
+        }
+        decision = optimizeGoodSuccessRate(current, previous, previousValue,
+            decreaseStepSize, localIncreaseStep,
+            rationale);
     }
 
     // Apply margins to the decision

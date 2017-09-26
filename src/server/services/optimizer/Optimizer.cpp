@@ -34,7 +34,9 @@ namespace optimizer {
 Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
     dataSource(ds), callbacks(callbacks),
     optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
-    maxSuccessRate(100), lowSuccessRate(97), baseSuccessRate(96)
+    maxSuccessRate(100), lowSuccessRate(97), baseSuccessRate(96),
+    decreaseStepSize(1), increaseStepSize(1), increaseAggressiveStepSize(2),
+    emaAlpha(EMA_ALPHA)
 {
 }
 
@@ -71,6 +73,20 @@ void Optimizer::setLowSuccessRate(int newValue)
 void Optimizer::setBaseSuccessRate(int newValue)
 {
     baseSuccessRate = newValue;
+}
+
+
+void Optimizer::setStepSize(int increase, int increaseAggressive, int decrease)
+{
+    increaseStepSize = increase;
+    increaseAggressiveStepSize = increaseAggressive;
+    decreaseStepSize = decrease;
+}
+
+
+void Optimizer::setEmaAlpha(double alpha)
+{
+    emaAlpha = alpha;
 }
 
 
