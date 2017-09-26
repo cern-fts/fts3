@@ -103,14 +103,6 @@ static int optimizeLowSuccessRate(const PairState &current, const PairState &pre
     return decision;
 }
 
-// To be called for success rates higher than low, but worsening
-static int optimizeWorseningSuccessRate(const PairState &, const PairState &, int previousValue,
-    std::stringstream& rationale)
-{
-    rationale << "Worse link efficiency";
-    return previousValue - 1;
-}
-
 // To be called when there is not enough information to decide what to do
 static int optimizeNotEnoughInformation(const PairState &, const PairState &, int previousValue,
     std::stringstream& rationale)
@@ -271,22 +263,11 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     if (current.successRate < lowSuccessRate) {
         decision = optimizeLowSuccessRate(current, previous, previousValue, rationale, baseSuccessRate);
     }
-    // Success rate worsening
-    else if (current.successRate >= lowSuccessRate && current.successRate < previous.successRate) {
-        decision = optimizeWorseningSuccessRate(current, previous, previousValue, rationale);
-    }
     // No throughput info
     else if (current.ema == 0) {
         decision = optimizeNotEnoughInformation(current, previous, previousValue, rationale);
     }
-
-    // Good success rate
-    else if ((current.successRate == maxSuccessRate ||
-             (current.successRate >= medSuccessRate && current.successRate >= previous.successRate)) &&
-             current.retryCount <= previous.retryCount)  {
-        decision = optimizeGoodSuccessRate(current, previous, previousValue, optMode, rationale);
-    }
-    // Not enough information to take any decision
+    // Good success rate, or not enough information to take any decision
     else {
         decision = optimizeGoodSuccessRate(current, previous, previousValue, optMode, rationale);
     }

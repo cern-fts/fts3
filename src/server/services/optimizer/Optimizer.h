@@ -140,7 +140,6 @@ protected:
     boost::posix_time::time_duration optimizerSteadyInterval;
     int maxNumberOfStreams;
     int maxSuccessRate;
-    int medSuccessRate;
     int lowSuccessRate;
     int baseSuccessRate;
 
@@ -165,7 +164,6 @@ public:
     void setSteadyInterval(boost::posix_time::time_duration);
     void setMaxNumberOfStreams(int);
     void setMaxSuccessRate(int);
-    void setMedSuccessRate(int);
     void setLowSuccessRate(int);
     void setBaseSuccessRate(int);
     void run(void);

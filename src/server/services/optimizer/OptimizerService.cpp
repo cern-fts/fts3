@@ -85,7 +85,6 @@ void OptimizerService::runService()
     auto optimizerSteadyInterval = config::ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
     auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
     auto maxSuccessRate = config::ServerConfig::instance().get<int>("OptimizerMaxSuccessRate");
-    auto medSuccessRate = config::ServerConfig::instance().get<int>("OptimizerMedSuccessRate");
     auto lowSuccessRate = config::ServerConfig::instance().get<int>("OptimizerLowSuccessRate");
     auto baseSuccessRate = config::ServerConfig::instance().get<int>("OptimizerBaseSuccessRate");
 
@@ -100,7 +99,6 @@ void OptimizerService::runService()
     optimizer.setSteadyInterval(optimizerSteadyInterval);
     optimizer.setMaxNumberOfStreams(maxNumberOfStreams);
     optimizer.setMaxSuccessRate(maxSuccessRate);
-    optimizer.setMedSuccessRate(medSuccessRate);
     optimizer.setLowSuccessRate(lowSuccessRate);
     optimizer.setBaseSuccessRate(baseSuccessRate);
     while (!boost::this_thread::interruption_requested()) {
