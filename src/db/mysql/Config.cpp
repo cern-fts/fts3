@@ -359,26 +359,28 @@ bool MySqlAPI::getDrainInternal(soci::session& sql)
 }
 
 
-bool MySqlAPI::isProtocolUDT(const std::string &source, const std::string &dest)
+boost::tribool MySqlAPI::isProtocolUDT(const std::string &source, const std::string &dest)
 {
     soci::session sql(*connectionPool);
 
     try {
-        boost::logic::tribool srcEnabled, dstEnabled, starEnabled;
+        boost::logic::tribool srcEnabled(boost::indeterminate);
+        boost::logic::tribool dstEnabled(boost::indeterminate);
+        boost::logic::tribool starEnabled(boost::indeterminate);
         sql << "SELECT udt FROM t_se WHERE storage = :source", soci::use(source), soci::into(srcEnabled);
         sql << "SELECT udt FROM t_se WHERE storage = :dest", soci::use(dest), soci::into(dstEnabled);
         sql << "SELECT udt FROM t_se WHERE storage = '*'", soci::into(starEnabled);
 
-        // True if both are defined and true
-        if (srcEnabled && dstEnabled) {
-            return true;
+        // Fallback if both are undefined
+        if (boost::indeterminate(srcEnabled) && boost::indeterminate(dstEnabled)) {
+            return starEnabled;
         }
-        // True if either is defined and false
-        else if (!srcEnabled || !dstEnabled) {
-            return false;
+            // If any is undefined, the other decides
+        else if (boost::indeterminate(srcEnabled) || boost::indeterminate(dstEnabled)) {
+            return srcEnabled || dstEnabled;
         }
-        // Otherwise (both undefined)
-        return bool(starEnabled);
+        // Both defined, need to agree
+        return srcEnabled && dstEnabled;
     }
     catch (std::exception &e) {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
@@ -389,26 +391,28 @@ bool MySqlAPI::isProtocolUDT(const std::string &source, const std::string &dest)
 }
 
 
-bool MySqlAPI::isProtocolIPv6(const std::string &source, const std::string &dest)
+boost::tribool MySqlAPI::isProtocolIPv6(const std::string &source, const std::string &dest)
 {
     soci::session sql(*connectionPool);
 
     try {
-        boost::logic::tribool srcEnabled, dstEnabled, starEnabled;
+        boost::logic::tribool srcEnabled(boost::indeterminate);
+        boost::logic::tribool dstEnabled(boost::indeterminate);
+        boost::logic::tribool starEnabled(boost::indeterminate);
         sql << "SELECT ipv6 FROM t_se WHERE storage = :source", soci::use(source), soci::into(srcEnabled);
         sql << "SELECT ipv6 FROM t_se WHERE storage = :dest", soci::use(dest), soci::into(dstEnabled);
         sql << "SELECT ipv6 FROM t_se WHERE storage = '*'", soci::into(starEnabled);
 
-        // True if both are defined and true
-        if (srcEnabled && dstEnabled) {
-            return true;
+        // Fallback if both are undefined
+        if (boost::indeterminate(srcEnabled) && boost::indeterminate(dstEnabled)) {
+            return starEnabled;
         }
-            // True if either is defined and false
-        else if (!srcEnabled || !dstEnabled) {
-            return false;
+        // If any is undefined, the other decides
+        else if (boost::indeterminate(srcEnabled) || boost::indeterminate(dstEnabled)) {
+            return srcEnabled || dstEnabled;
         }
-        // Otherwise (both undefined)
-        return bool(starEnabled);
+        // Both defined, need to agree
+        return srcEnabled && dstEnabled;
     }
     catch (std::exception &e) {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());

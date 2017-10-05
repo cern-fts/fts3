@@ -62,7 +62,7 @@ public:
     void setDebugLevel(int);
     void setProxy(const std::string&);
     void setUDT(bool);
-    void setIPv6(bool);
+    void setIPv6(boost::tribool);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
