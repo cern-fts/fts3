@@ -53,7 +53,7 @@ void Optimizer::optimizeStreamsForPair(OptimizerMode optMode, const Pair &pair)
             streamsDecision = 1;
         }
         else if (streamsDecision > maxNumberOfStreams) {
-            streamsDecision = maxNumberOfStreams;
+            streamsDecision = std::max(maxNumberOfStreams, 1);
         }
     }
 
