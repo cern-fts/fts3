@@ -78,12 +78,22 @@ void MultihopTransfersService::runService()
 
 void MultihopTransfersService::executeUrlcopy()
 {
+    // Bail out as soon as possible if there are too many url-copy processes
+    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+    int urlCopyCount = countProcessesWithName("fts_url_copy");
+    int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
+
+    if (availableUrlCopySlots <= 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+            << "Reached limitation of MaxUrlCopyProcesses"
+            << commit;
+        return;
+    }
+
     std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > > voQueues;
     DBSingleton::instance().getDBObjectInstance()->getMultihopJobs(voQueues);
 
     bool empty = false;
-    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
-    int urlCopyCount = countProcessesWithName("fts_url_copy");
 
     while (!empty)
     {
@@ -96,14 +106,14 @@ void MultihopTransfersService::executeUrlcopy()
                 empty = false; //< if we are here there are still some data
                 std::pair<std::string, std::list<TransferFile> > const job = vo_jobs.front();
                 vo_jobs.pop();
-                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                if (availableUrlCopySlots <= 0) {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                         << "Reached limitation of MaxUrlCopyProcesses"
                         << commit;
                     return;
                 } else {
                     ReuseTransfersService::startUrlCopy(job.first, job.second);
-                    ++urlCopyCount;
+                    --availableUrlCopySlots;
                 }
             }
         }

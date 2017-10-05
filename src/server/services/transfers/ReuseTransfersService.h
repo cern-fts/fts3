@@ -39,7 +39,7 @@ public:
 protected:
     void writeJobFile(const std::string& jobId, const std::vector<std::string>& files);
     std::map<uint64_t, std::string> generateJobFile(const std::string& jobId, const std::list<TransferFile>& files);
-    void getFiles(const std::vector<QueueId>& queues);
+    void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
     void startUrlCopy(const std::string& jobId, const std::list<TransferFile>& files);
     void executeUrlcopy();
 };

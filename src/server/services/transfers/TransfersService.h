@@ -54,7 +54,7 @@ protected:
     std::string msgDir;
     boost::posix_time::time_duration schedulingInterval;
 
-    void getFiles(const std::vector<QueueId>& queues);
+    void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
     void executeUrlcopy();
 };
 

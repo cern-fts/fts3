@@ -146,15 +146,13 @@ std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
 }
 
 
-void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
+void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots)
 {
     //now get files to be scheduled
     std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > > voQueues;
     DBSingleton::instance().getDBObjectInstance()->getReadySessionReuseTransfers(queues, voQueues);
 
     bool empty = false;
-    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
-    int urlCopyCount = countProcessesWithName("fts_url_copy");
 
     while (!empty)
     {
@@ -169,14 +167,14 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues)
                 std::pair<std::string, std::list<TransferFile> > const job = vo_jobs.front();
                 vo_jobs.pop();
 
-                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                if (availableUrlCopySlots <= 0) {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                     << "Reached limitation of MaxUrlCopyProcesses"
                     << commit;
                     return;
                 } else {
                     startUrlCopy(job.first, job.second);
-                    ++urlCopyCount;
+                    --availableUrlCopySlots;
                 }
             }
         }
@@ -364,6 +362,18 @@ static void failUnschedulable(const std::vector<QueueId> &unschedulable)
 
 void ReuseTransfersService::executeUrlcopy()
 {
+    // Bail out as soon as possible if there are too many url-copy processes
+    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+    int urlCopyCount = countProcessesWithName("fts_url_copy");
+    int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
+
+    if (availableUrlCopySlots <= 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+            << "Reached limitation of MaxUrlCopyProcesses"
+            << commit;
+        return;
+    }
+
     try
     {
         std::vector<QueueId> queues, unschedulable;
@@ -378,7 +388,7 @@ void ReuseTransfersService::executeUrlcopy()
             return;
         }
 
-        getFiles(queues);
+        getFiles(queues, availableUrlCopySlots);
     }
     catch (std::exception& e)
     {

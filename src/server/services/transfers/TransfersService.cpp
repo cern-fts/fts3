@@ -101,7 +101,7 @@ void TransfersService::runService()
 }
 
 
-void TransfersService::getFiles(const std::vector<QueueId>& queues)
+void TransfersService::getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots)
 {
     ThreadPool<FileTransferExecutor> execPool(execPoolSize);
 
@@ -116,9 +116,6 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
 
         if (voQueues.empty())
             return;
-
-        int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
-        int urlCopyCount = countProcessesWithName("fts_url_copy");
 
         // create transfer-file handler
         TransferFileHandler tfh(voQueues);
@@ -157,7 +154,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                     proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
                 }
 
-                if (maxUrlCopy > 0 && urlCopyCount > maxUrlCopy) {
+                if (availableUrlCopySlots <= 0) {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                         << "Reached limitation of MaxUrlCopyProcesses"
                         << commit;
@@ -168,7 +165,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues)
                         proxies[proxy_key], logDir, msgDir);
 
                     execPool.start(exec);
-                    ++urlCopyCount;
+                    --availableUrlCopySlots;
                 }
             }
         }
@@ -233,6 +230,18 @@ void TransfersService::executeUrlcopy()
     std::vector<QueueId> queues, unschedulable;
     boost::thread_group g;
 
+    // Bail out as soon as possible if there are too many url-copy processes
+    int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+    int urlCopyCount = countProcessesWithName("fts_url_copy");
+    int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
+
+    if (availableUrlCopySlots <= 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+            << "Reached limitation of MaxUrlCopyProcesses"
+            << commit;
+        return;
+    }
+
     try {
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
@@ -247,7 +256,7 @@ void TransfersService::executeUrlcopy()
             return;
         }
         else if (1 == queues.size()) {
-            getFiles(queues);
+            getFiles(queues, availableUrlCopySlots);
         }
         else {
             std::size_t const half_size1 = queues.size() / 2;
@@ -264,16 +273,24 @@ void TransfersService::executeUrlcopy()
 
             // create threads only when needed
             if (!split_11.empty()) {
-                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_11)));
+                g.create_thread(boost::bind(
+                    &TransfersService::getFiles, this, boost::ref(split_11), availableUrlCopySlots / 4 + availableUrlCopySlots % 4
+                ));
             }
             if (!split_21.empty()) {
-                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_21)));
+                g.create_thread(boost::bind(
+                    &TransfersService::getFiles, this, boost::ref(split_21), availableUrlCopySlots / 4
+                ));
             }
             if (!split_12.empty()) {
-                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_12)));
+                g.create_thread(boost::bind(
+                    &TransfersService::getFiles, this, boost::ref(split_12), availableUrlCopySlots / 4
+                ));
             }
             if (!split_22.empty()) {
-                g.create_thread(boost::bind(&TransfersService::getFiles, this, boost::ref(split_22)));
+                g.create_thread(boost::bind(
+                    &TransfersService::getFiles, this, boost::ref(split_22), availableUrlCopySlots / 4
+                ));
             }
 
             // wait for them
