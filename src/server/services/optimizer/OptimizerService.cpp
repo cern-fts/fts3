@@ -36,10 +36,11 @@ using optimizer::PairState;
 
 class OptimizerNotifier : public OptimizerCallbacks {
 protected:
+    bool enabled;
     Producer msgProducer;
 
 public:
-    OptimizerNotifier(const std::string &msgDir) : msgProducer(msgDir)
+    OptimizerNotifier(bool enabled, const std::string &msgDir): enabled(enabled), msgProducer(msgDir)
     {}
 
     OptimizerNotifier(const OptimizerNotifier &) = delete;
@@ -47,6 +48,10 @@ public:
     void notifyDecision(const Pair &pair, int decision, const PairState &current,
         int diff, const std::string &rationale)
     {
+        if (!enabled) {
+            return;
+        }
+
         // Broadcast the decision
         OptimizerInfo msg;
 
@@ -94,6 +99,7 @@ void OptimizerService::runService()
     auto decreaseStep = config::ServerConfig::instance().get<int>("OptimizerDecreaseStep");
 
     OptimizerNotifier optimizerCallbacks(
+        config::ServerConfig::instance().get<bool>("MonitoringMessaging"),
         config::ServerConfig::instance().get<std::string>("MessagingDirectory")
     );
 
