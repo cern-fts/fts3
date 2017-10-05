@@ -1318,7 +1318,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 
         sql.commit();
 
-        if(newState == "FAILED")
+        if(newState == "FAILED" || newState == "CANCELED")
         {
             sql.begin();
             useFileReplica(sql, jobId, fileId);
