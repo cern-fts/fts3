@@ -55,14 +55,7 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
-    std::string monitoringMessagesStr = config::ServerConfig::instance().get<std::string>("MonitoringMessaging");
-    if (monitoringMessagesStr == "false") {
-        monitoringMessages = false;
-    }
-    else {
-        monitoringMessages = true;
-    }
-
+    monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
 }
 
