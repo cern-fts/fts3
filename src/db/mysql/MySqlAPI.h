@@ -63,10 +63,6 @@ public:
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
         std::map< std::string, std::list<TransferFile>>& files);
 
-    /// Get a list of multihop jobs ready to go
-    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
-    virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files);
-
     /// Update the status of a transfer
     /// @param jobId            The job ID
     /// @param fileId           The file ID
@@ -119,7 +115,7 @@ public:
     /// @param[out] currentActive   The current number of running transfers is put here
     virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive);
 
-    /// Mark a reuse or multihop job (and its files) as failed
+    /// Mark a reuse job (and its files) as failed
     /// @param jobId    The job id
     /// @param pid      The PID of the fts_url_copy
     /// @param message  The error message
@@ -148,7 +144,7 @@ public:
 
     /// Mark all the transfers as failed because the process fork failed
     /// @param jobId    The job id for which url copy failed to fork
-    /// @note           This method is used only for reuse and multihop jobs
+    /// @note           This method is used only for reuse jobs
     virtual void forkFailed(const std::string& jobId);
 
     /// Get the link configuration for the link defined by the source and destination given
