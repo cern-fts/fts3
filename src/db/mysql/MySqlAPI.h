@@ -84,9 +84,7 @@ public:
     /// Update the status of a job
     /// @param jobId            The job ID
     /// @param jobState         The job state
-    /// @param pid              The PID of the fts_url_copy process
-    /// @note                   If jobId is empty, the pid will be used to decide which job to update
-    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
+    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState);
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -299,9 +297,9 @@ private:
 
     boost::tuple<bool, std::string>  updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
-        std::string newState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
+        std::string newFileState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string status, int pid);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state);
 
     bool resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times);
 
@@ -314,6 +312,8 @@ private:
     std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
     void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId);
+
+    void useNextHop(soci::session& sql, std::string jobId);
 
     bool getDrainInternal(soci::session& sql);
 

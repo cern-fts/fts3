@@ -263,7 +263,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
                                              " is offline and the transfer is still assigned to it";
 
             updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "CANCELED", errorMessage, 0, 0, 0, false);
-            updateJobTransferStatusInternal(sql, jobId, "CANCELED", 0);
+            updateJobTransferStatusInternal(sql, jobId, "CANCELED");
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling assigned transfer " << jobId << " / " << fileId
                << commit;
@@ -311,7 +311,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
 
         if (diffInt > (bringOnline + 800)) {
             updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
-            updateJobTransferStatusInternal(sql, jobId, "FAILED", 0);
+            updateJobTransferStatusInternal(sql, jobId, "FAILED");
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
 

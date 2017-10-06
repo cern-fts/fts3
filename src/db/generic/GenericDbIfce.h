@@ -122,9 +122,8 @@ public:
     /// Update the status of a job
     /// @param jobId            The job ID
     /// @param jobState         The job state
-    /// @param pid              The PID of the fts_url_copy process
     /// @note                   If jobId is empty, the pid will be used to decide which job to update
-    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid) = 0;
+    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState) = 0;
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
