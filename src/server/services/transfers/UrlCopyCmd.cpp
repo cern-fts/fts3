@@ -126,11 +126,18 @@ void UrlCopyCmd::setUDT(bool set)
 }
 
 
-void UrlCopyCmd::setIPv6(bool set)
+void UrlCopyCmd::setIPv6(boost::tribool set)
 {
-    IPv6Explicit = true;
-    setFlag("ipv6", set);
-    setFlag("ipv4", !set);
+    if (boost::indeterminate(set)) {
+        IPv6Explicit = false;
+        setFlag("ipv6", false);
+        setFlag("ipv4", false);
+    }
+    else {
+        IPv6Explicit = true;
+        setFlag("ipv6", set);
+        setFlag("ipv4", !set);
+    }
 }
 
 

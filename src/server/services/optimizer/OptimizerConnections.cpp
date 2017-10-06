@@ -161,6 +161,9 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     int decision = 0;
     std::stringstream rationale;
 
+    // Start ticking!
+    boost::timer::cpu_timer timer;
+
     // Optimizer working values
     Range range;
     Limits limits;
@@ -194,7 +197,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
             rationale << "No information. Start halfway.";
         }
 
-        setOptimizerDecision(pair, decision, current, decision, rationale.str());
+        setOptimizerDecision(pair, decision, current, decision, rationale.str(), timer.elapsed());
 
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
@@ -217,7 +220,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        setOptimizerDecision(pair, range.min, current, 0, "Range fixed");
+        setOptimizerDecision(pair, range.min, current, 0, "Range fixed", timer.elapsed());
         return true;
     }
 
@@ -227,7 +230,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (throughput > limits.throughputSource) {
             decision = previousValue - decreaseStepSize;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str());
+            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
             return true;
         }
     }
@@ -236,7 +239,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (throughput > limits.throughputDestination) {
             decision = previousValue - decreaseStepSize;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str());
+            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
             return true;
         }
     }
@@ -309,14 +312,20 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str());
+    setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
     return true;
 }
 
 
 void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
-    int diff, const std::string &rationale)
+    int diff, const std::string &rationale, boost::timer::cpu_times elapsed)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)
+        << "Optimizer: Active for " << pair << " set to " << decision
+        << " (" << elapsed.wall << "ns)" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)
+        << rationale << commit;
+
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
     dataSource->storeOptimizerDecision(pair, decision, current, diff, rationale);

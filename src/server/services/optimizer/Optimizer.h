@@ -27,6 +27,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/timer/timer.hpp>
 #include <db/generic/LinkConfig.h>
 #include <db/generic/Pair.h>
 #include <msg-bus/producer.h>
@@ -159,7 +160,7 @@ protected:
 
     // Updates decision
     void setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
-        int diff, const std::string &rationale);
+        int diff, const std::string &rationale, boost::timer::cpu_times elapsed);
 
 public:
     Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks);

@@ -161,7 +161,7 @@ UrlCopyOpts::UrlCopyOpts():
     isSessionReuse(false), isMultihop(false), isMultipleReplicaJob(false),
     strictCopy(false),
     optimizerLevel(0), overwrite(false), nStreams(0), tcpBuffersize(0),
-    timeout(0), enableUdt(false), enableIpv6(boost::tribool::indeterminate_value), addSecPerMb(0),
+    timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
     enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
     debugLevel(0), logToStderr(false)

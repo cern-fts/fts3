@@ -43,10 +43,7 @@ boost::mutex SingleTrStateInstance::_mutex;
 
 SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
 {
-    std::string monitoringMessagesStr = ServerConfig::instance().get<std::string> ("MonitoringMessaging");
-    if(monitoringMessagesStr == "false")
-        monitoringMessages = false;
-
+    monitoringMessages = ServerConfig::instance().get<bool> ("MonitoringMessaging");
     ftsAlias = ServerConfig::instance().get<std::string>("Alias");
 }
 

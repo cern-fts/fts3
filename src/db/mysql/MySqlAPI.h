@@ -210,10 +210,10 @@ public:
     virtual bool getDrain();
 
     /// Returns if for the given link, UDT has been enabled
-    virtual bool isProtocolUDT(const std::string &source, const std::string &dest);
+    virtual boost::tribool isProtocolUDT(const std::string &source, const std::string &dest);
 
     /// Returns if for the given link, IPv6 has been enabled
-    virtual bool isProtocolIPv6(const std::string &source, const std::string &dest);
+    virtual boost::tribool isProtocolIPv6(const std::string &source, const std::string &dest);
 
     /// Returns how many streams must be used for the given link
     virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);

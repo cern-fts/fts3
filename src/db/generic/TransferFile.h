@@ -51,7 +51,7 @@ public:
           strictCopy(false), s3Alternate(false) {}
 
         ProtocolParameters(const std::string &serialized): nostreams(1), timeout(0), buffersize(0),
-            strictCopy(false), s3Alternate(false)
+            strictCopy(false), ipv6(boost::indeterminate), udt(boost::indeterminate), s3Alternate(false)
         {
             std::vector<std::string> params;
             boost::split(params, serialized, boost::is_any_of(","));

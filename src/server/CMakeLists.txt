@@ -30,7 +30,7 @@ include_directories(
 )
 
 # Server lib
-find_package(Boost COMPONENTS thread regex filesystem)
+find_package(Boost COMPONENTS thread regex filesystem timer chrono)
 
 file(GLOB fts_server_lib_sources
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
