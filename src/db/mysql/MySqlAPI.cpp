@@ -1482,7 +1482,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                     "    job_state = :state, job_finished = UTC_TIMESTAMP(), "
                     "    reason = :reason, source_se = :sourceSe "
                     "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
-                    soci::use(state, "state"), soci::use(reason, "reason"), soci::use(sourceSe, "source_se"),
+                    soci::use(state, "state"), soci::use(reason, "reason"), soci::use(sourceSe, "sourceSe"),
                     soci::use(jobId, "jobId"));
                 stmt6.execute(true);
                 sql.commit();
