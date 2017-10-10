@@ -131,14 +131,6 @@ public:
         return getOptimizerModeInner(sql, source, dest);
     }
 
-    bool isRetryEnabled(void) {
-        int retryValue = 0;
-        soci::indicator isRetryNull = soci::i_ok;
-        sql << " SELECT retry FROM t_server_config",
-            soci::into(retryValue, isRetryNull);
-        return isRetryNull != soci::i_null && retryValue;
-    }
-
     void getPairLimits(const Pair &pair, Range *range, Limits *limits) {
         soci::indicator nullIndicator;
 
@@ -287,25 +279,11 @@ public:
 
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
         int *retryCount) {
-        soci::rowset<soci::row> rs = isRetryEnabled() ?
-        (
-            sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
-            "WHERE "
-            "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-            "      ( "
-            "          (t_file.finish_time IS NULL AND current_failures > 0 AND retry_timestamp > (UTC_TIMESTAMP() - interval :calculateTimeFrame second)) OR "
-            "          (t_file.finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND)) "
-            "      ) AND "
-            "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-            soci::use(pair.source), soci::use(pair.destination),
-            soci::use(interval.total_seconds()), soci::use(interval.total_seconds())
-        )
-        :
-        (
-            sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT file_state, retry, current_failures AS recoverable FROM t_file "
             " WHERE "
-            "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-            "      t_file.finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
+            "      source_se = :source AND dest_se = :dst AND "
+            "      finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
             "file_state <> 'NOT_USED' ",
             soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds())
         );
@@ -317,40 +295,26 @@ public:
         *retryCount = 0;
         for (auto i = rs.begin(); i != rs.end(); ++i)
         {
-            int retryNum = i->get<int>("retry", 0);
-            int currentFailures = i->get<int>("current_failures", 0);
+            const int retryNum = i->get<int>("retry", 0);
+            const bool isRecoverable = i->get<bool>("recoverable", false);
+            const std::string state = i->get<std::string>("file_state", "");
 
-            std::string state = i->get<std::string>("file_state", "");
-            std::string reason = i->get<std::string>("reason", "");
-
-            //we do not want BringOnline errors to affect transfer success rate, exclude them
-            bool isBringOnlineError = (reason.find("BringOnline") != std::string::npos) ||
-                                      (reason.find("bring-online") != std::string::npos);
-
-            if(state.compare("FAILED") == 0 && isBringOnlineError)
-            {
-                //do nothing, it's a non recoverable error so do not consider it
+            // Recoverable FAILED
+            if (state == "FAILED" && isRecoverable) {
+                ++nFailedLastHour;
             }
-            else if(state.compare("FAILED") == 0 && currentFailures == 0)
-            {
-                //do nothing, it's a non recoverable error so do not consider it
-            }
-            else if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retryNum > 0)
-            {
-                nFailedLastHour+=1.0;
+            // Submitted, with a retry set
+            else if (state == "SUBMITTED" && retryNum) {
+                ++nFailedLastHour;
                 *retryCount += retryNum;
             }
-            else if(state.compare("FAILED") == 0 && currentFailures == 1)
-            {
-                nFailedLastHour+=1.0;
-            }
-            else if (state.compare("FINISHED") == 0)
-            {
-                nFinishedLastHour+=1.0;
+            // FINISHED
+            else if (state == "FINISHED") {
+                ++nFinishedLastHour;
             }
         }
 
-        // round up efficiency
+        // Round up efficiency
         int nTotal = nFinishedLastHour + nFailedLastHour;
         if (nTotal > 0) {
             return ceil((nFinishedLastHour * 100.0) / nTotal);

@@ -91,9 +91,6 @@ public:
     // Return the optimizer configuration value
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
 
-    // Return true if retry is enabled for this server
-    virtual bool isRetryEnabled(void) = 0;
-
     // Get configured limits
     virtual void getPairLimits(const Pair &pair, Range *range, Limits *limits) = 0;
 
