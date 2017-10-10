@@ -198,15 +198,20 @@ public:
         time_t windowStart = now - interval.total_seconds();
 
         soci::rowset<soci::row> transfers = (sql.prepare <<
-            "SELECT start_time, finish_time, transferred, filesize "
-            " FROM t_file "
-            " WHERE source_se = :source AND dest_se = :dest AND "
-            "       file_state  in ('ACTIVE','FINISHED') AND "
-            "       transferred > 0 AND "
-            "       (finish_time IS NULL OR finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND))",
-        soci::use(pair.source),soci::use(pair.destination), soci::use(interval.total_seconds()));
+        "SELECT start_time, finish_time, transferred, filesize "
+        " FROM t_file "
+        " WHERE "
+        "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
+        "UNION ALL "
+        "SELECT start_time, finish_time, transferred, filesize "
+        " FROM t_file "
+        " WHERE "
+        "   source_se = :sourceSe AND dest_se = :destSe "
+        "   AND file_state = 'FINISHED' AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
+        soci::use(pair.source, "sourceSe"), soci::use(pair.destination, "destSe"),
+        soci::use(interval.total_seconds(), "interval"));
 
-        int64_t totalBytes = 0.0;
+        int64_t totalBytes = 0;
         std::vector<int64_t> filesizes;
 
         for (auto j = transfers.begin(); j != transfers.end(); ++j) {
