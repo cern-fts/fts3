@@ -88,21 +88,9 @@ static int getCountInState(soci::session &sql, const Pair &pair, const std::stri
 {
     int count = 0;
 
-    if (pair.source.empty()) {
-        sql << "SELECT count(*) FROM t_file "
-            "WHERE dest_se = :dest_se AND file_state = :state",
-            soci::use(pair.destination), soci::use(state), soci::into(count);
-    }
-    else if (pair.destination.empty()) {
-        sql << "SELECT count(*) FROM t_file "
-            "WHERE source_se = :source AND file_state = :state",
-            soci::use(pair.source), soci::use(state), soci::into(count);
-    }
-    else {
-        sql << "SELECT count(*) FROM t_file "
-            "WHERE source_se = :source AND dest_se = :dest_se AND file_state = :state",
-            soci::use(pair.source), soci::use(pair.destination), soci::use(state), soci::into(count);
-    }
+    sql << "SELECT count(*) FROM t_file "
+    "WHERE source_se = :source AND dest_se = :dest_se AND file_state = :state",
+    soci::use(pair.source), soci::use(pair.destination), soci::use(state), soci::into(count);
 
     return count;
 }
