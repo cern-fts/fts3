@@ -310,7 +310,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "MaxUrlCopyProcesses",
-        po::value<std::string>( &(_vars["MaxUrlCopyProcesses"]) )->default_value("0"),
+        po::value<std::string>( &(_vars["MaxUrlCopyProcesses"]) )->default_value("400"),
         "Maximum number of url copy processes to run"
     )
     (
