@@ -26,13 +26,14 @@
 /// and then split among the VOs with queued transfers for that link
 class QueueId {
 public:
-    QueueId(const std::string& sourceSe, const std::string& destSe, const std::string& voName):
-        sourceSe(sourceSe), destSe(destSe), voName(voName)
+    QueueId(const std::string& sourceSe, const std::string& destSe, const std::string& voName, unsigned activeCount):
+        sourceSe(sourceSe), destSe(destSe), voName(voName), activeCount(activeCount)
     {}
 
     std::string sourceSe;
     std::string destSe;
     std::string voName;
+    unsigned activeCount;
 };
 
 #endif // QUEUEID_H_

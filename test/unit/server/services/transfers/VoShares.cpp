@@ -32,7 +32,7 @@ const Pair pair("mock://a", "mock://b");
  */
 BOOST_AUTO_TEST_CASE (TestNoShare)
 {
-    std::vector<std::string> vos{"atlas", "dteam", "cms"};
+    std::vector<std::pair<std::string, unsigned>> vos{{"atlas", 0}, {"dteam", 10}, {"cms", 5}};
     std::map<std::string, double> weights;
     weights["atlas"] = 20;
     weights["cms"] = 20;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE (TestNoShare)
  */
 BOOST_AUTO_TEST_CASE (TestNoShareSingle)
 {
-    std::vector<std::string> vos{"dteam"};
+    std::vector<std::pair<std::string, unsigned>> vos{{"dteam", 0}};
     std::map<std::string, double> weights;
     weights["atlas"] = 20;
     weights["cms"] = 20;
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE (TestNoShareSingle)
  */
 BOOST_AUTO_TEST_CASE (TestNoSharePublic0)
 {
-    std::vector<std::string> vos{"atlas", "dteam", "cms"};
+    std::vector<std::pair<std::string, unsigned>> vos{{"atlas", 0}, {"dteam", 10}, {"cms", 5}};
     std::map<std::string, double> weights;
     weights["atlas"] = 20;
     weights["cms"] = 20;
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE (TestNoSharePublic0)
  */
 BOOST_AUTO_TEST_CASE (TestPublicShare)
 {
-    std::vector<std::string> vos{"atlas", "dteam", "cms"};
+    std::vector<std::pair<std::string, unsigned>> vos{{"atlas", 0}, {"dteam", 10}, {"cms", 5}};
     std::map<std::string, double> weights;
     weights["atlas"] = 20;
     weights["cms"] = 20;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE (TestPublicShare)
  */
 BOOST_AUTO_TEST_CASE (TestPublicNoShareConfig)
 {
-    std::vector<std::string> vos{"atlas", "dteam", "cms"};
+    std::vector<std::pair<std::string, unsigned>> vos{{"atlas", 0}, {"dteam", 10}, {"cms", 5}};
     std::map<std::string, double> weights;
 
     std::vector<QueueId> unschedulable;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE (TestShareRespected)
 {
     const unsigned NRuns = 200;
 
-    std::vector<std::string> vos{"atlas", "dteam", "cms", "bitface"};
+    std::vector<std::pair<std::string, unsigned>> vos{{"atlas", 0}, {"dteam", 10}, {"cms", 5}, {"bitface", 4}};
     std::map<std::string, double> weights;
     weights["atlas"] = 80;
     weights["cms"]   = 15;

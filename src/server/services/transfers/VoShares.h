@@ -45,7 +45,7 @@ std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues, std::vecto
  * @return One single link/vo combination, with the probability given by the weights
  */
 boost::optional<QueueId> selectQueueForPair(const Pair &pair,
-    const std::vector<std::string> &vos,
+    const std::vector<std::pair<std::string, unsigned>> &vos,
     const std::map<std::string, double> &weights,
     std::vector<QueueId> &unschedulable);
 

@@ -445,10 +445,11 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
 void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
 {
     soci::session sql(*connectionPool);
-    uint64_t file_id = 0;
-    std::string source_se;
-    std::string dest_se;
-    std::string vo_name;
+    uint64_t fileId = 0;
+    unsigned activeCount;
+    std::string sourceSe;
+    std::string destSe;
+    std::string voName;
 
     std::vector<boost::tuple<std::string, std::string> > distinctSourceDest;
     soci::indicator isNull = soci::i_ok;
@@ -466,28 +467,37 @@ void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
              "WHERE source_se = :source_se AND dest_se = :dest_se AND vo_name = :vo_name "
              "  AND file_state='SUBMITTED' AND (hashed_id BETWEEN :hashStart AND :hashEnd) "
              "LIMIT 1",
-             soci::use(source_se),
-             soci::use(dest_se),
-             soci::use(vo_name),
+             soci::use(sourceSe),
+             soci::use(destSe),
+             soci::use(voName),
              soci::use(hashSegment.start),
              soci::use(hashSegment.end),
-             soci::into(file_id, isNull));
+             soci::into(fileId, isNull));
+
+        soci::statement activeStmt = (sql.prepare <<
+            "SELECT COUNT(*) FROM t_file "
+            "WHERE source_se = :source_se AND dest_se = :dest_se AND vo_name = :vo_name "
+            "   AND file_state = 'ACTIVE'",
+            soci::use(sourceSe), soci::use(destSe), soci::use(voName), soci::into(activeCount));
 
         for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
         {
             soci::row const& r1 = *i1;
-            vo_name = r1.get<std::string>("vo_name","");
-            source_se = r1.get<std::string>("source_se","");
-            dest_se = r1.get<std::string>("dest_se","");
+            voName = r1.get<std::string>("vo_name","");
+            sourceSe = r1.get<std::string>("source_se","");
+            destSe = r1.get<std::string>("dest_se","");
 
-            file_id = 0; //reset
+            fileId = 0; //reset
             stmt1.execute(true);
-            if(isNull != soci::i_null && file_id > 0)
+            if(isNull != soci::i_null && fileId > 0)
             {
+                activeStmt.execute(true);
+
                 queues.emplace_back(
-                    source_se,
-                    dest_se,
-                    vo_name
+                    sourceSe,
+                    destSe,
+                    voName,
+                    activeCount
                 );
             }
         }
@@ -510,27 +520,40 @@ void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
 
     try
     {
+        std::string sourceSe, destSe, voName;
+        unsigned activeCount;
+
         soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                       " SELECT DISTINCT t_file.vo_name, t_file.source_se, t_file.dest_se "
-                                       " FROM t_file "
-                                       " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
-                                       " WHERE "
-                                       "      t_file.file_state = 'SUBMITTED' AND "
-                                       "      (t_file.hashed_id BETWEEN :hStart AND :hEnd) AND"
-                                       "      t_job.job_type = 'Y' ",
-                                       soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                      );
+           " SELECT DISTINCT t_file.vo_name, t_file.source_se, t_file.dest_se "
+           " FROM t_file "
+           " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+           " WHERE "
+           "      t_file.file_state = 'SUBMITTED' AND "
+           "      (t_file.hashed_id BETWEEN :hStart AND :hEnd) AND"
+           "      t_job.job_type = 'Y' ",
+           soci::use(hashSegment.start), soci::use(hashSegment.end)
+        );
+
+        soci::statement activeStmt = (sql.prepare <<
+            "SELECT COUNT(*) FROM t_file "
+            "WHERE source_se = :source_se AND dest_se = :dest_se AND vo_name = :vo_name "
+            "   AND file_state = 'ACTIVE'",
+            soci::use(sourceSe), soci::use(destSe), soci::use(voName), soci::into(activeCount));
 
         for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
         {
             soci::row const& r = *i2;
-            std::string source_se = r.get<std::string>("source_se","");
-            std::string dest_se = r.get<std::string>("dest_se","");
+            sourceSe = r.get<std::string>("source_se", "");
+            destSe = r.get<std::string>("dest_se", "");
+            voName = r.get<std::string>("vo_name", "");
+
+            activeStmt.execute(true);
 
             queues.emplace_back(
-                r.get<std::string>("source_se",""),
-                r.get<std::string>("dest_se",""),
-                r.get<std::string>("vo_name","")
+                sourceSe,
+                destSe,
+                voName,
+                activeCount
             );
         }
     }
