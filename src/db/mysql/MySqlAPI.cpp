@@ -291,7 +291,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         soci::rowset<soci::row> rs = (
                                          sql.prepare <<
                                          " SELECT activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
-                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
+                                         " FROM t_file f USE INDEX(idx_link_state_vo) INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
                                          "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                          "  f.source_se = :source AND f.dest_se = :dest AND "
                                          "  f.vo_name = :vo_name AND j.vo_name = f.vo_name AND "
