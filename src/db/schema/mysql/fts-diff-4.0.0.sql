@@ -1,3 +1,5 @@
+SET default_storage_engine=INNODB;
+
 --
 -- Storage configuration
 --
