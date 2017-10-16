@@ -145,7 +145,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         int initial_size = tfh.size();
 
         std::set<std::string> warningPrintedSrc, warningPrintedDst;
-        while (!tfh.empty())
+        while (!tfh.empty() && availableUrlCopySlots > 0)
         {
             // iterate over all VOs
             for (auto it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
