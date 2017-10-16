@@ -148,9 +148,29 @@ std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
 
 void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots)
 {
+    auto db = DBSingleton::instance().getDBObjectInstance();
+
     //now get files to be scheduled
     std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > > voQueues;
-    DBSingleton::instance().getDBObjectInstance()->getReadySessionReuseTransfers(queues, voQueues);
+    db->getReadySessionReuseTransfers(queues, voQueues);
+
+    std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
+    for (auto i = queues.begin(); i != queues.end(); ++i) {
+        // To reduce queries, fill in one go limits as source and as destination
+        if (slotsLeftForDestination.count(i->destSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i->destSe);
+            slotsLeftForDestination[i->destSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
+            slotsLeftForSource[i->destSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
+        }
+        if (slotsLeftForSource.count(i->sourceSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i->sourceSe);
+            slotsLeftForDestination[i->sourceSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
+            slotsLeftForSource[i->sourceSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
+        }
+        // Once it is filled, decrement
+        slotsLeftForDestination[i->destSe] -= i->activeCount;
+        slotsLeftForSource[i->sourceSe] -= i->activeCount;
+    }
 
     bool empty = false;
 
@@ -167,7 +187,24 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues, int ava
                 std::pair<std::string, std::list<TransferFile> > const job = vo_jobs.front();
                 vo_jobs.pop();
 
-                if (availableUrlCopySlots <= 0) {
+                if (job.second.size() <= 0) {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                        << "Empty job " << job.first
+                        << commit;
+                    continue;
+                }
+
+                if (slotsLeftForDestination[job.second.front().destSe] <= 0) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                        << "Reached limitation for destination " << job.second.front().destSe
+                        << commit;
+                }
+                else if (slotsLeftForSource[job.second.front().sourceSe] <= 0) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                        << "Reached limitation for source " << job.second.front().sourceSe
+                        << commit;
+                }
+                else if (availableUrlCopySlots <= 0) {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                     << "Reached limitation of MaxUrlCopyProcesses"
                     << commit;
@@ -175,6 +212,8 @@ void ReuseTransfersService::getFiles(const std::vector<QueueId>& queues, int ava
                 } else {
                     startUrlCopy(job.first, job.second);
                     --availableUrlCopySlots;
+                    --slotsLeftForDestination[job.second.front().destSe];
+                    --slotsLeftForSource[job.second.front().sourceSe];
                 }
             }
         }

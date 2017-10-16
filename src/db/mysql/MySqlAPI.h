@@ -274,6 +274,9 @@ public:
     /// Get if the user dn should be visible or not in the messaging
     virtual bool publishUserDn(const std::string &vo);
 
+    /// Get the configuration for a given storage
+    virtual StorageConfig getStorageConfig(const std::string &storage);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

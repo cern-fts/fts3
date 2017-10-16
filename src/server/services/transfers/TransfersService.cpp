@@ -103,16 +103,35 @@ void TransfersService::runService()
 
 void TransfersService::getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots)
 {
+    auto db = DBSingleton::instance().getDBObjectInstance();
+
     ThreadPool<FileTransferExecutor> execPool(execPoolSize);
+    std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
+    for (auto i = queues.begin(); i != queues.end(); ++i) {
+        // To reduce queries, fill in one go limits as source and as destination
+        if (slotsLeftForDestination.count(i->destSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i->destSe);
+            slotsLeftForDestination[i->destSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
+            slotsLeftForSource[i->destSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
+        }
+        if (slotsLeftForSource.count(i->sourceSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i->sourceSe);
+            slotsLeftForDestination[i->sourceSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
+            slotsLeftForSource[i->sourceSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
+        }
+        // Once it is filled, decrement
+        slotsLeftForDestination[i->destSe] -= i->activeCount;
+        slotsLeftForSource[i->sourceSe] -= i->activeCount;
+    }
 
     try
     {
         if (queues.empty())
             return;
 
-        //now get files to be scheduled
+        // now get files to be scheduled
         std::map<std::string, std::list<TransferFile> > voQueues;
-        DBSingleton::instance().getDBObjectInstance()->getReadyTransfers(queues, voQueues);
+        db->getReadyTransfers(queues, voQueues);
 
         if (voQueues.empty())
             return;
@@ -125,6 +144,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         // loop until all files have been served
         int initial_size = tfh.size();
 
+        std::set<std::string> warningPrintedSrc, warningPrintedDst;
         while (!tfh.empty())
         {
             // iterate over all VOs
@@ -154,7 +174,23 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                     proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
                 }
 
-                if (availableUrlCopySlots <= 0) {
+                if (slotsLeftForDestination[tf.destSe] <= 0) {
+                    if (warningPrintedDst.count(tf.destSe) == 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                            << "Reached limitation for destination " << tf.destSe
+                            << commit;
+                        warningPrintedDst.insert(tf.destSe);
+                    }
+                }
+                else if (slotsLeftForSource[tf.sourceSe] <= 0) {
+                    if (warningPrintedSrc.count(tf.sourceSe) == 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                            << "Reached limitation for source " << tf.sourceSe
+                            << commit;
+                        warningPrintedSrc.insert(tf.sourceSe);
+                    }
+                }
+                else if (availableUrlCopySlots <= 0) {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING)
                         << "Reached limitation of MaxUrlCopyProcesses"
                         << commit;
@@ -166,6 +202,8 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
                     execPool.start(exec);
                     --availableUrlCopySlots;
+                    --slotsLeftForDestination[tf.destSe];
+                    --slotsLeftForSource[tf.sourceSe];
                 }
             }
         }
@@ -255,47 +293,7 @@ void TransfersService::executeUrlcopy()
         if (queues.empty()) {
             return;
         }
-        else if (1 == queues.size()) {
-            getFiles(queues, availableUrlCopySlots);
-        }
-        else {
-            std::size_t const half_size1 = queues.size() / 2;
-            std::vector<QueueId> split_1(queues.begin(), queues.begin() + half_size1);
-            std::vector<QueueId> split_2(queues.begin() + half_size1, queues.end());
-
-            std::size_t const half_size2 = split_1.size() / 2;
-            std::vector<QueueId> split_11(split_1.begin(), split_1.begin() + half_size2);
-            std::vector<QueueId> split_21(split_1.begin() + half_size2, split_1.end());
-
-            std::size_t const half_size3 = split_2.size() / 2;
-            std::vector<QueueId> split_12(split_2.begin(), split_2.begin() + half_size3);
-            std::vector<QueueId> split_22(split_2.begin() + half_size3, split_2.end());
-
-            // create threads only when needed
-            if (!split_11.empty()) {
-                g.create_thread(boost::bind(
-                    &TransfersService::getFiles, this, boost::ref(split_11), availableUrlCopySlots / 4 + availableUrlCopySlots % 4
-                ));
-            }
-            if (!split_21.empty()) {
-                g.create_thread(boost::bind(
-                    &TransfersService::getFiles, this, boost::ref(split_21), availableUrlCopySlots / 4
-                ));
-            }
-            if (!split_12.empty()) {
-                g.create_thread(boost::bind(
-                    &TransfersService::getFiles, this, boost::ref(split_12), availableUrlCopySlots / 4
-                ));
-            }
-            if (!split_22.empty()) {
-                g.create_thread(boost::bind(
-                    &TransfersService::getFiles, this, boost::ref(split_22), availableUrlCopySlots / 4
-                ));
-            }
-
-            // wait for them
-            g.join_all();
-        }
+        getFiles(queues, availableUrlCopySlots);
     }
     catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;

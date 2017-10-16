@@ -592,3 +592,27 @@ bool MySqlAPI::publishUserDn(const std::string &vo)
 
     return true;
 }
+
+
+StorageConfig MySqlAPI::getStorageConfig(const std::string &storage)
+{
+    soci::session sql(*connectionPool);
+    StorageConfig seConfig, seStarConfig;
+
+    try
+    {
+        sql << "SELECT * FROM t_se WHERE storage = :storage", soci::use(storage), soci::into(seConfig);
+        sql << "SELECT * FROM t_se WHERE storage = '*'", soci::into(seStarConfig);
+        seConfig.merge(seStarConfig);
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+
+    return seConfig;
+}
