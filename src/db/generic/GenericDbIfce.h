@@ -33,6 +33,7 @@
 #include "FileTransferStatus.h"
 #include "QueueId.h"
 #include "LinkConfig.h"
+#include "StorageConfig.h"
 #include "ShareConfig.h"
 #include "CloudStorageAuth.h"
 #include "TransferState.h"
@@ -316,6 +317,9 @@ public:
 
     /// Get if the user dn should be visible or not in the messaging
     virtual bool publishUserDn(const std::string &vo) = 0;
+
+    /// Get the configuration for a given storage
+    virtual StorageConfig getStorageConfig(const std::string &storage) = 0;
 };
 
 #endif // GENERICDBIFCE_H_

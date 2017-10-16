@@ -402,4 +402,24 @@ struct type_conversion<OptimizerMode>
     }
 };
 
+template <>
+struct type_conversion<StorageConfig>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, StorageConfig& seConfig)
+    {
+        seConfig.storage = v.get<std::string>("storage", "");
+        seConfig.site = v.get<std::string>("site", "");
+        seConfig.metadata = v.get<std::string>("metadata", "");
+        seConfig.ipv6 = v.get<boost::tribool>("ipv6", boost::indeterminate);
+        seConfig.udt = v.get<boost::tribool>("udt", boost::indeterminate);
+        seConfig.debugLevel = v.get<int>("debug_level", 0);
+        seConfig.inboundMaxActive = v.get<int>("inbound_max_active", 0);
+        seConfig.outboundMaxActive = v.get<int>("outbound_max_active", 0);
+        seConfig.inboundMaxThroughput = v.get<double>("inbound_max_throughput", 0.0);
+        seConfig.outboundMaxThroughput = v.get<double>("outbound_max_throughput", 0.0);
+    }
+};
+
 }

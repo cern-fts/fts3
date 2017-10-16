@@ -36,7 +36,7 @@ namespace server {
  * @note If the weight for a VO/public is 0, it will never be picked!
  */
 boost::optional<QueueId> selectQueueForPair(const Pair &pair,
-    const std::vector<std::string> &vos,
+    const std::vector<std::pair<std::string, unsigned>> &vos,
     const std::map<std::string, double> &weights,
     std::vector<QueueId> &unschedulable)
 {
@@ -60,7 +60,7 @@ boost::optional<QueueId> selectQueueForPair(const Pair &pair,
     // Need to calculate how many "public" there are, so we can split
     int publicCount = 0;
     for (auto i = vos.begin(); i != vos.end(); ++i) {
-        if (weights.find(*i) == weights.end()) {
+        if (weights.find(i->first) == weights.end()) {
             ++publicCount;
         }
     }
@@ -71,7 +71,7 @@ boost::optional<QueueId> selectQueueForPair(const Pair &pair,
     // Second pass, fill up the weights
     int pos = 0;
     for (auto i = vos.begin(); i != vos.end(); ++i, ++pos) {
-        auto wIter = weights.find(*i);
+        auto wIter = weights.find(i->first);
         if (wIter == weights.end()) {
             finalWeights[pos] = publicWeight;
         }
@@ -79,7 +79,7 @@ boost::optional<QueueId> selectQueueForPair(const Pair &pair,
             finalWeights[pos] = wIter->second;
         }
         if (finalWeights[pos] <= 0) {
-            unschedulable.emplace_back(pair.source, pair.destination, *i);
+            unschedulable.emplace_back(pair.source, pair.destination, i->first, i->second);
             ++unschedulableCount;
         }
     }
@@ -91,23 +91,24 @@ boost::optional<QueueId> selectQueueForPair(const Pair &pair,
     // And pick one at random
     boost::random::discrete_distribution<> dist(finalWeights);
     int chosen = dist(generator);
-    return QueueId(pair.source, pair.destination, vos[chosen]);
+    return QueueId(pair.source, pair.destination, vos[chosen].first, vos[chosen].second);
 }
 
 
 std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues, std::vector<QueueId> &unschedulable)
 {
     // Vo list for each pair
-    std::map<Pair, std::vector<std::string>> vosPerPair;
+    std::map<Pair, std::vector<std::pair<std::string, unsigned>>> vosPerPair;
+
     for (auto i = queues.begin(); i != queues.end(); ++i) {
-        vosPerPair[Pair(i->sourceSe, i->destSe)].push_back(i->voName);
+        vosPerPair[Pair(i->sourceSe, i->destSe)].push_back(std::make_pair(i->voName, i->activeCount));
     }
 
     // One VO per pair
     std::vector<QueueId> result;
     for (auto j = vosPerPair.begin(); j != vosPerPair.end(); ++j) {
         const Pair &p = j->first;
-        const std::vector<std::string> &vos = j->second;
+        const std::vector<std::pair<std::string, unsigned>> &vos = j->second;
         std::vector<ShareConfig> shares = DBSingleton::instance().getDBObjectInstance()->getShareConfig(p.source, p.destination);
 
         std::map<std::string, double> weights;
@@ -121,7 +122,7 @@ std::vector<QueueId> applyVoShares(const std::vector<QueueId> queues, std::vecto
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Chosen " << chosen->voName << " for " << p << commit;
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Options were " << commit;
             for (auto i = vos.begin(); i != vos.end(); ++i) {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "\t" << *i << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "\t" << i->first << commit;
             }
 
             result.emplace_back(chosen.get());

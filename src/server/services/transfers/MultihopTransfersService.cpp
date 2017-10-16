@@ -78,6 +78,8 @@ void MultihopTransfersService::runService()
 
 void MultihopTransfersService::executeUrlcopy()
 {
+    auto db = DBSingleton::instance().getDBObjectInstance();
+
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     int urlCopyCount = countProcessesWithName("fts_url_copy");
@@ -91,7 +93,7 @@ void MultihopTransfersService::executeUrlcopy()
     }
 
     std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFile> > > > voQueues;
-    DBSingleton::instance().getDBObjectInstance()->getMultihopJobs(voQueues);
+    db->getMultihopJobs(voQueues);
 
     bool empty = false;
 
