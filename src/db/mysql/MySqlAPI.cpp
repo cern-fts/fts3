@@ -2431,6 +2431,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.user_filesize = it->get<long long>("user_filesize", 0);
             ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
+            ret.reason = it->get<std::string>("reason", "");
             ret.timestamp = millisecondsSinceEpoch();
             aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
@@ -2461,11 +2462,6 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = it->get<std::string>("dest_surl","");
-
-            if (ret.job_state == "FAILED")
-            	ret.reason = it->get<std::string>("reason");
-            else
-                ret.reason = std::string("");
 
             temp.push_back(ret);
         }
