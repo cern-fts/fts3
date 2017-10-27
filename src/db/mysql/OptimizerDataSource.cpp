@@ -272,7 +272,7 @@ public:
         double avgDuration = 0.0;
         soci::indicator isNullAvg = soci::i_ok;
 
-        sql << "SELECT AVG(tx_duration) FROM t_file "
+        sql << "SELECT AVG(tx_duration) FROM t_file USE INDEX(idx_finish_time)"
             " WHERE source_se = :source AND dest_se = :dest AND file_state = 'FINISHED' AND "
             "   tx_duration > 0 AND tx_duration IS NOT NULL AND "
             "   finish_time > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) LIMIT 1",
