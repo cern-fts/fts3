@@ -204,7 +204,7 @@ public:
         "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
         "UNION ALL "
         "SELECT start_time, finish_time, transferred, filesize "
-        " FROM t_file "
+        " FROM t_file USE INDEX(idx_finish_time)"
         " WHERE "
         "   source_se = :sourceSe AND dest_se = :destSe "
         "   AND file_state = 'FINISHED' AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
