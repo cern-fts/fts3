@@ -285,7 +285,7 @@ public:
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
         int *retryCount) {
         soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT file_state, retry, current_failures AS recoverable FROM t_file "
+            "SELECT file_state, retry, current_failures AS recoverable FROM t_file USE INDEX(idx_finish_time)"
             " WHERE "
             "      source_se = :source AND dest_se = :dst AND "
             "      finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
