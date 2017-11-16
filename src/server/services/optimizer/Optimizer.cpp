@@ -95,6 +95,9 @@ void Optimizer::run(void)
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
         std::list<Pair> pairs = dataSource->getActivePairs();
+        // Make sure the order is always the same
+        // See FTS-1094
+        pairs.sort();
 
         for (auto i = pairs.begin(); i != pairs.end(); ++i) {
             runOptimizerForPair(*i);
