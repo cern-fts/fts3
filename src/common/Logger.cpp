@@ -185,7 +185,8 @@ std::string Logger::timestamp()
     time(&current);
     struct tm local_tm;
     localtime_r(&current, &local_tm);
-    strftime(timebuf, sizeof(timebuf), "%a %b %d %H:%M:%S %Y", &local_tm);
+    // asctime format
+    strftime(timebuf, sizeof(timebuf), "%a, %d %b %Y %H:%M:%S %z", &local_tm);
     return timebuf;
 }
 
