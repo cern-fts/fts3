@@ -312,7 +312,7 @@ struct type_conversion<LinkConfig>
         lnk.maxActive       = v.get<int>("max_active", 0);
         lnk.optimizerMode   = v.get<OptimizerMode>("optimizer_mode", kOptimizerDisabled);
         lnk.tcpBufferSize   = v.get<int>("tcp_buffer_size", 0);
-        lnk.numberOfStreams = v.get<int>("nostreams", 0);
+        lnk.numberOfStreams = v.get<int>("nostreams", 1);
     }
 };
 
