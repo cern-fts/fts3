@@ -71,7 +71,8 @@ LogLevel=INFO
 # The RAM limitation may not take into account other node limitations (i.e. IO)
 # or, depending on the swapping policy, may not even prevent overloads if the kernel
 # starts swapping before the free RAM decreases until it reaches the value of MinRequiredFreeRAM
-# 0 disables the check (default)
+# 0 disables the check.
+# The default is 400.
 # MaxUrlCopyProcesses = 400
 
 # Parameters for Bring Online
