@@ -335,12 +335,13 @@ bool MySqlAPI::getDrainInternal(soci::session& sql)
 {
 
     int drain = 0;
+    std::string servicename = "fts_server";
 
     try
     {
         soci::indicator isNull = soci::i_ok;
 
-        sql << "SELECT drain FROM t_hosts WHERE hostname = :hostname",soci::use(hostname), soci::into(drain, isNull);
+        sql << "SELECT drain FROM t_hosts WHERE hostname = :hostname and service_name= :servicename",soci::use(hostname), soci::use(servicename), soci::into(drain, isNull);
 
         if(isNull == soci::i_null || drain == 0)
             return false;
