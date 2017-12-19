@@ -148,7 +148,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         while (!tfh.empty() && availableUrlCopySlots > 0)
         {
             // iterate over all VOs
-            for (auto it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
+            for (auto it_vo = tfh.begin(); it_vo != tfh.end() && availableUrlCopySlots > 0; it_vo++)
             {
                 if (boost::this_thread::interruption_requested())
                 {
@@ -189,12 +189,6 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                             << commit;
                         warningPrintedSrc.insert(tf.sourceSe);
                     }
-                }
-                else if (availableUrlCopySlots <= 0) {
-                    FTS3_COMMON_LOGGER_NEWLOG(WARNING)
-                        << "Reached limitation of MaxUrlCopyProcesses"
-                        << commit;
-                    break;
                 } else {
                     FileTransferExecutor *exec = new FileTransferExecutor(tf,
                         tfh, monitoringMessages, infosys, ftsHostName,
@@ -206,6 +200,12 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                     --slotsLeftForSource[tf.sourceSe];
                 }
             }
+        }
+
+        if (availableUrlCopySlots <= 0 && !tfh.empty()) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Reached limitation of MaxUrlCopyProcesses"
+                << commit;
         }
 
         // wait for all the workers to finish
