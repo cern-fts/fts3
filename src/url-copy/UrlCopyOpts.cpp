@@ -52,6 +52,7 @@ const option UrlCopyOpts::long_options[] =
     {"user-dn",           required_argument, 0, 501},
     {"proxy",             required_argument, 0, 502},
     {"oauth",             required_argument, 0, 503},
+    {"issuer",            required_argument, 0, 504},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -280,6 +281,8 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 503:
                     oauthFile = optarg;
                     break;
+                case 504:
+                    issuer = optarg;
 
                 case 600:
                     infosys = optarg;

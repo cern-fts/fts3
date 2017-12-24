@@ -47,6 +47,8 @@ class Gfal2TransferParams {
 private:
     friend class Gfal2;
     gfalt_params_t params;
+    std::string src_token;
+    std::string dst_token;
 
     operator gfalt_params_t () {
         return params;
@@ -70,6 +72,8 @@ public:
         if (params == NULL) {
             throw Gfal2Exception(error);
         }
+        src_token = orig.src_token;
+        dst_token = orig.dst_token;
     }
 
 
@@ -77,6 +81,8 @@ public:
     Gfal2TransferParams(Gfal2TransferParams &&orig) {
         params = orig.params;
         orig.params = NULL;
+        src_token = std::move(orig.src_token);
+        dst_token = std::move(orig.dst_token);
     }
 
     /// Destructor
@@ -117,6 +123,16 @@ public:
         if (gfalt_set_dst_spacetoken(params, stoken.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
+    }
+
+    void setSourceBearerToken(const std::string &token)
+    {
+        src_token = token;
+    }
+
+    void setDestBearerToken(const std::string &token)
+    {
+        dst_token = token;
     }
 
     void setStrictCopy(bool value)
@@ -297,6 +313,15 @@ public:
     void copy(Gfal2TransferParams &params, const std::string &source, const std::string &destination)
     {
         GError *error = NULL;
+        gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.src_token.c_str());
+        if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+        token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
+        if (gfal2_cred_set(context, destination.c_str(), token_cred, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+
         if (gfalt_copy_file(context, params, source.c_str(), destination.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }

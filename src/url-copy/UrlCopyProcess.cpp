@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <dlfcn.h>
+
 #include <cstdlib>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
@@ -26,6 +28,13 @@
 #include "version.h"
 
 using fts3::common::commit;
+
+// dlopen-style handle to the token issuer library.  Allows us to
+// simplify the build-time dependencies.
+int (*g_x509_scitokens_issuer_init_p)(char **) = NULL;
+char* (*g_x509_scitokens_issuer_get_token_p)(const char *, const char *, const char *,
+                                             char**) = NULL;
+void *g_x509_scitokens_issuer_handle = NULL;
 
 
 static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
@@ -77,12 +86,98 @@ UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
 }
 
 
+static void initTokenLibrary()
+{
+    if (g_x509_scitokens_issuer_handle)
+    {
+        return;
+    }
+
+    char *error;
+    g_x509_scitokens_issuer_handle = dlopen("libX509SciTokensIssuer.so",
+                                            RTLD_NOW|RTLD_GLOBAL);
+    if (!g_x509_scitokens_issuer_handle)
+    {
+        char *error = dlerror();
+        std::stringstream ss;
+        ss <<  "Failed to load the token issuer library: " <<
+            (error ? error : "(unknown)");
+        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
+    }
+    // Clear any potential error message
+    dlerror();
+
+    *(void **)(&g_x509_scitokens_issuer_init_p) = dlsym(g_x509_scitokens_issuer_handle,
+                                                        "x509_scitokens_issuer_init");
+    if ((error = dlerror()) != NULL)
+    {
+        std::stringstream ss;
+        ss << "Failed to load the initializer handle: " << error;
+        dlclose(g_x509_scitokens_issuer_handle);
+        g_x509_scitokens_issuer_handle = NULL;
+        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
+    }
+    dlerror();
+
+    *(void **)(&g_x509_scitokens_issuer_get_token_p) =
+        dlsym(g_x509_scitokens_issuer_handle, "x509_scitokens_issuer_retrieve");
+    if ((error = dlerror()) != NULL)
+    {
+        std::stringstream ss;
+        ss << "Failed to load the token retrieval handle: " <<  error;
+        g_x509_scitokens_issuer_init_p = NULL;
+        dlclose(g_x509_scitokens_issuer_handle);
+        g_x509_scitokens_issuer_handle = NULL;
+        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
+    }
+
+    char *err = NULL;
+    if ((*g_x509_scitokens_issuer_init_p)(&err))
+    {
+        std::stringstream ss;
+        ss << "Failed to initialize the client issuer library: " << err;
+        g_x509_scitokens_issuer_init_p = NULL;
+        g_x509_scitokens_issuer_get_token_p = NULL;
+        free(err);
+        dlclose(g_x509_scitokens_issuer_handle);
+        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
+    }
+}
+
+
+static std::string setupToken(const std::string &issuer)
+{
+    initTokenLibrary();
+
+    char *err = NULL;
+    char *token = (*g_x509_scitokens_issuer_get_token_p)(issuer.c_str(), NULL, NULL, &err);
+    if (token)
+    {
+        std::string token_retval(token);
+        free(token);
+        return token_retval;
+    }
+    std::stringstream ss;
+    ss << "Failed to retrieve token: " << err;
+    free(err);
+
+    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
+}
+
+
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     params.setStrictCopy(opts.strictCopy);
     params.setCreateParentDir(true);
     params.setReplaceExistingFile(opts.overwrite);
+
+    if (!transfer.sourceTokenIssuer.empty()) {
+        params.setSourceBearerToken(setupToken(transfer.sourceTokenIssuer));
+    }
+    if (!transfer.destTokenIssuer.empty()) {
+        params.setDestBearerToken(setupToken(transfer.destTokenIssuer));
+    }
 
     if (!transfer.sourceTokenDescription.empty()) {
         params.setSourceSpacetoken(transfer.sourceTokenDescription);

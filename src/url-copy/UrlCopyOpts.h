@@ -52,6 +52,9 @@ public:
     std::string userDn;
     std::string proxy;
     std::string oauthFile;
+    // If only a token issuer is provided, then url-copy
+    // is responsible for generating the access token.
+    std::string issuer;
 
     std::string infosys;
     std::string alias;

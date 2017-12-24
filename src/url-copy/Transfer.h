@@ -88,6 +88,8 @@ public:
     std::string tokenBringOnline;
     std::string sourceTokenDescription;
     std::string destTokenDescription;
+    std::string sourceTokenIssuer;
+    std::string destTokenIssuer;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
 
