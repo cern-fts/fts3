@@ -145,12 +145,13 @@ static void initTokenLibrary()
 }
 
 
-static std::string setupToken(const std::string &issuer)
+static std::string setupToken(const std::string &issuer, const std::string &proxy)
 {
     initTokenLibrary();
 
     char *err = NULL;
-    char *token = (*g_x509_scitokens_issuer_get_token_p)(issuer.c_str(), NULL, NULL, &err);
+    char *token = (*g_x509_scitokens_issuer_get_token_p)(issuer.c_str(),
+        proxy.c_str(), proxy.c_str(), &err);
     if (token)
     {
         std::string token_retval(token);
@@ -173,10 +174,10 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setReplaceExistingFile(opts.overwrite);
 
     if (!transfer.sourceTokenIssuer.empty()) {
-        params.setSourceBearerToken(setupToken(transfer.sourceTokenIssuer));
+        params.setSourceBearerToken(setupToken(transfer.sourceTokenIssuer, opts.proxy));
     }
     if (!transfer.destTokenIssuer.empty()) {
-        params.setDestBearerToken(setupToken(transfer.destTokenIssuer));
+        params.setDestBearerToken(setupToken(transfer.destTokenIssuer, opts.proxy));
     }
 
     if (!transfer.sourceTokenDescription.empty()) {
@@ -267,6 +268,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Multihop: " << opts.isMultihop << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enableUdt << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token issuer: " << transfer.destTokenIssuer << commit;
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
@@ -275,7 +278,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     else {
         try {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Getting source file size" << commit;
-            transfer.fileSize = gfal2.stat(transfer.source).st_size;
+            transfer.fileSize = gfal2.stat(params, transfer.source, true).st_size;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File size: " << transfer.fileSize << commit;
         }
         catch (const Gfal2Exception &ex) {
@@ -288,7 +291,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         if (!opts.overwrite) {
             try {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
-                gfal2.stat(transfer.destination);
+                gfal2.stat(params, transfer.destination, false);
                 throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
                     "Destination file exists and overwrite is not enabled");
             }
@@ -350,7 +353,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     if (!opts.strictCopy) {
         uint64_t destSize;
         try {
-            destSize = gfal2.stat(transfer.destination).st_size;
+            destSize = gfal2.stat(params, transfer.destination, false).st_size;
         }
         catch (const Gfal2Exception &ex) {
             throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, ex);

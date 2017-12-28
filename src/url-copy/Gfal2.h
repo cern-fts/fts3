@@ -234,6 +234,25 @@ class Gfal2 {
 private:
     gfal2_context_t context;
 
+    /// Configure bearer token.
+    void bearerInit(Gfal2TransferParams &params,
+                    const std::string &source, const std::string &destination)
+    {
+        GError *error = NULL;
+        if (!source.empty() && !params.src_token.empty()) {
+            gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.src_token.c_str());
+            if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
+                throw Gfal2Exception(error);
+            }
+        }
+        if (!source.empty() && !params.src_token.empty()) {
+            gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
+            if (gfal2_cred_set(context, destination.c_str(), token_cred, &error) < 0) {
+                throw Gfal2Exception(error);
+            }
+        }
+    }
+
 public:
 
     /// Constructor
@@ -299,8 +318,12 @@ public:
         gfal2_cancel(context);
     }
 
+
     /// Stat a file
-    struct stat stat(const std::string &url) {
+    struct stat stat(Gfal2TransferParams &params, const std::string &url, bool is_source) {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
         GError *error = NULL;
         struct stat buffer;
         if (gfal2_stat(context, url.c_str(), &buffer, &error) < 0) {
@@ -312,16 +335,9 @@ public:
     /// Copy a file
     void copy(Gfal2TransferParams &params, const std::string &source, const std::string &destination)
     {
-        GError *error = NULL;
-        gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.src_token.c_str());
-        if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
-            throw Gfal2Exception(error);
-        }
-        token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
-        if (gfal2_cred_set(context, destination.c_str(), token_cred, &error) < 0) {
-            throw Gfal2Exception(error);
-        }
+        bearerInit(params, source, destination);
 
+        GError *error = NULL;
         if (gfalt_copy_file(context, params, source.c_str(), destination.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
