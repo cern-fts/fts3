@@ -34,6 +34,8 @@ using fts3::common::commit;
 int (*g_x509_scitokens_issuer_init_p)(char **) = NULL;
 char* (*g_x509_scitokens_issuer_get_token_p)(const char *, const char *, const char *,
                                              char**) = NULL;
+char *(*g_x509_macaroon_issuer_retrieve_p)(const char *, const char *, const char *, int,
+                                          const char **, char **) = NULL;
 void *g_x509_scitokens_issuer_handle = NULL;
 
 
@@ -130,6 +132,21 @@ static void initTokenLibrary()
         g_x509_scitokens_issuer_handle = NULL;
         throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
     }
+    dlerror();
+
+    *(void **)(&g_x509_macaroon_issuer_retrieve_p) =
+        dlsym(g_x509_scitokens_issuer_handle, "x509_macaroon_issuer_retrieve");
+    if ((error = dlerror()) != NULL)
+    {
+        std::stringstream ss;
+        ss << "Failed to load the macaroon retrieval handle: " <<  error;
+        g_x509_scitokens_issuer_init_p = NULL;
+        g_x509_scitokens_issuer_get_token_p = NULL;
+        dlclose(g_x509_scitokens_issuer_handle);
+        g_x509_scitokens_issuer_handle = NULL;
+        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
+    }
+    dlerror();
 
     char *err = NULL;
     if ((*g_x509_scitokens_issuer_init_p)(&err))
@@ -138,6 +155,7 @@ static void initTokenLibrary()
         ss << "Failed to initialize the client issuer library: " << err;
         g_x509_scitokens_issuer_init_p = NULL;
         g_x509_scitokens_issuer_get_token_p = NULL;
+        g_x509_macaroon_issuer_retrieve_p = NULL;
         free(err);
         dlclose(g_x509_scitokens_issuer_handle);
         throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
@@ -145,7 +163,7 @@ static void initTokenLibrary()
 }
 
 
-static std::string setupToken(const std::string &issuer, const std::string &proxy)
+static std::string setupBearerToken(const std::string &issuer, const std::string &proxy)
 {
     initTokenLibrary();
 
@@ -166,6 +184,36 @@ static std::string setupToken(const std::string &issuer, const std::string &prox
 }
 
 
+static std::string setupMacaroon(const std::string &url, const std::string &proxy,
+                                 const std::string &activity)
+{
+    initTokenLibrary();
+
+    std::vector<const char*> activity_list;
+    activity_list.reserve(2);
+    activity_list.push_back(activity.c_str());
+    activity_list.push_back(NULL);
+
+    char *err = NULL;
+    char *token = (*g_x509_macaroon_issuer_retrieve_p)(url.c_str(),
+                                                     proxy.c_str(), proxy.c_str(),
+                                                     2,
+                                                     &activity_list[0],
+                                                     &err);
+    if (token)
+    {
+        std::string token_retval(token);
+        free(token);
+        return token_retval;
+    }
+    std::stringstream ss;
+    ss << "Failed to retrieve macaroon: " << err;
+    free(err);
+
+    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
+}
+
+
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     Gfal2 &gfal2, Gfal2TransferParams &params)
 {
@@ -173,11 +221,41 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setCreateParentDir(true);
     params.setReplaceExistingFile(opts.overwrite);
 
+    // Attempt to retrieve an oauth token from the VO's issuer; if not,
+    // then try to retrieve a token from the SE itself.
     if (!transfer.sourceTokenIssuer.empty()) {
-        params.setSourceBearerToken(setupToken(transfer.sourceTokenIssuer, opts.proxy));
+        params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
+    }
+    else
+    {
+        try
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source" << commit;
+            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, "DOWNLOAD"));
+        }
+        catch (const UrlCopyError &ex)
+        {
+            // As we always try for a macaroon, do not fail on error.
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for source; will use GSI proxy for authorization: " << ex.what() << commit;
+        }
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
     }
     if (!transfer.destTokenIssuer.empty()) {
-        params.setDestBearerToken(setupToken(transfer.destTokenIssuer, opts.proxy));
+        params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
+    }
+    else
+    {
+        try
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for destination" << commit;
+            params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, "UPLOAD,DELETE"));
+        }
+        catch (const UrlCopyError &ex)
+        {
+            // As we always try for a macaroon, do not fail on error.
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for destination; will use GSI proxy for authorization: " << ex.what() << commit;
+        }
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
     }
 
     if (!transfer.sourceTokenDescription.empty()) {
@@ -383,15 +461,6 @@ void UrlCopyProcess::run(void)
             transfer = todoTransfers.front();
         }
 
-        // Prepare gfal2 transfer parameters
-        Gfal2TransferParams params;
-        try {
-        	setupTransferConfig(opts, transfer, gfal2, params);
-        }
-        catch (const UrlCopyError &ex) {
-        	transfer.error.reset(new UrlCopyError(ex));
-        }
-
         // Prepare logging
         transfer.stats.process.start = millisecondsSinceEpoch();
         transfer.logFile = generateLogPath(opts.logDir, transfer);
@@ -404,6 +473,15 @@ void UrlCopyProcess::run(void)
 
         if (!opts.logToStderr) {
             fts3::common::theLogger().redirect(transfer.logFile, transfer.debugLogFile);
+        }
+
+        // Prepare gfal2 transfer parameters
+        Gfal2TransferParams params;
+        try {
+                setupTransferConfig(opts, transfer, gfal2, params);
+        }
+        catch (const UrlCopyError &ex) {
+                transfer.error.reset(new UrlCopyError(ex));
         }
 
         // Notify we got it
