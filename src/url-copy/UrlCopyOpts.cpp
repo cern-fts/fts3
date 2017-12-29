@@ -294,9 +294,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 504:
                     referenceTransfer.sourceTokenIssuer = optarg;
+                    break;
                 case 505:
                     referenceTransfer.destTokenIssuer = optarg;
-
+                    break;
                 case 600:
                     infosys = optarg;
                     break;
