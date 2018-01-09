@@ -224,6 +224,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In days. Entries older than this will be purged"
     )
     (
+        "BackupTables",
+        po::value<std::string>( &(_vars["BackupTables"]) )->default_value("true"),
+        "Enable or disable the t_file and t_job backup"
+    )
+    (
         "CheckStalledTransfers",
         po::value<std::string>( &(_vars["CheckStalledTransfers"]) )->default_value("true"),
         "Check for stalled transfers"

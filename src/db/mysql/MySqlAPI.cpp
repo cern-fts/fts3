@@ -1891,7 +1891,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
     int countBeat = 0;
     bool drain = false;
     int hostsRunningBackup = 0;
-
+    bool doBackup = true;
     try
     {
 
@@ -1928,7 +1928,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
             }
 
         }
-
+        doBackup =  ServerConfig::instance().get<bool> ("BackupTables");
         //prevent more than on server to update the optimizer decisions
         if(hashSegment.start == 0)
         {
@@ -1986,7 +1986,6 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                 jobIdStmt << "'";
                 jobIdStmt << job_id;
                 jobIdStmt << "',";
-
                 if(count == bulkSize)
                 {
                     std::string queryStr = jobIdStmt.str();
@@ -1994,15 +1993,19 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
 
                     sql.begin();
 
-                    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
+                    if (doBackup) {
+                        sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
 
-                    soci::statement insertFiles = (sql.prepare <<
+                        soci::statement insertFiles = (sql.prepare <<
                             "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id in (" +job_id+ ")");
-                    insertFiles.execute();
-                    (*nFiles) += insertFiles.get_affected_rows();
-
-                    sql << "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
-
+                        insertFiles.execute();
+                    }
+                      
+                    soci::statement deleteFiles = (sql.prepare << 
+                           "DELETE FROM t_file WHERE job_id in (" +job_id+ ")");
+                    deleteFiles.execute();
+                    (*nFiles) += deleteFiles.get_affected_rows(); 
+                    
                     sql << "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
 
                     sql << "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
