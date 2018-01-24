@@ -1,9 +1,3 @@
-#default port number
-Port=8443
-
-#IP, default localhost
-IP=0.0.0.0
-
 # Running user and group
 User=fts3
 Group=fts3
