@@ -1,6 +1,8 @@
 [Unit]
 Description=File Transfer Service
 Documentation=man:fts-server
+Requires=network-online.target
+After=network-online.target
 
 [Service]
 Type=forking

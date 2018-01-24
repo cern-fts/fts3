@@ -1,6 +1,8 @@
 [Unit]
 Description=File Transfer Service - Staging
 Documentation=man:fts_bringonline
+Requires=network-online.target
+After=network-online.target
 
 [Service]
 Type=forking
