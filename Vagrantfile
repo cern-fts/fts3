@@ -11,7 +11,7 @@ opts = GetoptLong.new(
     ['--box', GetoptLong::OPTIONAL_ARGUMENT]
 )
 
-box = "centos/7"
+box = "bento/centos-7.4"
 
 opts.each do |opt, arg|
     case opt
