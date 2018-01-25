@@ -24,6 +24,9 @@ vagrant rsync-auto
 
 after the instance is up. This will synchronize the files.
 
+*Note:* Now the image is based on bento/centos, which by default installs
+Virtual Box Guest Additions, making unnecessary this command.
+
 To enter the vagrant instace, just run on a separate shell 
 
 ```bash
