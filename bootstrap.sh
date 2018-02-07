@@ -11,7 +11,7 @@ EOF
 
 yum install -y vim
 yum groupinstall -y 'Development Tools'
-yum install -y epel-release yum-builddep git
+yum install -y epel-release yum-utils git
 yum-builddep -y "/vagrant/packaging/rpm/fts.spec"
 yum install -y gfal2-all
 
