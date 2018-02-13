@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.7.8
+Version:    3.8.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -17,11 +17,11 @@ License:    ASL 2.0
 URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.7.8
-#  cd fts-3.7.8
-#  git checkout v3.7.8
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.8.0
+#  cd fts-3.8.0
+#  git checkout v3.8.0
 #  cd ..
-#  tar --exclude-vcs -vczf fts-3.7.8.tar.gz fts-3.7.8
+#  tar --exclude-vcs -vczf fts-3.8.0.tar.gz fts-3.8.0
 Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
