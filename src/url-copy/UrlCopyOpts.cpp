@@ -52,6 +52,8 @@ const option UrlCopyOpts::long_options[] =
     {"user-dn",           required_argument, 0, 501},
     {"proxy",             required_argument, 0, 502},
     {"oauth",             required_argument, 0, 503},
+    {"source-issuer",     required_argument, 0, 504},
+    {"dest-issuer",       required_argument, 0, 505},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -108,7 +110,9 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
 {
     typedef boost::tokenizer <boost::char_separator<char>> tokenizer;
 
-    std::string strArray[7];
+    std::string strArray[9];
+    strArray[7] = "x";
+    strArray[8] = "x";
     tokenizer tokens(line, boost::char_separator<char>(" "));
     std::copy(tokens.begin(), tokens.end(), strArray);
 
@@ -124,6 +128,14 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.tokenBringOnline = strArray[6];
     if (t.tokenBringOnline == "x") {
         t.tokenBringOnline.clear();
+    }
+    t.sourceTokenIssuer = strArray[7];
+    if (t.sourceTokenIssuer == "x") {
+        t.sourceTokenIssuer.clear();
+    }
+    t.destTokenIssuer = strArray[8];
+    if (t.destTokenIssuer == "x") {
+        t.destTokenIssuer.clear();
     }
     t.isMultipleReplicaJob = false;
     t.isLastReplica = false;
@@ -280,7 +292,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 503:
                     oauthFile = optarg;
                     break;
-
+                case 504:
+                    referenceTransfer.sourceTokenIssuer = optarg;
+                    break;
+                case 505:
+                    referenceTransfer.destTokenIssuer = optarg;
+                    break;
                 case 600:
                     infosys = optarg;
                     break;
