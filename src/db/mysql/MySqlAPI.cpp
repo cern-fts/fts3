@@ -1227,11 +1227,11 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         std::string newState, std::string transferMessage,
         int processId, double filesize, double duration, bool retry)
 {
+    std::string storedState;
     try
     {
         sql.begin();
 
-        std::string storedState;
 
         time_t now = time(NULL);
         struct tm tTime;
@@ -1358,7 +1358,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-    return true;
+    return  boost::tuple<bool, std::string>(true, storedState);
 }
 
 
