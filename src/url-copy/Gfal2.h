@@ -245,7 +245,7 @@ private:
                 throw Gfal2Exception(error);
             }
         }
-        if (!source.empty() && !params.src_token.empty()) {
+        if (!destination.empty() && !params.dst_token.empty()) {
             gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
             if (gfal2_cred_set(context, destination.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
