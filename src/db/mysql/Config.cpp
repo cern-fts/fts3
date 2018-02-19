@@ -196,7 +196,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
         {
             sql <<
                 " SELECT retry "
-                " FROM t_server_config WHERE vo_name IN (:vo_name, '*', NULL) "
+                " FROM t_server_config WHERE vo_name IN (:vo_name, '*') OR vo_name IS NULL "
                 " ORDER BY vo_name DESC LIMIT 1",
                 soci::use(vo_name), soci::into(nRetries);
         }
@@ -265,7 +265,7 @@ int MySqlAPI::getMaxTimeInQueue(const std::string &voName)
         soci::indicator isNull = soci::i_ok;
 
         sql << "SELECT max_time_queue "
-               " FROM t_server_config WHERE vo_name IN (:vo, '*', NULL) "
+               " FROM t_server_config WHERE vo_name IN (:vo, '*') OR vo_name IS NULL "
                " ORDER BY vo_name DESC LIMIT 1",
             soci::use(voName), soci::into(maxTime, isNull);
 
@@ -473,7 +473,7 @@ int MySqlAPI::getGlobalTimeout(const std::string &voName)
         soci::indicator isNullTimeout = soci::i_ok;
 
         sql << "SELECT global_timeout FROM t_server_config "
-               "WHERE vo_name IN (:vo, '*', NULL) "
+               "WHERE vo_name IN (:vo, '*') OR vo_name IS NULL) "
                "ORDER BY vo_name DESC LIMIT 1",
                soci::use(voName), soci::into(timeout, isNullTimeout);
 
@@ -500,7 +500,7 @@ int MySqlAPI::getSecPerMb(const std::string &voName)
         soci::indicator isNullSeconds = soci::i_ok;
 
         sql << "SELECT sec_per_mb FROM t_server_config "
-               "WHERE vo_name IN (:vo, '*', NULL) "
+               "WHERE vo_name IN (:vo, '*') OR vo_name IS NULL "
                "ORDER BY vo_name DESC LIMIT 1",
                soci::use(voName), soci::into(seconds, isNullSeconds);
 
@@ -532,7 +532,7 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
             "   cs.cloudStorage_name=:cs_name AND ("
             "       (cu.user_dn=:user_dn AND cu.vo_name=:vo) OR "
             "       (cu.user_dn='*' AND cu.vo_name=:vo) OR "
-            "       (cu.user_dn=:user_dn AND cu.vo_name IN ('*', '', NULL))"
+            "       (cu.user_dn=:user_dn AND (cu.vo_name IN ('*', '') OR cu.vo_name IS NULL))"
             "   )",
             soci::use(cloud_name, "cs_name"), soci::use(user_dn, "user_dn"), soci::use(vo, "vo"),
             soci::into(auth);
