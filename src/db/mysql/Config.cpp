@@ -470,7 +470,7 @@ int MySqlAPI::getGlobalTimeout(const std::string &voName)
         soci::indicator isNullTimeout = soci::i_ok;
 
         sql << "SELECT global_timeout FROM t_server_config "
-               "WHERE vo_name IN (:vo, '*') OR vo_name IS NULL) "
+               "WHERE vo_name IN (:vo, '*') OR vo_name IS NULL "
                "ORDER BY vo_name DESC LIMIT 1",
                soci::use(voName), soci::into(timeout, isNullTimeout);
 
