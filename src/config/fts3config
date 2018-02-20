@@ -130,7 +130,8 @@ LogLevel=INFO
 #SchedulingInterval = 2
 # In seconds, how often to check for messages. Should be less than CheckStalledTimeout/2
 #MessagingConsumeInterval = 1
-
+#Enable or disable auto session reuse
+#AutoSessionReuse = false
 [roles]
 Public = transfer
 lcgadmin = vo:transfer

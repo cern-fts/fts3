@@ -400,7 +400,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
 	(   "AutoSessionReuse",
 		po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
-		"Enable auto session reuse"
+		"Enable or disable auto session reuse"
     )
 
     ;
