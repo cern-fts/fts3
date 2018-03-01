@@ -221,11 +221,16 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setCreateParentDir(true);
     params.setReplaceExistingFile(opts.overwrite);
     bool macaroonRequestEnabledSource , macaroonRequestEnabledDestination = false;
-    
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
+
     //check source and destination protocol, so to enable macaroons
     if ((transfer.source.protocol.find("dav")==0)  ||  (transfer.source.protocol.find("http") == 0)) {
         macaroonRequestEnabledSource = true;
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
+
     if ((transfer.destination.protocol.find("dav")==0)  ||  (transfer.destination.protocol.find("http") == 0)) {
         macaroonRequestEnabledDestination = true;
     }
@@ -241,13 +246,13 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source" << commit;
             params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, "DOWNLOAD"));
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
         }
         catch (const UrlCopyError &ex)
         {
             // As we always try for a macaroon, do not fail on error.
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for source; will use GSI proxy for authorization: " << ex.what() << commit;
         }
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
     }
     if (!transfer.destTokenIssuer.empty()) {
         params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
@@ -258,13 +263,13 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for destination" << commit;
             params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, "UPLOAD,DELETE"));
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
         }
         catch (const UrlCopyError &ex)
         {
             // As we always try for a macaroon, do not fail on error.
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for destination; will use GSI proxy for authorization: " << ex.what() << commit;
         }
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
     }
 
     if (!transfer.sourceTokenDescription.empty()) {
