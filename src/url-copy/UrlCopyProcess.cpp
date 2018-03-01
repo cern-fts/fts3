@@ -220,7 +220,8 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setStrictCopy(opts.strictCopy);
     params.setCreateParentDir(true);
     params.setReplaceExistingFile(opts.overwrite);
-    bool macaroonRequestEnabledSource , macaroonRequestEnabledDestination = false;
+    bool macaroonRequestEnabledSource = false;
+    bool macaroonRequestEnabledDestination = false;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
 
