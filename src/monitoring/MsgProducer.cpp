@@ -230,7 +230,7 @@ bool MsgProducer::getConnection()
 			connected = true;
     	}
     	else {
-    		FTS3_COMMON_LOGGER_LOG(ERR, "The message broker is disabled");
+    		FTS3_COMMON_LOGGER_LOG(INFO, "The message broker is disabled");
     	}
     }
     catch (cms::CMSException &e) {
