@@ -150,84 +150,88 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
 bool MsgProducer::getConnection()
 {
     try {
-        // Set properties for SSL, if enabled
-        if (brokerConfig.UseSSL()) {
-            FTS3_COMMON_LOGGER_LOG(INFO, "Using SSL");
-            decaf::lang::System::setProperty("decaf.net.ssl.keyStore", brokerConfig.GetClientKeyStore());
-            if (!brokerConfig.GetClientKeyStorePassword().empty()) {
-                decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword",
-                    brokerConfig.GetClientKeyStorePassword());
-            }
-            decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
-            if (brokerConfig.SslVerify()) {
-                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
-            }
-            else {
-                FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
-                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
-            }
-        }
-        else {
-            FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
-        }
-        FTS3_COMMON_LOGGER_LOG(DEBUG, brokerConfig.GetBrokerURI());
+    	if (brokerConfig.UseMsgBroker()) {
+			// Set properties for SSL, if enabled
+			if (brokerConfig.UseSSL()) {
+				FTS3_COMMON_LOGGER_LOG(INFO, "Using SSL");
+				decaf::lang::System::setProperty("decaf.net.ssl.keyStore", brokerConfig.GetClientKeyStore());
+				if (!brokerConfig.GetClientKeyStorePassword().empty()) {
+					decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword",
+						brokerConfig.GetClientKeyStorePassword());
+				}
+				decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
+				if (brokerConfig.SslVerify()) {
+					decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
+				}
+				else {
+					FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
+					decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
+				}
+			}
+			else {
+				FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
+			}
+			FTS3_COMMON_LOGGER_LOG(DEBUG, brokerConfig.GetBrokerURI());
 
-        // Create a ConnectionFactory
-        activemq::core::ActiveMQConnectionFactory connectionFactory(brokerConfig.GetBrokerURI());
+			// Create a ConnectionFactory
+			activemq::core::ActiveMQConnectionFactory connectionFactory(brokerConfig.GetBrokerURI());
 
-        // Disable advisories
-        connectionFactory.setWatchTopicAdvisories(false);
+			// Disable advisories
+			connectionFactory.setWatchTopicAdvisories(false);
 
-        // Create a Connection
-        if (brokerConfig.UseBrokerCredentials()) {
-            connection = connectionFactory.createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
-        }
-        else {
-            connection = connectionFactory.createConnection();
-        }
+			// Create a Connection
+			if (brokerConfig.UseBrokerCredentials()) {
+				connection = connectionFactory.createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
+			}
+			else {
+				connection = connectionFactory.createConnection();
+			}
 
-        //connection->setExceptionListener(this);
-        connection->start();
+			//connection->setExceptionListener(this);
+			connection->start();
 
-        session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
+			session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
 
-        // Create the destination (Topic or Queue)
-        if (brokerConfig.UseTopics()) {
-            destination_transfer_started = session->createTopic(brokerConfig.GetStartDestination());
-            destination_transfer_completed = session->createTopic(brokerConfig.GetCompleteDestination());
-            destination_transfer_state = session->createTopic(brokerConfig.GetStateDestination());
-            destination_optimizer = session->createTopic(brokerConfig.GetOptimizerDestination());
-        }
-        else {
-            destination_transfer_started = session->createQueue(brokerConfig.GetStartDestination());
-            destination_transfer_completed = session->createQueue(brokerConfig.GetCompleteDestination());
-            destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
-            destination_optimizer = session->createQueue(brokerConfig.GetOptimizerDestination());
-        }
+			// Create the destination (Topic or Queue)
+			if (brokerConfig.UseTopics()) {
+				destination_transfer_started = session->createTopic(brokerConfig.GetStartDestination());
+				destination_transfer_completed = session->createTopic(brokerConfig.GetCompleteDestination());
+				destination_transfer_state = session->createTopic(brokerConfig.GetStateDestination());
+				destination_optimizer = session->createTopic(brokerConfig.GetOptimizerDestination());
+			}
+			else {
+				destination_transfer_started = session->createQueue(brokerConfig.GetStartDestination());
+				destination_transfer_completed = session->createQueue(brokerConfig.GetCompleteDestination());
+				destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
+				destination_optimizer = session->createQueue(brokerConfig.GetOptimizerDestination());
+			}
 
-        // setTimeToLive expects milliseconds
-        // GetTTL gives hours
-        int ttlMs = brokerConfig.GetTTL() * 3600000;
+			// setTimeToLive expects milliseconds
+			// GetTTL gives hours
+			int ttlMs = brokerConfig.GetTTL() * 3600000;
 
-        // Create a message producer
-        producer_transfer_started = session->createProducer(destination_transfer_started);
-        producer_transfer_started->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_started->setTimeToLive(ttlMs);
+			// Create a message producer
+			producer_transfer_started = session->createProducer(destination_transfer_started);
+			producer_transfer_started->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
+			producer_transfer_started->setTimeToLive(ttlMs);
 
-        producer_transfer_completed = session->createProducer(destination_transfer_completed);
-        producer_transfer_completed->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_completed->setTimeToLive(ttlMs);
+			producer_transfer_completed = session->createProducer(destination_transfer_completed);
+			producer_transfer_completed->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
+			producer_transfer_completed->setTimeToLive(ttlMs);
 
-        producer_transfer_state = session->createProducer(destination_transfer_state);
-        producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-        producer_transfer_state->setTimeToLive(ttlMs);
+			producer_transfer_state = session->createProducer(destination_transfer_state);
+			producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
+			producer_transfer_state->setTimeToLive(ttlMs);
 
-        producer_optimizer = session->createProducer(destination_optimizer);
-        producer_optimizer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
-        producer_optimizer->setTimeToLive(ttlMs);
+			producer_optimizer = session->createProducer(destination_optimizer);
+			producer_optimizer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
+			producer_optimizer->setTimeToLive(ttlMs);
 
-        connected = true;
-
+			connected = true;
+    	}
+    	else {
+    		FTS3_COMMON_LOGGER_LOG(ERR, "The message broker is disabled");
+    	}
     }
     catch (cms::CMSException &e) {
         FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());

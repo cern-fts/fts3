@@ -65,6 +65,9 @@ public:
     /// If true, enable SSL for the producer
     bool UseSSL() const;
 
+    /// If true, use the messaging broker
+    bool UseMsgBroker() const;
+
     /// If true, verify broker certificate
     bool SslVerify() const;
 

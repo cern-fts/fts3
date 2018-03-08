@@ -173,6 +173,12 @@ std::string BrokerConfig::GetPassword() const
 }
 
 
+bool BrokerConfig::UseMsgBroker() const
+{
+    return vm["ACTIVE"].as<bool>();
+}
+
+
 bool BrokerConfig::UseTopics() const
 {
     return vm["TOPIC"].as<bool>();
