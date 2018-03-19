@@ -132,6 +132,11 @@ LogLevel=INFO
 #MessagingConsumeInterval = 1
 #Enable or disable auto session reuse
 #AutoSessionReuse = false
+#Max file size for session reuse in bytes
+#AutoSessionReuseMaxFileSize = 104857600
+#Max number of files per session reuse
+#AutoSessionReuseMaxFiles = 1000
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
