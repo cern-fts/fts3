@@ -132,10 +132,14 @@ LogLevel=INFO
 #MessagingConsumeInterval = 1
 #Enable or disable auto session reuse
 AutoSessionReuse = true
-#Max file size for session reuse in bytes
-AutoSessionReuseMaxFileSize = 104857600
+#Max small file size for session reuse in bytes
+AutoSessionReuseMaxSmallFileSize = 104857600
+#Max big file size for session reuse in bytes
+AutoSessionReuseMaxBigFileSize = 1073741824
 #Max number of files per session reuse
 AutoSessionReuseMaxFiles = 1000
+#Max number of big files  per session reuse
+AutoSessionReuseMaxBigFiles = 2
 
 [roles]
 Public = transfer

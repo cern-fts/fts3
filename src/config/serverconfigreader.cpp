@@ -399,18 +399,27 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In milliseconds, delay between graceful SIGTERM and SIGKILL"
     )
     (   "AutoSessionReuse",
-	po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
-	"Enable or disable auto session reuse"
+    		po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
+		"Enable or disable auto session reuse"
     )
 
-    (   "AutoSessionReuseMaxFileSize",
-	po::value<int>()->default_value(104857600),
-	"Max file size for session reuse in bytes"
+    (   "AutoSessionReuseMaxSmallFileSize",
+    		po::value<int>()->default_value(104857600),
+		"Max small file size for session reuse in bytes"
      )
+	 (   "AutoSessionReuseMaxBigFileSize",
+	 	po::value<int>()->default_value(1073741824),
+	 	"Max big file size for session reuse in bytes"
+	 )
      (   "AutoSessionReuseMaxFiles",
          po::value<int>()->default_value(1000),
          "Max number of files per session reuse"
      )
+	 (   "AutoSessionReuseMaxBigFiles",
+	      po::value<int>()->default_value(2),
+	      "Max number of big files  per session reuse"
+	 )
+
     ;
 
     return config;
