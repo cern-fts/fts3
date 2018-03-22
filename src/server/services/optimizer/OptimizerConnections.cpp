@@ -321,7 +321,7 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
     int diff, const std::string &rationale, boost::timer::cpu_times elapsed)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
-        << "Optimizer: Active for " << pair << " set to " << decision
+        << "Optimizer: Active for " << pair << " set to " << decision << ", running " << current.activeCount
         << " (" << elapsed.wall << "ns)" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << rationale << commit;
