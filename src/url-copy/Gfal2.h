@@ -18,7 +18,9 @@
 #define GFAL2_CPP_H
 
 #include <gfal_api.h>
+#include "common/Uri.h"
 
+using fts3::common::Uri;
 
 class Gfal2Exception: public std::exception {
 private:
@@ -241,13 +243,17 @@ private:
         GError *error = NULL;
         if (!source.empty() && !params.src_token.empty()) {
             gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.src_token.c_str());
-            if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
+            //set the bearer associated to the host 
+            std::string sourceHost = Uri::parse(source).host;
+            if (gfal2_cred_set(context, sourceHost.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
         }
         if (!destination.empty() && !params.dst_token.empty()) {
             gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
-            if (gfal2_cred_set(context, destination.c_str(), token_cred, &error) < 0) {
+            //set the bearer associated to the host 
+            std::string destHost = Uri::parse(destination).host;
+            if (gfal2_cred_set(context, destHost.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
         }
