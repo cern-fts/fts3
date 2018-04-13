@@ -10,6 +10,7 @@ protect=1
 EOF
 
 yum install -y vim
+yum install -y nano
 yum groupinstall -y 'Development Tools'
 yum install -y epel-release yum-utils git
 yum-builddep -y "/vagrant/packaging/rpm/fts.spec"
