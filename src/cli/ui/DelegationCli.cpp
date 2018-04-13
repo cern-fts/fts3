@@ -30,7 +30,7 @@ DelegationCli::DelegationCli()
     // add commandline options specific for fts3-transfer-submit
     specific.add_options()
     ("id,I", po::value<std::string>(), "Delegation with ID as the delegation identifier.")
-    ("expire,e", po::value<long>(), "Expiration time of the delegation in minutes.")
+    ("expire,e", po::value<long>(), "Expiration time of the delegation in seconds.")
     ;
 }
 
