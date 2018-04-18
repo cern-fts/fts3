@@ -398,6 +398,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["SigKillDelay"]) )->default_value("500"),
         "In milliseconds, delay between graceful SIGTERM and SIGKILL"
     )
+    (
+        "UseFixedJobPriority",
+        po::value<int>()->default_value(0),
+        "Configure the system to use a fixed Job Priority, by default it queries the system to honour the priorities specified by the users"
+    )
     ;
 
     return config;

@@ -630,13 +630,15 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 }
             }
 
-            // Get highest priority waiting for this queue
-            // We then filter by this, and order by file_id
-            // Doing this, we avoid a order by priority, which would trigger a filesort, which
-            // can be pretty slow...
+            int fixedPriority =  ServerConfig::instance().get<int> ("UseFixedJobPriority");
             soci::indicator isMaxPriorityNull = soci::i_ok;
             int maxPriority = 3;
-            sql << "SELECT MAX(priority) "
+            if (fixedPriority == 0) {
+                // Get highest priority waiting for this queue
+                // We then filter by this, and order by file_id
+                // Doing this, we avoid a order by priority, which would trigger a filesort, which
+                // can be pretty slow...
+                sql << "SELECT MAX(priority) "
                    "FROM t_job, t_file "
                    "WHERE "
                    "    t_file.job_id = t_job.job_id AND "
@@ -644,11 +646,19 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "    t_file.file_state = 'SUBMITTED'",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
                    soci::into(maxPriority, isMaxPriorityNull);
-            if (isMaxPriorityNull == soci::i_null) {
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
-                continue;
-            }
+                if (isMaxPriorityNull == soci::i_null) {
+                   FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
+                   continue;
+                }
+            } 
+            else 
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
+                << " Using fixed priority for Jobs."
+                << commit;
 
+                maxPriority=fixedPriority;
+            }
             std::set<std::string> default_activities;
             std::map<std::string, int> activityFilesNum =
                 getFilesNumPerActivity(sql, it->sourceSe, it->destSe, it->voName, filesNum, default_activities);
