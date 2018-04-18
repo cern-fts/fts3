@@ -400,7 +400,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "UseFixedJobPriority",
-        po::value<int>()->default_value(0),
+        po::value<std::string>( &(_vars["UseFixedJobPriority"]) )->default_value("0"),
         "Configure the system to use a fixed Job Priority, by default it queries the system to honour the priorities specified by the users"
     )
     ;
