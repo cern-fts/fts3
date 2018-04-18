@@ -406,20 +406,24 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     (   "AutoSessionReuseMaxSmallFileSize",
     		po::value<int>()->default_value(104857600),
 		"Max small file size for session reuse in bytes"
-     )
-	 (   "AutoSessionReuseMaxBigFileSize",
+    )
+    (   "AutoSessionReuseMaxBigFileSize",
 	 	po::value<int>()->default_value(1073741824),
 	 	"Max big file size for session reuse in bytes"
-	 )
-     (   "AutoSessionReuseMaxFiles",
+    )
+    (   "AutoSessionReuseMaxFiles",
          po::value<int>()->default_value(1000),
          "Max number of files per session reuse"
-     )
-	 (   "AutoSessionReuseMaxBigFiles",
+    )
+    (   "AutoSessionReuseMaxBigFiles",
 	      po::value<int>()->default_value(2),
 	      "Max number of big files  per session reuse"
-	 )
-
+    )
+    (
+        "UseFixedJobPriority",
+        po::value<std::string>( &(_vars["UseFixedJobPriority"]) )->default_value("0"),
+        "Configure the system to use a fixed Job Priority, by default it queries the system to honour the priorities specified by the users"
+    )
     ;
 
     return config;
