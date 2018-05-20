@@ -31,7 +31,7 @@ RUN /usr/bin/yum install -y voms-config-wlcg  voms-config-vo-dteam
 #install supervisor
 RUN yum install -y supervisor
 
-COPY "supervisord" "/etc/supervisor/conf.d/supervisord.conf"
+COPY "packaging/docker/supervisord" "/etc/supervisor/conf.d/supervisord.conf"
 
 #log folder
 RUN mkdir -p /var/log/fts3 && chown fts3:fts3 /var/log/fts3

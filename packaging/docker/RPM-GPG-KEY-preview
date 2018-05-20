@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<title>RPM-GPG-KEY-preview - EGIWiki</title>
+<meta name="generator" content="MediaWiki 1.17.2" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="/w/opensearch_desc.php" title="EGIWiki (en)" />
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.egi.eu/w/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="EGIWiki Atom feed" href="/w/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="/w/load.php?debug=false&amp;lang=en&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" /><link rel="stylesheet" href="/w/load.php?debug=false&amp;lang=en&amp;modules=site&amp;only=styles&amp;skin=vector&amp;*" />
+<link rel="stylesheet" href="/w/load.php?debug=false&amp;lang=en&amp;modules=site&amp;only=styles&amp;skin=vector&amp;*" />
+<link rel="stylesheet" href="/w/load.php?debug=false&amp;lang=en&amp;modules=site&amp;only=styles&amp;skin=vector&amp;*" />
+
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/w/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr ns-0 ns-subject page-RPM-GPG-KEY-preview skin-vector">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading">RPM-GPG-KEY-preview</h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+				<!-- tagline -->
+				<div id="siteSub">From EGIWiki</div>
+				<!-- /tagline -->
+				<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav">
+					Jump to: <a href="#mw-head">navigation</a>,
+					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodytext -->
+				<pre>-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1
+
+mQENBFbdgucBCAC6428Y35mcaIH+JjKI1TkhVM0rWwxM86NULIAyTWfWZ6TXeap8
+a5wMplcUfdfen9ooAHzCpEjnaz0AOmILK63/WDfCLogczmJzmKZCpuT41VhQW/mW
+pBJsX8BwgUlae7u204Xk5Ugsr1o+bB5vgo6v1CBlgcVCI3iUjkamiBuq37YzElyc
+aLaJCTODCEZWO/p3PuP8+PrTPDVOxjmJ6ww5BIOLTsOndwyE4kMkdiN7pKWLViKZ
+FXMEIbfAG8daFQYkxNLyL0Wg5rUct/W5AquNs/RsKQmIgan2ip4dc1k7QjYXkCq4
+1H9boWKMl95yRHDjTH5oX/zOXACHpWdPiZDjABEBAAG0T0FsZXNzYW5kcm8gUGFv
+bGluaSAoZ3BnIGtleSBmb3IgUHJldmlldyBtaWRkbGV3YXJlKSA8YWxlc3NhbmRy
+by5wYW9saW5pQGVnaS5ldT6JATgEEwECACIFAlbdgucCGwMGCwkIBwMCBhUIAgkK
+CwQWAgMBAh4BAheAAAoJEAIraaRIsdgjJ7YH/3QKrRBlrBR1fouG3BOhGaMMJDmL
+YFDVphBFEbiwgzwn2Nhtonm1dMkYBYLXFPXSfT3SGLkCf6JZObKyViShLb97kmOr
+9XCBQtyyk5d7qPPODBW2+VUPD35OYYr4uwA29D9bf7nfB+9qS1Bgn8Fm+n713PEP
+L8MO10c7j6MoedQQ0uQU2XRrPaFL1LAAZvp3hHJST8hJ3gah6SqsFAQlpVmZdVBL
+zevw1MkAWuY6bz3+tdoUvXJHgdk9zKnoR89HJ1cXRHyzmE9ypcTRUKNtXnX/BLQz
+TuMV5np+ogeydegWtdXl0zfixrNEeAiO1Cl4YqYwWZOMUCcRMA5XuARfN9S5AQ0E
+Vt2C5wEIAO4grA/eUOBW8/S4QmuZRd/+kiFzfzjE6098DBliQ3z03UWYYdHo1DJI
+JGK5Hu54F8rPEhMKefd2R1W4z7zEQrsx9+FZm/nB9Xf8J8oITChuVIAm/IXrqlXH
+ux+z4UWdIsl8lkKIVBZMQ+g0ioCYsbBPxq+wLYBNXcucpYQCW6lqswgyOydR5N+b
+DcVTYsrdH90wAzrZ6D3wDM4ifoSDkOLyyS/LDy8gS/kvznt/dQy/LaBiYB7dezaL
+ajE3ICw39MhNsHb0uyMEcePzQW9l9pvpJN0S8pllq5otoFNQSlZ+jgl2+drxI3bw
+qRL1oMdphEHTdX1WmdLowMFZ1/Po/X8AEQEAAYkBHwQYAQIACQUCVt2C5wIbDAAK
+CRACK2mkSLHYI2hqB/wNvjs3bs0TIYvAJtvIyQ/FZA/mzN1JDt3UqpC+XeWPSHSG
+vMKobvBcDJPS+hmOr2FIHO1c1J4dJUkGJUxm1Mkwhppus3m+fQ7YNRbwkVJmzSFW
+06F/R2DwKPul1wr+T4A1YKUskZTCSQ513FxdBL/0k+zk4u47/kJ5VxyNp4P5mJvx
+MMtHZUd6iIexdsWoRXX01ek/alk6ybbThOgHiYPL9n9aqaUFZRFm9zD9ZqUQMdeA
+//oBL9hpvbTTz/6y9jCrhGkiBIoy77MbhBsHV6VSE2ayneXvBJvUKt1RYmq26r+0
+eOVpk5bQlQzCV5raQU1dFai2JYSP44KE4y9bXy2L
+=Kz+/
+-----END PGP PUBLIC KEY BLOCK-----
+</pre>
+<!-- 
+NewPP limit report
+Preprocessor node count: 1/1000000
+Post-expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key wikidb:pcache:idhash:7503-0!*!0!!*!*!edit=0 and timestamp 20170123090216 -->
+<div class="printfooter">
+Retrieved from "<a href="https://wiki.egi.eu/wiki/RPM-GPG-KEY-preview">https://wiki.egi.eu/wiki/RPM-GPG-KEY-preview</a>"</div>
+				<!-- /bodytext -->
+								<!-- catlinks -->
+				<div id='catlinks' class='catlinks catlinks-allhidden'></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<!-- header -->
+		<div id="mw-head" class="noprint">
+			
+<!-- 0 -->
+<div id="p-personal" class="">
+	<h5>Personal tools</h5>
+	<ul>
+					<li  id="pt-login"><a href="/w/index.php?title=Special:UserLogin&amp;returnto=RPM-GPG-KEY-preview" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+			<div id="left-navigation">
+				
+<!-- 0 -->
+<div id="p-namespaces" class="vectorTabs">
+	<h5>Namespaces</h5>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="/wiki/RPM-GPG-KEY-preview"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="/w/index.php?title=Talk:RPM-GPG-KEY-preview&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" class="vectorMenu emptyPortlet">
+		<h5><span>Variants</span><a href="#"></a></h5>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+			</div>
+			<div id="right-navigation">
+				
+<!-- 0 -->
+<div id="p-views" class="vectorTabs">
+	<h5>Views</h5>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="/wiki/RPM-GPG-KEY-preview" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="/w/index.php?title=RPM-GPG-KEY-preview&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible "><span><a href="/w/index.php?title=RPM-GPG-KEY-preview&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" class="vectorMenu emptyPortlet">
+	<h5><span>Actions</span><a href="#"></a></h5>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+<div id="p-search">
+	<h5><label for="searchInput">Search</label></h5>
+	<form action="/w/index.php" id="searchform">
+		<input type='hidden' name="title" value="Special:Search"/>
+				<input id="searchInput" name="search" type="text"  title="Search EGIWiki [f]" accesskey="f"  value="" />
+		<input type='submit' name="go" class="searchButton" id="searchGoButton"	value="Go" title="Go to a page with this exact name if exists" />
+		<input type="submit" name="fulltext" class="searchButton" id="mw-searchButton" value="Search" title="Search the pages for this text" />
+			</form>
+</div>
+
+<!-- /2 -->
+			</div>
+		</div>
+		<!-- /header -->
+		<!-- panel -->
+			<div id="mw-panel" class="noprint">
+				<!-- logo -->
+					<div id="p-logo"><a style="background-image: url(/EGI_logo_130.png);" href="/wiki/Main_Page"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" id='p-navigation'>
+	<h5>Navigation</h5>
+	<div class="body">
+				<ul>
+					<li id="n-mainpage-description"><a href="/wiki/Main_Page" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+					<li id="n-portal"><a href="/wiki/EGIWiki:Community_portal" title="About the project, what you can do, where to find things">Community portal</a></li>
+					<li id="n-currentevents"><a href="/wiki/EGIWiki:Current_events" title="Find background information on current events">Current events</a></li>
+					<li id="n-recentchanges"><a href="/wiki/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r">Recent changes</a></li>
+					<li id="n-randompage"><a href="/wiki/Special:Random" title="Load a random page [x]" accesskey="x">Random page</a></li>
+					<li id="n-help"><a href="/wiki/Help:Contents" title="The place to find out">Help</a></li>
+				</ul>
+			</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" id="p-tb">
+	<h5>Toolbox</h5>
+	<div class="body">
+		<ul>
+					<li id="t-whatlinkshere"><a href="/wiki/Special:WhatLinksHere/RPM-GPG-KEY-preview" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+						<li id="t-recentchangeslinked"><a href="/wiki/Special:RecentChangesLinked/RPM-GPG-KEY-preview" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+																																										<li id="t-specialpages"><a href="/wiki/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+											<li id="t-permalink"><a href="/w/index.php?title=RPM-GPG-KEY-preview&amp;oldid=86177" title="Permanent link to this revision of the page">Permanent link</a></li>
+						</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+
+<!-- coll-print_export -->
+<div class="portal" id='p-coll-print_export'>
+	<h5>Print/export</h5>
+	<div class="body">
+				<ul id="collectionPortletList"><li id="coll-create_a_book"><a href="/w/index.php?title=Special:Book&amp;bookcmd=book_creator&amp;referer=RPM-GPG-KEY-preview" title="Create a book or page collection" rel="nofollow">Create a book</a></li><li id="coll-download-as-rl"><a href="/w/index.php?title=Special:Book&amp;bookcmd=render_article&amp;arttitle=RPM-GPG-KEY-preview&amp;oldid=86177&amp;writer=rl" title="Download a PDF version of this wiki page" rel="nofollow">Download as PDF</a></li><li id="t-print"><a href="/w/index.php?title=RPM-GPG-KEY-preview&amp;printable=yes" title="Printable version of this page [p]" accesskey="p">Printable version</a></li></ul>			</div>
+</div>
+
+<!-- /coll-print_export -->
+			</div>
+		<!-- /panel -->
+		<!-- footer -->
+		<div id="footer">
+											<ul id="footer-info">
+																	<li id="footer-info-lastmod"> This page was last modified on 8 March 2016, at 15:15.</li>
+																							<li id="footer-info-viewcount">This page has been accessed 50 times.</li>
+															</ul>
+															<ul id="footer-places">
+																	<li id="footer-places-privacy"><a href="/wiki/EGIWiki:Privacy_policy" title="EGIWiki:Privacy policy">Privacy policy</a></li>
+																							<li id="footer-places-about"><a href="/wiki/EGIWiki:About" title="EGIWiki:About">Report a problem</a></li>
+																							<li id="footer-places-disclaimer"><a href="/wiki/EGIWiki:General_disclaimer" title="EGIWiki:General disclaimer">Disclaimers</a></li>
+															</ul>
+											<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="/w/skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		
+<script src="/w/load.php?debug=false&amp;lang=en&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if ( window.mediaWiki ) {
+	mediaWiki.config.set({"wgCanonicalNamespace": "", "wgCanonicalSpecialPageName": false, "wgNamespaceNumber": 0, "wgPageName": "RPM-GPG-KEY-preview", "wgTitle": "RPM-GPG-KEY-preview", "wgAction": "view", "wgArticleId": 7503, "wgIsArticle": true, "wgUserName": null, "wgUserGroups": ["*"], "wgCurRevisionId": 86177, "wgCategories": [], "wgBreakFrames": false, "wgRestrictionEdit": [], "wgRestrictionMove": [], "wgSearchNamespaces": [0, 100, 102, 108, 110, 114, 120, 122, 124, 128, 130, 132, 134, 136, 138, 152, 156, 160, 162, 164, 166, 168, 174, 178, 180, 182]});
+}
+</script>
+<script>if ( window.mediaWiki ) {
+	mediaWiki.loader.load(["mediawiki.util", "mediawiki.legacy.wikibits", "mediawiki.legacy.ajax", "mediawiki.legacy.mwsuggest"]);
+	mediaWiki.loader.go();
+}
+</script>
+
+<script src="/w/load.php?debug=false&amp;lang=en&amp;modules=site&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if ( window.mediaWiki ) {
+	mediaWiki.user.options.set({"ccmeonemails":0,"cols":80,"contextchars":50,"contextlines":5,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":1,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,
+	"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"riched_use_toggle":1,"riched_start_disabled":1,"riched_use_popup":1,"riched_toggle_remember_state":1,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"searchNs100":true,"searchNs101":false,"searchNs102":true,"searchNs103":false,"searchNs108":true,"searchNs109":false,"searchNs110":true,"searchNs111":false,"searchNs114":true,"searchNs115":false,"searchNs120":true,"searchNs121":false,"searchNs122":true,"searchNs123":false,"searchNs124":true,"searchNs125":false,"searchNs128":true,"searchNs129":false,"searchNs130":true,"searchNs131":false,
+	"searchNs132":true,"searchNs133":false,"searchNs134":true,"searchNs135":false,"searchNs136":true,"searchNs137":false,"searchNs138":true,"searchNs139":false,"searchNs152":true,"searchNs153":false,"searchNs156":true,"searchNs157":false,"searchNs160":true,"searchNs161":false,"searchNs162":true,"searchNs163":false,"searchNs164":true,"searchNs165":false,"searchNs166":true,"searchNs167":false,"searchNs168":true,"searchNs169":false,"searchNs174":true,"searchNs175":false,"searchNs178":true,"searchNs179":false,"searchNs180":true,"searchNs181":false,"searchNs182":true,"searchNs183":false,"searchNs274":false,"searchNs275":false});;mediaWiki.loader.state({"user.options":"ready"});
+}
+</script><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ 
+  ga('create', 'UA-21086391-1', 'auto');
+  ga('send', 'pageview');
+</script>		<!-- fixalpha -->
+		<script type="text/javascript"> if ( window.isMSIE55 ) fixalpha(); </script>
+		<!-- /fixalpha -->
+		<!-- Served in 0.065 secs. -->			</body>
+</html>
