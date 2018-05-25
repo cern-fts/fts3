@@ -27,7 +27,11 @@
 #include "CloudStorageConfig.h"
 #include "ThreadSafeList.h"
 #include "UrlCopyCmd.h"
+#include <iostream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
+namespace pt = boost::property_tree;
 
 namespace fts3
 {
@@ -57,6 +61,18 @@ FileTransferExecutor::~FileTransferExecutor()
 
 }
 
+std::string FileTransferExecutor::getAuthMethod(std::string jobMetadata)
+{
+	std::stringstream iostr;
+	iostr << jobMetadata;
+	pt::ptree job_metadata;
+	try {
+		pt::read_json(iostr, job_metadata);
+		return job_metadata.get<std::string>("auth_method", "null");
+	} catch (const pt::json_parser::json_parser_error&) {
+		return "null";
+	}
+}
 
 void FileTransferExecutor::run(boost::any & ctx)
 {
@@ -107,7 +123,19 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setFromTransfer(tf, false, db->publishUserDn(tf.voName), msgDir);
 
             // OAuth credentials
-            std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);
+            std::string cloudConfigFile;
+            if (FileTransferExecutor::getAuthMethod(tf.jobMetadata) != "oauth2") {
+            	cloudConfigFile = generateCloudStorageConfigFile(db, tf);
+            } else {
+            	cloudConfigFile = generateOAuthConfigFile(db, tf);
+            }
+
+            std::cout << "ARIS PRINTING HERE. FileId: " << std::endl;
+            std::cout << tf.fileId << std::endl;
+            std::cout << "ARIS PRINTING HERE. Job Metadata: " << std::endl;
+            std::cout << FileTransferExecutor::getAuthMethod(tf.jobMetadata) << std::endl;
+            std::cout << cloudConfigFile << std::endl;
+
             if (!cloudConfigFile.empty()) {
                 cmdBuilder.setOAuthFile(cloudConfigFile);
             }
