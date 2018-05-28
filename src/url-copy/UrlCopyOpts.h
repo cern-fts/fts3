@@ -58,6 +58,8 @@ public:
 
     std::string jobMetadata;
 
+    std::string authMethod;
+
     unsigned optimizerLevel;
     bool     overwrite;
     unsigned nStreams;

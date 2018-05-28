@@ -124,17 +124,14 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // OAuth credentials
             std::string cloudConfigFile;
-            if (FileTransferExecutor::getAuthMethod(tf.jobMetadata) != "oauth2") {
+            std::string authMethod = FileTransferExecutor::getAuthMethod(tf.jobMetadata);
+
+            cmdBuilder.setAuthMethod(authMethod);
+            if ("oauth2" != authMethod) {
             	cloudConfigFile = generateCloudStorageConfigFile(db, tf);
             } else {
             	cloudConfigFile = generateOAuthConfigFile(db, tf);
             }
-
-            std::cout << "ARIS PRINTING HERE. FileId: " << std::endl;
-            std::cout << tf.fileId << std::endl;
-            std::cout << "ARIS PRINTING HERE. Job Metadata: " << std::endl;
-            std::cout << FileTransferExecutor::getAuthMethod(tf.jobMetadata) << std::endl;
-            std::cout << cloudConfigFile << std::endl;
 
             if (!cloudConfigFile.empty()) {
                 cmdBuilder.setOAuthFile(cloudConfigFile);

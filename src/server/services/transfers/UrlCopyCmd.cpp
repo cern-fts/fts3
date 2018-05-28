@@ -160,6 +160,10 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
     setOption("oauth", path);
 }
 
+void UrlCopyCmd::setAuthMethod(const std::string &method)
+{
+    setOption("authMethod", method);
+}
 
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)

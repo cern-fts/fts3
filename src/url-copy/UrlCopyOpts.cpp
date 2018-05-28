@@ -54,6 +54,7 @@ const option UrlCopyOpts::long_options[] =
     {"oauth",             required_argument, 0, 503},
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
+	{"authMethod",        required_argument, 0, 506},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -297,6 +298,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 505:
                     referenceTransfer.destTokenIssuer = optarg;
+                    break;
+                case 506:
+                	authMethod = optarg;
                     break;
                 case 600:
                     infosys = optarg;
