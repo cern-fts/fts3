@@ -14,6 +14,13 @@ DbPassword=replacethis
 #For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
 DbConnectString=replacethis
 
+#The endpoint where openId Connect OP lies
+AuthorizationProvider=https://iam.extreme-datacloud.eu/introspect
+#The client Id at the IAM server
+ClientId=replacethis
+#The client secret
+ClientSecret=replacethis
+
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
 DbThreadsNum=25
 
