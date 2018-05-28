@@ -122,6 +122,21 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
         "Database account password"
     )
+	(
+	 	"AuthorizationProvider,w",
+	    po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
+	    "Authorization provider ex IAM"
+	)
+    (
+        "ClientId,w",
+        po::value<std::string>( &(_vars["ClientId"]) )->default_value(""),
+        "Authorization provider CLient id"
+    )
+	(
+		"ClientSecret,w",
+		po::value<std::string>( &(_vars["ClientSecret"]) )->default_value(""),
+		"Authorization provider Client Secret"
+	)
     (
         "Infosys",
         po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
