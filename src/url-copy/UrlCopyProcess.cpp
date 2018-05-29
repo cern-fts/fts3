@@ -218,13 +218,15 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
 
 static std::string readIAMTokenFromConfigFile(const std::string &path)
 {
-	std::ifstream file(path);
-	std::string   line;
+	if (!path.empty()) {
+		std::ifstream file(path);
+		std::string   line;
 
-	while(std::getline(file, line))
-	{
-		// Skip TOKEN= and return the actual token
-		return line.substr(6);
+		while(std::getline(file, line))
+		{
+			// Skip TOKEN= and return the actual token
+			return line.substr(6);
+		}
 	}
 }
 
@@ -253,8 +255,18 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     // If a IAM token has been passed, set this as Bearer Token
     // otherwise, attempt to retrieve an oauth token from the VO's issuer; if not,
     // then try to retrieve a token from the SE itself.
+    std::string IAMtoken;
+    if ("oauth2" == opts.authMethod && !opts.oauthFile.empty()) {
+    	try {
+    		IAMtoken = readIAMTokenFromConfigFile(opts.oauthFile);
+    		unlink(opts.oauthFile.c_str());
+    	} catch (const std::exception &ex) {
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file, no IAM token retrieved: " << ex.what() << commit;
+        }
+    }
+
     if ("oauth2" == opts.authMethod) {
-    	params.setSourceBearerToken(readIAMTokenFromConfigFile(opts.oauthFile));
+    	params.setSourceBearerToken(IAMtoken);
     }
     else if (!transfer.sourceTokenIssuer.empty()) {
         params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
@@ -274,7 +286,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         }
     }
     if ("oauth2" == opts.authMethod) {
-    	params.setDestBearerToken(readIAMTokenFromConfigFile(opts.oauthFile));
+    	params.setDestBearerToken(IAMtoken);
     }
     else if (!transfer.destTokenIssuer.empty()) {
         params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
