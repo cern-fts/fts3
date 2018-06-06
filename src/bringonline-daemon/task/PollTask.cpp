@@ -50,6 +50,9 @@ void PollTask::run(const boost::any&)
 
     int status = gfal2_bring_online_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
 
+    // refreshing the proxy if needed
+    ctx.getRefreshedProxy();
+
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);

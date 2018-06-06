@@ -71,7 +71,7 @@ public:
      *
      * @param jc : JobContext to be copied
      */
-    JobContext(const JobContext &jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken), urlToIDs(jc.urlToIDs)
+    JobContext(const JobContext &jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken), userDn(jc.userDn), delegId(jc.delegId), urlToIDs(jc.urlToIDs)
     {}
 
     /**
@@ -80,7 +80,7 @@ public:
      * @param jc : JobContext to be moved
      */
     JobContext(JobContext && jc) :
-        jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)), urlToIDs(std::move(jc.urlToIDs))
+        jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)), userDn(std::move(jc.userDn)), delegId(std::move(jc.delegId)), urlToIDs(std::move(jc.urlToIDs))
     {}
 
     /**
@@ -151,6 +151,13 @@ public:
 
     std::string getLogMsg() const;
 
+    std::string getRefreshedProxy() const;
+
+    std::string const & getUserDn() const
+    {
+        return userDn;
+    }
+
     /**
      * Get job and file ID for the given SURL
      */
@@ -163,15 +170,18 @@ public:
         }
         return ret;
     }
-
+    
 protected:
-
     /// Job ID -> URL -> list of file IDs
     std::map< std::string, std::map<std::string, std::vector<uint64_t> > > jobs;
     /// proxy-certificate file name
     std::string proxy;
     /// space token
     std::string spaceToken;
+    /// user DN
+    std::string userDn;
+    /// delegation id
+    std::string delegId;
     /// URL -> (job_id, file_id)
     std::unordered_multimap< std::string, std::pair<std::string, uint64_t> > urlToIDs;
 };
