@@ -2,10 +2,6 @@ stages:
 - build
 - tag
 
-variables:
-  CONTAINER_TEST_IMAGE: gitlab-registry.cern.ch/fts/fts3:latest
-  CONTAINER_RELEASE_IMAGE: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
-
 build:
     stage: build
     only:
@@ -13,7 +9,7 @@ build:
     script:
       - ""
     variables:
-      TO: $CONTAINER_TEST_IMAGE
+      TO: gitlab-registry.cern.ch/fts/fts3:latest
       DOCKER_FILE:  packaging/docker/Dockerfile
     tags:
       - docker-image-build
@@ -24,8 +20,7 @@ tag:
     script:
       - ""
     variables:
-      TO: $CONTAINER_RELEASE_IMAGE
-      DOCKER_FILE:  packaging/docker/Dockerfile
+      TO: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
+      DOCKER_FILE:  packaging/docker/Dockerfile-release
     tags:
         - docker-image-build
-
