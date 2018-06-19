@@ -1877,7 +1877,7 @@ void MySqlAPI::setPidForJob(const std::string& jobId, int pid)
 }
 
 
-void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles)
+void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles, long* nDeletions)
 {
 
     soci::session sql(*connectionPool);
@@ -1886,6 +1886,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
     std::string serviceName = "fts_backup";
     *nJobs = 0;
     *nFiles = 0;
+    *nDeletions = 0;
     std::string job_id;
     int count = 0;
     int countBeat = 0;
@@ -2005,8 +2006,11 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                            "DELETE FROM t_file WHERE job_id in (" +job_id+ ")");
                     deleteFiles.execute();
                     (*nFiles) += deleteFiles.get_affected_rows(); 
-                    
-                    sql << "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
+
+                    soci::statement deleteDeletions = (sql.prepare <<
+                           "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")");
+                    deleteDeletions.execute();
+                    (*nDeletions) += deleteDeletions.get_affected_rows();
 
                     sql << "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
                     (*nJobs) += count;

@@ -143,7 +143,8 @@ public:
     /// @param[in] bulkSize How many jobs per iteration must be processed
     /// @param[out] nJobs   How many jobs have been moved
     /// @param[out] nFiles  How many files have been moved
-    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles);
+    /// @param[out] nDeletions  How many deletions have been moved
+    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles, long* nDeletions);
 
     /// Mark all the transfers as failed because the process fork failed
     /// @param jobId    The job id for which url copy failed to fork
