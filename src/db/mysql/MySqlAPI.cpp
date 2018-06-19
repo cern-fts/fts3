@@ -3077,8 +3077,8 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     limit = 2000;
                 }
             }
-
-            if(limit == 0) //no free slots
+            
+            if(limit <= 0) //no free slots
                 continue;
 
 
