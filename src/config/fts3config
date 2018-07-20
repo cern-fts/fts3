@@ -131,15 +131,15 @@ LogLevel=INFO
 # In seconds, how often to check for messages. Should be less than CheckStalledTimeout/2
 #MessagingConsumeInterval = 1
 #Enable or disable auto session reuse
-AutoSessionReuse = true
+AutoSessionReuse = False
 #Max small file size for session reuse in bytes
-AutoSessionReuseMaxSmallFileSize = 104857600
+#AutoSessionReuseMaxSmallFileSize = 104857600
 #Max big file size for session reuse in bytes
-AutoSessionReuseMaxBigFileSize = 1073741824
+#AutoSessionReuseMaxBigFileSize = 1073741824
 #Max number of files per session reuse
-AutoSessionReuseMaxFiles = 1000
+#AutoSessionReuseMaxFiles = 1000
 #Max number of big files  per session reuse
-AutoSessionReuseMaxBigFiles = 2
+#AutoSessionReuseMaxBigFiles = 2
 
 [roles]
 Public = transfer

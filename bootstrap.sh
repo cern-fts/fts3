@@ -22,5 +22,7 @@ cp "/vagrant/src/config/fts3config" "/etc/fts3/fts3config"
 
 mkdir -p "/var/lib/fts3/"
 mkdir -p "/var/log/fts3"
+mkdir -p "/home/vagrant/gfal2"
+mkdir -p "/home/vagrant/gfal2-bindings"
 chown vagrant.vagrant "/var/lib/fts3/"
 chown vagrant.vagrant "/var/log/fts3/"

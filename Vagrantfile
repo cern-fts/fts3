@@ -24,6 +24,8 @@ Vagrant.configure("2") do |config|
     config.vm.box = box
     #config.vm.provision "file", source: "packaging/rpm/fts.spec", destination: "/tmp/fts.spec"
     config.vm.provision :shell, path: "bootstrap.sh"
+    config.vm.synced_folder "../gfal2/", "/home/vagrant/gfal2/"
+    config.vm.synced_folder "../gfal2-bindings/", "/home/vagrant/gfal2-bindings/"
 
     config.vm.provider "virtualbox" do |vb|
         vb.memory = 1024
