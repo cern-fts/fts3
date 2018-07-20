@@ -171,9 +171,6 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         case Job::kTypeSessionReuse:
             setFlag("reuse", true);
             break;
-        case Job::kTypeMultiHop:
-            setFlag("multi-hop", true);
-            break;
         case Job::kTypeMultipleReplica:
             setFlag("job_m_replica", true);
             break;

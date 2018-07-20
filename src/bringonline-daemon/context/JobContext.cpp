@@ -94,7 +94,7 @@ bool JobError::IsRecoverable() const
 
 JobContext::JobContext(const std::string &dn, const std::string &vo,
     const std::string &delegationId, const std::string &spaceToken) :
-    spaceToken(spaceToken)
+    spaceToken(spaceToken), userDn(dn), delegId(delegationId)
 {
     (void) vo;
     proxy = DelegCred::getProxyFile(dn, delegationId);
@@ -158,4 +158,9 @@ std::string JobContext::getLogMsg() const
         ss << "), ";
     }
     return ss.str();
+}
+
+std::string JobContext::getRefreshedProxy() const
+{
+    return DelegCred::getProxyFile(userDn, delegId);
 }

@@ -24,7 +24,6 @@
 #include "config/ServerConfig.h"
 #include "services/cleaner/CleanerService.h"
 #include "services/transfers/TransfersService.h"
-#include "services/transfers/MultihopTransfersService.h"
 #include "services/transfers/ReuseTransfersService.h"
 #include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
@@ -92,7 +91,6 @@ void Server::start()
     addService(new OptimizerService(heartBeatService));
     addService(new TransfersService);
     addService(new ReuseTransfersService);
-    addService(new MultihopTransfersService);
     addService(new SupervisorService);
 }
 

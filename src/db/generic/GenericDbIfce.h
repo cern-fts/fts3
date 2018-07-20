@@ -101,10 +101,6 @@ public:
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
             std::map< std::string, std::list<TransferFile>>& files) = 0;
 
-    /// Get a list of multihop jobs ready to go
-    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
-    virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files) = 0;
-
     /// Update the status of a transfer
     /// @param jobId            The job ID
     /// @param fileId           The file ID
@@ -126,9 +122,8 @@ public:
     /// Update the status of a job
     /// @param jobId            The job ID
     /// @param jobState         The job state
-    /// @param pid              The PID of the fts_url_copy process
     /// @note                   If jobId is empty, the pid will be used to decide which job to update
-    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid) = 0;
+    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState) = 0;
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -157,7 +152,7 @@ public:
     /// @param[out] currentActive   The current number of running transfers is put here
     virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive) = 0;
 
-    /// Mark a reuse or multihop job (and its files) as failed
+    /// Mark a reuse job (and its files) as failed
     /// @param jobId    The job id
     /// @param pid      The PID of the fts_url_copy
     /// @param message  The error message
@@ -169,7 +164,8 @@ public:
     /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
     virtual void reapStalledTransfers(std::vector<TransferFile>& transfers) = 0;
 
-    /// Set the PID for all the files inside a reuse or multihop job
+
+    /// Set the PID for a transfer
     /// @param jobId    The job id for which the files will be updated
     /// @param pid      The process ID
     /// @note           Transfers within reuse and multihop jobs go all together to a single fts_url_copy process
@@ -181,11 +177,12 @@ public:
     /// @param[in] bulkSize How many jobs per iteration must be processed
     /// @param[out] nJobs   How many jobs have been moved
     /// @param[out] nFiles  How many files have been moved
-    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles) = 0;
+    /// @param[out] nDeletions  How many deletions have been moved
+    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles, long* nDeletions) = 0;
 
     /// Mark all the transfers as failed because the process fork failed
     /// @param jobId    The job id for which url copy failed to fork
-    /// @note           This method is used only for reuse and multihop jobs
+    /// @note           This method is used only for reuse jobs
     virtual void forkFailed(const std::string& jobId) = 0;
 
     /// Get the link configuration for the link defined by the source and destination given

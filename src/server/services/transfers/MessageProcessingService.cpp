@@ -249,7 +249,7 @@ void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
         );
 
         db::DBSingleton::instance().getDBObjectInstance()->updateJobStatus(
-            msg.job_id(), msg.transfer_status(), msg.process_id());
+            msg.job_id(), msg.transfer_status());
 
         if (!updated.get<0>() && msg.transfer_status() != "CANCELED") {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Entry in the database not updated for "

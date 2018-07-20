@@ -9,11 +9,11 @@ RUN  yum localinstall /tmp/epel-release-7.noarch.rpm -y \
         && rm -rf /var/cache/yum
 
 # add FTS repo
-ARG ftsrepo=http://fts-repo.web.cern.ch/fts-repo/fts3-continuous-el7.repo
+ARG ftsrepo=http://fts-repo.web.cern.ch/fts-repo/fts3-rc-el7.repo
 ADD $ftsrepo /etc/yum.repos.d/fts.repo
 
 #add DMC repo
-ARG dmcrepo=http://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo
+ARG dmcrepo=http://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
 ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 
 RUN yum clean all

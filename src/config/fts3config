@@ -75,10 +75,10 @@ LogLevel=INFO
 # parse the responses. Some servers may reject the requests if they are too big.
 # If it is too small, performance will be reduced.
 # Keep it to a sensible size (between 100 and 1k)
-# StagingBulkSize=400
+# StagingBulkSize=200
 # Maximum number of concurrent requests. This gives a maximum of files sent to the storage system
 # (StagingBulkSize*StagingConcurrentRequests). The larger the number, the more requests will FTS need to keep track of.
-# StagingConcurrentRequests=500
+# StagingConcurrentRequests=1000
 # Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk.
 # Note that the resolution is 60 seconds.
 # StagingWaitingFactor=300
@@ -140,6 +140,10 @@ AutoSessionReuse = False
 #AutoSessionReuseMaxFiles = 1000
 #Max number of big files  per session reuse
 #AutoSessionReuseMaxBigFiles = 2
+
+#flag to use a default job priority
+#by default it queries the system to honour the priorities specified by the users ( value = 0)
+#UseFixedJobPriority = 0
 
 [roles]
 Public = transfer

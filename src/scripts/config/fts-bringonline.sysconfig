@@ -5,3 +5,4 @@
 ## Do not enable coredumps by default
 ## Change it to 'unlimited' to get coredumps under /tmp
 ulimit -c 0
+export XrdSecGSICRLCHECK=0
