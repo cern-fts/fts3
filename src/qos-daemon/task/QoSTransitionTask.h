@@ -33,7 +33,7 @@
 #include "cred/DelegCred.h"
 
 #include "Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "../context/CDMIQosTransitionContext.h"
 
 
 /**
@@ -50,14 +50,14 @@ public:
      *
      * @param ctx : qos-transition task details
      */
-	QoSTransitionTask(const StagingContext &ctx) : Gfal2Task("STAGING"), ctx(ctx)
+	QoSTransitionTask(const CDMIQosTransitionContext &ctx) : Gfal2Task("QOS_TRANSITION"), ctx(ctx)
     {
         // set up the token
-        setToken(ctx.getSpaceToken());
+        //setToken(ctx.getToken());
         // add urls to active
         auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_urls.insert(surls.begin(), surls.end());
+        active_surls.insert(surls.begin(), surls.end());
     }
 
     /**
@@ -82,11 +82,10 @@ public:
 protected:
 
     /// staging details
-    StagingContext ctx;
+    CDMIQosTransitionContext ctx;
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
-    /// set of tokens (and respective URLs) for ongoing qos-transition jobs
-    static std::set<std::pair<std::string, std::string>> active_urls;
+    static std::set<std::tuple<std::string, std::string, std::string>> active_surls;
 };
 
 

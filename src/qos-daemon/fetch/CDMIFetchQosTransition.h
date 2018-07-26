@@ -19,8 +19,8 @@
  */
 
 #pragma once
-#ifndef CDMIFetchStaging_H_
-#define CDMIFetchStaging_H_
+#ifndef CDMIFetchQosTransition_H_
+#define CDMIFetchQosTransition_H_
 
 #include <map>
 #include <string>
@@ -31,18 +31,18 @@
 #include "cred/DelegCred.h"
 
 #include "../task/Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "../context/CDMIQosTransitionContext.h"
 
 
 /**
  * Fetches the staging jobs from DB in a separate thread
  */
-class CDMIFetchStaging
+class CDMIFetchQosTransition
 {
 
 public:
-	CDMIFetchStaging(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
-    virtual ~CDMIFetchStaging() {}
+	CDMIFetchQosTransition(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
+    virtual ~CDMIFetchQosTransition() {}
 
     void fetch();
 
@@ -51,4 +51,4 @@ private:
 
 };
 
-#endif // CDMIFetchStaging_H_
+#endif // CDMIFetchQosTransition_H_

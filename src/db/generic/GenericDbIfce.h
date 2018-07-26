@@ -45,6 +45,7 @@
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
+#include "QosTransitionOperation.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -300,6 +301,10 @@ public:
     /// Get staging operations ready to be started
     /// @params[out] stagingOps The list of staging operations will be put here
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps) = 0;
+
+    /// Get qosTransition operations ready to be started
+    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps) = 0;
 
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here

@@ -53,12 +53,12 @@ public:
      * @param ctx : staging context (recover from DB after crash)
      * @param token : token that is needed for polling
      */
-	CDMIPollTask(const StagingContext &ctx, const std::string &token) :
+	CDMIPollTask(const CDMIQosTransitionContext &ctx, const std::string &token) :
 		QoSTransitionTask(ctx), token(token), nPolls(0), wait_until(0)
     {
-        auto surls = ctx.getSurls();
+        //auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_urls.insert(surls.begin(), surls.end());
+        //active_urls.insert(surls.begin(), surls.end());
     }
 
     /**

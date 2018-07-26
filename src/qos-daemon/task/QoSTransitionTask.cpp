@@ -28,12 +28,15 @@
 
 boost::shared_mutex QoSTransitionTask::mx;
 
-std::set<std::pair<std::string, std::string>> QoSTransitionTask::active_urls;
-
+std::set<std::tuple<std::string, std::string, std::string>> QoSTransitionTask::active_surls;
 
 void QoSTransitionTask::run(const boost::any &)
 {
 	std::cout << "Inside the QoS transition task" << std::endl;
+	std::cerr << "This is the set size: " << active_surls.size() << std::endl;
+	for (auto it = active_surls.begin(); it != active_surls.end(); ++it) {
+	      std::cerr << "Printing surl: " << std::get<0>(*it) << std::endl;
+	}
     /*char token[512] = {0};
     std::set<std::string> urlSet = ctx.getUrls();
     if (urlSet.empty())

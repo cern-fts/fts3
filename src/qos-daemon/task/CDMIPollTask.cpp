@@ -30,7 +30,8 @@ void CDMIPollTask::run(const boost::any&)
     // check if the timeout was exceeded
     //if (timeout_occurred())
     //	return;
-	std::cerr << "About to poll some stuff, inside the run" << std::endl;
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIPollTask starting" << commit;
+	std::cerr << "About to poll some stuff, inside run" << std::endl;
     /*int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
     bool forcePoll = false;
 

@@ -25,10 +25,10 @@
 
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
+#include "fetch/CDMIFetchQosTransition.h"
 #include "server/DrainMode.h"
 
 #include "fetch/FetchStaging.h"
-#include "fetch/CDMIFetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
 #include "fetch/FetchDeletion.h"
 #include "state/StagingStateUpdater.h"
@@ -111,7 +111,7 @@ void QoSServer::start(void)
     Gfal2Task::createPrototype (infosys);
 
     FetchStaging fs(threadpool);
-    CDMIFetchStaging cdmifs(threadpool);
+    CDMIFetchQosTransition cdmifs(threadpool);
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
 
@@ -122,7 +122,7 @@ void QoSServer::start(void)
     systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
-    systemThreads.create_thread(boost::bind(&CDMIFetchStaging::fetch, cdmifs));
+    systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
 
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));

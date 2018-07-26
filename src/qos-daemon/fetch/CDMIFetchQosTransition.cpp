@@ -25,58 +25,56 @@
 #include "db/generic/SingleDbInstance.h"
 #include "server/DrainMode.h"
 
-#include "CDMIFetchStaging.h"
+#include "CDMIFetchQosTransition.h"
 #include "../task/QoSTransitionTask.h"
 #include "../task/CDMIPollTask.h"
 
 
-void CDMIFetchStaging::fetch()
+void CDMIFetchQosTransition::fetch()
 {
-    // VO, user dn, storage, space token
-    typedef std::tuple<std::string, std::string, std::string> GroupByType;
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchStaging starting" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchQosTransition starting" << commit;
 
     std::cerr << "About to fetch stuff" << std::endl;
 
     while (!boost::this_thread::interruption_requested()) {
         try {
         	std::cerr << "Inside the while loop before sleeping" << std::endl;
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
+            boost::this_thread::sleep(boost::posix_time::seconds(2));
             std::cerr << "Inside the while loop after sleeping" << std::endl;
             //if we drain a host, no need to check if url_copy are reporting being alive
-            /*if (fts3::server::DrainMode::instance()) {
+            if (fts3::server::DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
                 continue;
             }
 
-            std::map<GroupByType, StagingContext> tasks;
-            std::vector<StagingOperation> files;
+            std::map<std::string, CDMIQosTransitionContext> tasks;
+            std::vector<QosTransitionOperation> files;
 
-            //WE NEED TO CHECK HERE THE KIND OF FILES RETRIEVED
-            db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
+            db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files);
 
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
                 std::string storage = Uri::parse(it_f->surl).host;
-                GroupByType key(it_f->credId, storage, it_f->spaceToken);
-                auto it_t = tasks.find(key);
+
+                std::cerr << "This is the storage we are talking about: " << storage << std::endl;
+
+                auto it_t = tasks.find(storage);
                 if (it_t == tasks.end()) {
-                    tasks.insert(std::make_pair(
-                        key, StagingContext(
-                            BringOnlineServer::instance(), *it_f
-                        ))
-                    );
+                    tasks.insert(std::make_pair(storage, CDMIQosTransitionContext( QoSServer::instance())));
+                    it_t = tasks.find(storage);
                 }
-                else {
-                    it_t->second.add(*it_f);
-                }
+                it_t->second.add(*it_f);
             }
+
 
             for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
             {
                 try
                 {
+                	//for (auto it = it_t->second.getSurls().begin(); it != it_t->second.getSurls().end(); ++it) {
+                	//	      std::cerr << "Printing surl in fetch: " << std::get<0>(*it) << std::endl;
+                	//	  }
+                	//std::cerr << "Checking the context: " << it_t->second.getSurls() << std::endl;
                     threadpool.start(new QoSTransitionTask(it_t->second));
                 }
                 catch(UserError const & ex)
@@ -87,20 +85,20 @@ void CDMIFetchStaging::fetch()
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
                 }
-            }*/
+            }
 
         }
         catch (const std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CDMIFetchStaging " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CDMIFetchQosTransition " << e.what() << commit;
         }
         catch (const boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchStaging interruption requested" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchQosTransition interruption requested" << commit;
             break;
         }
         catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CDMIFetchStaging Fatal error (unknown origin)" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CDMIFetchQosTransition Fatal error (unknown origin)" << commit;
         }
     }
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchStaging exiting" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchQosTransition exiting" << commit;
 }
