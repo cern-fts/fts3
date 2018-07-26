@@ -3160,6 +3160,32 @@ void MySqlAPI::requeueStartedDeletes()
     }
 }
 
+void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps)
+{
+	soci::session sql(*connectionPool);
+	soci::rowset<soci::row> rs2 = (sql.prepare <<
+			" SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, j.target_qos, c.proxy "
+			" FROM t_file f "
+			" INNER JOIN t_job j ON (f.job_id = j.job_id) "
+			" INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
+			" WHERE "
+			" 		f.file_state = 'QOS_TRANSITION' "//AND "
+			//"      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+			//soci::use(hashSegment.start), soci::use(hashSegment.end)
+		);
+
+	for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+		{
+			soci::row const& r = *i2;
+			std::string job_id = r.get<std::string>("job_id");
+			uint64_t file_id = r.get<unsigned long long>("file_id");
+	        std::string dest_surl = r.get<std::string>("dest_surl");
+	        std::string target_qos = r.get<std::string>("target_qos");
+	        std::string token = r.get<std::string>("proxy");
+
+	        qosTranstionOps.emplace_back(job_id, file_id, dest_surl, target_qos, token);
+		}
+}
 
 void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {

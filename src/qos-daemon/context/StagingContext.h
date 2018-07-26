@@ -42,9 +42,9 @@ public:
 
     using JobContext::add;
 
-    StagingContext(QoSServer &bringOnlineServer, const StagingOperation &stagingOp):
+    StagingContext(QoSServer &qosServer, const StagingOperation &stagingOp):
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
-        stateUpdater(bringOnlineServer.getStagingStateUpdater()), waitingRoom(bringOnlineServer.getWaitingRoom()),
+        stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
         pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
     {
         add(stagingOp);
