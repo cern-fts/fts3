@@ -6,6 +6,7 @@ After=network-online.target
 
 [Service]
 Type=forking
+Environment="XrdSecGSICRLCHECK=0"
 Environment="GLOBUS_THREAD_MODEL=pthread"
 Environment="CGSI_TRACE=0"
 EnvironmentFile=-/etc/sysconfig/fts-bringonline

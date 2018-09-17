@@ -84,7 +84,7 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 
 
 UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
-    opts(opts), reporter(reporter), canceled(false), multihopFailed(false), timeoutExpired(false)
+    opts(opts), reporter(reporter), canceled(false), timeoutExpired(false)
 {
     todoTransfers = opts.transfers;
     setupGlobalGfal2Config(opts, gfal2);
@@ -188,13 +188,18 @@ static std::string setupBearerToken(const std::string &issuer, const std::string
 
 
 static std::string setupMacaroon(const std::string &url, const std::string &proxy,
-                                 const std::string &activity)
+                                 const std::vector<std::string> &activity)
 {
     initTokenLibrary();
 
     std::vector<const char*> activity_list;
-    activity_list.reserve(2);
-    activity_list.push_back(activity.c_str());
+    activity_list.reserve(activity.size() + 1);
+    for (std::vector<std::string>::const_iterator iter = activity.begin();
+         iter != activity.end();
+         iter++)
+    {
+        activity_list.push_back(iter->c_str());
+    }
     activity_list.push_back(NULL);
 
     char *err = NULL;
@@ -276,7 +281,10 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         try
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source" << commit;
-            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, "DOWNLOAD"));
+            std::vector<std::string> activity_list;
+            activity_list.reserve(1);
+            activity_list.push_back("DOWNLOAD");
+            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
         }
         catch (const UrlCopyError &ex)
@@ -296,7 +304,15 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         try
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for destination" << commit;
-            params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, "UPLOAD,DELETE"));
+            std::vector<std::string> activity_list;
+            activity_list.reserve(2);
+            activity_list.push_back("MANAGE");
+            activity_list.push_back("UPLOAD");
+            activity_list.push_back("DELETE");
+            std::string dest_uri(transfer.destination);
+            std::string::size_type last_slash = dest_uri.rfind('/');
+            std::string parent_url = (last_slash == std::string::npos) ? dest_uri : dest_uri.substr(0, last_slash);
+            params.setDestBearerToken(setupMacaroon(parent_url, opts.proxy, activity_list));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
         }
         catch (const UrlCopyError &ex)
@@ -391,7 +407,6 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata: " << transfer.fileMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata: " << opts.jobMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Bringonline token: " << transfer.tokenBringOnline << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Multihop: " << opts.isMultihop << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enableUdt << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
@@ -501,7 +516,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
 void UrlCopyProcess::run(void)
 {
-    while (!todoTransfers.empty() && !canceled && !multihopFailed) {
+    while (!todoTransfers.empty() && !canceled) {
 
         Transfer transfer;
         {
@@ -564,11 +579,6 @@ void UrlCopyProcess::run(void)
                 << transfer.error->what()
                 << commit;
             }
-
-            // Do not continue after this failure if this is a multihop transfer
-            if (opts.isMultihop) {
-                multihopFailed = true;
-            }
         }
         else {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer finished successfully" << commit;
@@ -594,13 +604,7 @@ void UrlCopyProcess::run(void)
     // for them
     for (auto transfer = todoTransfers.begin(); transfer != todoTransfers.end(); ++transfer) {
         Gfal2TransferParams params;
-        if (multihopFailed) {
-            transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EMULTIHOP,
-                "Transfer canceled because a previous hop failed"));
-        }
-        else {
-            transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ECANCELED, "Transfer canceled"));
-        }
+        transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ECANCELED, "Transfer canceled"));
         reporter.sendTransferCompleted(*transfer, params);
     }
 }

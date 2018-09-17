@@ -1,35 +1,27 @@
-image: docker:latest
-
 stages:
 - build
 - tag
-
-variables:
-  CONTAINER_TEST_IMAGE: gitlab-registry.cern.ch/fts/fts3:latest
-  CONTAINER_RELEASE_IMAGE: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
-
-before_script:
-    - docker info
-    - docker login -p "${REGISTRY_PASSWD}" -u "${REGISTRY_USER}" gitlab-registry.cern.ch
-    
-after_script:
-    - docker logout gitlab-registry.cern.ch
 
 build:
     stage: build
     only:
       - develop
     script:
-      - docker build --pull -t $CONTAINER_TEST_IMAGE packaging/docker
-      - docker push $CONTAINER_TEST_IMAGE
+      - ""
+    variables:
+      TO: gitlab-registry.cern.ch/fts/fts3:latest
+      DOCKER_FILE:  packaging/docker/Dockerfile
     tags:
-      - docker
+      - docker-image-build
 tag:
     stage: tag
     only:
         - tags
     script:
-        - docker build  -t $CONTAINER_RELEASE_IMAGE --build-arg ftsrepo=http://fts-repo.web.cern.ch/fts-repo/fts3-rc-el7.repo  --build-arg dmcrepo=http://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo  packaging/docker
-        - docker push $CONTAINER_RELEASE_IMAGE 
+      - ""
+    variables:
+      TO: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
+      DOCKER_FILE:  packaging/docker/Dockerfile-release
     tags:
-        - docker 
+        - docker-image-build
+

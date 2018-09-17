@@ -91,25 +91,34 @@ void ProxyCertificateDelegator::delegate()
                 (long int)((timeLeftOnServer) % 3600 / 60)
             );
 
-            if (timeLeftOnServer > REDELEGATION_TIME_LIMIT)
+            if ((timeLeftOnServer > REDELEGATION_TIME_LIMIT) && (userRequestedDelegationExpTime < timeLeftOnServer))
                 {
                     // don;t bother redelegating
                     MsgPrinter::instance().print_info(
                         "delegation.message",
-                        "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
+                        "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 6 hours."
                     );
                     needDelegation = false;
                     renewDelegation = false;
                 }
             else
-                {
+                {   //redelegate if the user asks for a expire time longer than the one on the server
+                    if (userRequestedDelegationExpTime > timeLeftOnServer)
+                        {
+                            MsgPrinter::instance().print_info(
+                                "delegation.message",
+                                "Will redo delegation since the credential on the server has less than the user requested delegation expiration time."
+                            );
+                            needDelegation = true;
+                            renewDelegation = true;
+                        }
                     // think about redelegating
-                    if (localProxyTimeLeft > timeLeftOnServer)
+                    else if (localProxyTimeLeft > timeLeftOnServer)
                         {
                             // we improve the situation (the new proxy will last longer)
                             MsgPrinter::instance().print_info(
                                 "delegation.message",
-                                "Will redo delegation since the credential on the server has left that 4 hours validity left."
+                                "Will redo delegation since the credential on the server has less that 6 hours validity left."
                             );
                             needDelegation = true;
                             renewDelegation = true; // renew rather than put
@@ -155,8 +164,18 @@ void ProxyCertificateDelegator::delegate()
                         }
                 }
             else
-                {
-                    requestProxyDelegationTime = userRequestedDelegationExpTime;
+                { 
+                    if (localProxyTimeLeft < userRequestedDelegationExpTime) 
+                        {
+                            requestProxyDelegationTime = (int)localProxyTimeLeft - 60; // 60 seconds off current proxy
+                            MsgPrinter::instance().print_info(
+                                "delegation.message",
+                                "Your local proxy has less validity than the requested delegation expiration time, therefore your requested delegation has been shortened");
+                        } 
+                    else 
+                        {
+                            requestProxyDelegationTime = userRequestedDelegationExpTime;
+                        }
                 }
 
             MsgPrinter::instance().print_info(

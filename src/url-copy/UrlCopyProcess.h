@@ -44,7 +44,6 @@ private:
 
     Gfal2 gfal2;
     bool canceled;
-    bool multihopFailed;
     bool timeoutExpired;
 
     /// Run a single transfer

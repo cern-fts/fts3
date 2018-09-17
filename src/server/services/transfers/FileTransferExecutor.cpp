@@ -191,7 +191,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                 tf.jobId, tf.fileId, 0.0, "READY", "",
                 0, 0.0, 0.0, false
             );
-            db->updateJobStatus(tf.jobId, "ACTIVE",0);
+            db->updateJobStatus(tf.jobId, "ACTIVE");
 
             // If fileUpdated == false, the transfer was *not* updated, which means we got
             // probably a collision with some other node
@@ -221,7 +221,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     "Transfer failed to fork, check fts3server.log for more details",
                     (int) pr.getPid(), 0, 0, false
                 );
-                db->updateJobStatus(tf.jobId, "FAILED", 0);
+                db->updateJobStatus(tf.jobId, "FAILED");
 
                 if (forkMessage.empty()) {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork "

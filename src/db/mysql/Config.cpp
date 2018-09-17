@@ -436,6 +436,9 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
         sql <<
         "SELECT nostreams FROM ("
         "   SELECT nostreams FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND nostreams IS NOT NULL UNION "
+        "   SELECT nostreams FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND nostreams IS NOT NULL UNION "
+        "   SELECT nostreams FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND nostreams IS NOT NULL UNION "
+        "   SELECT nostreams FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND nostreams IS NOT NULL UNION "
         "   SELECT nostreams FROM t_optimizer WHERE source_se = :source AND dest_se = :dest"
         ") AS cfg LIMIT 1",
         soci::use(sourceSe, "source"), soci::use(destSe, "dest"),

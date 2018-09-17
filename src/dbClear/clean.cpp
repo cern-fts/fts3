@@ -73,16 +73,17 @@ int main(int argc, char **argv)
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting with bulk size of " << bulkSize
             << " and an interval of " << cleanInterval << " days" << commit;
 
-        long nJobs = 0, nFiles = 0;
+        long nJobs = 0, nFiles = 0, nDeletions = 0;
         auto start = boost::chrono::steady_clock::now();
-        db::DBSingleton::instance().getDBObjectInstance()->backup(cleanInterval, bulkSize, &nJobs, &nFiles);
+        db::DBSingleton::instance().getDBObjectInstance()->backup(cleanInterval, bulkSize, &nJobs, &nFiles, &nDeletions);
         auto end = boost::chrono::steady_clock::now();
 
         auto duration = boost::chrono::duration_cast<boost::chrono::seconds>(end - start);
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending: "
-        << nJobs << " jobs and "
-        << nFiles << " files affected after "
+        << nJobs << " jobs, "
+        << nFiles << " files and "
+        << nDeletions << " deletions affected after "
         << duration.count() << " seconds"
         << commit;
 

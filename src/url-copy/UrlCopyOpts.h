@@ -43,7 +43,6 @@ public:
     std::string bulkFile;
 
     bool isSessionReuse;
-    bool isMultihop;
     bool isMultipleReplicaJob;
 
     bool strictCopy;
