@@ -215,7 +215,8 @@ std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile&
         return "";
     }
 
-    writeOAuthToken(f, cred->proxy);
+    // Only set the access token and not the refresh token
+    writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
 
     fclose(f);
     return oauth_path;
