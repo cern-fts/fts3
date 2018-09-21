@@ -16,10 +16,15 @@ DbConnectString=replacethis
 
 #The endpoint where openId Connect OP lies
 AuthorizationProvider=https://iam.extreme-datacloud.eu/introspect
+AuthorizationProviderTokenEndpoint=https://iam.extreme-datacloud.eu/token
 #The client Id at the IAM server
 ClientId=replacethis
 #The client secret
 ClientSecret=replacethis
+TokenRefreshDaemonIntervalInSeconds=1800
+
+#Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)
+TokenRefreshTimeSinceLastTransferInSeconds=2629743
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
 DbThreadsNum=25

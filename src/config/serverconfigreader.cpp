@@ -127,6 +127,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	    po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
 	    "Authorization provider ex IAM"
 	)
+	(
+		"AuthorizationProviderTokenEndpoint,w",
+		po::value<std::string>( &(_vars["AuthorizationProviderTokenEndpoint"]) )->default_value(""),
+		"Authorization token endpoint ex IAM"
+	)
     (
         "ClientId,w",
         po::value<std::string>( &(_vars["ClientId"]) )->default_value(""),
@@ -136,6 +141,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 		"ClientSecret,w",
 		po::value<std::string>( &(_vars["ClientSecret"]) )->default_value(""),
 		"Authorization provider Client Secret"
+	)
+	(
+		"TokenRefreshTimeSinceLastTransferInSeconds,w",
+		po::value<std::string>( &(_vars["TokenRefreshTimeSinceLastTransferInSeconds"]) )->default_value(""),
+		"Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)"
+	)
+	(
+		"TokenRefreshDaemonIntervalInSeconds,w",
+		po::value<std::string>( &(_vars["TokenRefreshDaemonIntervalInSeconds"]) )->default_value(""),
+		"The interval that the token refresh daemon will run"
 	)
     (
         "Infosys",
