@@ -158,7 +158,7 @@ class FTS3Troubleshooter(object):
         crls = glob.glob("/etc/grid-security/certificates/*.r0")
         if len(certs) == 0:
             self.reporter.not_found("No root certificates found (*.0)")
-            self.reporter.advice("yum install lcg-CA")
+            self.reporter.advice("yum install ca-policy-egi-core")
         else:
             self.reporter.ok("%d root certificates found" % len(certs))
             n_cert_ok = 0
@@ -177,7 +177,7 @@ class FTS3Troubleshooter(object):
             if n_cert_ok > 0:
                 self.reporter.ok("%d certificates are ok" % n_cert_ok)
             if n_cert_expired > 0:
-                self.reporter.advice("Update the root ca / yum update lcg-CA")
+                self.reporter.advice("Update the root ca / yum update ca-policy-egi-core")
 
         if len(crls) == 0:
             self.reporter.not_found("No CRL found")

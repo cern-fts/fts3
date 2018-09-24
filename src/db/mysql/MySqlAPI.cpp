@@ -680,7 +680,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                       "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
                       "     f.vo_name = :vo_name AND "
                       "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                      "     j.job_type IN ('N', 'R') AND "
+                      "     j.job_type IN ('N', 'R', 'H') AND "
                       "     f.hashed_id BETWEEN :hStart AND :hEnd AND "
                       "     j.priority = :maxPriority "
                       " ORDER BY file_id ASC "
@@ -843,154 +843,79 @@ int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::st
 }
 
 
-void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFile> > > >& files)
+void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId)
 {
-    soci::session sql(*connectionPool);
+    soci::indicator selectionStrategyInd = soci::i_ok;
+    std::string selectionStrategy;
+    std::string vo_name;
+    uint64_t nextReplica = 0, alreadyActive;
+    soci::indicator nextReplicaInd = soci::i_ok;
 
-    try
-    {
-        time_t now = time(NULL);
-        struct tm tTime;
-        gmtime_r(&now, &tTime);
+    // make sure there hasn't been another already picked up
+    sql << "SELECT COUNT(*) FROM t_file WHERE file_state IN ('READY', 'ACTIVE') AND job_id=:job_id",
+        soci::use(jobId), soci::into(alreadyActive);
+    if (alreadyActive > 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Tried to look for another replica for "
+            << jobId << " when there is already at least one READY or ACTIVE "
+            << commit;
+        return;
+    }
 
-        soci::rowset<soci::row> jobs_rs = (sql.prepare <<
-                                           " SELECT DISTINCT t_file.vo_name, t_file.job_id "
-                                           " FROM t_file "
-                                           " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
-                                           " WHERE "
-                                           "      t_file.file_state = 'SUBMITTED' AND "
-                                           "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
-                                           "      t_job.job_type = 'H' AND "
-                                           "      (t_file.retry_timestamp IS NULL OR t_file.retry_timestamp < :tTime) ",
-                                           soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                           soci::use(tTime)
-                                          );
+    //check if it's auto or manual
+    sql << "SELECT selection_strategy, vo_name FROM t_file WHERE file_id = :file_id",
+        soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name);
+    // default is orderly
+    if (selectionStrategyInd == soci::i_null) {
+        selectionStrategy = "orderly";
+    }
 
-        std::list<std::pair<std::string, std::string> > visited;
+    sql << "SELECT min(file_id) FROM t_file WHERE file_state = 'NOT_USED' AND job_id=:job_id ",
+        soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
 
-        for (soci::rowset<soci::row>::iterator i = jobs_rs.begin(); i != jobs_rs.end(); ++i)
-        {
-            std::string vo_name = i->get<std::string>("vo_name", "");
-            std::string job_id = i->get<std::string>("job_id", "");
-
-            soci::rowset<TransferFile> rs =
-                (
-                    sql.prepare <<
-                    " SELECT SQL_NO_CACHE "
-                    "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                    "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                    "       f.checksum, j.checksum_method, j.source_space_token, "
-                    "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                    "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
-                    "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
-                    "       j.internal_job_params, j.job_type "
-                    " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                    " WHERE j.job_id = :job_id "
-                    " ORDER BY f.file_id ASC",
-                    soci::use(job_id)
-                );
-
-            std::list<TransferFile> tf;
-            for (soci::rowset<TransferFile>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
-            {
-                tf.push_back(*ti);
-            }
-
-            // Check link config only for the first pair, and, if there are slots, proceed
-            if (!tf.empty() && freeSlotForPair(sql, visited, tf.front().sourceSe, tf.front().destSe) > 0)
-            {
-                files[vo_name].push(std::make_pair(job_id, tf));
-                visited.push_back(std::make_pair(tf.front().sourceSe, tf.front().destSe));
-            }
+    if (selectionStrategy == "auto") {
+        uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
+        if (bestFileId > 0) {
+            sql <<
+                " UPDATE t_file "
+                    " SET file_state = 'SUBMITTED', finish_time=NULL "
+                    " WHERE job_id = :jobId AND file_id = :file_id  "
+                    " AND file_state = 'NOT_USED' ",
+                soci::use(jobId), soci::use(bestFileId);
+        }
+        else {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
         }
     }
-    catch (std::exception& e)
-    {
-        files.clear();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        files.clear();
-        throw UserError(std::string(__func__) + ": Caught exception ");
+    else {
+        sql <<
+            " UPDATE t_file "
+            " SET file_state = 'SUBMITTED', finish_time=NULL "
+            " WHERE job_id = :jobId "
+            " AND file_state = 'NOT_USED' and file_id=:file_id ",
+            soci::use(jobId), soci::use(nextReplica);
     }
 }
 
 
-
-void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId)
+void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
 {
-    try
-    {
-        soci::indicator selectionStrategyInd = soci::i_ok;
-        std::string selectionStrategy;
-        std::string vo_name;
-        uint64_t nextReplica = 0, alreadyActive;
-        soci::indicator nextReplicaInd = soci::i_ok;
+    uint64_t nextFileId;
+    soci::indicator nextFileIdInd;
 
-        //check if the file belongs to a multiple replica job
-        std::string mreplica;
-        std::string job_state;
-        sql << "select job_type, job_state from t_job where job_id=:job_id",
-            soci::use(jobId), soci::into(mreplica), soci::into(job_state);
-
-        //this is a m-replica job
-        if(mreplica == "R" && job_state != "CANCELED" && job_state != "FAILED")
-        {
-            // make sure there hasn't been another already picked up
-            sql << "select count(*) from t_file where file_state in ('READY', 'ACTIVE') and job_id=:job_id",
-                soci::use(jobId), soci::into(alreadyActive);
-            if (alreadyActive > 0) {
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Tried to look for another replica for "
-                    << jobId << " when there is already at least one READY or ACTIVE "
-                    << commit;
-                return;
-            }
-
-            //check if it's auto or manual
-            sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
-                soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name);
-            // default is orderly
-            if (selectionStrategyInd == soci::i_null) {
-                selectionStrategy = "orderly";
-            }
-
-            sql << "select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ",
-                soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
-
-            if (selectionStrategy == "auto") {
-                uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
-                if (bestFileId > 0) {
-                    sql <<
-                        " UPDATE t_file "
-                            " SET file_state = 'SUBMITTED', finish_time=NULL "
-                            " WHERE job_id = :jobId AND file_id = :file_id  "
-                            " AND file_state = 'NOT_USED' ",
-                        soci::use(jobId), soci::use(bestFileId);
-                }
-                else {
-                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
-                }
-            }
-            else {
-                sql <<
-                    " UPDATE t_file "
-                    " SET file_state = 'SUBMITTED', finish_time=NULL "
-                    " WHERE job_id = :jobId "
-                    " AND file_state = 'NOT_USED' and file_id=:file_id ",
-                    soci::use(jobId), soci::use(nextReplica);
-            }
-        }
-    }
-    catch (std::exception& e)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        throw UserError(std::string(__func__) + ": Caught exception " );
+    sql << "SELECT file_id FROM t_file "
+           "WHERE job_id = :jobId AND file_state = 'NOT_USED' "
+           "ORDER BY file_id ASC "
+           "LIMIT 1", soci::use(jobId), soci::into(nextFileId, nextFileIdInd);
+    if (nextFileIdInd != soci::i_ok) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No more hops for " << jobId << commit;
+        return;
     }
 
+    sql << "UPDATE t_file "
+           "SET file_state = 'SUBMITTED', finish_time=NULL "
+           "WHERE file_id = :fileId AND file_state = 'NOT_USED'",
+        soci::use(nextFileId);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Next hop for " << jobId << ": " << nextFileId << commit;
 }
 
 
@@ -1234,28 +1159,33 @@ boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::strin
 
 boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
-        std::string newState, std::string transferMessage,
+        std::string newFileState, std::string transferMessage,
         int processId, double filesize, double duration, bool retry)
 {
+    std::string storedState;
     try
     {
         sql.begin();
 
-        std::string storedState;
+        std::string storedState, jobState;
+        Job::JobType jobType;
 
         time_t now = time(NULL);
         struct tm tTime;
         gmtime_r(&now, &tTime);
 
-        if((jobId.empty() || fileId == 0) && newState == "FAILED") {
-            sql << "SELECT file_id FROM t_file WHERE pid=:pid AND file_state = 'ACTIVE' LIMIT 1 ",
-                soci::use(processId), soci::into(fileId);
+        if(jobId.empty() || fileId == 0) {
+            sql << "SELECT job_id, file_id FROM t_file WHERE pid=:pid AND file_state = 'ACTIVE' LIMIT 1 ",
+                soci::use(processId), soci::into(jobId), soci::into(fileId);
         }
 
+        // Need to know the type of job, to know what's coming next
+        sql << "SELECT job_type, job_state FROM t_job WHERE job_id = :job_id",
+            soci::use(jobId), soci::into(jobType), soci::into(jobState);
+
         // query for the file state in DB
-        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId",
+        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId",
             soci::use(fileId),
-            soci::use(jobId),
             soci::into(storedState);
 
         bool isStaging = (storedState == "STAGING");
@@ -1268,13 +1198,13 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         }
 
         // If trying to go from ACTIVE back to READY, do nothing either
-        if (storedState == "ACTIVE" && newState == "READY") {
+        if (storedState == "ACTIVE" && newFileState == "READY") {
             sql.rollback();
             return boost::tuple<bool, std::string>(false, storedState);
         }
 
         // If the file already in the same state, don't do anything either
-        if (storedState == newState && newState != "READY") {
+        if (storedState == newFileState && newFileState != "READY") {
             sql.rollback();
             return boost::tuple<bool, std::string>(false, storedState);
         }
@@ -1284,15 +1214,15 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 
         query << "UPDATE t_file SET "
               "    file_state = :state, reason = :reason";
-        stmt.exchange(soci::use(newState, "state"));
+        stmt.exchange(soci::use(newFileState, "state"));
         stmt.exchange(soci::use(transferMessage, "reason"));
 
-        if (newState == "FINISHED" || newState == "FAILED" || newState == "CANCELED")
+        if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
         {
             query << ", FINISH_TIME = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
         }
-        if (newState == "ACTIVE" || newState == "READY")
+        if (newFileState == "ACTIVE" || newFileState == "READY")
         {
             query << ", START_TIME = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
@@ -1302,20 +1232,20 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         query << ", transfer_Host = :hostname";
         stmt.exchange(soci::use(hostname, "hostname"));
 
-        if (newState == "FINISHED")
+        if (newFileState == "FINISHED")
         {
             query << ", transferred = :filesize";
             stmt.exchange(soci::use(filesize, "filesize"));
         }
 
-        if (newState == "FAILED" || newState == "CANCELED")
+        if (newFileState == "FAILED" || newFileState == "CANCELED")
         {
             query << ", transferred = :transferred";
             stmt.exchange(soci::use(0, "transferred"));
         }
 
 
-        if (newState == "STAGING")
+        if (newFileState == "STAGING")
         {
             if (isStaging)
             {
@@ -1351,11 +1281,28 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 
         sql.commit();
 
-        if(newState == "FAILED" || newState == "CANCELED")
-        {
-            sql.begin();
-            useFileReplica(sql, jobId, fileId);
-            sql.commit();
+        switch (jobType) {
+            // Multiple replica job, on failure, need to pick next option
+            case Job::kTypeMultipleReplica:
+                if ((jobState != "CANCELED" && jobState != "FAILED") &&
+                    (newFileState == "FAILED" || newFileState == "CANCELED")) {
+                    sql.begin();
+                    useFileReplica(sql, jobId, fileId);
+                    sql.commit();
+                }
+                break;
+            // For multihop jobs, on success enable next option
+            case Job::kTypeMultiHop:
+                if ((jobState != "CANCELED" && jobState != "FAILED") &&
+                    (newFileState == "FINISHED")) {
+                    sql.begin();
+                    useNextHop(sql, jobId);
+                    sql.commit();
+                }
+                break;
+            // Nothing special for other type of jobs
+            default:
+                break;
         }
     }
     catch (std::exception& e)
@@ -1368,21 +1315,19 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-    return true;
+    return  boost::tuple<bool, std::string>(true, storedState);
 }
 
 
-bool MySqlAPI::updateJobStatus(const std::string& jobId, const std::string& jobState, int pid)
+bool MySqlAPI::updateJobStatus(const std::string& jobId, const std::string& jobState)
 {
     soci::session sql(*connectionPool);
-    return updateJobTransferStatusInternal(sql, jobId, jobState, pid);
+    return updateJobTransferStatusInternal(sql, jobId, jobState);
 }
 
 
-bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string status, int pid)
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state)
 {
-    bool ok = true;
-
     try
     {
         int numberOfFilesInJob = 0;
@@ -1395,58 +1340,50 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         int numberOfFilesNotCanceledNorFailed = 0;
 
         std::string currentState("");
-        std::string reuseFlag;
+        Job::JobType jobType;
         soci::indicator isNull = soci::i_ok;
-        std::string source_se;
+        std::string sourceSe;
         soci::indicator isNullFileId = soci::i_ok;
 
-        if(jobId.empty())
-        {
-            sql << " SELECT job_id from t_file "
-                "   WHERE pid=:pid and transfer_host=:hostname and file_state IN ('FINISHED','FAILED') LIMIT 1 ",
-                soci::use(pid),soci::use(hostname),soci::into(jobId);
-        }
-
-
         soci::statement stmt1 = (
-                                    sql.prepare << " SELECT job_state, job_type FROM t_job  "
-                                    " WHERE job_id = :job_id ",
-                                    soci::use(jobId),
-                                    soci::into(currentState),
-                                    soci::into(reuseFlag, isNull));
+            sql.prepare << " SELECT job_state, job_type FROM t_job  "
+            " WHERE job_id = :job_id ",
+            soci::use(jobId),
+            soci::into(currentState),
+            soci::into(jobType, isNull));
         stmt1.execute(true);
 
-        if(currentState == status)
+        if(currentState == state)
             return true;
 
-        if(currentState == "STAGING" && status == "STARTED")
+        if(currentState == "STAGING" && state == "STARTED")
             return true;
 
-        if(status == "ACTIVE" && reuseFlag == "N")
+        if(state == "ACTIVE" && jobType == Job::kTypeRegular)
         {
             sql.begin();
 
             soci::statement stmt8 = (
-                                        sql.prepare << "UPDATE t_job "
-                                        "SET job_state = :state "
-                                        "WHERE job_id = :jobId AND job_state NOT IN ('ACTIVE','FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ",
-                                        soci::use(status, "state"), soci::use(jobId, "jobId"));
+                sql.prepare << "UPDATE t_job "
+                "SET job_state = :state "
+                "WHERE job_id = :jobId AND job_state NOT IN ('ACTIVE','FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ",
+                soci::use(state, "state"), soci::use(jobId, "jobId"));
             stmt8.execute(true);
 
             sql.commit();
 
             return true;
         }
-        else if ( (status == "FINISHED" || status == "FAILED") && reuseFlag == "N")
+        else if ( (state == "FINISHED" || state == "FAILED") && jobType == Job::kTypeRegular)
         {
             uint64_t file_id = 0;
             sql <<  " SELECT file_id from t_file where job_id=:job_id and file_state='SUBMITTED' LIMIT 1 ", soci::use(jobId), soci::into(file_id, isNullFileId);
             if(isNullFileId != soci::i_null && file_id > 0)
                 return true;
         }
-        else if ( status == "FINISHED" && reuseFlag == "R")
+        else if ( state == "FINISHED" && jobType == Job::kTypeMultipleReplica)
         {
-            sql <<  " SELECT source_se from t_file where job_id=:job_id and file_state='FINISHED' LIMIT 1 ", soci::use(jobId), soci::into(source_se);
+            sql <<  " SELECT source_se FROM t_file WHERE job_id=:job_id AND file_state='FINISHED' LIMIT 1 ", soci::use(jobId), soci::into(sourceSe);
         }
 
         sql << " SELECT COUNT(DISTINCT file_index) "
@@ -1497,7 +1434,8 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         // agregated number of files in terminal states (FINISHED, FAILED and CANCELED)
         int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
-        bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
+        bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal) ||
+            (jobType == Job::kTypeMultiHop && numberOfFilesFailed + numberOfFilesCanceled > 0);
 
         if (jobFinished)
         {
@@ -1505,7 +1443,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             std::string reason = "One or more files failed. Please have a look at the details for more information";
             if (numberOfFilesFinished > 0 && numberOfFilesFailed > 0)
             {
-                if (reuseFlag == "H")
+                if (jobType == Job::kTypeMultiHop)
                     state = "FAILED";
                 else
                     state = "FINISHEDDIRTY";
@@ -1535,16 +1473,16 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             if(currentState == state)
                 return true;
 
-            if(source_se.length() > 0)
+            if(sourceSe.length() > 0)
             {
                 sql.begin();
                 // Update job
                 soci::statement stmt6 = (
                     sql.prepare << "UPDATE t_job SET "
                     "    job_state = :state, job_finished = UTC_TIMESTAMP(), "
-                    "    reason = :reason, source_se = :source_se "
+                    "    reason = :reason, source_se = :sourceSe "
                     "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
-                    soci::use(state, "state"), soci::use(reason, "reason"), soci::use(source_se, "source_se"),
+                    soci::use(state, "state"), soci::use(reason, "reason"), soci::use(sourceSe, "sourceSe"),
                     soci::use(jobId, "jobId"));
                 stmt6.execute(true);
                 sql.commit();
@@ -1568,14 +1506,14 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         // Job not finished yet
         else
         {
-            if (status == "ACTIVE" || status == "STAGING" || status == "SUBMITTED" || (currentState == "STAGING" && numberOfStaging == 0))
+            if (state == "ACTIVE" || state == "STAGING" || state == "SUBMITTED" || (currentState == "STAGING" && numberOfStaging == 0))
             {
-                std::string newState = status;
+                std::string newState = state;
 
                 //re-execute here just in case
                 stmt1.execute(true);
 
-                if(currentState == status)
+                if(currentState == state)
                     return true;
 
                 // Move from staging to SUBMITTED if the job is session reuse and there are none in staging
@@ -1607,7 +1545,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
 
-    return ok;
+    return true;
 }
 
 
@@ -1887,7 +1825,7 @@ void MySqlAPI::setPidForJob(const std::string& jobId, int pid)
 }
 
 
-void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles)
+void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles, long* nDeletions)
 {
 
     soci::session sql(*connectionPool);
@@ -1896,6 +1834,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
     std::string serviceName = "fts_backup";
     *nJobs = 0;
     *nFiles = 0;
+    *nDeletions = 0;
     std::string job_id;
     int count = 0;
     int countBeat = 0;
@@ -2015,8 +1954,11 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                            "DELETE FROM t_file WHERE job_id in (" +job_id+ ")");
                     deleteFiles.execute();
                     (*nFiles) += deleteFiles.get_affected_rows(); 
-                    
-                    sql << "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
+
+                    soci::statement deleteDeletions = (sql.prepare <<
+                           "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")");
+                    deleteDeletions.execute();
+                    (*nDeletions) += deleteDeletions.get_affected_rows();
 
                     sql << "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
                     (*nJobs) += count;
@@ -2119,7 +2061,7 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
                 job_id = (*i);
 
                 stmtCancelFile.execute(true);
-                updateJobTransferStatusInternal(sql, job_id, "CANCELED", 0);
+                updateJobTransferStatusInternal(sql, job_id, "CANCELED");
 
                 jobs.push_back(*i);
             }
@@ -2137,7 +2079,7 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
             job_id = (*i);
 
             stmtCancelFile.execute(true);
-            updateJobTransferStatusInternal(sql, job_id, "CANCELED", 0);
+            updateJobTransferStatusInternal(sql, job_id, "CANCELED");
 
             jobs.push_back(*i);
         }
@@ -3087,8 +3029,8 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     limit = 2000;
                 }
             }
-
-            if(limit == 0) //no free slots
+            
+            if(limit <= 0) //no free slots
                 continue;
 
 
@@ -3668,9 +3610,9 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
         for (auto i = stagingOpsStatus.begin(); i < stagingOpsStatus.end(); ++i)
         {
             if(i->state == "SUBMITTED")
-                updateJobTransferStatusInternal(sql, i->jobId, "ACTIVE", 0);
+                updateJobTransferStatusInternal(sql, i->jobId, "ACTIVE");
             else
-                updateJobTransferStatusInternal(sql, i->jobId, i->state, 0);
+                updateJobTransferStatusInternal(sql, i->jobId, i->state);
 
             //send state message
             filesMsg = getStateOfTransferInternal(sql, i->jobId, i->fileId);

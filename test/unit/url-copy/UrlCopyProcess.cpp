@@ -242,34 +242,4 @@ BOOST_FIXTURE_TEST_CASE (multiplePanic, UrlCopyFixture)
 }
 
 
-BOOST_FIXTURE_TEST_CASE (multihop, UrlCopyFixture)
-{
-    Transfer original, original2;
-    original.source = Uri::parse("mock://host/path?size=10&errno=2");
-    original.destination = Uri::parse("mock://host/path?size_post=10&time=2");
-    original.fileId = 10;
-    original2.source = Uri::parse("mock://host/path2?size=42");
-    original2.destination = Uri::parse("mock://host/path2?size_post=42&time=2");
-    original2.fileId = 11;
-    opts.transfers.push_back(original);
-    opts.transfers.push_back(original2);
-
-    UrlCopyProcess proc(opts, *this);
-    proc.run();
-
-    BOOST_CHECK_EQUAL(startMsgs.size(), 2);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 2);
-
-    Transfer c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), ENOENT);
-    BOOST_CHECK_EQUAL(c.fileId, 10);
-
-    completedMsgs.pop_front();
-    c = completedMsgs.front();
-    BOOST_CHECK(!static_cast<bool>(c.error));
-    BOOST_CHECK_EQUAL(c.fileId, 11);
-}
-
-
 BOOST_AUTO_TEST_SUITE_END()

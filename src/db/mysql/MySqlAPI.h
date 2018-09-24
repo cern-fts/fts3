@@ -63,10 +63,6 @@ public:
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
         std::map< std::string, std::list<TransferFile>>& files);
 
-    /// Get a list of multihop jobs ready to go
-    /// @param[out] files   A map where the key is the VO. The value is a queue of pairs (jobId, list of transfers)
-    virtual void getMultihopJobs(std::map< std::string, std::queue<std::pair<std::string, std::list<TransferFile>>>>& files);
-
     /// Update the status of a transfer
     /// @param jobId            The job ID
     /// @param fileId           The file ID
@@ -88,9 +84,7 @@ public:
     /// Update the status of a job
     /// @param jobId            The job ID
     /// @param jobState         The job state
-    /// @param pid              The PID of the fts_url_copy process
-    /// @note                   If jobId is empty, the pid will be used to decide which job to update
-    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState, int pid);
+    virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState);
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -119,7 +113,7 @@ public:
     /// @param[out] currentActive   The current number of running transfers is put here
     virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive);
 
-    /// Mark a reuse or multihop job (and its files) as failed
+    /// Mark a reuse job (and its files) as failed
     /// @param jobId    The job id
     /// @param pid      The PID of the fts_url_copy
     /// @param message  The error message
@@ -143,11 +137,12 @@ public:
     /// @param[in] bulkSize How many jobs per iteration must be processed
     /// @param[out] nJobs   How many jobs have been moved
     /// @param[out] nFiles  How many files have been moved
-    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles);
+    /// @param[out] nDeletions  How many deletions have been moved
+    virtual void backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles, long* nDeletions);
 
     /// Mark all the transfers as failed because the process fork failed
     /// @param jobId    The job id for which url copy failed to fork
-    /// @note           This method is used only for reuse and multihop jobs
+    /// @note           This method is used only for reuse jobs
     virtual void forkFailed(const std::string& jobId);
 
     /// Get the link configuration for the link defined by the source and destination given
@@ -302,9 +297,9 @@ private:
 
     boost::tuple<bool, std::string>  updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
-        std::string newState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
+        std::string newFileState, std::string transferMessage, int processId, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string status, int pid);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state);
 
     bool resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times);
 
@@ -317,6 +312,8 @@ private:
     std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
     void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId);
+
+    void useNextHop(soci::session& sql, std::string jobId);
 
     bool getDrainInternal(soci::session& sql);
 

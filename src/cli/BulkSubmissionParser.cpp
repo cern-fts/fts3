@@ -34,7 +34,7 @@ const std::set<std::string> BulkSubmissionParser::file_tokens =
         ("sources")
         ("destinations")
         ("selection_strategy")
-        ("checksums")
+        ("checksum")
         ("filesize")
         ("metadata")
         ("activity");

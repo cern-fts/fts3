@@ -30,7 +30,7 @@ RUN yum-builddep -y fts-server
 
 # Run dependencies
 RUN yum install -y gfal2-plugin-mock git lcov \
-    lcg-CA supervisor voms-config-vo-dteam voms-clients \
+    ca-policy-egi-core supervisor voms-config-vo-dteam voms-clients \
     python-virtualenv python2-pip
 
 # We also need rest, with a patched config file that allows values to be passed via environment variables

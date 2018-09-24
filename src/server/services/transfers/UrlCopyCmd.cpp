@@ -23,6 +23,8 @@
  */
 
 #include "UrlCopyCmd.h"
+#include <cajun/json/elements.h>
+#include <cajun/json/reader.h>
 #include <boost/algorithm/string/replace.hpp>
 
 namespace fts3 {
@@ -169,9 +171,6 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         case Job::kTypeSessionReuse:
             setFlag("reuse", true);
             break;
-        case Job::kTypeMultiHop:
-            setFlag("multi-hop", true);
-            break;
         case Job::kTypeMultipleReplica:
             setFlag("job_m_replica", true);
             break;
@@ -188,6 +187,29 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     setFlag("overwrite", !transfer.overwriteFlag.empty());
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
+
+    if (!transfer.fileMetadata.empty())
+    {
+        std::istringstream ss(transfer.fileMetadata);
+        json::Object obj;
+        try {
+            json::Reader::Read(obj, ss);
+            json::Object::const_iterator it = obj.Find("source-issuer");
+            if (it != obj.End())
+            {
+                const json::String issuer = it->element;
+                setOption("source-issuer", issuer.Value());
+            }
+            it = obj.Find("dest-issuer");
+            if (it != obj.End())
+            {
+                const json::String issuer = it->element;
+                setOption("dest-issuer", issuer.Value());
+            }
+        } catch (json::Exception) {
+            // Ignore for now.
+        }
+    }
 
     if (publishUserDn)
         setOption("user-dn", prepareMetadataString(transfer.userDn));

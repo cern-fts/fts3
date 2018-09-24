@@ -46,45 +46,6 @@ const int HIGH_THROUGHPUT = 50;
 const int AVG_TRANSFER_DURATION = 15;
 const int MAX_TRANSFER_DURATION = 3600;
 
-
-/*check if it's a multiple replicas job*/
-inline bool is_mreplica(const std::list<SubmittedTransfer>& transfers)
-{
-    // if it has less than 2 pairs it wont be a m-replica
-    if (transfers.size() < 2) return false;
-
-    std::string destSurl = transfers.begin()->destination;
-
-    for (auto iter = transfers.begin(); iter != transfers.end(); ++iter)
-        {
-            if(destSurl != iter->destination)
-                {
-                    return false;
-                }
-        }
-
-    return true;
-}
-
-/*check if it's a m-hop job*/
-inline bool is_mhop(const std::list<SubmittedTransfer>& transfers)
-{
-    // if it has less than 2 pairs it wont be a multi-hop
-    if (transfers.size() < 2) return false;
-
-    auto iter = transfers.begin();
-    auto iter2 = transfers.begin();
-    std::advance(iter2, 1);
-
-    for (; iter2 != transfers.end(); ++iter, ++iter2)
-        {
-            if (iter->destination != iter2->source) return false;
-        }
-
-    return true;
-}
-
-
 /**
  * Returns the current time, plus the difference specified
  * in advance, in UTC time

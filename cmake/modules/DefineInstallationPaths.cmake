@@ -27,6 +27,10 @@ if (UNIX)
     "${SHARE_INSTALL_PREFIX}/${APPLICATION_NAME}"
     CACHE PATH "The parent directory where applications can install their data")
 
+  SET(DATADIR_INSTALL_PREFIX
+    "${CMAKE_INSTALL_PREFIX}/var/lib/${APPLICATION_NAME}"
+    CACHE PATH "The parent directory where applications can install runtime data")
+
   # The following are directories where stuff will be installed to
   SET(BIN_INSTALL_DIR
     "${EXEC_INSTALL_PREFIX}/bin"

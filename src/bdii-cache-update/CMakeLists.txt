@@ -57,7 +57,7 @@ else ()
 endif ()
 
 install(FILES bdii_cache.xml
-    DESTINATION /var/lib/fts3 
+    DESTINATION ${DATADIR_INSTALL_PREFIX}
 	PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
 )
 

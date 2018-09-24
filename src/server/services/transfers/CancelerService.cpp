@@ -85,7 +85,7 @@ void CancelerService::markAsStalled()
             boost::tuple<bool, std::string> updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
                 "FAILED", reason.str(), i->process_id(),
                 0, 0, false);
-            db->updateJobStatus(i->job_id(), "FAILED", i->process_id());
+            db->updateJobStatus(i->job_id(), "FAILED");
 
             if (updated.get<0>()) {
                 SingleTrStateInstance::instance().sendStateMessage(i->job_id(), i->file_id());
@@ -153,7 +153,7 @@ void CancelerService::applyActiveTimeouts()
         db->updateTransferStatus(i->jobId, i->fileId, 0.0,
             "FAILED", "Transfer has been forced-killed because it was stalled",
             i->pid, 0, 0, false);
-        db->updateJobStatus(i->jobId, "FAILED", i->pid);
+        db->updateJobStatus(i->jobId, "FAILED");
         SingleTrStateInstance::instance().sendStateMessage(i->jobId, i->fileId);
 
         fts3::events::MessageUpdater msg;
