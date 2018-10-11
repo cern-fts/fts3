@@ -2695,7 +2695,7 @@ void MySqlAPI::updateStagingState(const std::vector<MinFileStatus>& stagingOpsSt
 }
 
 
-static std::string int2str(int v) {
+static std::string int2str(uint64_t v) {
     return boost::lexical_cast<std::string>(v);
 }
 
