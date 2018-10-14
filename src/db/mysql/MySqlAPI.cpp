@@ -2070,7 +2070,7 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
 
         // Cancel jobs using their own timeout
         soci::rowset<std::string> rs = (sql.prepare
-            << "SELECT job_id FROM t_job WHERE "
+            << "SELECT job_id FROM t_job USE INDEX(idx_jobfinished)  WHERE "
             "    max_time_in_queue IS NOT NULL AND max_time_in_queue < unix_timestamp() AND vo_name = :vo "
             "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') and job_finished is NULL ", soci::use(vo));
             sql.begin();
