@@ -185,7 +185,8 @@ static std::string setupBearerToken(const std::string &issuer, const std::string
 
 
 static std::string setupMacaroon(const std::string &url, const std::string &proxy,
-                                 const std::vector<std::string> &activity)
+                                 const std::vector<std::string> &activity,
+				 unsigned validity)
 {
     initTokenLibrary();
 
@@ -202,7 +203,7 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     char *err = NULL;
     char *token = (*g_x509_macaroon_issuer_retrieve_p)(url.c_str(),
                                                      proxy.c_str(), proxy.c_str(),
-                                                     2,
+                                                     validity,
                                                      &activity_list[0],
                                                      &err);
     if (token)
@@ -222,6 +223,12 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     Gfal2 &gfal2, Gfal2TransferParams &params)
 {
+    //Timeout
+    unsigned timeout = opts.timeout;
+    if (timeout == 0) {
+        timeout = adjustTimeoutBasedOnSize(transfer.fileSize, opts.addSecPerMb);
+    }
+    params.setTimeout(timeout);
     params.setStrictCopy(opts.strictCopy);
     params.setCreateParentDir(true);
     params.setReplaceExistingFile(opts.overwrite);
@@ -254,7 +261,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             std::vector<std::string> activity_list;
             activity_list.reserve(1);
             activity_list.push_back("DOWNLOAD");
-            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list));
+            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list,timeout));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
         }
         catch (const UrlCopyError &ex)
@@ -279,7 +286,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             std::string dest_uri(transfer.destination);
             std::string::size_type last_slash = dest_uri.rfind('/');
             std::string parent_url = (last_slash == std::string::npos) ? dest_uri : dest_uri.substr(0, last_slash);
-            params.setDestBearerToken(setupMacaroon(parent_url, opts.proxy, activity_list));
+            params.setDestBearerToken(setupMacaroon(parent_url, opts.proxy, activity_list,timeout));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
         }
         catch (const UrlCopyError &ex)
@@ -411,16 +418,10 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
     }
 
-    // Timeout
-    unsigned timeout = opts.timeout;
-    if (timeout == 0) {
-        timeout = adjustTimeoutBasedOnSize(transfer.fileSize, opts.addSecPerMb);
-    }
 
     // Set protocol parameters
     params.setNumberOfStreams(opts.nStreams);
     params.setTcpBuffersize(opts.tcpBuffersize);
-    params.setTimeout(timeout);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
@@ -433,9 +434,9 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
     timeoutExpired = false;
     AutoInterruptThread timeoutThread(
-        boost::bind(&timeoutTask, boost::posix_time::seconds(timeout + 60), this)
+        boost::bind(&timeoutTask, boost::posix_time::seconds(params.getTimeout() + 60), this)
     );
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << timeout << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << params.getTimeout() << commit;
 
     // Ping thread
     AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter));
