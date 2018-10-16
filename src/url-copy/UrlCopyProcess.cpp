@@ -202,7 +202,7 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     char *err = NULL;
     char *token = (*g_x509_macaroon_issuer_retrieve_p)(url.c_str(),
                                                      proxy.c_str(), proxy.c_str(),
-                                                     2,
+                                                     180,
                                                      &activity_list[0],
                                                      &err);
     if (token)
