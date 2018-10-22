@@ -259,8 +259,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source" << commit;
             std::vector<std::string> activity_list;
-            activity_list.reserve(1);
+            activity_list.reserve(2);
             activity_list.push_back("DOWNLOAD");
+	    activity_list.push_back("LIST");
             params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list, macaroonValidity));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
         }
@@ -279,10 +280,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for destination" << commit;
             std::vector<std::string> activity_list;
-            activity_list.reserve(2);
+            activity_list.reserve(4);
             activity_list.push_back("MANAGE");
             activity_list.push_back("UPLOAD");
             activity_list.push_back("DELETE");
+	    activity_list.push_back("LIST");
             std::string dest_uri(transfer.destination);
             std::string::size_type last_slash = dest_uri.rfind('/');
             std::string parent_url = (last_slash == std::string::npos) ? dest_uri : dest_uri.substr(0, last_slash);
