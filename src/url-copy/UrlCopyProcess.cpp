@@ -285,10 +285,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             activity_list.push_back("UPLOAD");
             activity_list.push_back("DELETE");
 	    activity_list.push_back("LIST");
-            std::string dest_uri(transfer.destination);
-            std::string::size_type last_slash = dest_uri.rfind('/');
-            std::string parent_url = (last_slash == std::string::npos) ? dest_uri : dest_uri.substr(0, last_slash);
-            params.setDestBearerToken(setupMacaroon(parent_url, opts.proxy, activity_list, macaroonValidity));
+            params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, activity_list, macaroonValidity));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
         }
         catch (const UrlCopyError &ex)
