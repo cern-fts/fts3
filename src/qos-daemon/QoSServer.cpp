@@ -105,7 +105,6 @@ QoSServer::~QoSServer()
 void QoSServer::start(void)
 {
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
-    std::cerr << "About to start the threads" << std::endl;
 
     std::string infosys = ServerConfig::instance().get<std::string>("Infosys");
     Gfal2Task::createPrototype (infosys);

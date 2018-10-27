@@ -256,6 +256,10 @@ public:
     /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
     virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps);
 
+    /// Update File State to FINISHED after QoS Transition successfully completed
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId);
+
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);
