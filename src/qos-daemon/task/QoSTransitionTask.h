@@ -85,7 +85,7 @@ protected:
     CDMIQosTransitionContext ctx;
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
-    static std::set<std::tuple<std::string, std::string, std::string>> active_surls;
+    static std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> active_surls;
 };
 
 

@@ -34,13 +34,9 @@ void CDMIFetchQosTransition::fetch()
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIFetchQosTransition starting" << commit;
 
-    std::cerr << "About to fetch stuff" << std::endl;
-
     while (!boost::this_thread::interruption_requested()) {
         try {
-        	std::cerr << "Inside the while loop before sleeping" << std::endl;
-            boost::this_thread::sleep(boost::posix_time::seconds(2));
-            std::cerr << "Inside the while loop after sleeping" << std::endl;
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
@@ -56,7 +52,7 @@ void CDMIFetchQosTransition::fetch()
             {
                 std::string storage = Uri::parse(it_f->surl).host;
 
-                std::cerr << "This is the storage we are talking about: " << storage << std::endl;
+                //std::cerr << "Storage detected: " << storage << std::endl;
 
                 auto it_t = tasks.find(storage);
                 if (it_t == tasks.end()) {

@@ -69,14 +69,14 @@ public:
     /**
      * @return  Set of tuples <surl, token, target_qos>
      */
-    std::set<std::tuple<std::string, std::string, std::string>> getSurls() const
+    std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> getSurls() const
     {
-    	std::set<std::tuple<std::string, std::string, std::string>> surls;
+    	std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> surls;
     	//std::cerr << "This is the map size: " << filesToTransition.size() << std::endl;
         for (auto it_j = filesToTransition.begin(); it_j != filesToTransition.end(); ++it_j)
         	for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u) {
         		//std::cerr << "About to create the tuple " << it_u->surl << it_u->token << it_u->target_qos << std::endl;
-        		surls.insert(std::make_tuple(it_u->surl, it_u->token, it_u->target_qos));
+        		surls.insert(std::make_tuple(it_u->surl, it_u->token, it_u->target_qos, it_u->jobId, it_u->fileId));
         	}
         return surls;
     }

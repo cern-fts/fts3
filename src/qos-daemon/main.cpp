@@ -79,7 +79,6 @@ static void initializeDatabase()
 /// Run the Bring Online server
 static void doServer()
 {
-	std::cerr << "Entering doServer" << std::endl;
     bool isDaemon = false;//!ServerConfig::instance().get<bool> ("no-daemon");
     std::string logPath = ServerConfig::instance().get<std::string>("ServerLogDirectory");
     if (isDaemon && !logPath.empty()) {
@@ -92,9 +91,7 @@ static void doServer()
     }
     theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
 
-    std::cerr << "Before initializing db" << std::endl;
     initializeDatabase();
-    std::cerr << "Before start" << std::endl;
     QoSServer::instance().start();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Daemon started" << commit;
@@ -107,7 +104,6 @@ static void doServer()
 /// Prepare, fork and run qos daemon
 static void spawnServer(int argc, char** argv)
 {
-	std::cerr << "Entered in spawnServer!" << std::endl;
     ServerConfig::instance().read(argc, argv);
 
     std::string user = ServerConfig::instance().get<std::string>("User");
@@ -120,20 +116,15 @@ static void spawnServer(int argc, char** argv)
     }
 
 	bool isDaemon = false;//!ServerConfig::instance().get<bool>("no-daemon");
-    std::cerr << "This is the daemon " << isDaemon << std::endl;
     if (isDaemon) {
-    	std::cerr << "About to create the daemon" << std::endl;
         int d = daemon(0, 0);
-        std::cerr << "Created the daemon" << std::endl;
+        std::cerr << "Created the qos_daemon" << std::endl;
         if (d < 0) {
         	std::cerr << "Can't fork the daemon " << d << std::endl;
             throw SystemError("Can't fork the daemon");
         }
     }
-    std::cerr << "About to create pid file" << std::endl;
     createPidFile(pidDir, "fts-qos.pid");
-
-    std::cerr << "Created pidFile" << std::endl;
 
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
@@ -147,7 +138,6 @@ static void spawnServer(int argc, char** argv)
 /// Entry point
 int main(int argc, char** argv)
 {
-	std::cerr << "About to start stuff!!" << std::endl;
     // Do not even try if already running
     int n_running = countProcessesWithName("fts_qosdaemon");
     std::cerr << "Counting processes:" << n_running << std::endl;
