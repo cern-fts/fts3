@@ -48,13 +48,11 @@ class CDMIPollTask : public QoSTransitionTask
 {
 public:
     /**
-     * Creates a CDMIPollTask from StagingContext (for recovery purposes only)
      *
      * @param ctx : staging context (recover from DB after crash)
-     * @param token : token that is needed for polling
      */
-	CDMIPollTask(const CDMIQosTransitionContext &ctx, const std::string &token) :
-		QoSTransitionTask(ctx), token(token), nPolls(0), wait_until(0)
+	CDMIPollTask(const CDMIQosTransitionContext &ctx) :
+		QoSTransitionTask(ctx), nPolls(0), wait_until(0)
     {
         //auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
@@ -62,12 +60,12 @@ public:
     }
 
     /**
-     * Creates a new PollTask task from a BringOnlineTask
+     * Creates a new CDMIPollTask task from a QoSTransitionTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-	CDMIPollTask(QoSTransitionTask && copy, const std::string &token) :
-		QoSTransitionTask(std::move(copy)), token(token), nPolls(0), wait_until()
+	CDMIPollTask(QoSTransitionTask && copy) :
+		QoSTransitionTask(std::move(copy)), nPolls(0), wait_until()
     {
     }
 
@@ -75,7 +73,7 @@ public:
      * Move constructor
      */
 	CDMIPollTask(CDMIPollTask && copy) :
-		QoSTransitionTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(
+		QoSTransitionTask(std::move(copy)), nPolls(copy.nPolls), wait_until(
             copy.wait_until)
     {
     }
@@ -112,9 +110,6 @@ private:
         else
             return (2 << nPolls);
     }
-
-    /// the token that will be used for polling
-    std::string token;
 
     /// number of bring online polls
     int nPolls;

@@ -27,43 +27,52 @@
 
 void CDMIPollTask::run(const boost::any&)
 {
-    // check if the timeout was exceeded
-    //if (timeout_occurred())
-    //	return;
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMIPollTask starting" << commit;
-	std::cerr << "About to poll some stuff, inside run" << std::endl;
-    /*int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
-    bool forcePoll = false;
 
-    std::set<std::string> urlSet = ctx.getUrls();
-    if (urlSet.empty())
-        return;
+	std::map<std::string, CDMIQosTransitionContext> tasks;
 
-    std::vector<const char*> urls;
-    urls.reserve(urlSet.size());
-    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
-        urls.push_back(set_i->c_str());
-    }
+	//Retrieve all files with a state of QOS_REQUEST_SUBMITTED
+	std::vector<QosTransitionOperation> files;
+	db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files, "QOS_REQUEST_SUBMITTED");
 
-    std::vector<const char*> failedUrls;
+	bool anyFailed = false;
+	for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
+	{
+		GError *err = NULL;
 
-    // This is wrong, test only with one for now
-    GError *err = NULL;
-    const char* qos_result = NULL;
-    for (size_t i = 0; i < urls.size(); ++i) {
-    	qos_target_result = gfal2_check_target_qos(gfal2_ctx, urls[i], &err);
-    }
+		// Add token to context
+		//std::cerr << "Printing token: " << it_f->token << std::endl;
+		//std::cerr << "Printing host: " << Uri::parse(it_f->surl).host << std::endl;
+		//std::cerr << "Printing surl: " << it_f->surl << std::endl;
+		gfal2_cred_t *cred = gfal2_cred_new(GFAL_CRED_BEARER, it_f->token.c_str());
+		gfal2_cred_set(gfal2_ctx, Uri::parse(it_f->surl).host.c_str(), cred, &err);
 
+		// Check QoS of file
+		// TODO: add error checking
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file" << it_f->surl << commit;
+		const char* qos_target_result = gfal2_check_target_qos(gfal2_ctx, it_f->surl.c_str(), &err);
+
+		if (qos_target_result != NULL && std::strcmp(it_f->target_qos.c_str(),qos_target_result)==0) {
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file" << it_f->surl << " was successful. File was successfully transitioned" << commit;
+			// Update file state as finished
+			db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFinished(it_f->jobId, it_f->fileId);
+		} else {
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file" << it_f->surl << " failed. File has not been transitioned yet" << commit;
+			anyFailed = true;
+		}
+
+		//Delete token from context
+		gfal2_cred_free(cred);
+		gfal2_cred_clean(gfal2_ctx, &err);
+	}
 
     // If they are not the same, schedule a new poll
-    if (qos_target_result != NULL) {
+    if (anyFailed) {
         time_t interval = getPollInterval(++nPolls), now = time(NULL);
         wait_until = now + interval;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)
-            << "CDMIQoS polling " << ctx.getLogMsg() << token << commit;
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " next attempt in " << interval << " seconds" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " next QoS check attempt in " << interval << " seconds" << commit;
         ctx.getWaitingRoom().add(new CDMIPollTask(std::move(*this)));
-    }*/
+    }
 }
 

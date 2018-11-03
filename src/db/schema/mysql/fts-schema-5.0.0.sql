@@ -282,7 +282,7 @@ CREATE TABLE `t_file` (
   `file_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `file_index` int(11) DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING', 'QOS_TRANSITION','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
+  `file_state` enum('STAGING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
@@ -336,7 +336,7 @@ CREATE TABLE `t_file_backup` (
   `file_id` bigint(20) unsigned NOT NULL DEFAULT '0',
   `file_index` int(11) DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING', 'QOS_TRANSITION','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
+  `file_state` enum('STAGING', 'QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
@@ -428,7 +428,7 @@ DROP TABLE IF EXISTS `t_job`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_job` (
   `job_id` char(36) NOT NULL,
-  `job_state` enum('STAGING', 'QOS_TRANSITION','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','FINISHEDDIRTY','CANCELED','DELETE') NOT NULL,
+  `job_state` enum('STAGING', 'QOS_TRANSITION','QOS_REQUEST_SUBMITTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','FINISHEDDIRTY','CANCELED','DELETE') NOT NULL,
   `job_type` char(1) DEFAULT NULL,
   `cancel_job` char(1) DEFAULT NULL,
   `source_se` varchar(255) DEFAULT NULL,
@@ -470,7 +470,7 @@ DROP TABLE IF EXISTS `t_job_backup`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_job_backup` (
   `job_id` char(36) NOT NULL,
-  `job_state` enum('STAGING', 'QOS_TRANSITION','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','FINISHEDDIRTY','CANCELED','DELETE') NOT NULL,
+  `job_state` enum('STAGING', 'QOS_TRANSITION','QOS_REQUEST_SUBMITTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','FINISHEDDIRTY','CANCELED','DELETE') NOT NULL,
   `job_type` char(1) DEFAULT NULL,
   `cancel_job` char(1) DEFAULT NULL,
   `source_se` varchar(255) DEFAULT NULL,

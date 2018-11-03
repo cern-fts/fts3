@@ -3160,7 +3160,7 @@ void MySqlAPI::requeueStartedDeletes()
     }
 }
 
-void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps)
+void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp)
 {
 	soci::session sql(*connectionPool);
 	soci::rowset<soci::row> rs2 = (sql.prepare <<
@@ -3169,7 +3169,7 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
 			" INNER JOIN t_job j ON (f.job_id = j.job_id) "
 			" INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
 			" WHERE "
-			" 		f.file_state = 'QOS_TRANSITION' "//AND "
+			" 		f.file_state = :qosOp ",	soci::use(qosOp, "qosOp") //AND "
 			//"      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
 			//soci::use(hashSegment.start), soci::use(hashSegment.end)
 		);
@@ -3187,32 +3187,40 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
 		}
 }
 
-void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t fileId){
+void MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId){
 	//std::cerr << "About to update" << jobId << "         " << fileId << std::endl;
 	soci::session sql(*connectionPool);
 	sql.begin();
-	sql << " UPDATE t_file SET file_state='FINISHED' where file_id= :fileId", soci::use(fileId);
+	sql << " UPDATE t_file SET file_state='QOS_REQUEST_SUBMITTED' where file_id= :fileId", soci::use(fileId);
 	sql.commit();
+}
 
-	// Update job state to finished if all files of said QOS_TRANSITION job are FINISHED
-	// TODO: Add finish timestamp as well
-	sql.begin();
-	sql << " UPDATE t_job "
-		   " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FINISHED') > 1)) THEN 'FINISHED' ELSE job_state END "
-		   " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
-	sql.commit();
+void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t fileId){
+    //std::cerr << "About to update" << jobId << "         " << fileId << std::endl;
+    soci::session sql(*connectionPool);
+    sql.begin();
+    sql << " UPDATE t_file SET file_state='FINISHED' where file_id= :fileId", soci::use(fileId);
+    sql.commit();
 
-	// Print message if all files of job have been transitioned
-	soci::rowset<soci::row> rs2 = (sql.prepare <<
-				" SELECT job_state from t_job where job_id=:jobId ", soci::use(jobId, "jobId"));
-	for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
-		soci::row const& r = *i2;
-		std::string job_state = r.get<std::string>("job_state");
-		if (job_state == "FINISHED") {
-			std::cerr << "QoS Transition job: " << jobId << " finished";
-			break;
-		}
-	}
+    // Update job state to finished if all files of said QOS_REQUEST_SUBMITTED job are FINISHED
+    // TODO: Add finish timestamp as well
+    sql.begin();
+    sql << " UPDATE t_job "
+    	   " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FINISHED') > 1)) THEN 'FINISHED' ELSE job_state END "
+    	   " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
+    sql.commit();
+
+    // Print message if all files of job have been transitioned
+    soci::rowset<soci::row> rs2 = (sql.prepare <<
+    			" SELECT job_state from t_job where job_id=:jobId ", soci::use(jobId, "jobId"));
+    for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
+    	soci::row const& r = *i2;
+    	std::string job_state = r.get<std::string>("job_state");
+    	if (job_state == "FINISHED") {
+    		std::cerr << "QoS Transition job: " << jobId << " finished";
+    		break;
+    	}
+    }
 }
 
 void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)

@@ -41,7 +41,7 @@ class CDMIQosTransitionContext
 public:
 
     CDMIQosTransitionContext(QoSServer &qosServer):
-        waitingRoom(qosServer.getWaitingRoom())
+        waitingRoom(qosServer.getCDMIWaitingRoom())
     {
         startTime = time(0);
     }
@@ -58,7 +58,7 @@ public:
 
     void add(const QosTransitionOperation &qosTransitionOp);
 
-    WaitingRoom<PollTask>& getWaitingRoom() {
+    WaitingRoom<CDMIPollTask>& getWaitingRoom() {
         return waitingRoom;
     }
 
@@ -84,7 +84,7 @@ public:
 private:
     /// Job ID -> surl, target_qos, token
     std::map< std::string, std::vector<QosTransitionOperation>> filesToTransition;
-    WaitingRoom<PollTask> &waitingRoom;
+    WaitingRoom<CDMIPollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
     time_t startTime;
 };
