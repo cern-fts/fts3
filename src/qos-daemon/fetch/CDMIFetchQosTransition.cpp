@@ -46,7 +46,7 @@ void CDMIFetchQosTransition::fetch()
             std::map<std::string, CDMIQosTransitionContext> tasks;
             std::vector<QosTransitionOperation> files;
 
-            db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files);
+            db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files, "QOS_TRANSITION");
 
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {

@@ -254,9 +254,13 @@ public:
 
     /// Get qosTransition operations ready to be started
     /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps);
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp);
 
-    /// Update File State to FINISHED after QoS Transition successfully completed
+    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task for file successfully completed
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
+
+    /// Update File State to FINISHED after QoS Transition for file successfully completed
     /// @params[out] Nothing returned
     virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId);
 

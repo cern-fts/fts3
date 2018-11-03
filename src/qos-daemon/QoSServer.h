@@ -54,6 +54,10 @@ public:
         return waitingRoom;
     }
 
+    WaitingRoom<CDMIPollTask>& getCDMIWaitingRoom() {
+        return cdmiWaitingRoom;
+    }
+
 private:
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;

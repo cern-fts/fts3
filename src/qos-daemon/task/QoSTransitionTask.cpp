@@ -22,7 +22,7 @@
 #include "common/Logger.h"
 
 #include "QoSTransitionTask.h"
-#include "PollTask.h"
+#include "CDMIPollTask.h"
 #include "WaitingRoom.h"
 
 
@@ -34,6 +34,7 @@ void QoSTransitionTask::run(const boost::any &)
 {
 	//std::cerr << "This is the set size: " << active_surls.size() << std::endl;
 	std::vector<GError*> errors(active_surls.size(), NULL);
+	bool anySuccessful = false;
 	for (auto it = active_surls.begin(); it != active_surls.end(); ++it) {
 	      //std::cerr << "Printing surl: " << std::get<0>(*it) << std::endl;
 	      //std::cerr << "Printing token: " << std::get<1>(*it) << std::endl;
@@ -49,7 +50,7 @@ void QoSTransitionTask::run(const boost::any &)
 	      gfal2_cred_set(gfal2_ctx, Uri::parse(std::get<0>(*it)).host.c_str(), cred, &err);
 
 	      // Perform transition
-	      std::cerr << "Perform QoS transition of " << std::get<0>(*it) << " to QoS: " << std::get<2>(*it) << std::endl;
+		  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << std::get<0>(*it) << " to QoS: " << std::get<2>(*it) << commit;
 	      // TODO: add error checking
 		  int result = gfal2_change_object_qos(gfal2_ctx, std::get<0>(*it).c_str(), std::get<2>(*it).c_str(), &err);
 
@@ -58,10 +59,14 @@ void QoSTransitionTask::run(const boost::any &)
 		  gfal2_cred_clean(gfal2_ctx, &err);
 
 		  if (result != -1) {
-			  std::cerr << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " successful" << std::endl;
-			  db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFinished(std::get<3>(*it), std::get<4>(*it));
+			  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " submitted successfully" << commit;
+			  db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToQosRequestSubmitted(std::get<3>(*it), std::get<4>(*it));
+			  anySuccessful = true;
 		  } else {
-			  std::cerr << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " failed" << std::endl;
+			  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " failed" << commit;
 		  }
+	}
+	if (anySuccessful) {
+		ctx.getWaitingRoom().add(new CDMIPollTask(std::move(*this)));
 	}
 }
