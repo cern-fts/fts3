@@ -424,10 +424,12 @@ fi
 %attr(0644,root,root) %{_unitdir}/fts-server.service
 %attr(0644,root,root) %{_unitdir}/fts-bringonline.service
 %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
+%attr(0644,root,root) %{_unitdir}/fts-qos.service
 %else
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-bringonline
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
+%attr(0755,root,root) %{_initddir}/fts-qos
 %endif
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
