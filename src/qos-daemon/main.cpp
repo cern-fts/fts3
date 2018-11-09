@@ -79,10 +79,10 @@ static void initializeDatabase()
 /// Run the Bring Online server
 static void doServer()
 {
-    bool isDaemon = false;//!ServerConfig::instance().get<bool> ("no-daemon");
+    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
     std::string logPath = ServerConfig::instance().get<std::string>("ServerLogDirectory");
     if (isDaemon && !logPath.empty()) {
-        logPath += "/fts3qosdaemon.log";
+        logPath += "/fts3qos.log";
         if (theLogger().redirect(logPath, logPath) != 0) {
             std::ostringstream msg;
             msg << "fts3 qosdaemon failed to open log file " << logPath << " error is:" << strerror(errno);
@@ -115,7 +115,7 @@ static void spawnServer(int argc, char** argv)
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
     }
 
-	bool isDaemon = false;//!ServerConfig::instance().get<bool>("no-daemon");
+	bool isDaemon = !ServerConfig::instance().get<bool>("no-daemon");
     if (isDaemon) {
         int d = daemon(0, 0);
         std::cerr << "Created the qos_daemon" << std::endl;
@@ -139,7 +139,7 @@ static void spawnServer(int argc, char** argv)
 int main(int argc, char** argv)
 {
     // Do not even try if already running
-    int n_running = countProcessesWithName("fts_qosdaemon");
+    int n_running = countProcessesWithName("fts_qos");
     std::cerr << "Counting processes:" << n_running << std::endl;
     if (n_running < 0) {
         std::cerr << "Could not check if QoS daemon is already running" << std::endl;
