@@ -264,6 +264,10 @@ public:
     /// @params[out] Nothing returned
     virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId);
 
+    /// Update File State to FAILED after QoS Transition for file failed
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToFailed(const std::string& jobId, uint64_t fileId);
+
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);

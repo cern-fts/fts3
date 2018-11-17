@@ -64,6 +64,7 @@ void QoSTransitionTask::run(const boost::any &)
 			  anySuccessful = true;
 		  } else {
 			  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " failed" << commit;
+			  db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFailed(std::get<3>(*it), std::get<4>(*it));
 		  }
 	}
 	if (anySuccessful) {

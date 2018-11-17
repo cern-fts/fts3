@@ -3195,6 +3195,46 @@ void MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
 	sql.commit();
 }
 
+void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId){
+    soci::session sql(*connectionPool);
+    sql.begin();
+    sql << " UPDATE t_file SET file_state='FAILED' where file_id= :fileId", soci::use(fileId);
+    sql.commit();
+
+    // Update job state to FAILED if all files of said QoS job are FAILED
+    // TODO: Add finish timestamp as well
+    sql.begin();
+    sql << " UPDATE t_job "
+           " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FAILED') > 1)) THEN 'FAILED' ELSE job_state END "
+           " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
+    sql.commit();
+
+    // Update job state to FINISHEDDIRTY if some files of said job are FAILED and some others FINISHED
+    sql.begin();
+    sql << " UPDATE t_job "
+           " SET job_state = CASE WHEN (((select count(*) from fts3.t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
+           " ((select count(*) from t_file where job_id=:jobId and file_state = 'FINISHED') < (select count(*) from t_file where job_id=:jobId)) AND "
+           " ((select count(*) from fts3.t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from fts3.t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
+           " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
+    sql.commit();
+
+    // Print message if all files of job have been transitioned
+    soci::rowset<soci::row> rs2 = (sql.prepare <<
+                                               " SELECT job_state from t_job where job_id=:jobId ", soci::use(jobId, "jobId"));
+    for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
+        soci::row const& r = *i2;
+        std::string job_state = r.get<std::string>("job_state");
+        if (job_state == "FINISHED") {
+            std::cerr << "QoS Transition job: " << jobId << " finished";
+            break;
+        } else if (job_state == "FINISHEDDIRTY") {
+            std::cerr << "QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)";
+            break;
+        }
+    }
+}
+
+
 void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t fileId){
     //std::cerr << "About to update" << jobId << "         " << fileId << std::endl;
     soci::session sql(*connectionPool);
@@ -3210,6 +3250,15 @@ void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t file
     	   " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
     sql.commit();
 
+    // Update job state to FINISHEDDIRTY if some files of said job are FAILED and some others FINISHED
+    sql.begin();
+    sql << " UPDATE t_job "
+           " SET job_state = CASE WHEN (((select count(*) from fts3.t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
+           " ((select count(*) from t_file where job_id=:jobId and file_state = 'FINISHED') < (select count(*) from t_file where job_id=:jobId)) AND "
+           " ((select count(*) from fts3.t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from fts3.t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
+           " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
+    sql.commit();
+
     // Print message if all files of job have been transitioned
     soci::rowset<soci::row> rs2 = (sql.prepare <<
     			" SELECT job_state from t_job where job_id=:jobId ", soci::use(jobId, "jobId"));
@@ -3219,6 +3268,9 @@ void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t file
     	if (job_state == "FINISHED") {
     		std::cerr << "QoS Transition job: " << jobId << " finished";
     		break;
+    	} else if (job_state == "FINISHEDDIRTY") {
+            std::cerr << "QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)";
+            break;
     	}
     }
 }
