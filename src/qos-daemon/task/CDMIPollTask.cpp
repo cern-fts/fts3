@@ -35,6 +35,8 @@ void CDMIPollTask::run(const boost::any&)
 	std::vector<QosTransitionOperation> files;
 	db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files, "QOS_REQUEST_SUBMITTED");
 
+	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+
 	bool anyFailed = false;
 	for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
 	{
@@ -49,16 +51,21 @@ void CDMIPollTask::run(const boost::any&)
 
 		// Check QoS of file
 		// TODO: add error checking
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file" << it_f->surl << commit;
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << commit;
 		const char* qos_target_result = gfal2_check_target_qos(gfal2_ctx, it_f->surl.c_str(), &err);
 
 		if (qos_target_result != NULL && std::strcmp(it_f->target_qos.c_str(),qos_target_result)==0) {
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file" << it_f->surl << " was successful. File was successfully transitioned" << commit;
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << " was successful. File was successfully transitioned" << commit;
 			// Update file state as finished
 			db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFinished(it_f->jobId, it_f->fileId);
 		} else {
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file" << it_f->surl << " failed. File has not been transitioned yet" << commit;
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << " failed. File has not been transitioned yet" << commit;
 			anyFailed = true;
+			std::cerr << "Printing retry number for file: " << it_f->fileId << std::endl;
+			if (ctx.incrementErrorCountForSurl(it_f->surl) == maxPollRetries) {
+				db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFailed(it_f->jobId, it_f->fileId);
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI POLL check QoS of file " << it_f->surl << " exceeded the max configured limit retry. File has not been transitioned yet and is marked as FAILED" << commit;
+			}
 		}
 
 		//Delete token from context
@@ -71,7 +78,7 @@ void CDMIPollTask::run(const boost::any&)
         time_t interval = getPollInterval(++nPolls), now = time(NULL);
         wait_until = now + interval;
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " next QoS check attempt in " << interval << " seconds" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Next QoS check attempt in " << interval << " seconds" << commit;
         ctx.getWaitingRoom().add(new CDMIPollTask(std::move(*this)));
     }
 }
