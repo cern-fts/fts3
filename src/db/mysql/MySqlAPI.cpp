@@ -1971,14 +1971,22 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                 }
             }
 
-            //delete from t_optimizer_evolution > 7 days old records
+            //delete from t_optimizer_evolution old records bigger than the interval of days being passed
             sql.begin();
-            sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
+            soci::statement deleteOptEvo = (sql.prepare <<
+            		"delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval :days DAY ) ",
+					soci::use(intervalDays)
+            );
+            deleteOptEvo.execute();
             sql.commit();
 
-            //delete from t_file_retry_errors > 7 days old records
+            //delete from t_file_retry_errors old records bigger than the interval of days being passed
             sql.begin();
-            sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
+            soci::statement deleteFileRetryErr = (
+            		sql.prepare << "  delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval :days DAY ) ",
+					soci::use(intervalDays)
+            );
+            deleteFileRetryErr.execute();
             sql.commit();
         }
     }
@@ -1986,7 +1994,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
+    }v
     catch (...)
     {
         sql.rollback();
