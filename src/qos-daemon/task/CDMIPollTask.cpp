@@ -61,7 +61,7 @@ void CDMIPollTask::run(const boost::any&)
 		} else {
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << " failed. File has not been transitioned yet" << commit;
 			anyFailed = true;
-			if (ctx.incrementErrorCountForSurl(it_f->surl) == maxPollRetries) {
+			if (err && ctx.incrementErrorCountForSurl(it_f->surl) == maxPollRetries) {
 				db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFailed(it_f->jobId, it_f->fileId);
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI POLL check QoS of file " << it_f->surl << " exceeded the max configured limit retry. File has not been transitioned yet and is marked as FAILED" << commit;
 			}
