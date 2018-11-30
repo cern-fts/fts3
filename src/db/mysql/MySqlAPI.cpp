@@ -1994,7 +1994,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }v
+    }
     catch (...)
     {
         sql.rollback();
