@@ -3239,9 +3239,9 @@ void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId
     // Update job state to FINISHEDDIRTY if some files of said job are FAILED and some others FINISHED
     sql.begin();
     sql << " UPDATE t_job "
-           " SET job_state = CASE WHEN (((select count(*) from fts3.t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
+           " SET job_state = CASE WHEN (((select count(*) from t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
            " ((select count(*) from t_file where job_id=:jobId and file_state = 'FINISHED') < (select count(*) from t_file where job_id=:jobId)) AND "
-           " ((select count(*) from fts3.t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from fts3.t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
+           " ((select count(*) from t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
            " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
     sql.commit();
 
@@ -3280,9 +3280,9 @@ void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t file
     // Update job state to FINISHEDDIRTY if some files of said job are FAILED and some others FINISHED
     sql.begin();
     sql << " UPDATE t_job "
-           " SET job_state = CASE WHEN (((select count(*) from fts3.t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
+           " SET job_state = CASE WHEN (((select count(*) from t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
            " ((select count(*) from t_file where job_id=:jobId and file_state = 'FINISHED') < (select count(*) from t_file where job_id=:jobId)) AND "
-           " ((select count(*) from fts3.t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from fts3.t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
+           " ((select count(*) from t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
            " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
     sql.commit();
 
