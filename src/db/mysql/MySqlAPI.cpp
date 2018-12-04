@@ -3273,7 +3273,7 @@ void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t file
     // TODO: Add finish timestamp as well
     sql.begin();
     sql << " UPDATE t_job "
-    	   " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FINISHED') > 1)) THEN 'FINISHED' ELSE job_state END "
+    	   " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FINISHED') >= 1)) THEN 'FINISHED' ELSE job_state END "
     	   " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
     sql.commit();
 
