@@ -3181,7 +3181,7 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
 			uint64_t file_id = r.get<unsigned long long>("file_id");
 	        std::string dest_surl = r.get<std::string>("dest_surl");
 	        std::string target_qos = r.get<std::string>("target_qos");
-	        std::string token = r.get<std::string>("proxy").substr(0, cred->proxy.find(":"));
+	        std::string token = r.get<std::string>("proxy").substr(0, r.get<std::string>("proxy").find(":"));
 
 	        qosTranstionOps.emplace_back(job_id, file_id, dest_surl, target_qos, token);
 		}
