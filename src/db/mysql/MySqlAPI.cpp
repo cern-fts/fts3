@@ -3169,9 +3169,9 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
 			" INNER JOIN t_job j ON (f.job_id = j.job_id) "
 			" INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
 			" WHERE "
-			" 		f.file_state = :qosOp ",	soci::use(qosOp, "qosOp") //AND "
-			//"      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-			//soci::use(hashSegment.start), soci::use(hashSegment.end)
+			" 		f.file_state = :qosOp AND "
+			"      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+			soci::use(qosOp), soci::use(hashSegment.start), soci::use(hashSegment.end)
 		);
 
 	for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
