@@ -51,7 +51,6 @@ BlacklistCli::BlacklistCli()
     ;
 
     command_specific.add_options()
-    ("vo", po::value<std::string>(&vo), "The VO that is banned for the given SE")
     ("allow-submit", "FTS will accept transfer jobs for the blacklisted SE (they wont be executed until the SE is blacklisted)")
     ;
 
@@ -132,8 +131,6 @@ bool BlacklistCli::printHelp() const
             std::cout << "Examples: " << std::endl;
             std::cout << "\t- To blacklist a SE:" << std::endl;
             std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on" << std::endl;
-            std::cout << "\t- To blacklist a SE for given VO:" << std::endl;
-            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --vo $VO" << std::endl;
             std::cout << "\t- To blacklist a SE but still accept transfer-jobs:" << std::endl;
             std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --allow-submit" << std::endl;
             std::cout << "\t- To remove a SE from blacklist:" << std::endl;
