@@ -2294,7 +2294,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                 ret.job_metadata = "";
 
             ret.retry_max = it->get<int>("retry_max",0);
-            ret.file_id = it->get<int>("file_id");
+            ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = millisecondsSinceEpoch();
             auto aux_tm = it->get<struct tm>("submit_time");
