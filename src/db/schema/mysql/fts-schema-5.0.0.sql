@@ -191,7 +191,7 @@ DROP TABLE IF EXISTS `t_dm`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_dm` (
-  `file_id` int(11) NOT NULL AUTO_INCREMENT,
+  `file_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `job_id` char(36) NOT NULL,
   `file_state` varchar(32) NOT NULL,
   `dmHost` varchar(150) DEFAULT NULL,
@@ -236,7 +236,7 @@ DROP TABLE IF EXISTS `t_dm_backup`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_dm_backup` (
-  `file_id` int(11) NOT NULL DEFAULT '0',
+  `file_id` bigint(20) unsigned NOT NULL DEFAULT '0',
   `job_id` char(36) NOT NULL,
   `file_state` varchar(32) NOT NULL,
   `dmHost` varchar(150) DEFAULT NULL,
