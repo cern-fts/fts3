@@ -3090,7 +3090,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    uint64_t file_id = row.get<int>("file_id");
+                    uint64_t file_id = row.get<unsigned long long>("file_id");
                     user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
 
