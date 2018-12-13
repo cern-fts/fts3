@@ -143,24 +143,9 @@ void BulkSubmissionParser::parse_item(pt::ptree &item)
         }
     }
 
-    // handle checksums
+    // handle checksum
 
-    if (isArray(item, "checksums")) {
-        v_vec = get<std::vector<std::string> >(item, "checksums");
-        // if the checksums value was set ...
-        if (v_vec.is_initialized()) {
-            file.checksums = *v_vec;
-        }
-    }
-    else {
-        // check if checksum exists
-        v_str = get<std::string>(item, "checksums");
-        // if yes put it into the vector
-        if (v_str.is_initialized()) {
-            file.checksums.push_back(*v_str);
-        }
-    }
-
+    file.checksum = get<std::string>(item, "checksum");
 
 
     // handle file size

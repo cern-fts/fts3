@@ -134,7 +134,7 @@ static const std::string submit5_quoted =
     "    }"
     "  ],"
     "  \"params\": {"
-    "    \"verify_checksum\": \"true\","
+    "    \"verify_checksum\": true,"
     "    \"reuse\": \"true\","
     "    \"spacetoken\": \"blablabla\","
     "    \"bring_online\": \"24\","
@@ -200,7 +200,7 @@ struct RestSubmissionFixture : public RestSubmission
             file.metadata = it->second.get_optional<std::string>("metadata");
             file.file_size = it->second.get_optional<double>("filesize");
             boost::optional <std::string> checksum = it->second.get_optional<std::string>("checksum");
-            if (checksum) file.checksums.push_back(*checksum);
+            if (checksum) file.checksum = checksum;
 
             ret.push_back(file);
         }
