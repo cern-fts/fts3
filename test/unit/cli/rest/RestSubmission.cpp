@@ -134,7 +134,7 @@ static const std::string submit5_quoted =
     "    }"
     "  ],"
     "  \"params\": {"
-    "    \"verify_checksum\": \"true\","
+    "    \"verify_checksum\": true,"
     "    \"reuse\": \"true\","
     "    \"spacetoken\": \"blablabla\","
     "    \"bring_online\": \"24\","
