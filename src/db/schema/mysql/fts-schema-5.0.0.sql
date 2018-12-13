@@ -224,7 +224,7 @@ CREATE TABLE `t_dm` (
   `vo_name` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`file_id`),
   KEY `dm_job_id` (`job_id`),
-  CONSTRAINT `fk_job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`)
+  CONSTRAINT `fk_dmjob_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=534976 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
