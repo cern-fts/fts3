@@ -135,7 +135,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {4, 0};
+    static const unsigned expect[] = {5, 0};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
@@ -2290,7 +2290,7 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
                 ret.job_metadata = "";
 
             ret.retry_max = it->get<int>("retry_max",0);
-            ret.file_id = it->get<int>("file_id");
+            ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = millisecondsSinceEpoch();
             auto aux_tm = it->get<struct tm>("submit_time");
@@ -3092,7 +3092,7 @@ void MySqlAPI::getFilesForDeletion(std::vector<DeleteOperation>& delOps)
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string job_id = row.get<std::string>("job_id");
-                    uint64_t file_id = row.get<int>("file_id");
+                    uint64_t file_id = row.get<unsigned long long>("file_id");
                     user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
 
