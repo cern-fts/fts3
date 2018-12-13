@@ -192,7 +192,7 @@ void SubmitTransferCli::createJobElements()
                     std::string checksum_str = *it;
 
                     checksum = true;
-                    file.checksums.push_back(checksum_str);
+                    file.checksum = checksum_str;
                 }
 
                 files.push_back(file);
@@ -209,9 +209,9 @@ void SubmitTransferCli::createJobElements()
 
         // first, if the checksum algorithm has been given check if the
         // format is correct (ALGORITHM:1234af)
-        std::vector<std::string> checksums;
+        std::string checksum;
         if (vm.count("checksum")) {
-            checksums.push_back(vm["checksum"].as<std::string>());
+            checksum = vm["checksum"].as<std::string>();
             this->checksum = true;
         }
 
@@ -233,7 +233,7 @@ void SubmitTransferCli::createJobElements()
 
             files.push_back(
                 File(boost::assign::list_of(getSource()),
-                    boost::assign::list_of(getDestination()), checksums, filesize, file_metadata)
+                    boost::assign::list_of(getDestination()), checksum, filesize, file_metadata)
             );
         }
     }
