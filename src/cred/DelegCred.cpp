@@ -189,7 +189,7 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
             return false;
         }
 
-     else if(minValidityTime() >= (unsigned long)voms_lifetime)
+     else if( (voms_lifetime > 0) && (minValidityTime() >= (unsigned long)voms_lifetime))
         {
             message = " VO extensions for certificate ";
             message += filename;
