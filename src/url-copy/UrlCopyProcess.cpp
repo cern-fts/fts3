@@ -185,7 +185,8 @@ static std::string setupBearerToken(const std::string &issuer, const std::string
 
 
 static std::string setupMacaroon(const std::string &url, const std::string &proxy,
-                                 const std::vector<std::string> &activity)
+                                 const std::vector<std::string> &activity,
+				 unsigned validity)
 {
     initTokenLibrary();
 
@@ -202,7 +203,7 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     char *err = NULL;
     char *token = (*g_x509_macaroon_issuer_retrieve_p)(url.c_str(),
                                                      proxy.c_str(), proxy.c_str(),
-                                                     180,
+                                                     validity,
                                                      &activity_list[0],
                                                      &err);
     if (token)
@@ -227,7 +228,13 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setReplaceExistingFile(opts.overwrite);
     bool macaroonRequestEnabledSource = false;
     bool macaroonRequestEnabledDestination = false;
+    unsigned macaroonValidity = 180;
 
+    if (opts.timeout) {
+        macaroonValidity = (unsigned) opts.timeout/60;
+    } else if (transfer.userFileSize) {
+        macaroonValidity = (unsigned) adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb)/60;
+    }
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
 
     //check source and destination protocol, so to enable macaroons
@@ -252,9 +259,10 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source" << commit;
             std::vector<std::string> activity_list;
-            activity_list.reserve(1);
+            activity_list.reserve(2);
             activity_list.push_back("DOWNLOAD");
-            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list));
+	    activity_list.push_back("LIST");
+            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list, macaroonValidity));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
         }
         catch (const UrlCopyError &ex)
@@ -272,14 +280,12 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for destination" << commit;
             std::vector<std::string> activity_list;
-            activity_list.reserve(2);
+            activity_list.reserve(4);
             activity_list.push_back("MANAGE");
             activity_list.push_back("UPLOAD");
             activity_list.push_back("DELETE");
-            std::string dest_uri(transfer.destination);
-            std::string::size_type last_slash = dest_uri.rfind('/');
-            std::string parent_url = (last_slash == std::string::npos) ? dest_uri : dest_uri.substr(0, last_slash);
-            params.setDestBearerToken(setupMacaroon(parent_url, opts.proxy, activity_list));
+	    activity_list.push_back("LIST");
+            params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, activity_list, macaroonValidity));
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
         }
         catch (const UrlCopyError &ex)

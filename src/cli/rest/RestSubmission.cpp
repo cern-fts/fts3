@@ -87,8 +87,8 @@ void RestSubmission::strip_values(std::string & json, std::string const & token)
 std::string RestSubmission::strip_values(std::string const & json)
 {
     static std::string tokens[] =
-    {"filesize", "verify_checksum", "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry", "timeout"};
-    static int const size = 9;
+    {"filesize",  "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry", "timeout"};
+    static int const size = 8;
 
     std::string ret = json;
     for (int index = 0; index < size; ++index)
@@ -134,8 +134,8 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
             if (it->file_size)
                 element.put("filesize", boost::lexical_cast<std::string>(*it->file_size));
             // add checksum if provided
-            if (!it->checksums.empty())
-                element.put("checksum", *it->checksums.begin());
+            if (it->checksum)
+                element.put("checksum", it->checksum.get());
             // add activity
             if (it->activity)
                 element.put("activity", it->activity.get());

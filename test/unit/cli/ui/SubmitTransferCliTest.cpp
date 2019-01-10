@@ -23,7 +23,7 @@
 
 #include "cli/ui/SubmitTransferCli.h"
 #include "cli/JobParameterHandler.h"
-
+#include <boost/optional/optional_io.hpp>
 #include <fstream>
 
 using fts3::cli::SubmitTransferCli;
@@ -73,11 +73,12 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_bulk_submission)
 
     BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source1/file.in");
     BOOST_CHECK_EQUAL(files[0].destinations[0], "srm://destination1/file.out");
-    BOOST_CHECK_EQUAL(files[0].checksums[0], "Alg:check1");
+    boost::optional<std::string> checksum = std::string("Alg:check1");
+    BOOST_CHECK_EQUAL(files[0].checksum, checksum);
 
     BOOST_CHECK_EQUAL(files[1].sources[0], "srm://source2/file.in");
     BOOST_CHECK_EQUAL(files[1].destinations[0], "srm://destination2/file.out");
-    BOOST_CHECK(files[1].checksums.empty());
+    BOOST_CHECK_EQUAL(files[1].checksum, boost::none);
 }
 
 
@@ -168,8 +169,9 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_with_checksum)
 
     BOOST_CHECK_EQUAL(files.size(), 1);
     BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source/file.in");
+    boost::optional<std::string> checksum = std::string("ALGORITHM:1234af");
     BOOST_CHECK_EQUAL(files[0].destinations[0], "srm://destination/file.out");
-    BOOST_CHECK_EQUAL(files[0].checksums[0], "ALGORITHM:1234af");
+    BOOST_CHECK_EQUAL(files[0].checksum, checksum);
 }
 
 
