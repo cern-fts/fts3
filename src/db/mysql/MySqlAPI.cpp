@@ -33,7 +33,6 @@
 #include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
 
-
 using namespace fts3::common;
 using namespace db;
 
@@ -575,16 +574,25 @@ void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
 /// @return Number of running (or scheduled) transfers
 static int getActiveCount(soci::session& sql, const std::string &source, const std::string &dest)
 {
-    int activeCount = 0;
+    int activeCount = 0, reuseCount = 0;
 
-    //Running Transefers (R+N+Y+H job type)
+    // Non-session reuse running
     sql << "SELECT COUNT(*) FROM t_file f JOIN t_job j ON j.job_id = f.job_id "
         " WHERE f.source_se = :source_se AND f.dest_se = :dest_se"
-        " AND f.file_state = 'ACTIVE'",
+        "    AND j.job_type NOT IN ('Y', 'H') "
+        "    AND f.file_state IN ('READY', 'ACTIVE')",
         soci::use(source), soci::use(dest),
         soci::into(activeCount);
 
-    return activeCount;
+    // Session reuse running
+    sql << "SELECT COUNT(*) FROM t_job "
+        " WHERE source_se = :source_se AND dest_se = :dest_se "
+        "    AND job_type IN ('Y', 'H') "
+        "    AND job_state = 'ACTIVE'",
+        soci::use(source), soci::use(dest),
+        soci::into(reuseCount);
+
+    return activeCount + reuseCount;
 }
 
 
@@ -630,11 +638,10 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 // Doing this, we avoid a order by priority, which would trigger a filesort, which
                 // can be pretty slow...
                 sql << "SELECT MAX(priority) "
-                   "FROM t_job, t_file "
+                   "FROM t_file "
                    "WHERE "
-                   "    t_file.job_id = t_job.job_id AND "
-                   "    t_file.vo_name=:voName AND t_file.source_se=:source AND t_file.dest_se=:dest AND "
-                   "    t_file.file_state = 'SUBMITTED'",
+                   "    vo_name=:voName AND source_se=:source AND dest_se=:dest AND "
+                   "    file_state = 'SUBMITTED'",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
                    soci::into(maxPriority, isMaxPriorityNull);
                 if (isMaxPriorityNull == soci::i_null) {
@@ -839,6 +846,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     soci::indicator selectionStrategyInd = soci::i_ok;
     std::string selectionStrategy;
     std::string vo_name;
+    std::string destSurlUuid;
     uint64_t nextReplica = 0, alreadyActive;
     soci::indicator nextReplicaInd = soci::i_ok;
 
@@ -863,15 +871,19 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     sql << "SELECT min(file_id) FROM t_file WHERE file_state = 'NOT_USED' AND job_id=:job_id ",
         soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
 
+    // need to get the dest_surl_uuid that was stored by FTS-REST at the submission time
+    sql << "SELECT dest_surl_uuid FROM t_file WHERE dest_surl_uuid is not NULL AND job_id=:job_id ",
+        soci::use(jobId), soci::into(destSurlUuid);
+
     if (selectionStrategy == "auto") {
         uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
         if (bestFileId > 0) {
             sql <<
                 " UPDATE t_file "
-                    " SET file_state = 'SUBMITTED', finish_time=NULL "
+                    " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
                     " WHERE job_id = :jobId AND file_id = :file_id  "
                     " AND file_state = 'NOT_USED' ",
-                soci::use(jobId), soci::use(bestFileId);
+					soci::use(destSurlUuid), soci::use(jobId), soci::use(bestFileId);
         }
         else {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
@@ -880,10 +892,10 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     else {
         sql <<
             " UPDATE t_file "
-            " SET file_state = 'SUBMITTED', finish_time=NULL "
+            " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
             " WHERE job_id = :jobId "
             " AND file_state = 'NOT_USED' and file_id=:file_id ",
-            soci::use(jobId), soci::use(nextReplica);
+			soci::use(destSurlUuid), soci::use(jobId), soci::use(nextReplica);
     }
 }
 
@@ -905,8 +917,18 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
     sql << "UPDATE t_file "
            "SET file_state = 'SUBMITTED', finish_time=NULL "
            "WHERE file_id = :fileId AND file_state = 'NOT_USED'",
-        soci::use(nextFileId);
+		   soci::use(nextFileId);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Next hop for " << jobId << ": " << nextFileId << commit;
+}
+
+void MySqlAPI::setNullDestSURLMultiHop(soci::session& sql, std::string jobId)
+{
+
+	sql << "UPDATE t_file "
+           "SET dest_surl_uuid = NULL "
+           "WHERE job_id = :jobId AND file_state = 'NOT_USED'",
+		   soci::use(jobId);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Nullify multihop dest_surl_uuid for " << jobId << commit;
 }
 
 
@@ -1195,13 +1217,9 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         }
 
         // If the file already in the same state, don't do anything either
-        // avoid 2 url-copy on the same file id to start ( condition processId==0)
-        if (storedState == newFileState) {
-            if (newFileState == "READY" && processId != 0) {}
-	    else {
-                sql.rollback();
-                return boost::tuple<bool, std::string>(false, storedState);
-            }
+        if (storedState == newFileState && newFileState != "READY") {
+            sql.rollback();
+            return boost::tuple<bool, std::string>(false, storedState);
         }
 
         soci::statement stmt(sql);
@@ -1214,7 +1232,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 
         if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
         {
-            query << ", FINISH_TIME = :time1";
+            query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
             stmt.exchange(soci::use(tTime, "time1"));
         }
         if (newFileState == "ACTIVE" || newFileState == "READY")
@@ -1222,7 +1240,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             query << ", START_TIME = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
         }
-
 
         query << ", transfer_Host = :hostname";
         stmt.exchange(soci::use(hostname, "hostname"));
@@ -1238,7 +1255,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             query << ", transferred = :transferred";
             stmt.exchange(soci::use(0, "transferred"));
         }
-
 
         if (newFileState == "STAGING")
         {
@@ -1292,6 +1308,12 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
                     (newFileState == "FINISHED")) {
                     sql.begin();
                     useNextHop(sql, jobId);
+                    sql.commit();
+                }
+                else {
+                	// need to remove all dest_surl_uuid from all jobs
+                    sql.begin();
+                	setNullDestSURLMultiHop(sql, jobId);
                     sql.commit();
                 }
                 break;
@@ -1426,7 +1448,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         // number of files that failed
         numberOfFilesFailed = numberOfFilesInJob - numberOfFilesNotCanceledNorFailed - numberOfFilesCanceled;
 
-        // agregated number of files in terminal states (FINISHED, FAILED and CANCELED)
+        // aggregated number of files in terminal states (FINISHED, FAILED and CANCELED)
         int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
         bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal) ||
@@ -1695,7 +1717,6 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
             " j.job_type "
             " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
             " WHERE f.file_state IN ('ACTIVE', 'READY') "
-            " AND j.job_type NOT IN ('Y', 'H') "
             " AND f.transfer_host = :host",
             soci::use(hostname),
             soci::into(transfer.jobId), soci::into(transfer.fileId), soci::into(startTimeSt),
@@ -1756,7 +1777,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
             if (sql.got_data() && (reuse == "Y" || reuse == "H"))
             {
                 sql.begin();
-                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), "
+                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
                     " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                     soci::use(message),
                     soci::use(job_id),
@@ -1773,7 +1794,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
             if (sql.got_data() && (reuse == "Y" || reuse == "H"))
             {
                 sql.begin();
-                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), "
+                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
                     " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                     soci::use(message),
                     soci::use(job_id),
@@ -2008,7 +2029,7 @@ void MySqlAPI::forkFailed(const std::string& jobId)
         sql.begin();
 
         sql << "UPDATE t_file "
-               " SET file_state = 'FAILED', transfer_host=:hostname, "
+               " SET file_state = 'FAILED', transfer_host=:hostname, dest_surl_uuid = NULL, "
                "    finish_time= UTC_TIMESTAMP(),"
                "    reason='Transfer failed to fork, check fts3server.log for more details'"
                " WHERE job_id = :jobId AND "
@@ -2046,7 +2067,7 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
         std::string job_id;
         soci::statement stmtCancelFile = (sql.prepare <<
             "UPDATE t_file SET "
-            "   finish_time = UTC_TIMESTAMP(), "
+            "   finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
             "   file_state = 'CANCELED', reason = :reason "
             "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')",
             soci::use(message), soci::use(job_id));
@@ -2581,6 +2602,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 {
     try
     {
+
         auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
 
         sql.begin();
@@ -2591,8 +2613,8 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                     "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
                                     soci::use(hostname), soci::use(serviceName));
         stmt1.execute(true);
-
-    	// Will be replaced by a simple count later on since we get the total number of hosts
+	
+	    // Will be replaced by a simple count later on since we get the total number of hosts
         // Total number of working instances
         //soci::statement stmt2 = (
         //                            sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
@@ -2617,15 +2639,15 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
-       	    soci::row const& row = *i;
+	    soci::row const& row = *i;
             if (row.get<std::string>(1) == hostname)
             {
-            	*count = row.get<unsigned>(0);
-            	std::string& host = hostname;
+			*count = row.get<unsigned>(0);
+			std::string& host = hostname;
 	        break;
             }
         }
-
+	
         sql.commit();
 
         // Calculate start and end hash values
@@ -2666,7 +2688,6 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
-
 
 
 void MySqlAPI::updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus)
@@ -3541,7 +3562,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     sql <<
                         " UPDATE t_file "
-                        " SET finish_time=UTC_TIMESTAMP(), staging_finished=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET finish_time=UTC_TIMESTAMP(), staging_finished=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState, dest_surl_uuid = NULL "
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
@@ -3591,7 +3612,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState, dest_surl_uuid = NULL "
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
@@ -3604,7 +3625,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState, dest_surl_uuid = NULL "
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
@@ -3931,3 +3952,4 @@ extern "C" void destroy(GenericDbIfce* p)
     if (p)
         delete p;
 }
+
