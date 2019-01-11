@@ -1158,7 +1158,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::strin
             transferState, errorReason, processId, filesize, duration, retry);
 }
 
-std::string sanitize_utf8(const std::string &in) {
+std::string MySqlAPI::sanitize_utf8(const std::string &in) {
     std::string result;
     const char *ptr = in.data(), *end = ptr + in.size();
     while (true) {
