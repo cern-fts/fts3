@@ -1227,13 +1227,10 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         soci::statement stmt(sql);
         std::ostringstream query;
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "before...." << transferMessage << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "after...." << sanitize_utf8(transferMessage) << commit;
-
         query << "UPDATE t_file SET "
               "    file_state = :state, reason = :reason";
         stmt.exchange(soci::use(newFileState, "state"));
-        stmt.exchange(soci::use(transferMessage, "reason"));
+        stmt.exchange(soci::use(sanitize_utf8(transferMessage), "reason"));
 
         if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
         {
