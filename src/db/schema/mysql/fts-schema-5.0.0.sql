@@ -36,8 +36,8 @@ CREATE TABLE `t_activity_share_config` (
 
 DROP TABLE IF EXISTS `t_oauth2_providers`;
 CREATE TABLE t_oauth2_providers (
-    `provider_url` VARCHAR(150) NOT NULL,
-    `provider_jwk`   VARCHAR(150) NOT NULL,
+    `provider_url` VARCHAR(250) NOT NULL,
+    `provider_jwk`   VARCHAR(1000) NOT NULL,
     PRIMARY KEY(`provider_url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
