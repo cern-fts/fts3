@@ -295,7 +295,7 @@ private:
 
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
 
-    bool utf8_check_if_valid(const string& string);
+    bool utf8_check_if_valid(const std::string& string);
 
     boost::tuple<bool, std::string>  updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,

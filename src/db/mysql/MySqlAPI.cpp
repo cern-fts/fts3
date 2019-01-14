@@ -1156,7 +1156,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::strin
             transferState, errorReason, processId, filesize, duration, retry);
 }
 
-bool MySqlAPI::utf8_check_if_valid(const string& string)
+bool MySqlAPI::utf8_check_if_valid(const std::string& string)
 {
     int c,i,ix,n,j;
     for (i=0, ix=string.length(); i < ix; i++)
