@@ -2,6 +2,7 @@
 -- FTS3 Schema 5.0.0
 -- [FTS-1318] Study FTS schema and propose optimisations
 -- [FTS-1239] Revise the t_dm schema
+-- [FTS-1329] Make t_file and t_file_backup reason UTF-8
 -- 
 
 ALTER TABLE `t_job` 
@@ -12,6 +13,11 @@ ALTER TABLE `t_file`
 	ADD INDEX `idx_host` (`transfer_host`);
 ALTER TABLE `t_optimizer_evolution` 
 	ADD INDEX `idx_datetime` ( `datetime`);
+ALTER TABLE `t_file` 
+	MODIFY reason varchar(2048) CHARACTER SET utf8;
+ALTER TABLE `t_file_backup` 
+        MODIFY reason varchar(2048) CHARACTER SET utf8;
+
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');
