@@ -33,9 +33,6 @@
 #include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
 
-// #include <glib.h>
-
-
 using namespace fts3::common;
 using namespace db;
 
@@ -1158,19 +1155,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::strin
             transferState, errorReason, processId, filesize, duration, retry);
 }
 
-//std::string MySqlAPI::sanitize_utf8(const std::string &in) {
-//    std::string result;
-//    const char *ptr = in.data(), *end = ptr + in.size();
-//    while (true) {
-//        const char *ptr2;
-//        g_utf8_validate(ptr, end - ptr, &ptr2);
-//        result.append(ptr, ptr2);
-//        if (ptr2 == end)
-//            break;
-//        ptr = ptr2 + 1;
-//    }
-//    return result;
-//}
 
 boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
@@ -1230,7 +1214,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         query << "UPDATE t_file SET "
               "    file_state = :state, reason = :reason";
         stmt.exchange(soci::use(newFileState, "state"));
-        //stmt.exchange(soci::use(sanitize_utf8(transferMessage), "reason"));
         stmt.exchange(soci::use(transferMessage, "reason"));
 
         if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
