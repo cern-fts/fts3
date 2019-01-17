@@ -17,7 +17,12 @@ ALTER TABLE `t_file`
 	MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_backup` 
         MODIFY reason varchar(2048) CHARACTER SET utf8;
-
+ALTER TABLE `t_dm`
+        MODIFY reason varchar(2048) CHARACTER SET utf8;
+ALTER TABLE `t_dm_backup`
+        MODIFY reason varchar(2048) CHARACTER SET utf8;
+ALTER TABLE `t_file_retry_errors`
+        MODIFY reason varchar(2048) CHARACTER SET utf8;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');
@@ -33,7 +38,7 @@ CREATE TABLE `t_dm_new` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,

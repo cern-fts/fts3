@@ -201,7 +201,7 @@ CREATE TABLE `t_dm` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -246,7 +246,7 @@ CREATE TABLE `t_dm_backup` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -383,7 +383,7 @@ CREATE TABLE `t_file_retry_errors` (
   `file_id` bigint(20) unsigned NOT NULL,
   `attempt` int(11) NOT NULL,
   `datetime` timestamp NULL DEFAULT NULL,
-  `reason` varchar(2048) DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
   PRIMARY KEY (`file_id`,`attempt`),
   CONSTRAINT `t_file_retry_errors_ibfk_1` FOREIGN KEY (`file_id`) REFERENCES `t_file` (`file_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
