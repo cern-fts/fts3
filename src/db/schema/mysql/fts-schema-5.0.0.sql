@@ -313,6 +313,7 @@ CREATE TABLE `t_file` (
   `vo_name` varchar(50) DEFAULT NULL,
   `activity` varchar(255) DEFAULT 'default',
   `transferred` bigint(20) DEFAULT '0',
+  `priority` int(11) DEFAULT '3',
   PRIMARY KEY (`file_id`),
   KEY `idx_job_id` (`job_id`),
   KEY `idx_activity` (`vo_name`,`activity`),

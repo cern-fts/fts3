@@ -3,6 +3,7 @@
 -- [FTS-1318] Study FTS schema and propose optimisations
 -- [FTS-1239] Revise the t_dm schema
 -- [FTS-1329] Make t_file and t_file_backup reason UTF-8
+-- [FTS-1201] De-normalize priority in DB
 -- 
 
 ALTER TABLE `t_job` 
@@ -23,6 +24,9 @@ ALTER TABLE `t_dm_backup`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
+ALTER TABLE `t_file` 
+	ADD COLUMN `priority` int(11) DEFAULT '3';
+
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');
