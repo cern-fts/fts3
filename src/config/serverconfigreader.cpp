@@ -132,6 +132,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 		po::value<std::string>( &(_vars["AuthorizationProviderTokenEndpoint"]) )->default_value(""),
 		"Authorization token endpoint ex IAM"
 	)
+	(
+		"AuthorizationProviderJwkEndpoint,w",
+		po::value<std::string>( &(_vars["AuthorizationProviderJwkEndpoint"]) )->default_value(""),
+		"Jwk enpoint of Authorization provider"
+	)
     (
         "ClientId,w",
         po::value<std::string>( &(_vars["ClientId"]) )->default_value(""),

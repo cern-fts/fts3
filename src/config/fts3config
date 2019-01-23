@@ -17,6 +17,7 @@ DbConnectString=replacethis
 #The endpoint where openId Connect OP lies
 AuthorizationProvider=https://iam.extreme-datacloud.eu/introspect
 AuthorizationProviderTokenEndpoint=https://iam.extreme-datacloud.eu/token
+AuthorizationProviderJwkEndpoint=https://iam.extreme-datacloud.eu/jwk/
 #The client Id at the IAM server
 ClientId=replacethis
 #The client secret
