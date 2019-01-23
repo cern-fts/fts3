@@ -10,3 +10,9 @@ ALTER TABLE t_job_backup MODIFY COLUMN job_state enum('STAGING','QOS_TRANSITION'
 
 ALTER TABLE t_job ADD target_qos varchar(255) DEFAULT NULL;
 ALTER TABLE t_job_backup ADD target_qos varchar(255) DEFAULT NULL;
+
+CREATE TABLE t_oauth2_providers (
+    `provider_url` VARCHAR(250) NOT NULL,
+    `provider_jwk`   VARCHAR(1000) NOT NULL,
+    PRIMARY KEY(`provider_url`)
+)
