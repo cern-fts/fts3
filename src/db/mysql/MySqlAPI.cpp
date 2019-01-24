@@ -2593,15 +2593,16 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                     "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
                                     soci::use(hostname), soci::use(serviceName));
         stmt1.execute(true);
-
+	
+	// Will be replaced by a simple count later on since we get the total number of hosts
         // Total number of working instances
-        soci::statement stmt2 = (
-                                    sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-                                    "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
-                                    soci::use(heartBeatGraceInterval),
-                                    soci::use(serviceName),
-                                    soci::into(*count));
-        stmt2.execute(true);
+        //soci::statement stmt2 = (
+        //                            sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
+        //                            "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
+        //                            soci::use(heartBeatGraceInterval),
+        //                            soci::use(serviceName),
+        //                            soci::into(*count));
+        //stmt2.execute(true);
 
         // This instance index
         // Mind that MySQL does not have rownum
@@ -2620,10 +2621,16 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                 break;
         }
 
+        for (*count = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i)
+        {
+		++(*count);
+        }
+
         sql.commit();
 
         if(*count != 0)
         {
+	    ++(*count);
             // Calculate start and end hash values
             unsigned segsize = UINT16_MAX / *count;
             unsigned segmod  = UINT16_MAX % *count;
