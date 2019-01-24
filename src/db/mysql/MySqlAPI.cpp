@@ -2596,15 +2596,15 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                     soci::use(hostname), soci::use(serviceName));
         stmt1.execute(true);
 
-        // Will be replaced by a simple count later on since we get the total number of hosts already
-        // Total number of working instances
-        //soci::statement stmt2 = (
-        //                            sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-        //                            "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
-        //                            soci::use(heartBeatGraceInterval),
-        //                            soci::use(serviceName),
-        //                            soci::into(*count));
-        //stmt2.execute(true);
+        // Will be replaced by a simple count later on since we get the total number of hosts
+//        // Total number of working instances
+//        soci::statement stmt2 = (
+//                                    sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
+//                                    "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
+//                                    soci::use(heartBeatGraceInterval),
+//                                    soci::use(serviceName),
+//                                    soci::into(*count));
+//        stmt2.execute(true);
 
         // This instance index
         // Mind that MySQL does not have rownum
@@ -2631,21 +2631,23 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         sql.commit();
 
-	++(*count);
+        if(*count != 0)
+        {
+	    ++(*count);
+            // Calculate start and end hash values
+            unsigned segsize = UINT16_MAX / *count;
+            unsigned segmod  = UINT16_MAX % *count;
 
-        // Calculate start and end hash values
-        unsigned segsize = UINT16_MAX / *count;
-        unsigned segmod  = UINT16_MAX % *count;
+            *start = segsize * (*index);
+            *end   = segsize * (*index + 1) - 1;
 
-        *start = segsize * (*index);
-        *end   = segsize * (*index + 1) - 1;
+            // Last one take over what is left
+            if (*index == *count - 1)
+                *end += segmod + 1;
 
-        // Last one take over what is left
-        if (*index == *count - 1)
-        	*end += segmod + 1;
-
-        this->hashSegment.start = *start;
-        this->hashSegment.end   = *end;
+            this->hashSegment.start = *start;
+            this->hashSegment.end   = *end;
+        }
 
         if(hashSegment.start == 0)
         {
