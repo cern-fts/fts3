@@ -2628,23 +2628,20 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         sql.commit();
 
-        if(*count != 0)
-        {
-	    ++(*count);
-            // Calculate start and end hash values
-            unsigned segsize = UINT16_MAX / *count;
-            unsigned segmod  = UINT16_MAX % *count;
+	++(*count);
+        // Calculate start and end hash values
+        unsigned segsize = UINT16_MAX / *count;
+        unsigned segmod  = UINT16_MAX % *count;
 
-            *start = segsize * (*index);
-            *end   = segsize * (*index + 1) - 1;
+        *start = segsize * (*index);
+        *end   = segsize * (*index + 1) - 1;
 
-            // Last one take over what is left
-            if (*index == *count - 1)
-                *end += segmod + 1;
+        // Last one take over what is left
+        if (*index == *count - 1)
+        	*end += segmod + 1;
 
-            this->hashSegment.start = *start;
-            this->hashSegment.end   = *end;
-        }
+        this->hashSegment.start = *start;
+        this->hashSegment.end   = *end;
 
         if(hashSegment.start == 0)
         {
