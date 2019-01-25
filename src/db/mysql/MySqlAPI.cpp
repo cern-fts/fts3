@@ -2564,6 +2564,10 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 {
     soci::session sql(*connectionPool);
 
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Before calling the the actual function: host " << *index << " out of " << *count
+                << commit;
+
     try
     {
         updateHeartBeatInternal(sql, index, count, start, end, service_name);
@@ -2583,6 +2587,11 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 {
     try
     {
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Inside function: host " << *index << " out of " << *count
+                << commit;
+
         auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
 
         sql.begin();
@@ -2606,29 +2615,42 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         // This instance index
         // Mind that MySQL does not have rownum
-        soci::rowset<std::string> rsHosts = (sql.prepare <<
-                                             "SELECT hostname FROM t_hosts "
+        soci::rowset<soci::row> rsHosts = (sql.prepare <<
+                                             "SELECT (SELECT count(hostname) FROM t_hosts WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name) as totalhosts, "
+					     "hostname FROM t_hosts "
                                              "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
                                              "ORDER BY hostname",
-                                             soci::use(heartBeatGraceInterval), soci::use(serviceName)
+                                             soci::use(heartBeatGraceInterval), soci::use(serviceName), soci::use(heartBeatGraceInterval), soci::use(serviceName)
                                             );
+        soci::rowset<soci::row>::const_iterator i;
 
-        soci::rowset<std::string>::const_iterator i;
+	*count = 0;
+
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
-            std::string& host = *i;
-            if (host == hostname)
-                break;
-        }
+	    soci::row const& row = *i;
+	    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+        	        << "Entering index loop, host is  " << *index << " count is " << row.get<unsigned>(0)
+			<< "host is " << row.get<std::string>(1) << " hostname is " << hostname
+                	<< commit;
+            if (row.get<std::string>(1) == hostname)
+		{
+			*count = row.get<unsigned>(0);
+			std::string& host = hostname;
+		        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+        	                << "Host is  " << host << " row is " << row.get<std::string>(1) 
+				<< commit;
+	                break;
+		}
+	}
 
-        for (*count = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i)
-        {
-		++(*count);
-        }
-
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+		<< "Outside the loops, host is  " << *index  
+		<< commit;
+		
+	
         sql.commit();
 
-	++(*count);
         // Calculate start and end hash values
         unsigned segsize = UINT16_MAX / *count;
         unsigned segmod  = UINT16_MAX % *count;
@@ -2666,6 +2688,10 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Exiting function: host " << *index << " out of " << *count
+                << commit;
+
 }
 
 
