@@ -2564,6 +2564,10 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 {
     soci::session sql(*connectionPool);
 
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Before calling the the actual function: host " << *index << " out of " << *count
+                << commit;
+
     try
     {
         updateHeartBeatInternal(sql, index, count, start, end, service_name);
@@ -2583,6 +2587,11 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 {
     try
     {
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Inside function: host " << *index << " out of " << *count
+                << commit;
+
         auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
 
         sql.begin();
@@ -2628,7 +2637,17 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         sql.commit();
 
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Count before increase: host " << *index << " out of " << *count
+                << commit;
+
+
 	++(*count);
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Count after increase: host " << *index << " out of " << *count
+                << commit;
+
         // Calculate start and end hash values
         unsigned segsize = UINT16_MAX / *count;
         unsigned segmod  = UINT16_MAX % *count;
@@ -2666,6 +2685,10 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Exiting function: host " << *index << " out of " << *count
+                << commit;
+
 }
 
 
