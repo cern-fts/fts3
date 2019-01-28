@@ -2634,13 +2634,18 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                 break;
 	}
 
-        for (*count = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i)
+        soci::rowset<std::string>::const_iterator e;
+        for (*count = 0, e = rsHosts.begin(); e != rsHosts.end(); ++e)
         {
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                        << "Entering index loop, host is  " << *index << " and host is " << *i
+                        << "Entering count loop, host is  " << *index << " and count is " << *count
                         << commit;
 
 		++(*count);
+
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                        << "After increase, host is  " << *index << " and count is " << *count
+                        << commit;
         }
 	
 	if (*count == 0) 
