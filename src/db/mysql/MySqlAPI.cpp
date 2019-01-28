@@ -2622,6 +2622,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                              soci::use(heartBeatGraceInterval), soci::use(serviceName)
                                             );
 
+	soci::rowset<std::string> rsCount = rsHosts;
         soci::rowset<std::string>::const_iterator i;
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
@@ -2635,7 +2636,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 	}
 
         soci::rowset<std::string>::const_iterator e;
-        for (*count = 0, e = rsHosts.begin(); e != rsHosts.end(); ++e)
+        for (*count = 0, e = rsCount.begin(); e != rsCount.end(); ++e)
         {
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
                         << "Entering count loop, host is  " << *index << " and count is " << *count
