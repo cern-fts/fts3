@@ -2639,7 +2639,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         {
 
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                 << "Inside loop, count is " << *index << " i is " << *i
+                 << "Inside loop, count is " << *count << " i is " << *i
                  << commit;
 
 		++(*count);
