@@ -2622,7 +2622,6 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                              soci::use(heartBeatGraceInterval), soci::use(serviceName)
                                             );
 
-	soci::rowset<std::string> rsCount = rsHosts;
         soci::rowset<std::string>::const_iterator i;
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
@@ -2634,6 +2633,13 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
             if (host == hostname)
                 break;
 	}
+
+        soci::rowset<std::string> rsCount = (sql.prepare <<
+                                             "SELECT hostname FROM t_hosts "
+                                             "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
+                                             "ORDER BY hostname",
+                                             soci::use(heartBeatGraceInterval), soci::use(serviceName)
+                                            );
 
         soci::rowset<std::string>::const_iterator e;
         for (*count = 0, e = rsCount.begin(); e != rsCount.end(); ++e)
