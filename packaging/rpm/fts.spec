@@ -501,6 +501,64 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Thu Jan 10 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.2-1
+- New bugfix release
+
+* Tue Oct 16 2018 Andrea Manzi <amanzi@cern.ch> - 3.8.1-1
+- New bugfix release
+
+* Mon Sep 24 2018 Andrea Manzi <amanzi@cern.ch> - 3.8.0-1
+- New Minor release
+- Initial support for Macaroons/Scitokens
+- Multihop Scheduler merged into Standard Scheduling system
+- AutoSessionReuse support
+
+* Mon Jun 11 2018 Andrea Manzi <amanzi@cern.ch> - 3.7.10-1
+- New upstream release
+
+* Fri May 4 2018 Andrea Manzi <amanzi@cern.ch> - 3.7.9-1
+- New upstream release
+
+* Thu Feb 15 2018 Andrea Manzi <amanzi@cern.ch> - 3.7.8-1
+- New upstream release
+
+* Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.10-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Wed Nov 29 2017 Igor Gnatenko <ignatenko@redhat.com> - 3.6.10-3
+- Rebuild for protobuf 3.5
+
+* Mon Nov 13 2017 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 3.6.10-2
+- Rebuild for protobuf 3.4
+
+* Thu Aug 03 2017 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.6.10-1
+- New upstream release
+
+* Wed Aug 02 2017 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.8-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.8-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Mon Jul 03 2017 Jonathan Wakely <jwakely@redhat.com> - 3.6.8-3
+- Rebuilt for Boost 1.64
+
+* Wed Jun 14 2017 Orion Poplawski <orion@cora.nwra.com> - 3.6.8-2
+- Rebuild for protobuf 3.3.1
+
+* Tue Apr 18 2017 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.6.8-1
+- New upstream release
+- rpmlint
+
+* Mon Feb 20 2017 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.6.3-1
+- New upstream release
+
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 3.5.7-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Fri Jan 27 2017 Jonathan Wakely <jwakely@redhat.com> - 3.5.7-2
+- Rebuilt for Boost 1.63
+
 * Mon Nov 14 2016 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.5.7-1
 - New upstream release
 
