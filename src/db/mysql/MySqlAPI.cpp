@@ -2623,40 +2623,23 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                             );
 
         soci::rowset<std::string>::const_iterator i;
+	*count = 0;
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
+            ++(*count);
 
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
                 << "Inside loop, index is " << *index << " i is " << *i
                 << commit;
+            if (*i == hostname)
+	        std::string& host = *i;
 
-            std::string& host = *i;
-            if (host == hostname)
-                break;
-        }
-
-        for (*count = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i)
-        {
-
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                 << "Inside loop, count is " << *count << " i is " << *i
-                 << commit;
-
-		++(*count);
-        }
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "Inside loop, count is " << *count << " i is " << *i
+                << commit;
+	}
 
         sql.commit();
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                << "Count before increase: host " << *index << " out of " << *count
-                << commit;
-
-
-	++(*count);
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                << "Count after increase: host " << *index << " out of " << *count
-                << commit;
 
         // Calculate start and end hash values
         unsigned segsize = UINT16_MAX / *count;
