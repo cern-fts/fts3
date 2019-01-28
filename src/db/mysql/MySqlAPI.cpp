@@ -2641,7 +2641,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                         << "Entering count loop, host is  " << *index << " and count is " << *count
                         << commit;
 
-		*count++;
+		(*count)++;
 
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
                         << "After increase, host is  " << *index << " and count is " << *count
