@@ -2633,8 +2633,10 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         	        << "Entering index loop, host is  " << *index << " count is " << row.get<unsigned>(0)
 			<< "host is " << row.get<std::string>(1)
                 	<< commit;
+	    //std::string& host = row.get<std::string>(1);
             if (row.get<std::string>(1) == hostname)
 		*count = row.get<unsigned>(0);
+		std::string& host = hostname;
                 break;
 	}
 
