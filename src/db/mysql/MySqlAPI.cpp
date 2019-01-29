@@ -2564,10 +2564,6 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 {
     soci::session sql(*connectionPool);
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                << "Before calling the the actual function: host " << *index << " out of " << *count
-                << commit;
-
     try
     {
         updateHeartBeatInternal(sql, index, count, start, end, service_name);
@@ -2587,10 +2583,6 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 {
     try
     {
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                << "Inside function: host " << *index << " out of " << *count
-                << commit;
 
         auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
 
@@ -2629,25 +2621,13 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
 	    soci::row const& row = *i;
-	    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-        	        << "Entering index loop, host is  " << *index << " count is " << row.get<unsigned>(0)
-			<< "host is " << row.get<std::string>(1) << " hostname is " << hostname
-                	<< commit;
             if (row.get<std::string>(1) == hostname)
 		{
 			*count = row.get<unsigned>(0);
 			std::string& host = hostname;
-		        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-        	                << "Host is  " << host << " row is " << row.get<std::string>(1) 
-				<< commit;
 	                break;
 		}
 	}
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-		<< "Outside the loops, host is  " << *index  
-		<< commit;
-		
 	
         sql.commit();
 
@@ -2688,10 +2668,6 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                << "Exiting function: host " << *index << " out of " << *count
-                << commit;
-
 }
 
 
