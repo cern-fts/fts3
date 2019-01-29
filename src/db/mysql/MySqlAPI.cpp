@@ -2631,13 +2631,17 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 	    soci::row const& row = *i;
 	    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
         	        << "Entering index loop, host is  " << *index << " count is " << row.get<unsigned>(0)
-			<< "host is " << row.get<std::string>(1)
+			<< "host is " << row.get<std::string>(1) << " hostname is " << hostname
                 	<< commit;
-	    //std::string& host = row.get<std::string>(1);
             if (row.get<std::string>(1) == hostname)
-		*count = row.get<unsigned>(0);
-		std::string& host = hostname;
-                break;
+		{
+			*count = row.get<unsigned>(0);
+			std::string& host = hostname;
+		        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+        	                << "Host is  " << host << " row is " << row.get<std::string>(1) 
+				<< commit;
+	                break;
+		}
 	}
 
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
