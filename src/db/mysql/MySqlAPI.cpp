@@ -2615,57 +2615,29 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         // This instance index
         // Mind that MySQL does not have rownum
-        soci::rowset<std::string> rsHosts = (sql.prepare <<
-                                             "SELECT hostname FROM t_hosts "
+        soci::rowset<soci::row> rsHosts = (sql.prepare <<
+                                             "SELECT (SELECT count(hostname) FROM t_hosts WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name) as totalhosts, "
+					     "hostname FROM t_hosts "
                                              "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
                                              "ORDER BY hostname",
-                                             soci::use(heartBeatGraceInterval), soci::use(serviceName)
+                                             soci::use(heartBeatGraceInterval), soci::use(serviceName), soci::use(heartBeatGraceInterval), soci::use(serviceName)
                                             );
-
-        soci::rowset<std::string>::const_iterator i;
-        for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
+        soci::rowset<soci::row>::const_iterator i;
+	
+        for (*count = 0, *index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
-	        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-        	        << "Entering index loop, host is  " << *index << " and host is " << *i
+	    soci::row const& row = *i;
+	    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+        	        << "Entering index loop, host is  " << *index << " count is " << row.get<unsigned>(0)
+			<< "host is " << row.get<std::string>(1)
                 	<< commit;
-
-            std::string& host = *i;
-            if (host == hostname)
+            if (row.get<std::string>(1) == hostname)
+		*count = row.get<unsigned>(0);
                 break;
 	}
 
-        soci::rowset<std::string> rsCount = (sql.prepare <<
-                                             "SELECT hostname FROM t_hosts "
-                                             "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
-                                             "ORDER BY hostname",
-                                             soci::use(heartBeatGraceInterval), soci::use(serviceName)
-                                            );
-
-        soci::rowset<std::string>::const_iterator e;
-        for (*count = 0, e = rsCount.begin(); e != rsCount.end(); ++e)
-        {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                        << "Entering count loop, host is  " << *index << " and count is " << *count
-                        << commit;
-
-		(*count)++;
-
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                        << "After increase, host is  " << *index << " and count is " << *count
-                        << commit;
-        }
-	
-	if (*count == 0) 
-	{
-		++(*count);
-	        FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-        	        << "Only one host count is " << *count
-                	<< commit;
-
-	}
-
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-		<< "Outside the loops, host is  " << *index << " count is " << *count
+		<< "Outside the loops, host is  " << *index  
 		<< commit;
 		
 	
