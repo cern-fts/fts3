@@ -2623,8 +2623,10 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                              soci::use(heartBeatGraceInterval), soci::use(serviceName), soci::use(heartBeatGraceInterval), soci::use(serviceName)
                                             );
         soci::rowset<soci::row>::const_iterator i;
-	
-        for (*count = 0, *index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
+
+	*count = 0;
+
+        for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
 	    soci::row const& row = *i;
 	    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
