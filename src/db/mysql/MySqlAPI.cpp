@@ -2596,50 +2596,55 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                     soci::use(hostname), soci::use(serviceName));
         stmt1.execute(true);
 
+    	// Will be replaced by a simple count later on since we get the total number of hosts
         // Total number of working instances
-        soci::statement stmt2 = (
-                                    sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-                                    "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
-                                    soci::use(heartBeatGraceInterval),
-                                    soci::use(serviceName),
-                                    soci::into(*count));
-        stmt2.execute(true);
+        //soci::statement stmt2 = (
+        //                            sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
+        //                            "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name",
+        //                            soci::use(heartBeatGraceInterval),
+        //                            soci::use(serviceName),
+        //                            soci::into(*count));
+        //stmt2.execute(true);
 
         // This instance index
         // Mind that MySQL does not have rownum
-        soci::rowset<std::string> rsHosts = (sql.prepare <<
-                                             "SELECT hostname FROM t_hosts "
+        soci::rowset<soci::row> rsHosts = (sql.prepare <<
+                                             "SELECT (SELECT count(hostname) FROM t_hosts WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name) as totalhosts, "
+					     "hostname FROM t_hosts "
                                              "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
                                              "ORDER BY hostname",
-                                             soci::use(heartBeatGraceInterval), soci::use(serviceName)
+                                             soci::use(heartBeatGraceInterval), soci::use(serviceName), soci::use(heartBeatGraceInterval), soci::use(serviceName)
                                             );
+        soci::rowset<soci::row>::const_iterator i;
 
-        soci::rowset<std::string>::const_iterator i;
+        *count = 0;
+
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
-            std::string& host = *i;
-            if (host == hostname)
-                break;
+       	    soci::row const& row = *i;
+            if (row.get<std::string>(1) == hostname)
+            {
+            	*count = row.get<unsigned>(0);
+            	std::string& host = hostname;
+	        break;
+            }
         }
 
         sql.commit();
 
-        if(*count != 0)
-        {
-            // Calculate start and end hash values
-            unsigned segsize = UINT16_MAX / *count;
-            unsigned segmod  = UINT16_MAX % *count;
+        // Calculate start and end hash values
+        unsigned segsize = UINT16_MAX / *count;
+        unsigned segmod  = UINT16_MAX % *count;
 
-            *start = segsize * (*index);
-            *end   = segsize * (*index + 1) - 1;
+        *start = segsize * (*index);
+        *end   = segsize * (*index + 1) - 1;
 
-            // Last one take over what is left
-            if (*index == *count - 1)
-                *end += segmod + 1;
+        // Last one take over what is left
+        if (*index == *count - 1)
+        	*end += segmod + 1;
 
-            this->hashSegment.start = *start;
-            this->hashSegment.end   = *end;
-        }
+        this->hashSegment.start = *start;
+        this->hashSegment.end   = *end;
 
         if(hashSegment.start == 0)
         {
@@ -2665,6 +2670,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
+
 
 
 void MySqlAPI::updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus)
