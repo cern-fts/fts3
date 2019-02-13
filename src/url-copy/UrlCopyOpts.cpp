@@ -109,9 +109,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
 {
     typedef boost::tokenizer <boost::char_separator<char>> tokenizer;
 
-    std::string strArray[9];
-    strArray[7] = "x";
-    strArray[8] = "x";
+    std::string strArray[7];
     tokenizer tokens(line, boost::char_separator<char>(" "));
     std::copy(tokens.begin(), tokens.end(), strArray);
 
@@ -128,14 +126,10 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     if (t.tokenBringOnline == "x") {
         t.tokenBringOnline.clear();
     }
-    t.sourceTokenIssuer = strArray[7];
-    if (t.sourceTokenIssuer == "x") {
-        t.sourceTokenIssuer.clear();
-    }
-    t.destTokenIssuer = strArray[8];
-    if (t.destTokenIssuer == "x") {
-        t.destTokenIssuer.clear();
-    }
+    t.sourceTokenDescription = reference.sourceTokenDescription;
+    t.destTokenDescription = reference.destTokenDescription;
+    t.sourceTokenIssuer = reference.sourceTokenIssuer;
+    t.destTokenIssuer = reference.destTokenIssuer;
     t.isMultipleReplicaJob = false;
     t.isLastReplica = false;
     return t;
