@@ -1204,7 +1204,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         }
 
         // If the file already in the same state, don't do anything either
-        if (storedState == newFileState && newFileState != "READY") {
+        if (storedState == newFileState) {
             sql.rollback();
             return boost::tuple<bool, std::string>(false, storedState);
         }
