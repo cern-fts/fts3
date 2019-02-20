@@ -164,8 +164,13 @@ void HeartBeat::orderedShutdown()
 }
 
 bool HeartBeat::isLeadNode()
-{
-    return index == 0;
+{   
+    if (DrainMode::instance()) 
+    {
+        return false;
+    } 
+    else 
+        return index == 0;
 }
 
 } // end namespace server
