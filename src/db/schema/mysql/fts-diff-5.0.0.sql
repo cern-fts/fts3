@@ -4,6 +4,7 @@
 -- [FTS-1239] Revise the t_dm schema
 -- [FTS-1329] Make t_file and t_file_backup reason UTF-8
 -- [FTS-1201] De-normalize priority in DB
+-- [FTS-1353] Avoid submitting multiple transfers to the same destination 
 -- 
 
 ALTER TABLE `t_job` 
@@ -27,6 +28,10 @@ ALTER TABLE `t_file_retry_errors`
 ALTER TABLE `t_file` 
 	ADD COLUMN `priority` int(11) DEFAULT '3';
 
+ALTER TABLE `t_file` 
+       ADD COLUMN `dest_surl_uuid` char(36) DEFAULT NULL;
+ALTER TABLE `t_file` 
+       ADD UNIQUE KEY `dest_surl_uuid` (`dest_surl_uuid`);
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');
