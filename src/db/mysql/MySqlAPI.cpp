@@ -1217,9 +1217,13 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         }
 
         // If the file already in the same state, don't do anything either
-        if (storedState == newFileState && newFileState != "READY") {
-            sql.rollback();
-            return boost::tuple<bool, std::string>(false, storedState);
+        // avoid 2 url-copy on the same file id to start ( condition processId==0)
+        if (storedState == newFileState) {
+            if (newFileState == "READY" && processId != 0) {}
+	    else {
+                sql.rollback();
+                return boost::tuple<bool, std::string>(false, storedState);
+            }
         }
 
         soci::statement stmt(sql);
