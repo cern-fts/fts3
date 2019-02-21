@@ -230,11 +230,6 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     bool macaroonRequestEnabledDestination = false;
     unsigned macaroonValidity = 180;
 
-    if (opts.timeout) {
-        macaroonValidity = (unsigned) opts.timeout/60;
-    } else if (transfer.userFileSize) {
-        macaroonValidity = (unsigned) adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb)/60;
-    }
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
 
     //check source and destination protocol, so to enable macaroons
@@ -246,6 +241,15 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
 
     if ((transfer.destination.protocol.find("dav")==0)  ||  (transfer.destination.protocol.find("http") == 0)) {
         macaroonRequestEnabledDestination = true;
+    }
+
+    if (macaroonRequestEnabledDestination || macaroonRequestEnabledSource) {
+         //request a macaroon longer twice the timeout as we could run both push and pull mode 
+         if (opts.timeout) {
+             macaroonValidity = ((unsigned) (2 * opts.timeout)/60) + 10 ;
+         } else if (transfer.userFileSize) {
+             macaroonValidity = ((unsigned) (2 * adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb))/60) + 10;
+         }
     }
   
     // Attempt to retrieve an oauth token from the VO's issuer; if not,
