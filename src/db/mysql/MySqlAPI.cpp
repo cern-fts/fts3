@@ -1429,7 +1429,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         // number of files that failed
         numberOfFilesFailed = numberOfFilesInJob - numberOfFilesNotCanceledNorFailed - numberOfFilesCanceled;
 
-        // agregated number of files in terminal states (FINISHED, FAILED and CANCELED)
+        // aggregated number of files in terminal states (FINISHED, FAILED and CANCELED)
         int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
         bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal) ||
