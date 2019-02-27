@@ -846,6 +846,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     soci::indicator selectionStrategyInd = soci::i_ok;
     std::string selectionStrategy;
     std::string vo_name;
+    std::string destSurlUuid;
     uint64_t nextReplica = 0, alreadyActive;
     soci::indicator nextReplicaInd = soci::i_ok;
 
@@ -870,15 +871,19 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     sql << "SELECT min(file_id) FROM t_file WHERE file_state = 'NOT_USED' AND job_id=:job_id ",
         soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
 
+    // need to get the dest_surl_uuid that was stored by FTS-REST at the submission time
+    sql << "SELECT dest_surl_uuid FROM t_file WHERE dest_surl_uuid is not NULL AND job_id=:job_id ",
+        soci::use(jobId), soci::into(destSurlUuid);
+
     if (selectionStrategy == "auto") {
         uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
         if (bestFileId > 0) {
             sql <<
                 " UPDATE t_file "
-                    " SET file_state = 'SUBMITTED', finish_time=NULL "
+                    " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
                     " WHERE job_id = :jobId AND file_id = :file_id  "
                     " AND file_state = 'NOT_USED' ",
-                soci::use(jobId), soci::use(bestFileId);
+					soci::use(destSurlUuid), soci::use(jobId), soci::use(bestFileId);
         }
         else {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
@@ -887,10 +892,10 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     else {
         sql <<
             " UPDATE t_file "
-            " SET file_state = 'SUBMITTED', finish_time=NULL "
+            " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
             " WHERE job_id = :jobId "
             " AND file_state = 'NOT_USED' and file_id=:file_id ",
-            soci::use(jobId), soci::use(nextReplica);
+			soci::use(destSurlUuid), soci::use(jobId), soci::use(nextReplica);
     }
 }
 
@@ -899,6 +904,7 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
 {
     uint64_t nextFileId;
     soci::indicator nextFileIdInd;
+    std::string destSurlUuid;
 
     sql << "SELECT file_id FROM t_file "
            "WHERE job_id = :jobId AND file_state = 'NOT_USED' "
@@ -909,10 +915,14 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
         return;
     }
 
+    // need to get the dest_surl_uuid that was stored by FTS-REST at the submission time
+    sql << "SELECT dest_surl_uuid FROM t_file WHERE dest_surl_uuid is not NULL AND job_id=:job_id ",
+        soci::use(jobId), soci::into(destSurlUuid);
+
     sql << "UPDATE t_file "
-           "SET file_state = 'SUBMITTED', finish_time=NULL "
+           "SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
            "WHERE file_id = :fileId AND file_state = 'NOT_USED'",
-        soci::use(nextFileId);
+		   soci::use(destSurlUuid), soci::use(nextFileId);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Next hop for " << jobId << ": " << nextFileId << commit;
 }
 
@@ -1217,7 +1227,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 
         if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
         {
-            query << ", FINISH_TIME = :time1";
+            query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
             stmt.exchange(soci::use(tTime, "time1"));
         }
         if (newFileState == "ACTIVE" || newFileState == "READY")
@@ -1225,7 +1235,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             query << ", START_TIME = :time1";
             stmt.exchange(soci::use(tTime, "time1"));
         }
-
 
         query << ", transfer_Host = :hostname";
         stmt.exchange(soci::use(hostname, "hostname"));
@@ -1241,7 +1250,6 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             query << ", transferred = :transferred";
             stmt.exchange(soci::use(0, "transferred"));
         }
-
 
         if (newFileState == "STAGING")
         {
@@ -1758,7 +1766,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
             if (sql.got_data() && (reuse == "Y" || reuse == "H"))
             {
                 sql.begin();
-                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), "
+                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
                     " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                     soci::use(message),
                     soci::use(job_id),
@@ -1775,7 +1783,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
             if (sql.got_data() && (reuse == "Y" || reuse == "H"))
             {
                 sql.begin();
-                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), "
+                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
                     " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                     soci::use(message),
                     soci::use(job_id),
@@ -2010,7 +2018,7 @@ void MySqlAPI::forkFailed(const std::string& jobId)
         sql.begin();
 
         sql << "UPDATE t_file "
-               " SET file_state = 'FAILED', transfer_host=:hostname, "
+               " SET file_state = 'FAILED', transfer_host=:hostname, dest_surl_uuid = NULL, "
                "    finish_time= UTC_TIMESTAMP(),"
                "    reason='Transfer failed to fork, check fts3server.log for more details'"
                " WHERE job_id = :jobId AND "
@@ -2048,7 +2056,7 @@ void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTim
         std::string job_id;
         soci::statement stmtCancelFile = (sql.prepare <<
             "UPDATE t_file SET "
-            "   finish_time = UTC_TIMESTAMP(), "
+            "   finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
             "   file_state = 'CANCELED', reason = :reason "
             "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')",
             soci::use(message), soci::use(job_id));
@@ -2595,7 +2603,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                     soci::use(hostname), soci::use(serviceName));
         stmt1.execute(true);
 	
-	// Will be replaced by a simple count later on since we get the total number of hosts
+	    // Will be replaced by a simple count later on since we get the total number of hosts
         // Total number of working instances
         //soci::statement stmt2 = (
         //                            sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
@@ -2616,18 +2624,18 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                                             );
         soci::rowset<soci::row>::const_iterator i;
 
-	*count = 0;
+        *count = 0;
 
         for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
         {
 	    soci::row const& row = *i;
             if (row.get<std::string>(1) == hostname)
-		{
+            {
 			*count = row.get<unsigned>(0);
 			std::string& host = hostname;
-	                break;
-		}
-	}
+	        break;
+            }
+        }
 	
         sql.commit();
 
