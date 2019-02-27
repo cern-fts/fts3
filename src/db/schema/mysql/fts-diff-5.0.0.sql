@@ -25,6 +25,8 @@ ALTER TABLE `t_dm_backup`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
+ALTER TABLE `t_file_retry_errors`
+        ADD INDEX `idx_datetime` ( `datetime`);
 ALTER TABLE `t_file` 
 	ADD COLUMN `priority` int(11) DEFAULT '3';
 

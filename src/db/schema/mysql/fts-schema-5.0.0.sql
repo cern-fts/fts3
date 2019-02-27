@@ -388,6 +388,7 @@ CREATE TABLE `t_file_retry_errors` (
   `datetime` timestamp NULL DEFAULT NULL,
   `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
   PRIMARY KEY (`file_id`,`attempt`),
+  KEY `idx_datetime` (`datetime`),
   CONSTRAINT `t_file_retry_errors_ibfk_1` FOREIGN KEY (`file_id`) REFERENCES `t_file` (`file_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
