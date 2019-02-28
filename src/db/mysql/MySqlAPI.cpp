@@ -904,7 +904,6 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
 {
     uint64_t nextFileId;
     soci::indicator nextFileIdInd;
-    std::string destSurlUuid;
 
     sql << "SELECT file_id FROM t_file "
            "WHERE job_id = :jobId AND file_state = 'NOT_USED' "
@@ -915,14 +914,10 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
         return;
     }
 
-    // need to get the dest_surl_uuid that was stored by FTS-REST at the submission time
-    sql << "SELECT dest_surl_uuid FROM t_file WHERE dest_surl_uuid is not NULL AND job_id=:job_id ",
-        soci::use(jobId), soci::into(destSurlUuid);
-
     sql << "UPDATE t_file "
-           "SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
+           "SET file_state = 'SUBMITTED', finish_time=NULL "
            "WHERE file_id = :fileId AND file_state = 'NOT_USED'",
-		   soci::use(destSurlUuid), soci::use(nextFileId);
+		   soci::use(nextFileId);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Next hop for " << jobId << ": " << nextFileId << commit;
 }
 
