@@ -574,25 +574,16 @@ void MySqlAPI::getQueuesWithSessionReusePending(std::vector<QueueId>& queues)
 /// @return Number of running (or scheduled) transfers
 static int getActiveCount(soci::session& sql, const std::string &source, const std::string &dest)
 {
-    int activeCount = 0, reuseCount = 0;
+    int activeCount = 0;
 
-    // Non-session reuse running
+    //Running Transefers (R+N+Y+H job type)
     sql << "SELECT COUNT(*) FROM t_file f JOIN t_job j ON j.job_id = f.job_id "
         " WHERE f.source_se = :source_se AND f.dest_se = :dest_se"
-        "    AND j.job_type NOT IN ('Y', 'H') "
-        "    AND f.file_state IN ('READY', 'ACTIVE')",
+        " AND f.file_state = 'ACTIVE'",
         soci::use(source), soci::use(dest),
         soci::into(activeCount);
 
-    // Session reuse running
-    sql << "SELECT COUNT(*) FROM t_job "
-        " WHERE source_se = :source_se AND dest_se = :dest_se "
-        "    AND job_type IN ('Y', 'H') "
-        "    AND job_state = 'ACTIVE'",
-        soci::use(source), soci::use(dest),
-        soci::into(reuseCount);
-
-    return activeCount + reuseCount;
+    return activeCount;
 }
 
 
