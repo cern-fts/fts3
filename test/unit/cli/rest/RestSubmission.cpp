@@ -62,6 +62,20 @@ static const std::string submit2 =
 
 ;
 
+static const std::string submit2_checksums =
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\"],"
+    "      \"destinations\": [\"root://dest/file\"],"
+    "      \"metadata\": \"User defined metadata\","
+    "      \"filesize\": 1024,"
+    "      \"checksums\": \"adler32:1234\""
+    "    }"
+    "  ]"
+    "}"
+
+;
 
 static const std::string submit3 =
     "{"
@@ -200,8 +214,14 @@ struct RestSubmissionFixture : public RestSubmission
             file.metadata = it->second.get_optional<std::string>("metadata");
             file.file_size = it->second.get_optional<double>("filesize");
             boost::optional <std::string> checksum = it->second.get_optional<std::string>("checksum");
-            if (checksum) file.checksum = checksum;
-
+            if (checksum) { 
+                file.checksum = checksum;
+            } else {
+                checksum = it->second.get_optional<std::string>("checksums");
+                if (checksum) {
+                    file.checksum = checksum;
+                }
+            }
             ret.push_back(file);
         }
 
@@ -289,7 +309,7 @@ struct RestSubmissionFixture : public RestSubmission
         return ss.str();
     }
 
-    RestSubmission::strip_values;
+    using RestSubmission::strip_values;
 };
 
 
@@ -328,6 +348,11 @@ BOOST_AUTO_TEST_CASE(RestSubmissionStreamOp)
     expected = RestSubmissionFixture::get_expected(submit2);
     result = RestSubmissionFixture::get_result(submit2);
     BOOST_CHECK_EQUAL(expected, result);
+    // 2nd checksums, check that we accect the checksums keys as well
+    expected = RestSubmissionFixture::get_expected(submit2_checksums);
+    result = RestSubmissionFixture::get_result(submit2);
+    BOOST_CHECK_EQUAL((expected.find("adler32:1234") != std::string::npos ), 
+	(result.find("adler32:1234") != std::string::npos)); 
     // 3rd
     expected = RestSubmissionFixture::get_expected(submit3);
     result = RestSubmissionFixture::get_result(submit3);
