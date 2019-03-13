@@ -33,7 +33,7 @@ void CDMIPollTask::run(const boost::any&)
 
 	//Retrieve all files with a state of QOS_REQUEST_SUBMITTED
 	std::vector<QosTransitionOperation> files;
-	db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files, "QOS_REQUEST_SUBMITTED");
+	ctx.cdmiGetFilesForQosRequestSubmitted(files, "QOS_REQUEST_SUBMITTED");
 
 	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
 
@@ -57,12 +57,12 @@ void CDMIPollTask::run(const boost::any&)
 		if (qos_target_result != NULL && std::strcmp(it_f->target_qos.c_str(),qos_target_result)==0) {
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << " was successful. File was successfully transitioned" << commit;
 			// Update file state as finished
-			db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFinished(it_f->jobId, it_f->fileId);
+			ctx.cdmiUpdateFileStateToFinished(it_f->jobId, it_f->fileId);
 		} else {
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << " failed. File has not been transitioned yet" << commit;
 			anyFailed = true;
 			if (err && ctx.incrementErrorCountForSurl(it_f->surl) == maxPollRetries) {
-				db::DBSingleton::instance().getDBObjectInstance()->updateFileStateToFailed(it_f->jobId, it_f->fileId);
+				ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId);
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI POLL check QoS of file " << it_f->surl << " exceeded the max configured limit retry. File has not been transitioned yet and is marked as FAILED" << commit;
 			}
 		}

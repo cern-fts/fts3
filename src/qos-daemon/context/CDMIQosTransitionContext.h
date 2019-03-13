@@ -41,17 +41,17 @@ class CDMIQosTransitionContext
 public:
 
     CDMIQosTransitionContext(QoSServer &qosServer):
-        waitingRoom(qosServer.getCDMIWaitingRoom())
+            stateUpdater(qosServer.getStagingStateUpdater()),waitingRoom(qosServer.getCDMIWaitingRoom())
     {
         startTime = time(0);
     }
 
     CDMIQosTransitionContext(const CDMIQosTransitionContext &copy) :
-        waitingRoom(copy.waitingRoom), errorCount(copy.errorCount), startTime(copy.startTime)
+        waitingRoom(copy.waitingRoom), stateUpdater(copy.stateUpdater), errorCount(copy.errorCount), startTime(copy.startTime)
     {}
 
     CDMIQosTransitionContext(CDMIQosTransitionContext && copy) :
-        waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)), startTime(copy.startTime)
+        waitingRoom(copy.waitingRoom), stateUpdater(copy.stateUpdater), errorCount(std::move(copy.errorCount)), startTime(copy.startTime)
     {}
 
     virtual ~CDMIQosTransitionContext() {}
@@ -64,6 +64,29 @@ public:
 
     int incrementErrorCountForSurl(const std::string &surl) {
         return (errorCount[surl] += 1);
+    }
+
+    /**
+     * Synchronous update of the state of a QoS transition operation
+     */
+    void cdmiUpdateFileStateToFinished(const std::string &jobId, uint64_t fileId) const
+    {
+        stateUpdater.cdmiUpdateFileStateToFinished(jobId, fileId);
+    }
+
+    void cdmiUpdateFileStateToFailed(const std::string &jobId, uint64_t fileId) const
+    {
+        stateUpdater.cdmiUpdateFileStateToFailed(jobId, fileId);
+    }
+
+    void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) const
+    {
+        stateUpdater.cdmiGetFilesForQosRequestSubmitted(qosTranstionOps, qosOp);
+    }
+
+    void cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) const
+    {
+        stateUpdater.cdmiUpdateFileStateToQosRequestSubmitted(jobId, fileId);
     }
 
     /**
@@ -82,6 +105,7 @@ public:
     }
 
 private:
+    StagingStateUpdater &stateUpdater;
     /// Job ID -> surl, target_qos, token
     std::map< std::string, std::vector<QosTransitionOperation>> filesToTransition;
     WaitingRoom<CDMIPollTask> &waitingRoom;
