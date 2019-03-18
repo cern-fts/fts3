@@ -122,9 +122,14 @@ void UrlCopyCmd::setProxy(const std::string &path)
 }
 
 
-void UrlCopyCmd::setUDT(bool set)
+void UrlCopyCmd::setUDT(boost::tribool set)
 {
-    setFlag("udt", set);
+    if (boost::indeterminate(set)) {
+        setFlag("udt", false);
+    } else {
+        bool value = (set.value == true);
+        setFlag("udt", value);
+    }
 }
 
 
@@ -136,9 +141,10 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
         setFlag("ipv4", false);
     }
     else {
+        bool value = (set.value == true);
         IPv6Explicit = true;
-        setFlag("ipv6", set);
-        setFlag("ipv4", !set);
+        setFlag("ipv6", value);
+        setFlag("ipv4", !value);
     }
 }
 

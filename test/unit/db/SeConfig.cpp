@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE (SeConfigMerge)
 
     BOOST_CHECK_EQUAL(60, target.inboundMaxActive);
     BOOST_CHECK_EQUAL(100, target.outboundMaxActive);
-    BOOST_CHECK_EQUAL(true, target.udt);
+    BOOST_CHECK_EQUAL(true, target.udt.value);
     BOOST_CHECK(boost::indeterminate(target.ipv6));
 
 }

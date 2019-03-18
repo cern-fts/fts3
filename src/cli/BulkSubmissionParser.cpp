@@ -35,6 +35,7 @@ const std::set<std::string> BulkSubmissionParser::file_tokens =
         ("destinations")
         ("selection_strategy")
         ("checksum")
+        ("checksums")
         ("filesize")
         ("metadata")
         ("activity");
@@ -143,10 +144,12 @@ void BulkSubmissionParser::parse_item(pt::ptree &item)
         }
     }
 
-    // handle checksum
-
+    // handle checksum 
+    // for backward compatibility we accept both checksum and checksums strings
     file.checksum = get<std::string>(item, "checksum");
-
+    if(!file.checksum.is_initialized()) {
+        file.checksum = get<std::string>(item, "checksums");
+    }
 
     // handle file size
 
