@@ -10,21 +10,20 @@ ALTER TABLE `t_file`
 	DROP INDEX `idx_host`;
 ALTER TABLE `t_optimizer_evolution` 
 	DROP INDEX `idx_datetime`;
-ALTER TABLE `t_file` 
-	DROP reason;
-ALTER TABLE `t_file_backup` 
-        DROP reason;
+ALTER TABLE `t_file`
+        MODIFY reason varchar(2048) CHARACTER SET latin1;
+ALTER TABLE `t_file_backup`
+        MODIFY reason varchar(2048) CHARACTER SET latin1;
 ALTER TABLE `t_dm`
-        DROP reason;
+        MODIFY reason varchar(2048) CHARACTER SET latin1;
 ALTER TABLE `t_dm_backup`
-        DROP reason;
+        MODIFY reason varchar(2048) CHARACTER SET latin1;
 ALTER TABLE `t_file_retry_errors`
-        DROP reason;
+        MODIFY reason varchar(2048) CHARACTER SET latin1;
 ALTER TABLE `t_file_retry_errors`
         DROP INDEX `idx_datetime`;
 ALTER TABLE `t_file` 
 	DROP `priority`;
-
 ALTER TABLE `t_file` 
        DROP `dest_surl_uuid`;
 ALTER TABLE `t_file` 
