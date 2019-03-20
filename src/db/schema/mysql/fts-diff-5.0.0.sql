@@ -74,8 +74,8 @@ CREATE TABLE `t_dm_new` (
   CONSTRAINT `fk_dmjob_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`)
 ) 
 AS
-SELECT file_id, job_id, file_state, dmHost, source_surl, dest_surl, source_se, dest_se, error_scope, error_phase, reason, checksum, finish_time, start_time, internal_file_params,
-job_finished, pid, tx_duration, retry, user_filesize, file_metadata, activity, selection_strategy, dm_start, dm_finished, dm_token, retry_timestamp, wait_timestamp, wait_timeout, hashed_id, vo_name
+SELECT file_id, job_id, file_state, dmHost, source_surl, dest_surl, source_se, dest_se, NULL as error_scope, NULL as error_phase, reason, checksum, finish_time, start_time, NULL as internal_file_params,
+job_finished, NULL as pid, tx_duration, retry, user_filesize, file_metadata, activity, NULL as selection_strategy, NULL as dm_start, NULL as dm_finished, dm_token, retry_timestamp, wait_timestamp, wait_timeout, hashed_id, vo_name
 FROM t_dm;
 
 RENAME TABLE t_dm TO t_dm_old;
