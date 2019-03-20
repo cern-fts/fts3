@@ -35,9 +35,6 @@ ALTER TABLE `t_file`
 ALTER TABLE `t_file` 
        ADD UNIQUE KEY `dest_surl_uuid` (`dest_surl_uuid`);
 
-INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (5, 0, 0, 'FTS-1318 diff');
-
 CREATE TABLE `t_dm_new` (
   `file_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `job_id` char(36) NOT NULL,
@@ -90,3 +87,5 @@ ALTER TABLE t_dm
 RENAME TABLE t_dm_backup TO t_dm_backup_old;
 CREATE TABLE t_dm_backup ENGINE = ARCHIVE AS (SELECT * FROM t_dm WHERE NULL);
 
+INSERT INTO t_schema_vers (major, minor, patch, message)
+VALUES (5, 0, 0, 'FTS-1318 diff');
