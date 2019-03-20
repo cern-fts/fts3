@@ -42,4 +42,4 @@ ALTER TABLE t_dm
 DROP TABLE t_dm_backup;
 RENAME TABLE t_dm_backup_old TO t_dm_backup;
 
-UPDATE t_schema_vers (major, minor, patch, message) SET MAJOR=4, PATCH=1, MESSAGE='DOWNGRADE from 5.0.0' where MAJOR = 5;
+UPDATE t_schema_vers SET MAJOR=4, PATCH=1, MESSAGE='DOWNGRADE from 5.0.0' where MAJOR = 5;
