@@ -87,8 +87,8 @@ void RestSubmission::strip_values(std::string & json, std::string const & token)
 std::string RestSubmission::strip_values(std::string const & json)
 {
     static std::string tokens[] =
-    {"filesize",  "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry", "timeout"};
-    static int const size = 8;
+    {"filesize", "verify_checksum",  "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry", "timeout"};
+    static int const size = 9;
 
     std::string ret = json;
     for (int index = 0; index < size; ++index)
