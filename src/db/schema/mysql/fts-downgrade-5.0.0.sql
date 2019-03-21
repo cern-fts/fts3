@@ -25,9 +25,9 @@ ALTER TABLE `t_file_retry_errors`
 ALTER TABLE `t_file` 
 	DROP `priority`;
 ALTER TABLE `t_file` 
-       DROP `dest_surl_uuid`;
-ALTER TABLE `t_file` 
        DROP UNIQUE KEY `dest_surl_uuid`;
+ALTER TABLE `t_file`
+       DROP `dest_surl_uuid`;
 
 DROP TABLE t_dm;
 RENAME TABLE t_dm_old TO t_dm;
