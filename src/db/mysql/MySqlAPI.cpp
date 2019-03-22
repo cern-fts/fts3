@@ -3546,7 +3546,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     sql <<
                         " UPDATE t_file "
-                        " SET finish_time=UTC_TIMESTAMP(), staging_finished=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET finish_time=UTC_TIMESTAMP(), staging_finished=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState, dest_surl_uuid = NULL "
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
@@ -3596,7 +3596,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState, dest_surl_uuid = NULL "
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
@@ -3609,7 +3609,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET staging_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState, dest_surl_uuid = NULL "
                         " WHERE "
                         "   file_id = :fileId "
                         "   AND file_state in ('STAGING','STARTED')",
