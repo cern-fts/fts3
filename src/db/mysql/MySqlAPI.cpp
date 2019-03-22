@@ -921,6 +921,16 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Next hop for " << jobId << ": " << nextFileId << commit;
 }
 
+void MySqlAPI::setNullDestSURLMultiHop(soci::session& sql, std::string jobId)
+{
+
+	sql << "UPDATE t_file "
+           "SET dest_surl_uuid = NULL "
+           "WHERE job_id = :jobId AND file_state = 'NOT_USED'",
+		   soci::use(jobId);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Nullify multihop dest_surl_uuid for " << jobId << commit;
+}
+
 
 bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, std::pair<std::pair<std::string, std::string>, int> j)
 {
@@ -1298,6 +1308,12 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
                     (newFileState == "FINISHED")) {
                     sql.begin();
                     useNextHop(sql, jobId);
+                    sql.commit();
+                }
+                else {
+                	// need to remove all dest_surl_uuid from all jobs
+                    sql.begin();
+                	setNullDestSURLMultiHop(sql, jobId);
                     sql.commit();
                 }
                 break;

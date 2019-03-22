@@ -315,6 +315,8 @@ private:
 
     void useNextHop(soci::session& sql, std::string jobId);
 
+    void setNullDestSURLMultiHop(soci::session& sql, std::string jobId);
+
     bool getDrainInternal(soci::session& sql);
 
     int getMaxTimeInQueue(const std::string &voName);
