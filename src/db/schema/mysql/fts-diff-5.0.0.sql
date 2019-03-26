@@ -88,4 +88,3 @@ CREATE TABLE t_dm_backup ENGINE = ARCHIVE AS (SELECT * FROM t_dm WHERE NULL);
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');
-
