@@ -562,7 +562,6 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 * Fri Jan 27 2017 Jonathan Wakely <jwakely@redhat.com> - 3.5.7-2
 - Rebuilt for Boost 1.63
 
->>>>>>> develop
 * Mon Nov 14 2016 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.5.7-1
 - New upstream release
 
