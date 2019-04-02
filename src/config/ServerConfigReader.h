@@ -131,7 +131,7 @@ protected:
 
         try
             {
-                po::store(po::parse_config_file(*in, desc), _vm);
+                po::store(po::parse_config_file(*in, desc,true), _vm);
             }
         catch (std::exception& e)
             {
