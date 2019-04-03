@@ -336,7 +336,7 @@ static void timeoutTask(boost::posix_time::time_duration &duration, UrlCopyProce
         urlCopyProcess->timeout();
     }
     catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout stopped" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Timeout stopped" << commit;
     }
     catch (const std::exception &ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in the timeout task: " << ex.what() << commit;
