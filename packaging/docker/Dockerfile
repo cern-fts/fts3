@@ -2,7 +2,7 @@ FROM centos:7
 MAINTAINER CERN
 
 # Add EPEL repos
-ADD  http://mirror.switch.ch/ftp/mirror/epel/epel-release-latest-7.noarch.rpm  /tmp/epel-release-7.noarch.rpm
+ADD  http://linuxsoft.cern.ch/epel/epel-release-latest-7.noarch.rpm  /tmp/epel-release-7.noarch.rpm
 RUN  yum localinstall /tmp/epel-release-7.noarch.rpm -y \
         && /usr/bin/yum --enablerepo=*-testing clean all \
         && rm /tmp/epel-release-7.noarch.rpm \

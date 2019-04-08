@@ -149,6 +149,7 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
 
     std::string time1 = boost::lexical_cast<std::string>(lifetime);
     std::string time2 = boost::lexical_cast<std::string>(minValidityTime());
+    std::string time3 = boost::lexical_cast<std::string>(voms_lifetime);
 
     if(lifetime < 0)
         {
@@ -182,6 +183,18 @@ bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
             message += filename;
             message += " should be renewed, lifetime is ";
             message += time1;
+            message +=  " secs, while min validity time is ";
+            message += time2;
+            message += " secs";
+            return false;
+        }
+
+     else if( (voms_lifetime > 0) && (minValidityTime() >= (unsigned long)voms_lifetime))
+        {
+            message = " VO extensions for certificate ";
+            message += filename;
+            message += " should be renewed, lifetime is ";
+            message += time3;
             message +=  " secs, while min validity time is ";
             message += time2;
             message += " secs";

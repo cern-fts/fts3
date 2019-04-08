@@ -9,8 +9,8 @@
 %endif
 
 Name:       fts
-Version:    3.9.0
-Release:    2%{?dist}
+Version:    3.10.0
+Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -504,6 +504,13 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+
+* Tue Apr 02 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-3
+- New Minor release
+- Includes multiple database optimisations that improve the overall performance of FTS
+- Avoid submitting multiple transfers to the same destination
+- Fix optmizer running in parallel in 2 nodes
+
 * Mon Jan 28 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.0-2
 - New Minor release
 - Support for OIDC
@@ -566,9 +573,6 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 
 * Fri Jan 27 2017 Jonathan Wakely <jwakely@redhat.com> - 3.5.7-2
 - Rebuilt for Boost 1.63
-
-* Mon Nov 14 2016 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.5.7-1
-- New upstream release
 
 * Mon Nov 14 2016 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.5.7-1
 - New upstream release

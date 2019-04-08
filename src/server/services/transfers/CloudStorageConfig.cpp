@@ -39,7 +39,9 @@ bool isCloudStorage(const Uri &storage)
 {
     return storage.protocol == "dropbox" ||
            storage.protocol == "s3" ||
-           storage.protocol == "s3s";
+           storage.protocol == "s3s" || 
+           storage.protocol == "gcloud" ||
+           storage.protocol == "gclouds";
 }
 
 
@@ -61,12 +63,14 @@ std::string getCloudStorageDefaultName(const Uri &storage)
 {
     std::string prefix = storage.protocol;
     boost::to_upper(prefix);
-    if (prefix == "S3") {
+    if ((prefix == "S3") or (prefix == "S3S") ){
         // S3 is a bit special, so generate two: S3:HOST and S3:HOST removing first component (might be bucket)
-        std::string cs_name = prefix + ":" + storage.host + ";";
-        cs_name += prefix + ":" + stripBucket(storage.host);
+        std::string cs_name = std::string("S3:") + storage.host + ";";
+        cs_name += std::string("S3:") + stripBucket(storage.host);
 
         return cs_name;
+    } else if ((prefix == "GCLOUD") or (prefix == "GCLOUDS")) {
+        return std::string("GCLOUD:") + storage.host;
     }
     else if (prefix == "DROPBOX") {
         return prefix;
@@ -114,7 +118,8 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
     fprintf(f, "[%s]\n", csName.c_str());
     fprintf(f, "SECRET_KEY=%s\n", auth.accessTokenSecret.c_str());
     fprintf(f, "ACCESS_KEY=%s\n", auth.accessToken.c_str());
-    fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
+    if (!auth.requestToken.empty())
+        fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
     fprintf(f, "ALTERNATE=%s\n", alternate?"true":"false");
 }
 

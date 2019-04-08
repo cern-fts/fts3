@@ -45,7 +45,7 @@ using namespace fts3::common;
  * FileTransfers one by one in a separate thread.
  *
  * The FileTransfers are added to a thread-safe queue, which is processed by the worker.
- * In order to let the worker thread know that all the date were pushed into the queue the
+ * In order to let the worker thread know that all the data were pushed into the queue the
  * 'noMoreData()' method should be used, in order to wait for the thread to finish processing
  * FileTransfers the 'join()' method should be used (before calling join, noMoreData should be called)
  */

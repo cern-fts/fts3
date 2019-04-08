@@ -331,6 +331,8 @@ private:
 
     void useNextHop(soci::session& sql, std::string jobId);
 
+    void setNullDestSURLMultiHop(soci::session& sql, std::string jobId);
+
     bool getDrainInternal(soci::session& sql);
 
     int getMaxTimeInQueue(const std::string &voName);
@@ -351,3 +353,4 @@ private:
     std::vector<std::string> getVos(void);
     void cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo);
 };
+

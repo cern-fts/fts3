@@ -41,12 +41,12 @@ struct File
     File (
         std::vector<std::string> const & s,
         std::vector<std::string> const & d,
-        std::vector<std::string> const & c = std::vector<std::string>(),
+        boost::optional<std::string> const & c = boost::none,
         boost::optional<double> const & fs = boost::none,
         boost::optional<std::string> const & m = boost::none,
         boost::optional<std::string> const & ss = boost::none,
         boost::optional<std::string> const & a = boost::none
-    ) : sources(s), destinations(d), selection_strategy(ss), checksums(c), file_size(fs), metadata(m), activity(a)
+    ) : sources(s), destinations(d), selection_strategy(ss), checksum(c), file_size(fs), metadata(m), activity(a)
     {
 
     }
@@ -57,8 +57,8 @@ struct File
     std::vector<std::string> destinations;
     /// source selection strategy
     boost::optional<std::string> selection_strategy;
-    /// checksum (multiple checksums in case of protocols that don't support adler32)
-    std::vector<std::string> checksums;
+    /// checksum
+    boost::optional<std::string> checksum;
     /// file size
     boost::optional<double> file_size;
     /// metadata

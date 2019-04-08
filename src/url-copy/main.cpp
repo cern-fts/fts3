@@ -60,11 +60,13 @@ static void signalCallback(int signum, void *udata)
 }
 
 /// Remove some environment variables that may interfere
+/// set   XrdSecGSIDELEGPROXY=1  as a workaround for FTS-1354
 void clearEnvironment()
 {
     unsetenv("X509_USER_CERT");
     unsetenv("X509_USER_KEY");
     unsetenv("X509_USER_PROXY");
+    setenv("XrdSecGSIDELEGPROXY", "1", 1);
 }
 
 

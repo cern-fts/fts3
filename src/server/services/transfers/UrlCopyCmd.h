@@ -61,7 +61,7 @@ public:
     void setOptimizerLevel(int);
     void setDebugLevel(int);
     void setProxy(const std::string&);
-    void setUDT(bool);
+    void setUDT(boost::tribool);
     void setIPv6(boost::tribool);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
