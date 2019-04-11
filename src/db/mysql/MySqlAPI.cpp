@@ -3681,7 +3681,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
     try
     {
         soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl, bringonline_token from t_file WHERE "
-                                      "  file_state='CANCELED' and finish_time is NULL "
+                                      "  file_state='CANCELED' and staging_finished is NULL "
                                       "  AND transfer_host = :hostname  AND staging_start is NOT NULL ",
                                       soci::use(hostname));
 
