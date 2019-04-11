@@ -267,6 +267,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
     urls.reserve(urlSet.size());
     for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
         urls.push_back(set_i->c_str());
+        FTS3_COMMON_LOGGER_NEWLOG(NOTICE)<< "BRINGONLINE abort requested for " << set_i->c_str() << commit;
     }
 
     std::vector<GError*> errors(urls.size(), NULL);
