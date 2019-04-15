@@ -9,8 +9,8 @@
 %endif
 
 Name:       fts
-Version:    3.8.4
-Release:    2%{?dist}
+Version:    3.8.5
+Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -501,6 +501,12 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Apr 15 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.5-1
+- New bugfix release
+
+* Mon Mar 28 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.4-1
+- New bugfix release
+
 * Thu Feb 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.3-1
 - New bugfix release
 
