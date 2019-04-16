@@ -29,6 +29,8 @@ ALTER TABLE `t_file_retry_errors`
         ADD INDEX `idx_datetime` ( `datetime`);
 ALTER TABLE `t_file` 
 	ADD COLUMN `priority` int(11) DEFAULT '3';
+UPDATE `t_job`
+	SET `priority`=3 where `priority`!=3;
 ALTER TABLE `t_file` 
        ADD COLUMN `dest_surl_uuid` char(36) DEFAULT NULL;
 ALTER TABLE `t_file` 
