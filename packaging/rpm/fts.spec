@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.8.5
+Version:    3.9.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -501,6 +501,11 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Wed May 08 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
+- New Minor release
+- Includes multiple database optimisations that improve the overall performance of FTS
+- Avoid submitting multiple transfers to the same destination
+- Fix optmizer running in parallel in 2 nodes
 * Mon Apr 15 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.5-1
 - New bugfix release
 
