@@ -42,28 +42,28 @@ public:
 
     using JobContext::add;
 
-    ArchivingContext(QoSServer &qosServer, const StagingOperation &stagingOp):
-        JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
+    ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
+        JobContext(archiveOp.userDn, archiveOp.voName, archiveOp.credId, archiveOp.spaceToken),
         stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
-        pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
+		archiveTimeout(archiveOp.timeout)
     {
-        add(stagingOp);
+        add(archiveOp);
         startTime = time(0);
     }
 
     ArchivingContext(const ArchivingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
-        pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
+		archiveTimeout(copy.archiveTimeout), startTime(copy.startTime)
     {}
 
     ArchivingContext(ArchivingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
-        pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
+		archiveTimeout(copy.archiveTimeout), startTime(copy.startTime)
     {}
 
     virtual ~ArchivingContext() {}
 
-    void add(const StagingOperation &stagingOp);
+    void add(const ArchivingOperation &stagingOp);
 
     /**
      * Asynchronous update of a single transfer-file within a job
@@ -83,21 +83,18 @@ public:
         stateUpdater(jobs, token);
     }
 
-    int getBringonlineTimeout() const
+    int getArchiveTimeout() const
     {
-        return bringonlineTimeout;
+        return archiveTimeout;
     }
 
-    int getPinlifetime() const
-    {
-        return pinLifetime;
-    }
+
 
     bool hasTimeoutExpired();
 
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
 
-    WaitingRoom<PollTask>& getWaitingRoom() {
+    WaitingRoom<ArchivingPollTask>& getWaitingRoom() {
         return waitingRoom;
     }
 
@@ -109,7 +106,7 @@ private:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
-    int archivingTimeout;
+    int archiveTimeout;
     time_t startTime;
 };
 

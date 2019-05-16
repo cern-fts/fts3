@@ -25,21 +25,21 @@
 #include "cred/CredUtility.h"
 
 
-void ArchivingContext::add(const ArchivingOperation &stagingOp)
+void ArchivingContext::add(const ArchivingOperation &archiveOp)
 {
 
 
-    if (stagingOp.timeout > bringonlineTimeout) {
-        bringonlineTimeout = stagingOp.timeout;
+    if (archiveOp.timeout > archiveTimeout) {
+    	archiveTimeout = archiveOp.timeout;
     }
 
-    add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
+    add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
 }
 
 
 bool ArchivingContext::hasTimeoutExpired()
 {
-    return difftime(time(0), startTime) > bringonlineTimeout;
+    return difftime(time(0), startTime) > archiveTimeout;
 }
 
 

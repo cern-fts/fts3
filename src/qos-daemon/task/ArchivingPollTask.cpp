@@ -21,7 +21,7 @@
 #include <gfal_api.h>
 #include "common/Logger.h"
 
-#include "BringOnlineTask.h"
+#include "ArchiveTask.h"
 #include "PollTask.h"
 
 

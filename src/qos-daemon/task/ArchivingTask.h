@@ -19,8 +19,8 @@
  */
 
 #pragma once
-#ifndef BRINGONLINETASK_H_
-#define BRINGONLINETASK_H_
+#ifndef ARCHIVINGTASK_H_
+#define ARCHIVINGTASK_H_
 
 #include <string>
 #include <utility>
@@ -33,29 +33,29 @@
 #include "cred/DelegCred.h"
 
 #include "Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "../context/ArchivingContext.h"
 
 
 /**
- * A bring-online task, when started using a thread pool issues a bring online operation
- * if successful spawns a PollTask, if retries are set another BringOnlineTask otherwise
+ * Archiving task, when started using a thread pool spawn a
+ *
+ * ArchivingPollTask, if retries are set another ArchivingTaks is spawn
  *
  * @see StagingTask
  */
-class BringOnlineTask : public Gfal2Task
+class ArchivingTask : public Gfal2Task
 {
 
 public:
 
     /**
-     * Creates a new BringOnlineTask from a message_bringonline
+     * Creates a new ArchviningTask
      *
-     * @param ctx : bring-online task details
+     * @param ctx : ArchivingTask task details
      */
-    BringOnlineTask(const StagingContext &ctx) : Gfal2Task("STAGING"), ctx(ctx)
+	ArchivingTask(const ArchivingContext &ctx) : Gfal2Task("ARCHIVING"), ctx(ctx)
     {
-        // set up the space token
-        setSpaceToken(ctx.getSpaceToken());
+
         // set the proxy certificate
         setProxy(ctx);
         // add urls to active
@@ -65,16 +65,16 @@ public:
     }
 
     /**
-     * Creates a new BringOnlineTask from another BringOnlineTask
+     * Creates a new ArchivingTask from another ArchivingTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    BringOnlineTask(BringOnlineTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)) {}
+	ArchivingTask(ArchivingTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)) {}
 
     /**
      * Destructor
      */
-    virtual ~BringOnlineTask()
+    virtual ~ArchivingTask()
     {
         if (gfal2_ctx)
             cancel(ctx.getSurls());
@@ -105,7 +105,7 @@ public:
 protected:
 
     /// staging details
-    StagingContext ctx;
+    ArchivingContext ctx;
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     /// set of tokens (and respective URLs) for ongoing bring-online jobs

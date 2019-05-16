@@ -19,17 +19,21 @@
  */
 
 #include <qos-daemon/task/PollTask.h>
+#include <qos-daemon/task/ArchivingPollTask.h>
 #include <qos-daemon/task/CDMIPollTask.h>
 #include <qos-daemon/task/WaitingRoom.h>
 #include "QoSServer.h"
 
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
-#include "fetch/CDMIFetchQosTransition.h"
+
 #include "server/DrainMode.h"
+
 
 #include "fetch/FetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
+#include "fetch/CDMIFetchQosTransition.h"
+#include "fetch/FetchArchiving.h"
 #include "fetch/FetchDeletion.h"
 #include "state/StagingStateUpdater.h"
 #include "state/DeletionStateUpdater.h"

@@ -21,19 +21,18 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 
-#include "BringOnlineTask.h"
-#include "PollTask.h"
+#include "ArchivingTask.h"
+#include "ArchivingPollTask.h"
 #include "WaitingRoom.h"
 
 
-boost::shared_mutex BringOnlineTask::mx;
+boost::shared_mutex ArchiveTask::mx;
 
-std::set<std::pair<std::string, std::string>> BringOnlineTask::active_urls;
+std::set<std::pair<std::string, std::string>> ArchiveTask::active_urls;
 
 
 void BringOnlineTask::run(const boost::any &)
 {
-    char token[512] = {0};
     std::set<std::string> urlSet = ctx.getUrls();
     if (urlSet.empty())
         return;
@@ -106,7 +105,7 @@ void BringOnlineTask::run(const boost::any &)
         << ctx.getLogMsg() << commit;
 
         ctx.updateState(token);
-        ctx.getWaitingRoom().add(new PollTask(std::move(*this), token));
+        ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this), token));
     }
     else {
         // No need to poll

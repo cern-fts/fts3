@@ -36,25 +36,24 @@
 
 
 /**
- * A poll task: checks whether a given bring-online operation was successful
+ * A poll task: checks whether a list of url has been archived
  *
- * If the bring-online operation is not finished yet spawns another PollTask.
- * If the operation fails and retries are set spawns another BringOnlineTask.
+ * If the archive operation is not finished yet spawns another ArchivingPollTask.
+ * If the operation fails and retries are set spawns another ArchivingPollTask.
  *
- * @see StagingTask
- * @see BringOnlineTask
+ *
+ * @see ArchivingTask
  */
-class PollTask : public BringOnlineTask
+class ArchivingPollTask : public ArchivingTask
 {
 public:
     /**
-     * Creates a PollTask from StagingContext (for recovery purposes only)
+     * Creates a ArchivingPollTask from ArchiveContext (for recovery purposes only)
      *
      * @param ctx : staging context (recover from DB after crash)
-     * @param token : token that is needed for polling
      */
-    PollTask(const StagingContext &ctx, const std::string &token) :
-        BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
+	ArchivingPollTask(const StagingContext &ctx) :
+		ArchivingTask(ctx), nPolls(0), wait_until(0)
     {
         auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
@@ -62,20 +61,20 @@ public:
     }
 
     /**
-     * Creates a new PollTask task from a BringOnlineTask
+     * Creates a new ArchivingPollTask task from a ArchivingTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(BringOnlineTask && copy, const std::string &token) :
-        BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
+	ArchivingPollTask(ArchivingTask && copy) :
+		ArchivingTask(std::move(copy)),  nPolls(0), wait_until()
     {
     }
 
     /**
      * Move constructor
      */
-    PollTask(PollTask && copy) :
-        BringOnlineTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(
+	ArchivingPollTask(ArchivingPollTask && copy) :
+		ArchivingTask(std::move(copy)),  nPolls(copy.nPolls), wait_until(
             copy.wait_until)
     {
     }
@@ -83,7 +82,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~PollTask() {}
+    virtual ~ArchivingPollTask() {}
 
     /**
      * The routine is executed by the thread pool
@@ -99,13 +98,13 @@ public:
     }
 
 private:
-    /// checks if the bring online task was cancelled and removes those URLs that were from the context
+    /// checks if the archive  task was cancelled and removes those URLs that were from the context
     void handle_canceled();
 
-    /// checks if the bring online task timed-out and removes respective URLs from the context
+    /// checks if the archive  task timed-out and removes respective URLs from the context
     bool timeout_occurred();
 
-    /// aborts the bring online operation for the given URLs
+    /// aborts the operation for the given URLs
     void abort(std::set<std::string> const & urls, bool report = true);
 
     /**
