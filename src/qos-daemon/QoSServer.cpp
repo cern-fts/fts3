@@ -117,6 +117,7 @@ void QoSServer::start(void)
     CDMIFetchQosTransition cdmifs(threadpool);
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
+    FetchArchiving fa(threadpool);
 
     waitingRoom.attach(threadpool);
     cdmiWaitingRoom.attach(threadpool);
@@ -126,6 +127,9 @@ void QoSServer::start(void)
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
     systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
+
+    systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
+    systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));
 
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));

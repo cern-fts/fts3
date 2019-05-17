@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "cred/DelegCred.h"
+#include "db/generic/ArchivingOperation.h"
 
 #include "JobContext.h"
 #include "../QoSServer.h"
@@ -43,8 +44,8 @@ public:
     using JobContext::add;
 
     ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
-        JobContext(archiveOp.userDn, archiveOp.voName, archiveOp.credId, archiveOp.spaceToken),
-        stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
+        JobContext(archiveOp.user, archiveOp.voName, archiveOp.credId, ""),
+        stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom()),
 		archiveTimeout(archiveOp.timeout)
     {
         add(archiveOp);
@@ -78,10 +79,6 @@ public:
         stateUpdater(jobs, state, error);
     }
 
-    void updateState(const std::string &token)
-    {
-        stateUpdater(jobs, token);
-    }
 
     int getArchiveTimeout() const
     {

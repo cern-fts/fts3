@@ -26,7 +26,7 @@
 #include "server/DrainMode.h"
 
 #include "FetchStaging.h"
-#include "../task/BringOnlineTask.h"
+#include "../task/ArchivingTask.h"
 #include "../task/PollTask.h"
 
 
@@ -59,8 +59,8 @@ void FetchArchiving::fetch()
                 continue;
             }
 
-            std::map<GroupByType, StagingContext> tasks;
-            std::vector<StagingOperation> files;
+            std::map<GroupByType, ArchivingContext> tasks;
+            std::vector<ArchivingOperation> files;
 
             db::DBSingleton::instance().getDBObjectInstance()->getFilesForArchiving(files);
 
@@ -85,7 +85,7 @@ void FetchArchiving::fetch()
             {
                 try
                 {
-                    threadpool.start(new BringOnlineTask(it_t->second));
+                    threadpool.start(new ArchivingTask(it_t->second));
                 }
                 catch(UserError const & ex)
                 {

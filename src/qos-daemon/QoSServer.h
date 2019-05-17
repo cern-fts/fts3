@@ -31,6 +31,7 @@
 
 class PollTask;
 class CDMIPollTask;
+class ArchivingPollTask;
 
 class QoSServer: public fts3::common::Singleton<QoSServer>
 {
@@ -58,11 +59,16 @@ public:
         return cdmiWaitingRoom;
     }
 
+    WaitingRoom<ArchivingPollTask>& getArchivingWaitingRoom() {
+        return archivingWaitingRoom;
+    }
+
 private:
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
     WaitingRoom<PollTask> waitingRoom;
     WaitingRoom<CDMIPollTask> cdmiWaitingRoom;
+    WaitingRoom<ArchivingPollTask> archivingWaitingRoom;
 
     DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;

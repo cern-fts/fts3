@@ -19,8 +19,8 @@
  */
 
 #pragma once
-#ifndef POLLTASK_H_
-#define POLLTASK_H_
+#ifndef ARCHIVINGPOLLTASK_H_
+#define ARCHIVINGPOLLTASK_H_
 
 #include <algorithm>
 #include <iterator>
@@ -32,7 +32,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "BringOnlineTask.h"
+#include "ArchivingTask.h"
 
 
 /**
@@ -52,7 +52,7 @@ public:
      *
      * @param ctx : staging context (recover from DB after crash)
      */
-	ArchivingPollTask(const StagingContext &ctx) :
+	ArchivingPollTask(const ArchivingContext &ctx) :
 		ArchivingTask(ctx), nPolls(0), wait_until(0)
     {
         auto surls = ctx.getSurls();
@@ -63,7 +63,7 @@ public:
     /**
      * Creates a new ArchivingPollTask task from a ArchivingTask
      *
-     * @param copy : a staging task (stills the gfal2 context of this object)
+     * @param copy : a archive task (stills the gfal2 context of this object)
      */
 	ArchivingPollTask(ArchivingTask && copy) :
 		ArchivingTask(std::move(copy)),  nPolls(0), wait_until()
@@ -130,4 +130,4 @@ private:
     time_t wait_until;
 };
 
-#endif // POLLTASK_H_
+#endif // ARCHIVINGPOLLTASK_H_

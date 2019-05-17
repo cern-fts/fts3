@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "StagingContext.h"
+#include "ArchivingContext.h"
 
 #include <sstream>
 #include <unordered_set>
