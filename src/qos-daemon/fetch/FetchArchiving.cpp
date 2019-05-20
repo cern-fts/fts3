@@ -25,15 +25,15 @@
 #include "db/generic/SingleDbInstance.h"
 #include "server/DrainMode.h"
 
-#include "FetchStaging.h"
+#include "FetchArchiving.h"
 #include "../task/ArchivingTask.h"
-#include "../task/PollTask.h"
+#include "../task/ArchivingPollTask.h"
 
 
 void FetchArchiving::fetch()
 {
-    // VO, user dn, storage, space token
-    typedef std::tuple<std::string, std::string, std::string> GroupByType;
+    // VO+user dn, storage
+    typedef std::tuple<std::string, std::string> GroupByType;
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving starting" << commit;
 
@@ -67,11 +67,11 @@ void FetchArchiving::fetch()
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
                 std::string storage = Uri::parse(it_f->surl).host;
-                GroupByType key(it_f->credId, storage, it_f->spaceToken);
+                GroupByType key(it_f->credId, storage);
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
                     tasks.insert(std::make_pair(
-                        key, StagingContext(
+                        key, ArchivingContext(
                         		QoSServer::instance(), *it_f
                         ))
                     );
@@ -114,12 +114,12 @@ void FetchArchiving::fetch()
 }
 
 
-void FetchStaging::recoverStartedTasks()
+void FetchArchiving::recoverStartedTasks()
 {
-    std::vector<StagingOperation> startedStagingOps;
+    std::vector<ArchivingOperation> startedArchivingOps;
 
     try {
-        db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(startedStagingOps);
+        db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedArchiving(startedArchivingOps);
     }
     catch (UserError const & ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
@@ -129,13 +129,13 @@ void FetchStaging::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
-    std::map<std::string, StagingContext> tasks;
+    std::map<std::string, ArchivingContext> tasks;
 
-    for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f) {
-        auto it_t = tasks.find(it_f->token);
+    for (auto it_f = startedArchivingOps.begin(); it_f != startedArchivingOps.end(); ++it_f) {
+        auto it_t = tasks.find(it_f->jobId);
         if (it_t == tasks.end())
             tasks.insert(std::make_pair(
-                it_f->token, StagingContext(
+                it_f->jobId, ArchivingContext(
                 		QoSServer::instance(), *it_f
                 ))
             );
@@ -146,11 +146,11 @@ void FetchStaging::recoverStartedTasks()
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
         try {
             std::set<std::string> urls = it_t->second.getUrls();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered with token " << it_t->first << commit;
+            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for job " << it_t->jobId << commit;
             for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
             }
-            threadpool.start(new PollTask(it_t->second, it_t->first));
+            threadpool.start(new ArchivingPollTask(it_t->second));
         }
         catch (UserError const & ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;

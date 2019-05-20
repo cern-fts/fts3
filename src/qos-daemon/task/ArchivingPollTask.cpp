@@ -22,10 +22,10 @@
 #include "common/Logger.h"
 
 #include "ArchivingTask.h"
-#include "PollTask.h"
+#include "ArchivingPollTask.h"
 
 
-void PollTask::run(const boost::any&)
+void ArchivingPollTask::run(const boost::any&)
 {
     // check if the bring-online timeout was exceeded
     if (timeout_occurred()) return;
@@ -201,12 +201,12 @@ void PollTask::run(const boost::any&)
             << "BRINGONLINE polling " << ctx.getLogMsg() << token << commit;
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
-        ctx.getWaitingRoom().add(new PollTask(std::move(*this)));
+        ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
     }
 }
 
 
-void PollTask::handle_canceled()
+void ArchivingPollTask::handle_canceled()
 {
     std::set<std::pair<std::string, std::string>> remove;
     // critical section
@@ -229,7 +229,7 @@ void PollTask::handle_canceled()
 }
 
 
-bool PollTask::timeout_occurred()
+bool ArchivingPollTask::timeout_occurred()
 {
     // first check if bring-online timeout was exceeded
     if (!ctx.hasTimeoutExpired()) return false;
@@ -255,7 +255,7 @@ bool PollTask::timeout_occurred()
 }
 
 
-void PollTask::abort(std::set<std::string> const & urlSet, bool report)
+void ArchivingPollTask::abort(std::set<std::string> const & urlSet, bool report)
 {
     if (urlSet.empty())
         return;

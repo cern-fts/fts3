@@ -256,6 +256,10 @@ public:
     /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
     virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp);
 
+    /// Get archivingOps operations ready to be polled
+    /// @params[out] archivingOps The list of Archiving  operations will be put here
+    virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps);
+
     /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task for file successfully completed
     /// @params[out] Nothing returned
     virtual void updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
@@ -271,6 +275,10 @@ public:
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);
+
+    /// Get archiving operations already started
+    /// @params[out] archivingOps The list of started archiving operations will be put here
+    virtual void getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archivingOps);
 
     /// Put into files a set of bring online requests that must be cancelled
     /// @param files    Each entry in the set if a pair of surl / token

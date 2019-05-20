@@ -41,7 +41,6 @@ class ArchivingContext : public JobContext
 
 public:
 
-    using JobContext::add;
 
     ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
         JobContext(archiveOp.user, archiveOp.voName, archiveOp.credId, ""),
@@ -107,4 +106,4 @@ private:
     time_t startTime;
 };
 
-#endif // STAGINGCONTEXT_H_
+#endif // ARCHIVINGCONTEXT_H_
