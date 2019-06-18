@@ -19,10 +19,6 @@ ALTER TABLE `t_file`
 	MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_backup` 
         MODIFY reason varchar(2048) CHARACTER SET utf8;
-ALTER TABLE `t_dm`
-        MODIFY reason varchar(2048) CHARACTER SET utf8;
-ALTER TABLE `t_dm_backup`
-        MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
