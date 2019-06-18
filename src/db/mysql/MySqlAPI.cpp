@@ -837,6 +837,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     soci::indicator selectionStrategyInd = soci::i_ok;
     std::string selectionStrategy;
     std::string vo_name;
+    soci::indicator destSurlUuidInd = soci::i_null;
     std::string destSurlUuid;
     uint64_t nextReplica = 0, alreadyActive;
     soci::indicator nextReplicaInd = soci::i_ok;
@@ -852,19 +853,18 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     }
 
     //check if it's auto or manual
-    sql << "SELECT selection_strategy, vo_name FROM t_file WHERE file_id = :file_id",
-        soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name);
+    sql << "SELECT selection_strategy, vo_name, dest_surl_uuid FROM t_file WHERE file_id = :file_id",
+        soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name), soci::into(destSurlUuid, destSurlUuidInd);
     // default is orderly
     if (selectionStrategyInd == soci::i_null) {
         selectionStrategy = "orderly";
     }
 
+   // if (destSurlUuid == soci::i_null) {
+
+
     sql << "SELECT min(file_id) FROM t_file WHERE file_state = 'NOT_USED' AND job_id=:job_id ",
         soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
-
-    // need to get the dest_surl_uuid that was stored by FTS-REST at the submission time
-    sql << "SELECT dest_surl_uuid FROM t_file WHERE dest_surl_uuid is not NULL AND job_id=:job_id ",
-        soci::use(jobId), soci::into(destSurlUuid);
 
     if (selectionStrategy == "auto") {
         uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
@@ -874,7 +874,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
                     " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
                     " WHERE job_id = :jobId AND file_id = :file_id  "
                     " AND file_state = 'NOT_USED' ",
-					soci::use(destSurlUuid), soci::use(jobId), soci::use(bestFileId);
+					soci::use(destSurlUuid, destSurlUuidInd ), soci::use(jobId), soci::use(bestFileId);
         }
         else {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
@@ -886,7 +886,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
             " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
             " WHERE job_id = :jobId "
             " AND file_state = 'NOT_USED' and file_id=:file_id ",
-			soci::use(destSurlUuid), soci::use(jobId), soci::use(nextReplica);
+			soci::use(destSurlUuid, destSurlUuidInd), soci::use(jobId), soci::use(nextReplica);
     }
 }
 
