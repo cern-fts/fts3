@@ -9,8 +9,8 @@
 %endif
 
 Name:       fts
-Version:    3.9.0
-Release:    2%{?dist}
+Version:    3.9.1
+Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -501,6 +501,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Tue Jun 18 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.1-1
+- New bugfix release
+
 * Thu May 23 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-2
 - fix db upgrade script
 
