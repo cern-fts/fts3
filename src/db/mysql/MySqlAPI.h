@@ -311,7 +311,7 @@ private:
 
     std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
-    void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId);
+    void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd);
 
     void useNextHop(soci::session& sql, std::string jobId);
 

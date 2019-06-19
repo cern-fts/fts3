@@ -832,13 +832,11 @@ int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::st
 }
 
 
-void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId)
+void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd )
 {
     soci::indicator selectionStrategyInd = soci::i_ok;
     std::string selectionStrategy;
     std::string vo_name;
-    soci::indicator destSurlUuidInd = soci::i_null;
-    std::string destSurlUuid;
     uint64_t nextReplica = 0, alreadyActive;
     soci::indicator nextReplicaInd = soci::i_ok;
 
@@ -1167,6 +1165,9 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         int processId, double filesize, double duration, bool retry)
 {
     std::string storedState;
+    soci::indicator destSurlUuidInd = soci::i_null;
+    std::string destSurlUuid;
+
     try
     {
         sql.begin();
@@ -1188,9 +1189,10 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             soci::use(jobId), soci::into(jobType), soci::into(jobState);
 
         // query for the file state in DB
-        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId",
+        sql << "SELECT file_state, dest_surl_uuid FROM t_file WHERE file_id=:fileId",
             soci::use(fileId),
-            soci::into(storedState);
+            soci::into(storedState),
+			soci::into(destSurlUuid, destSurlUuidInd);
 
         bool isStaging = (storedState == "STAGING");
 
@@ -1293,7 +1295,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
                 if ((jobState != "CANCELED" && jobState != "FAILED") &&
                     (newFileState == "FAILED" || newFileState == "CANCELED")) {
                     sql.begin();
-                    useFileReplica(sql, jobId, fileId);
+                    useFileReplica(sql, jobId, fileId, destSurlUuid, destSurlUuidInd);
                     sql.commit();
                 }
                 break;
