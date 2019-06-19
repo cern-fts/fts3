@@ -851,15 +851,13 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     }
 
     //check if it's auto or manual
-    sql << "SELECT selection_strategy, vo_name, dest_surl_uuid FROM t_file WHERE file_id = :file_id",
-        soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name), soci::into(destSurlUuid, destSurlUuidInd);
+    sql << "SELECT selection_strategy, vo_name FROM t_file WHERE file_id = :file_id",
+        soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name);
+
     // default is orderly
     if (selectionStrategyInd == soci::i_null) {
         selectionStrategy = "orderly";
     }
-
-   // if (destSurlUuid == soci::i_null) {
-
 
     sql << "SELECT min(file_id) FROM t_file WHERE file_state = 'NOT_USED' AND job_id=:job_id ",
         soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
