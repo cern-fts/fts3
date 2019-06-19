@@ -1165,7 +1165,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         int processId, double filesize, double duration, bool retry)
 {
     std::string storedState;
-    soci::indicator destSurlUuidInd = soci::i_null;
+    soci::indicator destSurlUuidInd;
     std::string destSurlUuid;
 
     try
