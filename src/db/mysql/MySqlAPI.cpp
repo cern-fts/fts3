@@ -3187,7 +3187,7 @@ void MySqlAPI::requeueStartedDeletes()
     }
 }
 
-void MySqlAPI::getFilesArchiving(std::vector<ArchivingOperation> &archivingOps)
+void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps)
 {
 	soci::session sql(*connectionPool);
    //TODO: query for credentials to be checked when integrating OIDC
@@ -3210,9 +3210,11 @@ void MySqlAPI::getFilesArchiving(std::vector<ArchivingOperation> &archivingOps)
                 uint64_t file_id = r.get<unsigned long long>("file_id");
                 std::string dest_surl = r.get<std::string>("dest_surl");
                 std::string proxy = r.get<std::string>("proxy");
-
-                archivingOps.emplace_back(job_id, file_id, dest_surl, target_qos, proxy);
+                //TODO filling plalceholders for now
+                archivingOps.emplace_back(job_id, file_id,"voname","user", "credid", dest_surl, 0);
             }
+
+    //TODO: add throtteling
     }
     catch (std::exception& e)
     {
