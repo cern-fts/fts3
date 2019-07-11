@@ -37,7 +37,7 @@ void FetchArchiving::fetch()
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving starting" << commit;
 
-    // we want to be sure that this won't break our fetching thread
+    // we want to be sure that this won't break out fetching thread
     try
     {
         recoverStartedTasks();
@@ -99,18 +99,18 @@ void FetchArchiving::fetch()
 
         }
         catch (const std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving " << e.what() << commit;
         }
         catch (const boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging interruption requested" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving interruption requested" << commit;
             break;
         }
         catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving Fatal error (unknown origin)" << commit;
         }
     }
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging exiting" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving exiting" << commit;
 }
 
 
@@ -118,7 +118,9 @@ void FetchArchiving::recoverStartedTasks()
 {
     std::vector<ArchivingOperation> startedArchivingOps;
 
+
     try {
+    	//We get the files with archiving started not null
         db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedArchiving(startedArchivingOps);
     }
     catch (UserError const & ex) {

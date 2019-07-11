@@ -52,7 +52,9 @@ void CDMIPollTask::run(const boost::any&)
 		// Check QoS of file
 		// TODO: add error checking
 		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << commit;
-		const char* qos_target_result = gfal2_check_target_qos(gfal2_ctx, it_f->surl.c_str(), &err);
+		const char* qos_target_result = "";
+		//comment it for now as it needs gfal2 2.17
+		//gfal2_check_target_qos(gfal2_ctx, it_f->surl.c_str(), &err);
 
 		if (qos_target_result != NULL && std::strcmp(it_f->target_qos.c_str(),qos_target_result)==0) {
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << " was successful. File was successfully transitioned" << commit;

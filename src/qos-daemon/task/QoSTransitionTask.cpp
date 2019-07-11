@@ -52,7 +52,9 @@ void QoSTransitionTask::run(const boost::any &)
 	      // Perform transition
 		  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << std::get<0>(*it) << " to QoS: " << std::get<2>(*it) << commit;
 	      // TODO: add error checking
-		  int result = gfal2_change_object_qos(gfal2_ctx, std::get<0>(*it).c_str(), std::get<2>(*it).c_str(), &err);
+		  int result = 0;
+		  //comment it for now since it needs gfal2 2.17
+		  //gfal2_change_object_qos(gfal2_ctx, std::get<0>(*it).c_str(), std::get<2>(*it).c_str(), &err);
 
 	      //Delete token from context
 		  gfal2_cred_free(cred);

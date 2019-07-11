@@ -3633,6 +3633,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
     }
 }
 
+void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &stagingOps)
+{
+	//TODO
+}
+
 void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
