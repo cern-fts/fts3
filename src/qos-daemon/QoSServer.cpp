@@ -136,6 +136,7 @@ void QoSServer::start(void)
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
     systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
     systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
+    systemThreads.create_thread(boost::bind(&ArchivingStateUpdater::run, &archivingStateUpdater));
     systemThreads.create_thread(heartBeat);
 }
 
@@ -151,6 +152,7 @@ void QoSServer::stop(void)
 {
     stagingStateUpdater.recover();
     deletionStateUpdater.recover();
+    archivingStateUpdater.recover();
     threadpool.interrupt();
     systemThreads.interrupt_all();
 }

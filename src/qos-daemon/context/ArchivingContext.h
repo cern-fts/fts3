@@ -44,7 +44,7 @@ public:
 
     ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
         JobContext(archiveOp.user, archiveOp.voName, archiveOp.credId, ""),
-        stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom()),
+        stateUpdater(qosServer.getArchivingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom()),
 		archiveTimeout(archiveOp.timeout)
     {
         add(archiveOp);
@@ -99,7 +99,7 @@ public:
     }
 
 private:
-    StagingStateUpdater &stateUpdater;
+    ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
     int archiveTimeout;

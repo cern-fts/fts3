@@ -18,14 +18,15 @@
  * limitations under the License.
  */
 
-#ifndef BRINGONLINE_SERVER_H_
-#define BRINGONLINE_SERVER_H_
+#ifndef QOS_SERVER_H_
+#define QOS_SERVER_H_
 
 #include "common/Singleton.h"
 #include "common/ThreadPool.h"
 
 #include "state/DeletionStateUpdater.h"
 #include "state/StagingStateUpdater.h"
+#include "state/ArchivingStateUpdater.h"
 #include "task/Gfal2Task.h"
 #include "task/WaitingRoom.h"
 
@@ -51,6 +52,10 @@ public:
         return stagingStateUpdater;
     }
 
+    ArchivingStateUpdater& getArchivingStateUpdater() {
+        return archivingStateUpdater;
+    }
+
     WaitingRoom<PollTask>& getWaitingRoom() {
         return waitingRoom;
     }
@@ -72,6 +77,7 @@ private:
 
     DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;
+    ArchivingStateUpdater archivingStateUpdater;
 };
 
 

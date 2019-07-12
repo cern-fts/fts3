@@ -2703,6 +2703,16 @@ void MySqlAPI::updateDeletionsState(const std::vector<MinFileStatus>& delOpsStat
     }
 }
 
+void MySqlAPI::updateArchivingState(const std::vector<MinFileStatus>& archivingOpStatus)
+{
+
+	//TODO
+}
+
+void MySqlAPI::setArchivingStartTime(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs)
+{
+	//TODO
+}
 
 void MySqlAPI::updateStagingState(const std::vector<MinFileStatus>& stagingOpsStatus)
 {
@@ -3200,6 +3210,7 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
                 " INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
                 " WHERE "
                 " 		f.file_state = 'ARCHIVING' AND "
+        		" 		f.archive_start_time IS NULL AND "
                 "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
             );

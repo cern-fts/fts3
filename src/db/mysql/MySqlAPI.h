@@ -241,6 +241,15 @@ public:
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus);
 
+    /// Updates the status for archiving operations
+    /// @param archivingOpStatus  Update for files in archiving
+    virtual void updateArchivingState(const std::vector<MinFileStatus>& archivingOpStatus);
+
+    /// Updates the start time for archiving operations
+    /// @param jobs  A map where the key is the job id, and the value another map where the key is a surl, and the
+    ///                     value a file id
+    virtual void setArchivingStartTime(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs);
+
     /// Update the bring online token for the given set of transfers
     /// @param jobs     A map where the key is the job id, and the value another map where the key is a surl, and the
     ///                     value a file id
