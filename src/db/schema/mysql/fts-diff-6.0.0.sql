@@ -14,6 +14,14 @@ ALTER TABLE t_file
 ALTER TABLE t_file_backup
     ADD COLUMN `archive_start_time` timestamp NULL DEFAULT NULL,
     ADD COLUMN `archive_finish_time` timestamp NULL DEFAULT NULL;
+    
+ALTER TABLE t_job
+    ADD COLUMN `archive_timeout` int(11) DEFAULT NULL;
+    
+        
+ALTER TABLE t_job_backup
+    ADD COLUMN `archive_timeout` int(11) DEFAULT NULL;
+    
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (6, 0, 0, 'FTS-1318 diff');
