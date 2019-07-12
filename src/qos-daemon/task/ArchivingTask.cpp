@@ -36,7 +36,8 @@ void ArchivingTask::run(const boost::any &)
     std::set<std::string> urlSet = ctx.getUrls();
     if (urlSet.empty())
         return;
-
+    //Set Archiving start time for all surls
+    ctx.setStartTime();
     ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
 
 }

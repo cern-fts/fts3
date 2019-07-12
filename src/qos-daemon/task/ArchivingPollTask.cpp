@@ -55,8 +55,6 @@ void ArchivingPollTask::run(const boost::any&)
 
 		ssize_t ret = gfal2_getxattr(gfal2_ctx,  urls[i], GFAL_XATTR_STATUS, buffer, sizeof(buffer), &errors[i]);
 
-	    //TODO: if files are pooled for the first time we need to set the archive_start_time
-
 		//check for errors
 		if (ret > 0 and strlen(buffer) > 0 and errors[i] == 0) {
 			bool found = false;

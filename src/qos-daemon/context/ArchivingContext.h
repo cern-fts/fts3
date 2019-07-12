@@ -78,6 +78,10 @@ public:
         stateUpdater(jobs, state, error);
     }
 
+    void setStartTime()
+    {
+         stateUpdater(jobs);
+    }
 
     int getArchiveTimeout() const
     {
