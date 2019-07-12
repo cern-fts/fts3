@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2019
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -27,282 +27,158 @@
 
 void ArchivingPollTask::run(const boost::any&)
 {
-    // check if the bring-online timeout was exceeded
-    if (timeout_occurred()) return;
-    // handle cancelled jobs/files
-    handle_canceled();
+	// check if the archive  timeout was exceeded
+	if (timeout_occurred()) return;
+	// handle cancelled jobs/files
+	handle_canceled();
 
-    int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
-    bool forcePoll = false;
+	//use the same var for staging pool retries now
+	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+	bool forcePoll = false;
 
-    std::set<std::string> urlSet = ctx.getUrls();
-    if (urlSet.empty())
-        return;
+	std::set<std::string> urlSet = ctx.getUrls();
+	if (urlSet.empty())
+		return;
 
-    std::vector<const char*> urls;
-    urls.reserve(urlSet.size());
-    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
-        urls.push_back(set_i->c_str());
-    }
+	std::vector<const char*> urls;
+	urls.reserve(urlSet.size());
+	for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
+		urls.push_back(set_i->c_str());
+	}
 
-    std::vector<GError*> errors(urls.size(), NULL);
-    std::vector<const char*> failedUrls;
+	std::vector<GError*> errors(urls.size(), NULL);
+	std::vector<const char*> failedUrls;
 
-    int status = gfal2_bring_online_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
+	for (size_t i = 0; i < urls.size(); ++i) {
+		auto ids = ctx.getIDs(urls[i]);
+		char buffer[1024];
 
-    if (status < 0) {
-        for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx.getIDs(urls[i]);
+		ssize_t ret = gfal2_getxattr(gfal2_ctx,  urls[i], GFAL_XATTR_STATUS, buffer, sizeof(buffer), &errors[i]);
+		//check for errors
+		if (ret > 0 and strlen(buffer) > 0 and errors[i] == 0) {
+			bool found = false;
+			int i = 0;
+			//check for NEARLINE or ONLINE_AND_NEARLINE
+			while (i < ret) {
+				if (strncmp(buffer + i, GFAL_XATTR_STATUS_NEARLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE)) == 0) {
+					found = true;
+					break;
+				}
+				if (strncmp(buffer + i, GFAL_XATTR_STATUS_NEARLINE_ONLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE_ONLINE)) == 0) {
+					found = true;
+					break;
+				}
+				i += strlen(buffer + i) + 1;
+			}
+			if (found) {
 
-            if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ". Communication error, soft failure: " << errors[i]->message
-                    << commit;
-                forcePoll = true;
-            }
-            else if (errors[i] && errors[i]->code != EOPNOTSUPP) {
-                failedUrls.push_back(urls[i]);
+				FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                    		<< "ARCHIVING FINISHED for "
+							<< urls[i]
+									<< commit;
+				//update the state of the file to finished
+				for (auto it = ids.begin(); it != ids.end(); ++it) {
+					ctx.updateState(it->first, it->second, "FINISHED", JobError());
+				}
+				ctx.removeUrl(urls[i]);
 
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE polling FAILED for " << urls[i] << ": "
-                    << errors[i]->code << " " << errors[i]->message
-                    << commit;
+			} else {
+				forcePoll = true;
+			}
+		}
+		else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+			FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                    		<< "ARCHIVING  NOT FINISHED for " << urls[i]
+																	  << ". Communication error, soft failure: " << errors[i]->message
+																	  << commit;
+			forcePoll = true;
+		}
+		else if (errors[i]) {
+			failedUrls.push_back(urls[i]);
 
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                        "FAILED", JobError("STAGING", errors[i])
-                    );
-                }
-            }
-            else if (errors[i] && errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for " << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                        "FINISHED", JobError()
-                    );
-                 }
-            }
-            else
-            {
-                failedUrls.push_back(urls[i]);
+			FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+			<< "ARCHIVING polling FAILED for " << urls[i] << ": "
+			<< errors[i]->code << " " << errors[i]->message
+			<< commit;
 
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                    << "BRINGONLINE FAILED for " << urls[i]
-                    << ": returned -1 but error was not set "
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                        "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
-                    );
-                }
-            }
-            g_clear_error(&errors[i]);
-        }
-    }
-    // 0 = not all are terminal
-    // 1 = all are terminal
-    // So check the status for each individual file regardless, so we can start transferring before the
-    // whole staging job is finished
-    else {
-        for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx.getIDs(urls[i]);
+			for (auto it = ids.begin(); it != ids.end(); ++it) {
+				ctx.updateState(it->first, it->second,
+						"FAILED", JobError("ARCHIVING", errors[i])
+				);
+			}
+		}
+		else
+		{
+			failedUrls.push_back(urls[i]);
 
-            if (errors[i] == NULL) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrl(urls[i]);
-            }
-            else if (errors[i]->code == EAGAIN)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ": " << errors[i]->message
-                    << commit;
-            }
-            else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ". Communication error, soft failure: " << errors[i]->message
-                    << commit;
-                forcePoll = true;
-            }
-            else if (errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrl(urls[i]);
-            }
-            else
-            {
-                failedUrls.push_back(urls[i]);
+			FTS3_COMMON_LOGGER_NEWLOG(ERR)
+			<< "ARCHIVING FAILED for " << urls[i]
+											   << ": returned -1 but error was not set "
+											   << commit;
+			for (auto it = ids.begin(); it != ids.end(); ++it) {
+				ctx.updateState(it->first, it->second,
+						"FAILED", JobError("ARCHIVING", -1, "Error not set by gfal2")
+				);
+			}
+		}
+		g_clear_error(&errors[i]);
+	}
 
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FAILED for " << urls[i] << ": "
-                    << errors[i]->code << " " << errors[i]->message
-                    << commit;
+	// If status was 0, not everything is terminal, so schedule a new poll
+	if (forcePoll) {
+		time_t interval = getPollInterval(++nPolls), now = time(NULL);
+		wait_until = now + interval;
+		FTS3_COMMON_LOGGER_NEWLOG(INFO)
+		<< "ARCHIVING polling " << ctx.getLogMsg() << token << commit;
 
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                        "FAILED", JobError("STAGING", errors[i])
-                    );
-                }
-                ctx.removeUrl(urls[i]);
-
-            }
-            g_clear_error(&errors[i]);
-        }
-    }
-
-    // Issue a preventive abort for those that failed
-    // For instance, Castor may give a failure saying the timeout expired, but the request will remain
-    // on the queue until we explicitly cancel them.
-    if (!failedUrls.empty()) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing an abort for staging requests that failed"
-                                        << commit;
-        std::vector<GError*> abortErrors(failedUrls.size(), NULL);
-        int abort_status = gfal2_abort_files(
-            gfal2_ctx, static_cast<int>(failedUrls.size()), failedUrls.data(),
-            token.c_str(), abortErrors.data()
-        );
-        // Only log errors for postmortem, do not mark anything on the database
-        if (abort_status < 0) {
-            for (auto i = abortErrors.begin(); i != abortErrors.end(); ++i) {
-                if (*i != NULL) {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE got an error from the staging abort "
-                                                    << (*i)->code << " " << (*i)->message
-                                                    << commit;
-                    g_clear_error(&(*i));
-                }
-            }
-        }
-    }
-
-    // If status was 0, not everything is terminal, so schedule a new poll
-    if (status == 0 || forcePoll) {
-        time_t interval = getPollInterval(++nPolls), now = time(NULL);
-        wait_until = now + interval;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)
-            << "BRINGONLINE polling " << ctx.getLogMsg() << token << commit;
-
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
-        ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
-    }
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
+		ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
+	}
 }
 
 
 void ArchivingPollTask::handle_canceled()
 {
-    std::set<std::pair<std::string, std::string>> remove;
-    // critical section
-    {
-        boost::shared_lock<boost::shared_mutex> lock(mx);
-        // get the URLs for the given task
-        auto surls = ctx.getSurls();
-        // check if some of the URLs should be aborted
-        std::set_difference(
-            surls.begin(), surls.end(),
-            active_urls.begin(), active_urls.end(),
-            std::inserter(remove, remove.end())
-        );
-    }
-    // check if there is something to do first
-    if (remove.empty()) return;
-    // get the urls for abortions
-    auto urls = ctx.getSurlsToAbort(remove);
-    abort(urls);
+	std::set<std::pair<std::string, std::string>> remove;
+	// critical section
+	{
+		boost::shared_lock<boost::shared_mutex> lock(mx);
+		// get the URLs for the given task
+		auto surls = ctx.getSurls();
+		// check if some of the URLs should be aborted
+		std::set_difference(
+				surls.begin(), surls.end(),
+				active_urls.begin(), active_urls.end(),
+				std::inserter(remove, remove.end())
+		);
+	}
+	// check if there is something to do first
+	if (remove.empty()) return;
 }
 
 
 bool ArchivingPollTask::timeout_occurred()
 {
-    // first check if bring-online timeout was exceeded
-    if (!ctx.hasTimeoutExpired()) return false;
-    // get URLs
-    std::set<std::string> urls = ctx.getUrls();
-    // Log the event per file
-    for (auto i = urls.begin(); i != urls.end(); ++i) {
-        auto ids = ctx.getIDs(*i);
-        for (auto j = ids.begin(); j != ids.end(); ++j) {
-            FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "BRINGONLINE timeout triggered for "
-                << j->first << "/" << j->second
-                << commit;
-        }
-    }
-    // and abort the bring-online operation
-    abort(urls, false);
-    // set the state
-    ctx.updateState("FAILED",
-        JobError("STAGING", ETIMEDOUT, "bring-online timeout has been exceeded")
-    );
-    // confirm the timeout
-    return true;
+	// first check if archive timeout was exceeded
+	if (!ctx.hasTimeoutExpired()) return false;
+	// get URLs
+	std::set<std::string> urls = ctx.getUrls();
+	// Log the event per file
+	for (auto i = urls.begin(); i != urls.end(); ++i) {
+		auto ids = ctx.getIDs(*i);
+		for (auto j = ids.begin(); j != ids.end(); ++j) {
+			FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING timeout triggered for "
+					<< j->first << "/" << j->second
+					<< commit;
+		}
+	}
+
+	// set the state
+	ctx.updateState("FAILED",
+			JobError("ARCHIVING", ETIMEDOUT, "archiving timeout has been exceeded")
+	);
+	// confirm the timeout
+	return true;
 }
 
 
-void ArchivingPollTask::abort(std::set<std::string> const & urlSet, bool report)
-{
-    if (urlSet.empty())
-        return;
-
-    std::vector<const char*> urls;
-    urls.reserve(urlSet.size());
-    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
-        urls.push_back(set_i->c_str());
-    }
-
-    std::vector<GError*> errors(urls.size(), NULL);
-    int status = gfal2_abort_files(
-        gfal2_ctx, static_cast<int>(urls.size()), urls.data(),
-        token.c_str(), errors.data()
-    );
-
-    if (status < 0) {
-        for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx.getIDs(urls[i]);
-
-            if (errors[i]) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)<< "BRINGONLINE abort FAILED for " << urls[i] << ": "
-                << errors[i]->code << " " << errors[i]->message
-                << commit;
-                if (report)
-                {
-                    for (auto it = ids.begin(); it != ids.end(); ++it) {
-                        ctx.updateState(it->first, it->second,
-                            "FAILED", JobError("STAGING", errors[i])
-                        );
-                    }
-                }
-                g_clear_error(&errors[i]);
-            }
-            else
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED for "
-                << urls[i] << ", returned -1, but error not set " << token
-                << commit;
-                if (report)
-                {
-                    for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.updateState(it->first, it->second,
-                            "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
-                        );
-                }
-            }
-        }
-    }
-}

@@ -63,7 +63,7 @@ static void heartBeat(void)
         try {
             //check if draining is on
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking files for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
@@ -114,19 +114,20 @@ void QoSServer::start(void)
     Gfal2Task::createPrototype (infosys);
 
     FetchStaging fs(threadpool);
-    CDMIFetchQosTransition cdmifs(threadpool);
+    //CDMIFetchQosTransition cdmifs(threadpool);
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
     FetchArchiving fa(threadpool);
 
     waitingRoom.attach(threadpool);
-    cdmiWaitingRoom.attach(threadpool);
+    //cdmiWaitingRoom.attach(threadpool);
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
     systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
 
-    systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
-    systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
+    //disable CDMI threads for now
+    //systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
+    //systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
     systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));

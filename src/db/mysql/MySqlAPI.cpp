@@ -3191,9 +3191,10 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
 {
 	soci::session sql(*connectionPool);
    //TODO: query for credentials to be checked when integrating OIDC
+   //TODO: create a view as for staging
     try {
         soci::rowset<soci::row> rs2 = (sql.prepare <<
-                " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, c.proxy "
+                " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, f.vo_name,  c.dn, c.dlg_id, j.archive_timeout"
                 " FROM t_file f "
                 " INNER JOIN t_job j ON (f.job_id = j.job_id) "
                 " INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
@@ -3209,12 +3210,14 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
                 std::string job_id = r.get<std::string>("job_id");
                 uint64_t file_id = r.get<unsigned long long>("file_id");
                 std::string dest_surl = r.get<std::string>("dest_surl");
-                std::string proxy = r.get<std::string>("proxy");
-                //TODO filling plalceholders for now
-                archivingOps.emplace_back(job_id, file_id,"voname","user", "credid", dest_surl, 0);
+                std::string voname = r.get<std::string>("vo_name");
+                std::string dn = r.get<std::string>("dn");
+                std::string dlg_id = r.get<std::string>("dlg_id");
+                int archive_timeout = r.get<int>("archive_timeout",0);
+                archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, archive_timeout);
             }
 
-    //TODO: add throtteling
+    //TODO: add throttling
     }
     catch (std::exception& e)
     {
