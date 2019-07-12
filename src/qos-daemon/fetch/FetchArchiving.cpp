@@ -67,6 +67,7 @@ void FetchArchiving::fetch()
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
                 std::string storage = Uri::parse(it_f->surl).host;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "storage: " << storage << commit;
                 GroupByType key(it_f->credId, storage);
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
@@ -75,6 +76,7 @@ void FetchArchiving::fetch()
                         		QoSServer::instance(), *it_f
                         ))
                     );
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "task inserted for storage:  " << storage << commit;
                 }
                 else {
                     it_t->second.add(*it_f);
@@ -85,7 +87,12 @@ void FetchArchiving::fetch()
             {
                 try
                 {
+                	for (auto it = it_t->second.getSurls().begin(); it != it_t->second.getSurls().end(); ++it) {
+                	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting task for: " << std::get<0>(*it) << commit;
+                	}
                     threadpool.start(new ArchivingTask(it_t->second));
+
+
                 }
                 catch(UserError const & ex)
                 {

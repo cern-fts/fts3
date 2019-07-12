@@ -2703,6 +2703,11 @@ void MySqlAPI::updateDeletionsState(const std::vector<MinFileStatus>& delOpsStat
 	}
 }
 
+
+static std::string int2str(uint64_t v) {
+	return boost::lexical_cast<std::string>(v);
+}
+
 void MySqlAPI::updateArchivingState(const std::vector<MinFileStatus>& archivingOpStatus)
 {
 
@@ -2735,7 +2740,6 @@ void MySqlAPI::setArchivingStartTime(const std::map< std::string, std::map<std::
 			query << "update t_file set archive_start_time = UTC_TIMESTAMP() where job_id = :jobId and file_id IN (" << fileIdsStr << ")";
 
 			sql << query.str(),
-					soci::use(token),
 					soci::use(jobId);
 		}
 		sql.commit();
@@ -2770,9 +2774,6 @@ void MySqlAPI::updateStagingState(const std::vector<MinFileStatus>& stagingOpsSt
 }
 
 
-static std::string int2str(uint64_t v) {
-	return boost::lexical_cast<std::string>(v);
-}
 
 
 void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<uint64_t> > > const & jobs, std::string const & token)
