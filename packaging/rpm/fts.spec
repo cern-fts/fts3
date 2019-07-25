@@ -37,7 +37,6 @@ BuildRequires:  boost148-devel
 
 BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
-BuildRequires:  wget
 BuildRequires:  cmake
 BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
