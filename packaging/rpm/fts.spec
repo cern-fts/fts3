@@ -9,8 +9,8 @@
 %endif
 
 Name:       fts
-Version:    3.9.1
-Release:    2%{?dist}
+Version:    3.9.2
+Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -37,8 +37,9 @@ BuildRequires:  boost148-devel
 
 BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
-
+BuildRequires:  wget
 BuildRequires:  cmake
+BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 %if 0%{?el5}
@@ -50,7 +51,6 @@ BuildRequires:  gfal2-devel >= 2.14.2
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
-BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
@@ -198,6 +198,8 @@ The File Transfer Service V3 mysql plug-in
 %setup -q
 
 %build
+#build curl
+./src/cli/buildcurl.sh
 # Make sure the version in the spec file and the version used
 # for building matches
 fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
