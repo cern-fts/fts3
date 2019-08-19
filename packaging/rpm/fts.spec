@@ -35,7 +35,6 @@ BuildRequires:  boost-devel
 BuildRequires:  boost148-devel
 %endif
 
-BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
 BuildRequires:  cmake
 BuildRequires:  cmake3
