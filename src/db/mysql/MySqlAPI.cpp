@@ -457,9 +457,12 @@ void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
     {
         soci::rowset<soci::row> rs1 = (sql.prepare <<
            "SELECT f.vo_name, f.source_se, f.dest_se FROM t_file f "
-           "WHERE f.file_state = 'SUBMITTED' "
+           "WHERE f.file_state = 'SUBMITTED' AND (hashed_id BETWEEN :hashStart AND :hashEnd) "
            "GROUP BY f.source_se, f.dest_se, f.file_state, f.vo_name "
-           "ORDER BY null");
+           "ORDER BY null",
+           soci::use(hashSegment.start),
+           soci::use(hashSegment.end)
+		   );
 
         soci::statement stmt1 = (sql.prepare <<
              "SELECT file_id FROM t_file "

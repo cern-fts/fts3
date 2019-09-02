@@ -30,8 +30,6 @@ include_directories(${GLOBUS_INCLUDE_DIRS})
 
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 
-# Require soap headers
-include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
 
 add_definitions(-DCURL_STATICLIB)
 
