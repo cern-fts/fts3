@@ -10,7 +10,7 @@
 
 Name:       fts
 Version:    3.9.2
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -501,6 +501,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Sep 02 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-2
+- stop requiring CGSI-gsoap
+
 * Thu Jul 25 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-1
 - New bugfix releas
 
