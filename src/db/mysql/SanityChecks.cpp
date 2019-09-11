@@ -144,7 +144,7 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         else {
             if (stateCount["FINISHED"] >= 1) {
                 sql << "UPDATE t_file SET "
-                    "    file_state = 'NOT_USED', finish_time = NULL, "
+                    "    file_state = 'NOT_USED', finish_time = NULL, dest_surl_uuid = NULL, "
                     "    reason = '' "
                     "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
                     soci::use(jobId);
@@ -191,7 +191,7 @@ void MySqlAPI::fixJobTerminalFileNonTerminal(soci::session &sql)
         const std::string jobId = i->get<std::string>("job_id");
 
         sql << "UPDATE t_file SET "
-            "    file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), "
+            "    file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
             "    reason = 'Force failure due to file state inconsistency' "
             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ",
             soci::use(jobId);
@@ -315,7 +315,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
 
-            sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(fileId);
+            sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP(), dest_surl_uuid = NULL where file_id=:file_id", soci::use(fileId);
         }
     }
     sql.commit();

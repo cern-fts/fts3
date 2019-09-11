@@ -19,16 +19,14 @@ ALTER TABLE `t_file`
 	MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_backup` 
         MODIFY reason varchar(2048) CHARACTER SET utf8;
-ALTER TABLE `t_dm`
-        MODIFY reason varchar(2048) CHARACTER SET utf8;
-ALTER TABLE `t_dm_backup`
-        MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
         ADD INDEX `idx_datetime` ( `datetime`);
 ALTER TABLE `t_file` 
 	ADD COLUMN `priority` int(11) DEFAULT '3';
+UPDATE `t_job`
+	SET `priority`=3 where `priority`!=3;
 ALTER TABLE `t_file` 
        ADD COLUMN `dest_surl_uuid` char(36) DEFAULT NULL;
 ALTER TABLE `t_file` 
@@ -85,6 +83,9 @@ ALTER TABLE t_dm
 --
 RENAME TABLE t_dm_backup TO t_dm_backup_old;
 CREATE TABLE t_dm_backup ENGINE = ARCHIVE AS (SELECT * FROM t_dm WHERE NULL);
+
+DROP TABLE t_dm_old;
+DROP TABLE t_dm_backup_old;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');

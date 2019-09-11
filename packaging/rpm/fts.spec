@@ -35,10 +35,9 @@ BuildRequires:  boost-devel
 BuildRequires:  boost148-devel
 %endif
 
-BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
-
 BuildRequires:  cmake
+BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 %if 0%{?el5}
@@ -50,7 +49,6 @@ BuildRequires:  gfal2-devel >= 2.14.2
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
-BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
@@ -198,6 +196,8 @@ The File Transfer Service V3 mysql plug-in
 %setup -q
 
 %build
+#build curl
+./src/cli/buildcurl.sh
 # Make sure the version in the spec file and the version used
 # for building matches
 fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
@@ -505,7 +505,13 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 
 %changelog
 
-* Tue Apr 02 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-3
+* Tue Jun 18 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.1-1
+- New bugfix release
+
+* Thu May 23 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-2
+- fix db upgrade script
+
+* Tue Apr 02 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
 - New Minor release
 - Includes multiple database optimisations that improve the overall performance of FTS
 - Avoid submitting multiple transfers to the same destination

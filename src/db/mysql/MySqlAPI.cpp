@@ -832,12 +832,11 @@ int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::st
 }
 
 
-void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId)
+void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd )
 {
     soci::indicator selectionStrategyInd = soci::i_ok;
     std::string selectionStrategy;
     std::string vo_name;
-    std::string destSurlUuid;
     uint64_t nextReplica = 0, alreadyActive;
     soci::indicator nextReplicaInd = soci::i_ok;
 
@@ -854,6 +853,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
     //check if it's auto or manual
     sql << "SELECT selection_strategy, vo_name FROM t_file WHERE file_id = :file_id",
         soci::use(fileId), soci::into(selectionStrategy, selectionStrategyInd), soci::into(vo_name);
+
     // default is orderly
     if (selectionStrategyInd == soci::i_null) {
         selectionStrategy = "orderly";
@@ -861,10 +861,6 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
 
     sql << "SELECT min(file_id) FROM t_file WHERE file_state = 'NOT_USED' AND job_id=:job_id ",
         soci::use(jobId), soci::into(nextReplica, nextReplicaInd);
-
-    // need to get the dest_surl_uuid that was stored by FTS-REST at the submission time
-    sql << "SELECT dest_surl_uuid FROM t_file WHERE dest_surl_uuid is not NULL AND job_id=:job_id ",
-        soci::use(jobId), soci::into(destSurlUuid);
 
     if (selectionStrategy == "auto") {
         uint64_t bestFileId = getBestNextReplica(sql, jobId, vo_name);
@@ -874,7 +870,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
                     " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
                     " WHERE job_id = :jobId AND file_id = :file_id  "
                     " AND file_state = 'NOT_USED' ",
-					soci::use(destSurlUuid), soci::use(jobId), soci::use(bestFileId);
+					soci::use(destSurlUuid, destSurlUuidInd ), soci::use(jobId), soci::use(bestFileId);
         }
         else {
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Out of replicas for " << jobId << commit;
@@ -886,7 +882,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
             " SET file_state = 'SUBMITTED', finish_time=NULL, dest_surl_uuid = :destSurlUuid "
             " WHERE job_id = :jobId "
             " AND file_state = 'NOT_USED' and file_id=:file_id ",
-			soci::use(destSurlUuid), soci::use(jobId), soci::use(nextReplica);
+			soci::use(destSurlUuid, destSurlUuidInd), soci::use(jobId), soci::use(nextReplica);
     }
 }
 
@@ -1167,6 +1163,9 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         int processId, double filesize, double duration, bool retry)
 {
     std::string storedState;
+    soci::indicator destSurlUuidInd;
+    std::string destSurlUuid;
+
     try
     {
         sql.begin();
@@ -1188,9 +1187,10 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             soci::use(jobId), soci::into(jobType), soci::into(jobState);
 
         // query for the file state in DB
-        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId",
+        sql << "SELECT file_state, dest_surl_uuid FROM t_file WHERE file_id=:fileId",
             soci::use(fileId),
-            soci::into(storedState);
+            soci::into(storedState),
+			soci::into(destSurlUuid, destSurlUuidInd);
 
         bool isStaging = (storedState == "STAGING");
 
@@ -1293,7 +1293,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
                 if ((jobState != "CANCELED" && jobState != "FAILED") &&
                     (newFileState == "FAILED" || newFileState == "CANCELED")) {
                     sql.begin();
-                    useFileReplica(sql, jobId, fileId);
+                    useFileReplica(sql, jobId, fileId, destSurlUuid, destSurlUuidInd);
                     sql.commit();
                 }
                 break;
@@ -3844,7 +3844,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
     try
     {
         soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl, bringonline_token from t_file WHERE "
-                                      "  file_state='CANCELED' and finish_time is NULL "
+                                      "  file_state='CANCELED' and staging_finished is NULL "
                                       "  AND transfer_host = :hostname  AND staging_start is NOT NULL ",
                                       soci::use(hostname));
 
