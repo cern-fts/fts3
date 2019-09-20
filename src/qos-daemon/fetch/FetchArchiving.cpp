@@ -52,12 +52,7 @@ void FetchArchiving::fetch()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
-
-            if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
-                continue;
-            }
+           
 
             std::map<GroupByType, ArchivingContext> tasks;
             std::vector<ArchivingOperation> files;
@@ -70,6 +65,7 @@ void FetchArchiving::fetch()
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "storage: " << storage << commit;
                 GroupByType key(it_f->credId, storage);
                 auto it_t = tasks.find(key);
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "inserting task for storage:  " << storage << commit;
                 if (it_t == tasks.end()) {
                     tasks.insert(std::make_pair(
                         key, ArchivingContext(
@@ -87,11 +83,11 @@ void FetchArchiving::fetch()
             {
                 try
                 {
-                	for (auto it = it_t->second.getSurls().begin(); it != it_t->second.getSurls().end(); ++it) {
-                	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting task for: " << std::get<0>(*it) << commit;
-                	}
-                    threadpool.start(new ArchivingTask(it_t->second));
-
+                     for (auto it = it_t->second.getSurls().begin(); it != it_t->second.getSurls().end(); ++it) {
+                	    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting task for: " << std::get<0>(*it) << commit;
+                      
+                            threadpool.start(new ArchivingTask(it_t->second));
+                     }
 
                 }
                 catch(UserError const & ex)
@@ -102,6 +98,12 @@ void FetchArchiving::fetch()
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
                 }
+            }
+            boost::this_thread::sleep(boost::posix_time::seconds(60));
+
+            if (fts3::server::DrainMode::instance()) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
+                continue;
             }
 
         }

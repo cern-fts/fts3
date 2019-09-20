@@ -34,8 +34,10 @@ std::set<std::pair<std::string, std::string>> ArchivingTask::active_urls;
 void ArchivingTask::run(const boost::any &)
 {
     std::set<std::string> urlSet = ctx.getUrls();
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running task 1" << commit;
     if (urlSet.empty())
         return;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running task 2" << commit;
     //Set Archiving start time for all surls
     ctx.setStartTime();
     ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));

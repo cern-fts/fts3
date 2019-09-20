@@ -41,6 +41,7 @@ class ArchivingContext : public JobContext
 
 public:
 
+    using JobContext::add;
 
     ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
         JobContext(archiveOp.user, archiveOp.voName, archiveOp.credId, ""),

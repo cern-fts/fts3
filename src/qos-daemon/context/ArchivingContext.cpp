@@ -33,7 +33,7 @@ void ArchivingContext::add(const ArchivingOperation &archiveOp)
     	archiveTimeout = archiveOp.timeout;
     }
 
-    add(archiveOp);
+     add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
 }
 
 
