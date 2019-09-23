@@ -108,7 +108,7 @@ protected:
     ArchivingContext ctx;
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
-    /// set of tokens (and respective URLs) for ongoing archiving 
+    /// set of jobid (and respective URLs) for ongoing archiving 
     static std::set<std::pair<std::string, std::string>> active_urls;
 };
 

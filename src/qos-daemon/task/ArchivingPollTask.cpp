@@ -131,7 +131,7 @@ void ArchivingPollTask::run(const boost::any&)
 		time_t interval = getPollInterval(++nPolls), now = time(NULL);
 		wait_until = now + interval;
 		FTS3_COMMON_LOGGER_NEWLOG(INFO)
-		<< "ARCHIVING polling " << ctx.getLogMsg() << token << commit;
+		<< "ARCHIVING polling " << ctx.getLogMsg() << commit;
 
 		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
 		ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));

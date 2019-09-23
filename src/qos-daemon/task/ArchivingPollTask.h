@@ -120,10 +120,7 @@ private:
             return (2 << nPolls);
     }
 
-    /// the token that will be used for polling
-    std::string token;
-
-    /// number of bring online polls
+    /// number of archive task polls
     int nPolls;
 
     /// wait in the wait room until given time

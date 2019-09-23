@@ -82,13 +82,8 @@ void FetchArchiving::fetch()
             for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
             {
                 try
-                {
-                     for (auto it = it_t->second.getSurls().begin(); it != it_t->second.getSurls().end(); ++it) {
-                	    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting task for: " << std::get<0>(*it) << commit;
-                      
-                            threadpool.start(new ArchivingTask(it_t->second));
-                     }
-
+                {    
+                     threadpool.start(new ArchivingTask(it_t->second));
                 }
                 catch(UserError const & ex)
                 {
