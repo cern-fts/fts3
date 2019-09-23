@@ -129,7 +129,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setAuthMethod(authMethod);
             if ("oauth2" == authMethod) {
                 cloudConfigFile = generateOAuthConfigFile(db, tf);
-            } else
+            } else {
             	cloudConfigFile = generateCloudStorageConfigFile(db, tf);
 	    }
 
