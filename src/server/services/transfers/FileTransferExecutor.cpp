@@ -69,7 +69,7 @@ std::string FileTransferExecutor::getAuthMethod(std::string jobMetadata)
 	try {
 		pt::read_json(iostr, job_metadata);
 		return job_metadata.get<std::string>("auth_method", "null");
-	} catch (const pt::json_parser::json_parser_error&) {
+	} catch (...) {
 		return "null";
 	}
 }
