@@ -98,7 +98,7 @@ private:
     GenericDbIfce* db;
 
     // method to retrieve auth method used
-    std::string getAuthMethod(std::string jobMetadata);
+    std::string getAuthMethod(const std::string& jobMetadata);
 };
 
 } /* namespace server */

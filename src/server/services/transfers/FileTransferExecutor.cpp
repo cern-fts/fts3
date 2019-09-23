@@ -61,17 +61,22 @@ FileTransferExecutor::~FileTransferExecutor()
 
 }
 
-std::string FileTransferExecutor::getAuthMethod(std::string jobMetadata)
+std::string FileTransferExecutor::getAuthMethod(const std::string& jobMetadata)
 {
 	std::stringstream iostr;
-	iostr << jobMetadata;
-	pt::ptree job_metadata;
-	try {
-		pt::read_json(iostr, job_metadata);
-		return job_metadata.get<std::string>("auth_method", "null");
-	} catch (...) {
+	if (jobMetadata != "null") {
+            iostr << jobMetadata;
+            pt::ptree job_metadata;
+	
+            try {
+                pt::read_json(iostr, job_metadata);
+                return job_metadata.get<std::string>("auth_method", "null");
+            } catch (...) {
 		return "null";
-	}
+            }
+        } else return "null";
+       
+            
 }
 
 void FileTransferExecutor::run(boost::any & ctx)
