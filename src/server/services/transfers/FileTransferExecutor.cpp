@@ -127,11 +127,11 @@ void FileTransferExecutor::run(boost::any & ctx)
             std::string authMethod = FileTransferExecutor::getAuthMethod(tf.jobMetadata);
 
             cmdBuilder.setAuthMethod(authMethod);
-            if ("oauth2" != authMethod) {
+            if ("oauth2" == authMethod) {
+                cloudConfigFile = generateOAuthConfigFile(db, tf);
+            } else
             	cloudConfigFile = generateCloudStorageConfigFile(db, tf);
-            } else {
-            	cloudConfigFile = generateOAuthConfigFile(db, tf);
-            }
+	    }
 
             if (!cloudConfigFile.empty()) {
                 cmdBuilder.setOAuthFile(cloudConfigFile);
