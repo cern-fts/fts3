@@ -21,13 +21,16 @@
 #include <gfal_api.h>
 #include "common/Logger.h"
 
-#include "ArchivingTask.h"
 #include "ArchivingPollTask.h"
 
+boost::shared_mutex ArchivingPollTask::mx;
+
+std::set<std::pair<std::string, std::string>> ArchivingPollTask::active_urls;
 
 void ArchivingPollTask::run(const boost::any&)
+
 {
-	// check if the archive  timeout was exceeded
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting" << commit;
 	if (timeout_occurred()) return;
 	// handle cancelled jobs/files
 	handle_canceled();

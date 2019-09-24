@@ -26,7 +26,6 @@
 #include "server/DrainMode.h"
 
 #include "FetchArchiving.h"
-#include "../task/ArchivingTask.h"
 #include "../task/ArchivingPollTask.h"
 
 
@@ -83,7 +82,8 @@ void FetchArchiving::fetch()
             {
                 try
                 {    
-                     threadpool.start(new ArchivingTask(it_t->second));
+                     threadpool.start(new ArchivingPollTask(it_t->second));
+                     it_t->second.setStartTime();
                 }
                 catch(UserError const & ex)
                 {

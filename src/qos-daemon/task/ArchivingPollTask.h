@@ -31,10 +31,8 @@
 #include <boost/thread.hpp>
 
 #include "db/generic/SingleDbInstance.h"
-
-#include "ArchivingTask.h"
-
-
+#include "Gfal2Task.h"
+#include "../context/ArchivingContext.h"
 /**
  * A poll task: checks whether a list of url has been archived
  *
@@ -44,7 +42,7 @@
  *
  * @see ArchivingTask
  */
-class ArchivingPollTask : public ArchivingTask
+class ArchivingPollTask :  public Gfal2Task
 {
 public:
     /**
@@ -52,10 +50,12 @@ public:
      *
      * @param ctx : staging context (recover from DB after crash)
      */
-	ArchivingPollTask(const ArchivingContext &ctx) :
-		ArchivingTask(ctx), nPolls(0), wait_until(0)
+	ArchivingPollTask(const ArchivingContext &ctx) : Gfal2Task("ARCHIVING"), ctx(ctx), nPolls(0), wait_until(0)
     {
+        // set the proxy certificate
+        setProxy(ctx);
         auto surls = ctx.getSurls();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask contructor " << commit;
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_urls.insert(surls.begin(), surls.end());
     }
@@ -65,24 +65,18 @@ public:
      *
      * @param copy : a archive task (stills the gfal2 context of this object)
      */
-	ArchivingPollTask(ArchivingTask && copy) :
-		ArchivingTask(std::move(copy)),  nPolls(0), wait_until()
+	ArchivingPollTask(ArchivingPollTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),  nPolls(0), wait_until()
     {
-    }
-
-    /**
-     * Move constructor
-     */
-	ArchivingPollTask(ArchivingPollTask && copy) :
-		ArchivingTask(std::move(copy)),  nPolls(copy.nPolls), wait_until(
-            copy.wait_until)
-    {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask copy" << commit;
     }
 
     /**
      * Destructor
      */
-    virtual ~ArchivingPollTask() {}
+    virtual ~ArchivingPollTask() {
+         if (gfal2_ctx)
+            cancel(ctx.getSurls());
+    }
 
     /**
      * The routine is executed by the thread pool
@@ -96,7 +90,22 @@ public:
     {
         return wait_until > now;
     }
-
+    static void cancel(const std::set<std::pair<std::string, std::string> > &urls)
+        {
+            if (urls.empty()) return;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask cancel " << commit;
+            boost::unique_lock<boost::shared_mutex> lock(mx);
+            auto begin = active_urls.lower_bound(*urls.begin());
+            auto end   = active_urls.upper_bound(*urls.rbegin());
+            for (auto it = begin; it != end;) {
+                if (urls.count(*it)) {
+                    active_urls.erase(it++);
+                }
+                else {
+                    ++it;
+                }
+            }
+        }
 private:
     /// checks if the archive  task was cancelled and removes those URLs that were from the context
     void handle_canceled();
@@ -125,6 +134,14 @@ private:
 
     /// wait in the wait room until given time
     time_t wait_until;
+    
+      /// archiving details
+    ArchivingContext ctx;
+    /// prevents concurrent access to active_tokens
+    static boost::shared_mutex mx;
+    
+    /// set of jobid (and respective URLs) for ongoing archiving 
+    static std::set<std::pair<std::string, std::string>> active_urls;
 };
 
 #endif // ARCHIVINGPOLLTASK_H_

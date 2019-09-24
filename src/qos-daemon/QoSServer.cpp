@@ -122,7 +122,7 @@ void QoSServer::start(void)
     waitingRoom.attach(threadpool);
     //cdmiWaitingRoom.attach(threadpool);
 
-    systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
+    //systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
     systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
 
     //disable CDMI threads for now
