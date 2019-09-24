@@ -55,7 +55,7 @@ public:
         // set the proxy certificate
         setProxy(ctx);
         auto surls = ctx.getSurls();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask contructor " << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask constructor " << commit;
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_urls.insert(surls.begin(), surls.end());
     }
@@ -65,7 +65,8 @@ public:
      *
      * @param copy : a archive task (stills the gfal2 context of this object)
      */
-	ArchivingPollTask(ArchivingPollTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),  nPolls(0), wait_until()
+	ArchivingPollTask(ArchivingPollTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),   nPolls(copy.nPolls), 
+		wait_until(copy.wait_until)
     {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask copy" << commit;
     }
