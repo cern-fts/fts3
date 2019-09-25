@@ -1171,7 +1171,8 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 	{
 		sql.begin();
 
-		std::string storedState, jobState;
+		std::string storedState, jobState, archiveTimeout;
+                soci::indicator archiveTimeoutNull = soci::i_ok;
 		Job::JobType jobType;
 
 		time_t now = time(NULL);
@@ -1184,14 +1185,16 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 		}
 
 		// Need to know the type of job, to know what's coming next
-		sql << "SELECT job_type, job_state FROM t_job WHERE job_id = :job_id",
-				soci::use(jobId), soci::into(jobType), soci::into(jobState);
+		sql << "SELECT job_type, job_state, archive_timeout FROM t_job WHERE job_id = :job_id",
+				soci::use(jobId), soci::into(jobType), soci::into(jobState), soci::into(archiveTimeout,archiveTimeoutNull);
 
 		// query for the file state in DB
 		sql << "SELECT file_state FROM t_file WHERE file_id=:fileId",
 				soci::use(fileId),
 				soci::into(storedState);
 
+                bool isArchiving = (archiveTimeoutNull == soci::i_ok && std::atoi(archiveTimeout.c_str()) > -1);
+                
 		bool isStaging = (storedState == "STAGING");
 
 		// If file is in terminal don't do anything, just return
@@ -1264,6 +1267,10 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 				stmt.exchange(soci::use(tTime, "time1"));
 			}
 		}
+                //move the new state to ARCHIVING if the transfer completed and the archive timeout is set
+                if (newFileState == "FINISHED" && isArchiving) {
+                        newFileState = "ARCHIVING";
+                }
 
 		query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
 				"WHERE file_id = :fileId AND file_state = :oldState";
