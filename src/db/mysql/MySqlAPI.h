@@ -324,6 +324,8 @@ private:
 
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 
+    void updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &archivingOpsStatus);
+      
     void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
 
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);

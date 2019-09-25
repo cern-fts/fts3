@@ -55,7 +55,6 @@ public:
         // set the proxy certificate
         setProxy(ctx);
         auto surls = ctx.getSurls();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask constructor " << commit;
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_urls.insert(surls.begin(), surls.end());
     }
@@ -68,7 +67,6 @@ public:
 	ArchivingPollTask(ArchivingPollTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),   nPolls(copy.nPolls), 
 		wait_until(copy.wait_until)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask copy" << commit;
     }
 
     /**
@@ -91,10 +89,10 @@ public:
     {
         return wait_until > now;
     }
+
     static void cancel(const std::set<std::pair<std::string, std::string> > &urls)
         {
             if (urls.empty()) return;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask cancel " << commit;
             boost::unique_lock<boost::shared_mutex> lock(mx);
             auto begin = active_urls.lower_bound(*urls.begin());
             auto end   = active_urls.upper_bound(*urls.rbegin());
@@ -107,6 +105,7 @@ public:
                 }
             }
         }
+
 private:
     /// checks if the archive  task was cancelled and removes those URLs that were from the context
     void handle_canceled();
@@ -124,7 +123,7 @@ private:
      */
     static time_t getPollInterval(int nPolls)
     {
-        if (nPolls > 9)
+        if (nPolls > 8)
             return 600;
         else
             return (2 << nPolls);

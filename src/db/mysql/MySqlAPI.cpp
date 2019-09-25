@@ -2255,108 +2255,105 @@ void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& me
 	}
 }
 
-
 std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId)
 {
-	TransferState ret;
-	std::vector<TransferState> temp;
+       TransferState ret;
+       std::vector<TransferState> temp;
 
-	try
-	{
-		soci::rowset<soci::row> rs = (fileId ==-1) ? (
-				sql.prepare <<
-				" SELECT "
-				"  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-				"  j.job_metadata, j.retry AS retry_max, f.file_id, "
-				"  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-				"  f.source_se, f.start_time , f.source_surl "
-				" FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-				" WHERE "
-				"  j.job_id = :jobId ",
-				soci::use(jobId)
-		)
-				:
-				(
-						sql.prepare <<
-						" SELECT "
-						"  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-						"  j.job_metadata, j.retry AS retry_max, f.file_id, "
-						"  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-						"  f.source_se, f.start_time , f.source_surl "
-						" FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-						" WHERE "
-						"  j.job_id = :jobId "
-						"  AND f.file_id = :fileId ",
-						soci::use(jobId),
-						soci::use(fileId)
-				);
+       try
+       {
+               soci::rowset<soci::row> rs = (fileId ==-1) ? (
+                               sql.prepare <<
+                               " SELECT "
+                               "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                               "  j.job_metadata, j.retry AS retry_max, f.file_id, "
+                               "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
+                               "  f.source_se, f.start_time , f.source_surl "
+                               " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                               " WHERE "
+                               "  j.job_id = :jobId ",
+                               soci::use(jobId)
+               )
+                               :
+                               (
+                                               sql.prepare <<
+                                               " SELECT "
+                                               "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                               "  j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                               "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
+                                               "  f.source_se, f.start_time , f.source_surl "
+                                               " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                               " WHERE "
+                                               "  j.job_id = :jobId "
+                                               "  AND f.file_id = :fileId ",
+                                               soci::use(jobId),
+                                               soci::use(fileId)
+                               );
 
 
-		soci::rowset<soci::row>::const_iterator it;
+               soci::rowset<soci::row>::const_iterator it;
 
-		for (it = rs.begin(); it != rs.end(); ++it)
-		{
-			ret.job_id = it->get<std::string>("job_id");
-			ret.job_state = it->get<std::string>("job_state");
-			ret.vo_name = it->get<std::string>("vo_name");
+               for (it = rs.begin(); it != rs.end(); ++it)
+               {
+                       ret.job_id = it->get<std::string>("job_id");
+                       ret.job_state = it->get<std::string>("job_state");
+                       ret.vo_name = it->get<std::string>("vo_name");
 
-			soci::indicator isNull1 = it->get_indicator("job_metadata");
-			if (isNull1 == soci::i_ok)
-				ret.job_metadata = it->get<std::string>("job_metadata","");
-			else
-				ret.job_metadata = "";
+                       soci::indicator isNull1 = it->get_indicator("job_metadata");
+                       if (isNull1 == soci::i_ok)
+                               ret.job_metadata = it->get<std::string>("job_metadata","");
+                       else
+                               ret.job_metadata = "";
 
-			ret.retry_max = it->get<int>("retry_max",0);
-			ret.file_id = it->get<unsigned long long>("file_id");
-			ret.file_state = it->get<std::string>("file_state");
-			ret.timestamp = millisecondsSinceEpoch();
-			auto aux_tm = it->get<struct tm>("submit_time");
-			ret.submit_time = (timegm(&aux_tm) * 1000);
-			ret.staging = false;
+                       ret.retry_max = it->get<int>("retry_max",0);
+                       ret.file_id = it->get<unsigned long long>("file_id");
+                       ret.file_state = it->get<std::string>("file_state");
+                       ret.timestamp = millisecondsSinceEpoch();
+                       auto aux_tm = it->get<struct tm>("submit_time");
+                       ret.submit_time = (timegm(&aux_tm) * 1000);
+                       ret.staging = false;
 
-			ret.retry_counter = it->get<int>("retry_counter",0);
+                       ret.retry_counter = it->get<int>("retry_counter",0);
 
-			soci::indicator isNull2 = it->get_indicator("file_metadata");
-			if (isNull2 == soci::i_ok)
-				ret.file_metadata = it->get<std::string>("file_metadata","");
-			else
-				ret.file_metadata = "";
+                       soci::indicator isNull2 = it->get_indicator("file_metadata");
+                       if (isNull2 == soci::i_ok)
+                               ret.file_metadata = it->get<std::string>("file_metadata","");
+                       else
+                               ret.file_metadata = "";
 
-			ret.user_filesize = it->get<long long>("user_filesize", 0);
+                       ret.user_filesize = it->get<long long>("user_filesize", 0);
 
-			ret.source_se = it->get<std::string>("source_se");
-			ret.dest_se = "";
+                       ret.source_se = it->get<std::string>("source_se");
+                       ret.dest_se = "";
 
-			bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
-			if(!publishUserDn)
-				ret.user_dn = std::string("");
-			else
-				ret.user_dn = it->get<std::string>("user_dn","");
+                       bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
+                       if(!publishUserDn)
+                               ret.user_dn = std::string("");
+                       else
+                               ret.user_dn = it->get<std::string>("user_dn","");
 
-			ret.source_url = it->get<std::string>("source_surl","");
-			ret.dest_url = "";
-			if (ret.job_state == "FAILED")
-				ret.reason = it->get<std::string>("reason");
-			else
-				ret.reason = std::string("");
+                       ret.source_url = it->get<std::string>("source_surl","");
+                       ret.dest_url = "";
+                       if (ret.job_state == "FAILED")
+                               ret.reason = it->get<std::string>("reason");
+                       else
+                               ret.reason = std::string("");
 
-			temp.push_back(ret);
-		}
-	}
-	catch (std::exception& e)
-	{
-		throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-	}
-	catch (...)
-	{
-		throw UserError(std::string(__func__) + ": Caught exception " );
-	}
+                       temp.push_back(ret);
+               }
+       }
+       catch (std::exception& e)
+       {
+               throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+       }
+       catch (...)
+       {
+               throw UserError(std::string(__func__) + ": Caught exception " );
+       }
 
-	return temp;
+       return temp;
 
 }
-
-
 std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, uint64_t fileId)
 {
 	TransferState ret;
@@ -2710,8 +2707,19 @@ static std::string int2str(uint64_t v) {
 
 void MySqlAPI::updateArchivingState(const std::vector<MinFileStatus>& archivingOpStatus)
 {
-
-	//TODO
+	soci::session sql(*connectionPool);
+	try
+	{
+		updateArchivingStateInternal(sql, archivingOpStatus);
+	}
+	catch (std::exception& e)
+	{
+		throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+	}
+	catch (...)
+	{
+		throw UserError(std::string(__func__) + ": Caught exception " );
+	}
 }
 
 void MySqlAPI::setArchivingStartTime(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs)
@@ -2743,6 +2751,190 @@ void MySqlAPI::setArchivingStartTime(const std::map< std::string, std::map<std::
 					soci::use(jobId);
 		}
 		sql.commit();
+	}
+	catch (std::exception& e)
+	{
+		sql.rollback();
+		throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+	}
+	catch (...)
+	{
+		sql.rollback();
+		throw UserError(std::string(__func__) + ": Caught exception " );
+	}
+}
+void MySqlAPI::updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus>& archivingOpStatus)
+{
+	std::vector<TransferState> filesMsg;
+	std::vector<std::string> distinctJobIds;
+
+	try
+	{
+		sql.begin();
+
+		for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i)
+		{
+		
+			if(i->state == "FAILED")
+			{
+                            
+                                //TO DO check if we need to retry
+                                bool shouldBeRetried = false;
+				//bool shouldBeRetried = resetForRetryArchiving(sql, i->fileId, i->jobId, i->retry);
+				if (!shouldBeRetried)
+				{
+					sql <<
+							" UPDATE t_file "
+							" SET  archive_finish_time=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+							" WHERE "
+							"   file_id = :fileId ",
+							soci::use(i->reason),
+							soci::use(i->state),
+							soci::use(i->fileId)
+					;
+				}
+			}
+			else
+			{
+				sql <<
+						" UPDATE t_file "
+						" SET  archive_finish_time=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+						" WHERE "
+						"   file_id = :fileId ",
+						soci::use(i->reason),
+						soci::use(i->state),
+						soci::use(i->fileId)
+				;
+			}
+		}
+
+		sql.commit();
+
+		sql.begin();
+
+		for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i)
+		{
+			//prevent multiple times of updating the same job id
+			if (std::find(distinctJobIds.begin(), distinctJobIds.end(), i->jobId) != distinctJobIds.end())
+			{
+				continue;
+			}
+			else
+			{
+				distinctJobIds.push_back(i->jobId);
+			}
+
+			//now update job state
+                        long long numberOfFilesCanceled = 0;
+			long long numberOfFilesFinished = 0;
+			long long numberOfFilesFailed = 0;
+			long long numberOfFilesArchiving = 0;
+			long long totalNumOfFilesInJob= 0;
+			long long totalInTerminal = 0;
+
+			soci::rowset<soci::row> rsReplica = (
+					sql.prepare <<
+					" select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+					soci::use(i->jobId)
+			);
+
+			soci::rowset<soci::row>::const_iterator iRep;
+			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+			{
+				std::string file_state = iRep->get<std::string>("file_state");
+				long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+
+				if(file_state == "FINISHED")
+				{
+					numberOfFilesFinished = countStates;
+				}
+				else if(file_state == "FAILED")
+				{
+					numberOfFilesFailed = countStates;
+				}
+				else if(file_state == "ARCHIVING")
+				{
+					numberOfFilesArchiving = countStates;
+				}
+				else if(file_state == "CANCELED")
+				{
+					numberOfFilesCanceled = countStates;
+				}
+
+			}
+
+			totalNumOfFilesInJob = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesArchiving + numberOfFilesCanceled);
+			totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
+
+			if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
+			{
+				sql << " UPDATE t_job SET "
+						" job_state = 'FINISHED', job_finished = UTC_TIMESTAMP() "
+						" WHERE job_id = :jobId ", soci::use(i->jobId);
+			}
+			else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
+			{
+				sql << " UPDATE t_job SET "
+						" job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
+						" WHERE job_id = :jobId ", soci::use(i->jobId);
+			}
+			else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
+			{
+				sql << " UPDATE t_job SET "
+						" job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
+						" WHERE job_id = :jobId ", soci::use(i->jobId);
+			}
+			else if (numberOfFilesArchiving >= 1) //one file ARCHIVING FILE/ JOB ACTIVE
+			{
+				std::string job_state;
+				sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(i->jobId), soci::into(job_state);
+				if(job_state == "ACTIVE") //do not commit if already active
+				{
+					//do nothings
+				}
+				else //set job to ACTIVE, >=1 in STARTED and there are DELETE
+				{
+					sql << " UPDATE t_job SET "
+							" job_state = 'ACTIVE' "
+							" WHERE job_id = :jobId ", soci::use(i->jobId);
+				}
+			}
+			else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
+			{
+				sql << " UPDATE t_job SET "
+						" job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
+						" WHERE job_id = :jobId ", soci::use(i->jobId);
+			}
+			else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
+			{
+				sql << " UPDATE t_job SET "
+						" job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), reason='Job canceled, check files for more details' "
+						" WHERE job_id = :jobId ", soci::use(i->jobId);
+			}
+			else
+			{
+				//it should never go here, if it does it means the state machine is bad!
+			}
+		}
+		sql.commit();
+
+		//now send monitoring messages
+		Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+		for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i)
+		{
+			//send state message
+			filesMsg = getStateOfTransferInternal(sql, i->jobId, i->fileId);
+			if(!filesMsg.empty())
+			{
+				std::vector<TransferState>::iterator it;
+				for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+				{
+					TransferState tmp = (*it);
+					MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
+				}
+			}
+			filesMsg.clear();
+		}
 	}
 	catch (std::exception& e)
 	{

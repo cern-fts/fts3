@@ -119,7 +119,6 @@ protected:
                     // swap the vectors in order to quickly release the lock
                     updates.swap(tmp);
                 }
-
                 // run the DB query
                 (db.*update_state)(tmp);
             }
