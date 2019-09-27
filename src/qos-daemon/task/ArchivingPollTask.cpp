@@ -90,7 +90,7 @@ void ArchivingPollTask::run(const boost::any&)
 				ctx.removeUrl(urls[i]);
 				
 			} else {
-				forcePoll = true;ss
+				forcePoll = true;
                                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
                     		<< "ARCHIVING ONGOING for " << urls[i] << commit;
 				
