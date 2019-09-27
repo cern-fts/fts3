@@ -30,7 +30,7 @@ std::set<std::pair<std::string, std::string>> ArchivingPollTask::active_urls;
 void ArchivingPollTask::run(const boost::any&)
 
 {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ArchivingPollTask starting" << commit;
 	if (timeout_occurred()) return;
 	// handle cancelled jobs/files
 	handle_canceled();
@@ -59,36 +59,41 @@ void ArchivingPollTask::run(const boost::any&)
 		ssize_t ret = gfal2_getxattr(gfal2_ctx,  urls[i], GFAL_XATTR_STATUS, buffer, sizeof(buffer), &errors[i]);
 
 		//check for errors
-		if (ret > 0 and strlen(buffer) > 0 and errors[i] == 0) {
+		if (ret > 0 && strlen(buffer) > 0 && errors[i] == 0) {
 			bool found = false;
-			int i = 0;
+			int z = 0;
 			//check for NEARLINE or ONLINE_AND_NEARLINE
-			while (i < ret) {
-				if (strncmp(buffer + i, GFAL_XATTR_STATUS_NEARLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE)) == 0) {
+			while (z < ret) {
+				if (strncmp(buffer + z, GFAL_XATTR_STATUS_NEARLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE)) == 0) {
 					found = true;
 					break;
 				}
-				if (strncmp(buffer + i, GFAL_XATTR_STATUS_NEARLINE_ONLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE_ONLINE)) == 0) {
+				if (strncmp(buffer + z, GFAL_XATTR_STATUS_NEARLINE_ONLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE_ONLINE)) == 0) {
 					found = true;
 					break;
 				}
-				i += strlen(buffer + i) + 1;
+                                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                    		<< "Xattr user.status  "
+							<< buffer + z
+				<< " found " << found  << commit;
+				z += strlen(buffer + z) + 1;
 			}
 			if (found) {
 
 				FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     		<< "ARCHIVING FINISHED for "
-							<< urls[i]
-									<< commit;
-				//update the state of the file to finished
+							<< urls[i] << commit;
+				//update the state of the file to finished ( to do only for one file)
 				for (auto it = ids.begin(); it != ids.end(); ++it) {
 					ctx.updateState(it->first, it->second, "FINISHED", JobError());
 				}
 				ctx.removeUrl(urls[i]);
-				//TODO: when completed we need to set the archive_finish_time
-
+				
 			} else {
-				forcePoll = true;
+				forcePoll = true;ss
+                                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                    		<< "ARCHIVING ONGOING for " << urls[i] << commit;
+				
 			}
 		}
 		else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
@@ -117,9 +122,7 @@ void ArchivingPollTask::run(const boost::any&)
 			failedUrls.push_back(urls[i]);
 
 			FTS3_COMMON_LOGGER_NEWLOG(ERR)
-			<< "ARCHIVING FAILED for " << urls[i]
-											   << ": returned -1 but error was not set "
-											   << commit;
+			<< "ARCHIVING FAILED for " << urls[i] << ": returned -1 but error was not set " << commit;
 			for (auto it = ids.begin(); it != ids.end(); ++it) {
 				ctx.updateState(it->first, it->second,
 						"FAILED", JobError("ARCHIVING", -1, "Error not set by gfal2")
