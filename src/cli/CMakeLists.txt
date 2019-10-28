@@ -30,9 +30,22 @@ include_directories(${GLOBUS_INCLUDE_DIRS})
 
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 
+set(CURL_DIR /tmp/curl/bogusinstall)
+set(CURL_LIBRARIES ${CURL_DIR}/lib${LIB_SUFFIX}/ws2_32 ${CURL_DIR}/lib${LIB_SUFFIX}/iphlpapi ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl)
+set(CURL_INCLUDE_DIR ${CURL_DIR}/include/)
+set(CURL_LIBRARY ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl.a CACHE filepath "path to libcurl.a")
+find_file(Curl_local libcurl.a PATHS ${CURL_DIR}/lib${LIB_SUFFIX}/ )
+
+if (NOT Curl_local)
+  message(STATUS "Building curl..")
+  execute_process(COMMAND ./src/cli/buildcurl.sh
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    RESULT_VARIABLE curl_ok
+    OUTPUT_VARIABLE curl_out)
+endif()
+message(STATUS "curl build ${curl_ok}")
 
 add_definitions(-DCURL_STATICLIB)
-
 include_directories(${CURL_INCLUDE_DIR})
 
 # add a target to generate API documentation with Doxygen
