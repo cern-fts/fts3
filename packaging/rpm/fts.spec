@@ -196,8 +196,6 @@ The File Transfer Service V3 mysql plug-in
 %setup -q
 
 %build
-#build curl
-./src/cli/buildcurl.sh
 # Make sure the version in the spec file and the version used
 # for building matches
 fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
