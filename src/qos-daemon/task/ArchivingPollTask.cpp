@@ -61,23 +61,14 @@ void ArchivingPollTask::run(const boost::any&)
 		//check for errors
 		if (ret > 0 && strlen(buffer) > 0 && errors[i] == 0) {
 			bool found = false;
-			int z = 0;
 			//check for NEARLINE or ONLINE_AND_NEARLINE
-			while (z < ret) {
-				if (strncmp(buffer + z, GFAL_XATTR_STATUS_NEARLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE)) == 0) {
-					found = true;
-					break;
-				}
-				if (strncmp(buffer + z, GFAL_XATTR_STATUS_NEARLINE_ONLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE_ONLINE)) == 0) {
-					found = true;
-					break;
-				}
-                                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                    		<< "Xattr user.status  "
-							<< buffer + z
-				<< " found " << found  << commit;
-				z += strlen(buffer + z) + 1;
+			
+			if (strncmp(buffer, GFAL_XATTR_STATUS_NEARLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE)) == 0) {
+				found = true;
+			} else if (strncmp(buffer, GFAL_XATTR_STATUS_NEARLINE_ONLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE_ONLINE)) == 0) {
+				found = true;
 			}
+                        
 			if (found) {
 
 				FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -99,8 +90,8 @@ void ArchivingPollTask::run(const boost::any&)
 		else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
 			FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     		<< "ARCHIVING  NOT FINISHED for " << urls[i]
-																	  << ". Communication error, soft failure: " << errors[i]->message
-																	  << commit;
+			        << ". Communication error, soft failure: " << errors[i]->message
+                                << commit;
 			forcePoll = true;
 		}
 		else if (errors[i]) {
