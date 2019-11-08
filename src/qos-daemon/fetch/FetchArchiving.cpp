@@ -151,11 +151,8 @@ void FetchArchiving::recoverStartedTasks()
 
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
         try {
-            std::set<std::string> urls = it_t->second.getUrls();
-            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for job " << it_t->jobId << commit;
-            for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
-            }
+           
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for job " << it_t->first << commit;
             threadpool.start(new ArchivingPollTask(it_t->second));
         }
         catch (UserError const & ex) {
@@ -167,3 +164,4 @@ void FetchArchiving::recoverStartedTasks()
         }
     }
 }
+
