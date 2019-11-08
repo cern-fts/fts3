@@ -341,6 +341,10 @@ public:
     /// @param files    Each entry in the set if a pair of surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
+    /// Put into files a set of bring online requests that must be cancelled
+    /// @param files    Each entry in the set if a pair of jobid / surl
+    virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
+    
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,

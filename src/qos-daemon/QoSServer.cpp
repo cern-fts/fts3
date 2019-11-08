@@ -34,6 +34,7 @@
 #include "fetch/FetchCancelStaging.h"
 #include "fetch/CDMIFetchQosTransition.h"
 #include "fetch/FetchArchiving.h"
+#include "fetch/FetchCancelArchiving.h"
 #include "fetch/FetchDeletion.h"
 #include "state/StagingStateUpdater.h"
 #include "state/DeletionStateUpdater.h"
@@ -118,7 +119,8 @@ void QoSServer::start(void)
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
     FetchArchiving fa(threadpool);
-
+    FetchCancelArchiving fca(threadpool);
+    
     waitingRoom.attach(threadpool);
     //cdmiWaitingRoom.attach(threadpool);
     archivingWaitingRoom.attach(threadpool);
@@ -131,7 +133,7 @@ void QoSServer::start(void)
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
     systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));
-
+    systemThreads.create_thread(boost::bind(&FetchCancelArchiving::fetch, fca));
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
     systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));

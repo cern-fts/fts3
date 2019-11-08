@@ -4176,6 +4176,48 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
 }
 
 
+//file_id / surl 
+void MySqlAPI::getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files)
+{
+	soci::session sql(*connectionPool);
+	uint64_t file_id = 0;
+	std::string source_surl;
+	std::string job_id;
+
+	try
+	{
+		soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl from t_file WHERE "
+				"  file_state='CANCELED' and archive_finish_time is NULL "
+				"  AND transfer_host = :hostname  AND archive_start_time is NOT NULL ",
+				soci::use(hostname));
+
+		soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET finish_time = UTC_TIMESTAMP(), archive_finish_time = UTC_TIMESTAMP() "
+				"WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
+
+		// Cancel staging files
+		sql.begin();
+		for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
+		{
+			soci::row const& row = *i2;
+			job_id  = row.get<std::string>("job_id", "");
+			file_id = row.get<unsigned long long>("file_id",0);
+			source_surl = row.get<std::string>("source_surl","");
+			files.insert({job_id, source_surl});
+			stmt1.execute(true);
+		}
+		sql.commit();
+	}
+	catch (std::exception& e)
+	{
+		sql.rollback();
+		throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+	}
+	catch (...)
+	{
+		sql.rollback();
+		throw UserError(std::string(__func__) + ": Caught exception " );
+	}
+}
 
 //file_id / surl / token
 void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files)
