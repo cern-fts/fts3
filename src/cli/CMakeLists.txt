@@ -30,11 +30,9 @@ include_directories(${GLOBUS_INCLUDE_DIRS})
 
 find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
 
-
 add_definitions(-DCURL_STATICLIB)
 
 include_directories(${CURL_INCLUDE_DIR})
-
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
