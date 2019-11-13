@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2019
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
