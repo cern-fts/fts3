@@ -29,7 +29,7 @@ set(CMAKE_MODULE_PATH
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 9)
-set(VERSION_PATCH 2)
+set(VERSION_PATCH 3)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Generate include header with the version string
@@ -95,17 +95,23 @@ endif ()
 find_package(Threads)
 find_package(OpenSSL)
 
+set(CURL_DIR1 /tmp/curl/bogusinstall)
+find_file(Curl_local libcurl.a PATHS ${CURL_DIR1}/lib${LIB_SUFFIX}/ )
 
-# Include directories for our newer version of curl
+if (NOT Curl_local)
+  message(STATUS "Building curl..")
+  execute_process(COMMAND ./src/cli/buildcurl.sh
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    RESULT_VARIABLE curl_ok
+    OUTPUT_VARIABLE curl_out)
+endif()
+message(STATUS "curl build ${curl_ok}")
+
 set(CURL_DIR /tmp/curl/bogusinstall)
 set(CURL_LIBRARIES ${CURL_DIR}/lib${LIB_SUFFIX}/ws2_32 ${CURL_DIR}/lib${LIB_SUFFIX}/iphlpapi ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include/)
 set(CURL_LIBRARY ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl.a CACHE filepath "path to libcurl.a")
 find_file(Curl_local libcurl.a PATHS ${CURL_DIR}/lib${LIB_SUFFIX}/ )
-if (NOT Curl_local)
-  message("-- LibCurl not found in '${CURL_LIBRARY}'")
-endif()
-
 
 # Find Boost
 set(Boost_ADDITIONAL_VERSIONS

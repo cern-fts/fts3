@@ -16,4 +16,4 @@
 
 FROM mysql:5.7
 
-ADD "src/db/schema/mysql/fts-schema-4.0.0.sql" "/docker-entrypoint-initdb.d/fts-schema-4.0.0.sql"
+ADD "src/db/schema/mysql/fts-schema-5.0.0.sql" "/docker-entrypoint-initdb.d/fts-schema-5.0.0.sql"

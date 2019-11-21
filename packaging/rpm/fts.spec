@@ -9,8 +9,8 @@
 %endif
 
 Name:       fts
-Version:    3.9.2
-Release:    3%{?dist}
+Version:    3.9.3
+Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -185,8 +185,8 @@ This package setup the SELinux policies for the FTS3 server.
 Summary:    File Transfer Service V3 mysql plug-in
 Group:      Applications/Internet
 
-BuildRequires:  soci-mysql-devel
-Requires:   soci-mysql%{?_isa}
+BuildRequires:  soci-mysql-devel < 4.0.0
+Requires:   soci-mysql%{?_isa} < 4.0.0
 Requires:   fts-server%{?_isa}
 
 %description mysql
@@ -196,8 +196,6 @@ The File Transfer Service V3 mysql plug-in
 %setup -q
 
 %build
-#build curl
-./src/cli/buildcurl.sh
 # Make sure the version in the spec file and the version used
 # for building matches
 fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
