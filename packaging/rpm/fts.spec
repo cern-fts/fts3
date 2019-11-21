@@ -499,17 +499,34 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Sep 09 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-3
+- fix curl build when libssh2 is installed on the system
+
+* Mon Sep 02 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-2
+- stop requiring CGSI-gsoap
+
+* Thu Jul 25 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-1
+- New bugfix release
+
 * Tue Jun 18 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.1-1
 - New bugfix release
 
 * Thu May 23 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-2
 - fix db upgrade script
 
-* Tue Apr 02 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
+* Tue May 08 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
 - New Minor release
 - Includes multiple database optimisations that improve the overall performance of FTS
 - Avoid submitting multiple transfers to the same destination
 - Fix optmizer running in parallel in 2 nodes
+* Mon Apr 15 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.5-1
+- New bugfix release
+
+* Mon Mar 28 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.4-1
+- New bugfix release
+
+* Thu Feb 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.3-1
+- New bugfix release
 
 * Thu Jan 10 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.2-1
 - New bugfix release
