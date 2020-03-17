@@ -14,19 +14,6 @@ DbPassword=replacethis
 #For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
 DbConnectString=replacethis
 
-#The endpoint where openId Connect OP lies
-AuthorizationProvider=https://iam.extreme-datacloud.eu/introspect
-AuthorizationProviderTokenEndpoint=https://iam.extreme-datacloud.eu/token
-AuthorizationProviderJwkEndpoint=https://iam.extreme-datacloud.eu/jwk/
-#The client Id at the IAM server
-ClientId=replacethis
-#The client secret
-ClientSecret=replacethis
-TokenRefreshDaemonIntervalInSeconds=1800
-
-#Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)
-TokenRefreshTimeSinceLastTransferInSeconds=2629743
-
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
 DbThreadsNum=25
 
@@ -158,8 +145,20 @@ AutoSessionReuse = False
 #by default it queries the system to honour the priorities specified by the users ( value = 0)
 #UseFixedJobPriority = 0
 
+ValidateAccessTokenOffline=True
+JWKCacheSeconds=86400
+TokenRefreshDaemonIntervalInSeconds=600
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
 production = all:config
 
+# Uncomment and configure your provider(s)
+#[providers]
+#provider1=https://iam.extreme-datacloud.eu
+#provider1_ClientId=...
+#provider1_ClientSecret=...
+#provider2=https://wlcg.cloud.cnaf.infn.it
+#provider2_ClientId=...
+#provider2_ClientSecret=...
