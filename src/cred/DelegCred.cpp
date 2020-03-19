@@ -276,6 +276,6 @@ std::string DelegCred::generateProxyName(const std::string& userDn, const std::s
 
 unsigned long DelegCred::minValidityTime()
 {
-    return 3600;
+    return 5400;
 }
 
