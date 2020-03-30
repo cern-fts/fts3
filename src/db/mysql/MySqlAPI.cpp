@@ -207,7 +207,7 @@ void MySqlAPI::init(const std::string& username, const std::string& password,
             soci::session& sql = (*connectionPool).at(i);
             sql.open(soci::mysql, connStr);
 
-            (*connectionPool).at(i) << "SET SESSION tx_isolation = 'READ-COMMITTED'";
+            (*connectionPool).at(i) << "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;";
 
             soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
             mysql_options(static_cast<MYSQL*>(be->conn_), MYSQL_OPT_RECONNECT, &reconnect);
