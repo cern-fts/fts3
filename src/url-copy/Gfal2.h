@@ -348,6 +348,19 @@ public:
             throw Gfal2Exception(error);
         }
     }
+
+    /// Release file
+    void releaseFile(Gfal2TransferParams &params, const std::string &url, const std::string &token,
+                     bool is_source)
+    {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_release_file(context, url.c_str(), token.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
 };
 
 

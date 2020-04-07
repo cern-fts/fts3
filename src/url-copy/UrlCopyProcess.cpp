@@ -498,6 +498,17 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
 
+    // Release file for SRM source bring online
+    if (transfer.source.protocol == "srm" && !transfer.tokenBringOnline.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing file for SRM source" << commit;
+        try {
+            gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
+        }
+        catch (const Gfal2Exception &ex) {
+            throw UrlCopyError(SOURCE, TRANSFER_FINALIZATION, ex);
+        }
+    }
+
     // Validate destination size
     if (!opts.strictCopy) {
         uint64_t destSize;
