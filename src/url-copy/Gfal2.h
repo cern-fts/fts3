@@ -248,12 +248,20 @@ private:
             if (gfal2_cred_set(context, sourceHost.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
+            gfal2_cred_t *token_src_cred = gfal2_cred_new("BEARER_SRC", params.src_token.c_str());
+            if (gfal2_cred_set(context, source.c_str(), token_src_cred, &error) < 0) {
+                throw Gfal2Exception(error);
+            }
         }
         if (!destination.empty() && !params.dst_token.empty()) {
             gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
             //set the bearer associated to the host 
             std::string destHost = Uri::parse(destination).host;
             if (gfal2_cred_set(context, destHost.c_str(), token_cred, &error) < 0) {
+                throw Gfal2Exception(error);
+            }
+            gfal2_cred_t *token_dst_cred = gfal2_cred_new("BEARER_DST", params.dst_token.c_str());
+            if (gfal2_cred_set(context, destination.c_str(), token_dst_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
         }
