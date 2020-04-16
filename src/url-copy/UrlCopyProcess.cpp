@@ -239,34 +239,6 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 
-    // [FTS-1528]: when source and destination host are the same
-    // and using macaroons, generate just one token for the host
-    bool macaroonRequest = (macaroonRequestEnabledSource && macaroonRequestEnabledDestination);
-    bool tokenIssuerRequest = (!transfer.sourceTokenIssuer.empty() || !transfer.sourceTokenIssuer.empty());
-
-    if (macaroonRequest && !tokenIssuerRequest && (transfer.source.host == transfer.destination.host))
-    {
-        try
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source + destination" << commit;
-            std::vector<std::string> activity_list;
-            activity_list.reserve(5);
-            activity_list.push_back("DOWNLOAD");
-            activity_list.push_back("LIST");
-            activity_list.push_back("MANAGE");
-            activity_list.push_back("UPLOAD");
-            activity_list.push_back("DELETE");
-            params.setSourceBearerToken(setupMacaroon(transfer.source.getSeName(), opts.proxy, activity_list, macaroonValidity));
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source + destination" << commit;
-            return;
-        }
-        catch (const UrlCopyError &ex)
-        {
-            // As we always try for a macaroon, do not fail on error.
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for source + destination; will use GSI proxy for authorization: " << ex.what() << commit;
-        }
-    }
-
     // Attempt to retrieve an oauth token from the VO's issuer; if not,
     // then try to retrieve a token from the SE itself.
     if (!transfer.sourceTokenIssuer.empty()) {
