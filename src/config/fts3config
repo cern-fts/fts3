@@ -145,10 +145,6 @@ AutoSessionReuse = False
 #by default it queries the system to honour the priorities specified by the users ( value = 0)
 #UseFixedJobPriority = 0
 
-#flag to use a default job priority
-#by default it queries the system to honour the priorities specified by the users ( value = 0)
-#UseFixedJobPriority = 0
-
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
