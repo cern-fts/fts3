@@ -499,6 +499,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Thu Nov 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.3-1
+- Select multihop transfers as well when reaping stalled transfers
+
 * Mon Sep 09 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-3
 - fix curl build when libssh2 is installed on the system
 
