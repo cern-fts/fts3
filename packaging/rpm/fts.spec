@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.9.3
+Version:    3.9.4
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -499,6 +499,12 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Thu May 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-1
+- Release focused on HTTP TPC tests
+- Fix SRM pin leak after copy
+- Change minimum validity time for a proxy from 60 to 90 minutes
+- Compatibility with MySQL version 8 database
+
 * Thu Nov 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.3-1
 - Select multihop transfers as well when reaping stalled transfers
 
