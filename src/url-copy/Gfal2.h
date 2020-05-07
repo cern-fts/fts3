@@ -243,9 +243,8 @@ private:
         GError *error = NULL;
         if (!source.empty() && !params.src_token.empty()) {
             gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.src_token.c_str());
-            //set the bearer associated to the host 
-            std::string sourceHost = Uri::parse(source).host;
-            if (gfal2_cred_set(context, sourceHost.c_str(), token_cred, &error) < 0) {
+            //set the bearer associated to the source URL
+            if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
         }
@@ -345,6 +344,19 @@ public:
 
         GError *error = NULL;
         if (gfalt_copy_file(context, params, source.c_str(), destination.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
+    /// Release file
+    void releaseFile(Gfal2TransferParams &params, const std::string &url, const std::string &token,
+                     bool is_source)
+    {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_release_file(context, url.c_str(), token.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }

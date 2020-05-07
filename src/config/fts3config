@@ -149,4 +149,3 @@ AutoSessionReuse = False
 Public = transfer
 lcgadmin = vo:transfer
 production = all:config
-

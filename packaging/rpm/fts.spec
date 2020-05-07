@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.9.3
+Version:    3.9.4
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -45,7 +45,7 @@ BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  gfal2-devel >= 2.14.2
+BuildRequires:  gfal2-devel >= 2.17.3
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -87,10 +87,10 @@ Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.14.2
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.14.2
-Requires: gfal2-plugin-http%{?_isa} >= 2.14.2
-Requires: gfal2-plugin-srm%{?_isa} >= 2.14.2
+Requires: gfal2%{?_isa} >= 2.17.3
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.17.3
+Requires: gfal2-plugin-http%{?_isa} >= 2.17.3
+Requires: gfal2-plugin-srm%{?_isa} >= 2.17.3
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -499,6 +499,15 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Thu May 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-1
+- Release focused on HTTP TPC tests
+- Fix SRM pin leak after copy
+- Change minimum validity time for a proxy from 60 to 90 minutes
+- Compatibility with MySQL version 8 database
+
+* Thu Nov 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.3-1
+- Select multihop transfers as well when reaping stalled transfers
+
 * Mon Sep 09 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-3
 - fix curl build when libssh2 is installed on the system
 
@@ -506,7 +515,7 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 - stop requiring CGSI-gsoap
 
 * Thu Jul 25 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-1
-- New bugfix releas
+- New bugfix release
 
 * Tue Jun 18 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.1-1
 - New bugfix release
