@@ -18,5 +18,11 @@ ALTER TABLE `t_file`
 ALTER TABLE `t_file_backup` 
 	MODIFY COLUMN file_state enum('STAGING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL;
 
+CREATE TABLE t_oauth2_providers (
+    `provider_url` VARCHAR(250) NOT NULL,
+    `provider_jwk`   VARCHAR(1000) NOT NULL,
+    PRIMARY KEY(`provider_url`)
+);
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (6, 0, 0, 'OIDC integration diff');
