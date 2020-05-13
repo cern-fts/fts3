@@ -35,7 +35,7 @@ int (*g_x509_scitokens_issuer_init_p)(char **) = NULL;
 char* (*g_x509_scitokens_issuer_get_token_p)(const char *, const char *, const char *,
                                              char**) = NULL;
 char *(*g_x509_macaroon_issuer_retrieve_p)(const char *, const char *, const char *, int,
-                                          const char **, char **) = NULL;
+                                           const char **, char **) = NULL;
 void *g_x509_scitokens_issuer_handle = NULL;
 
 
@@ -186,7 +186,7 @@ static std::string setupBearerToken(const std::string &issuer, const std::string
 
 static std::string setupMacaroon(const std::string &url, const std::string &proxy,
                                  const std::vector<std::string> &activity,
-				 unsigned validity)
+                                 unsigned validity)
 {
     initTokenLibrary();
 
@@ -220,7 +220,7 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
 }
 
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
-    Gfal2 &gfal2, Gfal2TransferParams &params)
+                             Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     bool macaroonRequestEnabledSource = false;
     bool macaroonRequestEnabledDestination = false;
@@ -291,7 +291,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
 }
 
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
-    Gfal2 &gfal2, Gfal2TransferParams &params)
+                                Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     params.setStrictCopy(opts.strictCopy);
     params.setCreateParentDir(true);
@@ -308,6 +308,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     if (!transfer.destTokenDescription.empty()) {
         params.setDestSpacetoken(transfer.destTokenDescription);
     }
+
     if (!transfer.checksumAlgorithm.empty()) {
     	try	{
     		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
@@ -322,6 +323,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     		else
     		    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
     	}
+    }
+
+    // Avoid TPC attempts in S3 to S3 transfers
+    if ((transfer.source.protocol.find("s3") == 0) && (transfer.destination.protocol.find("s3") == 0)) {
+        gfal2.set("HTTP PLUGIN", "ENABLE_REMOTE_COPY", false);
     }
 
     // Additional metadata
@@ -532,7 +538,7 @@ void UrlCopyProcess::run(void)
         // Prepare gfal2 transfer parameters
         Gfal2TransferParams params;
         try {
-                setupTransferConfig(opts, transfer, gfal2, params);
+            setupTransferConfig(opts, transfer, gfal2, params);
         }
         catch (const UrlCopyError &ex) {
                 transfer.error.reset(new UrlCopyError(ex));
