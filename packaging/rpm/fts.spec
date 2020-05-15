@@ -185,8 +185,8 @@ This package setup the SELinux policies for the FTS3 server.
 Summary:    File Transfer Service V3 mysql plug-in
 Group:      Applications/Internet
 
-BuildRequires:  soci-mysql-devel < 4.0.0
-Requires:   soci-mysql%{?_isa} < 4.0.0
+BuildRequires:  soci-mysql-devel
+Requires:   soci-mysql%{?_isa}
 Requires:   fts-server%{?_isa}
 
 %description mysql
