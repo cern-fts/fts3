@@ -96,6 +96,9 @@ private:
 
     // DB interface
     GenericDbIfce* db;
+
+    // method to retrieve auth method used
+    std::string getAuthMethod(const std::string& jobMetadata);
 };
 
 } /* namespace server */

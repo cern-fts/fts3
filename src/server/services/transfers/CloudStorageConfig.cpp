@@ -129,6 +129,8 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     char errDescr[128];
 
     std::string csName = generateCloudStorageNames(tf);
+    std::cout << "Cloud storage names" << std::endl;
+    std::cout << csName << std::endl;
     if (csName.empty()) {
         return "";
     }
@@ -181,6 +183,45 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
             }
         }
     }
+
+    fclose(f);
+    return oauth_path;
+}
+
+static void writeOAuthToken(FILE *f, const std::string& token)
+{
+    fprintf(f, "TOKEN=%s\n", token.c_str());
+}
+
+std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf)
+{
+    char errDescr[128];
+
+    char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
+
+    int fd = mkstemp(oauth_path);
+
+    if (fd < 0) {
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
+    }
+    fchmod(fd, 0660);
+
+    FILE *f = fdopen(fd, "w");
+    if (f == NULL) {
+        close(fd);
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
+    }
+
+    auto cred = db->findCredential(tf.credId, tf.userDn);
+    if (!cred) {
+    	fclose(f);
+        return "";
+    }
+
+    // Only set the access token and not the refresh token
+    writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
 
     fclose(f);
     return oauth_path;

@@ -27,7 +27,11 @@
 #include "CloudStorageConfig.h"
 #include "ThreadSafeList.h"
 #include "UrlCopyCmd.h"
+#include <iostream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
+namespace pt = boost::property_tree;
 
 namespace fts3
 {
@@ -57,6 +61,23 @@ FileTransferExecutor::~FileTransferExecutor()
 
 }
 
+std::string FileTransferExecutor::getAuthMethod(const std::string& jobMetadata)
+{
+	std::stringstream iostr;
+	if (jobMetadata != "null") {
+            iostr << jobMetadata;
+            pt::ptree job_metadata;
+	
+            try {
+                pt::read_json(iostr, job_metadata);
+                return job_metadata.get<std::string>("auth_method", "null");
+            } catch (...) {
+		return "null";
+            }
+        } else return "null";
+       
+            
+}
 
 void FileTransferExecutor::run(boost::any & ctx)
 {
@@ -107,7 +128,16 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setFromTransfer(tf, false, db->publishUserDn(tf.voName), msgDir);
 
             // OAuth credentials
-            std::string cloudConfigFile = generateCloudStorageConfigFile(db, tf);
+            std::string cloudConfigFile;
+            std::string authMethod = FileTransferExecutor::getAuthMethod(tf.jobMetadata);
+
+            cmdBuilder.setAuthMethod(authMethod);
+            if ("oauth2" == authMethod) {
+                cloudConfigFile = generateOAuthConfigFile(db, tf);
+            } else {
+            	cloudConfigFile = generateCloudStorageConfigFile(db, tf);
+	    }
+
             if (!cloudConfigFile.empty()) {
                 cmdBuilder.setOAuthFile(cloudConfigFile);
             }

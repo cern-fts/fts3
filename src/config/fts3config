@@ -145,7 +145,20 @@ AutoSessionReuse = False
 #by default it queries the system to honour the priorities specified by the users ( value = 0)
 #UseFixedJobPriority = 0
 
+ValidateAccessTokenOffline=True
+JWKCacheSeconds=86400
+TokenRefreshDaemonIntervalInSeconds=600
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
 production = all:config
+
+# Uncomment and configure your provider(s)
+#[providers]
+#provider1=https://iam.extreme-datacloud.eu
+#provider1_ClientId=...
+#provider1_ClientSecret=...
+#provider2=https://wlcg.cloud.cnaf.infn.it
+#provider2_ClientId=...
+#provider2_ClientSecret=...

@@ -45,6 +45,7 @@
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
+#include "QosTransitionOperation.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -297,6 +298,22 @@ public:
     /// Get staging operations ready to be started
     /// @params[out] stagingOps The list of staging operations will be put here
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps) = 0;
+
+    /// Get qosTransition operations ready to be started
+    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) = 0;
+
+    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task for file successfully completed
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId) = 0;
+
+    /// Update File State to FINISHED after QoS Transition for file successfully completed
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId) = 0;
+
+    /// Update File State to FAILED after QoS Transition for file failed
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToFailed(const std::string& jobId, uint64_t fileId) = 0;
 
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here

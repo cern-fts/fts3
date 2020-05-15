@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2014-2015
+ * Copyright (c) CERN 2015
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,25 @@
  */
 
 #pragma once
+#ifndef QosTransitionOperation_H_
+#define QosTransitionOperation_H_
 
-#include <db/generic/GenericDbIfce.h>
+#include <stdint.h>
+#include <string>
 
-namespace fts3
-{
 
-std::string generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf);
+struct QosTransitionOperation {
+	QosTransitionOperation(const std::string& jobId, uint64_t fileId, const std::string& surl, const std::string& target_qos, const std::string& token):
+        jobId(jobId), fileId(fileId), surl(surl), target_qos(target_qos), token(token)
+    {
+    }
 
-std::string generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf);
+    std::string jobId;
+    uint64_t fileId;
+    std::string surl;
+    std::string target_qos;
+    std::string token; ///< IAM token
+};
 
-}
+
+#endif // QosTransitionOperation

@@ -17,6 +17,9 @@
 #include <dlfcn.h>
 
 #include <cstdlib>
+#include <fstream>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include "common/Logger.h"
@@ -219,12 +222,27 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
 }
 
+static std::string readIAMTokenFromConfigFile(const std::string &path)
+{
+    if (!path.empty()) {
+        std::ifstream file(path);
+        std::string   line;
+
+        while(std::getline(file, line))
+        {
+            // Skip TOKEN= and return the actual token
+            return line.substr(6);
+        }
+    }
+}
+
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                              Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     bool macaroonRequestEnabledSource = false;
     bool macaroonRequestEnabledDestination = false;
     unsigned macaroonValidity = 180;
+    std::string IAMtoken;
 
     // Check source and destination protocol whether to enable macaroons
     macaroonRequestEnabledSource = ((transfer.source.protocol.find("dav") == 0) || (transfer.source.protocol.find("http") == 0));
@@ -239,9 +257,22 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 
-    // Attempt to retrieve an oauth token from the VO's issuer; if not,
-    // then try to retrieve a token from the SE itself.
-    if (!transfer.sourceTokenIssuer.empty()) {
+    if ("oauth2" == opts.authMethod && !opts.oauthFile.empty()) {
+    	try {
+    		IAMtoken = readIAMTokenFromConfigFile(opts.oauthFile);
+    		unlink(opts.oauthFile.c_str());
+    	} catch (const std::exception &ex) {
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file, no IAM token retrieved: " << ex.what() << commit;
+        }
+    }
+
+    // If a IAM token has been passed, set this as Bearer token.
+    // Otherwise, attempt to retrieve an OAuth token from the VO's issuer.
+    // If not, try to retrieve a token from the SE itself.
+    if ("oauth2" == opts.authMethod) {
+    	params.setSourceBearerToken(IAMtoken);
+    }
+    else if (!transfer.sourceTokenIssuer.empty()) {
         params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for source" << commit;
     }
@@ -264,7 +295,10 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 
-    if (!transfer.destTokenIssuer.empty()) {
+    if ("oauth2" == opts.authMethod) {
+    	params.setDestBearerToken(IAMtoken);
+    }
+    else if (!transfer.destTokenIssuer.empty()) {
         params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for destination" << commit;
     }

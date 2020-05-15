@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.9.4
+Version:    3.10.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -409,6 +409,7 @@ fi
 %dir %attr(0755,fts3,root) %{_sysconfdir}/fts3
 
 %{_sbindir}/fts_bringonline
+%{_sbindir}/fts_qos
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
@@ -421,10 +422,12 @@ fi
 %attr(0644,root,root) %{_unitdir}/fts-server.service
 %attr(0644,root,root) %{_unitdir}/fts-bringonline.service
 %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
+%attr(0644,root,root) %{_unitdir}/fts-qos.service
 %else
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-bringonline
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
+%attr(0755,root,root) %{_initddir}/fts-qos
 %endif
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
@@ -528,6 +531,7 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 - Includes multiple database optimisations that improve the overall performance of FTS
 - Avoid submitting multiple transfers to the same destination
 - Fix optmizer running in parallel in 2 nodes
+
 * Mon Apr 15 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.5-1
 - New bugfix release
 

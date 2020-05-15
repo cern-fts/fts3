@@ -1,5 +1,9 @@
 /*
- * Copyright (c) CERN 2014-2015
+ * Copyright (c) CERN 2013-2015
+ *
+ * Copyright (c) Members of the EMI Collaboration. 2010-2013
+ *  See  http://www.eu-emi.eu/partners for details on the copyright
+ *  holders.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +19,23 @@
  */
 
 #pragma once
+#ifndef FETCHCANCELSTAGING_H_
+#define FETCHCANCELSTAGING_H_
 
-#include <db/generic/GenericDbIfce.h>
+#include "common/ThreadPool.h"
+#include "../task/Gfal2Task.h"
 
-namespace fts3
+
+class FetchCancelStaging
 {
+public:
+    FetchCancelStaging(fts3::common::ThreadPool<Gfal2Task> &threadpool) : threadpool(threadpool) {}
+    virtual ~FetchCancelStaging() {}
 
-std::string generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf);
+    void fetch();
 
-std::string generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf);
+private:
+    fts3::common::ThreadPool<Gfal2Task> &threadpool;
+};
 
-}
+#endif // FETCHCANCELSTAGING_H_

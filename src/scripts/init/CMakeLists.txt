@@ -37,6 +37,9 @@ if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-records-cleaner.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
+    install(FILES fts-qos.service
+        DESTINATION ${SYSTEMD_INSTALL_DIR}
+    )
 # Init scripts
 else ()
     install(FILES fts-server.initd
@@ -62,5 +65,12 @@ else ()
        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
        RENAME fts-records-cleaner
     )
+    
+    install(FILES fts-qos.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
+        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-qos
+    )
+
 endif ()
 
