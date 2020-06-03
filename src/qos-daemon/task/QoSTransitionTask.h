@@ -19,21 +19,19 @@
  */
 
 #pragma once
-#ifndef QOSTRANSITIONTASK
+#ifndef QOSTRANSITIONTASK_H_
 #define QOSTRANSITIONTASK_H_
 
 #include <string>
 #include <utility>
-
 #include <boost/any.hpp>
-
-#include <gfal_api.h>
 
 #include "db/generic/SingleDbInstance.h"
 #include "cred/DelegCred.h"
 
 #include "Gfal2Task.h"
-#include "../context/CDMIQosTransitionContext.h"
+#include "Gfal2QoS.h"
+#include "qos-daemon/context/CDMIQosTransitionContext.h"
 
 
 /**
@@ -86,7 +84,12 @@ protected:
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     static std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> active_surls;
+
+private:
+
+    /// Gfal2 QoS helper
+    Gfal2QoS gfal2QoS;
 };
 
 
-#endif // QoSTransitionTask_H_
+#endif // QOSTRANSITIONTASK_H_

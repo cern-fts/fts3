@@ -32,41 +32,25 @@ std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t
 
 void QoSTransitionTask::run(const boost::any &)
 {
-	//std::cerr << "This is the set size: " << active_surls.size() << std::endl;
 	std::vector<GError*> errors(active_surls.size(), NULL);
 	bool anySuccessful = false;
+
 	for (auto it = active_surls.begin(); it != active_surls.end(); ++it) {
-	      //std::cerr << "Printing surl: " << std::get<0>(*it) << std::endl;
-	      //std::cerr << "Printing token: " << std::get<1>(*it) << std::endl;
-	      //std::cerr << "Printing target_qos: " << std::get<2>(*it) << std::endl;
-	      //std::cerr << "Printing job_id: " << std::get<3>(*it) << std::endl;
-	      //std::cerr << "Printing file_id: " << std::get<4>(*it) << std::endl;
-		 //std::cerr << "The host is:" << Uri::parse(std::get<0>(*it).c_str()).host << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << std::get<0>(*it) << " to QoS: " << std::get<2>(*it) << commit;
 
-	      GError *err = NULL;
+        // Perform transition
+        try {
+            gfal2QoS.changeFileQoS(std::get<0>(*it), std::get<2>(*it), std::get<1>(*it));
+        } catch (Gfal2Exception &err) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " failed" << commit;
+            ctx.cdmiUpdateFileStateToFailed(std::get<3>(*it), std::get<4>(*it));
+        }
 
-	      // Add token to context
-	      gfal2_cred_t *cred = gfal2_cred_new(GFAL_CRED_BEARER, std::get<1>(*it).c_str());
-	      gfal2_cred_set(gfal2_ctx, Uri::parse(std::get<0>(*it)).host.c_str(), cred, &err);
-
-	      // Perform transition
-		  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << std::get<0>(*it) << " to QoS: " << std::get<2>(*it) << commit;
-	      // TODO: add error checking
-		  int result = gfal2_change_object_qos(gfal2_ctx, std::get<0>(*it).c_str(), std::get<2>(*it).c_str(), &err);
-
-	      //Delete token from context
-		  gfal2_cred_free(cred);
-		  gfal2_cred_clean(gfal2_ctx, &err);
-
-		  if (result != -1) {
-			  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " submitted successfully" << commit;
-			  ctx.cdmiUpdateFileStateToQosRequestSubmitted(std::get<3>(*it), std::get<4>(*it));
-			  anySuccessful = true;
-		  } else {
-			  FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " failed" << commit;
-			  ctx.cdmiUpdateFileStateToFailed(std::get<3>(*it), std::get<4>(*it));
-		  }
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " submitted successfully" << commit;
+        ctx.cdmiUpdateFileStateToQosRequestSubmitted(std::get<3>(*it), std::get<4>(*it));
+        anySuccessful = true;
 	}
+
 	if (anySuccessful) {
 		ctx.getWaitingRoom().add(new CDMIPollTask(std::move(*this)));
 	}

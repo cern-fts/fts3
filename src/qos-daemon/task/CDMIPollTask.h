@@ -32,6 +32,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include "Gfal2QoS.h"
 #include "QoSTransitionTask.h"
 
 
@@ -116,6 +117,9 @@ private:
 
     /// wait in the wait room until given time
     time_t wait_until;
+
+    /// Gfal2 QoS helper
+    Gfal2QoS gfal2QoS;
 };
 
 #endif // CDMIPOLLTASK_H_
