@@ -28,6 +28,8 @@
 #include "ThreadSafeList.h"
 #include "UrlCopyCmd.h"
 #include <iostream>
+
+#define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -63,20 +65,19 @@ FileTransferExecutor::~FileTransferExecutor()
 
 std::string FileTransferExecutor::getAuthMethod(const std::string& jobMetadata)
 {
-	std::stringstream iostr;
-	if (jobMetadata != "null") {
-            iostr << jobMetadata;
-            pt::ptree job_metadata;
-	
-            try {
-                pt::read_json(iostr, job_metadata);
-                return job_metadata.get<std::string>("auth_method", "null");
-            } catch (...) {
-		return "null";
-            }
-        } else return "null";
-       
-            
+    if (jobMetadata != "null") {
+        std::stringstream iostr(jobMetadata);
+        pt::ptree job_metadata;
+
+        try {
+            pt::read_json(iostr, job_metadata);
+            return job_metadata.get<std::string>("auth_method", "null");
+        } catch (...) {
+            return "null";
+        }
+    }
+
+    return "null";
 }
 
 void FileTransferExecutor::run(boost::any & ctx)
@@ -136,7 +137,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cloudConfigFile = generateOAuthConfigFile(db, tf);
             } else {
             	cloudConfigFile = generateCloudStorageConfigFile(db, tf);
-	    }
+            }
 
             if (!cloudConfigFile.empty()) {
                 cmdBuilder.setOAuthFile(cloudConfigFile);
