@@ -10,7 +10,7 @@
 
 Name:       fts
 Version:    3.9.4
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
@@ -499,6 +499,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Wed Jun 10 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-2
+- Remove soci < 4.0.0 requirement
+
 * Thu May 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-1
 - Release focused on HTTP TPC tests
 - Fix SRM pin leak after copy
