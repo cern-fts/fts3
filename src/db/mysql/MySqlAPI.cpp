@@ -3277,10 +3277,10 @@ void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId
             soci::row const& r = *i2;
             std::string job_state = r.get<std::string>("job_state");
             if (job_state == "FINISHED") {
-                std::cerr << "QoS Transition job: " << jobId << " finished";
+                std::cerr << "[Failed] QoS Transition job: " << jobId << " finished" << std::endl;
                 break;
             } else if (job_state == "FINISHEDDIRTY") {
-                std::cerr << "QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)";
+                std::cerr << "[Failed] QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)" << std::endl;
                 break;
             }
         }
@@ -3331,10 +3331,10 @@ void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t file
             soci::row const& r = *i2;
             std::string job_state = r.get<std::string>("job_state");
             if (job_state == "FINISHED") {
-                std::cerr << "QoS Transition job: " << jobId << " finished";
+                std::cerr << "[Finished] QoS Transition job: " << jobId << " finished" << std::endl;
                 break;
             } else if (job_state == "FINISHEDDIRTY") {
-                std::cerr << "QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)";
+                std::cerr << "[Finished] QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)" << std::endl;
                 break;
             }
         }

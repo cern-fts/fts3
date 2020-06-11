@@ -18,19 +18,19 @@
  * limitations under the License.
  */
 
-#include <qos-daemon/task/PollTask.h>
-#include <qos-daemon/task/CDMIPollTask.h>
-#include <qos-daemon/task/WaitingRoom.h>
-#include "QoSServer.h"
 
+#include "QoSServer.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
-#include "fetch/CDMIFetchQosTransition.h"
 #include "server/DrainMode.h"
 
+#include "task/PollTask.h"
+#include "task/CDMIPollTask.h"
+#include "task/WaitingRoom.h"
 #include "fetch/FetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
 #include "fetch/FetchDeletion.h"
+#include "fetch/CDMIFetchQosTransition.h"
 #include "state/StagingStateUpdater.h"
 #include "state/DeletionStateUpdater.h"
 

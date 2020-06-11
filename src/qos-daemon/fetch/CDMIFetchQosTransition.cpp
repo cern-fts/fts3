@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-
 #include <map>
 
 #include "common/Uri.h"
@@ -26,8 +25,8 @@
 #include "server/DrainMode.h"
 
 #include "CDMIFetchQosTransition.h"
-#include "../task/QoSTransitionTask.h"
-#include "../task/CDMIPollTask.h"
+#include "qos-daemon/task/QoSTransitionTask.h"
+#include "qos-daemon/task/CDMIPollTask.h"
 
 
 void CDMIFetchQosTransition::fetch()
@@ -37,9 +36,9 @@ void CDMIFetchQosTransition::fetch()
     while (!boost::this_thread::interruption_requested()) {
         try {
             boost::this_thread::sleep(boost::posix_time::seconds(10));
-            //if we drain a host, no need to check if url_copy are reporting being alive
+            // If we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking QoS transitions for this instance!" << commit;
                 continue;
             }
 
@@ -48,37 +47,31 @@ void CDMIFetchQosTransition::fetch()
 
             db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files, "QOS_TRANSITION");
 
-            for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
+            for (const auto& file: files)
             {
-                std::string storage = Uri::parse(it_f->surl).host;
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Fetched QoS transition: [" << file.jobId << "] "
+                                                 << file.surl << " [" << file.target_qos << "]" << commit;
 
-                //std::cerr << "Storage detected: " << storage << std::endl;
-
+                std::string storage = Uri::parse(file.surl).host;
                 auto it_t = tasks.find(storage);
+
                 if (it_t == tasks.end()) {
-                    tasks.insert(std::make_pair(storage, CDMIQosTransitionContext( QoSServer::instance())));
+                    tasks.insert(std::make_pair(storage, CDMIQosTransitionContext(QoSServer::instance())));
                     it_t = tasks.find(storage);
                 }
-                it_t->second.add(*it_f);
+
+                it_t->second.add(file);
             }
 
-
-            for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
+            for (const auto& pair: tasks)
             {
-                try
-                {
-                	//for (auto it = it_t->second.getSurls().begin(); it != it_t->second.getSurls().end(); ++it) {
-                	//	      std::cerr << "Printing surl in fetch: " << std::get<0>(*it) << std::endl;
-                	//	  }
-                	//std::cerr << "Checking the context: " << it_t->second.getSurls() << std::endl;
-                    threadpool.start(new QoSTransitionTask(it_t->second));
+                try {
+                    threadpool.start(new QoSTransitionTask(pair.second));
                 }
-                catch(UserError const & ex)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << ex.what() << commit;
+                catch (const UserError& e) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << e.what() << commit;
                 }
-                catch(...)
-                {
+                catch (...) {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
                 }
             }

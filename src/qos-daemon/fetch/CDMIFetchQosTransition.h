@@ -39,16 +39,18 @@
  */
 class CDMIFetchQosTransition
 {
-
 public:
-	CDMIFetchQosTransition(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
-    virtual ~CDMIFetchQosTransition() {}
+
+	CDMIFetchQosTransition(fts3::common::ThreadPool<Gfal2Task> & threadpool) :
+	    threadpool(threadpool)
+	{}
+
+	virtual ~CDMIFetchQosTransition() {}
 
     void fetch();
 
 private:
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
-
 };
 
 #endif // CDMIFetchQosTransition_H_

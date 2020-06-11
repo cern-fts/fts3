@@ -26,29 +26,25 @@
 #include "WaitingRoom.h"
 
 
-boost::shared_mutex QoSTransitionTask::mx;
-
-std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> QoSTransitionTask::active_surls;
-
 void QoSTransitionTask::run(const boost::any &)
 {
-	std::vector<GError*> errors(active_surls.size(), NULL);
 	bool anySuccessful = false;
+    auto transitions = ctx.getSurls();
 
-	for (auto it = active_surls.begin(); it != active_surls.end(); ++it) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << std::get<0>(*it) << " to QoS: " << std::get<2>(*it) << commit;
+	for (const auto& transition: transitions) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << transition.surl << " to QoS: " << transition.target_qos << commit;
 
         // Perform transition
         try {
-            gfal2QoS.changeFileQoS(std::get<0>(*it), std::get<2>(*it), std::get<1>(*it));
+            gfal2QoS.changeFileQoS(transition.surl, transition.target_qos, transition.token);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << transition.surl << " to "
+                                            << transition.target_qos << " submitted successfully" << commit;
+            ctx.cdmiUpdateFileStateToQosRequestSubmitted(transition.jobId, transition.fileId);
+            anySuccessful = true;
         } catch (Gfal2Exception &err) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " failed" << commit;
-            ctx.cdmiUpdateFileStateToFailed(std::get<3>(*it), std::get<4>(*it));
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << transition.surl << " to " << transition.target_qos << " failed" << commit;
+            ctx.cdmiUpdateFileStateToFailed(transition.jobId, transition.fileId);
         }
-
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << std::get<0>(*it) << " to " << std::get<2>(*it) << " submitted successfully" << commit;
-        ctx.cdmiUpdateFileStateToQosRequestSubmitted(std::get<3>(*it), std::get<4>(*it));
-        anySuccessful = true;
 	}
 
 	if (anySuccessful) {

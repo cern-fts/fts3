@@ -29,11 +29,11 @@
 #include <string>
 #include <vector>
 
-#include "cred/DelegCred.h"
-
 #include "JobContext.h"
-#include "../QoSServer.h"
-
+#include "qos-daemon/QoSServer.h"
+#include "qos-daemon/task/WaitingRoom.h"
+#include "qos-daemon/state/StagingStateUpdater.h"
+#include "db/generic/QosTransitionOperation.h"
 
 class CDMIQosTransitionContext
 {
@@ -41,22 +41,29 @@ class CDMIQosTransitionContext
 public:
 
     CDMIQosTransitionContext(QoSServer &qosServer):
-            stateUpdater(qosServer.getStagingStateUpdater()),waitingRoom(qosServer.getCDMIWaitingRoom())
+        stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getCDMIWaitingRoom())
     {
         startTime = time(0);
     }
 
     CDMIQosTransitionContext(const CDMIQosTransitionContext &copy) :
-        waitingRoom(copy.waitingRoom), stateUpdater(copy.stateUpdater), errorCount(copy.errorCount), startTime(copy.startTime)
+        stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        filesToTransition(copy.filesToTransition), errorCount(copy.errorCount), startTime(copy.startTime)
     {}
 
     CDMIQosTransitionContext(CDMIQosTransitionContext && copy) :
-        waitingRoom(copy.waitingRoom), stateUpdater(copy.stateUpdater), errorCount(std::move(copy.errorCount)), startTime(copy.startTime)
+        stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        filesToTransition(std::move(copy.filesToTransition)), errorCount(std::move(copy.errorCount)),
+        startTime(copy.startTime)
     {}
 
     virtual ~CDMIQosTransitionContext() {}
 
-    void add(const QosTransitionOperation &qosTransitionOp);
+    void add(const QosTransitionOperation &qosTransitionOp) {
+        if (qosTransitionOp.valid()) {
+            filesToTransition[qosTransitionOp.jobId].push_back(qosTransitionOp);
+        }
+    }
 
     WaitingRoom<CDMIPollTask>& getWaitingRoom() {
         return waitingRoom;
@@ -90,25 +97,25 @@ public:
     }
 
     /**
-     * @return  Set of tuples <surl, token, target_qos>
+     * @return  Set of QoSTransitionOperations
      */
-    std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> getSurls() const
+    std::set<QosTransitionOperation> getSurls() const
     {
-    	std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> surls;
-    	//std::cerr << "This is the map size: " << filesToTransition.size() << std::endl;
-        for (auto it_j = filesToTransition.begin(); it_j != filesToTransition.end(); ++it_j)
-        	for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u) {
-        		//std::cerr << "About to create the tuple " << it_u->surl << it_u->token << it_u->target_qos << std::endl;
-        		surls.insert(std::make_tuple(it_u->surl, it_u->token, it_u->target_qos, it_u->jobId, it_u->fileId));
+    	std::set<QosTransitionOperation> surls;
+
+    	for (const auto& transitions: filesToTransition)
+        	for (const auto& file: transitions.second) {
+        		surls.insert(file);
         	}
+
         return surls;
     }
 
 private:
     StagingStateUpdater &stateUpdater;
-    /// Job ID -> surl, target_qos, token
-    std::map< std::string, std::vector<QosTransitionOperation>> filesToTransition;
     WaitingRoom<CDMIPollTask> &waitingRoom;
+    /// Job ID -> QoSTransition details
+    std::map<std::string, std::vector<QosTransitionOperation>> filesToTransition;
     std::map<std::string, int> errorCount;
     time_t startTime;
 };
