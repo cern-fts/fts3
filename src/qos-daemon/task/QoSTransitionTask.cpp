@@ -39,8 +39,13 @@ void QoSTransitionTask::run(const boost::any &)
             gfal2QoS.changeFileQoS(transition.surl, transition.target_qos, transition.token);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << transition.surl << " to "
                                             << transition.target_qos << " submitted successfully" << commit;
-            ctx.cdmiUpdateFileStateToQosRequestSubmitted(transition.jobId, transition.fileId);
-            anySuccessful = true;
+
+            if (ctx.cdmiUpdateFileStateToQosRequestSubmitted(transition.jobId, transition.fileId)) {
+                anySuccessful = true;
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to update database QoS state for " << transition.surl << " [" << transition.target_qos << "]. "
+                                                 << "Assuming other server updated the transition already." << commit;
+            }
         } catch (Gfal2Exception &err) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << transition.surl << " to " << transition.target_qos << " failed" << commit;
             ctx.cdmiUpdateFileStateToFailed(transition.jobId, transition.fileId);

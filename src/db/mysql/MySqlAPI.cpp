@@ -3187,20 +3187,25 @@ void MySqlAPI::requeueStartedDeletes()
     }
 }
 
-void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp)
+void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp, bool matchHost)
 {
 	soci::session sql(*connectionPool);
-    try {
-        soci::rowset<soci::row> rs2 = (sql.prepare <<
-                " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, j.target_qos, c.proxy "
-                " FROM t_file f "
-                " INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                " INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
-                " WHERE "
-                " 		f.file_state = :qosOp AND "
-                "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-                soci::use(qosOp), soci::use(hashSegment.start), soci::use(hashSegment.end)
-            );
+
+	try {
+        std::ostringstream query;
+        query << " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, j.target_qos, c.proxy FROM t_file f"
+              << " INNER JOIN t_job j ON (f.job_id = j.job_id) "
+              << " INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
+              << " WHERE "
+              << "      f.file_state = :qosOp AND "
+              << "      (hashed_id >= :hStart AND hashed_id <= :hEnd) ";
+
+        if (matchHost) {
+            query << "AND f.transfer_host = \"" << hostname << "\"";
+        }
+
+        soci::rowset<soci::row> rs2 = (sql.prepare << query.str(),
+                soci::use(qosOp), soci::use(hashSegment.start), soci::use(hashSegment.end));
 
         for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
             {
@@ -3226,12 +3231,27 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
     }
 }
 
-void MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId){
-	//std::cerr << "About to update" << jobId << "         " << fileId << std::endl;
+bool MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId)
+{
 	soci::session sql(*connectionPool);
+
 	try {
+        std::string storedState;
         sql.begin();
-        sql << " UPDATE t_file SET file_state='QOS_REQUEST_SUBMITTED' where file_id= :fileId", soci::use(fileId);
+
+        // Get the current file state
+        sql << "SELECT file_state FROM t_file WHERE file_id = :fileId",
+            soci::use(fileId),
+            soci::into(storedState);
+
+        if (storedState != "QOS_TRANSITION") {
+            sql.rollback();
+            return false;
+        }
+
+        sql << "UPDATE t_file SET "
+               "file_state = 'QOS_REQUEST_SUBMITTED',  start_time = UTC_TIMESTAMP(), transfer_host = :hostname "
+               "WHERE file_id = :fileId", soci::use(hostname), soci::use(fileId);
         sql.commit();
     }
     catch (std::exception& e)
@@ -3244,13 +3264,17 @@ void MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
+
+    return true;
 }
 
-void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId){
+void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId)
+{
     soci::session sql(*connectionPool);
+
     try {
         sql.begin();
-        sql << " UPDATE t_file SET file_state='FAILED' where file_id= :fileId", soci::use(fileId);
+        sql << " UPDATE t_file SET file_state = 'FAILED', finish_time = UTC_TIMESTAMP() WHERE file_id = :fileId", soci::use(fileId);
         sql.commit();
 
         // Update job state to FAILED if all files of said QoS job are FAILED
@@ -3297,14 +3321,14 @@ void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId
     }
 }
 
-
-void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t fileId){
-    //std::cerr << "About to update" << jobId << "         " << fileId << std::endl;
+void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t fileId)
+{
     soci::session sql(*connectionPool);
+
     try
     {
         sql.begin();
-        sql << " UPDATE t_file SET file_state='FINISHED' where file_id= :fileId", soci::use(fileId);
+        sql << " UPDATE t_file SET file_state = 'FINISHED', finish_time = UTC_TIMESTAMP() WHERE file_id = :fileId", soci::use(fileId);
         sql.commit();
 
         // Update job state to finished if all files of said QOS_REQUEST_SUBMITTED job are FINISHED

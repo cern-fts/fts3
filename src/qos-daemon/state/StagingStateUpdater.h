@@ -86,11 +86,11 @@ public:
     }
 
     void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) {
-        db.getFilesForQosTransition(qosTranstionOps, qosOp);
+        db.getFilesForQosTransition(qosTranstionOps, qosOp, true);
     }
 
-    void cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) {
-        db.updateFileStateToQosRequestSubmitted(jobId, fileId);
+    bool cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) {
+        return db.updateFileStateToQosRequestSubmitted(jobId, fileId);
     }
 
     /// Destructor

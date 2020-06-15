@@ -91,9 +91,9 @@ public:
         stateUpdater.cdmiGetFilesForQosRequestSubmitted(qosTranstionOps, qosOp);
     }
 
-    void cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) const
+    bool cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) const
     {
-        stateUpdater.cdmiUpdateFileStateToQosRequestSubmitted(jobId, fileId);
+        return stateUpdater.cdmiUpdateFileStateToQosRequestSubmitted(jobId, fileId);
     }
 
     /**
