@@ -103,10 +103,11 @@ public:
     {
     	std::set<QosTransitionOperation> surls;
 
-    	for (const auto& transitions: filesToTransition)
-        	for (const auto& file: transitions.second) {
-        		surls.insert(file);
+    	for (auto it_t = filesToTransition.begin(); it_t != filesToTransition.end(); ++it_t) {
+        	for (auto it_f = it_t->second.begin(); it_f != it_t->second.end(); ++it_f) {
+        		surls.insert(*it_f);
         	}
+        }
 
         return surls;
     }

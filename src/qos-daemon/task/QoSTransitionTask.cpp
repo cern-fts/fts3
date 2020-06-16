@@ -31,24 +31,24 @@ void QoSTransitionTask::run(const boost::any &)
 	bool anySuccessful = false;
     auto transitions = ctx.getSurls();
 
-	for (const auto& transition: transitions) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << transition.surl << " to QoS: " << transition.target_qos << commit;
+	for (auto it_t = transitions.begin(); it_t != transitions.end(); ++it_t) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Perform QoS transition of " << it_t->surl << " to QoS: " << it_t->target_qos << commit;
 
         // Perform transition
         try {
-            gfal2QoS.changeFileQoS(transition.surl, transition.target_qos, transition.token);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << transition.surl << " to "
-                                            << transition.target_qos << " submitted successfully" << commit;
+            gfal2QoS.changeFileQoS(it_t->surl, it_t->target_qos, it_t->token);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition Request of " << it_t->surl << " to "
+                                            << it_t->target_qos << " submitted successfully" << commit;
 
-            if (ctx.cdmiUpdateFileStateToQosRequestSubmitted(transition.jobId, transition.fileId)) {
+            if (ctx.cdmiUpdateFileStateToQosRequestSubmitted(it_t->jobId, it_t->fileId)) {
                 anySuccessful = true;
             } else {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to update database QoS state for " << transition.surl << " [" << transition.target_qos << "]. "
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to update database QoS state for " << it_t->surl << " [" << it_t->target_qos << "]. "
                                                  << "Assuming other server updated the transition already." << commit;
             }
         } catch (Gfal2Exception &err) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << transition.surl << " to " << transition.target_qos << " failed" << commit;
-            ctx.cdmiUpdateFileStateToFailed(transition.jobId, transition.fileId);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << it_t->surl << " to " << it_t->target_qos << " failed" << commit;
+            ctx.cdmiUpdateFileStateToFailed(it_t->jobId, it_t->fileId);
         }
 	}
 

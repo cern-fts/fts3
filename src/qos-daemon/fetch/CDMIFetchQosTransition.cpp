@@ -47,12 +47,12 @@ void CDMIFetchQosTransition::fetch()
 
             db::DBSingleton::instance().getDBObjectInstance()->getFilesForQosTransition(files, "QOS_TRANSITION");
 
-            for (const auto& file: files)
+            for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Fetched QoS transition: [" << file.jobId << "] "
-                                                 << file.surl << " [" << file.target_qos << "]" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Fetched QoS transition: [" << it_f->jobId << "] "
+                                                 << it_f->surl << " [" << it_f->target_qos << "]" << commit;
 
-                std::string storage = Uri::parse(file.surl).host;
+                std::string storage = Uri::parse(it_f->surl).host;
                 auto it_t = tasks.find(storage);
 
                 if (it_t == tasks.end()) {
@@ -60,13 +60,13 @@ void CDMIFetchQosTransition::fetch()
                     it_t = tasks.find(storage);
                 }
 
-                it_t->second.add(file);
+                it_t->second.add(*it_f);
             }
 
-            for (const auto& pair: tasks)
+            for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
             {
                 try {
-                    threadpool.start(new QoSTransitionTask(pair.second));
+                    threadpool.start(new QoSTransitionTask(it_t->second));
                 }
                 catch (const UserError& e) {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << e.what() << commit;
