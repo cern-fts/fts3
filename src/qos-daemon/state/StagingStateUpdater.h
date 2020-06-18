@@ -78,11 +78,11 @@ public:
     }
 
     void cdmiUpdateFileStateToFinished(const std::string &jobId, uint64_t fileId) {
-        db.updateFileStateToFinished(jobId, fileId);
+        db.updateFileStateToQosTerminal(jobId, fileId, "FINISHED");
     }
 
-    void cdmiUpdateFileStateToFailed(const std::string &jobId, uint64_t fileId) {
-        db.updateFileStateToFailed(jobId, fileId);
+    void cdmiUpdateFileStateToFailed(const std::string &jobId, uint64_t fileId, const std::string &reason = "") {
+        db.updateFileStateToQosTerminal(jobId, fileId, "FAILED", reason);
     }
 
     void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) {

@@ -3268,100 +3268,98 @@ bool MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
     return true;
 }
 
-void MySqlAPI::updateFileStateToFailed(const std::string& jobId, uint64_t fileId)
+void MySqlAPI::updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
+                                            const std::string& reason)
 {
+    struct tm startTime;
+    struct tm finishTime;
+    double duration;
+    time_t now = time(NULL);
+    gmtime_r(&now, &finishTime);
+
+    std::string transferHost;
+    soci::indicator nullStartTime = soci::i_ok;
+    soci::indicator nullTransferHost = soci::i_ok;
     soci::session sql(*connectionPool);
 
     try {
         sql.begin();
-        sql << " UPDATE t_file SET file_state = 'FAILED', finish_time = UTC_TIMESTAMP() WHERE file_id = :fileId", soci::use(fileId);
-        sql.commit();
 
-        // Update job state to FAILED if all files of said QoS job are FAILED
-        // TODO: Add finish timestamp as well
-        sql.begin();
-        sql << " UPDATE t_job "
-               " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FAILED') > 1)) THEN 'FAILED' ELSE job_state END "
-               " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
-        sql.commit();
+        sql << "SELECT start_time, transfer_host FROM t_file WHERE file_id = :fileId",
+            soci::use(fileId),
+            soci::into(startTime, nullStartTime),
+            soci::into(transferHost, nullTransferHost);
 
-        // Update job state to FINISHEDDIRTY if some files of said job are FAILED and some others FINISHED
-        sql.begin();
-        sql << " UPDATE t_job "
-               " SET job_state = CASE WHEN (((select count(*) from t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
-               " ((select count(*) from t_file where job_id=:jobId and file_state = 'FINISHED') < (select count(*) from t_file where job_id=:jobId)) AND "
-               " ((select count(*) from t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
-               " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
-        sql.commit();
-
-        // Print message if all files of job have been transitioned
-        soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                                   " SELECT job_state from t_job where job_id=:jobId ", soci::use(jobId, "jobId"));
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
-            soci::row const& r = *i2;
-            std::string job_state = r.get<std::string>("job_state");
-            if (job_state == "FINISHED") {
-                std::cerr << "[Failed] QoS Transition job: " << jobId << " finished" << std::endl;
-                break;
-            } else if (job_state == "FINISHEDDIRTY") {
-                std::cerr << "[Failed] QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)" << std::endl;
-                break;
-            }
+        if (nullStartTime == soci::i_null) {
+            startTime = finishTime;
         }
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
 
-void MySqlAPI::updateFileStateToFinished(const std::string& jobId, uint64_t fileId)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        sql.begin();
-        sql << " UPDATE t_file SET file_state = 'FINISHED', finish_time = UTC_TIMESTAMP() WHERE file_id = :fileId", soci::use(fileId);
-        sql.commit();
-
-        // Update job state to finished if all files of said QOS_REQUEST_SUBMITTED job are FINISHED
-        // TODO: Add finish timestamp as well
-        sql.begin();
-        sql << " UPDATE t_job "
-               " SET job_state = CASE WHEN (((select count(distinct file_state) from t_file where job_id=:jobId) = 1) AND ((select count(*) from t_file where job_id=:jobId  and file_state = 'FINISHED') >= 1)) THEN 'FINISHED' ELSE job_state END "
-               " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
-        sql.commit();
-
-        // Update job state to FINISHEDDIRTY if some files of said job are FAILED and some others FINISHED
-        sql.begin();
-        sql << " UPDATE t_job "
-               " SET job_state = CASE WHEN (((select count(*) from t_file where job_id=:jobId AND (file_state = 'FINISHED' or file_state = 'FAILED')) = (select count(*) from t_file where job_id=:jobId)) AND "
-               " ((select count(*) from t_file where job_id=:jobId and file_state = 'FINISHED') < (select count(*) from t_file where job_id=:jobId)) AND "
-               " ((select count(*) from t_file where job_id=:jobId and file_state = 'FAILED') < (select count(*) from t_file where job_id=:jobId))) THEN 'FINISHEDDIRTY' ELSE job_state END "
-               " WHERE job_id=:jobId ",	soci::use(jobId, "jobId");
-        sql.commit();
-
-        // Print message if all files of job have been transitioned
-        soci::rowset<soci::row> rs2 = (sql.prepare <<
-                    " SELECT job_state from t_job where job_id=:jobId ", soci::use(jobId, "jobId"));
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
-            soci::row const& r = *i2;
-            std::string job_state = r.get<std::string>("job_state");
-            if (job_state == "FINISHED") {
-                std::cerr << "[Finished] QoS Transition job: " << jobId << " finished" << std::endl;
-                break;
-            } else if (job_state == "FINISHEDDIRTY") {
-                std::cerr << "[Finished] QoS Transition job: " << jobId << " has finished dirty (some files failed and other succeeded)" << std::endl;
-                break;
-            }
+        if (nullTransferHost == soci::i_null) {
+            transferHost = hostname;
         }
+
+        duration = difftime(now, timegm(&startTime));
+
+        sql << "UPDATE t_file SET "
+               "file_state = :fileState, start_time = :startTime, "
+               "finish_time = :finishTime, tx_duration = :duration, "
+               "transfer_host = :transferHost "
+               "WHERE file_id = :fileId",
+            soci::use(fileState), soci::use(startTime), soci::use(finishTime),
+            soci::use(duration), soci::use(transferHost), soci::use(fileId);
+
+        if (fileState == "FAILED" && !reason.empty()) {
+            sql << "UPDATE t_file SET reason = :reason WHERE file_id = :fileId",
+                soci::use(reason), soci::use(fileId);
+        }
+
+        // Update job state:
+        // - FAILED, if all files of job are FAILED
+        // - FINISHED, if all files of job are FINISHED
+        // - FINISHEDDIRTY, if files have different final state
+
+        long long numberFilesInJob = 0;
+        long long numberFilesFailed = 0;
+        long long numberFilesFinished = 0;
+        long long numberFilesTerminal = 0;
+        std::string jobState;
+
+        soci::rowset<soci::row> rsReplica = (
+            sql.prepare <<
+            "SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = :jobId GROUP BY file_state ORDER BY NULL",
+            soci::use(jobId)
+        );
+
+        for (auto it = rsReplica.begin(); it != rsReplica.end(); ++it) {
+            std::string state = it->get<std::string>("file_state");
+            long long count = it->get<long long>("COUNT(file_state)", 0);
+
+            if (state == "FINISHED") {
+                numberFilesFinished = count;
+            } else if (state == "FAILED") {
+                numberFilesFailed = count;
+            }
+
+            numberFilesInJob += count;
+        }
+
+        numberFilesTerminal = numberFilesFinished + numberFilesFailed;
+
+        if (numberFilesInJob == numberFilesFinished) {
+            jobState = "FINISHED";
+        } else if (numberFilesInJob == numberFilesFailed) {
+            jobState = "FAILED";
+        } else if (numberFilesInJob == numberFilesTerminal && numberFilesFailed > 0) {
+            jobState = "FINISHEDDIRTY";
+        }
+
+        if (!jobState.empty()) {
+            sql << "UPDATE t_job SET job_state = :jobState, job_finished = :finishTime WHERE job_id = :jobId",
+                soci::use(jobState), soci::use(finishTime), soci::use(jobId);
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "[" << jobState << "] QoS Transition job: " << jobId << " finalized" << commit;
+        }
+
+        sql.commit();
     }
     catch (std::exception& e)
     {

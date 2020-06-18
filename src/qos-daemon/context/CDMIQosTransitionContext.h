@@ -81,9 +81,9 @@ public:
         stateUpdater.cdmiUpdateFileStateToFinished(jobId, fileId);
     }
 
-    void cdmiUpdateFileStateToFailed(const std::string &jobId, uint64_t fileId) const
+    void cdmiUpdateFileStateToFailed(const std::string &jobId, uint64_t fileId, const std::string &reason = "") const
     {
-        stateUpdater.cdmiUpdateFileStateToFailed(jobId, fileId);
+        stateUpdater.cdmiUpdateFileStateToFailed(jobId, fileId, reason);
     }
 
     void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) const

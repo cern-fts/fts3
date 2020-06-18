@@ -61,20 +61,20 @@ void CDMIPollTask::run(const boost::any&)
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << ": [Failed] Transition has finished but did not reach target QoS "
                                                         << "(requested_target_qos=" << it_f->target_qos << ", actual_qos=" << fileQoS << "). "
                                                         << "Marking file as FAILED " << commit;
-                        ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId);
+                        ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId, "Transition has finished but did not reach target QoS");
                     }
                 } else {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI check QoS of file " << it_f->surl << ": [Failed] Target QoS has changed to a different value "
                                                     << "(requested_target_qos=" << it_f->target_qos << ", actual_target_qos=" << targetQoS << "). "
                                                     << "Marking file as FAILED" << commit;
-                    ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId);
+                    ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId, "Target QoS has changed to a different value");
                 }
             }
         } catch (const Gfal2Exception &ex) {
 	        if (ctx.incrementErrorCountForSurl(it_f->surl) == maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI POLL check QoS of file " << it_f->surl << " exceeded the max configured limit retry. "
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CDMI POLL check QoS of file " << it_f->surl << " exceeded the maximum retry limit. "
                                                 << "File has not been transitioned yet. Marking file as FAILED" << commit;
-                ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId);
+                ctx.cdmiUpdateFileStateToFailed(it_f->jobId, it_f->fileId, "Poll check exceeded the maximum retry limit");
 	        }
 	    }
 	}

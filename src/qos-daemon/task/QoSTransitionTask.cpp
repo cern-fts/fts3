@@ -48,7 +48,7 @@ void QoSTransitionTask::run(const boost::any &)
             }
         } catch (Gfal2Exception &err) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "QoS Transition of " << it_t->surl << " to " << it_t->target_qos << " failed" << commit;
-            ctx.cdmiUpdateFileStateToFailed(it_t->jobId, it_t->fileId);
+            ctx.cdmiUpdateFileStateToFailed(it_t->jobId, it_t->fileId, err.what());
         }
 	}
 

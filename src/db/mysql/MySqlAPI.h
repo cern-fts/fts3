@@ -257,17 +257,14 @@ public:
     virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string &qosOp,
                                           bool matchHost = false);
 
-    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task for file successfully completed
-    /// @params[out] Nothing returned
+    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
+    /// @params[out] true if file state was updated, false otherwise
     virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
 
-    /// Update File State to FINISHED after QoS Transition for file successfully completed
+    /// Update File State to FINISHED after QoS Transition of file reached a terminal state
     /// @params[out] Nothing returned
-    virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId);
-
-    /// Update File State to FAILED after QoS Transition for file failed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToFailed(const std::string& jobId, uint64_t fileId);
+    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
+                                              const std::string& reason = "");
 
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
