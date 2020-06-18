@@ -109,8 +109,8 @@ static void spawnServer(int argc, char** argv)
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
     std::string pidDir = ServerConfig::instance().get<std::string>("PidDirectory");
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "[user] " << user << " [group] " << group << " [pidDir] " << pidDir << commit;
 
-    std::cerr << "user group pidDir" << user << group << pidDir << std::endl;
     if (dropPrivileges(user, group)) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
     }
