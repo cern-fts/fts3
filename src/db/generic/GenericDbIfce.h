@@ -315,19 +315,17 @@ public:
 
     /// Get qosTransition operations ready to be started
     /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) = 0;
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string &qosOp,
+                                          bool matchHost = false) = 0;
 
-    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task for file successfully completed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId) = 0;
+    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
+    /// @params[out] true if file state was updated, false otherwise
+    virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId) = 0;
 
     /// Update File State to FINISHED after QoS Transition for file successfully completed
     /// @params[out] Nothing returned
-    virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId) = 0;
-
-    /// Update File State to FAILED after QoS Transition for file failed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToFailed(const std::string& jobId, uint64_t fileId) = 0;
+    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
+                                              const std::string& reason = "") = 0;
 
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
@@ -344,7 +342,7 @@ public:
     /// Put into files a set of bring online requests that must be cancelled
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
-    
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,

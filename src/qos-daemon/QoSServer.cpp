@@ -18,24 +18,22 @@
  * limitations under the License.
  */
 
-#include <qos-daemon/task/PollTask.h>
-#include <qos-daemon/task/ArchivingPollTask.h>
-#include <qos-daemon/task/CDMIPollTask.h>
-#include <qos-daemon/task/WaitingRoom.h>
-#include "QoSServer.h"
 
+#include "QoSServer.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
-
 #include "server/DrainMode.h"
 
-
+#include "task/PollTask.h"
+#include "task/CDMIPollTask.h"
+#include "task/ArchivingPollTask.h"
+#include "task/WaitingRoom.h"
 #include "fetch/FetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
-#include "fetch/CDMIFetchQosTransition.h"
 #include "fetch/FetchArchiving.h"
 #include "fetch/FetchCancelArchiving.h"
 #include "fetch/FetchDeletion.h"
+#include "fetch/CDMIFetchQosTransition.h"
 #include "state/StagingStateUpdater.h"
 #include "state/DeletionStateUpdater.h"
 
@@ -115,30 +113,35 @@ void QoSServer::start(void)
     Gfal2Task::createPrototype (infosys);
 
     FetchStaging fs(threadpool);
-    //CDMIFetchQosTransition cdmifs(threadpool);
+    CDMIFetchQosTransition cdmifs(threadpool);
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
     FetchArchiving fa(threadpool);
     FetchCancelArchiving fca(threadpool);
-    
+
     waitingRoom.attach(threadpool);
-    //cdmiWaitingRoom.attach(threadpool);
+    cdmiWaitingRoom.attach(threadpool);
     archivingWaitingRoom.attach(threadpool);
-    //systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
-    systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
 
-    //disable CDMI threads for now
-    //systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
-    //systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
-
+    systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
+    systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
     systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
+
+    // Staging
+    systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
+    systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
+    // Archiving
     systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));
     systemThreads.create_thread(boost::bind(&FetchCancelArchiving::fetch, fca));
-    systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
+    // CDMI
+    systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
+    // Deletion
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
+    // StateUpdaters
     systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
     systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
     systemThreads.create_thread(boost::bind(&ArchivingStateUpdater::run, &archivingStateUpdater));
+    // Heartbeat
     systemThreads.create_thread(heartBeat);
 }
 

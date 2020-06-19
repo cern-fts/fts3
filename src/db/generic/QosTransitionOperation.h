@@ -25,7 +25,15 @@
 struct QosTransitionOperation {
 	QosTransitionOperation(const std::string& jobId, uint64_t fileId, const std::string& surl, const std::string& target_qos, const std::string& token):
         jobId(jobId), fileId(fileId), surl(surl), target_qos(target_qos), token(token)
-    {
+    {}
+
+    inline bool valid() const {
+	    return (!surl.empty() && !jobId.empty() && !target_qos.empty() && !token.empty());
+	}
+
+    // Required so it can be used as a key in std::containers
+    inline bool operator < (const QosTransitionOperation& that) const {
+        return surl < that.surl;
     }
 
     std::string jobId;

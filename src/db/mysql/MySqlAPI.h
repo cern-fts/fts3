@@ -261,25 +261,23 @@ public:
     /// @params[out] stagingOps The list of staging operations will be put here
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps);
 
-    /// Get qosTransition operations ready to be started
-    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp);
-
     /// Get archivingOps operations ready to be polled
     /// @params[out] archivingOps The list of Archiving  operations will be put here
     virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps);
 
-    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task for file successfully completed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
+    /// Get qosTransition operations ready to be started
+    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string &qosOp,
+                                          bool matchHost = false);
 
-    /// Update File State to FINISHED after QoS Transition for file successfully completed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToFinished(const std::string& jobId, uint64_t fileId);
+    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
+    /// @params[out] true if file state was updated, false otherwise
+    virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
 
-    /// Update File State to FAILED after QoS Transition for file failed
+    /// Update File State to FINISHED after QoS Transition of file reached a terminal state
     /// @params[out] Nothing returned
-    virtual void updateFileStateToFailed(const std::string& jobId, uint64_t fileId);
+    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
+                                              const std::string& reason = "");
 
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
@@ -292,8 +290,7 @@ public:
     /// Put into files a set of bring online requests that must be cancelled
     /// @param files    Each entry in the set if a pair of surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
-    
-    
+
     /// Put into files a set of archiving requests that must be cancelled
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
@@ -330,7 +327,7 @@ private:
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 
     void updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &archivingOpsStatus);
-      
+
     void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
 
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
@@ -351,7 +348,7 @@ private:
 
     std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
-    void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId);
+    void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd);
 
     void useNextHop(soci::session& sql, std::string jobId);
 

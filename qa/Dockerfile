@@ -58,6 +58,8 @@ RUN /static-analysis.sh "/usr/src/fts3" "/usr/src/fts3"
 RUN CFLAGS=--coverage CXXFLAGS=--coverage cmake . \
         -DMAINBUILD=ON -DSERVERBUILD=ON -DCLIENTBUILD=ON -DMYSQLBUILD=ON \
         -DTESTBUILD=ON -DCMAKE_INSTALL_PREFIX=""
+        
+RUN ./src/cli/buildcurl.sh
 RUN make -j2
 RUN make install
 

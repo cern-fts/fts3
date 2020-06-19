@@ -196,9 +196,9 @@ def populate_schema(config, sql_location):
     schema = get_full_schema_path(sql_location)
     run_sql_script(config, schema)
 
-    current_version = get_schema_version(config)
+    current_version = get_schema_version(connect_database(config))
     log.info('Running upgrade scripts')
-    upgrade_schema(config, current_version, sql_location)
+    upgrade_schema(connect_database(config), config, current_version, sql_location)
 
 
 def upgrade_schema(conn, config, current_version, sql_location):

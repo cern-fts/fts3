@@ -19,10 +19,6 @@ ALTER TABLE `t_file`
 	MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_backup` 
         MODIFY reason varchar(2048) CHARACTER SET utf8;
-ALTER TABLE `t_dm`
-        MODIFY reason varchar(2048) CHARACTER SET utf8;
-ALTER TABLE `t_dm_backup`
-        MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
         MODIFY reason varchar(2048) CHARACTER SET utf8;
 ALTER TABLE `t_file_retry_errors`
@@ -87,6 +83,9 @@ ALTER TABLE t_dm
 --
 RENAME TABLE t_dm_backup TO t_dm_backup_old;
 CREATE TABLE t_dm_backup ENGINE = ARCHIVE AS (SELECT * FROM t_dm WHERE NULL);
+
+DROP TABLE t_dm_old;
+DROP TABLE t_dm_backup_old;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (5, 0, 0, 'FTS-1318 diff');

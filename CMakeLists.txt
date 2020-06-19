@@ -95,6 +95,24 @@ endif ()
 find_package(Threads)
 find_package(OpenSSL)
 
+set(CURL_DIR1 /tmp/curl/bogusinstall)
+find_file(Curl_local libcurl.a PATHS ${CURL_DIR1}/lib${LIB_SUFFIX}/ )
+
+if (NOT Curl_local)
+  message(STATUS "Building curl..")
+  execute_process(COMMAND ./src/cli/buildcurl.sh
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    RESULT_VARIABLE curl_ok
+    OUTPUT_VARIABLE curl_out)
+endif()
+message(STATUS "curl build ${curl_ok}")
+
+set(CURL_DIR /tmp/curl/bogusinstall)
+set(CURL_LIBRARIES ${CURL_DIR}/lib${LIB_SUFFIX}/ws2_32 ${CURL_DIR}/lib${LIB_SUFFIX}/iphlpapi ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl)
+set(CURL_INCLUDE_DIR ${CURL_DIR}/include/)
+set(CURL_LIBRARY ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl.a CACHE filepath "path to libcurl.a")
+find_file(Curl_local libcurl.a PATHS ${CURL_DIR}/lib${LIB_SUFFIX}/ )
+
 # Find Boost
 set(Boost_ADDITIONAL_VERSIONS
     "1.41" "1.41.0" "1.42" "1.42.0" "1.43" "1.43.0" "1.44" "1.44.0" "1.45" "1.45.0"

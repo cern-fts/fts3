@@ -19,26 +19,24 @@
  */
 
 #pragma once
-#ifndef QOSTRANSITIONTASK
+#ifndef QOSTRANSITIONTASK_H_
 #define QOSTRANSITIONTASK_H_
 
 #include <string>
 #include <utility>
-
 #include <boost/any.hpp>
-
-#include <gfal_api.h>
 
 #include "db/generic/SingleDbInstance.h"
 #include "cred/DelegCred.h"
 
 #include "Gfal2Task.h"
-#include "../context/CDMIQosTransitionContext.h"
+#include "Gfal2QoS.h"
+#include "qos-daemon/context/CDMIQosTransitionContext.h"
 
 
 /**
- * A QoS transition task, when started using a thread pool issues a qos transition operation,
- * if successful spawns a CDMIPollTask, if retries are set another QoSTransitionTask
+ * A QoS transition task, when started using a thread pool, issues a QoS transition operation.
+ * If successful, spawns a CDMIPollTask, if not, the transition retry will be picked up by another QoSTransitionTask.
  */
 class QoSTransitionTask : public Gfal2Task
 {
@@ -51,14 +49,7 @@ public:
      * @param ctx : qos-transition task details
      */
 	QoSTransitionTask(const CDMIQosTransitionContext &ctx) : Gfal2Task("QOS_TRANSITION"), ctx(ctx)
-    {
-        // set up the token
-        //setToken(ctx.getToken());
-        // add urls to active
-        auto surls = ctx.getSurls();
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_surls.insert(surls.begin(), surls.end());
-    }
+    {}
 
     /**
      * Creates a new QoSTransitionTask from another QoSTransitionTask
@@ -81,12 +72,14 @@ public:
 
 protected:
 
-    /// staging details
+    /// QoS transition details
     CDMIQosTransitionContext ctx;
-    /// prevents concurrent access to active_tokens
-    static boost::shared_mutex mx;
-    static std::set<std::tuple<std::string, std::string, std::string, std::string, uint64_t>> active_surls;
+
+private:
+
+    /// Gfal2 QoS helper
+    Gfal2QoS gfal2QoS;
 };
 
 
-#endif // QoSTransitionTask_H_
+#endif // QOSTRANSITIONTASK_H_

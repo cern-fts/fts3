@@ -30,18 +30,16 @@
 
 #include <boost/thread.hpp>
 
-#include "db/generic/SingleDbInstance.h"
-
+#include "Gfal2QoS.h"
 #include "QoSTransitionTask.h"
+#include "db/generic/SingleDbInstance.h"
 
 
 /**
- * A poll task: checks whether a given qos transition was successful
+ * A poll task: checks whether a given QoS transition was successful
  *
- * If the qos transition operation is not finished yet spawns another CDMIPollTask.
- * If the operation fails and retries are set spawns another QoSTransitionTask.
+ * If the QoS transition operation is not finished yet, spawns another CDMIPollTask.
  *
- * @see StagingTask
  * @see BringOnlineTask
  */
 class CDMIPollTask : public QoSTransitionTask
@@ -53,11 +51,7 @@ public:
      */
 	CDMIPollTask(const CDMIQosTransitionContext &ctx) :
 		QoSTransitionTask(ctx), nPolls(0), wait_until(0)
-    {
-        //auto surls = ctx.getSurls();
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        //active_urls.insert(surls.begin(), surls.end());
-    }
+    {}
 
     /**
      * Creates a new CDMIPollTask task from a QoSTransitionTask
@@ -65,18 +59,15 @@ public:
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
 	CDMIPollTask(QoSTransitionTask && copy) :
-		QoSTransitionTask(std::move(copy)), nPolls(0), wait_until()
-    {
-    }
+		QoSTransitionTask(std::move(copy)), nPolls(0), wait_until(0)
+    {}
 
     /**
      * Move constructor
      */
 	CDMIPollTask(CDMIPollTask && copy) :
-		QoSTransitionTask(std::move(copy)), nPolls(copy.nPolls), wait_until(
-            copy.wait_until)
-    {
-    }
+		QoSTransitionTask(std::move(copy)), nPolls(copy.nPolls), wait_until(copy.wait_until)
+    {}
 
     /**
      * Destructor
@@ -91,7 +82,7 @@ public:
     /**
      * @return : true if the task is still waiting, false otherwise
      */
-    bool waiting(time_t now)
+    inline bool waiting(time_t now)
     {
         return wait_until > now;
     }
@@ -99,16 +90,13 @@ public:
 private:
 
     /**
-     * Gets the interval after next polling should be done
+     * Get the interval after which next polling should be done
      *
      * @param nPolls : number of polls already done
      */
     static time_t getPollInterval(int nPolls)
     {
-        if (nPolls > 9)
-            return 600;
-        else
-            return (2 << nPolls);
+        return (nPolls > 9) ? 600 : (2 << nPolls);
     }
 
     /// number of bring online polls
@@ -116,6 +104,9 @@ private:
 
     /// wait in the wait room until given time
     time_t wait_until;
+
+    /// Gfal2 QoS helper
+    Gfal2QoS gfal2QoS;
 };
 
 #endif // CDMIPOLLTASK_H_

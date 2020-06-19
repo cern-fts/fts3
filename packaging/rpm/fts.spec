@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.9.0
+Version:    3.10.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -35,10 +35,9 @@ BuildRequires:  boost-devel
 BuildRequires:  boost148-devel
 %endif
 
-BuildRequires:  CGSI-gSOAP-devel
 BuildRequires:  cajun-jsonapi-devel
-
 BuildRequires:  cmake
+BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 %if 0%{?el5}
@@ -46,11 +45,10 @@ BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  gfal2-devel >= 2.14.2
+BuildRequires:  gfal2-devel >= 2.18.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
-BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
@@ -89,10 +87,10 @@ Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.14.2
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.14.2
-Requires: gfal2-plugin-http%{?_isa} >= 2.14.2
-Requires: gfal2-plugin-srm%{?_isa} >= 2.14.2
+Requires: gfal2%{?_isa} >= 2.18.0
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.18.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.18.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.18.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -504,11 +502,44 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
-* Tue Apr 02 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
+* Thu May 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-1
+- Release focused on HTTP TPC tests
+- Fix SRM pin leak after copy
+- Change minimum validity time for a proxy from 60 to 90 minutes
+- Compatibility with MySQL version 8 database
+
+* Thu Nov 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.3-1
+- Select multihop transfers as well when reaping stalled transfers
+
+* Mon Sep 09 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-3
+- fix curl build when libssh2 is installed on the system
+
+* Mon Sep 02 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-2
+- stop requiring CGSI-gsoap
+
+* Thu Jul 25 2019 Andrea Manzi <amanzi@cern.ch> - 3.9.2-1
+- New bugfix release
+
+* Tue Jun 18 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.1-1
+- New bugfix release
+
+* Thu May 23 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-2
+- fix db upgrade script
+
+* Tue May 08 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
 - New Minor release
 - Includes multiple database optimisations that improve the overall performance of FTS
 - Avoid submitting multiple transfers to the same destination
 - Fix optmizer running in parallel in 2 nodes
+
+* Mon Apr 15 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.5-1
+- New bugfix release
+
+* Mon Mar 28 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.4-1
+- New bugfix release
+
+* Thu Feb 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.3-1
+- New bugfix release
 
 * Thu Jan 10 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.2-1
 - New bugfix release

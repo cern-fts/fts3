@@ -89,20 +89,15 @@ void Gfal2Task::setToken(std::string const & token)
 {
 	// set up the gfal2 context
 	GError *error = NULL;
-	gfal2_cred_t *cred;
-
-	cred = gfal2_cred_new(GFAL_CRED_BEARER, token.c_str());
-
 	if (!token.empty()) {
-		gfal2_cred_clean(gfal2_ctx, &error);
-		gfal2_cred_set(gfal2_ctx, "dcache-xdc.desy.de", cred, &error);
-		if (error) {
-			std::stringstream ss;
-		    ss << gfal2_ctx.operation << " could not set the destination token "
+            int status = gfal2_set_opt_string(gfal2_ctx, "BEARER", "TOKEN", (char *) token.c_str(), &error);
+            if (status) {
+		std::stringstream ss;
+		ss << gfal2_ctx.operation << " could not set the token "
 		    		<< error->code << " " << error->message;
-		    g_clear_error(&error);
-		    throw UserError(ss.str());
-		}
+		g_clear_error(&error);
+		throw UserError(ss.str());
+            }
 	}
 
 }

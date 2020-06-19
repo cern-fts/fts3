@@ -17,6 +17,9 @@
 #include <dlfcn.h>
 
 #include <cstdlib>
+#include <fstream>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include "common/Logger.h"
@@ -35,7 +38,7 @@ int (*g_x509_scitokens_issuer_init_p)(char **) = NULL;
 char* (*g_x509_scitokens_issuer_get_token_p)(const char *, const char *, const char *,
                                              char**) = NULL;
 char *(*g_x509_macaroon_issuer_retrieve_p)(const char *, const char *, const char *, int,
-                                          const char **, char **) = NULL;
+                                           const char **, char **) = NULL;
 void *g_x509_scitokens_issuer_handle = NULL;
 
 
@@ -186,7 +189,7 @@ static std::string setupBearerToken(const std::string &issuer, const std::string
 
 static std::string setupMacaroon(const std::string &url, const std::string &proxy,
                                  const std::vector<std::string> &activity,
-				 unsigned validity)
+                                 unsigned validity)
 {
     initTokenLibrary();
 
@@ -219,45 +222,61 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
 }
 
-
-static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
-    Gfal2 &gfal2, Gfal2TransferParams &params)
+static std::string readIAMTokenFromConfigFile(const std::string &path)
 {
-    params.setStrictCopy(opts.strictCopy);
-    params.setCreateParentDir(true);
-    params.setReplaceExistingFile(opts.overwrite);
+    if (!path.empty()) {
+        std::ifstream file(path);
+        std::string   line;
+
+        while(std::getline(file, line))
+        {
+            // Skip TOKEN= and return the actual token
+            return line.substr(6);
+        }
+    }
+}
+
+static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
+                             Gfal2 &gfal2, Gfal2TransferParams &params)
+{
     bool macaroonRequestEnabledSource = false;
     bool macaroonRequestEnabledDestination = false;
     unsigned macaroonValidity = 180;
+    std::string IAMtoken;
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
-
-    //check source and destination protocol, so to enable macaroons
-    if ((transfer.source.protocol.find("dav")==0)  ||  (transfer.source.protocol.find("http") == 0)) {
-        macaroonRequestEnabledSource = true;
-    }
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
-
-    if ((transfer.destination.protocol.find("dav")==0)  ||  (transfer.destination.protocol.find("http") == 0)) {
-        macaroonRequestEnabledDestination = true;
-    }
+    // Check source and destination protocol whether to enable macaroons
+    macaroonRequestEnabledSource = ((transfer.source.protocol.find("dav") == 0) || (transfer.source.protocol.find("http") == 0));
+    macaroonRequestEnabledDestination = ((transfer.destination.protocol.find("dav") == 0) || (transfer.destination.protocol.find("http") == 0));
 
     if (macaroonRequestEnabledDestination || macaroonRequestEnabledSource) {
-         //request a macaroon longer twice the timeout as we could run both push and pull mode 
-         if (opts.timeout) {
-             macaroonValidity = ((unsigned) (2 * opts.timeout)/60) + 10 ;
-         } else if (transfer.userFileSize) {
-             macaroonValidity = ((unsigned) (2 * adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb))/60) + 10;
-         }
+        // Request a macaroon longer twice the timeout as we could run both push and pull mode
+        if (opts.timeout) {
+            macaroonValidity = ((unsigned) (2 * opts.timeout) / 60) + 10 ;
+        } else if (transfer.userFileSize) {
+            macaroonValidity = ((unsigned) (2 * adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb)) / 60) + 10;
+        }
     }
-  
-    // Attempt to retrieve an oauth token from the VO's issuer; if not,
-    // then try to retrieve a token from the SE itself.
-    if (!transfer.sourceTokenIssuer.empty()) {
+
+    if ("oauth2" == opts.authMethod && !opts.oauthFile.empty()) {
+    	try {
+    		IAMtoken = readIAMTokenFromConfigFile(opts.oauthFile);
+    		unlink(opts.oauthFile.c_str());
+    	} catch (const std::exception &ex) {
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file, no IAM token retrieved: " << ex.what() << commit;
+        }
+    }
+
+    // If a IAM token has been passed, set this as Bearer token.
+    // Otherwise, attempt to retrieve an OAuth token from the VO's issuer.
+    // If not, try to retrieve a token from the SE itself.
+    if ("oauth2" == opts.authMethod) {
+    	params.setSourceBearerToken(IAMtoken);
+    }
+    else if (!transfer.sourceTokenIssuer.empty()) {
         params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for source" << commit;
     }
-    else if (macaroonRequestEnabledSource) 
+    else if (macaroonRequestEnabledSource)
     {
         try
         {
@@ -265,9 +284,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             std::vector<std::string> activity_list;
             activity_list.reserve(2);
             activity_list.push_back("DOWNLOAD");
-	    activity_list.push_back("LIST");
+            activity_list.push_back("LIST");
             params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list, macaroonValidity));
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source." << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source"  << commit;
         }
         catch (const UrlCopyError &ex)
         {
@@ -275,8 +294,13 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for source; will use GSI proxy for authorization: " << ex.what() << commit;
         }
     }
-    if (!transfer.destTokenIssuer.empty()) {
+
+    if ("oauth2" == opts.authMethod) {
+    	params.setDestBearerToken(IAMtoken);
+    }
+    else if (!transfer.destTokenIssuer.empty()) {
         params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for destination" << commit;
     }
     else if (macaroonRequestEnabledDestination)
     {
@@ -288,9 +312,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             activity_list.push_back("MANAGE");
             activity_list.push_back("UPLOAD");
             activity_list.push_back("DELETE");
-	    activity_list.push_back("LIST");
+            activity_list.push_back("LIST");
             params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, activity_list, macaroonValidity));
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination." << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination" << commit;
         }
         catch (const UrlCopyError &ex)
         {
@@ -298,6 +322,19 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for destination; will use GSI proxy for authorization: " << ex.what() << commit;
         }
     }
+}
+
+static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
+                                Gfal2 &gfal2, Gfal2TransferParams &params)
+{
+    params.setStrictCopy(opts.strictCopy);
+    params.setCreateParentDir(true);
+    params.setReplaceExistingFile(opts.overwrite);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
+
+    setupTokenConfig(opts, transfer, gfal2, params);
 
     if (!transfer.sourceTokenDescription.empty()) {
         params.setSourceSpacetoken(transfer.sourceTokenDescription);
@@ -305,6 +342,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     if (!transfer.destTokenDescription.empty()) {
         params.setDestSpacetoken(transfer.destTokenDescription);
     }
+
     if (!transfer.checksumAlgorithm.empty()) {
     	try	{
     		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
@@ -319,6 +357,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     		else
     		    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
     	}
+    }
+
+    // Avoid TPC attempts in S3 to S3 transfers
+    if ((transfer.source.protocol.find("s3") == 0) && (transfer.destination.protocol.find("s3") == 0)) {
+        gfal2.set("HTTP PLUGIN", "ENABLE_REMOTE_COPY", false);
     }
 
     // Additional metadata
@@ -467,6 +510,17 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
 
+    // Release file for SRM source bring online
+    if (transfer.source.protocol == "srm" && !transfer.tokenBringOnline.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing file for SRM source" << commit;
+        try {
+            gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
+        }
+        catch (const Gfal2Exception &ex) {
+            throw UrlCopyError(SOURCE, TRANSFER_FINALIZATION, ex);
+        }
+    }
+
     // Validate destination size
     if (!opts.strictCopy) {
         uint64_t destSize;
@@ -518,7 +572,7 @@ void UrlCopyProcess::run(void)
         // Prepare gfal2 transfer parameters
         Gfal2TransferParams params;
         try {
-                setupTransferConfig(opts, transfer, gfal2, params);
+            setupTransferConfig(opts, transfer, gfal2, params);
         }
         catch (const UrlCopyError &ex) {
                 transfer.error.reset(new UrlCopyError(ex));

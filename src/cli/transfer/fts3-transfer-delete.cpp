@@ -45,7 +45,7 @@ int main(int ac, char* av[])
             // create and initialise the command line utility
             cli.parse(ac,av);
 
-            // validate command line options, and return respective gsoap context
+            // validate command line options
             if (cli.printHelp()) return 0;
             cli.validate();
 

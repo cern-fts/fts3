@@ -24,4 +24,3 @@ tag:
       DOCKER_FILE:  packaging/docker/Dockerfile-release
     tags:
         - docker-image-build
-
