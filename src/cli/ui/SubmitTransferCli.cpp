@@ -72,7 +72,8 @@ SubmitTransferCli::SubmitTransferCli()
         ("timeout", po::value<int>(), "timeout (expressed in seconds) that will be used for the given job")
         ("buff-size", po::value<int>(), "buffer size (expressed in bytes) that will be used for the given transfer-job")
         ("strict-copy", "disable all checks, just copy the file")
-        ("credentials", po::value<std::string>(), "additional credentials for the transfer (i.e. S3)");
+        ("credentials", po::value<std::string>(), "additional credentials for the transfer (i.e. S3)")
+        ("s3alternate", "use S3 alternate URL");
 
     // add hidden options
     hidden.add_options()
@@ -395,6 +396,9 @@ std::map<std::string, std::string> SubmitTransferCli::getParams()
     }
     if (vm.count("credentials")) {
         parameters[JobParameterHandler::CREDENTIALS] = vm["credentials"].as<std::string>();
+    }
+    if (vm.count("s3alternate")) {
+        parameters[JobParameterHandler::S3ALTERNATE] = "Y";
     }
 
     return parameters;
