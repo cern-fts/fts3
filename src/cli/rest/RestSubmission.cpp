@@ -230,6 +230,11 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
         {
             params.put("nostreams", param_itr->second);
         }
+    param_itr = me.parameters.find(JobParameterHandler::S3ALTERNATE);
+    if (param_itr != me.parameters.end())
+        {
+            params.put("s3alternate", true);
+        }
 
 
     // add params to root
