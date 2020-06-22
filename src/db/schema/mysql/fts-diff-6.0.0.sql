@@ -35,4 +35,4 @@ CREATE TABLE t_oauth2_providers (
 );
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (6, 0, 0, 'QoS daemon and OIDC integration diff');
+VALUES (6, 0, 0, 'QoS daemon, OIDC integration and archiving monitoring diff');
