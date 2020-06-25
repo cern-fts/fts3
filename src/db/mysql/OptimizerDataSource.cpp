@@ -207,7 +207,12 @@ public:
         " FROM t_file USE INDEX(idx_finish_time)"
         " WHERE "
         "   source_se = :sourceSe AND dest_se = :destSe "
-        "   AND file_state = 'FINISHED' AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
+        "   AND file_state = 'FINISHED' AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND) "
+        "UNION ALL "
+        "SELECT start_time, finish_time, transferred, user_filesize as filesize "
+        " FROM t_file "
+        " WHERE "
+        "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'SUBMITTED'",
         soci::use(pair.source, "sourceSe"), soci::use(pair.destination, "destSe"),
         soci::use(interval.total_seconds(), "interval"));
 
