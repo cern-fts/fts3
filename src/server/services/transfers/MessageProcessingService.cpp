@@ -71,8 +71,8 @@ void MessageProcessingService::runService()
                 break;
             }
 
-            //if conn to the db is lost, do not retrieve state, save it for later
-            //use one fast query
+            // if conn to the db is lost, do not retrieve state, save it for later
+            // use one fast query
             try
             {
                 db::DBSingleton::instance().getDBObjectInstance()->getDrain();
@@ -92,8 +92,8 @@ void MessageProcessingService::runService()
 
             if (!messages.empty())
             {
-                executeUpdate(messages);
-                db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);
+                handleOtherMessages(messages);
+                handleUpdateMessages(messages);
                 messages.clear();
             }
 
@@ -118,12 +118,12 @@ void MessageProcessingService::runService()
                 continue;
             }
 
-            if(!messagesUpdater.empty())
+            if (!messagesUpdater.empty())
             {
                 std::vector<fts3::events::MessageUpdater>::iterator iterUpdater;
                 for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
                 {
-                    std::string job = std::string((*iterUpdater).job_id()).substr(0, 36);
+                    std::string job = (*iterUpdater).job_id().substr(0, 36);
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
                         << "\nJob id: " << job
                         << "\nFile id: " << (*iterUpdater).file_id()
@@ -140,51 +140,80 @@ void MessageProcessingService::runService()
             }
         }
         catch (const std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-
-            for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
-            {
-                producer.runProducerStatus(*iterBreak);
-            }
-
-            std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
-            for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
-            {
-                fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
-                producer.runProducerLog( msgLogBreak );
-            }
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown exception: " << e.what() << commit;
+            dumpMessages();
         }
         catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
-
-            for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
-            {
-                producer.runProducerStatus(*iterBreak);
-            }
-
-            std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
-            for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
-            {
-                fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
-                producer.runProducerLog( msgLogBreak );
-            }
+            dumpMessages();
         }
+
         boost::this_thread::sleep(msgCheckInterval);
     }
 }
 
 
-void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
+void MessageProcessingService::performUpdateMessageDbChange(const fts3::events::Message& msg)
 {
     try
     {
-        //do not process the updates here, will be done separately
-        if(std::string(msg.transfer_status()).compare("UPDATE") == 0)
+        // process only UPDATE messages
+        if (msg.transfer_status().compare("UPDATE") != 0)
             return;
 
-        if (std::string(msg.transfer_status()).compare("FINISHED") == 0 ||
-                std::string(msg.transfer_status()).compare("FAILED") == 0 ||
-                std::string(msg.transfer_status()).compare("CANCELED") == 0)
+        std::ostringstream internal_params;
+        internal_params << "nostreams:" << static_cast<int>(msg.nostreams())
+                        << ",timeout:" << static_cast<int>(msg.timeout())
+                        << ",buffsersize:" << static_cast<int>(msg.buffersize());
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Update message job_id=" << msg.job_id()
+                                         << " file_id=" << msg.file_id()
+                                         << " file_size=" << msg.filesize()
+                                         << " file_params=" << internal_params.str()
+                                         << commit;
+
+        db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(msg);
+    }
+    catch (const std::exception& e)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue performUpdateMessageDbChange thrown exception " << e.what() << commit;
+
+        // Encountered unexpected DB error. Terminate all files of a given job
+        if (isUnrecoverableErrorMessage(e.what())) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Attempted database change with invalid values: " << e.what() << commit;
+            db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
+                    msg.job_id(), msg.process_id(), "Database change failed due to invalid values", true);
+            return;
+        }
+
+        producer.runProducerStatus(msg);
+    }
+    catch (...)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue performUpdateMessageDbChange thrown exception" << commit;
+        producer.runProducerStatus(msg);
+    }
+}
+
+
+void MessageProcessingService::performOtherMessageDbChange(const fts3::events::Message& msg)
+{
+    try
+    {
+        // do not process UPDATE messages
+        if (msg.transfer_status().compare("UPDATE") == 0)
+            return;
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << msg.job_id()
+                                        << "\nFile id: " << msg.file_id()
+                                        << "\nPid: " << msg.process_id()
+                                        << "\nState: " << msg.transfer_status()
+                                        << "\nSource: " << msg.source_se()
+                                        << "\nDest: " << msg.dest_se() << commit;
+
+        if (msg.transfer_status().compare("FINISHED") == 0 ||
+            msg.transfer_status().compare("FAILED") == 0 ||
+            msg.transfer_status().compare("CANCELED") == 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO)
                 << "Removing job from monitoring list " << msg.job_id() << " " << msg.file_id()
@@ -192,17 +221,17 @@ void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
             ThreadSafeList::get_instance().removeFinishedTr(msg.job_id(), msg.file_id());
         }
 
-        if(std::string(msg.transfer_status()).compare("FAILED") == 0)
+        if (msg.transfer_status().compare("FAILED") == 0)
         {
             try
             {
-                //multiple replica files belonging to a job will not be retried
+                // multiple replica files belonging to a job will not be retried
                 int retry = db::DBSingleton::instance().getDBObjectInstance()->getRetry(msg.job_id());
 
-                if(msg.retry() == true && retry > 0 && msg.file_id() > 0)
+                if (msg.retry() == true && retry > 0 && msg.file_id() > 0)
                 {
-                    int retryTimes = db::DBSingleton::instance().getDBObjectInstance()->getRetryTimes(msg.job_id(),
-                        msg.file_id());
+                    int retryTimes = db::DBSingleton::instance().getDBObjectInstance()->getRetryTimes(msg.job_id(), msg.file_id());
+
                     if (retryTimes <= retry - 1)
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(
@@ -213,35 +242,22 @@ void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
             }
             catch (std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue performOtherMessageDbChange throw exception when set retry " << e.what() << commit;
             }
             catch (...)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue performOtherMessageDbChange throw exception when set retry " << commit;
             }
         }
 
-        /*session reuse process died or terminated unexpected, must terminate all files of a given job*/
-        if (msg.transfer_message().find("Transfer terminate handler called") != std::string::npos ||
-            msg.transfer_message().find("Transfer process died") != std::string::npos ||
-            msg.transfer_message().find("because it was stalled") != std::string::npos ||
-            msg.transfer_message().find("canceled by the user") != std::string::npos ||
-            msg.transfer_message().find("undefined symbol") != std::string::npos ||
-            msg.transfer_message().find("canceled because it was not responding") != std::string::npos)
+        // session reuse process died or terminated unexpected. Terminate all files of a given job
+        if (isUnrecoverableErrorMessage(msg.transfer_message()))
         {
-            if(std::string(msg.job_id()).length() == 0)
-            {
-                db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
-                    std::string(), msg.process_id(), msg.transfer_message());
-            }
-            else
-            {
-                db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
-                    msg.job_id(), msg.process_id(), msg.transfer_message());
-            }
+            db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
+                msg.job_id(), msg.process_id(), msg.transfer_message());
         }
 
-        //update file/job state
+        // update file and job state
         boost::tuple<bool, std::string> updated = db::DBSingleton::instance()
             .getDBObjectInstance()->updateTransferStatus(
                 msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
@@ -261,20 +277,62 @@ void MessageProcessingService::updateDatabase(const fts3::events::Message& msg)
             SingleTrStateInstance::instance().sendStateMessage(msg.job_id(), msg.file_id());
         }
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue performOtherMessageDbChange throw exception " << e.what() << commit;
+
+        // Encountered unexpected DB error. Terminate all files of a given job
+        if (isUnrecoverableErrorMessage(e.what())) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Attempted database change with invalid values: " << e.what() << commit;
+            db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
+                    msg.job_id(), msg.process_id(), "Database change failed due to invalid values", true);
+            return;
+        }
+
         producer.runProducerStatus(msg);
     }
     catch (...)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue performOtherMessageDbChange throw exception" << commit;
         producer.runProducerStatus(msg);
     }
 }
 
 
-void MessageProcessingService::executeUpdate(const std::vector<fts3::events::Message>& messages)
+void MessageProcessingService::handleUpdateMessages(const std::vector<fts3::events::Message>& messages)
+{
+    for (auto iter = messages.begin(); iter != messages.end(); ++iter)
+    {
+        try
+        {
+            if (boost::this_thread::interruption_requested())
+            {
+                dumpMessages();
+                return;
+            }
+
+            if ((*iter).transfer_status().compare("UPDATE") == 0)
+            {
+                performUpdateMessageDbChange(*iter);
+            }
+        }
+        catch (const boost::filesystem::filesystem_error& e)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Caught exception related to message dumping: " << e.what() << commit;
+        }
+        catch (const std::exception& e)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
+        }
+        catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
+        }
+    }
+}
+
+
+void MessageProcessingService::handleOtherMessages(const std::vector<fts3::events::Message>& messages)
 {
     fts3::events::MessageUpdater msgUpdater;
 
@@ -282,21 +340,10 @@ void MessageProcessingService::executeUpdate(const std::vector<fts3::events::Mes
     {
         try
         {
-            if(boost::this_thread::interruption_requested())
+            if (boost::this_thread::interruption_requested())
             {
-                for (auto iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
-                {
-                    producer.runProducerStatus(*iterBreak);
-                }
-
-                std::map<int, fts3::events::MessageLog>::const_iterator iterLogBreak;
-                for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
-                {
-                    fts3::events::MessageLog msgLogBreak = (*iterLogBreak).second;
-                    producer.runProducerLog( msgLogBreak );
-                }
-
-                break;
+                dumpMessages();
+                return;
             }
 
             msgUpdater.set_job_id((*iter).job_id());
@@ -309,29 +356,56 @@ void MessageProcessingService::executeUpdate(const std::vector<fts3::events::Mes
 
             if ((*iter).transfer_status().compare("UPDATE") != 0)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << (*iter).job_id()
-                << "\nFile id: " << (*iter).file_id()
-                << "\nPid: " << (*iter).process_id()
-                << "\nState: " << (*iter).transfer_status()
-                << "\nSource: " << (*iter).source_se()
-                << "\nDest: " << (*iter).dest_se() << commit;
-
-                updateDatabase((*iter));
+                performOtherMessageDbChange(*iter);
             }
         }
         catch (const boost::filesystem::filesystem_error& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Caught exception related to message dumping: " << e.what() << commit;
         }
-        catch (std::exception& ex)
+        catch (const std::exception& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
         }
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
         }
-    } //end for
+    }
+}
+
+
+void MessageProcessingService::dumpMessages()
+{
+    try
+    {
+        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
+        {
+            producer.runProducerStatus(*iter);
+        }
+
+        for (auto iterLog = messagesLog.begin(); iterLog != messagesLog.end(); ++iterLog)
+        {
+            auto messageLog = (*iterLog).second;
+            producer.runProducerLog(messageLog);
+        }
+    }
+    catch (const boost::filesystem::filesystem_error& e)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Caught exception while dumping messages: " << e.what() << commit;
+    }
+}
+
+
+bool MessageProcessingService::isUnrecoverableErrorMessage(const std::string& errmsg)
+{
+    return errmsg.find("Transfer terminate handler called") != std::string::npos ||
+           errmsg.find("Transfer process died") != std::string::npos ||
+           errmsg.find("because it was stalled") != std::string::npos ||
+           errmsg.find("canceled by the user") != std::string::npos ||
+           errmsg.find("undefined symbol") != std::string::npos ||
+           errmsg.find("canceled because it was not responding") != std::string::npos ||
+           errmsg.find("Out of range value") != std::string::npos;
 }
 
 } // end namespace server

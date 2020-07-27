@@ -502,6 +502,12 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Jul 27 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.5-1
+- Rework the message handling mechanism
+
+* Wed Jun 10 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-2
+- Remove soci < 4.0.0 requirement
+
 * Thu May 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.4-1
 - Release focused on HTTP TPC tests
 - Fix SRM pin leak after copy

@@ -1823,64 +1823,45 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
 }
 
 
-bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
+bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message, bool force)
 {
-    bool ok = true;
     soci::session sql(*connectionPool);
-    std::string job_id;
-    std::string reuse;
-    soci::indicator reuseInd = soci::i_ok;
+    std::string job_id = jobId;
+    bool doUpdate = false;
 
     try
     {
-        if(jobId.length() == 0)
-        {
-            sql << " SELECT job_id from t_file where pid=:pid and file_state = 'ACTIVE' LIMIT 1",
+        if (job_id.empty()) {
+            sql << "SELECT job_id FROM t_file WHERE pid = :pid AND file_state = 'ACTIVE' LIMIT 1",
                 soci::use(pid), soci::into(job_id);
+        }
 
-            sql << " SELECT job_type FROM t_job WHERE job_id = :jobId AND job_type IS NOT NULL",
+        if (!force) {
+            std::string reuse;
+            soci::indicator reuseInd = soci::i_ok;
+
+            sql << "SELECT job_type FROM t_job WHERE job_id = :job_id AND job_type IS NOT NULL",
                 soci::use(job_id), soci::into(reuse, reuseInd);
-
-            if (sql.got_data() && (reuse == "Y" || reuse == "H"))
-            {
-                sql.begin();
-                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
-                    " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
-                    soci::use(message),
-                    soci::use(job_id),
-                    soci::use(pid);
-                sql.commit();
-            }
-
+            doUpdate = (sql.got_data() && (reuse == "Y" || reuse == "H"));
         }
-        else
+
+        if (force || doUpdate)
         {
-            sql << " SELECT job_type FROM t_job WHERE job_id = :jobId AND job_type IS NOT NULL",
-                soci::use(jobId), soci::into(reuse, reuseInd);
-
-            if (sql.got_data() && (reuse == "Y" || reuse == "H"))
-            {
-                sql.begin();
-                sql << " UPDATE t_file SET file_state = 'FAILED', finish_time=UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
-                    " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
-                    soci::use(message),
-                    soci::use(job_id),
-                    soci::use(pid);
-                sql.commit();
-            }
+            sql.begin();
+            sql << "UPDATE t_file SET file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
+                    "reason = :message WHERE (job_id = :job_id OR pid = :pid) AND file_state NOT IN ('FINISHED', 'FAILED', 'CANCELED')",
+                soci::use(message),
+                soci::use(job_id),
+                soci::use(pid);
+            sql.commit();
         }
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        return ok;
     }
     catch (...)
     {
         sql.rollback();
-        return ok;
     }
-    return ok;
+
+    return true;
 }
 
 
@@ -2248,7 +2229,7 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
             internalParams.clear();
 
             auto msg = *iter;
-            if(msg.transfer_status().compare("UPDATE") == 0)
+            if (msg.transfer_status().compare("UPDATE") == 0)
             {
                 fileId = msg.file_id();
                 filesize = msg.filesize();
@@ -2263,6 +2244,46 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
 
     }
     catch (std::exception& e)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+}
+
+
+void MySqlAPI::updateProtocol(const fts3::events::Message& msg)
+{
+    soci::session sql(*connectionPool);
+
+    if (msg.transfer_status().compare("UPDATE") != 0)
+        return;
+
+    try
+    {
+        double filesize = msg.filesize();
+        uint64_t fileId = msg.file_id();
+
+        std::ostringstream internalParams;
+        internalParams << "nostreams:" << static_cast<int>(msg.nostreams())
+                       << ",timeout:" << static_cast<int>(msg.timeout())
+                       << ",buffsersize:" << static_cast<int>(msg.buffersize());
+        std::string params = internalParams.str();
+
+        soci::statement stmt = (
+                sql.prepare << "UPDATE t_file set internal_file_params=:params, filesize=:filesize WHERE file_id=:fileId",
+                        soci::use(params),
+                        soci::use(filesize),
+                        soci::use(fileId));
+
+        sql.begin();
+        stmt.execute(true);
+        sql.commit();
+    } catch (std::exception& e)
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
