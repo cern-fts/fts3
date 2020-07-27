@@ -90,6 +90,7 @@ public:
     static const std::string TIMEOUT;
     static const std::string STRICT_COPY;
     static const std::string CREDENTIALS;
+    static const std::string S3ALTERNATE;
     ///@}
 
     /**

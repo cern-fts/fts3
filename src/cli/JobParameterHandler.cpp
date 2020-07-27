@@ -44,6 +44,7 @@ const std::string JobParameterHandler::NOSTREAMS = "nostreams";
 const std::string JobParameterHandler::TIMEOUT = "timeout";
 const std::string JobParameterHandler::STRICT_COPY = "strict_copy";
 const std::string JobParameterHandler::CREDENTIALS = "credentials";
+const std::string JobParameterHandler::S3ALTERNATE = "s3alternate";
 
 
 JobParameterHandler::JobParameterHandler()

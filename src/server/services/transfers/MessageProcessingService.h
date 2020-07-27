@@ -53,8 +53,24 @@ public:
     virtual void runService();
 
 private:
-    void updateDatabase(const fts3::events::Message& msg);
-    void executeUpdate(const std::vector<fts3::events::Message>& messages);
+    /// Handle only messages whose message state is UPDATE.
+    /// These messages are usually sent to update certain fields such as filesize.
+    void handleUpdateMessages(const std::vector<fts3::events::Message>& messages);
+
+    /// Handle all messages except for UPDATE ones.
+    /// Normally, these messages change the file and job status.
+    void handleOtherMessages(const std::vector<fts3::events::Message>& messages);
+
+    /// Perform the database change associated with an UPDATE type message
+    void performUpdateMessageDbChange(const fts3::events::Message& msg);
+    /// Perform the database change associated with a non-UPDATE type message
+    void performOtherMessageDbChange(const fts3::events::Message& msg);
+
+    /// Dump the messages and messages logs onto disk
+    void dumpMessages();
+
+    /// Return whether an error message cannot be recovered from
+    bool isUnrecoverableErrorMessage(const std::string& errmsg);
 };
 
 } // end namespace server

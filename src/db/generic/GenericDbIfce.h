@@ -156,9 +156,10 @@ public:
     /// @param jobId    The job id
     /// @param pid      The PID of the fts_url_copy
     /// @param message  The error message
+    /// @param force    Force termination regardless of job_type
     /// @note           If jobId is empty, the implementation may look for the job bound to the pid.
     ///                 Note that I am not completely sure you can get an empty jobId.
-    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
+    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message, bool force = false) = 0;
 
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
     /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
@@ -202,7 +203,10 @@ public:
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
 
     /// Update the protocol parameters used for each transfer
-    virtual void updateProtocol(const std::vector<fts3::events::Message>& tempProtocol) = 0;
+    virtual void updateProtocol(const std::vector<fts3::events::Message>& messages) = 0;
+
+    /// Update the protocol parameters for this particular transfer
+    virtual void updateProtocol(const fts3::events::Message& message) = 0;
 
     /// Get the state the transfer identified by jobId/fileId
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, uint64_t fileId) = 0;
