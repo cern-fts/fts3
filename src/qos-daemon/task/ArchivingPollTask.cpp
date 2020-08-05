@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2019
+ * Copyright (c) CERN 2013-2020
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -28,9 +28,8 @@ boost::shared_mutex ArchivingPollTask::mx;
 std::set<std::pair<std::string, std::string>> ArchivingPollTask::active_urls;
 
 void ArchivingPollTask::run(const boost::any&)
-
 {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ArchivingPollTask starting" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ArchivingPollTask starting" << commit;
 	if (timeout_occurred()) return;
 	// handle cancelled jobs/files
 	handle_canceled();
@@ -52,84 +51,71 @@ void ArchivingPollTask::run(const boost::any&)
 	std::vector<GError*> errors(urls.size(), NULL);
 	std::vector<const char*> failedUrls;
 
-	for (size_t i = 0; i < urls.size(); ++i) {
-		auto ids = ctx.getIDs(urls[i]);
-		char buffer[1024];
+	int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
 
-		ssize_t ret = gfal2_getxattr(gfal2_ctx,  urls[i], GFAL_XATTR_STATUS, buffer, sizeof(buffer), &errors[i]);
+	// Status return code meaning:
+	//  0  - Not all files are in terminal state
+	//  1  - All files are in terminal successful state
+	//  2  - All files are in terminal state, but not all are successful
+	// -1  - All files are in error state
 
-		//check for errors
-		if (ret > 0 && strlen(buffer) > 0 && errors[i] == 0) {
-			bool found = false;
-			//check for NEARLINE or ONLINE_AND_NEARLINE
-			
-			if (strncmp(buffer, GFAL_XATTR_STATUS_NEARLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE)) == 0) {
-				found = true;
-			} else if (strncmp(buffer, GFAL_XATTR_STATUS_NEARLINE_ONLINE, sizeof(GFAL_XATTR_STATUS_NEARLINE_ONLINE)) == 0) {
-				found = true;
-			}
-                        
-			if (found) {
+    for (size_t i = 0 ; i < urls.size(); i++) {
+        auto ids = ctx.getIDs(urls[i]);
 
-				FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    		<< "ARCHIVING FINISHED for "
-							<< urls[i] << commit;
-				//update the state of the file to finished ( to do only for one file)
-				for (auto it = ids.begin(); it != ids.end(); ++it) {
-					ctx.updateState(it->first, it->second, "FINISHED", JobError());
-				}
-				ctx.removeUrl(urls[i]);
-				
-			} else {
-				forcePoll = true;
-                                FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                    		<< "ARCHIVING ONGOING for " << urls[i] << commit;
-				
-			}
-		}
-		else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-			FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    		<< "ARCHIVING  NOT FINISHED for " << urls[i]
-			        << ". Communication error, soft failure: " << errors[i]->message
-                                << commit;
-			forcePoll = true;
-		}
-		else if (errors[i]) {
-			failedUrls.push_back(urls[i]);
+        if (errors[i]) {
+            if (errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING ONGOING for " << urls[i] << "."
+                                                  << " Communication error, soft failure: " << errors[i]->message
+                                                  << commit;
+                forcePoll = true;
+            } else if (errors[i]->code == EAGAIN) {
+                if (status == 0) {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING ONGOING for " << urls[i] << commit;
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << "."
+                                                       << " EAGAIN error code not expected in terminal state: "
+                                                       << errors[i]->message << commit;
+                    for (auto it = ids.begin(); it != ids.end(); ++it) {
+                        ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
+                    }
+                    failedUrls.push_back(urls[i]);
+                }
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ":"
+                                                  << errors[i]->code << " " << errors[i]->message << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
+                }
+                failedUrls.push_back(urls[i]);
+            }
+        } else {
+            if (status >= 0) {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING FINISHED for " << urls[i] << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
+                }
+                ctx.removeUrl(urls[i]);
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ":"
+                                                  << errors[i]->code << " " << errors[i]->message << commit;
+                for (auto it = ids.begin(); it != ids.end(); ++it) {
+                    ctx.updateState(it->first, it->second, "FAILED",
+                                    JobError("ARCHIVING", -1, "Error not set by Gfal2"));
+                }
+                failedUrls.push_back(urls[i]);
+            }
+        }
 
-			FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-			<< "ARCHIVING polling FAILED for " << urls[i] << ": "
-			<< errors[i]->code << " " << errors[i]->message
-			<< commit;
+        g_clear_error(&errors[i]);
+    }
 
-			for (auto it = ids.begin(); it != ids.end(); ++it) {
-				ctx.updateState(it->first, it->second,
-						"FAILED", JobError("ARCHIVING", errors[i])
-				);
-			}
-		}
-		else
-		{
-			failedUrls.push_back(urls[i]);
-
-			FTS3_COMMON_LOGGER_NEWLOG(ERR)
-			<< "ARCHIVING FAILED for " << urls[i] << ": returned -1 but error was not set " << commit;
-			for (auto it = ids.begin(); it != ids.end(); ++it) {
-				ctx.updateState(it->first, it->second,
-						"FAILED", JobError("ARCHIVING", -1, "Error not set by gfal2")
-				);
-			}
-		}
-		g_clear_error(&errors[i]);
-	}
-
-	// If status was 0, not everything is terminal, so schedule a new poll
-	if (forcePoll) {
-		time_t interval = getPollInterval(++nPolls), now = time(NULL);
+	// Schedule a new poll
+	if (status == 0 || forcePoll) {
+		time_t interval = getPollInterval(++nPolls);
+		time_t now = time(NULL);
 		wait_until = now + interval;
-		FTS3_COMMON_LOGGER_NEWLOG(INFO)
-		<< "ARCHIVING polling " << ctx.getLogMsg() << commit;
 
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling " << ctx.getLogMsg() << commit;
 		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
 		ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
 	}
@@ -179,5 +165,3 @@ bool ArchivingPollTask::timeout_occurred()
 	// confirm the timeout
 	return true;
 }
-
-

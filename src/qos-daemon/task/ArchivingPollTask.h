@@ -33,16 +33,17 @@
 #include "db/generic/SingleDbInstance.h"
 #include "Gfal2Task.h"
 #include "../context/ArchivingContext.h"
+
+
 /**
- * A poll task: checks whether a list of url has been archived
+ * An archiving poll task: checks whether a list of URLs have been archived
  *
  * If the archive operation is not finished yet spawns another ArchivingPollTask.
  * If the operation fails and retries are set spawns another ArchivingPollTask.
  *
- *
- * @see ArchivingTask
+ * @see PollTask
  */
-class ArchivingPollTask :  public Gfal2Task
+class ArchivingPollTask : public Gfal2Task
 {
 public:
     /**
@@ -64,8 +65,8 @@ public:
      *
      * @param copy : a archive task (stills the gfal2 context of this object)
      */
-	ArchivingPollTask(ArchivingPollTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),   nPolls(copy.nPolls), 
-		wait_until(copy.wait_until)
+    ArchivingPollTask(ArchivingPollTask &&copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),
+        nPolls(copy.nPolls), wait_until(copy.wait_until)
     {
     }
 
@@ -129,14 +130,15 @@ private:
             return (2 << nPolls);
     }
 
+    /// archiving details
+    ArchivingContext ctx;
+
     /// number of archive task polls
     int nPolls;
 
     /// wait in the wait room until given time
     time_t wait_until;
-    
-      /// archiving details
-    ArchivingContext ctx;
+
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     
