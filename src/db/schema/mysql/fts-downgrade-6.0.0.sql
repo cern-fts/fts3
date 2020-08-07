@@ -29,4 +29,10 @@ ALTER TABLE `t_file_backup`
 
 DROP TABLE t_oauth2_providers;
 
+ALTER TABLE `t_cloudStorage`
+	MODIFY `cloudStorage_name` varchar(50) NOT NULL;
+
+ALTER TABLE `t_cloudStorageUser`
+        MODIFY `cloudStorage_name` varchar(36) NOT NULL;
+
 UPDATE t_schema_vers SET MAJOR=5, PATCH=0, MESSAGE='DOWNGRADE from 6.0.0' where MAJOR = 6;

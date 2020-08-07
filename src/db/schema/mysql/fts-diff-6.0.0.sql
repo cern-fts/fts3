@@ -34,5 +34,11 @@ CREATE TABLE t_oauth2_providers (
     PRIMARY KEY(`provider_url`)
 );
 
+ALTER TABLE `t_cloudStorage`
+	MODIFY `cloudStorage_name` varchar(150) NOT NULL;
+	
+ALTER TABLE `t_cloudStorageUser`
+        MODIFY `cloudStorage_name` varchar(150) NOT NULL;
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (6, 0, 0, 'QoS daemon, OIDC integration and archiving monitoring diff');

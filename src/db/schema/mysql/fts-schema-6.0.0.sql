@@ -100,7 +100,7 @@ DROP TABLE IF EXISTS `t_cloudStorage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_cloudStorage` (
-  `cloudStorage_name` varchar(50) NOT NULL,
+  `cloudStorage_name` varchar(150) NOT NULL,
   `app_key` varchar(255) DEFAULT NULL,
   `app_secret` varchar(255) DEFAULT NULL,
   `service_api_url` varchar(1024) DEFAULT NULL,
@@ -118,7 +118,7 @@ DROP TABLE IF EXISTS `t_cloudStorageUser`;
 CREATE TABLE `t_cloudStorageUser` (
   `user_dn` varchar(700) NOT NULL DEFAULT '',
   `vo_name` varchar(100) NOT NULL DEFAULT '',
-  `cloudStorage_name` varchar(36) NOT NULL,
+  `cloudStorage_name` varchar(150) NOT NULL,
   `access_token` varchar(255) DEFAULT NULL,
   `access_token_secret` varchar(255) DEFAULT NULL,
   `request_token` varchar(255) DEFAULT NULL,
