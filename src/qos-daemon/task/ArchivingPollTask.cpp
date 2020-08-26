@@ -81,7 +81,7 @@ void ArchivingPollTask::run(const boost::any&)
                     failedUrls.push_back(urls[i]);
                 }
             } else {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ":"
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
                                                   << errors[i]->code << " " << errors[i]->message << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
                     ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
@@ -96,7 +96,7 @@ void ArchivingPollTask::run(const boost::any&)
                 }
                 ctx.removeUrl(urls[i]);
             } else {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ":"
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
                                                   << errors[i]->code << " " << errors[i]->message << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
                     ctx.updateState(it->first, it->second, "FAILED",
