@@ -887,7 +887,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fi
 }
 
 
-void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
+uint64_t MySqlAPI::getNextHop(soci::session& sql, const std::string& jobId)
 {
     uint64_t nextFileId;
     soci::indicator nextFileIdInd;
@@ -896,7 +896,16 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
            "WHERE job_id = :jobId AND file_state = 'NOT_USED' "
            "ORDER BY file_id ASC "
            "LIMIT 1", soci::use(jobId), soci::into(nextFileId, nextFileIdInd);
-    if (nextFileIdInd != soci::i_ok) {
+
+    return (nextFileIdInd == soci::i_ok) ? nextFileId : 0;
+}
+
+
+void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
+{
+    uint64_t nextFileId = getNextHop(sql, jobId);
+
+    if (nextFileId == 0) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No more hops for " << jobId << commit;
         return;
     }
@@ -905,8 +914,10 @@ void MySqlAPI::useNextHop(soci::session& sql, std::string jobId)
            "SET file_state = 'SUBMITTED', finish_time=NULL "
            "WHERE file_id = :fileId AND file_state = 'NOT_USED'",
            soci::use(nextFileId);
+
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Next hop for " << jobId << ": " << nextFileId << commit;
 }
+
 
 void MySqlAPI::setNullDestSURLMultiHop(soci::session& sql, std::string jobId)
 {
@@ -916,6 +927,22 @@ void MySqlAPI::setNullDestSURLMultiHop(soci::session& sql, std::string jobId)
            "WHERE job_id = :jobId AND file_state = 'NOT_USED'",
            soci::use(jobId);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Nullify multihop dest_surl_uuid for " << jobId << commit;
+}
+
+
+bool MySqlAPI::isArchivingTransfer(soci::session& sql, const std::string& jobId,
+                                   const Job::JobType& jobType, int archiveTimeout)
+{
+    bool isFinalTransfer = true;
+
+    if (jobType == Job::kTypeMultiHop) {
+        isFinalTransfer = (getNextHop(sql, jobId) == 0);
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Check if archiving transfer: final_ransfer=" << isFinalTransfer
+                                     << " archive_timeout=" << archiveTimeout;
+
+    return isFinalTransfer && (archiveTimeout > -1);
 }
 
 
@@ -1170,8 +1197,9 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
     {
         sql.begin();
         
-        std::string storedState, jobState, archiveTimeout;
-        soci::indicator archiveTimeoutNull = soci::i_ok;
+        std::string storedState, jobState, archiveTimeoutStr;
+        soci::indicator archiveTimeoutInd = soci::i_ok;
+        int archiveTimeout = -1;
         Job::JobType jobType;
 
         time_t now = time(NULL);
@@ -1185,7 +1213,8 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
 
         // Need to know the type of job, to know what's coming next
         sql << "SELECT job_type, job_state, archive_timeout FROM t_job WHERE job_id = :job_id",
-            soci::use(jobId), soci::into(jobType), soci::into(jobState), soci::into(archiveTimeout, archiveTimeoutNull);
+            soci::use(jobId), soci::into(jobType), soci::into(jobState),
+            soci::into(archiveTimeoutStr, archiveTimeoutInd);
 
         // query for the file state in DB
         sql << "SELECT file_state, dest_surl_uuid FROM t_file WHERE file_id=:fileId",
@@ -1193,7 +1222,11 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             soci::into(storedState),
             soci::into(destSurlUuid, destSurlUuidInd);
 
-        bool isArchiving = (archiveTimeoutNull == soci::i_ok && std::atoi(archiveTimeout.c_str()) > -1);
+        if (archiveTimeoutInd == soci::i_ok) {
+            archiveTimeout = std::atoi(archiveTimeoutStr.c_str());
+        }
+
+        bool isArchiving = isArchivingTransfer(sql, jobId, jobType, archiveTimeout);
         bool isStaging = (storedState == "STAGING");
 
         // If file is in terminal don't do anything, just return
@@ -1268,7 +1301,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         }
         
         // Move the new state to ARCHIVING if the transfer completed and the archive timeout is set
-        if (newFileState == "FINISHED" && isArchiving) {
+        if (newFileState == "FINISHED" && isArchivingTransfer(sql, jobId, jobType, archiveTimeout)) {
             newFileState = "ARCHIVING";
         }
 

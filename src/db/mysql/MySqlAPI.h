@@ -350,9 +350,14 @@ private:
 
     void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd);
 
+    uint64_t getNextHop(soci::session& sql, const std::string& jobId);
+
     void useNextHop(soci::session& sql, std::string jobId);
 
     void setNullDestSURLMultiHop(soci::session& sql, std::string jobId);
+
+    bool isArchivingTransfer(soci::session& sql, const std::string& jobId,
+                             const Job::JobType& jobType, int archiveTimeout);
 
     bool getDrainInternal(soci::session& sql);
 
