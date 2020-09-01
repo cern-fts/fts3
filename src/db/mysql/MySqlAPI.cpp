@@ -1391,6 +1391,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
         int numberOfFilesFinished = 0;
         int numberOfFilesFailed = 0;
         int numberOfStaging = 0;
+        int numberOfFilesArchiving = 0;
 
         int numberOfFilesNotCanceled = 0;
         int numberOfFilesNotCanceledNorFailed = 0;
@@ -1475,6 +1476,14 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             soci::use(jobId),
             soci::into(numberOfStaging);
 
+        // number of files archiving
+        sql << " SELECT COUNT(DISTINCT file_index) "
+            " FROM t_file "
+            " WHERE job_id = :jobId "
+            "   AND file_state = 'ARCHIVING' ",
+            soci::use(jobId),
+            soci::into(numberOfFilesArchiving);
+
         // number of files that were not canceled nor failed
         sql << " SELECT COUNT(DISTINCT file_index) "
             " FROM t_file "
@@ -1556,7 +1565,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                     soci::use(jobId, "jobId"));
                 stmt6.execute(true);
                 sql.commit();
-
             }
         }
         // Job not finished yet
@@ -1584,6 +1592,25 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                             "SET job_state = :state "
                                             "WHERE job_id = :jobId AND job_state NOT IN ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ",
                                             soci::use(newState, "state"), soci::use(jobId, "jobId"));
+                stmt8.execute(true);
+
+                sql.commit();
+            }
+            // all ongoing files are in archiving state
+            else if (numberOfFilesArchiving > 0 &&
+                     (numberOfFilesInJob == numberOfFilesTerminal + numberOfFilesArchiving)) {
+                // re-execute here just in case
+                stmt1.execute(true);
+
+                if (currentState == "ARCHIVING")
+                    return true;
+
+                sql.begin();
+
+                soci::statement stmt8 = (
+                    sql.prepare << "UPDATE t_job SET job_state = 'ARCHIVING' "
+                                   "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')",
+                            soci::use(jobId, "jobId"));
                 stmt8.execute(true);
 
                 sql.commit();
