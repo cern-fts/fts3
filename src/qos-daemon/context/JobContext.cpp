@@ -152,18 +152,16 @@ std::string JobContext::getLogMsg() const
 
     for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j) {
         if (it_j != jobs.begin()) {
-            ss << ",";
+            ss << ", ";
         }
 
         ss << it_j->first << " (";
         for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
             for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f) {
-                if (it_f != it_u->second.begin()) {
-                    ss << ", ";
-                }
-
-                ss << *it_f;
+                ss << *it_f << ", ";
             }
+
+        ss.seekp(-2, std::ios_base::end);
         ss << ")";
     }
 
