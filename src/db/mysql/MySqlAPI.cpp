@@ -3993,7 +3993,7 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
         soci::rowset<soci::row> rs =
                 (
                         sql.prepare <<
-                        " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.archive_timeout, "
+                        " SELECT f.vo_name, f.dest_surl, f.job_id, f.file_id, j.archive_timeout, "
                         " j.user_dn, j.cred_id "
                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                         " WHERE  "
@@ -4008,7 +4008,7 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
         {
             soci::row const& row = *i3;
             std::string vo_name = row.get<std::string>("vo_name");
-            std::string source_url = row.get<std::string>("source_surl");
+            std::string dest_url = row.get<std::string>("dest_surl");
             std::string job_id = row.get<std::string>("job_id");
             uint64_t file_id = row.get<unsigned long long>("file_id");
             int archiveTimeout = row.get<int>("archive_timeout",0);
@@ -4018,8 +4018,8 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
             
             archiveOps.emplace_back(
                     job_id, file_id, vo_name,
-                    user_dn, cred_id, source_url,
-                        archiveTimeout
+                    user_dn, cred_id, dest_url,
+                    archiveTimeout
             );
         }
     }
