@@ -18,19 +18,21 @@
  * limitations under the License.
  */
 
-#ifndef BRINGONLINE_SERVER_H_
-#define BRINGONLINE_SERVER_H_
+#ifndef QOS_SERVER_H_
+#define QOS_SERVER_H_
 
 #include "common/Singleton.h"
 #include "common/ThreadPool.h"
 
 #include "state/DeletionStateUpdater.h"
 #include "state/StagingStateUpdater.h"
+#include "state/ArchivingStateUpdater.h"
 #include "task/Gfal2Task.h"
 #include "task/WaitingRoom.h"
 
 class PollTask;
 class CDMIPollTask;
+class ArchivingPollTask;
 
 class QoSServer: public fts3::common::Singleton<QoSServer>
 {
@@ -50,6 +52,10 @@ public:
         return stagingStateUpdater;
     }
 
+    ArchivingStateUpdater& getArchivingStateUpdater() {
+        return archivingStateUpdater;
+    }
+
     WaitingRoom<PollTask>& getWaitingRoom() {
         return waitingRoom;
     }
@@ -58,14 +64,20 @@ public:
         return cdmiWaitingRoom;
     }
 
+    WaitingRoom<ArchivingPollTask>& getArchivingWaitingRoom() {
+        return archivingWaitingRoom;
+    }
+
 private:
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
     WaitingRoom<PollTask> waitingRoom;
     WaitingRoom<CDMIPollTask> cdmiWaitingRoom;
+    WaitingRoom<ArchivingPollTask> archivingWaitingRoom;
 
     DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;
+    ArchivingStateUpdater archivingStateUpdater;
 };
 
 

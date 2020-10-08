@@ -26,9 +26,12 @@
 
 #include "task/PollTask.h"
 #include "task/CDMIPollTask.h"
+#include "task/ArchivingPollTask.h"
 #include "task/WaitingRoom.h"
 #include "fetch/FetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
+#include "fetch/FetchArchiving.h"
+#include "fetch/FetchCancelArchiving.h"
 #include "fetch/FetchDeletion.h"
 #include "fetch/CDMIFetchQosTransition.h"
 #include "state/StagingStateUpdater.h"
@@ -59,7 +62,7 @@ static void heartBeat(void)
         try {
             //check if draining is on
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking files for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
@@ -113,20 +116,32 @@ void QoSServer::start(void)
     CDMIFetchQosTransition cdmifs(threadpool);
     FetchCancelStaging fcs(threadpool);
     FetchDeletion fd(threadpool);
+    FetchArchiving fa(threadpool);
+    FetchCancelArchiving fca(threadpool);
 
     waitingRoom.attach(threadpool);
     cdmiWaitingRoom.attach(threadpool);
+    archivingWaitingRoom.attach(threadpool);
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
-    systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
-
     systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
-    systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
+    systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
 
+    // Staging
+    systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
+    // Archiving
+    systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));
+    systemThreads.create_thread(boost::bind(&FetchCancelArchiving::fetch, fca));
+    // CDMI
+    systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
+    // Deletion
     systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
+    // StateUpdaters
     systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
     systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
+    systemThreads.create_thread(boost::bind(&ArchivingStateUpdater::run, &archivingStateUpdater));
+    // Heartbeat
     systemThreads.create_thread(heartBeat);
 }
 
@@ -142,6 +157,7 @@ void QoSServer::stop(void)
 {
     stagingStateUpdater.recover();
     deletionStateUpdater.recover();
+    archivingStateUpdater.recover();
     threadpool.interrupt();
     systemThreads.interrupt_all();
 }

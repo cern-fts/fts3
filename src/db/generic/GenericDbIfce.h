@@ -45,6 +45,7 @@
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
+#include "ArchivingOperation.h"
 #include "QosTransitionOperation.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
@@ -288,6 +289,15 @@ public:
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus) = 0;
 
+    /// Updates the status for archiving operations
+    /// @param archivingOpStatus  Update for files in archiving
+    virtual void updateArchivingState(const std::vector<MinFileStatus>& archivingOpStatus) = 0;
+
+    /// Updates the start time for archiving operations
+    /// @param jobs  A map where the key is the job id, and the value another map where the key is a surl, and the
+    ///                     value a file id
+    virtual void setArchivingStartTime(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs) = 0;
+
     /// Update the bring online token for the given set of transfers
     /// @param jobs     A map where the key is the job id, and the value another map where the key is a surl, and the
     ///                     value a file id
@@ -298,6 +308,10 @@ public:
     /// Get staging operations ready to be started
     /// @params[out] stagingOps The list of staging operations will be put here
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps) = 0;
+
+    /// Get archiving operations ready to be started
+    /// @params[out] archivingops The list of archiving operations will be put here
+    virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps) = 0;
 
     /// Get qosTransition operations ready to be started
     /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
@@ -317,9 +331,17 @@ public:
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps) = 0;
 
+    /// Get archiving operations already started
+    /// @params[out] archivingOps The list of started archiving operations will be put here
+    virtual void getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archivingOps) = 0;
+
     /// Put into files a set of bring online requests that must be cancelled
     /// @param files    Each entry in the set if a pair of surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
+
+    /// Put into files a set of bring online requests that must be cancelled
+    /// @param files    Each entry in the set if a pair of jobid / surl
+    virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
