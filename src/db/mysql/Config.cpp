@@ -463,6 +463,47 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
 }
 
 
+bool MySqlAPI::getDisableDelegationFlag(const std::string &sourceSe, const std::string &destSe)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        bool disable_delegation = false;
+        std::string sdisable_delegation;
+        soci::indicator ind;
+
+        sql <<
+            "SELECT no_delegation FROM ("
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND no_delegation IS NOT NULL UNION "
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND no_delegation IS NOT NULL"
+            ") AS dlg LIMIT 1",
+            soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
+            soci::into(sdisable_delegation, ind);
+
+        if (ind == soci::i_null) {
+            disable_delegation = false;
+        } else if (sdisable_delegation == "on") {
+            disable_delegation = true;
+        }
+
+        return disable_delegation;
+    }
+    catch (std::exception& e)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
 int MySqlAPI::getGlobalTimeout(const std::string &voName)
 {
     soci::session sql(*connectionPool);
