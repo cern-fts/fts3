@@ -38,7 +38,10 @@ ALTER TABLE `t_cloudStorage`
 	MODIFY `cloudStorage_name` varchar(150) NOT NULL;
 	
 ALTER TABLE `t_cloudStorageUser`
-        MODIFY `cloudStorage_name` varchar(150) NOT NULL;
+    MODIFY `cloudStorage_name` varchar(150) NOT NULL;
+
+ALTER TABLE `t_link_config`
+    ADD COLUMN `no_delegation` varchar(3) DEFAULT NULL;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (6, 0, 0, 'QoS daemon, OIDC integration and archiving monitoring diff');

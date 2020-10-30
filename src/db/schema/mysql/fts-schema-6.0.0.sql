@@ -540,12 +540,13 @@ CREATE TABLE `t_link_config` (
   `optimizer_mode` int(11) DEFAULT NULL,
   `tcp_buffer_size` int(11) DEFAULT NULL,
   `nostreams` int(11) DEFAULT NULL,
+  `no_delegation` varchar(3) DEFAULT NULL,
   PRIMARY KEY (`source_se`,`dest_se`),
   UNIQUE KEY `symbolic_name` (`symbolic_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams )
-VALUES ('*', '*', '*', 2, 130, 2, 0);
+INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
+VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
 --
 -- Table structure for table `t_link_config_old`
