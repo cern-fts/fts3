@@ -146,6 +146,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Debug level
             cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));
 
+            // Disable delegation (according to link config)
+            cmdBuilder.setDisableDelegation(db->getDisableDelegationFlag(tf.sourceSe, tf.destSe));
+
             // Enable monitoring
             cmdBuilder.setMonitoring(monitoringMsg, msgDir);
 

@@ -76,6 +76,7 @@ public:
     void setNumberOfActive(int);
     void setNumberOfRetries(int);
     void setMaxNumberOfRetries(int);
+    void setDisableDelegation(bool);
 
     // Observers
     int getBuffersize();

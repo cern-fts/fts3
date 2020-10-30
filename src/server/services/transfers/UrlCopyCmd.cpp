@@ -291,6 +291,11 @@ void UrlCopyCmd::setMaxNumberOfRetries(int retry_max)
     setOption("retry_max", retry_max);
 }
 
+void UrlCopyCmd::setDisableDelegation(bool disable_delegation)
+{
+    setFlag("no-delegation", disable_delegation);
+}
+
 
 int UrlCopyCmd::getBuffersize()
 {

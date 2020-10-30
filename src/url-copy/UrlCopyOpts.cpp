@@ -72,6 +72,7 @@ const option UrlCopyOpts::long_options[] =
     {"ipv6",              no_argument,       0, 807},
     {"sec-per-mb",        required_argument, 0, 808},
     {"ipv4",              no_argument,       0, 809},
+    {"no-delegation",     no_argument,       0, 810},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -338,6 +339,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 809:
                     enableIpv6 = false;
+                    break;
+                case 810:
+                    noDelegation = true;
                     break;
 
                 case 820:
