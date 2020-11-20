@@ -408,9 +408,11 @@ boost::tribool MySqlAPI::isProtocolIPv6(const std::string &source, const std::st
         if (boost::indeterminate(srcEnabled) && boost::indeterminate(dstEnabled)) {
             return starEnabled;
         }
-        // If any is undefined, the other decides
-        else if (boost::indeterminate(srcEnabled) || boost::indeterminate(dstEnabled)) {
-            return srcEnabled || dstEnabled;
+        // If only one is undefined, the other decides
+        else if (boost::indeterminate(srcEnabled)) {
+            return dstEnabled;
+        } else if (boost::indeterminate(dstEnabled)) {
+            return srcEnabled;
         }
         // Both defined, need to agree
         return srcEnabled && dstEnabled;
