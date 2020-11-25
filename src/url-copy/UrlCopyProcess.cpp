@@ -44,16 +44,6 @@ void *g_x509_scitokens_issuer_handle = NULL;
 
 static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 {
-    if (!opts.oauthFile.empty()) {
-        try {
-            gfal2.loadConfigFile(opts.oauthFile);
-            unlink(opts.oauthFile.c_str());
-        }
-        catch (const std::exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file: " << ex.what() << commit;
-        }
-    }
-
     gfal2.set("GRIDFTP PLUGIN", "SESSION_REUSE", true);
     gfal2.set("GRIDFTP PLUGIN", "ENABLE_UDT", opts.enableUdt);
 
@@ -242,7 +232,6 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     bool macaroonRequestEnabledSource = false;
     bool macaroonRequestEnabledDestination = false;
     unsigned macaroonValidity = 180;
-    std::string IAMtoken;
 
     // Check source and destination protocol whether to enable macaroons
     macaroonRequestEnabledSource = ((transfer.source.protocol.find("dav") == 0) || (transfer.source.protocol.find("http") == 0));
@@ -257,22 +246,26 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 
-    if ("oauth2" == opts.authMethod && !opts.oauthFile.empty()) {
-    	try {
-    		IAMtoken = readIAMTokenFromConfigFile(opts.oauthFile);
-    		unlink(opts.oauthFile.c_str());
-    	} catch (const std::exception &ex) {
-        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file, no IAM token retrieved: " << ex.what() << commit;
+    // Load Cloud + OIDC credentials
+    if (!opts.oauthFile.empty()) {
+        try {
+            gfal2.loadConfigFile(opts.oauthFile);
         }
+        catch (const std::exception &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file: " << ex.what() << commit;
+        }
+        unlink(opts.oauthFile.c_str());
     }
 
-    // If a IAM token has been passed, set this as Bearer token.
-    // Otherwise, attempt to retrieve an OAuth token from the VO's issuer.
-    // If not, try to retrieve a token from the SE itself.
+    // OIDC token has been passed already in the OauthFile
+    // and loaded by Gfal2 as the default BEARER token credential
     if ("oauth2" == opts.authMethod) {
-    	params.setSourceBearerToken(IAMtoken);
+        return;
     }
-    else if (!transfer.sourceTokenIssuer.empty()) {
+
+    // Attempt to retrieve a bearer token from the VO's issuer.
+    // If not, try to retrieve a token from the SE itself.
+    if (!transfer.sourceTokenIssuer.empty()) {
         params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for source" << commit;
     }
@@ -295,10 +288,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 
-    if ("oauth2" == opts.authMethod) {
-    	params.setDestBearerToken(IAMtoken);
-    }
-    else if (!transfer.destTokenIssuer.empty()) {
+    if (!transfer.destTokenIssuer.empty()) {
         params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for destination" << commit;
     }
