@@ -821,6 +821,7 @@ CREATE TABLE `t_server_config` (
   `sec_per_mb` int(11) DEFAULT '0',
   `global_timeout` int(11) DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL,
+  `no_streaming` varchar(3) DEFAULT NULL,
   `show_user_dn` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

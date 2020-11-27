@@ -43,5 +43,8 @@ ALTER TABLE `t_cloudStorageUser`
 ALTER TABLE `t_link_config`
     ADD COLUMN `no_delegation` varchar(3) DEFAULT NULL;
 
+ALTER TABLE `t_server_config`
+    ADD COLUMN `no_streaming` varchar(3) DEFAULT NULL;
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (6, 0, 0, 'QoS daemon, OIDC integration and archiving monitoring diff');
