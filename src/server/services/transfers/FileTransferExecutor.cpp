@@ -149,6 +149,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Disable delegation (according to link config)
             cmdBuilder.setDisableDelegation(db->getDisableDelegationFlag(tf.sourceSe, tf.destSe));
 
+            // Disable streaming via local transfers (according to global config)
+            cmdBuilder.setDisableStreaming(db->getDisableStreamingFlag(tf.voName));
+
             // Enable monitoring
             cmdBuilder.setMonitoring(monitoringMsg, msgDir);
 

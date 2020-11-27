@@ -68,6 +68,7 @@ public:
     bool     enableUdt;
     boost::tribool enableIpv6;
     unsigned addSecPerMb;
+    bool     noStreaming;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option
 

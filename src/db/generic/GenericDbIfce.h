@@ -270,6 +270,9 @@ public:
     /// Returns how many seconds must be added to the timeout per MB to be transferred
     virtual int getSecPerMb(const std::string &voName) = 0;
 
+    /// Returns the globally configured disable streaming flag
+    virtual bool getDisableStreamingFlag(const std::string &voName) = 0;
+
     /// Puts into the vector queue the Queues for which there are pending transfers
     virtual void getQueuesWithPending(std::vector<QueueId>& queues) = 0;
 

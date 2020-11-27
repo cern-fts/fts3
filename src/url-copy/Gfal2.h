@@ -222,6 +222,14 @@ public:
         }
     }
 
+    void setStreamingFlag(bool value)
+    {
+        GError *error = NULL;
+        if (gfalt_set_local_transfer_perm(params, value, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     void addEventCallback(gfalt_event_func callback, void *udata)
     {
         GError *error = NULL;
