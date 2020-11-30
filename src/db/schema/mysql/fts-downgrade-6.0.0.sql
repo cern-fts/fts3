@@ -14,7 +14,6 @@ ALTER TABLE `t_job_backup`
 	DROP COLUMN `target_qos`,
 	DROP COLUMN `archive_timeout`;
 
-
 ALTER TABLE `t_file`
     DROP COLUMN `archive_start_time`,
     DROP COLUMN `archive_finish_time`;
@@ -33,6 +32,12 @@ ALTER TABLE `t_cloudStorage`
 	MODIFY `cloudStorage_name` varchar(50) NOT NULL;
 
 ALTER TABLE `t_cloudStorageUser`
-        MODIFY `cloudStorage_name` varchar(36) NOT NULL;
+    MODIFY `cloudStorage_name` varchar(36) NOT NULL;
+
+ALTER TABLE `t_link_config`
+    DROP COLUMN `no_delegation`;
+
+ALTER TABLE `t_server_config`
+    DROP COLUMN `no_streaming`;
 
 UPDATE t_schema_vers SET MAJOR=5, PATCH=0, MESSAGE='DOWNGRADE from 6.0.0' where MAJOR = 6;
