@@ -263,6 +263,12 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         return;
     }
 
+    // Check if allowed to retrieve Storage Element issued tokens
+    if (!opts.retrieveSEToken) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Configured to skip retrieval of SE-issued tokens" << commit;
+        return;
+    }
+
     // Attempt to retrieve a bearer token from the VO's issuer.
     // If not, try to retrieve a token from the SE itself.
     if (!transfer.sourceTokenIssuer.empty()) {

@@ -24,6 +24,7 @@
 #include "ExecuteProcess.h"
 #include "SingleTrStateInstance.h"
 
+#include "config/ServerConfig.h"
 #include "CloudStorageConfig.h"
 #include "ThreadSafeList.h"
 #include "UrlCopyCmd.h"
@@ -142,6 +143,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             if (!cloudConfigFile.empty()) {
                 cmdBuilder.setOAuthFile(cloudConfigFile);
             }
+
+            // Retrieve SE-issued tokens flag
+            cmdBuilder.setRetrieveSEToken(fts3::config::ServerConfig::instance().get<bool>("RetrieveSEToken"));
 
             // Debug level
             cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));

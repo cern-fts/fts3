@@ -58,6 +58,7 @@ public:
     std::string jobMetadata;
 
     std::string authMethod;
+    bool retrieveSEToken;
 
     unsigned optimizerLevel;
     bool     overwrite;

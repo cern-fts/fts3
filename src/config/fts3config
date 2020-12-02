@@ -147,7 +147,10 @@ AutoSessionReuse = False
 
 # Behavior for failed multihop jobs
 # Cancel all NOT_USED files in a failed multihop job (default false)
-CancelUnusedMultihopFiles = False
+#CancelUnusedMultihopFiles = False
+
+# Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default true)
+#RetrieveSEToken = true
 
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400

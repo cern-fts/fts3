@@ -173,6 +173,12 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
+void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_tokens)
+{
+    setFlag("retrieve-se-token", retrieve_se_tokens);
+}
+
+
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
