@@ -437,6 +437,7 @@ fi
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_bringonline.8.gz
+%{_mandir}/man8/fts_qos.8.gz
 %{_mandir}/man8/fts_db_cleaner.8.gz
 %{_mandir}/man8/fts_server.8.gz
 %{_mandir}/man8/fts_url_copy.8.gz
