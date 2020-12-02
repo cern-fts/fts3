@@ -434,6 +434,7 @@ fi
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-server
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-bringonline
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_bringonline.8.gz
 %{_mandir}/man8/fts_db_cleaner.8.gz

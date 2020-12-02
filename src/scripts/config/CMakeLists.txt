@@ -39,3 +39,8 @@ install(FILES fts-bringonline.sysconfig
     RENAME fts-bringonline
 )
 
+install(FILES fts-qos.sysconfig
+    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    RENAME fts-qos
+)
