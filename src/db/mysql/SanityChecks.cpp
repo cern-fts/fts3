@@ -282,7 +282,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
 /// has expired.
 void MySqlAPI::recoverStalledStaging(soci::session &sql)
 {
-    const std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+    const std::string errorMessage = "Transfer has been forced-canceled because it has been in staging started state beyond its bringonline timeout";
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check stalled staging" << commit;
 
@@ -321,6 +321,47 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
     sql.commit();
 }
 
+/// Search for files in ARCHIVING state with expired archive timeout
+void MySqlAPI::recoverStalledArchiving(soci::session &sql)
+{
+    const std::string errorMessage = "Transfer has been forced-canceled because it has been in ARCHIVING state beyond its archive timeout";
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check stalled archiving" << commit;
+
+    soci::rowset<soci::row> rsArchivingStarted = (
+        sql.prepare <<
+            "SELECT f.file_id, j.job_id, f.archive_start_time, j.archive_timeout "
+            "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+            "WHERE f.file_state = 'ARCHIVING'"
+    );
+
+    sql.begin();
+    for (auto itArchiving = rsArchivingStarted.begin(); itArchiving != rsArchivingStarted.end(); itArchiving++) {
+        const std::string jobId = itArchiving->get<std::string>("job_id");
+        const uint64_t fileId = itArchiving->get<unsigned long long>("file_id");
+        int archiveTimeout = itArchiving->get<int>("archive_timeout", 0);
+
+        time_t startTimeT = 0;
+        if (itArchiving->get_indicator("archive_start_time") == soci::i_ok) {
+            struct tm startTime = itArchiving->get<struct tm>("archive_start_time");
+            startTimeT = timegm(&startTime);
+        }
+
+        time_t now = getUTC(0);
+        double diff = difftime(now, startTimeT);
+        int diffInt = boost::lexical_cast<int>(diff);
+
+        if (diffInt > (archiveTimeout + 800)) {
+            updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
+            updateJobTransferStatusInternal(sql, jobId, "FAILED");
+
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling archiving operation " << jobId << " / " << fileId << commit;
+            sql << "UPDATE t_file SET archive_finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL WHERE file_id = :file_id", soci::use(fileId);
+        }
+    }
+    sql.commit();
+}
+
 
 void MySqlAPI::checkSanityState()
 {
@@ -337,6 +378,7 @@ void MySqlAPI::checkSanityState()
         fixDeleteInconsistencies(sql);
         recoverFromDeadHosts(sql);
         recoverStalledStaging(sql);
+        recoverStalledArchiving(sql);
     }
     catch (std::exception &e) {
         sql.rollback();

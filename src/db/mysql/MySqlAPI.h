@@ -381,6 +381,7 @@ private:
     void fixDeleteInconsistencies(soci::session &sql);
     void recoverFromDeadHosts(soci::session &sql);
     void recoverStalledStaging(soci::session &sql);
+    void recoverStalledArchiving(soci::session &sql);
 
     void fixEmptyJob(soci::session &sql, const std::string &jobId);
     void fixNonTerminalJob(soci::session &sql, const std::string &jobId,
