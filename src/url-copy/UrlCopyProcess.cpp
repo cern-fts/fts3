@@ -513,7 +513,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
         }
         catch (const Gfal2Exception &ex) {
-            throw UrlCopyError(SOURCE, TRANSFER_FINALIZATION, ex);
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release file for SRM source: "
+                                               << transfer.source << commit;
         }
     }
 
