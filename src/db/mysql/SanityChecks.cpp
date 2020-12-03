@@ -332,7 +332,7 @@ void MySqlAPI::recoverStalledArchiving(soci::session &sql)
         sql.prepare <<
             "SELECT f.file_id, j.job_id, f.archive_start_time, j.archive_timeout "
             "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-            "WHERE f.file_state = 'ARCHIVING'"
+            "WHERE f.file_state = 'ARCHIVING' AND f.archive_start_time IS NOT NULL"
     );
 
     sql.begin();
