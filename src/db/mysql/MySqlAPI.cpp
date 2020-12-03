@@ -4169,10 +4169,10 @@ void MySqlAPI::getArchivingFilesForCanceling(std::set< std::pair<std::string, st
     {
         soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl from t_file WHERE "
                 "  file_state='CANCELED' and archive_finish_time is NULL "
-                "  AND transfer_host = :hostname  AND archive_start_time is NOT NULL ",
+                "  AND transfer_host = :hostname AND archive_start_time is NOT NULL ",
                 soci::use(hostname));
 
-        soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET finish_time = UTC_TIMESTAMP(), archive_finish_time = UTC_TIMESTAMP() "
+        soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET archive_finish_time = UTC_TIMESTAMP() "
                 "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
 
         // Cancel staging files
