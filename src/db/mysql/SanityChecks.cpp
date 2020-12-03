@@ -356,6 +356,7 @@ void MySqlAPI::recoverStalledArchiving(soci::session &sql)
             updateJobTransferStatusInternal(sql, jobId, "FAILED");
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling archiving operation " << jobId << " / " << fileId << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "archiveTimeout=" << archiveTimeout << " archiveStartTime=" << startTimeT << " now=" << now << " diff=" << diff << " diffInt=" << diffInt;
             sql << "UPDATE t_file SET archive_finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL WHERE file_id = :file_id", soci::use(fileId);
         }
     }
