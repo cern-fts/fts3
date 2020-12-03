@@ -2864,175 +2864,36 @@ void MySqlAPI::setArchivingStartTime(const std::map< std::string, std::map<std::
 
 void MySqlAPI::updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus>& archivingOpStatus)
 {
-    std::vector<TransferState> filesMsg;
-    std::vector<std::string> distinctJobIds;
-
+    // Updates to ARCHIVING state always lead to terminal state
     try
     {
         sql.begin();
 
-        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i)
-        {
-        
-            if(i->state == "FAILED")
-            {
-                            
-                                //TO DO check if we need to retry
-                                bool shouldBeRetried = false;
-                //bool shouldBeRetried = resetForRetryArchiving(sql, i->fileId, i->jobId, i->retry);
-                if (!shouldBeRetried)
-                {
-                    sql <<
-                            " UPDATE t_file "
-                            " SET  archive_finish_time=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
-                            " WHERE "
-                            "   file_id = :fileId ",
-                            soci::use(i->reason),
-                            soci::use(i->state),
-                            soci::use(i->fileId)
-                    ;
-                }
-            }
-            else
-            {
-                sql <<
-                        " UPDATE t_file "
-                        " SET  archive_finish_time=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
-                        " WHERE "
-                        "   file_id = :fileId ",
-                        soci::use(i->reason),
-                        soci::use(i->state),
-                        soci::use(i->fileId)
-                ;
-            }
+        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i) {
+            sql <<
+                "UPDATE t_file "
+                "SET archive_finish_time = UTC_TIMESTAMP(), file_state = :fileState, reason = :reason "
+                "WHERE file_id = :fileId",
+                soci::use(i->state),
+                soci::use(i->reason),
+                soci::use(i->fileId);
         }
 
         sql.commit();
 
-        sql.begin();
-
-        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i)
-        {
-            //prevent multiple times of updating the same job id
-            if (std::find(distinctJobIds.begin(), distinctJobIds.end(), i->jobId) != distinctJobIds.end())
-            {
-                continue;
-            }
-            else
-            {
-                distinctJobIds.push_back(i->jobId);
-            }
-
-            //now update job state
-                        long long numberOfFilesCanceled = 0;
-            long long numberOfFilesFinished = 0;
-            long long numberOfFilesFailed = 0;
-            long long numberOfFilesArchiving = 0;
-            long long totalNumOfFilesInJob= 0;
-            long long totalInTerminal = 0;
-
-            soci::rowset<soci::row> rsReplica = (
-                    sql.prepare <<
-                    " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
-                    soci::use(i->jobId)
-            );
-
-            soci::rowset<soci::row>::const_iterator iRep;
-            for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
-            {
-                std::string file_state = iRep->get<std::string>("file_state");
-                long long countStates = iRep->get<long long>("COUNT(file_state)",0);
-
-                if(file_state == "FINISHED")
-                {
-                    numberOfFilesFinished = countStates;
-                }
-                else if(file_state == "FAILED")
-                {
-                    numberOfFilesFailed = countStates;
-                }
-                else if(file_state == "ARCHIVING")
-                {
-                    numberOfFilesArchiving = countStates;
-                }
-                else if(file_state == "CANCELED")
-                {
-                    numberOfFilesCanceled = countStates;
-                }
-
-            }
-
-            totalNumOfFilesInJob = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesArchiving + numberOfFilesCanceled);
-            totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
-
-            if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
-            {
-                sql << " UPDATE t_job SET "
-                        " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP() "
-                        " WHERE job_id = :jobId ", soci::use(i->jobId);
-            }
-            else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
-            {
-                sql << " UPDATE t_job SET "
-                        " job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
-                        " WHERE job_id = :jobId ", soci::use(i->jobId);
-            }
-            else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
-            {
-                sql << " UPDATE t_job SET "
-                        " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
-                        " WHERE job_id = :jobId ", soci::use(i->jobId);
-            }
-            else if (numberOfFilesArchiving >= 1) //one file ARCHIVING FILE/ JOB ACTIVE
-            {
-                std::string job_state;
-                sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(i->jobId), soci::into(job_state);
-                if(job_state == "ACTIVE") //do not commit if already active
-                {
-                    //do nothings
-                }
-                else //set job to ACTIVE, >=1 in STARTED and there are DELETE
-                {
-                    sql << " UPDATE t_job SET "
-                            " job_state = 'ACTIVE' "
-                            " WHERE job_id = :jobId ", soci::use(i->jobId);
-                }
-            }
-            else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
-            {
-                sql << " UPDATE t_job SET "
-                        " job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
-                        " WHERE job_id = :jobId ", soci::use(i->jobId);
-            }
-            else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
-            {
-                sql << " UPDATE t_job SET "
-                        " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), reason='Job canceled, check files for more details' "
-                        " WHERE job_id = :jobId ", soci::use(i->jobId);
-            }
-            else
-            {
-                //it should never go here, if it does it means the state machine is bad!
-            }
-        }
-        sql.commit();
-
-        //now send monitoring messages
         Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
-        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i)
-        {
-            //send state message
-            filesMsg = getStateOfTransferInternal(sql, i->jobId, i->fileId);
-            if(!filesMsg.empty())
-            {
-                std::vector<TransferState>::iterator it;
-                for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                {
-                    TransferState tmp = (*it);
-                    MsgIfce::getInstance()->SendTransferStatusChange(producer, tmp);
+
+        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i) {
+            updateJobTransferStatusInternal(sql, i->jobId, i->state);
+
+            // Send monitoring state message
+            std::vector<TransferState> filesMsg = getStateOfTransferInternal(sql, i->jobId, i->fileId);
+
+            if (!filesMsg.empty()) {
+                for (auto it = filesMsg.begin(); it != filesMsg.end(); ++it) {
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, *it);
                 }
             }
-            filesMsg.clear();
         }
     }
     catch (std::exception& e)
