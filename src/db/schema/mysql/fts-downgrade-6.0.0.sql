@@ -28,11 +28,18 @@ ALTER TABLE `t_file_backup`
 
 DROP TABLE t_oauth2_providers;
 
+---
+--- Manage foreign key on `cloudStorage_name` before changing var length
+---
+ALTER TABLE `t_cloudStorageUser`
+    DROP FOREIGN KEY `t_cloudStorageUser_ibfk_1`,
+    MODIFY `cloudStorage_name` varchar(36) NOT NULL;
+
 ALTER TABLE `t_cloudStorage`
-	MODIFY `cloudStorage_name` varchar(50) NOT NULL;
+    MODIFY `cloudStorage_name` varchar(50) NOT NULL;
 
 ALTER TABLE `t_cloudStorageUser`
-    MODIFY `cloudStorage_name` varchar(36) NOT NULL;
+    ADD CONSTRAINT `t_cloudStorageUser_ibfk_1` FOREIGN KEY (`cloudStorage_name`) REFERENCES `t_cloudStorage` (`cloudStorage_name`);
 
 ALTER TABLE `t_link_config`
     DROP COLUMN `no_delegation`;
