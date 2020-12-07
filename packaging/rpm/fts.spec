@@ -45,7 +45,7 @@ BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  gfal2-devel >= 2.18.0
+BuildRequires:  gfal2-devel >= 2.19.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -87,10 +87,10 @@ Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.18.0
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.18.0
-Requires: gfal2-plugin-http%{?_isa} >= 2.18.0
-Requires: gfal2-plugin-srm%{?_isa} >= 2.18.0
+Requires: gfal2%{?_isa} >= 2.19.0
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.19.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.19.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.19.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -504,6 +504,13 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Dec 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.10.0-1
+- New minor release
+- Brings the QoS daemon, which replaces the Bringonline daemon
+- OIDC Tokens Integration
+- Archive Monitoring feature
+- Support for QoS transitions
+
 * Mon Jul 27 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.9.5-1
 - Rework the message handling mechanism
 
