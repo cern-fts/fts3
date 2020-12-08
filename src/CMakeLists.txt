@@ -56,6 +56,7 @@ if(SERVERBUILD)
     add_subdirectory(scripts)
     add_subdirectory(dbClear)
     add_subdirectory(glue2-publisher)
+    add_subdirectory(qos-daemon)
 
     if(PUGIXML_FOUND)
         add_subdirectory(bdii-cache-update)

@@ -122,6 +122,41 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
         "Database account password"
     )
+	(
+	 	"AuthorizationProvider,w",
+	    po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
+	    "Authorization provider ex IAM"
+	)
+	(
+		"AuthorizationProviderTokenEndpoint,w",
+		po::value<std::string>( &(_vars["AuthorizationProviderTokenEndpoint"]) )->default_value(""),
+		"Authorization token endpoint ex IAM"
+	)
+	(
+		"AuthorizationProviderJwkEndpoint,w",
+		po::value<std::string>( &(_vars["AuthorizationProviderJwkEndpoint"]) )->default_value(""),
+		"Jwk enpoint of Authorization provider"
+	)
+    (
+        "ClientId,w",
+        po::value<std::string>( &(_vars["ClientId"]) )->default_value(""),
+        "Authorization provider CLient id"
+    )
+	(
+		"ClientSecret,w",
+		po::value<std::string>( &(_vars["ClientSecret"]) )->default_value(""),
+		"Authorization provider Client Secret"
+	)
+	(
+		"TokenRefreshTimeSinceLastTransferInSeconds,w",
+		po::value<std::string>( &(_vars["TokenRefreshTimeSinceLastTransferInSeconds"]) )->default_value(""),
+		"Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)"
+	)
+	(
+		"TokenRefreshDaemonIntervalInSeconds,w",
+		po::value<std::string>( &(_vars["TokenRefreshDaemonIntervalInSeconds"]) )->default_value(""),
+		"The interval that the token refresh daemon will run"
+	)
     (
         "Infosys",
         po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),

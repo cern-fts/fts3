@@ -376,9 +376,11 @@ boost::tribool MySqlAPI::isProtocolUDT(const std::string &source, const std::str
         if (boost::indeterminate(srcEnabled) && boost::indeterminate(dstEnabled)) {
             return starEnabled;
         }
-            // If any is undefined, the other decides
-        else if (boost::indeterminate(srcEnabled) || boost::indeterminate(dstEnabled)) {
-            return srcEnabled || dstEnabled;
+        // If only one is undefined, the other decides
+        else if (boost::indeterminate(srcEnabled)) {
+            return dstEnabled;
+        } else if (boost::indeterminate(dstEnabled)) {
+            return srcEnabled;
         }
         // Both defined, need to agree
         return srcEnabled && dstEnabled;
@@ -408,9 +410,11 @@ boost::tribool MySqlAPI::isProtocolIPv6(const std::string &source, const std::st
         if (boost::indeterminate(srcEnabled) && boost::indeterminate(dstEnabled)) {
             return starEnabled;
         }
-        // If any is undefined, the other decides
-        else if (boost::indeterminate(srcEnabled) || boost::indeterminate(dstEnabled)) {
-            return srcEnabled || dstEnabled;
+        // If only one is undefined, the other decides
+        else if (boost::indeterminate(srcEnabled)) {
+            return dstEnabled;
+        } else if (boost::indeterminate(dstEnabled)) {
+            return srcEnabled;
         }
         // Both defined, need to agree
         return srcEnabled && dstEnabled;
@@ -459,6 +463,44 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
+bool MySqlAPI::getDisableDelegationFlag(const std::string &sourceSe, const std::string &destSe)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        std::string disable_delegation;
+        soci::indicator ind = soci::i_ok;
+
+        sql <<
+            "SELECT no_delegation FROM ("
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND no_delegation IS NOT NULL UNION "
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
+            "   SELECT no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND no_delegation IS NOT NULL"
+            ") AS dlg LIMIT 1",
+            soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
+            soci::into(disable_delegation, ind);
+
+        if (ind == soci::i_null) {
+            return false;
+        } else {
+            return disable_delegation == "on";
+        }
+    }
+    catch (std::exception& e)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception");
     }
 }
 
@@ -513,6 +555,40 @@ int MySqlAPI::getSecPerMb(const std::string &voName)
     catch (...)
     {
         throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
+bool MySqlAPI::getDisableStreamingFlag(const std::string& voName)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        std::string disable_streaming;
+        soci::indicator ind = soci::i_ok;
+
+        sql <<
+            "SELECT no_streaming FROM t_server_config "
+            "WHERE vo_name IN (:vo, '*') OR vo_name IS NULL "
+            "ORDER BY vo_name DESC LIMIT 1",
+            soci::use(voName), soci::into(disable_streaming, ind);
+
+        if (ind == soci::i_null) {
+            return false;
+        } else {
+            return disable_streaming == "on";
+        }
+    }
+    catch (std::exception& e)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception");
     }
 }
 

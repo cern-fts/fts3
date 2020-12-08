@@ -1,5 +1,5 @@
 ##
-## FTS3 server sysconfig
+## FTS3 bringonline daemon sysconfig
 ##
 
 ## Do not enable coredumps by default

@@ -217,11 +217,17 @@ public:
     /// Returns how many streams must be used for the given link
     virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);
 
+    /// Returns whether proxy delegation sould be disabled for the given link
+    virtual bool getDisableDelegationFlag(const std::string &sourceSe, const std::string &destSe);
+
     /// Returns the globally configured transfer timeout
     virtual int getGlobalTimeout(const std::string &voName);
 
     /// Returns how many seconds must be added to the timeout per MB to be transferred
     virtual int getSecPerMb(const std::string &voName);
+
+    /// Returns the globally configured disable streaming flag
+    virtual bool getDisableStreamingFlag(const std::string &voName);
 
     /// Puts into the vector queue the Queues for which there are pending transfers
     virtual void getQueuesWithPending(std::vector<QueueId>& queues);
@@ -245,6 +251,15 @@ public:
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus);
 
+    /// Updates the status for archiving operations
+    /// @param archivingOpStatus  Update for files in archiving
+    virtual void updateArchivingState(const std::vector<MinFileStatus>& archivingOpStatus);
+
+    /// Updates the start time for archiving operations
+    /// @param jobs  A map where the key is the job id, and the value another map where the key is a surl, and the
+    ///                     value a file id
+    virtual void setArchivingStartTime(const std::map< std::string, std::map<std::string, std::vector<uint64_t> > > &jobs);
+
     /// Update the bring online token for the given set of transfers
     /// @param jobs     A map where the key is the job id, and the value another map where the key is a surl, and the
     ///                     value a file id
@@ -256,13 +271,39 @@ public:
     /// @params[out] stagingOps The list of staging operations will be put here
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps);
 
+    /// Get archivingOps operations ready to be polled
+    /// @params[out] archivingOps The list of Archiving  operations will be put here
+    virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps);
+
+    /// Get qosTransition operations ready to be started
+    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string &qosOp,
+                                          bool matchHost = false);
+
+    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
+    /// @params[out] true if file state was updated, false otherwise
+    virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
+
+    /// Update File State to FINISHED after QoS Transition of file reached a terminal state
+    /// @params[out] Nothing returned
+    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
+                                              const std::string& reason = "");
+
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);
 
+    /// Get archiving operations already started
+    /// @params[out] archivingOps The list of started archiving operations will be put here
+    virtual void getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archivingOps);
+
     /// Put into files a set of bring online requests that must be cancelled
     /// @param files    Each entry in the set if a pair of surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
+
+    /// Put into files a set of archiving requests that must be cancelled
+    /// @param files    Each entry in the set if a pair of jobid / surl
+    virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
@@ -295,6 +336,8 @@ private:
 
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 
+    void updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &archivingOpsStatus);
+
     void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
 
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
@@ -317,9 +360,14 @@ private:
 
     void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd);
 
+    uint64_t getNextHop(soci::session& sql, const std::string& jobId);
+
     void useNextHop(soci::session& sql, std::string jobId);
 
     void setNullDestSURLMultiHop(soci::session& sql, std::string jobId);
+
+    bool isArchivingTransfer(soci::session& sql, const std::string& jobId,
+                             const Job::JobType& jobType, int archiveTimeout);
 
     bool getDrainInternal(soci::session& sql);
 
@@ -333,6 +381,7 @@ private:
     void fixDeleteInconsistencies(soci::session &sql);
     void recoverFromDeadHosts(soci::session &sql);
     void recoverStalledStaging(soci::session &sql);
+    void recoverStalledArchiving(soci::session &sql);
 
     void fixEmptyJob(soci::session &sql, const std::string &jobId);
     void fixNonTerminalJob(soci::session &sql, const std::string &jobId,

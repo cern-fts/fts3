@@ -17,6 +17,9 @@
 #include <dlfcn.h>
 
 #include <cstdlib>
+#include <fstream>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include "common/Logger.h"
@@ -41,16 +44,6 @@ void *g_x509_scitokens_issuer_handle = NULL;
 
 static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 {
-    if (!opts.oauthFile.empty()) {
-        try {
-            gfal2.loadConfigFile(opts.oauthFile);
-            unlink(opts.oauthFile.c_str());
-        }
-        catch (const std::exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file: " << ex.what() << commit;
-        }
-    }
-
     gfal2.set("GRIDFTP PLUGIN", "SESSION_REUSE", true);
     gfal2.set("GRIDFTP PLUGIN", "ENABLE_UDT", opts.enableUdt);
 
@@ -219,6 +212,20 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
 }
 
+static std::string readIAMTokenFromConfigFile(const std::string &path)
+{
+    if (!path.empty()) {
+        std::ifstream file(path);
+        std::string   line;
+
+        while(std::getline(file, line))
+        {
+            // Skip TOKEN= and return the actual token
+            return line.substr(6);
+        }
+    }
+}
+
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                              Gfal2 &gfal2, Gfal2TransferParams &params)
 {
@@ -239,8 +246,25 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 
-    // Attempt to retrieve an oauth token from the VO's issuer; if not,
-    // then try to retrieve a token from the SE itself.
+    // Load Cloud + OIDC credentials
+    if (!opts.oauthFile.empty()) {
+        try {
+            gfal2.loadConfigFile(opts.oauthFile);
+        }
+        catch (const std::exception &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file: " << ex.what() << commit;
+        }
+        unlink(opts.oauthFile.c_str());
+    }
+
+    // OIDC token has been passed already in the OauthFile
+    // and loaded by Gfal2 as the default BEARER token credential
+    if ("oauth2" == opts.authMethod) {
+        return;
+    }
+
+    // Attempt to retrieve a bearer token from the VO's issuer.
+    // If not, try to retrieve a token from the SE itself.
     if (!transfer.sourceTokenIssuer.empty()) {
         params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for source" << commit;
@@ -296,6 +320,8 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setStrictCopy(opts.strictCopy);
     params.setCreateParentDir(true);
     params.setReplaceExistingFile(opts.overwrite);
+    params.setDelegationFlag(!opts.noDelegation);
+    params.setStreamingFlag(!opts.noStreaming);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
@@ -385,6 +411,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source url: " << transfer.source << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest url: " << transfer.destination << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled: " << opts.overwrite << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable delegation: " << opts.noDelegation << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
@@ -441,6 +469,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     params.setTcpBuffersize(opts.tcpBuffersize);
     params.setTimeout(timeout);
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "IPv6: " << (boost::indeterminate(opts.enableIpv6) ? "indeterminate" :
+                                                   (opts.enableIpv6 ? "true" : "false")) << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
 
@@ -483,7 +513,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
         }
         catch (const Gfal2Exception &ex) {
-            throw UrlCopyError(SOURCE, TRANSFER_FINALIZATION, ex);
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release file for SRM source: "
+                                               << transfer.source << commit;
         }
     }
 

@@ -167,6 +167,12 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 }
 
 
+void UrlCopyCmd::setAuthMethod(const std::string &method)
+{
+    setOption("authMethod", method);
+}
+
+
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
@@ -285,6 +291,18 @@ void UrlCopyCmd::setNumberOfRetries(int count)
 void UrlCopyCmd::setMaxNumberOfRetries(int retry_max)
 {
     setOption("retry_max", retry_max);
+}
+
+
+void UrlCopyCmd::setDisableDelegation(bool disable_delegation)
+{
+    setFlag("no-delegation", disable_delegation);
+}
+
+
+void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
+{
+    setFlag("no-streaming", disable_streaming);
 }
 
 

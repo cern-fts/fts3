@@ -1,0 +1,141 @@
+#!/bin/sh
+#
+# FTS3 - File transfer service
+#
+# chkconfig:    - 80 20
+# description:  Enable a run of fts daemon for QoS
+# processname:  fts_qos
+
+# http://fedoraproject.org/wiki/FCNewInit/Initscripts
+### BEGIN INIT INFO
+# Provides:
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:
+# Default-Stop:
+# Short-Description:
+# Description:
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+exec="/usr/sbin/fts_qos"
+prog=$(basename $exec)
+
+[ -e /etc/sysconfig/fts-qos ] && . /etc/sysconfig/fts-qos
+
+lockfile=/var/lock/subsys/fts-qos
+export GLOBUS_THREAD_MODEL=pthread
+export CGSI_TRACE=0
+
+start() {
+    echo -n $"Starting $prog: "
+    # if not running, start it up here, usually something like "daemon $exec"
+    pgrep $prog
+    retval=$?
+    if [ ! -f $lockfile ] && [ $retval -eq 1 ] ; then
+        touch "$lockfile" && success || failure
+        daemon $prog -t 25
+        retval=$?
+        echo
+        [ $retval -eq 0 ] && touch $lockfile
+
+        echo "Wait for 23 seconds..."
+        sleep 23
+        pgrep $prog &> /dev/null
+        retval=$?
+        if [ $retval -ne 0 ]; then
+            failure
+            echo "The process died unexpectedly!"
+            rm $lockfile
+        else
+            echo
+            success
+        fi
+
+        return $retval
+    else
+        pgrep $prog
+        retval=$?
+        if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
+                restart
+        else
+                echo "Already running"
+                return $retval
+        fi
+    fi
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    # Is running?
+    pgrep $prog &> /dev/null
+    if [ $? -ne 0 ]; then
+        failure
+        if [ -f "$lockfile" ]; then
+            rm -f "$lockfile"
+            echo "$prog is not running, but a lock file was found"
+        else
+            echo "$prog is not running"
+        fi
+        return 1
+    fi
+    # Kill it gracefully and give some time
+    killproc $prog -2
+    sleep 30
+    pgrep $prog &> /dev/null
+    if [ $? -eq 0 ]; then
+        # Force it
+        killproc $prog -9
+        retval=$?
+    else
+        retval=0
+    fi
+
+    if [ $retval -eq 0 ]; then
+        rm -f "$lockfile"
+        success
+    else
+        failure
+    fi
+
+    echo
+    return $retval
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start|stop|restart)
+        $1
+        ;;
+    force-reload)
+        restart
+        ;;
+    status)
+        status $prog
+        ;;
+    try-restart|condrestart)
+        if status $prog >/dev/null ; then
+            restart
+        fi
+        ;;
+    reload)
+        # If config can be reloaded without restarting, implement it here,
+        # remove the "exit", and add "reload" to the usage message below.
+        # For example:
+        # status $prog >/dev/null || exit 7
+        # killproc $prog -HUP
+        action $"Service ${0##*/} does not support the reload action: " /bin/false
+        exit 3
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|try-restart|force-reload}"
+        exit 2
+esac

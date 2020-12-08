@@ -53,6 +53,7 @@ const option UrlCopyOpts::long_options[] =
     {"oauth",             required_argument, 0, 503},
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
+	{"authMethod",        required_argument, 0, 506},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -71,6 +72,8 @@ const option UrlCopyOpts::long_options[] =
     {"ipv6",              no_argument,       0, 807},
     {"sec-per-mb",        required_argument, 0, 808},
     {"ipv4",              no_argument,       0, 809},
+    {"no-delegation",     no_argument,       0, 810},
+    {"no-streaming",      no_argument,       0, 811},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -165,9 +168,9 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 UrlCopyOpts::UrlCopyOpts():
     isSessionReuse(false), isMultipleReplicaJob(false),
     strictCopy(false),
-    optimizerLevel(0), overwrite(false), nStreams(0), tcpBuffersize(0),
+    optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
-    enableMonitoring(false), active(0), retry(0), retryMax(0),
+    noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
     debugLevel(0), logToStderr(false)
 {
@@ -288,6 +291,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 505:
                     referenceTransfer.destTokenIssuer = optarg;
                     break;
+                case 506:
+                	authMethod = optarg;
+                    break;
                 case 600:
                     infosys = optarg;
                     break;
@@ -334,6 +340,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 809:
                     enableIpv6 = false;
+                    break;
+                case 810:
+                    noDelegation = true;
+                    break;
+                case 811:
+                    noStreaming = true;
                     break;
 
                 case 820:

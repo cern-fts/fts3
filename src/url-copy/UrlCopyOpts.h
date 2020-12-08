@@ -57,14 +57,18 @@ public:
 
     std::string jobMetadata;
 
+    std::string authMethod;
+
     unsigned optimizerLevel;
     bool     overwrite;
+    bool     noDelegation;
     unsigned nStreams;
     unsigned tcpBuffersize;
     unsigned timeout;
     bool     enableUdt;
     boost::tribool enableIpv6;
     unsigned addSecPerMb;
+    bool     noStreaming;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option
 

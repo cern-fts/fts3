@@ -864,4 +864,3 @@ CREATE VIEW v_staging AS
         s.file_state='STARTED'
     WHERE q.file_state='STAGING' AND s.file_state IS NULL;
 
-

@@ -120,7 +120,7 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
     fprintf(f, "ACCESS_KEY=%s\n", auth.accessToken.c_str());
     if (!auth.requestToken.empty())
         fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
-    fprintf(f, "ALTERNATE=%s\n", alternate?"true":"false");
+    fprintf(f, "ALTERNATE=%s\n", alternate ? "true" : "false");
 }
 
 
@@ -184,4 +184,53 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
 
     fclose(f);
     return oauth_path;
+}
+
+static void writeOAuthToken(FILE *f, const std::string& token)
+{
+    fprintf(f, "[BEARER]\n");
+    fprintf(f, "TOKEN=%s\n", token.c_str());
+}
+
+std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf, const std::string& filename)
+{
+    char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
+    char errDescr[128];
+    FILE *f = NULL;
+    int fd = -1;
+
+    if (filename.empty()) {
+        fd = mkstemp(oauth_path);
+
+        if (fd < 0) {
+            strerror_r(errno, errDescr, sizeof(errDescr));
+            throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
+        }
+        fchmod(fd, 0660);
+
+        f = fdopen(fd, "w");
+    } else {
+        f = fopen(filename.c_str(), "a");
+    }
+
+    if (f == NULL) {
+        if (fd != -1) {
+            close(fd);
+        }
+
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
+    }
+
+    auto cred = db->findCredential(tf.credId, tf.userDn);
+    if (!cred) {
+    	fclose(f);
+        return "";
+    }
+
+    // Only set the access token and not the refresh token
+    writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
+
+    fclose(f);
+    return filename.empty() ? oauth_path : filename;
 }

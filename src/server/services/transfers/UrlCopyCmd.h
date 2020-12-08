@@ -66,6 +66,7 @@ public:
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
+    void setAuthMethod(const std::string&);
 
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn, const std::string &msgDir);
 
@@ -75,6 +76,8 @@ public:
     void setNumberOfActive(int);
     void setNumberOfRetries(int);
     void setMaxNumberOfRetries(int);
+    void setDisableDelegation(bool);
+    void setDisableStreaming(bool);
 
     // Observers
     int getBuffersize();

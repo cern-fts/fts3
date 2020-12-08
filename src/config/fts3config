@@ -15,7 +15,7 @@ DbPassword=replacethis
 DbConnectString=replacethis
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
-DbThreadsNum=25
+DbThreadsNum=26
 
 #The alias used for the FTS endpoint, will be published as such in the dashboard transfers UI http://dashb-wlcg-transfers.cern.ch/ui/
 Alias=replacethis
@@ -145,7 +145,20 @@ AutoSessionReuse = False
 #by default it queries the system to honour the priorities specified by the users ( value = 0)
 #UseFixedJobPriority = 0
 
+ValidateAccessTokenOffline=True
+JWKCacheSeconds=86400
+TokenRefreshDaemonIntervalInSeconds=600
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer
 production = all:config
+
+# Uncomment and configure your provider(s)
+#[providers]
+#provider1=https://iam.extreme-datacloud.eu
+#provider1_ClientId=...
+#provider1_ClientSecret=...
+#provider2=https://wlcg.cloud.cnaf.infn.it
+#provider2_ClientId=...
+#provider2_ClientSecret=...
