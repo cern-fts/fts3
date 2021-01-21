@@ -1566,6 +1566,17 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 stmt6.execute(true);
                 sql.commit();
             }
+
+            // Finished multihop jobs should move all NOT_USED files in CANCELED state
+            if (jobType == Job::kTypeMultiHop) {
+                sql.begin();
+                soci::statement stmt7 = (
+                    sql.prepare << "UPDATE t_file SET file_state = 'CANCELED' "
+                                   "WHERE job_id = :jobId and file_state = 'NOT_USED' ",
+                    soci::use(jobId));
+                stmt7.execute(true);
+                sql.commit();
+            }
         }
         // Job not finished yet
         else
