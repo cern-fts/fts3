@@ -4076,6 +4076,17 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     dbState = i->state == "FINISHED" ? "FINISHED" : i->state;
                     dbReason = i->state == "FINISHED" ? std::string() : i->reason;
+
+                    // Find out job type
+                    Job::JobType jobType;
+                    sql << "SELECT job_type FROM t_job WHERE job_id = :job_id",
+                        soci::use(i->jobId),
+                        soci::into(jobType);
+
+                    // Trigger next hop after stage-in only operation
+                    if (dbState == "FINISHED" && jobType == Job::kTypeMultiHop) {
+                        useNextHop(sql, i->jobId);
+                    }
                 }
 
                 if(dbState == "SUBMITTED")
