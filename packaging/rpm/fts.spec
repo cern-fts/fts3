@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.10.0
+Version:    3.10.1
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -504,6 +504,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Fri Feb 26 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.10.1-1
+- Bugfix for stage-only + multihop jobs
+
 * Mon Dec 07 2020 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.10.0-1
 - New minor release
 - Brings the QoS daemon, which replaces the Bringonline daemon

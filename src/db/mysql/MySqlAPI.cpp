@@ -1566,6 +1566,17 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 stmt6.execute(true);
                 sql.commit();
             }
+
+            // Finished multihop jobs should move all NOT_USED files in CANCELED state
+            if (jobType == Job::kTypeMultiHop) {
+                sql.begin();
+                soci::statement stmt7 = (
+                    sql.prepare << "UPDATE t_file SET file_state = 'CANCELED' "
+                                   "WHERE job_id = :jobId and file_state = 'NOT_USED' ",
+                    soci::use(jobId));
+                stmt7.execute(true);
+                sql.commit();
+            }
         }
         // Job not finished yet
         else
@@ -4076,6 +4087,17 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, const std::vector<
                 {
                     dbState = i->state == "FINISHED" ? "FINISHED" : i->state;
                     dbReason = i->state == "FINISHED" ? std::string() : i->reason;
+
+                    // Find out job type
+                    Job::JobType jobType;
+                    sql << "SELECT job_type FROM t_job WHERE job_id = :job_id",
+                        soci::use(i->jobId),
+                        soci::into(jobType);
+
+                    // Trigger next hop after stage-in only operation
+                    if (dbState == "FINISHED" && jobType == Job::kTypeMultiHop) {
+                        useNextHop(sql, i->jobId);
+                    }
                 }
 
                 if(dbState == "SUBMITTED")
