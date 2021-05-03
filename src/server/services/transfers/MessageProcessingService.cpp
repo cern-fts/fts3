@@ -164,7 +164,7 @@ void MessageProcessingService::performUpdateMessageDbChange(const fts3::events::
         std::ostringstream internal_params;
         internal_params << "nostreams:" << static_cast<int>(msg.nostreams())
                         << ",timeout:" << static_cast<int>(msg.timeout())
-                        << ",buffsersize:" << static_cast<int>(msg.buffersize());
+                        << ",buffersize:" << static_cast<int>(msg.buffersize());
 
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Update message job_id=" << msg.job_id()
                                          << " file_id=" << msg.file_id()

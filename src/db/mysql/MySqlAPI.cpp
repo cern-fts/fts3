@@ -2282,7 +2282,7 @@ void MySqlAPI::updateProtocol(const fts3::events::Message& msg)
         std::ostringstream internalParams;
         internalParams << "nostreams:" << static_cast<int>(msg.nostreams())
                        << ",timeout:" << static_cast<int>(msg.timeout())
-                       << ",buffsersize:" << static_cast<int>(msg.buffersize());
+                       << ",buffersize:" << static_cast<int>(msg.buffersize());
         std::string params = internalParams.str();
 
         soci::statement stmt = (
