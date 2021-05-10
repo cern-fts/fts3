@@ -392,6 +392,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         gfal2.set("HTTP PLUGIN", "ENABLE_REMOTE_COPY", false);
     }
 
+    // Enable HTTP sensitive log scope
+    if (opts.debugLevel == 3) {
+        gfal2.set("HTTP PLUGIN", "LOG_SENSITIVE", true);
+    }
+
     // Additional metadata
     gfal2.addClientInfo("job-id", transfer.jobId);
     gfal2.addClientInfo("file-id", boost::lexical_cast<std::string>(transfer.fileId));
