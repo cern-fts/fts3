@@ -46,6 +46,9 @@ public:
 
     void fetch();
 
+    // Group by  credential ID (VO + DN) and storage endpoint
+    typedef std::pair<std::string, std::string> GroupByType;
+
 private:
     void recoverStartedTasks();
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
