@@ -459,6 +459,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["UseFixedJobPriority"]) )->default_value("0"),
         "Configure the system to use a fixed Job Priority, by default it queries the system to honour the priorities specified by the users"
     )
+    (
+        "CancelUnusedMultihopFiles",
+        po::value<std::string>( &(_vars["CancelUnusedMultihopFiles"]) )->default_value("false"),
+        "Enable or disable behaviour to cancel all NOT_USED files in a failed multihop job"
+    )
     ;
 
     return config;
