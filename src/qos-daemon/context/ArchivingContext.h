@@ -84,12 +84,15 @@ public:
          stateUpdater(jobs);
     }
 
-    int getArchiveTimeout() const
+    inline time_t getStartTime() const
+    {
+        return startTime;
+    }
+
+    inline int getArchiveTimeout() const
     {
         return archiveTimeout;
     }
-
-
 
     bool hasTimeoutExpired();
 

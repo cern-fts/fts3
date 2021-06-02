@@ -31,9 +31,6 @@
 
 void FetchArchiving::fetch()
 {
-    // VO+user dn, storage
-    typedef std::tuple<std::string, std::string> GroupByType;
-
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving starting" << commit;
 
     // we want to be sure that this won't break out fetching thread
@@ -51,8 +48,6 @@ void FetchArchiving::fetch()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-           
-
             std::map<GroupByType, ArchivingContext> tasks;
             std::vector<ArchivingOperation> files;
 
@@ -124,7 +119,7 @@ void FetchArchiving::recoverStartedTasks()
 
 
     try {
-    	//We get the files with archiving started not null
+    	// Retrieve the files with archive_start_time not null
         db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedArchiving(startedArchivingOps);
     }
     catch (UserError const & ex) {
@@ -135,24 +130,29 @@ void FetchArchiving::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
-    std::map<std::string, ArchivingContext> tasks;
+    std::map<GroupByType, ArchivingContext> tasks;
 
     for (auto it_f = startedArchivingOps.begin(); it_f != startedArchivingOps.end(); ++it_f) {
-        auto it_t = tasks.find(it_f->jobId);
-        if (it_t == tasks.end())
+        // Apply grouping by credential ID and storage endpoint
+        std::string storage = Uri::parse(it_f->surl).host;
+        GroupByType key(it_f->credId, storage);
+        auto it_t = tasks.find(key);
+        if (it_t == tasks.end()) {
             tasks.insert(std::make_pair(
-                it_f->jobId, ArchivingContext(
-                		QoSServer::instance(), *it_f
-                ))
+                    key, ArchivingContext(
+                            QoSServer::instance(), *it_f
+                    ))
             );
-        else
+        }
+        else {
             it_t->second.add(*it_f);
+        }
     }
 
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
         try {
-           
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for job " << it_t->first << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for storage " << it_t->first.second << ": "
+                                            <<  it_t->second.getLogMsg() << commit;
             threadpool.start(new ArchivingPollTask(it_t->second));
         }
         catch (UserError const & ex) {

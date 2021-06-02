@@ -29,7 +29,6 @@ std::set<std::pair<std::string, std::string>> ArchivingPollTask::active_urls;
 
 void ArchivingPollTask::run(const boost::any&)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ArchivingPollTask starting" << commit;
 	if (timeout_occurred()) return;
 	// handle cancelled jobs/files
 	handle_canceled();
@@ -47,6 +46,10 @@ void ArchivingPollTask::run(const boost::any&)
 	for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
 		urls.push_back(set_i->c_str());
 	}
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting"
+        << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime()
+        << " / timeout=" << ctx.getArchiveTimeout() << " ]" << commit;
 
 	std::vector<GError*> errors(urls.size(), NULL);
 	std::vector<const char*> failedUrls;

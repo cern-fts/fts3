@@ -145,6 +145,10 @@ AutoSessionReuse = False
 #by default it queries the system to honour the priorities specified by the users ( value = 0)
 #UseFixedJobPriority = 0
 
+# Behavior for failed multihop jobs
+# Cancel all NOT_USED files in a failed multihop job (default false)
+CancelUnusedMultihopFiles = False
+
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
 TokenRefreshDaemonIntervalInSeconds=600

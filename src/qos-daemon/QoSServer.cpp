@@ -127,6 +127,14 @@ void QoSServer::start(void)
     systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
     systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
 
+    // Heartbeat
+    systemThreads.create_thread(heartBeat);
+
+    // Give heartbeat some time to be processed
+    if (!ServerConfig::instance().get<bool>("rush")) {
+        boost::this_thread::sleep(boost::posix_time::seconds(8));
+    }
+
     // Staging
     systemThreads.create_thread(boost::bind(&FetchStaging::fetch, fs));
     systemThreads.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
@@ -141,8 +149,6 @@ void QoSServer::start(void)
     systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
     systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
     systemThreads.create_thread(boost::bind(&ArchivingStateUpdater::run, &archivingStateUpdater));
-    // Heartbeat
-    systemThreads.create_thread(heartBeat);
 }
 
 
