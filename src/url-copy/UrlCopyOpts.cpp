@@ -82,6 +82,8 @@ const option UrlCopyOpts::long_options[] =
     {"logDir",            required_argument, 0, 900},
     {"msgDir",            required_argument, 0, 901},
 
+    {"dst_file_report",   no_argument,       0, 1000},
+
     {"help",              no_argument,       0, 0},
     {"debug",             required_argument, 0, 1},
     {"stderr",            no_argument,       0, 2},
@@ -173,6 +175,7 @@ UrlCopyOpts::UrlCopyOpts():
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
     noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+    dst_file_report(false),
     debugLevel(0), logToStderr(false)
 {
 }
@@ -365,6 +368,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 901:
                     msgDir = boost::lexical_cast<std::string>(optarg);
+                    break;
+
+                case 1000:
+                    dst_file_report = true;
                     break;
 
                 default:

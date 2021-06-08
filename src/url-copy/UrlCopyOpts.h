@@ -79,6 +79,8 @@ public:
     std::string logDir;
     std::string msgDir;
 
+    bool dst_file_report;
+
     unsigned debugLevel;
     bool     logToStderr;
 
