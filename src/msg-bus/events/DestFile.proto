@@ -1,0 +1,9 @@
+package fts3.events;
+
+message DestFile {
+    optional uint64 file_size = 1;
+    optional string checksum_type = 2;
+    optional string checksum_value = 3;
+    optional bool   file_on_disk = 4;
+    optional bool   file_on_tape = 5;
+}
