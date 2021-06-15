@@ -431,6 +431,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token issuer: " << transfer.destTokenIssuer << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dst_file_report << commit;
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
@@ -452,9 +453,45 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         if (!opts.overwrite) {
             try {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
-                gfal2.stat(params, transfer.destination, false);
-                throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
+                const auto destFileSize = gfal2.stat(params, transfer.destination, false).st_size;
+                UrlCopyError urlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
                     "Destination file exists and overwrite is not enabled");
+                if (opts.dst_file_report) {
+                    try {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: " <<
+                            transfer.destination << commit;
+                        const std::string checksumType = transfer.checksumAlgorithm.empty() ? "ADLER32" :
+                            transfer.checksumAlgorithm;
+                        const std::string checksum = gfal2.getChecksum(transfer.destination,
+                            transfer.checksumAlgorithm);
+                        UrlCopyError::DestFile destFile;
+                        destFile.fileSize = destFileSize;
+                        destFile.checksumType = checksumType;
+                        destFile.checksumValue = checksum;
+                        const std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
+                        if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
+                          destFile.fileOnDisk = true;
+                          destFile.fileOnTape = false;
+                        } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
+                          destFile.fileOnDisk = false;
+                          destFile.fileOnTape = true;
+                        } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
+                          destFile.fileOnDisk = true;
+                          destFile.fileOnTape = true;
+                        } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
+                          destFile.fileOnDisk = false;
+                          destFile.fileOnTape = false;
+                        } else {
+                          throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
+                        }
+                        urlCopyError.setDestFile(destFile);
+                    } catch (const std::exception &ex) {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
+                            << transfer.destination << ": " << ex.what() << commit;
+                    }
+                }
+
+                throw urlCopyError;
             }
             catch (const Gfal2Exception &ex) {
                 if (ex.code() != ENOENT) {
