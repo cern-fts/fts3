@@ -386,6 +386,16 @@ public:
         }
         return buffer;
     }
+
+    // Get the extended attribute of a resource
+    std::string getXattr(const std::string &url, const std::string &name) {
+        char buffer[1024];
+        GError *error = NULL;
+        if (gfal2_getxattr(context, url.c_str(), name.c_str(), buffer, sizeof(buffer), &error)) {
+            throw Gfal2Exception(error);
+        }
+        return buffer;
+    }
 };
 
 
