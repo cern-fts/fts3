@@ -312,6 +312,12 @@ void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
 }
 
 
+void UrlCopyCmd::setDstFileReport(const bool dst_file_report)
+{
+    setFlag("dst_file_report", dst_file_report);
+}
+
+
 int UrlCopyCmd::getBuffersize()
 {
     auto buffersize = options["tcp-buffersize"];
