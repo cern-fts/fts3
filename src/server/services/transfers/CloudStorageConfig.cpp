@@ -125,6 +125,12 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
     }
 }
 
+static void writeSwiftCreds(FILE *f, const std::string& csName, const CloudStorageAuth& auth)
+{
+    fprintf(f, "[%s]\n", csName.c_str());
+    fprintf(f, "OS_TOKEN=%s\n", auth.osToken.c_str());
+    fprintf(f, "OS_PROJECT_ID=%s\n", auth.osProjectID.c_str());
+}
 
 std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
@@ -175,6 +181,9 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
             if (db->getCloudStorageCredentials(tf.userDn, *voI, upperCsName, auth)) {
                 if (boost::starts_with(upperCsName, "DROPBOX")) {
                     writeDropboxCreds(f, upperCsName, auth);
+                }
+                else if (boost::starts_with(upperCsName, "SWIFT")) {
+                    writeSwiftCreds(f, upperCsName, auth);
                 }
                 else {
                     writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);

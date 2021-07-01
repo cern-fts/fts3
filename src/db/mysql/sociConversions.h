@@ -347,6 +347,8 @@ struct type_conversion<CloudStorageAuth>
         auth.accessToken = v.get<std::string>("access_token", "");
         auth.accessTokenSecret = v.get<std::string>("access_token_secret", "");
         auth.requestToken = v.get<std::string>("request_token", "");
+        auth.osToken      = v.get<std::string>("os_token", "");
+        auth.osProjectID  = v.get<std::string>("os_project_id", "");
     }
 };
 
