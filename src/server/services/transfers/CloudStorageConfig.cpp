@@ -41,7 +41,9 @@ bool isCloudStorage(const Uri &storage)
            storage.protocol == "s3" ||
            storage.protocol == "s3s" || 
            storage.protocol == "gcloud" ||
-           storage.protocol == "gclouds";
+           storage.protocol == "gclouds" ||
+           storage.protocol == "swift" ||
+           storage.protocol == "swifts";
 }
 
 
@@ -71,6 +73,8 @@ std::string getCloudStorageDefaultName(const Uri &storage)
         return cs_name;
     } else if ((prefix == "GCLOUD") or (prefix == "GCLOUDS")) {
         return std::string("GCLOUD:") + storage.host;
+    } else if ((prefix == "SWIFT") or (prefix == "SWIFTS")) {
+        return std::string("SWIFT:") + storage.host;
     }
     else if (prefix == "DROPBOX") {
         return prefix;
