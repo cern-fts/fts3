@@ -66,23 +66,23 @@ public:
 
     using JobContext::add;
 
-    StagingContext(QoSServer &qosServer, const StagingOperation &stagingOp):
+    StagingContext(QoSServer &qosServer, const StagingOperation &stagingOp) :
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
         stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
-        pinLifetime(stagingOp.pinLifetime), bringonlineTimeout(stagingOp.timeout)
+        maxPinLifetime(stagingOp.pinLifetime), maxBringonlineTimeout(stagingOp.timeout)
     {
         add(stagingOp);
-        startTime = time(0);
+        minStagingStartTime = time(0);
     }
 
     StagingContext(const StagingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
-        pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
+        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime)
     {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
-        pinLifetime(copy.pinLifetime), bringonlineTimeout(copy.bringonlineTimeout), startTime(copy.startTime)
+        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime)
     {}
 
     virtual ~StagingContext() {}
@@ -109,12 +109,12 @@ public:
 
     int getBringonlineTimeout() const
     {
-        return bringonlineTimeout;
+        return maxBringonlineTimeout;
     }
 
     int getPinlifetime() const
     {
-        return pinLifetime;
+        return maxPinLifetime;
     }
 
     bool hasTimeoutExpired();
@@ -133,9 +133,9 @@ private:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
-    int pinLifetime;
-    int bringonlineTimeout;
-    time_t startTime;
+    int maxPinLifetime; ///< maximum copy pin lifetime of the batch
+    int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
+    time_t minStagingStartTime; ///< first staging start timestamp of the batch
 };
 
 #endif // STAGINGCONTEXT_H_
