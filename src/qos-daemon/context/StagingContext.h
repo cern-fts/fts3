@@ -35,6 +35,30 @@
 #include "../QoSServer.h"
 
 
+/**
+ * The StagingContext groups relevant details for a BringOnline batch request.
+ * Within the context, files share the same credential ID, storage endpoint and space token.
+ *
+ * When retrieving staging operations from the database, the above grouping criteria is applied.
+ * Files from different jobs may end up in the same batch. More so, multiple file ids may have
+ * the same file sURL.
+ *
+ * As files are grouped into a batch, they are forced on common properties:
+ *   - ctx_bringonline_timeout: max(staging_operation.bringonline_timeout)
+ *   - ctx_copy_pin_lifetime: max(staging_operation.copy_pin_lifetime)
+ *   - ctx_staging_start_time: min(staging_operation.staging_start_time)
+ *
+ * Timeout is reached when: now() - ctx_staging_start_time > ctx_bringonline_timeout
+ *
+ * Two data structures are defined internally:
+ * 1. map(job_id, map(surl, vector(file_id))).
+ *    This data structure is passed to the StateUpdater, responsible for running
+ *    a certain update operation across the whole set, on each (job_id, file_id).
+ * 2. multimap(surl, pair(job_id, file_id))
+ *    Provides an easy way to retrieve a vector(pair(job_id, file_id)) for the given sURL.
+ *    This data structure is used predominantly by polling tasks, which operate on a per-file basis.
+ */
+
 class StagingContext : public JobContext
 {
 
