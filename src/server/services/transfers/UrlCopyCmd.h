@@ -80,8 +80,6 @@ public:
     void setDisableDelegation(bool);
     void setDisableStreaming(bool);
 
-    void setDstFileReport(bool);
-
     // Observers
     int getBuffersize();
     int getNoStreams();
