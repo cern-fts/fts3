@@ -82,7 +82,7 @@ const option UrlCopyOpts::long_options[] =
     {"logDir",            required_argument, 0, 900},
     {"msgDir",            required_argument, 0, 901},
 
-    {"dst_file_report",   no_argument,       0, 1000},
+    {"dst-file-report",   no_argument,       0, 1000},
 
     {"help",              no_argument,       0, 0},
     {"debug",             required_argument, 0, 1},
