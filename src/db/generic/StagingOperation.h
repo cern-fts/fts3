@@ -25,10 +25,11 @@
 struct StagingOperation {
     StagingOperation(const std::string& jobId, uint64_t fileId, const std::string& voName,
         const std::string& userDn, const std::string& credId, const std::string& surl,
-        time_t pinLifetime, time_t timeout, const std::string& spaceToken,
-        const std::string& token):
+        time_t pinLifetime, time_t timeout, time_t startTime,
+        const std::string& spaceToken, const std::string& token):
         jobId(jobId), fileId(fileId), voName(voName), userDn(userDn), credId(credId), surl(surl),
-        pinLifetime(pinLifetime), timeout(timeout), spaceToken(spaceToken), token(token)
+        pinLifetime(pinLifetime), timeout(timeout), startTime(startTime),
+        spaceToken(spaceToken), token(token)
     {
     }
 
@@ -40,6 +41,7 @@ struct StagingOperation {
     std::string surl;
     time_t pinLifetime;
     time_t timeout;
+    time_t startTime;
     std::string spaceToken;
     std::string token; ///< Bring online operation token
 };

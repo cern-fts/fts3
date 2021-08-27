@@ -3826,11 +3826,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,
                         user_dn, cred_id, source_url,
-                        copy_pin_lifetime, bring_online, source_space_token,
-                        std::string()
+                        copy_pin_lifetime, bring_online, 0,
+                        source_space_token, std::string()
                     );
 
-                    if(!job_id.empty() && file_id > 0)
+                    if (!job_id.empty() && file_id > 0)
                     {
                         filesState.emplace_back(job_id, file_id, initState, reason, false);
                     }
@@ -3954,8 +3954,8 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
         soci::rowset<soci::row> rs3 =
             (
                 sql.prepare <<
-                " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
-                " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
+                " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, f.staging_start, f.bringonline_token, "
+                " j.copy_pin_lifetime, j.bring_online, j.user_dn, j.cred_id, j.source_space_token "
                 " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                 " WHERE  "
                 " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
@@ -3975,7 +3975,13 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
             int bring_online = row.get<int>("bring_online",0);
 
-            if(copy_pin_lifetime > 0 && bring_online <= 0)
+            time_t staging_start_time = 0;
+            if (row.get_indicator("staging_start") == soci::i_ok) {
+                struct tm start_tm = row.get<struct tm>("staging_start");
+                staging_start_time = timegm(&start_tm);
+            }
+
+            if (copy_pin_lifetime > 0 && bring_online <= 0)
                 bring_online = 28800;
             else if (bring_online > 0 && copy_pin_lifetime <= 0)
                 copy_pin_lifetime = 28800;
@@ -3991,7 +3997,9 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             stagingOps.emplace_back(
                 job_id, file_id, vo_name,
                 user_dn, cred_id, source_url,
-                copy_pin_lifetime, bring_online, source_space_token,
+                copy_pin_lifetime, bring_online,
+                staging_start_time,
+                source_space_token,
                 bringonline_token
             );
         }

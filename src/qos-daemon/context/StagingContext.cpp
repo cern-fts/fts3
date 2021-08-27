@@ -35,6 +35,10 @@ void StagingContext::add(const StagingOperation &stagingOp)
         maxBringonlineTimeout = stagingOp.timeout;
     }
 
+    if ((stagingOp.startTime > 0) && (stagingOp.startTime < minStagingStartTime)) {
+        minStagingStartTime = stagingOp.startTime;
+    }
+
     add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
 }
 

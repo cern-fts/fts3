@@ -69,10 +69,9 @@ public:
     StagingContext(QoSServer &qosServer, const StagingOperation &stagingOp) :
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
         stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
-        maxPinLifetime(stagingOp.pinLifetime), maxBringonlineTimeout(stagingOp.timeout)
+        maxPinLifetime(stagingOp.pinLifetime), maxBringonlineTimeout(stagingOp.timeout), minStagingStartTime(time(0))
     {
         add(stagingOp);
-        minStagingStartTime = time(0);
     }
 
     StagingContext(const StagingContext &copy) :
@@ -115,6 +114,11 @@ public:
     int getPinlifetime() const
     {
         return maxPinLifetime;
+    }
+
+    time_t getStartTime() const
+    {
+        return minStagingStartTime;
     }
 
     bool hasTimeoutExpired();

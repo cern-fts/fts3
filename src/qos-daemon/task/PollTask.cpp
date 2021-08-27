@@ -197,9 +197,10 @@ void PollTask::run(const boost::any&)
     if (status == 0 || forcePoll) {
         time_t interval = getPollInterval(++nPolls), now = time(NULL);
         wait_until = now + interval;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)
-            << "BRINGONLINE polling " << ctx.getLogMsg() << token << commit;
-
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling " << ctx.getLogMsg()
+                                        << "[ token=" << token << ", minStagingStartTime=" << ctx.getStartTime()
+                                        << ", maxBringonlineTimeout=" << ctx.getBringonlineTimeout() << " ]"
+                                        << commit;
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
         ctx.getWaitingRoom().add(new PollTask(std::move(*this)));
     }
