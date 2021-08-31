@@ -58,7 +58,6 @@
  *    Provides an easy way to retrieve a vector(pair(job_id, file_id)) for the given sURL.
  *    This data structure is used predominantly by polling tasks, which operate on a per-file basis.
  */
-
 class StagingContext : public JobContext
 {
 
