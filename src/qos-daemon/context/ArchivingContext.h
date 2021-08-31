@@ -35,7 +35,29 @@
 #include "JobContext.h"
 #include "../QoSServer.h"
 
-
+/**
+ * The ArchivingContext groups relevant details for an ArchivingPoll request.
+ * Within the context, files share the same credential ID and storage endpoint.
+ *
+ * Grouping archive monitoring operations is a bit simpler than for staging.
+ * As archiving operations are done per file (and not per batch), they only need
+ * to share the same credential ID and storage endpoint.
+ *
+ * Since the archive polling operation is per file, then the timeout for each operation
+ * needs to be stored. Timeout is reached when:
+ *   now() >= archive_operation_start + archive_operation_timeout
+ *
+ * The following data structures are defined internally:
+ * 1. map(job_id, map(surl, vector(file_id))).
+ *    This data structure is passed to the StateUpdater, responsible for running
+ *    a certain update operation across the whole set, on each (job_id, file_id).
+ * 2. multimap(surl, pair(job_id, file_id))
+ *    Provides an easy way to retrieve a vector(pair(job_id, file_id)) for the given sURL.
+ *    This data structure is used predominantly by polling tasks, which operate on a per-file basis.
+ * 3. map(file_id, expiry_timestamp)
+ *    Data structure used to map FileIDs with expiry timestamps (start_time + archive_timeout).
+ *    This data structure is used to identify whether the transfer timed out.
+ */
 class ArchivingContext : public JobContext
 {
 
@@ -45,43 +67,92 @@ public:
 
     ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
         JobContext(archiveOp.user, archiveOp.voName, archiveOp.credId, ""),
-        stateUpdater(qosServer.getArchivingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom()),
-		archiveTimeout(archiveOp.timeout)
+        stateUpdater(qosServer.getArchivingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom())
     {
         add(archiveOp);
         startTime = time(0);
     }
 
     ArchivingContext(const ArchivingContext &copy) :
-        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
-		archiveTimeout(copy.archiveTimeout), startTime(copy.startTime)
+        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime)
     {}
 
     ArchivingContext(ArchivingContext && copy) :
-        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
-		archiveTimeout(copy.archiveTimeout), startTime(copy.startTime)
+        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime)
     {}
 
     virtual ~ArchivingContext() {}
 
-    void add(const ArchivingOperation &stagingOp);
+    /**
+     * Add archive operation to the context.
+     *
+     * @param archiveOp : the archive operation to add
+     */
+    void add(const ArchivingOperation &archiveOp);
 
     /**
-     * Asynchronous update of a single transfer-file within a job
+     * Asynchronous update of a single transfer file within a job.
      */
     void updateState(const std::string &jobId, uint64_t fileId, const std::string &state, const JobError &error) const
     {
         stateUpdater(jobId, fileId, state, error);
     }
 
+    /**
+     * Asynchronous update across all transfers within the context.
+     */
     void updateState(const std::string &state, const JobError &error) const
     {
         stateUpdater(jobs, state, error);
     }
 
-    void setStartTime()
+    /**
+     * Register current time as the archive start time in the database and
+     * add this value to all transfers in the expiry map.
+     */
+    void setArchiveStartTime()
     {
-         stateUpdater(jobs);
+        stateUpdater(jobs);
+
+        time_t now(time(0));
+        for (auto it = expiryMap.begin(); it != expiryMap.end(); it++) {
+            expiryMap[it->first] += now;
+        }
+    }
+
+    /**
+     * Checks the expiry map whether the given transfer timed out.
+     *
+     * @param file_id : transfer file id to check
+     * @return true if the transfer timed out, false otherwise
+     */
+    bool hasTransferTimedOut(uint64_t file_id);
+
+    /**
+     * Removes the given transfers from all internal data structures.
+     *
+     * @param transfers : list of tuples(sURL, job_id, file_id)
+     */
+    void removeTransfers(const std::list<std::tuple<std::string, std::string, uint64_t>>& timeout_transfers);
+
+    /**
+     * Remove a surl and list of IDs from all internal data structures.
+     *
+     * @param url : the sURL
+     * @param ids : vector of pair(job_id, file_id)
+     */
+    void removeUrlWithIds(const std::string& url, const std::vector<std::pair<std::string, uint64_t>>& ids);
+
+    std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
+
+    int incrementErrorCountForSurl(const std::string &surl) {
+        return (errorCount[surl] += 1);
+    }
+
+    WaitingRoom<ArchivingPollTask>& getWaitingRoom() {
+        return waitingRoom;
     }
 
     inline time_t getStartTime() const
@@ -89,29 +160,15 @@ public:
         return startTime;
     }
 
-    inline int getArchiveTimeout() const
-    {
-        return archiveTimeout;
-    }
-
-    bool hasTimeoutExpired();
-
-    std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
-
-    WaitingRoom<ArchivingPollTask>& getWaitingRoom() {
-        return waitingRoom;
-    }
-
-    int incrementErrorCountForSurl(const std::string &surl) {
-        return (errorCount[surl] += 1);
-    }
-
 private:
     ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
-    int archiveTimeout;
+    /// Map of FileID --> expire timestamp
+    std::map<uint64_t, time_t> expiryMap;
     time_t startTime;
+
+    friend class ArchivingPollTask;
 };
 
 #endif // ARCHIVINGCONTEXT_H_

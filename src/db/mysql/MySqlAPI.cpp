@@ -3429,7 +3429,7 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
             std::string dn = r.get<std::string>("dn");
             std::string dlg_id = r.get<std::string>("dlg_id");
             int archive_timeout = r.get<int>("archive_timeout",0);
-            archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, archive_timeout);
+            archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, 0, archive_timeout);
         }
 
         //TODO: add throttling
@@ -3888,8 +3888,8 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
         soci::rowset<soci::row> rs =
                 (
                         sql.prepare <<
-                        " SELECT f.vo_name, f.dest_surl, f.job_id, f.file_id, j.archive_timeout, "
-                        " j.user_dn, j.cred_id "
+                        " SELECT f.vo_name, f.dest_surl, f.job_id, f.file_id, f.archive_start_time, "
+                        " j.archive_timeout, j.user_dn, j.cred_id "
                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                         " WHERE  "
                         " j.archive_timeout >= 0  "
@@ -3906,15 +3906,21 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
             std::string dest_url = row.get<std::string>("dest_surl");
             std::string job_id = row.get<std::string>("job_id");
             uint64_t file_id = row.get<unsigned long long>("file_id");
-            int archiveTimeout = row.get<int>("archive_timeout",0);
-            
+            int archive_timeout = row.get<int>("archive_timeout", 0);
+
+            time_t archive_start_time = time(0);
+            if (row.get_indicator("archive_start_time") == soci::i_ok) {
+                struct tm start_tm = row.get<struct tm>("archive_start_time");
+                archive_start_time = timegm(&start_tm);
+            }
+
             std::string user_dn = row.get<std::string>("user_dn");
             std::string cred_id = row.get<std::string>("cred_id");
             
             archiveOps.emplace_back(
                     job_id, file_id, vo_name,
                     user_dn, cred_id, dest_url,
-                    archiveTimeout
+                    archive_start_time, archive_timeout
             );
         }
     }

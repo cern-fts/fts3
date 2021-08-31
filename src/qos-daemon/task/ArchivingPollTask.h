@@ -114,6 +114,9 @@ private:
     /// checks if the archive  task timed-out and removes respective URLs from the context
     bool timeout_occurred();
 
+    /// check each transfer for timeout
+    void handle_timeouts();
+
     /// aborts the operation for the given URLs
     void abort(std::set<std::string> const & urls, bool report = true);
 
