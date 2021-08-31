@@ -108,12 +108,6 @@ public:
         }
 
 private:
-    /// checks if the archive  task was cancelled and removes those URLs that were from the context
-    void handle_canceled();
-
-    /// checks if the archive  task timed-out and removes respective URLs from the context
-    bool timeout_occurred();
-
     /// check each transfer for timeout
     void handle_timeouts();
 

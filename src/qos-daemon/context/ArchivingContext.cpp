@@ -20,7 +20,6 @@
 
 #include "ArchivingContext.h"
 
-#include <unordered_set>
 #include "common/Logger.h"
 
 
@@ -93,32 +92,4 @@ void ArchivingContext::removeUrlWithIds(const std::string& url,
     for (auto it = ids.begin(); it != ids.end(); it++) {
         expiryMap.erase(it->second);
     }
-}
-
-
-std::set<std::string> ArchivingContext::getSurlsToAbort(
-    const std::set<std::pair<std::string, std::string>> &urls)
-{
-    // remove respective URLs from the task
-    for (auto it = urls.begin(); it != urls.end(); ++it) {
-        jobs[it->first].erase(it->second);
-    }
-
-    std::unordered_set<std::string> not_canceled, unique;
-    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j) {
-        auto const & urls = it_j->second;
-        for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {
-            std::string const & url = it_u->first;
-            not_canceled.insert(url);
-        }
-    }
-
-    std::set<std::string> ret;
-    for (auto it = urls.begin(); it != urls.end(); ++it) {
-        std::string const & url = it->second;
-        if (not_canceled.count(url) || unique.count(url))
-            continue;
-        ret.insert(url.c_str());
-    }
-    return ret;
 }

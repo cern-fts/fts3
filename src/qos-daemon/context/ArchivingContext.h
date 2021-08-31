@@ -145,8 +145,6 @@ public:
      */
     void removeUrlWithIds(const std::string& url, const std::vector<std::pair<std::string, uint64_t>>& ids);
 
-    std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
-
     int incrementErrorCountForSurl(const std::string &surl) {
         return (errorCount[surl] += 1);
     }
