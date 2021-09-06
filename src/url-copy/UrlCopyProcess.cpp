@@ -29,6 +29,7 @@
 #include "AutoInterruptThread.h"
 #include "UrlCopyProcess.h"
 #include "version.h"
+#include "DestFile.h"
 
 using fts3::common::commit;
 
@@ -464,7 +465,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                             transfer.checksumAlgorithm;
                         const std::string checksum = gfal2.getChecksum(transfer.destination,
                             transfer.checksumAlgorithm);
-                        UrlCopyError::DestFile destFile;
+                        DestFile destFile;
                         destFile.fileSize = destFileSize;
                         destFile.checksumType = checksumType;
                         destFile.checksumValue = checksum;
@@ -484,7 +485,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                         } else {
                           throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
                         }
-                        urlCopyError.setDestFile(destFile);
+                        transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
                     } catch (const std::exception &ex) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
                             << transfer.destination << ": " << ex.what() << commit;

@@ -41,22 +41,12 @@
 
 
 class UrlCopyError: public fts3::common::BaseException {
-public:
-    struct DestFile {
-        uint64_t fileSize;
-        std::string checksumType;
-        std::string checksumValue;
-        bool fileOnDisk;
-        bool fileOnTape;
-        DestFile(): fileSize(0), fileOnDisk(false), fileOnTape(false) {}
-    };
 
 private:
     std::string scope_;
     std::string phase_;
     int code_;
     std::string msg_;
-    boost::optional<DestFile> destFile_;
 
 public:
     UrlCopyError(const std::string &scope, const std::string &phase, int code, const std::string &msg):
@@ -88,14 +78,6 @@ public:
 
     bool isRecoverable(void) const throw() {
         return retryTransfer(code(), scope(), what());
-    }
-
-    void setDestFile(const DestFile &destFile) {
-        destFile_ = destFile;
-    }
-
-    const boost::optional<DestFile> &destFile() const throw() {
-        return destFile_;
     }
 };
 
