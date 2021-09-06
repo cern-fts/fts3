@@ -34,4 +34,8 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
  */
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned addSecPerMb);
 
+std::string mapErrnoToString(int err);
+
+std::string replaceMetadataString(std::string text);
+
 #endif // HEURISTICS_H

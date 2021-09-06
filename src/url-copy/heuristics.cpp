@@ -21,6 +21,7 @@
 #include <errno.h>
 #include "heuristics.h"
 #include "common/Logger.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace fts3::common;
 
@@ -147,4 +148,25 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
 
     // Final timeout adjusted considering transfer timeout
     return 600 + ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
+}
+
+
+std::string mapErrnoToString(int err)
+{
+    char buf[256] = {0};
+    char const *str = strerror_r(err, buf, sizeof(buf));
+    if (str) {
+        std::string rep(str);
+        std::replace(rep.begin(), rep.end(), ' ', '_');
+        return boost::to_upper_copy(rep);
+    }
+    return "GENERAL ERROR";
+}
+
+
+std::string replaceMetadataString(std::string text)
+{
+    text = boost::replace_all_copy(text, "?"," ");
+    text = boost::replace_all_copy(text, "\\\"","\"");
+    return text;
 }

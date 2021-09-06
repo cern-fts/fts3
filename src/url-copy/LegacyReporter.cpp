@@ -18,30 +18,10 @@
 #include <boost/algorithm/string.hpp>
 #include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
+#include "heuristics.h"
 
 namespace events = fts3::events;
 using fts3::common::commit;
-
-
-static std::string mapErrnoToString(int err)
-{
-    char buf[256] = {0};
-    char const *str = strerror_r(err, buf, sizeof(buf));
-    if (str) {
-        std::string rep(str);
-        std::replace(rep.begin(), rep.end(), ' ', '_');
-        return boost::to_upper_copy(rep);
-    }
-    return "GENERAL ERROR";
-}
-
-
-static std::string replaceMetadataString(std::string text)
-{
-    text = boost::replace_all_copy(text, "?"," ");
-    text = boost::replace_all_copy(text, "\\\"","\"");
-    return text;
-}
 
 
 LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), opts(opts),
