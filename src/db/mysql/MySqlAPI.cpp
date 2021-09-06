@@ -659,7 +659,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             {
                 soci::rowset<TransferFile> rs = (sql.prepare <<
                       " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                      "       f.file_id, j.overwrite_flag, j.dst_file_report, j.user_dn, j.cred_id, "
+                      "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, j.user_dn, j.cred_id, "
                       "       f.checksum, j.checksum_method, j.source_space_token, "
                       "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                       "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
@@ -723,7 +723,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     if (it_act->second == 0) continue;
 
                     std::string select = " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                         "       f.file_id, j.overwrite_flag, j.dst_file_report, j.user_dn, j.cred_id,"
+                                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, j.user_dn, j.cred_id,"
                                          "       f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
@@ -1137,8 +1137,8 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         sql.prepare <<
                         " SELECT SQL_NO_CACHE "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.dst_file_report, j.user_dn, j.cred_id, "
-                        "       f.checksum, j.checksum_method, j.source_space_token, "
+                        "       f.file_id, j.overwrite_flag,  j.archive_timeout, j.dst_file_report, j.user_dn, "
+                        "       j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "

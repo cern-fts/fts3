@@ -145,6 +145,7 @@ struct type_conversion<TransferFile>
         file.fileId     = v.get<unsigned long long>("file_id");
         file.overwriteFlag   = v.get<std::string>("overwrite_flag","");
         file.dstFileReport   = v.get<std::string>("dst_file_report","");
+        file.archiveTimeout  = v.get<int>("archive_timeout",-1);
         file.userDn          = v.get<std::string>("user_dn");
         file.credId     = v.get<std::string>("cred_id");
         file.checksum    = v.get<std::string>("checksum","");
