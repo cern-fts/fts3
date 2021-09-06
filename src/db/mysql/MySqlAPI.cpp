@@ -1179,18 +1179,19 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 
 boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
-        int processId, double filesize, double duration, bool retry)
+        int processId, double filesize, double duration, bool retry, std::string FileMetadata)
 {
     soci::session sql(*connectionPool);
     return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-            transferState, errorReason, processId, filesize, duration, retry);
+            transferState, errorReason, processId, filesize, duration, retry, FileMetadata);
 }
 
 
 boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
         std::string newFileState, std::string transferMessage,
-        int processId, double filesize, double duration, bool retry)
+        int processId, double filesize, double duration, bool retry,
+        std::string FileMetadata)
 {
     std::string storedState;
     soci::indicator destSurlUuidInd;
@@ -1307,6 +1308,11 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
                                              << " to ARCHIVING state" << commit;
             newFileState = "ARCHIVING";
+        }
+
+        if (!FileMetadata.empty()) {
+            query << ", file_metadata = :file_metadata";
+            stmt.exchange(soci::use(FileMetadata, "file_metadata"));
         }
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
