@@ -149,12 +149,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         }
         else {
             status.set_transfer_status("FAILED");
-            if (const boost::optional<UrlCopyError::DestFile> destFile = transfer.error->destFile()){
-                status.mutable_dest_file()->set_file_size(destFile->fileSize);
-                status.mutable_dest_file()->set_checksum_type(destFile->checksumType);
-                status.mutable_dest_file()->set_checksum_value(destFile->checksumValue);
-                status.mutable_dest_file()->set_file_on_disk(destFile->fileOnDisk);
-                status.mutable_dest_file()->set_file_on_tape(destFile->fileOnTape);
+            if (opts.dst_file_report && (!opts.overwrite)){
+                status.set_file_metadata(replaceMetadataString(transfer.fileMetadata));
             }
         }
         status.set_transfer_message(fullErrMsg.str());
