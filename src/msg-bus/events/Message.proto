@@ -1,7 +1,5 @@
 package fts3.events;
 
-import "DestFile.proto";
-
 message Message {
     required string job_id = 1;
     required uint64 file_id = 2;
@@ -24,5 +22,5 @@ message Message {
 
     optional int32 errcode = 16;
 
-    optional string file_metadata = 18;
+    optional string file_metadata = 17;
 }

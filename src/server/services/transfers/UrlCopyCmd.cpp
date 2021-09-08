@@ -40,8 +40,7 @@ UrlCopyCmd::UrlCopyCmd() : IPv6Explicit(false)
 
 std::string UrlCopyCmd::prepareMetadataString(const std::string &text)
 {
-    std::string copy(text);
-    copy = boost::replace_all_copy(copy, " ", "?");
+    std::string copy = boost::replace_all_copy(text, " ", "?");
     copy = boost::replace_all_copy(copy, "\"", "\\\"");
     return copy;
 }
@@ -203,7 +202,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setOption("checksum-mode", transfer.checksumMode);
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", !transfer.overwriteFlag.empty());
-    if (transfer.archiveTimeout > 0){
+    if (transfer.archiveTimeout > 0) {
         setFlag("dst-file-report", !transfer.dstFileReport.empty());   
     }
     setOption("dest-token-desc", transfer.destinationSpaceToken);

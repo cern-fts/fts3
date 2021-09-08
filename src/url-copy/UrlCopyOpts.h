@@ -46,6 +46,7 @@ public:
     bool isMultipleReplicaJob;
 
     bool strictCopy;
+    bool dst_file_report;
 
     std::string voName;
     std::string userDn;
@@ -78,8 +79,6 @@ public:
 
     std::string logDir;
     std::string msgDir;
-
-    bool dst_file_report;
 
     unsigned debugLevel;
     bool     logToStderr;

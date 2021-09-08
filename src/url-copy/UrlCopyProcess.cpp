@@ -73,6 +73,35 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
     }
 }
 
+static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfal2TransferParams &params)
+{
+    const std::string checksumType = transfer.checksumAlgorithm.empty() ? "ADLER32" :
+        transfer.checksumAlgorithm;
+    const std::string checksum = gfal2.getChecksum(transfer.destination,
+        transfer.checksumAlgorithm);
+    const uint64_t destFileSize = gfal2.stat(params, transfer.destination, false).st_size;
+    DestFile destFile;
+    destFile.fileSize = destFileSize;
+    destFile.checksumType = checksumType;
+    destFile.checksumValue = checksum;
+    const std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
+    if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
+        destFile.fileOnDisk = true;
+        destFile.fileOnTape = false;
+    } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
+        destFile.fileOnDisk = false;
+        destFile.fileOnTape = true;
+    }else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
+        destFile.fileOnDisk = true;
+        destFile.fileOnTape = true;
+    } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
+    destFile.fileOnDisk = false;
+    destFile.fileOnTape = false;
+    } else {
+        throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
+    }
+    return destFile;
+} 
 
 UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
     opts(opts), reporter(reporter), canceled(false), timeoutExpired(false)
@@ -454,45 +483,20 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         if (!opts.overwrite) {
             try {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
-                const auto destFileSize = gfal2.stat(params, transfer.destination, false).st_size;
-                UrlCopyError urlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
-                    "Destination file exists and overwrite is not enabled");
+                gfal2.stat(params, transfer.destination, false);
                 if (opts.dst_file_report) {
                     try {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: " <<
                             transfer.destination << commit;
-                        const std::string checksumType = transfer.checksumAlgorithm.empty() ? "ADLER32" :
-                            transfer.checksumAlgorithm;
-                        const std::string checksum = gfal2.getChecksum(transfer.destination,
-                            transfer.checksumAlgorithm);
-                        DestFile destFile;
-                        destFile.fileSize = destFileSize;
-                        destFile.checksumType = checksumType;
-                        destFile.checksumValue = checksum;
-                        const std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
-                        if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
-                          destFile.fileOnDisk = true;
-                          destFile.fileOnTape = false;
-                        } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
-                          destFile.fileOnDisk = false;
-                          destFile.fileOnTape = true;
-                        } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
-                          destFile.fileOnDisk = true;
-                          destFile.fileOnTape = true;
-                        } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
-                          destFile.fileOnDisk = false;
-                          destFile.fileOnTape = false;
-                        } else {
-                          throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
-                        }
+                        auto destFile = createDestFileReport(transfer, gfal2, params);
                         transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
                     } catch (const std::exception &ex) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
                             << transfer.destination << ": " << ex.what() << commit;
                     }
                 }
-
-                throw urlCopyError;
+                throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
+                    "Destination file exists and overwrite is not enabled");;
             }
             catch (const Gfal2Exception &ex) {
                 if (ex.code() != ENOENT) {

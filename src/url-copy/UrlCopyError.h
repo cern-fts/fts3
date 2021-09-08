@@ -25,8 +25,6 @@
 #include "Gfal2.h"
 #include "heuristics.h"
 
-#include <boost/optional.hpp>
-
 // ERROR SCOPE
 #define TRANSFER "TRANSFER"
 #define DESTINATION "DESTINATION"

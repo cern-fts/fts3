@@ -42,6 +42,7 @@ const option UrlCopyOpts::long_options[] =
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
     {"strict-copy",       no_argument,       0, 302},
+    {"dst-file-report",   no_argument,       0, 303},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -81,8 +82,6 @@ const option UrlCopyOpts::long_options[] =
 
     {"logDir",            required_argument, 0, 900},
     {"msgDir",            required_argument, 0, 901},
-
-    {"dst-file-report",   no_argument,       0, 1000},
 
     {"help",              no_argument,       0, 0},
     {"debug",             required_argument, 0, 1},
@@ -266,6 +265,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 302:
                     strictCopy = true;
                     break;
+                case 303:
+                    dst_file_report = true;
+                    break;
 
                 case 400:
                     referenceTransfer.tokenBringOnline = optarg;
@@ -368,10 +370,6 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 901:
                     msgDir = boost::lexical_cast<std::string>(optarg);
-                    break;
-
-                case 1000:
-                    dst_file_report = true;
                     break;
 
                 default:

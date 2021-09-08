@@ -164,9 +164,9 @@ std::string mapErrnoToString(int err)
 }
 
 
-std::string replaceMetadataString(std::string text)
+std::string replaceMetadataString(const std::string &text)
 {
-    text = boost::replace_all_copy(text, "?"," ");
-    text = boost::replace_all_copy(text, "\\\"","\"");
-    return text;
+    std::string copy = boost::replace_all_copy(text, "?"," ");
+    copy = boost::replace_all_copy(copy, "\\\"","\"");
+    return copy;
 }

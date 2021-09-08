@@ -15,7 +15,6 @@
  */
 
 #include "LegacyReporter.h"
-#include <boost/algorithm/string.hpp>
 #include "common/Logger.h"
 #include "monitoring/msg-ifce.h"
 #include "heuristics.h"
@@ -149,7 +148,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         }
         else {
             status.set_transfer_status("FAILED");
-            if (transfer.error->code() == EEXIST && opts.dst_file_report && (!opts.overwrite)){
+            if ((transfer.error->code() == EEXIST) && (opts.dst_file_report) && (!opts.overwrite)) {
                 status.set_file_metadata(replaceMetadataString(transfer.fileMetadata));
             }
         }

@@ -36,6 +36,6 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned addSecPerMb);
 
 std::string mapErrnoToString(int err);
 
-std::string replaceMetadataString(std::string text);
+std::string replaceMetadataString(const std::string &text);
 
 #endif // HEURISTICS_H

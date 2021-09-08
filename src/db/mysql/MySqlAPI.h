@@ -73,14 +73,14 @@ public:
     /// @param filesize         Actual filesize reported by the storage
     /// @param duration         How long (in seconds) took to transfer the file
     /// @param retry            If the error is considered recoverable by fts_url_copy
-    /// @param FileMetadata     The new file metadata in case it needs to be updated
+    /// @param fileMetadata     The new file metadata in case it needs to be updated
     /// @return                 true if an updated was done into the DB, false otherwise
     ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
     /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
     ///                         which transfers to update
     virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
-        int processId, double filesize, double duration, bool retry, std::string FileMetadata = "");
+        int processId, double filesize, double duration, bool retry, std::string fileMetadata = "");
 
     /// Update the status of a job
     /// @param jobId            The job ID
@@ -346,7 +346,7 @@ private:
     boost::tuple<bool, std::string>  updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
         std::string newFileState, std::string transferMessage, int processId, double filesize, double duration, bool retry,
-        std::string FileMetadata = "");
+        std::string fileMetadata = "");
 
     bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state);
 
