@@ -2120,55 +2120,64 @@ void MySqlAPI::forkFailed(const std::string& jobId)
 
 void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo)
 {
-    const static std::string message = "Job has been canceled because it stayed in the queue for too long";
     soci::session sql(*connectionPool);
 
     try {
-        // Prepare common statements
+        // Prepare common statements (normal and multihop jobs)
+        // Multihop jobs should not cancel NOT_USED file states
+        std::string message;
         std::string job_id;
-        soci::statement stmtCancelFile = (sql.prepare <<
+
+        std::string cancelFileQuery =
             "UPDATE t_file SET "
             "   finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
             "   file_state = 'CANCELED', reason = :reason "
-            "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')",
-            soci::use(message), soci::use(job_id));
+            "   WHERE job_id = :jobId AND file_state IN ";
+        std::string cancelFileStates = "('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')";
+        std::string cancelMultihopFileStates = "('SUBMITTED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')";
+
+        soci::statement stmtCancelFile = (sql.prepare << cancelFileQuery + cancelFileStates,
+                soci::use(message), soci::use(job_id));
+
+        soci::statement stmtMultihopCancelFile = (sql.prepare << cancelFileQuery + cancelMultihopFileStates,
+                soci::use(message), soci::use(job_id));
+
+        auto performCancel = [&](const soci::rowset<soci::row>& rs) {
+            for (auto i = rs.begin(); i != rs.end(); ++i) {
+                auto job_type = i->get<std::string>("job_type", "N");
+                job_id = i->get<std::string>("job_id");
+
+                (job_type != "H") ? stmtCancelFile.execute(true)
+                                  : stmtMultihopCancelFile.execute(true);
+
+                updateJobTransferStatusInternal(sql, job_id, "CANCELED");
+                jobs.push_back(job_id);
+            }
+        };
 
         // Cancel jobs using global timeout
-        if(maxTime > 0)
-        {
-            soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+        if (maxTime > 0) {
+            message = "Job has been canceled because it stayed in the queue for too long (global timeout)";
+            soci::rowset<soci::row> rs = (sql.prepare <<
+                "SELECT job_id, job_type FROM t_job WHERE "
                 "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
                 "    job_state IN ('SUBMITTED', 'STAGING') AND job_finished IS NULL AND vo_name = :vo ",
                 soci::use(maxTime), soci::use(vo));
 
             sql.begin();
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            {
-                job_id = (*i);
-
-                stmtCancelFile.execute(true);
-                updateJobTransferStatusInternal(sql, job_id, "CANCELED");
-
-                jobs.push_back(*i);
-            }
+            performCancel(rs);
             sql.commit();
         }
 
         // Cancel jobs using their own timeout
-        soci::rowset<std::string> rs = (sql.prepare
-            << "SELECT job_id FROM t_job USE INDEX(idx_jobfinished)  WHERE "
-            "    max_time_in_queue IS NOT NULL AND max_time_in_queue < unix_timestamp() AND vo_name = :vo "
-            "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') and job_finished is NULL ", soci::use(vo));
-            sql.begin();
-        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            job_id = (*i);
+        message = "Job has been canceled because it stayed in the queue for too long (max-time-in-queue timeout)";
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT job_id, job_type FROM t_job USE INDEX(idx_jobfinished) WHERE "
+            "    max_time_in_queue IS NOT NULL AND max_time_in_queue < UNIX_TIMESTAMP() AND vo_name = :vo "
+            "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') AND job_finished IS NULL ", soci::use(vo));
 
-            stmtCancelFile.execute(true);
-            updateJobTransferStatusInternal(sql, job_id, "CANCELED");
-
-            jobs.push_back(*i);
-        }
+        sql.begin();
+        performCancel(rs);
         sql.commit();
     }
     catch (std::exception& e) {
