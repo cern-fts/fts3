@@ -261,8 +261,8 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
         boost::tuple<bool, std::string> updated = db::DBSingleton::instance()
             .getDBObjectInstance()->updateTransferStatus(
                 msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
-                msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry()
-        );
+                msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry(),
+                msg.file_metadata());
 
         db::DBSingleton::instance().getDBObjectInstance()->updateJobStatus(
             msg.job_id(), msg.transfer_status());

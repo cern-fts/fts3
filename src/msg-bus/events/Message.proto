@@ -21,4 +21,6 @@ message Message {
     optional double throughput = 15;
 
     optional int32 errcode = 16;
+
+    optional string file_metadata = 17;
 }

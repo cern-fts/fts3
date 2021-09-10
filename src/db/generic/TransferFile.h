@@ -111,6 +111,8 @@ public:
     time_t jobFinished;
     std::string voName;
     std::string overwriteFlag;
+    std::string dstFileReport;
+    int archiveTimeout;
     std::string userDn;
     std::string credId;
     std::string checksumMode;

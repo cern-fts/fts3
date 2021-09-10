@@ -659,8 +659,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             {
                 soci::rowset<TransferFile> rs = (sql.prepare <<
                       " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                      "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                      "       f.checksum, j.checksum_method, j.source_space_token, "
+                      "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                      "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                       "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                       "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                       "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
@@ -723,8 +723,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     if (it_act->second == 0) continue;
 
                     std::string select = " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id,"
-                                         "       f.checksum, j.checksum_method, j.source_space_token, "
+                                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
@@ -1137,8 +1137,8 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         sql.prepare <<
                         " SELECT SQL_NO_CACHE "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                        "       f.checksum, j.checksum_method, j.source_space_token, "
+                        "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                        "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
@@ -1179,18 +1179,19 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 
 boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
-        int processId, double filesize, double duration, bool retry)
+        int processId, double filesize, double duration, bool retry, std::string fileMetadata)
 {
     soci::session sql(*connectionPool);
     return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-            transferState, errorReason, processId, filesize, duration, retry);
+            transferState, errorReason, processId, filesize, duration, retry, fileMetadata);
 }
 
 
 boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
         std::string newFileState, std::string transferMessage,
-        int processId, double filesize, double duration, bool retry)
+        int processId, double filesize, double duration, bool retry,
+        std::string fileMetadata)
 {
     std::string storedState;
     soci::indicator destSurlUuidInd;
@@ -1307,6 +1308,11 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
                                              << " to ARCHIVING state" << commit;
             newFileState = "ARCHIVING";
+        }
+
+        if (!fileMetadata.empty()) {
+            query << ", file_metadata = :file_metadata";
+            stmt.exchange(soci::use(fileMetadata, "file_metadata"));
         }
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "

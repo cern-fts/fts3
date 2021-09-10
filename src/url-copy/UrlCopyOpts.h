@@ -46,6 +46,7 @@ public:
     bool isMultipleReplicaJob;
 
     bool strictCopy;
+    bool dst_file_report;
 
     std::string voName;
     std::string userDn;

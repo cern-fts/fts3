@@ -42,6 +42,7 @@ const option UrlCopyOpts::long_options[] =
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
     {"strict-copy",       no_argument,       0, 302},
+    {"dst-file-report",   no_argument,       0, 303},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -173,6 +174,7 @@ UrlCopyOpts::UrlCopyOpts():
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
     noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+    dst_file_report(false),
     debugLevel(0), logToStderr(false)
 {
 }
@@ -262,6 +264,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 302:
                     strictCopy = true;
+                    break;
+                case 303:
+                    dst_file_report = true;
                     break;
 
                 case 400:
