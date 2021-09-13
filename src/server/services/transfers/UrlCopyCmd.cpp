@@ -201,7 +201,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     if (!transfer.checksumMode.empty())
         setOption("checksum-mode", transfer.checksumMode);
     setOption("job-id", transfer.jobId);
-    setFlag("overwrite", !transfer.overwriteFlag.empty());
+    setFlag("overwrite", transfer.overwriteFlag == "Y");
     if (transfer.archiveTimeout > 0) {
         setFlag("dst-file-report", !transfer.dstFileReport.empty());   
     }
@@ -311,6 +311,12 @@ void UrlCopyCmd::setDisableDelegation(bool disable_delegation)
 void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
 {
     setFlag("no-streaming", disable_streaming);
+}
+
+
+void UrlCopyCmd::setOverwrite(bool overwrite)
+{
+    setFlag("overwrite", overwrite);
 }
 
 

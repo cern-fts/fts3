@@ -185,6 +185,10 @@ void FileTransferExecutor::run(boost::any & ctx)
             int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);
             cmdBuilder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
 
+            if ((retry_times > 0) && (tf.overwriteFlag == "R")) {
+                cmdBuilder.setOverwrite(true);
+            }
+
             int retry_max = db->getRetry(tf.jobId);
             cmdBuilder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
 

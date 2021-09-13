@@ -79,6 +79,7 @@ public:
     void setMaxNumberOfRetries(int);
     void setDisableDelegation(bool);
     void setDisableStreaming(bool);
+    void setOverwrite(bool);
 
     // Observers
     int getBuffersize();
