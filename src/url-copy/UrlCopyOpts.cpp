@@ -169,12 +169,11 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 UrlCopyOpts::UrlCopyOpts():
     isSessionReuse(false), isMultipleReplicaJob(false),
-    strictCopy(false), retrieveSEToken(false),
+    strictCopy(false), dstFileReport(false), retrieveSEToken(false),
     optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
     noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
-    dst_file_report(false),
     debugLevel(0), logToStderr(false)
 {
 }
@@ -266,7 +265,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     strictCopy = true;
                     break;
                 case 303:
-                    dst_file_report = true;
+                    dstFileReport = true;
                     break;
 
                 case 400:

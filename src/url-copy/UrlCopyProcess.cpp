@@ -73,6 +73,7 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
     }
 }
 
+
 static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     const std::string checksumType = transfer.checksumAlgorithm.empty() ? "ADLER32" :
@@ -102,6 +103,7 @@ static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfa
     }
     return destFile;
 } 
+
 
 UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
     opts(opts), reporter(reporter), canceled(false), timeoutExpired(false)
@@ -242,19 +244,6 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
 }
 
-static std::string readIAMTokenFromConfigFile(const std::string &path)
-{
-    if (!path.empty()) {
-        std::ifstream file(path);
-        std::string   line;
-
-        while(std::getline(file, line))
-        {
-            // Skip TOKEN= and return the actual token
-            return line.substr(6);
-        }
-    }
-}
 
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                              Gfal2 &gfal2, Gfal2TransferParams &params)
@@ -349,6 +338,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         }
     }
 }
+
 
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                                 Gfal2 &gfal2, Gfal2TransferParams &params)
@@ -466,7 +456,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token issuer: " << transfer.destTokenIssuer << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dst_file_report << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dstFileReport << commit;
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
@@ -489,7 +479,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             try {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
                 gfal2.stat(params, transfer.destination, false);
-                if (opts.dst_file_report) {
+                if (opts.dstFileReport) {
                     try {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: " <<
                             transfer.destination << commit;
@@ -501,7 +491,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                     }
                 }
                 throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
-                    "Destination file exists and overwrite is not enabled");;
+                    "Destination file exists and overwrite is not enabled");
             }
             catch (const Gfal2Exception &ex) {
                 if (ex.code() != ENOENT) {
