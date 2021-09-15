@@ -89,7 +89,7 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
 
     if (opts.enableMonitoring) {
         std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, completed);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer start message content: " << msgReturnValue << commit;
     }
 }
 
@@ -267,7 +267,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     if (opts.enableMonitoring) {
         std::string msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Start message content: " << msgReturnValue << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer complete message content: " << msgReturnValue << commit;
     }
 }
 
