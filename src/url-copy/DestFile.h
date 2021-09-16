@@ -22,8 +22,8 @@ public:
         output["file_size"] = json::Number(fileSize);
         output["checksum_type"] = json::String(checksumType);
         output["checksum_value"] = json::String(checksumValue);
-        output["file_on_tape"] = json::Boolean(fileOnDisk);
-        output["file_on_disk"] = json::Boolean(fileOnTape);
+        output["file_on_tape"] = json::Boolean(fileOnTape);
+        output["file_on_disk"] = json::Boolean(fileOnDisk);
         
         return output;
     }
