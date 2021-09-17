@@ -32,6 +32,8 @@ from fts3.util.config import fts3_config_load
 
 log = logging.getLogger(__name__)
 
+ASSUME_YES = False
+
 
 def infer_sql_location(config):
     """
@@ -96,6 +98,8 @@ def ask_confirmation(question):
     :param question: The question
     :return: True if accepted, False if not
     """
+    if ASSUME_YES:
+        return True
     print "%s [Y/N]" % question
     return strtobool(raw_input().lower())
 
@@ -264,9 +268,13 @@ if __name__ == '__main__':
     optparser.add_option('-f', '--config-file', default='/etc/fts3/fts3config', help='Configuration file')
     optparser.add_option('-v', '--verbose', default=False, action='store_true', help='Verbose mode')
     optparser.add_option('-d', '--sql-location', default=None, help='SQL scripts location')
+    optparser.add_option('-y', '--assume-yes', default=False, action='store_true', help='Automatically answer yes to questions.')
     opts, args = optparser.parse_args()
     if len(args) > 0:
         optparser.error('No arguments are expected')
+    if opts.assume_yes:
+        global ASSUME_YES
+        ASSUME_YES = True
 
     log_handler = logging.StreamHandler(sys.stderr)
     log_handler.setFormatter(logging.Formatter('[%(levelname)7s] %(message)s'))
