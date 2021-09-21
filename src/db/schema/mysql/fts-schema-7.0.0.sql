@@ -536,6 +536,8 @@ CREATE TABLE `t_link_config` (
   UNIQUE KEY `symbolic_name` (`symbolic_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
+VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
 --
 -- Table structure for table `t_link_config_old`
@@ -759,6 +761,8 @@ CREATE TABLE `t_schema_vers` (
   `message` text
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_schema_vers (major, minor, patch, message)
+VALUES (7, 0, 0, 'Schema 7.0.0');
 
 --
 -- Table structure for table `t_se`
@@ -781,6 +785,8 @@ CREATE TABLE `t_se` (
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_se (storage, inbound_max_active, outbound_max_active)
+VALUES ('*', 200, 200);
 
 --
 -- Table structure for table `t_se_old`
@@ -824,6 +830,8 @@ CREATE TABLE `t_server_config` (
   `show_user_dn` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_server_config (vo_name)
+VALUES ('*');
 
 --
 -- Table structure for table `t_share_config`
@@ -873,48 +881,11 @@ CREATE TABLE `t_vo_acl` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `v_staging`
+-- View `v_staging`
 --
 
-DROP TABLE IF EXISTS `v_staging`;
-/*!50001 DROP VIEW IF EXISTS `v_staging`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `v_staging` (
-  `job_id` tinyint NOT NULL,
-  `file_id` tinyint NOT NULL,
-  `hashed_id` tinyint NOT NULL,
-  `vo_name` tinyint NOT NULL,
-  `source_se` tinyint NOT NULL,
-  `file_state` tinyint NOT NULL,
-  `source_surl` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
-
---
--- Final view structure for view `v_staging`
---
-
-/*!50001 DROP TABLE IF EXISTS `v_staging`*/;
-/*!50001 DROP VIEW IF EXISTS `v_staging`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`fts3lb`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `v_staging` AS select `t_file`.`job_id` AS `job_id`,`t_file`.`file_id` AS `file_id`,`t_file`.`hashed_id` AS `hashed_id`,`t_file`.`vo_name` AS `vo_name`,`t_file`.`source_se` AS `source_se`,`t_file`.`file_state` AS `file_state`,`t_file`.`source_surl` AS `source_surl` from `t_file` where (`t_file`.`file_state` = 'STAGING') */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+DROP VIEW IF EXISTS `v_staging`;
+CREATE VIEW v_staging AS
+    SELECT job_id, file_id, hashed_id, vo_name, source_se, file_state, source_surl
+    FROM t_file
+    WHERE file_state = 'STAGING';
