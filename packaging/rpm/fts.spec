@@ -45,7 +45,7 @@ BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  gfal2-devel >= 2.19.0
+BuildRequires:  gfal2-devel >= 2.20.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -87,10 +87,10 @@ Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.19.0
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.19.0
-Requires: gfal2-plugin-http%{?_isa} >= 2.19.0
-Requires: gfal2-plugin-srm%{?_isa} >= 2.19.0
+Requires: gfal2%{?_isa} >= 2.20.0
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.20.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.20.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.20.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
