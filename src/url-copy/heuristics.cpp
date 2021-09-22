@@ -21,6 +21,7 @@
 #include <errno.h>
 #include "heuristics.h"
 #include "common/Logger.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace fts3::common;
 
@@ -135,7 +136,6 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
 {
     static const unsigned long MB = 1 << 20;
-    static const unsigned long metadataTime = 600;
 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
@@ -147,4 +147,25 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, const unsigned addSecPerMb)
 
     // Final timeout adjusted considering transfer timeout
     return 600 + ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
+}
+
+
+std::string mapErrnoToString(int err)
+{
+    char buf[256] = {0};
+    char const *str = strerror_r(err, buf, sizeof(buf));
+    if (str) {
+        std::string rep(str);
+        std::replace(rep.begin(), rep.end(), ' ', '_');
+        return boost::to_upper_copy(rep);
+    }
+    return "GENERAL ERROR";
+}
+
+
+std::string replaceMetadataString(const std::string &text)
+{
+    std::string copy = boost::replace_all_copy(text, "?"," ");
+    copy = boost::replace_all_copy(copy, "\\\"","\"");
+    return copy;
 }

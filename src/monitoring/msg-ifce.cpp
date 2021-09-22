@@ -271,7 +271,7 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
     message["reason"] = json::String(tr_state.reason);
 
     set_metadata(message, "job_metadata", tr_state.job_metadata);
-    set_metadata(message, "file_metadata", tr_state.job_metadata);
+    set_metadata(message, "file_metadata", tr_state.file_metadata);
 
     std::ostringstream stream;
 

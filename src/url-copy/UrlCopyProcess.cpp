@@ -29,6 +29,7 @@
 #include "AutoInterruptThread.h"
 #include "UrlCopyProcess.h"
 #include "version.h"
+#include "DestFile.h"
 
 using fts3::common::commit;
 
@@ -71,6 +72,37 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
         setenv("X509_USER_KEY", opts.proxy.c_str(), 1);
     }
 }
+
+
+static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfal2TransferParams &params)
+{
+    const std::string checksumType = transfer.checksumAlgorithm.empty() ? "ADLER32" :
+        transfer.checksumAlgorithm;
+    const std::string checksum = gfal2.getChecksum(transfer.destination,
+        transfer.checksumAlgorithm);
+    const uint64_t destFileSize = gfal2.stat(params, transfer.destination, false).st_size;
+    DestFile destFile;
+    destFile.fileSize = destFileSize;
+    destFile.checksumType = checksumType;
+    destFile.checksumValue = checksum;
+    const std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
+    if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
+        destFile.fileOnDisk = true;
+        destFile.fileOnTape = false;
+    } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
+        destFile.fileOnDisk = false;
+        destFile.fileOnTape = true;
+    }else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
+        destFile.fileOnDisk = true;
+        destFile.fileOnTape = true;
+    } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
+    destFile.fileOnDisk = false;
+    destFile.fileOnTape = false;
+    } else {
+        throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
+    }
+    return destFile;
+} 
 
 
 UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
@@ -212,19 +244,6 @@ static std::string setupMacaroon(const std::string &url, const std::string &prox
     throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
 }
 
-static std::string readIAMTokenFromConfigFile(const std::string &path)
-{
-    if (!path.empty()) {
-        std::ifstream file(path);
-        std::string   line;
-
-        while(std::getline(file, line))
-        {
-            // Skip TOKEN= and return the actual token
-            return line.substr(6);
-        }
-    }
-}
 
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                              Gfal2 &gfal2, Gfal2TransferParams &params)
@@ -260,6 +279,12 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     // OIDC token has been passed already in the OauthFile
     // and loaded by Gfal2 as the default BEARER token credential
     if ("oauth2" == opts.authMethod) {
+        return;
+    }
+
+    // Check if allowed to retrieve Storage Element issued tokens
+    if (!opts.retrieveSEToken) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Configured to skip retrieval of SE-issued tokens" << commit;
         return;
     }
 
@@ -314,6 +339,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     }
 }
 
+
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                                 Gfal2 &gfal2, Gfal2TransferParams &params)
 {
@@ -354,6 +380,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     // Avoid TPC attempts in S3 to S3 transfers
     if ((transfer.source.protocol.find("s3") == 0) && (transfer.destination.protocol.find("s3") == 0)) {
         gfal2.set("HTTP PLUGIN", "ENABLE_REMOTE_COPY", false);
+    }
+
+    // Enable HTTP sensitive log scope
+    if (opts.debugLevel == 3) {
+        gfal2.set("HTTP PLUGIN", "LOG_SENSITIVE", true);
     }
 
     // Additional metadata
@@ -425,6 +456,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token issuer: " << transfer.destTokenIssuer << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dstFileReport << commit;
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
@@ -447,6 +479,17 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             try {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
                 gfal2.stat(params, transfer.destination, false);
+                if (opts.dstFileReport) {
+                    try {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: " <<
+                            transfer.destination << commit;
+                        auto destFile = createDestFileReport(transfer, gfal2, params);
+                        transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
+                    } catch (const std::exception &ex) {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
+                            << transfer.destination << ": " << ex.what() << commit;
+                    }
+                }
                 throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
                     "Destination file exists and overwrite is not enabled");
             }

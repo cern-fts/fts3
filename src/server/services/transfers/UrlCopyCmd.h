@@ -67,6 +67,7 @@ public:
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
     void setAuthMethod(const std::string&);
+    void setRetrieveSEToken(bool);
 
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn, const std::string &msgDir);
 
@@ -78,6 +79,7 @@ public:
     void setMaxNumberOfRetries(int);
     void setDisableDelegation(bool);
     void setDisableStreaming(bool);
+    void setOverwrite(bool);
 
     // Observers
     int getBuffersize();

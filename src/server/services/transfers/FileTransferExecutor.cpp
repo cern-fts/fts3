@@ -24,6 +24,7 @@
 #include "ExecuteProcess.h"
 #include "SingleTrStateInstance.h"
 
+#include "config/ServerConfig.h"
 #include "CloudStorageConfig.h"
 #include "ThreadSafeList.h"
 #include "UrlCopyCmd.h"
@@ -143,6 +144,9 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setOAuthFile(cloudConfigFile);
             }
 
+            // Retrieve SE-issued tokens flag
+            cmdBuilder.setRetrieveSEToken(fts3::config::ServerConfig::instance().get<bool>("RetrieveSEToken"));
+
             // Debug level
             cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));
 
@@ -180,6 +184,10 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Number of retries and maximum number allowed
             int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);
             cmdBuilder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
+
+            if ((retry_times > 0) && (tf.overwriteFlag == "R")) {
+                cmdBuilder.setOverwrite(true);
+            }
 
             int retry_max = db->getRetry(tf.jobId);
             cmdBuilder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);

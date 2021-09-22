@@ -39,6 +39,7 @@
 
 
 class UrlCopyError: public fts3::common::BaseException {
+
 private:
     std::string scope_;
     std::string phase_;

@@ -20,52 +20,76 @@
 
 #include "ArchivingContext.h"
 
-#include <sstream>
-#include <unordered_set>
-#include "cred/CredUtility.h"
+#include "common/Logger.h"
 
 
 void ArchivingContext::add(const ArchivingOperation &archiveOp)
 {
-
-
-    if (archiveOp.timeout > archiveTimeout) {
-    	archiveTimeout = archiveOp.timeout;
-    }
-
-     add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
+    add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
+    expiryMap[archiveOp.fileId] = archiveOp.startTime + archiveOp.timeout;
 }
 
 
-bool ArchivingContext::hasTimeoutExpired()
+bool ArchivingContext::hasTransferTimedOut(uint64_t file_id)
 {
-    return difftime(time(0), startTime) > archiveTimeout;
+    if (expiryMap.count(file_id)) {
+        return time(0) >= expiryMap[file_id];
+    }
+
+    return false;
 }
 
 
-std::set<std::string> ArchivingContext::getSurlsToAbort(
-    const std::set<std::pair<std::string, std::string>> &urls)
+void ArchivingContext::removeTransfers(const std::list<std::tuple<std::string, std::string, uint64_t>>& transfers)
 {
-    // remove respective URLs from the task
-    for (auto it = urls.begin(); it != urls.end(); ++it) {
-        jobs[it->first].erase(it->second);
-    }
+    for (auto it_t = transfers.begin(); it_t != transfers.end(); it_t++)
+    {
+        const auto& surl = std::get<0>(*it_t);
+        const auto& job_id = std::get<1>(*it_t);
+        const auto& file_id = std::get<2>(*it_t);
 
-    std::unordered_set<std::string> not_canceled, unique;
-    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j) {
-        auto const & urls = it_j->second;
-        for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {
-            std::string const & url = it_u->first;
-            not_canceled.insert(url);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Removing transfer from the watch list: "
+            << surl << " / " << job_id << " / " << file_id << commit;
+
+        // Remove from map(job_id, map(sURL, file_id))
+        if (jobs.count(job_id) && jobs[job_id].count(surl)) {
+            auto& file_ids = jobs[job_id][surl];
+            auto pos = std::find(file_ids.begin(), file_ids.end(), file_id);
+
+            if (pos != file_ids.end()) {
+                file_ids.erase(pos);
+            }
+
+            if (file_ids.empty()) {
+                jobs[job_id].erase(surl);
+            }
+
+            if (jobs[job_id].empty()) {
+                jobs.erase(job_id);
+            }
         }
-    }
 
-    std::set<std::string> ret;
-    for (auto it = urls.begin(); it != urls.end(); ++it) {
-        std::string const & url = it->second;
-        if (not_canceled.count(url) || unique.count(url))
-            continue;
-        ret.insert(url.c_str());
+        // Remove from multi_map(sURL, pair(job_id, file_id))
+        auto range = urlToIDs.equal_range(surl);
+        for (auto it = range.first; it != range.second; it++) {
+            if ((it->second.first == job_id) && (it->second.second == file_id)) {
+                urlToIDs.erase(it);
+                break;
+            }
+        }
+
+        // Remove from map(file_id, expiry_timestamp)
+        expiryMap.erase(file_id);
     }
-    return ret;
+}
+
+
+void ArchivingContext::removeUrlWithIds(const std::string& url,
+                                        const std::vector<std::pair<std::string, uint64_t>>& ids)
+{
+    removeUrl(url);
+
+    for (auto it = ids.begin(); it != ids.end(); it++) {
+        expiryMap.erase(it->second);
+    }
 }

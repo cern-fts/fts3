@@ -207,7 +207,7 @@ public:
         " FROM t_file USE INDEX(idx_finish_time)"
         " WHERE "
         "   source_se = :sourceSe AND dest_se = :destSe "
-        "   AND file_state = 'FINISHED' AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
+        "   AND file_state IN ('FINISHED', 'ARCHIVING') AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
         soci::use(pair.source, "sourceSe"), soci::use(pair.destination, "destSe"),
         soci::use(interval.total_seconds(), "interval"));
 
@@ -273,7 +273,7 @@ public:
         soci::indicator isNullAvg = soci::i_ok;
 
         sql << "SELECT AVG(tx_duration) FROM t_file USE INDEX(idx_finish_time)"
-            " WHERE source_se = :source AND dest_se = :dest AND file_state = 'FINISHED' AND "
+            " WHERE source_se = :source AND dest_se = :dest AND file_state IN ('FINISHED', 'ARCHIVING') AND "
             "   tx_duration > 0 AND tx_duration IS NOT NULL AND "
             "   finish_time > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) LIMIT 1",
             soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds()),
@@ -314,7 +314,7 @@ public:
                 *retryCount += retryNum;
             }
             // FINISHED
-            else if (state == "FINISHED") {
+            else if (state == "FINISHED" || state == "ARCHIVING") {
                 ++nFinishedLastHour;
             }
         }

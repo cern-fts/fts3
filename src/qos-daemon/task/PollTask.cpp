@@ -45,6 +45,12 @@ void PollTask::run(const boost::any&)
         urls.push_back(set_i->c_str());
     }
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BringonlinePollTask starting"
+        << " [ files= " << urls.size() << " / token=" << token
+        << " / minStagingStartTime=" << ctx.getStartTime()
+        << " / maxBringonlineTimeout=" << ctx.getBringonlineTimeout() << " ]"
+        << commit;
+
     std::vector<GError*> errors(urls.size(), NULL);
     std::vector<const char*> failedUrls;
 
@@ -195,11 +201,11 @@ void PollTask::run(const boost::any&)
 
     // If status was 0, not everything is terminal, so schedule a new poll
     if (status == 0 || forcePoll) {
-        time_t interval = getPollInterval(++nPolls), now = time(NULL);
+        time_t interval = getPollInterval(++nPolls);
+        time_t now = time(NULL);
         wait_until = now + interval;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO)
-            << "BRINGONLINE polling " << ctx.getLogMsg() << token << commit;
 
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling " << ctx.getLogMsg() << commit;
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
         ctx.getWaitingRoom().add(new PollTask(std::move(*this)));
     }

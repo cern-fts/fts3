@@ -25,9 +25,9 @@
 struct ArchivingOperation {
 	ArchivingOperation(const std::string& jobId, uint64_t fileId, const std::string& voName,
         const std::string& user, const std::string& credId, const std::string& surl,
-       time_t timeout):
+        time_t startTime, time_t timeout):
         jobId(jobId), fileId(fileId), voName(voName), user(user), credId(credId), surl(surl),
-        timeout(timeout)
+        startTime(startTime), timeout(timeout)
     {
     }
 
@@ -37,6 +37,7 @@ struct ArchivingOperation {
     std::string user;
     std::string credId;
     std::string surl;
+    time_t startTime;
     time_t timeout;
 };
 

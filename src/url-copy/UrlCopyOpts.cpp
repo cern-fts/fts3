@@ -42,6 +42,7 @@ const option UrlCopyOpts::long_options[] =
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
     {"strict-copy",       no_argument,       0, 302},
+    {"dst-file-report",   no_argument,       0, 303},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -54,6 +55,7 @@ const option UrlCopyOpts::long_options[] =
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
 	{"authMethod",        required_argument, 0, 506},
+    {"retrieve-se-token", no_argument,       0, 507},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -167,7 +169,7 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 UrlCopyOpts::UrlCopyOpts():
     isSessionReuse(false), isMultipleReplicaJob(false),
-    strictCopy(false),
+    strictCopy(false), dstFileReport(false), retrieveSEToken(false),
     optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
     noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
@@ -262,6 +264,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 302:
                     strictCopy = true;
                     break;
+                case 303:
+                    dstFileReport = true;
+                    break;
 
                 case 400:
                     referenceTransfer.tokenBringOnline = optarg;
@@ -294,6 +299,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 506:
                 	authMethod = optarg;
                     break;
+                case 507:
+                    retrieveSEToken = true;
+                    break;
+
                 case 600:
                     infosys = optarg;
                     break;

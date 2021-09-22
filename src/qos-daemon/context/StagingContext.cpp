@@ -27,12 +27,16 @@
 
 void StagingContext::add(const StagingOperation &stagingOp)
 {
-    if (stagingOp.pinLifetime > pinLifetime) {
-        pinLifetime = stagingOp.pinLifetime;
+    if (stagingOp.pinLifetime > maxPinLifetime) {
+        maxPinLifetime = stagingOp.pinLifetime;
     }
 
-    if (stagingOp.timeout > bringonlineTimeout) {
-        bringonlineTimeout = stagingOp.timeout;
+    if (stagingOp.timeout > maxBringonlineTimeout) {
+        maxBringonlineTimeout = stagingOp.timeout;
+    }
+
+    if ((stagingOp.startTime > 0) && (stagingOp.startTime < minStagingStartTime)) {
+        minStagingStartTime = stagingOp.startTime;
     }
 
     add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
@@ -41,7 +45,7 @@ void StagingContext::add(const StagingOperation &stagingOp)
 
 bool StagingContext::hasTimeoutExpired()
 {
-    return difftime(time(0), startTime) > bringonlineTimeout;
+    return difftime(time(0), minStagingStartTime) > maxBringonlineTimeout;
 }
 
 

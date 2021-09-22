@@ -27,13 +27,15 @@ boost::shared_mutex ArchivingPollTask::mx;
 
 std::set<std::pair<std::string, std::string>> ArchivingPollTask::active_urls;
 
+/// Steps taken by the ArchivingPollTask:
+///   1. Iterate transfers once and remove timeouts
+///   2. Flatten the map to obtain a set of sURLs
+///   3. Remove the sURLs presented by gfal2_archive_poll_list as finished
 void ArchivingPollTask::run(const boost::any&)
 {
-	if (timeout_occurred()) return;
-	// handle cancelled jobs/files
-	handle_canceled();
+    handle_timeouts();
 
-	//use the same var for staging pool retries now
+	// Use the same var for staging pool retries now
 	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
 	bool forcePoll = false;
 
@@ -48,12 +50,10 @@ void ArchivingPollTask::run(const boost::any&)
 	}
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting"
-        << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime()
-        << " / timeout=" << ctx.getArchiveTimeout() << " ]" << commit;
+        << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime() << " ]"
+        << commit;
 
 	std::vector<GError*> errors(urls.size(), NULL);
-	std::vector<const char*> failedUrls;
-
 	int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
 
 	// Status return code meaning:
@@ -81,7 +81,6 @@ void ArchivingPollTask::run(const boost::any&)
                     for (auto it = ids.begin(); it != ids.end(); ++it) {
                         ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
                     }
-                    failedUrls.push_back(urls[i]);
                 }
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
@@ -89,7 +88,6 @@ void ArchivingPollTask::run(const boost::any&)
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
                     ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
                 }
-                failedUrls.push_back(urls[i]);
             }
         } else {
             if (status >= 0) {
@@ -97,7 +95,7 @@ void ArchivingPollTask::run(const boost::any&)
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
                     ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
-                ctx.removeUrl(urls[i]);
+                ctx.removeUrlWithIds(urls[i], ids);
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
                                                   << errors[i]->code << " " << errors[i]->message << commit;
@@ -105,7 +103,6 @@ void ArchivingPollTask::run(const boost::any&)
                     ctx.updateState(it->first, it->second, "FAILED",
                                     JobError("ARCHIVING", -1, "Error not set by Gfal2"));
                 }
-                failedUrls.push_back(urls[i]);
             }
         }
 
@@ -125,46 +122,22 @@ void ArchivingPollTask::run(const boost::any&)
 }
 
 
-void ArchivingPollTask::handle_canceled()
+void ArchivingPollTask::handle_timeouts()
 {
-	std::set<std::pair<std::string, std::string>> remove;
-	// critical section
-	{
-		boost::shared_lock<boost::shared_mutex> lock(mx);
-		// get the URLs for the given task
-		auto surls = ctx.getSurls();
-		// check if some of the URLs should be aborted
-		std::set_difference(
-				surls.begin(), surls.end(),
-				active_urls.begin(), active_urls.end(),
-				std::inserter(remove, remove.end())
-		);
-	}
-	// check if there is something to do first
-	if (remove.empty()) return;
-}
+    std::list<std::tuple<std::string, std::string, uint64_t>> timeout_transfers;
 
+    for (auto it = ctx.urlToIDs.begin(); it != ctx.urlToIDs.end(); it++) {
+        const auto& job_id = it->second.first;
+        const auto& file_id = it->second.second;
 
-bool ArchivingPollTask::timeout_occurred()
-{
-	// first check if archive timeout was exceeded
-	if (!ctx.hasTimeoutExpired()) return false;
-	// get URLs
-	std::set<std::string> urls = ctx.getUrls();
-	// Log the event per file
-	for (auto i = urls.begin(); i != urls.end(); ++i) {
-		auto ids = ctx.getIDs(*i);
-		for (auto j = ids.begin(); j != ids.end(); ++j) {
-			FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING timeout triggered for "
-					<< j->first << "/" << j->second
-					<< commit;
-		}
-	}
+        if (ctx.hasTransferTimedOut(file_id)) {
+            ctx.updateState(job_id, file_id, "FAILED",
+                            JobError("ARCHIVING", ETIMEDOUT, "archive timeout has been exceeded"));
+            timeout_transfers.emplace_back(it->first, job_id, file_id);
+        }
+    }
 
-	// set the state
-	ctx.updateState("FAILED",
-			JobError("ARCHIVING", ETIMEDOUT, "archiving timeout has been exceeded")
-	);
-	// confirm the timeout
-	return true;
+    if (!timeout_transfers.empty()) {
+        ctx.removeTransfers(timeout_transfers);
+    }
 }

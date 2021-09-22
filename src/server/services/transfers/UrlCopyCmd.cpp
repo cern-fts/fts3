@@ -40,8 +40,7 @@ UrlCopyCmd::UrlCopyCmd() : IPv6Explicit(false)
 
 std::string UrlCopyCmd::prepareMetadataString(const std::string &text)
 {
-    std::string copy(text);
-    copy = boost::replace_all_copy(copy, " ", "?");
+    std::string copy = boost::replace_all_copy(text, " ", "?");
     copy = boost::replace_all_copy(copy, "\"", "\\\"");
     return copy;
 }
@@ -173,6 +172,12 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
+void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_tokens)
+{
+    setFlag("retrieve-se-token", retrieve_se_tokens);
+}
+
+
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
@@ -196,7 +201,10 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     if (!transfer.checksumMode.empty())
         setOption("checksum-mode", transfer.checksumMode);
     setOption("job-id", transfer.jobId);
-    setFlag("overwrite", !transfer.overwriteFlag.empty());
+    setFlag("overwrite", transfer.overwriteFlag == "Y");
+    if (transfer.archiveTimeout > 0) {
+        setFlag("dst-file-report", !transfer.dstFileReport.empty());   
+    }
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
 
@@ -303,6 +311,12 @@ void UrlCopyCmd::setDisableDelegation(bool disable_delegation)
 void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
 {
     setFlag("no-streaming", disable_streaming);
+}
+
+
+void UrlCopyCmd::setOverwrite(bool overwrite)
+{
+    setFlag("overwrite", overwrite);
 }
 
 

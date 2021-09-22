@@ -46,6 +46,7 @@ public:
     bool isMultipleReplicaJob;
 
     bool strictCopy;
+    bool dstFileReport;
 
     std::string voName;
     std::string userDn;
@@ -58,6 +59,7 @@ public:
     std::string jobMetadata;
 
     std::string authMethod;
+    bool retrieveSEToken;
 
     unsigned optimizerLevel;
     bool     overwrite;

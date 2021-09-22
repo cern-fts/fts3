@@ -89,7 +89,7 @@ public:
     virtual ~JobContext() {}
 
     /**
-     * adds another surl and file to the context
+     * Adds another surl and file to the context
      *
      * @param surl : SURL name
      * @param jobId : job ID

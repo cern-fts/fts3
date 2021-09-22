@@ -77,8 +77,8 @@ void FetchArchiving::fetch()
             {
                 try
                 {    
-                     threadpool.start(new ArchivingPollTask(it_t->second));
-                     it_t->second.setStartTime();
+                    it_t->second.setArchiveStartTime();
+                    threadpool.start(new ArchivingPollTask(it_t->second));
                 }
                 catch(UserError const & ex)
                 {

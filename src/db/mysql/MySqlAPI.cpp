@@ -134,7 +134,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {6, 0};
+    static const unsigned expect[] = {7, 0};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
@@ -659,8 +659,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             {
                 soci::rowset<TransferFile> rs = (sql.prepare <<
                       " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                      "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                      "       f.checksum, j.checksum_method, j.source_space_token, "
+                      "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                      "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                       "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                       "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                       "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
@@ -723,8 +723,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                     if (it_act->second == 0) continue;
 
                     std::string select = " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id,"
-                                         "       f.checksum, j.checksum_method, j.source_space_token, "
+                                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
@@ -1137,8 +1137,8 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         sql.prepare <<
                         " SELECT SQL_NO_CACHE "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                        "       f.checksum, j.checksum_method, j.source_space_token, "
+                        "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                        "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
@@ -1179,18 +1179,19 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 
 boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
         const std::string& transferState, const std::string& errorReason,
-        int processId, double filesize, double duration, bool retry)
+        int processId, double filesize, double duration, bool retry, std::string fileMetadata)
 {
     soci::session sql(*connectionPool);
     return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-            transferState, errorReason, processId, filesize, duration, retry);
+            transferState, errorReason, processId, filesize, duration, retry, fileMetadata);
 }
 
 
 boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
         std::string jobId, uint64_t fileId,
         std::string newFileState, std::string transferMessage,
-        int processId, double filesize, double duration, bool retry)
+        int processId, double filesize, double duration, bool retry,
+        std::string fileMetadata)
 {
     std::string storedState;
     soci::indicator destSurlUuidInd;
@@ -1307,6 +1308,11 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
                                              << " to ARCHIVING state" << commit;
             newFileState = "ARCHIVING";
+        }
+
+        if (!fileMetadata.empty()) {
+            query << ", file_metadata = :file_metadata";
+            stmt.exchange(soci::use(fileMetadata, "file_metadata"));
         }
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
@@ -2120,55 +2126,64 @@ void MySqlAPI::forkFailed(const std::string& jobId)
 
 void MySqlAPI::cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo)
 {
-    const static std::string message = "Job has been canceled because it stayed in the queue for too long";
     soci::session sql(*connectionPool);
 
     try {
-        // Prepare common statements
+        // Prepare common statements (normal and multihop jobs)
+        // Multihop jobs should not cancel NOT_USED file states
+        std::string message;
         std::string job_id;
-        soci::statement stmtCancelFile = (sql.prepare <<
+
+        std::string cancelFileQuery =
             "UPDATE t_file SET "
             "   finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
             "   file_state = 'CANCELED', reason = :reason "
-            "   WHERE job_id = :jobId AND file_state IN ('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')",
-            soci::use(message), soci::use(job_id));
+            "   WHERE job_id = :jobId AND file_state IN ";
+        std::string cancelFileStates = "('SUBMITTED', 'NOT_USED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')";
+        std::string cancelMultihopFileStates = "('SUBMITTED', 'STAGING', 'ON_HOLD', 'ON_HOLD_STAGING')";
+
+        soci::statement stmtCancelFile = (sql.prepare << cancelFileQuery + cancelFileStates,
+                soci::use(message), soci::use(job_id));
+
+        soci::statement stmtMultihopCancelFile = (sql.prepare << cancelFileQuery + cancelMultihopFileStates,
+                soci::use(message), soci::use(job_id));
+
+        auto performCancel = [&](const soci::rowset<soci::row>& rs) {
+            for (auto i = rs.begin(); i != rs.end(); ++i) {
+                auto job_type = i->get<std::string>("job_type", "N");
+                job_id = i->get<std::string>("job_id");
+
+                (job_type != "H") ? stmtCancelFile.execute(true)
+                                  : stmtMultihopCancelFile.execute(true);
+
+                updateJobTransferStatusInternal(sql, job_id, "CANCELED");
+                jobs.push_back(job_id);
+            }
+        };
 
         // Cancel jobs using global timeout
-        if(maxTime > 0)
-        {
-            soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+        if (maxTime > 0) {
+            message = "Job has been canceled because it stayed in the queue for too long (global timeout)";
+            soci::rowset<soci::row> rs = (sql.prepare <<
+                "SELECT job_id, job_type FROM t_job WHERE "
                 "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
                 "    job_state IN ('SUBMITTED', 'STAGING') AND job_finished IS NULL AND vo_name = :vo ",
                 soci::use(maxTime), soci::use(vo));
 
             sql.begin();
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            {
-                job_id = (*i);
-
-                stmtCancelFile.execute(true);
-                updateJobTransferStatusInternal(sql, job_id, "CANCELED");
-
-                jobs.push_back(*i);
-            }
+            performCancel(rs);
             sql.commit();
         }
 
         // Cancel jobs using their own timeout
-        soci::rowset<std::string> rs = (sql.prepare
-            << "SELECT job_id FROM t_job USE INDEX(idx_jobfinished)  WHERE "
-            "    max_time_in_queue IS NOT NULL AND max_time_in_queue < unix_timestamp() AND vo_name = :vo "
-            "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') and job_finished is NULL ", soci::use(vo));
-            sql.begin();
-        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-        {
-            job_id = (*i);
+        message = "Job has been canceled because it stayed in the queue for too long (max-time-in-queue timeout)";
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT job_id, job_type FROM t_job USE INDEX(idx_jobfinished) WHERE "
+            "    max_time_in_queue IS NOT NULL AND max_time_in_queue < UNIX_TIMESTAMP() AND vo_name = :vo "
+            "    AND job_state IN ('SUBMITTED', 'ACTIVE', 'STAGING') AND job_finished IS NULL ", soci::use(vo));
 
-            stmtCancelFile.execute(true);
-            updateJobTransferStatusInternal(sql, job_id, "CANCELED");
-
-            jobs.push_back(*i);
-        }
+        sql.begin();
+        performCancel(rs);
         sql.commit();
     }
     catch (std::exception& e) {
@@ -3429,7 +3444,7 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
             std::string dn = r.get<std::string>("dn");
             std::string dlg_id = r.get<std::string>("dlg_id");
             int archive_timeout = r.get<int>("archive_timeout",0);
-            archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, archive_timeout);
+            archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, 0, archive_timeout);
         }
 
         //TODO: add throttling
@@ -3826,11 +3841,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,
                         user_dn, cred_id, source_url,
-                        copy_pin_lifetime, bring_online, source_space_token,
-                        std::string()
+                        copy_pin_lifetime, bring_online, 0,
+                        source_space_token, std::string()
                     );
 
-                    if(!job_id.empty() && file_id > 0)
+                    if (!job_id.empty() && file_id > 0)
                     {
                         filesState.emplace_back(job_id, file_id, initState, reason, false);
                     }
@@ -3888,8 +3903,8 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
         soci::rowset<soci::row> rs =
                 (
                         sql.prepare <<
-                        " SELECT f.vo_name, f.dest_surl, f.job_id, f.file_id, j.archive_timeout, "
-                        " j.user_dn, j.cred_id "
+                        " SELECT f.vo_name, f.dest_surl, f.job_id, f.file_id, f.archive_start_time, "
+                        " j.archive_timeout, j.user_dn, j.cred_id "
                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                         " WHERE  "
                         " j.archive_timeout >= 0  "
@@ -3906,15 +3921,21 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
             std::string dest_url = row.get<std::string>("dest_surl");
             std::string job_id = row.get<std::string>("job_id");
             uint64_t file_id = row.get<unsigned long long>("file_id");
-            int archiveTimeout = row.get<int>("archive_timeout",0);
-            
+            int archive_timeout = row.get<int>("archive_timeout", 0);
+
+            time_t archive_start_time = time(0);
+            if (row.get_indicator("archive_start_time") == soci::i_ok) {
+                struct tm start_tm = row.get<struct tm>("archive_start_time");
+                archive_start_time = timegm(&start_tm);
+            }
+
             std::string user_dn = row.get<std::string>("user_dn");
             std::string cred_id = row.get<std::string>("cred_id");
             
             archiveOps.emplace_back(
                     job_id, file_id, vo_name,
                     user_dn, cred_id, dest_url,
-                    archiveTimeout
+                    archive_start_time, archive_timeout
             );
         }
     }
@@ -3954,8 +3975,8 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
         soci::rowset<soci::row> rs3 =
             (
                 sql.prepare <<
-                " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
-                " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
+                " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, f.staging_start, f.bringonline_token, "
+                " j.copy_pin_lifetime, j.bring_online, j.user_dn, j.cred_id, j.source_space_token "
                 " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                 " WHERE  "
                 " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
@@ -3975,7 +3996,13 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
             int bring_online = row.get<int>("bring_online",0);
 
-            if(copy_pin_lifetime > 0 && bring_online <= 0)
+            time_t staging_start_time = 0;
+            if (row.get_indicator("staging_start") == soci::i_ok) {
+                struct tm start_tm = row.get<struct tm>("staging_start");
+                staging_start_time = timegm(&start_tm);
+            }
+
+            if (copy_pin_lifetime > 0 && bring_online <= 0)
                 bring_online = 28800;
             else if (bring_online > 0 && copy_pin_lifetime <= 0)
                 copy_pin_lifetime = 28800;
@@ -3991,7 +4018,9 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             stagingOps.emplace_back(
                 job_id, file_id, vo_name,
                 user_dn, cred_id, source_url,
-                copy_pin_lifetime, bring_online, source_space_token,
+                copy_pin_lifetime, bring_online,
+                staging_start_time,
+                source_space_token,
                 bringonline_token
             );
         }
