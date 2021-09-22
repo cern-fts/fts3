@@ -14,14 +14,14 @@ Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
 License:    ASL 2.0
-URL:        http://fts3-service.web.cern.ch/
+URL:        https://fts.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.8.0
-#  cd fts-3.8.0
-#  git checkout v3.8.0
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.11.0
+#  cd fts-3.11.0
+#  git checkout v3.11.0
 #  cd ..
-#  tar --exclude-vcs -vczf fts-3.8.0.tar.gz fts-3.8.0
+#  tar --exclude-vcs -vczf fts-3.11.0.tar.gz fts-3.11.0
 Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -504,6 +504,11 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Wed Sep 22 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.0-1
+- New minor release
+- Destination file report feature
+- Improved handling of timeouts during polling tasks
+
 * Wed Jun 02 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.10.2-1
 - Fix memory management in archiving tasks recovery
 
