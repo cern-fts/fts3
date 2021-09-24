@@ -18,6 +18,7 @@ KillSignal=SIGTERM
 SendSIGHUP=no
 SendSIGKILL=yes
 Restart=on-failure
+RestartSec=3
 LimitNOFILE=65536
 
 [Install]
