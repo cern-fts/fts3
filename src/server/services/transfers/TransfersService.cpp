@@ -136,6 +136,9 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         if (voQueues.empty())
             return;
 
+        // Count of scheduled transfers for activity
+        std::map<std::string, int> scheduledByActivity;
+
         // create transfer-file handler
         TransferFileHandler tfh(voQueues);
 
@@ -167,6 +170,10 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                 if (tf.fileId == 0 || tf.userDn.empty() || tf.credId.empty())
                     continue;
 
+                if (!scheduledByActivity.count(tf.activity)) {
+                    scheduledByActivity[tf.activity] = 0;
+                }
+
                 std::pair<std::string, std::string> proxy_key(tf.credId, tf.userDn);
 
                 if (proxies.find(proxy_key) == proxies.end())
@@ -190,6 +197,9 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                         warningPrintedSrc.insert(tf.sourceSe);
                     }
                 } else {
+                    // Increment scheduled transfers by activity
+                    scheduledByActivity[tf.activity]++;
+
                     FileTransferExecutor *exec = new FileTransferExecutor(tf,
                         tfh, monitoringMessages, infosys, ftsHostName,
                         proxies[proxy_key], logDir, msgDir);
@@ -210,10 +220,22 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
         // wait for all the workers to finish
         execPool.join();
+        int scheduled = execPool.reduce(std::plus<int>());
         FTS3_COMMON_LOGGER_NEWLOG(INFO) <<"Threadpool processed: " << initial_size
-                << " files (" << execPool.reduce(std::plus<int>())
-                << " have been scheduled)" << commit;
+                << " files (" << scheduled << " have been scheduled)" << commit;
 
+        if (scheduled > 0) {
+            std::ostringstream out;
+
+            for (auto it_activity = scheduledByActivity.begin();
+                 it_activity != scheduledByActivity.end(); ++it_activity) {
+                std::string activity_name = it_activity->first;
+                std::replace(activity_name.begin(), activity_name.end(), " ", "_");
+                out << " " << activity_name << "=" << it_activity->second;
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scheduled by activity:" << out.str() << commit;
+        }
     }
     catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;

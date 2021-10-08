@@ -120,6 +120,7 @@ public:
     std::string sourceSpaceToken;
     std::string destinationSpaceToken;
     std::string selectionStrategy;
+    std::string activity;
     int pinLifetime;
     int bringOnline;
     int64_t userFilesize;
