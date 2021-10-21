@@ -230,7 +230,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
             for (auto it_activity = scheduledByActivity.begin();
                  it_activity != scheduledByActivity.end(); ++it_activity) {
                 std::string activity_name = it_activity->first;
-                std::replace(activity_name.begin(), activity_name.end(), " ", "_");
+                std::replace(activity_name.begin(), activity_name.end(), ' ', '_');
                 out << " " << activity_name << "=" << it_activity->second;
             }
 
