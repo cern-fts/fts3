@@ -442,7 +442,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	"Max small file size for session reuse in bytes"
     )
     (   "AutoSessionReuseMaxBigFileSize",
-	 po::value<int>()->default_value(1073741824),
+	 po::value<long long>()->default_value(1073741824),
 	 "Max big file size for session reuse in bytes"
     )
     (   "AutoSessionReuseMaxFiles",
