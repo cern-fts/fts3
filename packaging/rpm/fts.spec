@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.11.0
+Version:    3.11.1
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -504,6 +504,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Oct 25 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.1-1
+- Introduce shuffling of Activity queues
+
 * Wed Sep 22 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.0-1
 - New minor release
 - Destination file report feature
