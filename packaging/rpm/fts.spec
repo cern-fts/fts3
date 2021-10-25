@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.11.0
+Version:    3.11.1
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -504,6 +504,9 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 ./build/test/unit/unit --log_level=all --report_level=detailed
 
 %changelog
+* Mon Oct 25 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.1-1
+- Introduce shuffling of Activity queues
+
 * Wed Sep 22 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.0-1
 - New minor release
 - Destination file report feature
@@ -552,7 +555,7 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 * Thu May 23 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-2
 - fix db upgrade script
 
-* Tue May 08 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
+* Wed May 08 2019 Edward Karavakis <edward.karavakis@cern.ch> - 3.9.0-1
 - New Minor release
 - Includes multiple database optimisations that improve the overall performance of FTS
 - Avoid submitting multiple transfers to the same destination
@@ -561,7 +564,7 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 * Mon Apr 15 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.5-1
 - New bugfix release
 
-* Mon Mar 28 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.4-1
+* Mon Mar 18 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.4-1
 - New bugfix release
 
 * Thu Feb 21 2019 Andrea Manzi <amanzi@cern.ch> - 3.8.3-1
@@ -691,49 +694,48 @@ export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
 - Update for new upstream release
 
 * Thu Sep 04 2014 Orion Poplawski <orion@cora.nwra.com> - 3.2.26.2-4
-  - Rebuild for pugixml 1.4
+- Rebuild for pugixml 1.4
 * Sat Aug 16 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.26.2-3
-  - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 * Wed Aug 13 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
-  - Update for new upstream releas
+- Update for new upstream releas
 * Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-1
-  - introduced dist back in the release
+- introduced dist back in the release
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-2
-  - separated rpms for messaging and infosys subsystems
+- separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
-  - Added missing changelog entry
-  - Fixed bogus date
+- Added missing changelog entry
+- Fixed bogus date
 * Tue Oct 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.33-1
-  - Update for new upstream release
+- Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
-  - no longer linking explicitly to boost libraries with '-mt' sufix
+- no longer linking explicitly to boost libraries with '-mt' sufix
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
-  - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 * Sat Jul 27 2013 Petr Machata <pmachata@redhat.com> - 3.1.0-2
-  - rebuild for boost 1.54.0
-  - boost package doesn't use tagged sonames anymore, drop the -mt
-    suffix from several boost libraries (fts-3.1.0-boost_mt.patch)
+- rebuild for boost 1.54.0
+- boost package doesn't use tagged sonames anymore, drop the -mt
+suffix from several boost libraries (fts-3.1.0-boost_mt.patch)
 * Wed Jul 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-15
-  - compatible with rawhide (f20)
+- compatible with rawhide (f20)
 * Tue Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
-  - mysql queries optimization
+- mysql queries optimization
 * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
-  - dependency on 'gfal2-plugin-http' has been removed
-  - the calls to mktemp have been removed
-  - cmake build type changed from Release to RelWithDebInfo
-  - EPEL5 specifics have been removed from spec files
-  - changelog has been fixed
+- dependency on 'gfal2-plugin-http' has been removed
+- the calls to mktemp have been removed
+- cmake build type changed from Release to RelWithDebInfo
+- EPEL5 specifics have been removed from spec files
+- changelog has been fixed
 * Fri May 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.2-1
-  - speling has been fixed in package's description
-  - man pages added to devel package
-  - services are disabled by default
-  - missing 'Requires(post): chkconfig' and 'Requires(preun): chkconfig' added
+- speling has been fixed in package's description
+- man pages added to devel package
+- services are disabled by default
+- missing 'Requires(post): chkconfig' and 'Requires(preun): chkconfig' added
 * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-1
-  - BuildRequires and Requires entries have been sorted alphabetically
-  - the non standard compilation options have been removed
-  - package and the subpackages descriptions have been updated
-  - documentation files listed as %doc
-  - trailing white-spaces have been removed
+- BuildRequires and Requires entries have been sorted alphabetically
+- the non standard compilation options have been removed
+- package and the subpackages descriptions have been updated
+- documentation files listed as %%doc
+- trailing white-spaces have been removed
 * Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1
-  - First EPEL release
-
+- First EPEL release

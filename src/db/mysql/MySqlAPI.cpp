@@ -23,6 +23,7 @@
 #include <boost/range/algorithm/transform.hpp>
 
 #include <map>
+#include <chrono>
 #include <soci/mysql/soci-mysql.h>
 #include "MySqlAPI.h"
 #include "sociConversions.h"
@@ -718,7 +719,21 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 }
                 def_act += ") ";
 
+                // Shuffle the map via intermediary vector
+                using ActivityNumTuple = std::pair<std::string, int>;
+                std::vector<ActivityNumTuple> vActivityFilesNum;
+                vActivityFilesNum.reserve(activityFilesNum.size());
+
                 for (auto it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
+                {
+                    vActivityFilesNum.emplace_back(it_act->first, it_act->second);
+                }
+
+                auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+                auto random_engine = std::default_random_engine{seed};
+                std::shuffle(vActivityFilesNum.begin(), vActivityFilesNum.end(), random_engine);
+
+                for (auto it_act = vActivityFilesNum.begin(); it_act != vActivityFilesNum.end(); ++it_act)
                 {
                     if (it_act->second == 0) continue;
 
@@ -778,6 +793,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                             tfile.lastReplica = (total == remain)? 1: 0;
                         }
 
+                        tfile.activity = it_act->first;
                         files[tfile.voName].push_back(tfile);
                     }
                 }
