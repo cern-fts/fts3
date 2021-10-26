@@ -1,9 +1,14 @@
 stages:
 - build
+- docker
 - tag
 
-build:
-    stage: build
+#--------------------------
+# Docker build jobs
+#--------------------------
+
+.docker_build:
+    stage: docker
     only:
       - develop
     script:
@@ -13,14 +18,15 @@ build:
       DOCKER_FILE:  packaging/docker/Dockerfile
     tags:
       - docker-image-build
-tag:
+
+.docker_tag:
     stage: tag
     only:
-        - tags
+      - tags
     script:
       - ""
     variables:
       TO: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
       DOCKER_FILE:  packaging/docker/Dockerfile-release
     tags:
-        - docker-image-build
+      - docker-image-build
