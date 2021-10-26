@@ -72,7 +72,7 @@ cc7:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
     - eosfusebind
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
+    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
     - sleep 60
   tags:
     - docker-privileged
@@ -101,7 +101,7 @@ publish-production:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
     - eosfusebind
-    - packaging/syncrepo --base-origin /eos/workspace/f/fts/www/repos/rc --base-dest /eos/workspace/f/fts/www/repos/ '*.rpm'
+    - packaging/syncrepo --base-origin /eos/workspace/f/fts/repo/www/repos/rc --base-dest /eos/workspace/f/fts/repo/www/repos/ '*.rpm'
     - sleep 60
   tags:
     - docker-privileged
