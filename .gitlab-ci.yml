@@ -1,7 +1,6 @@
 stages:
 - build
 - docker
-- tag
 - publish
 
 #--------------------------
@@ -34,29 +33,41 @@ cc7:
 # Docker build jobs
 #--------------------------
 
-.docker_build:
-    stage: docker
-    only:
-      - develop
-    script:
-      - ""
-    variables:
-      TO: gitlab-registry.cern.ch/fts/fts3:latest
-      DOCKER_FILE:  packaging/docker/Dockerfile
-    tags:
-      - docker-image-build
+.kaniko_build: &kaniko_build-template
+  stage: docker
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - if [[ -z "$CI_COMMIT_TAG" ]]; 
+      then CACHE="false"; REGISTRY="latest"; 
+      else CACHE="true"; REGISTRY="${CI_COMMIT_TAG}";
+      fi
+    - if [[ -z "$DMC_REPO" ]];
+      then DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo";
+      fi
+    - DESTINATION="gitlab-registry.cern.ch/fts/fts3:${REGISTRY}"
+    - printf "CACHE=${CACHE}\nDESTINATION=${DESTINATION}\nDMCREPO=${DMC_REPO}\n"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --dockerfile ci/docker/Dockerfile-ci --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+  retry: 1
 
-.docker_tag:
-    stage: tag
-    only:
-      - tags
-    script:
-      - ""
-    variables:
-      TO: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
-      DOCKER_FILE:  packaging/docker/Dockerfile-release
-    tags:
-      - docker-image-build
+docker_build:
+  <<: *kaniko_build-template
+  dependencies:
+    - cc7
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+
+docker_tag:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
+  dependencies:
+    - cc7
+  rules:
+    - if: $CI_COMMIT_TAG != null
 
 #--------------------------
 # Publish templates
