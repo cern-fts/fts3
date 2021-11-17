@@ -63,8 +63,6 @@ BuildRequires:  cppzmq-devel
 BuildRequires:  zeromq-devel
 %endif
 
-# Required for some unit tests
-BuildRequires:  gfal2-plugin-mock
 Requires(pre):  shadow-utils
 
 %description
@@ -191,6 +189,17 @@ Requires:   fts-server%{?_isa}
 
 %description mysql
 The File Transfer Service V3 mysql plug-in
+
+%package tests
+Summary:    FTS unit tests
+Group:      Development/Tools
+
+Requires:   fts-libs%{?_isa} = %{version}-%{release}
+Requires:   gfal2-plugin-mock
+Requires:   zeromq
+
+%description tests
+Testing binaries for the FTS Server and related components.
 
 %prep
 %setup -q
@@ -499,9 +508,9 @@ fi
 %{_libdir}/libfts_db_mysql.so.*
 %{_datadir}/fts-mysql
 
-%check
-export LD_LIBRARY_PATH=%{buildroot}%{_libdir}:./build/test/unit
-./build/test/unit/unit --log_level=all --report_level=detailed
+%files tests
+%{_bindir}/fts-unit-tests
+%{_libdir}/fts-tests
 
 %changelog
 * Mon Oct 25 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.1-1
