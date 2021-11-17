@@ -30,7 +30,7 @@ cc7:
   <<: *build-template_definition
 
 #--------------------------
-# Docker build jobs
+# Docker build templates
 #--------------------------
 
 .kaniko_build: &kaniko_build-template
@@ -53,10 +53,14 @@ cc7:
     - /kaniko/executor --dockerfile ci/docker/Dockerfile-ci --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
   retry: 1
 
+#--------------------------
+# Docker build jobs
+#--------------------------
+
 docker_build:
   <<: *kaniko_build-template
-  dependencies:
-    - cc7
+  needs:
+    - job: cc7
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
@@ -64,8 +68,8 @@ docker_tag:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
-  dependencies:
-    - cc7
+  needs:
+    - job: cc7
   rules:
     - if: $CI_COMMIT_TAG != null
 
