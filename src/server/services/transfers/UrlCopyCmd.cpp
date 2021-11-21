@@ -147,6 +147,17 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
     }
 }
 
+void UrlCopyCmd::setEvict(boost::tribool set)
+{
+    if (boost::indeterminate(set)) {
+        setFlag("evict", false);
+    } else {
+        bool value = (set.value == true);
+        setFlag("evict", value);
+    }
+}
+
+
 
 bool UrlCopyCmd::isIPv6Explicit(void)
 {

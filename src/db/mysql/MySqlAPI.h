@@ -203,7 +203,7 @@ public:
     virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end,
         std::string service_name);
 
-    /// Update the state of a trnasfer inside a session reuse job
+    /// Update the state of a transfer inside a session reuse job
     virtual unsigned int updateFileStatusReuse(const TransferFile &file, const std::string &status);
 
     /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
@@ -217,6 +217,9 @@ public:
 
     /// Returns if for the given link, IPv6 has been enabled
     virtual boost::tribool isProtocolIPv6(const std::string &source, const std::string &dest);
+
+    /// Returns if for the given storage endpoint, eviction has been enabled
+    virtual boost::tribool getEvictionFlag(const std::string &source);
 
     /// Returns how many streams must be used for the given link
     virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);

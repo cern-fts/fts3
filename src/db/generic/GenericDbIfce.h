@@ -251,7 +251,7 @@ public:
         service_name = std::string("");
     }
 
-    /// Update the state of a trnasfer inside a session reuse job
+    /// Update the state of a transfer inside a session reuse job
     virtual unsigned int updateFileStatusReuse(const TransferFile &file, const std::string &status) = 0;
 
     /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
@@ -265,6 +265,9 @@ public:
 
     /// Returns if for the given link, IPv6 has been enabled
     virtual boost::tribool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe) = 0;
+
+    /// Returns if for the given storage endpoint, eviction has been enabled
+    virtual boost::tribool getEvictionFlag(const std::string &source) = 0;
 
     /// Returns how many streams must be used for the given link
     virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe) = 0;
