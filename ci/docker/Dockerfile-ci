@@ -32,7 +32,7 @@ RUN yum install -y fts-server fts-client fts-mysql fts-server-selinux fts-msg ft
 RUN yum install -y gfal2-all gfal2-plugin-mock
 
 # Install VOMS packages
-RUN yum install -y voms-config-wlcg  voms-config-vo-dteam
+RUN yum install -y voms-config-wlcg voms-config-vo-dteam
 
 # Install supervisor
 RUN yum install -y supervisor
