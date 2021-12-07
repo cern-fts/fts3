@@ -176,6 +176,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     std::vector<std::string> csVector;
     boost::split(csVector, csName, boost::is_any_of(";"), boost::token_compress_on);
 
+    int cnt = 0;
     for (auto i = csVector.begin(); i != csVector.end(); ++i) {
         std::string upperCsName = *i;
         boost::to_upper(upperCsName);
@@ -187,6 +188,8 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
                     writeDropboxCreds(f, upperCsName, auth);
                 }
                 else if (boost::starts_with(upperCsName, "SWIFT")) {
+                    db->getCloudCredentialCache(tf.jobId, tf.userDn, upperCsName, auth, cnt);
+                    cnt += 1;
                     writeSwiftCreds(f, upperCsName, auth);
                 }
                 else {

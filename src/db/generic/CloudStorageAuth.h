@@ -32,7 +32,7 @@ struct CloudStorageAuth
     std::string accessTokenSecret; ///< Secret key for S3
     std::string requestToken;      ///< Session token for S3 (short term credentials)
     std::string osToken;           ///< OS token for Swift
-    std::string osProjectID;       ///< OS project ID for S3
+    std::string osProjectID;       ///< OS project ID for Swift
 };
 
 #endif // CLOUDSTORAGEAUTH_H_

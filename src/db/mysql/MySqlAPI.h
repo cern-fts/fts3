@@ -321,6 +321,13 @@ public:
         const std::string& cloudName,
         CloudStorageAuth& auth);
 
+    /// Retrieve the credentials cache for a cloud storage endpoint for the given user
+    virtual bool getCloudCredentialCache(const std::string& jobId,
+                                         const std::string& userDn,
+                                         const std::string& cloudName,
+                                         CloudStorageAuth& auth,
+                                         int& cnt);
+
     /// Get if the user dn should be visible or not in the messaging
     virtual bool publishUserDn(const std::string &vo);
 

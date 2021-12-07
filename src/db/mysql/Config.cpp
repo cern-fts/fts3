@@ -685,6 +685,47 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
 }
 
 
+bool MySqlAPI::getCloudCredentialCache(const std::string &jobId, const std::string &userDn,
+                                       const std::string &cloudName, CloudStorageAuth &auth, int &cnt) {
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        std::string os_project_ids;
+        sql <<
+            " SELECT os_project_id "
+            " FROM t_job "
+            " WHERE job_id = :jobId ",
+            soci::use(jobId, "jobId"),
+            soci::into(os_project_ids);
+
+        std::vector<std::string> projectIdVec;
+        boost::split(projectIdVec, os_project_ids, boost::is_any_of(":"), boost::token_compress_on);
+
+        std::string os_token;
+        sql <<
+            " SELECT os_token "
+            " FROM t_cloudCredentialCache "
+            " WHERE "
+            " cloudStorage_name=:cs_name AND "
+            " user_dn=:user_dn AND "
+            " os_project_id=:os_project_id",
+            soci::use(cloudName, "cs_name"), soci::use(userDn, "user_dn"), soci::use(projectIdVec[cnt], "os_project_id"),
+            soci::into(os_token);
+        auth.osToken = os_token;
+        auth.osProjectID = projectIdVec[cnt];
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+    return true;
+}
+
 bool MySqlAPI::publishUserDnInternal(soci::session& sql, const std::string &vo)
 {
     std::string publish;
