@@ -714,6 +714,8 @@ bool MySqlAPI::getCloudCredentialCache(const std::string &jobId, const std::stri
             soci::into(os_token);
         auth.osToken = os_token;
         auth.osProjectID = projectIdVec[cnt];
+        if (!sql.got_data())
+            return false;
     }
     catch (std::exception& e)
     {

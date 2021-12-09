@@ -188,9 +188,10 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
                     writeDropboxCreds(f, upperCsName, auth);
                 }
                 else if (boost::starts_with(upperCsName, "SWIFT")) {
-                    db->getCloudCredentialCache(tf.jobId, tf.userDn, upperCsName, auth, cnt);
-                    cnt += 1;
-                    writeSwiftCreds(f, upperCsName, auth);
+                    if(db->getCloudCredentialCache(tf.jobId, tf.userDn, upperCsName, auth, cnt)){
+                        cnt += 1;
+                        writeSwiftCreds(f, upperCsName, auth);
+                    }
                 }
                 else {
                     writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);
