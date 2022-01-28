@@ -36,6 +36,8 @@
 
 #include <msg-bus/producer.h>
 
+#include <ctime>
+
 using namespace fts3::common;
 
 
@@ -47,7 +49,7 @@ extern time_t retrieveRecords;
 
 TransfersService::TransfersService(): BaseService("TransfersService")
 {
-    cmd = "fts_url_copy";
+   cmd = "fts_url_copy";
 
     logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
@@ -131,7 +133,14 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
         // now get files to be scheduled
         std::map<std::string, std::list<TransferFile> > voQueues;
+
+
+	time_t start = time(0);
         db->getReadyTransfers(queues, voQueues);
+        time_t end =time(0);
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService:getFiles:getReadyTransfers\"" 
+					<< "time=\"" << end - start << "\"";
+
 
         if (voQueues.empty())
             return;
@@ -303,6 +312,7 @@ void TransfersService::executeUrlcopy()
     }
 
     try {
+      time_t start = time(0); //std::chrono::system_clock::now();
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
         std::random_shuffle(queues.begin(), queues.end());
@@ -316,6 +326,9 @@ void TransfersService::executeUrlcopy()
             return;
         }
         getFiles(queues, availableUrlCopySlots);
+	time_t end = time(0); //std::chrono::system_clock::now();
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService:executeUrlcopy:getQueuesWithPending\"" 
+					<< "time=\"" << end - start << "\"";
     }
     catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;

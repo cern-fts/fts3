@@ -51,7 +51,12 @@ void FetchArchiving::fetch()
             std::map<GroupByType, ArchivingContext> tasks;
             std::vector<ArchivingOperation> files;
 
+	    time_t start = time(0);
             db::DBSingleton::instance().getDBObjectInstance()->getFilesForArchiving(files);
+	    time_t end = time(0);
+	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchArchiving:fetch:getFilesForArchiving\"" 
+					    << "time=\"" << end - start << "\"";
+
 
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
