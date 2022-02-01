@@ -49,7 +49,7 @@ extern time_t retrieveRecords;
 
 TransfersService::TransfersService(): BaseService("TransfersService")
 {
-   cmd = "fts_url_copy";
+    cmd = "fts_url_copy";
 
     logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
@@ -135,12 +135,14 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         std::map<std::string, std::list<TransferFile> > voQueues;
 
 
-	time_t start = time(0);
+        time_t start = time(0);
         db->getReadyTransfers(queues, voQueues);
         time_t end =time(0);
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService:getFiles:getReadyTransfers\"" 
-					<< "time=\"" << end - start << "\"";
-
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
+                                        << "func=\"getFiles\" "
+                                        << "DBcall=\"getReadyTransfers\" " 
+                                        << "time=\"" << end - start << "\"" 
+                                        << commit;
 
         if (voQueues.empty())
             return;
@@ -326,9 +328,12 @@ void TransfersService::executeUrlcopy()
             return;
         }
         getFiles(queues, availableUrlCopySlots);
-	time_t end = time(0); //std::chrono::system_clock::now();
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService:executeUrlcopy:getQueuesWithPending\"" 
-					<< "time=\"" << end - start << "\"";
+        time_t end = time(0); //std::chrono::system_clock::now();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
+                                        << "func=\"executeUrlcopy\" "
+                                        << "DBcall=\"getQueuesWithPending\" " 
+                                        << "time=\"" << end - start << "\"" 
+                                        << commit;
     }
     catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;
