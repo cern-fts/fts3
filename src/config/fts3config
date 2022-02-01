@@ -120,6 +120,8 @@ LogLevel=INFO
 #PurgeMessagingDirectoryInterval = 600
 # In seconds, how often to run sanity checks
 #CheckSanityStateInterval = 3600
+# In seconds, how often to run multihop sanity checks
+#MultihopSanityStateInterval = 600
 # In seconds, how often to check for canceled transfers
 #CancelCheckInterval = 10
 # In seconds, how often to check for expired queued transfers

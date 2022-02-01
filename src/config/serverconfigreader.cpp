@@ -364,6 +364,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, how often to run sanity checks"
     )
     (
+        "MultihopSanityStateInterval",
+        po::value<std::string>( &(_vars["MultihopSanityStateInterval"]) )->default_value("600"),
+        "In seconds, how often to run multihop sanity checker"
+    )
+    (
         "CancelCheckInterval",
         po::value<std::string>( &(_vars["CancelCheckInterval"]) )->default_value("10"),
         "In seconds, how often to check for canceled transfers"

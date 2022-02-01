@@ -172,8 +172,11 @@ public:
     /// Get the state the transfer identified by jobId/fileId
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, uint64_t fileId);
 
-    /// Run a set of sanity checks over the database, logging potential inconsistencies and logging them
+    /// Run a set of sanity checks over the database, logging potential inconsistencies and fixing them
     virtual void checkSanityState();
+
+    /// Run a sanity check over the database on multihop jobs, logging potential inconsistencies and fixing them
+    virtual void multihopSanitySate();
 
     /// Add a new retry to the transfer identified by fileId
     /// @param jobId    Job identifier
@@ -391,5 +394,8 @@ private:
 
     std::vector<std::string> getVos(void);
     void cancelExpiredJobsForVo(std::vector<std::string>& jobs, int maxTime, const std::string &vo);
+
+    // Multihop Check
+    void fixFilesInNotUsedState(soci::session &sql);
 };
 
