@@ -35,43 +35,68 @@ static void logInconsistency(const std::string &jobId, const std::string &messag
 }
 
 
-/// Search for files in multihob jobs whose state is NOT_USED but first hop has already finished
-void MySqlAPI::fixFilesInNotUsedState(soci::session &sql){
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check multihop files with second hop stuck" << commit;
+/// Search for files in multihob jobs whose state is NOT_USED but previous hop is already FINISHED
+void MySqlAPI::fixFilesInNotUsedState(soci::session &sql)
+{
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check of multihop jobs with a stuck hop" << commit;
 
     sql.begin();
 
     soci::rowset<soci::row> multihopJobIds = (
         sql.prepare <<
-            "SELECT SQL_BUFFER_RESULT job_id, job_state FROM t_job WHERE job_type='H'"
+            "SELECT SQL_BUFFER_RESULT job_id "
+            "FROM t_job "
+            "WHERE job_state IN ('SUBMITTED', 'ACTIVE') "
+            "AND job_type='H'"
     );
 
     for (auto i = multihopJobIds.begin(); i != multihopJobIds.end(); ++i) {
         const std::string jobId = i->get<std::string>("job_id");
 
-        std::map<std::string, long long> stateCount;
+        int maxIndex;
+        int fileIndex;
+        std::string fileState;
+        soci::indicator nullIndex = soci::i_ok;
 
-        soci::rowset<soci::row> fileStates = (sql.prepare <<
-            "SELECT file_state, COUNT(file_state) AS cnt "
+        sql << "SELECT MAX(file_index) "
             "FROM t_file "
             "WHERE job_id = :job_id "
-            "GROUP BY file_state "
-            "ORDER BY NULL",
-            soci::use(jobId)
-        );
+            "AND file_state = 'FINISHED' ",
+            soci::use(jobId),
+            soci::into(fileIndex, nullIndex);
 
-        for (auto i = fileStates.begin(); i != fileStates.end(); ++i) {
-            const std::string fileState = i->get<std::string>("file_state");
-            long long count = i->get<long long>("cnt");
-            stateCount[fileState] = count;
+        // If there is no file in FINISHED state continue to next job
+        if (nullIndex == soci::i_null) {
+            continue;
         }
 
-        if ((stateCount["FINISHED"] == 1) && (stateCount["NOT_USED"] == 1)){
-                sql << "UPDATE t_file SET "
-                    "    file_state = 'SUBMITTED' "
-                    "    WHERE file_state = 'NOT_USED' AND job_id = :jobId",
-                    soci::use(jobId);
-                logInconsistency(jobId, "Multihop job with first hop finished and second hop not used");
+        sql << "SELECT MAX(file_index) "
+            "FROM t_file "
+            "WHERE job_id = :job_id ",
+            soci::use(jobId),
+            soci::into(maxIndex);
+
+        // If last hop is already FINISHED continue to next job
+        if (fileIndex == maxIndex) {
+            continue;
+        }
+
+        sql << "SELECT file_state "
+            "FROM t_file "
+            "WHERE job_id = :job_id "
+            "AND file_index = :file_index ",
+            soci::use(jobId), soci::use(fileIndex+1),
+            soci::into(fileState);
+
+        // If the file after the last file in FINISHED state is in NOT_USED state change it to SUBMITTED
+        if (fileState == "NOT_USED"){
+            sql << "UPDATE t_file SET "
+                "    file_state = 'SUBMITTED' "
+                "    WHERE file_index = :file_index "
+                "    AND job_id = :jobId ",
+                soci::use(fileIndex+1),
+                soci::use(jobId);
+            logInconsistency(jobId, "Multihop job with a file in NOT_USED state when previous hop is FINISHED");
         }
     }
     sql.commit();
