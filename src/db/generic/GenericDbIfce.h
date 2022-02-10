@@ -198,7 +198,7 @@ public:
     /// Returns how many retries there is configured for the given jobId
     virtual int getRetry(const std::string & jobId) = 0;
 
-    /// Returns how many thime the given file has been already retried
+    /// Returns how many times the given file has been already retried
     virtual int getRetryTimes(const std::string & jobId, uint64_t fileId) = 0;
 
     /// Set to FAIL jobs that have been in the queue for more than its max in queue time
