@@ -69,7 +69,7 @@ void FetchStaging::fetch()
             time_t end = time(0);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchStaging\" "
                                             << "func=\"fetch\" "
-                                            << "DBcall=\"getFilesForStaging\"" 
+                                            << "DBcall=\"getFilesForStaging\" " 
                                             << "time=\"" << end - start << "\""
                                             << commit;
 
