@@ -55,7 +55,7 @@ void FetchArchiving::fetch()
             db::DBSingleton::instance().getDBObjectInstance()->getFilesForArchiving(files);
             time_t end = time(0);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchArchiving\" "
-                                            << "func=\"fetchs\" "
+                                            << "func=\"fetch\" "
                                             << "DBcall=\"getFilesForArchiving\" " 
                                             << "time=\"" << end - start << "\"" 
                                             << commit;
