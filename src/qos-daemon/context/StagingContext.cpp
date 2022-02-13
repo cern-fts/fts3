@@ -39,6 +39,10 @@ void StagingContext::add(const StagingOperation &stagingOp)
         minStagingStartTime = stagingOp.startTime;
     }
 
+    if (storageEndpoint.empty()) {
+        storageEndpoint = Uri::parse(stagingOp.surl).getSeName();
+    }
+
     add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
 }
 
