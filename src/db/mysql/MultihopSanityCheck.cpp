@@ -53,31 +53,20 @@ void MySqlAPI::fixFilesInNotUsedState(soci::session &sql)
     for (auto i = multihopJobIds.begin(); i != multihopJobIds.end(); ++i) {
         const std::string jobId = i->get<std::string>("job_id");
 
-        int maxIndex;
-        int fileIndex;
+        int lastFinishedIndex;
         std::string fileState;
         soci::indicator nullIndex = soci::i_ok;
+        soci::indicator nullState = soci::i_ok;
 
         sql << "SELECT MAX(file_index) "
             "FROM t_file "
             "WHERE job_id = :job_id "
             "AND file_state = 'FINISHED' ",
             soci::use(jobId),
-            soci::into(fileIndex, nullIndex);
+            soci::into(lastFinishedIndex, nullIndex);
 
         // If there is no file in FINISHED state continue to next job
         if (nullIndex == soci::i_null) {
-            continue;
-        }
-
-        sql << "SELECT MAX(file_index) "
-            "FROM t_file "
-            "WHERE job_id = :job_id ",
-            soci::use(jobId),
-            soci::into(maxIndex);
-
-        // If last hop is already FINISHED continue to next job
-        if (fileIndex == maxIndex) {
             continue;
         }
 
@@ -85,8 +74,13 @@ void MySqlAPI::fixFilesInNotUsedState(soci::session &sql)
             "FROM t_file "
             "WHERE job_id = :job_id "
             "AND file_index = :file_index ",
-            soci::use(jobId), soci::use(fileIndex+1),
-            soci::into(fileState);
+            soci::use(jobId), soci::use(lastFinishedIndex+1),
+            soci::into(fileState, nullState);
+
+        // Continue to next job if there is no file with file_index = lastFinishedIndex + 1
+        if (nullState == soci::i_null) {
+            continue;
+        }
 
         // If the file after the last file in FINISHED state is in NOT_USED state change it to SUBMITTED
         if (fileState == "NOT_USED"){
@@ -94,7 +88,7 @@ void MySqlAPI::fixFilesInNotUsedState(soci::session &sql)
                 "    file_state = 'SUBMITTED' "
                 "    WHERE file_index = :file_index "
                 "    AND job_id = :jobId ",
-                soci::use(fileIndex+1),
+                soci::use(lastFinishedIndex+1),
                 soci::use(jobId);
             logInconsistency(jobId, "Multihop job with a file in NOT_USED state when previous hop is FINISHED");
         }
