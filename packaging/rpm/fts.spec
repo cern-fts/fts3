@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.11.1
+Version:    3.11.2
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -513,6 +513,10 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Wed Feb 16 2022 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.11.2-1
+- Introduce profiling logs
+- Introduce new sanity-checker to prevent stuck multihop jobs
+
 * Mon Oct 25 2021 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.1-1
 - Introduce shuffling of Activity queues
 
