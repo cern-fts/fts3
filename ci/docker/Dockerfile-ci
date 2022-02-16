@@ -1,5 +1,5 @@
 #
-# FTS Docker file
+# FTS Docker file for the CI environment
 #
 
 FROM centos:7
@@ -12,14 +12,18 @@ RUN yum localinstall /tmp/epel-release-7.noarch.rpm -y \
         && rm /tmp/epel-release-7.noarch.rpm \
         && rm -rf /var/cache/yum
 
-# Add FTS repo
-ARG ftsrepo=https://fts-repo.web.cern.ch/fts-repo/fts3-continuous-el7.repo
-ADD $ftsrepo /etc/yum.repos.d/fts.repo
+# Build repo prerequisites
+RUN yum install -y createrepo
+
+# Add FTS repo from build artifacts
+ADD cc7 /repo/fts
+RUN createrepo /repo/fts
+RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
 
 # Add DMC repo
 ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo
 ADD $dmcrepo /etc/yum.repos.d/dmc.repo
-RUN yum clean all
+RUN yum clean metadata
 
 # Install FTS packages
 RUN yum install -y fts-server fts-client fts-mysql fts-server-selinux fts-msg fts-infosys cronie crontabs

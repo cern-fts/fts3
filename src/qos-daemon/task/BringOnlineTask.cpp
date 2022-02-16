@@ -46,9 +46,10 @@ void BringOnlineTask::run(const boost::any &)
 
     std::vector<GError*> errors(urls.size(), NULL);
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing bring-online for: " << urls.size() << " files, "
-                                    << "with copy-pin-lifetime: " << ctx.getPinlifetime() <<
-                                    " and bring-online-timeout: " << ctx.getBringonlineTimeout() << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing bring-online for: " << urls.size() << " files"
+                                    << " copy-pin-lifetime=" << ctx.getPinlifetime()
+                                    << " bring-online-timeout=" << ctx.getBringonlineTimeout()
+                                    << " storage=" << ctx.getStorageEndpoint() << commit;
 
     int status = gfal2_bring_online_list(
                      gfal2_ctx,

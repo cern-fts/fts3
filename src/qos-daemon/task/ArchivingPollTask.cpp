@@ -50,7 +50,8 @@ void ArchivingPollTask::run(const boost::any&)
 	}
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting"
-        << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime() << " ]"
+        << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime()
+        << " / storage=" << ctx.getStorageEndpoint() << " ]"
         << commit;
 
 	std::vector<GError*> errors(urls.size(), NULL);

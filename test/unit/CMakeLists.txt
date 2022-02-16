@@ -20,15 +20,20 @@ add_definitions ("-DBOOST_TEST_DYN_LINK")
 
 set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
 
+# Use RPATH to link with individual FTS test libraries
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "${LIB_INSTALL_DIR}/fts-tests/")
+
 # Shortcut to compile and declare a test in one shot
 # Usage: define_test (mytest common) => add a test with the source mytest.cpp linking against the common library
 #        define_test (mytest common helper.cpp) => similar, but compiling also helper.cpp
 function (define_test name link)
     add_library (${name} SHARED "${name}.cpp" ${ARGN})
     target_link_libraries (${name} ${link})
-    set_target_properties(${name} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test/unit
-    )
+    install(TARGETS ${name}
+            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/fts-tests/)
 
     list (APPEND UNIT_TEST_LIST ${name})
     set (UNIT_TEST_LIST "${UNIT_TEST_LIST}" CACHE INTERNAL "Unit tests" FORCE)
@@ -43,11 +48,15 @@ add_subdirectory (msg-bus)
 add_subdirectory (server)
 add_subdirectory (url-copy)
 
-# Build THE test binary
-message ("Found tests: ${UNIT_TEST_LIST}")
-add_executable (unit unit.cpp)
-target_link_libraries(unit
+# Build the test binary
+message(STATUS "Found tests: ${UNIT_TEST_LIST}")
+
+add_executable(fts-unit-tests unit.cpp)
+target_link_libraries(fts-unit-tests
     ${Boost_LIBRARIES}
-    ${UNIT_TEST_LIST}
-)
-add_test (unit unit)
+    ${UNIT_TEST_LIST})
+
+install(TARGETS fts-unit-tests
+        RUNTIME DESTINATION ${BIN_INSTALL_DIR})
+
+add_test(fts-unit-test fts-unit-tests)

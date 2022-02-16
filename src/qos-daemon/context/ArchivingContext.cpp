@@ -27,6 +27,10 @@ void ArchivingContext::add(const ArchivingOperation &archiveOp)
 {
     add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
     expiryMap[archiveOp.fileId] = archiveOp.startTime + archiveOp.timeout;
+
+    if (storageEndpoint.empty()) {
+        storageEndpoint = Uri::parse(archiveOp.surl).getSeName();
+    }
 }
 
 

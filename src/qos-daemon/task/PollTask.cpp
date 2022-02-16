@@ -46,9 +46,10 @@ void PollTask::run(const boost::any&)
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BringonlinePollTask starting"
-        << " [ files= " << urls.size() << " / token=" << token
+        << " [ files=" << urls.size() << " / token=" << token
         << " / minStagingStartTime=" << ctx.getStartTime()
-        << " / maxBringonlineTimeout=" << ctx.getBringonlineTimeout() << " ]"
+        << " / maxBringonlineTimeout=" << ctx.getBringonlineTimeout()
+        << " / storage=" << ctx.getStorageEndpoint() << " ]"
         << commit;
 
     std::vector<GError*> errors(urls.size(), NULL);

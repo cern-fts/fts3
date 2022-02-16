@@ -68,19 +68,22 @@ public:
     StagingContext(QoSServer &qosServer, const StagingOperation &stagingOp) :
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
         stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
-        maxPinLifetime(stagingOp.pinLifetime), maxBringonlineTimeout(stagingOp.timeout), minStagingStartTime(time(0))
+        maxPinLifetime(stagingOp.pinLifetime), maxBringonlineTimeout(stagingOp.timeout), minStagingStartTime(time(0)),
+        storageEndpoint()
     {
         add(stagingOp);
     }
 
     StagingContext(const StagingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
-        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime)
+        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
+        storageEndpoint(copy.storageEndpoint)
     {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
-        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime)
+        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
+        storageEndpoint(std::move(copy.storageEndpoint))
     {}
 
     virtual ~StagingContext() {}
@@ -115,6 +118,11 @@ public:
         return maxPinLifetime;
     }
 
+    std::string getStorageEndpoint() const
+    {
+        return storageEndpoint;
+    }
+
     time_t getStartTime() const
     {
         return minStagingStartTime;
@@ -139,6 +147,7 @@ private:
     int maxPinLifetime; ///< maximum copy pin lifetime of the batch
     int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
     time_t minStagingStartTime; ///< first staging start timestamp of the batch
+    std::string storageEndpoint; ///< storage endpoint of the batch
 };
 
 #endif // STAGINGCONTEXT_H_

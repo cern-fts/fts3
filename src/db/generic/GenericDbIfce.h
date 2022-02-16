@@ -217,6 +217,9 @@ public:
     /// Run a set of sanity checks over the database, fixing potential inconsistencies and logging them
     virtual void checkSanityState() = 0;
 
+    /// Run a sanity check over the database on multihop jobs, logging potential inconsistencies and fixing them
+    virtual void multihopSanitySate() = 0;
+
     /// Add a new retry to the transfer identified by fileId
     /// @param jobId    Job identifier
     /// @param fileId   Transfer identifier

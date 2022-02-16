@@ -75,12 +75,14 @@ public:
 
     ArchivingContext(const ArchivingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
-        errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime)
+        errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime),
+        storageEndpoint(copy.storageEndpoint)
     {}
 
     ArchivingContext(ArchivingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
-        errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime)
+        errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime),
+        storageEndpoint(std::move(copy.storageEndpoint))
     {}
 
     virtual ~ArchivingContext() {}
@@ -158,6 +160,11 @@ public:
         return startTime;
     }
 
+    std::string getStorageEndpoint() const
+    {
+        return storageEndpoint;
+    }
+
 private:
     ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
@@ -165,6 +172,7 @@ private:
     /// Map of FileID --> expire timestamp
     std::map<uint64_t, time_t> expiryMap;
     time_t startTime;
+    std::string storageEndpoint;
 
     friend class ArchivingPollTask;
 };

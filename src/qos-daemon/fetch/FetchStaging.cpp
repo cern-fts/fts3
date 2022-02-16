@@ -29,6 +29,7 @@
 #include "../task/BringOnlineTask.h"
 #include "../task/PollTask.h"
 
+#include <ctime>
 
 void FetchStaging::fetch()
 {
@@ -63,7 +64,14 @@ void FetchStaging::fetch()
             std::map<GroupByType, StagingContext> tasks;
             std::vector<StagingOperation> files;
 
+            time_t start = time(0);
             db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
+            time_t end = time(0);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchStaging\" "
+                                            << "func=\"fetch\" "
+                                            << "DBcall=\"getFilesForStaging\" " 
+                                            << "time=\"" << end - start << "\""
+                                            << commit;
 
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {

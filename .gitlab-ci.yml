@@ -1,26 +1,152 @@
 stages:
 - build
-- tag
+- docker
+- test
+- publish
 
-build:
-    stage: build
-    only:
-      - develop
-    script:
-      - ""
-    variables:
-      TO: gitlab-registry.cern.ch/fts/fts3:latest
-      DOCKER_FILE:  packaging/docker/Dockerfile
-    tags:
-      - docker-image-build
-tag:
-    stage: tag
-    only:
-        - tags
-    script:
-      - ""
-    variables:
-      TO: gitlab-registry.cern.ch/fts/fts3:$CI_BUILD_REF_NAME
-      DOCKER_FILE:  packaging/docker/Dockerfile-release
-    tags:
-        - docker-image-build
+#--------------------------
+# Build templates
+#--------------------------
+
+.build-template: &build-template_definition
+  stage: build
+  script:
+    - ci/fedora-packages.sh
+    - ci/common-rpm-build.sh
+    - mkdir ${CI_JOB_NAME}
+    - cp -rv build/RPMS build/SRPMS ${CI_JOB_NAME}
+    - tree ${CI_JOB_NAME}
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    paths:
+      - "$CI_JOB_NAME"
+
+#--------------------------
+# Build jobs
+#--------------------------
+
+cc7:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  <<: *build-template_definition
+
+#--------------------------
+# Docker build templates
+#--------------------------
+
+.kaniko_build: &kaniko_build-template
+  stage: docker
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - if [[ -z "$CI_COMMIT_TAG" ]]; 
+      then CACHE="true"; REGISTRY="latest";
+      else CACHE="false"; REGISTRY="${CI_COMMIT_TAG}";
+      fi
+    - if [[ -z "$DMC_REPO" ]];
+      then DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo";
+      fi
+    - DESTINATION="gitlab-registry.cern.ch/fts/fts3:${REGISTRY}"
+    - printf "CACHE=${CACHE}\nDESTINATION=${DESTINATION}\nDMCREPO=${DMC_REPO}\n"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --dockerfile ci/docker/Dockerfile-ci --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+  retry: 1
+
+#--------------------------
+# Docker build jobs
+#--------------------------
+
+docker_build:
+  <<: *kaniko_build-template
+  needs:
+    - job: cc7
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+
+docker_tag:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
+  needs:
+    - job: cc7
+  rules:
+    - if: $CI_COMMIT_TAG != null
+
+#--------------------------
+# Testing templates
+#--------------------------
+
+.test-template: &test-template_definition
+  stage: test
+  script:
+    - yum install -y wget createrepo
+    - if [[ -z "$CI_COMMIT_TAG" ]]; then REPOFILE="dmc-ci-el7.repo" ; else REPOFILE="dmc-rc-el7.repo" ; fi
+    - wget "https://dmc-repo.web.cern.ch/dmc-repo/${REPOFILE}" -O /etc/yum.repos.d/gfal2.repo
+    - mkdir -p /repo/fts ; cp -v cc7/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
+    - echo -e "[fts]\nname=FTS\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
+    - yum install -y fts-tests
+    - fts-unit-tests --log_level=all --report_level=detailed
+
+#--------------------------
+# Testing jobs
+#--------------------------
+
+cc7-test:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  needs:
+    - job: cc7
+  <<: *test-template_definition
+
+#--------------------------
+# Publish templates
+#--------------------------
+
+.publish-template: &publish-template_definition
+  stage: publish
+  image: gitlab-registry.cern.ch/eos/gitlab-eos/cc7:latest
+  dependencies:
+    - cc7
+  script:
+    - yum install -y python sssd-client sudo createrepo
+    - automount
+    - cat "$repo_passwd" | kinit "$repo_user"
+    - eosfusebind
+    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
+    - sleep 60
+  tags:
+    - docker-privileged
+  retry: 2
+
+#--------------------------
+# Publish jobs
+#--------------------------
+
+rpms:
+  <<: *publish-template_definition
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG!= null'
+
+testing-rpms:
+  <<: *publish-template_definition
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "develop" && $CI_COMMIT_TAG == null'
+      when: manual
+
+publish-production:
+  stage: publish
+  image: gitlab-registry.cern.ch/eos/gitlab-eos/cc7:latest
+  script:
+    - yum install -y python sssd-client sudo createrepo
+    - automount
+    - cat "$repo_passwd" | kinit "$repo_user"
+    - eosfusebind
+    - packaging/syncrepo --base-origin /eos/workspace/f/fts/repo/www/repos/rc --base-dest /eos/workspace/f/fts/repo/www/repos/ '*.rpm'
+    - sleep 60
+  tags:
+    - docker-privileged
+  retry: 2
+  rules:
+    - if: $CI_COMMIT_TAG != null
+      when: manual
