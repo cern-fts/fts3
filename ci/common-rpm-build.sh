@@ -31,15 +31,16 @@ fi
 DIST=$(rpm --eval "%{dist}" | cut -d. -f2)
 DISTNAME=${DIST}
 
-# Fetch repository files from fts/build-utils
-./ci/fetch-repo-files.sh
+# Write repository files to /etc/yum.repos.d/
+./ci/write-repo-file.sh
 
-REPO_FILE="${BUILD}/dmc-${BUILD}-${DISTNAME}.repo"
-print_info
-
-if [[ -f "ci/repo/${REPO_FILE}" ]]; then
-  cp -v "ci/repo/${REPO_FILE}" "/etc/yum.repos.d/"
+if [[ -z ${DMC_REPO} ]]; then
+  REPO_FILE="dmc-develop-${DISTNAME}.repo"
+else
+  REPO_FILE="dmc-${DMC_REPO}-${DISTNAME}.repo"
 fi
+
+print_info
 
 RPMBUILD=${PWD}/build
 SRPMS=${RPMBUILD}/SRPMS
