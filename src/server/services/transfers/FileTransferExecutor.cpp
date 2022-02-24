@@ -175,6 +175,9 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setIPv6(db->isProtocolIPv6(tf.sourceSe, tf.destSe));
             }
 
+            // Enable source file eviction from disk buffer (according to SE config)
+            cmdBuilder.setEvict(db->getEvictionFlag(tf.sourceSe));
+
             // FTS3 host name
             cmdBuilder.setFTSName(ftsHostName);
 

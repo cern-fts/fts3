@@ -76,6 +76,7 @@ const option UrlCopyOpts::long_options[] =
     {"ipv4",              no_argument,       0, 809},
     {"no-delegation",     no_argument,       0, 810},
     {"no-streaming",      no_argument,       0, 811},
+    {"evict",             no_argument,       0, 812},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -172,7 +173,7 @@ UrlCopyOpts::UrlCopyOpts():
     strictCopy(false), dstFileReport(false), retrieveSEToken(false),
     optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
-    noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
+    noStreaming(false), evict(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
     debugLevel(0), logToStderr(false)
 {
@@ -355,6 +356,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 811:
                     noStreaming = true;
+                    break;
+                case 812:
+                    evict = true;
                     break;
 
                 case 820:

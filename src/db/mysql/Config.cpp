@@ -428,6 +428,29 @@ boost::tribool MySqlAPI::isProtocolIPv6(const std::string &source, const std::st
 }
 
 
+boost::tribool MySqlAPI::getEvictionFlag(const std::string &source)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        boost::logic::tribool evictionEnabled(boost::indeterminate);
+        sql << "SELECT eviction FROM t_se WHERE storage = :source", soci::use(source), soci::into(evictionEnabled);
+
+        if (boost::indeterminate(evictionEnabled)) {
+            return false;
+        } else {
+            return evictionEnabled;
+        }
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
 int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::string &destSe)
 {
     soci::session sql(*connectionPool);
