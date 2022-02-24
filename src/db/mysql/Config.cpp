@@ -443,11 +443,9 @@ boost::tribool MySqlAPI::getEvictionFlag(const std::string &source)
         }
     }
     catch (std::exception &e) {
-        sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...) {
-        sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
 }
