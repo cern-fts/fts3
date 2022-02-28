@@ -85,8 +85,8 @@ public:
 
     TransferFile() :
             fileId(0), fileIndex(0),  numFailures(0),filesize(0.0),
-            finishTime(0), jobFinished(0), pinLifetime(0),
-            bringOnline(0), userFilesize(0.0), jobType(Job::kTypeRegular), lastReplica(0), pid(0)
+            finishTime(0), jobFinished(0), pinLifetime(0), bringOnline(0),
+            userFilesize(0.0), jobType(Job::kTypeRegular), lastReplica(0), lastHop(0), pid(0)
     {
     }
 
@@ -129,6 +129,7 @@ public:
     std::string bringOnlineToken;
     Job::JobType jobType; // See Job constants
     int lastReplica;
+    int lastHop;
     pid_t pid;
 
     ProtocolParameters getProtocolParameters(void) const {

@@ -701,6 +701,17 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                         tfile.lastReplica = (total == remain)? 1: 0;
                     }
+                    if(tfile.jobType == Job::kTypeMultiHop)
+                    {
+                        int maxIndex = 0;
+                        sql << "SELECT MAX(file_index) "
+                               "FROM t_file "
+                               "WHERE job_id = :job_id ",
+                                soci::use(tfile.jobId),
+                                soci::into(maxIndex);
+
+                        tfile.lastHop = (maxIndex == tfile.fileIndex)? 1: 0;
+                    }
 
                     files[tfile.voName].push_back(tfile);
                 }
@@ -791,6 +802,17 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                                 soci::into(remain);
 
                             tfile.lastReplica = (total == remain)? 1: 0;
+                        }
+                        if(tfile.jobType == Job::kTypeMultiHop)
+                        {
+                            int maxIndex = 0;
+                            sql << "SELECT MAX(file_index) "
+                                   "FROM t_file "
+                                   "WHERE job_id = :job_id ",
+                                    soci::use(tfile.jobId),
+                                    soci::into(maxIndex);
+
+                            tfile.lastHop = (maxIndex == tfile.fileIndex)? 1: 0;
                         }
 
                         tfile.activity = it_act->first;

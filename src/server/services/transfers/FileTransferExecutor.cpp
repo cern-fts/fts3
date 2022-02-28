@@ -192,6 +192,11 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setOverwrite(true);
             }
 
+            // If is multihop job, file is not the final destination and overwriteFlag is "M" => enable overwrite
+            if (tf.jobType == Job::kTypeMultiHop && !tf.lastHop && tf.overwriteFlag == "M") {
+                cmdBuilder.setOverwrite(true);
+            }
+
             int retry_max = db->getRetry(tf.jobId);
             cmdBuilder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
 
