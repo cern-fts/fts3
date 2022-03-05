@@ -43,6 +43,7 @@ const option UrlCopyOpts::long_options[] =
     {"checksum-mode",     required_argument, 0, 301},
     {"strict-copy",       no_argument,       0, 302},
     {"dst-file-report",   no_argument,       0, 303},
+    {"3rd-party-turl",    required_argument, 0, 304},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -267,6 +268,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 303:
                     dstFileReport = true;
+                    break;
+                case 304:
+                    thirdPartyTURL = boost::lexical_cast<std::string>(optarg);
                     break;
 
                 case 400:

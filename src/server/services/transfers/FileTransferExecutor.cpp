@@ -153,6 +153,12 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Disable delegation (according to link config)
             cmdBuilder.setDisableDelegation(db->getDisableDelegationFlag(tf.sourceSe, tf.destSe));
 
+            // Get SRM 3rd party TURL (according to link config)
+            auto thirdPartyTURL = db->getThirdPartyTURL(tf.sourceSe, tf.destSe);
+            if (!thirdPartyTURL.empty()) {
+                cmdBuilder.setThirdPartyTURL(thirdPartyTURL);
+            }
+
             // Disable streaming via local transfers (according to global config)
             cmdBuilder.setDisableStreaming(db->getDisableStreamingFlag(tf.voName));
 

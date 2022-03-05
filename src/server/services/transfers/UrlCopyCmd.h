@@ -81,6 +81,7 @@ public:
     void setDisableDelegation(bool);
     void setDisableStreaming(bool);
     void setOverwrite(bool);
+    void setThirdPartyTURL(const std::string&);
 
     // Observers
     int getBuffersize();
