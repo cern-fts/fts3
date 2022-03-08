@@ -554,12 +554,10 @@ std::string MySqlAPI::getThirdPartyTURL(const std::string &sourceSe, const std::
     }
     catch (std::exception& e)
     {
-        sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
-        sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception");
     }
 }
