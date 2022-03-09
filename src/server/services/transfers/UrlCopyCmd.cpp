@@ -331,6 +331,12 @@ void UrlCopyCmd::setOverwrite(bool overwrite)
 }
 
 
+void UrlCopyCmd::setThirdPartyTURL(const std::string& thirdPartyTURL)
+{
+    setOption("3rd-party-turl", thirdPartyTURL);
+}
+
+
 int UrlCopyCmd::getBuffersize()
 {
     auto buffersize = options["tcp-buffersize"];

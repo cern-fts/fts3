@@ -528,6 +528,41 @@ bool MySqlAPI::getDisableDelegationFlag(const std::string &sourceSe, const std::
 }
 
 
+std::string MySqlAPI::getThirdPartyTURL(const std::string &sourceSe, const std::string &destSe)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        std::string thirdPartyTURL;
+        soci::indicator ind = soci::i_ok;
+
+        sql <<
+            "SELECT 3rd_party_turl FROM ("
+            "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND 3rd_party_turl IS NOT NULL UNION "
+            "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND 3rd_party_turl IS NOT NULL UNION "
+            "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND 3rd_party_turl IS NOT NULL"
+            ") AS 3rd_turl LIMIT 1",
+            soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
+            soci::into(thirdPartyTURL, ind);
+
+        if (ind == soci::i_null) {
+            thirdPartyTURL.clear();
+        }
+
+        return thirdPartyTURL;
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
 int MySqlAPI::getGlobalTimeout(const std::string &voName)
 {
     soci::session sql(*connectionPool);

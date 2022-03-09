@@ -347,7 +347,6 @@ public:
         gfal2_cancel(context);
     }
 
-
     /// Stat a file
     struct stat stat(Gfal2TransferParams &params, const std::string &url, bool is_source) {
         bearerInit(params, is_source ? url : "",
@@ -395,7 +394,7 @@ public:
         return buffer;
     }
 
-    // Get the extended attribute of a resource
+    /// Get the extended attribute of a resource
     std::string getXattr(const std::string &url, const std::string &name) {
         char buffer[1024];
         GError *error = NULL;
@@ -403,6 +402,20 @@ public:
             throw Gfal2Exception(error);
         }
         return buffer;
+    }
+
+    /// Get a string config value
+    std::string get(const std::string &group, const std::string &key) {
+        std::string value = "N/A";
+        GError *error = NULL;
+        char* cfgvalue = gfal2_get_opt_string(context, group.c_str(), key.c_str(), &error);
+        if (error != NULL) {
+            g_error_free(error);
+        } else {
+            value = cfgvalue;
+            g_free(cfgvalue);
+        }
+        return value;
     }
 };
 

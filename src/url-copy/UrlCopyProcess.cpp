@@ -60,6 +60,10 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
         gfal2.set("BDII", "LCG_GFAL_INFOSYS", opts.infosys);
     }
 
+    if (!opts.thirdPartyTURL.empty()) {
+        gfal2.set("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS", opts.thirdPartyTURL);
+    }
+
     gfal2.setUserAgent("fts_url_copy", VERSION);
 
     if (!opts.proxy.empty()) {
@@ -459,6 +463,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token issuer: " << transfer.destTokenIssuer << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dstFileReport << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
+                                    << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;

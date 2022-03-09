@@ -47,6 +47,7 @@ public:
 
     bool strictCopy;
     bool dstFileReport;
+    std::string thirdPartyTURL;
 
     std::string voName;
     std::string userDn;
