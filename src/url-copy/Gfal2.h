@@ -406,13 +406,16 @@ public:
 
     /// Get a string config value
     std::string get(const std::string &group, const std::string &key) {
+        std::string value = "N/A";
         GError *error = NULL;
-        char* value = gfal2_get_opt_string(context, group.c_str(), key.c_str(), &error);
+        char* cfgvalue = gfal2_get_opt_string(context, group.c_str(), key.c_str(), &error);
         if (error != NULL) {
-            value = "N/A";
             g_error_free(error);
+        } else {
+            value = cfgvalue;
+            g_free(cfgvalue);
         }
-        return std::string(value);
+        return value;
     }
 };
 
