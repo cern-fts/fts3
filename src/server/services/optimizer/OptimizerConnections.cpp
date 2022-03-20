@@ -72,6 +72,7 @@ void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
     bool isMaxConfigured = (range->max > 0);
     if (!isMaxConfigured) {
         range->max = std::min({limits->source, limits->destination, limits->link});
+        range->storageSpecific = true;
         if (range->max < range->min) {
             range->max = range->min;
         }
@@ -285,10 +286,18 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     if (decision < range.min) {
         decision = range.min;
         rationale << ". Hit lower range limit";
+        if (!range.specific) {
+            rationale <<". Using *->* link configuration";
+        }
     }
     else if (decision > range.max) {
         decision = range.max;
         rationale << ". Hit upper range limit";
+        if (!range.specific) {
+            rationale <<". Using *->* link configuration";
+        } else if (range.storageSpecific) {
+            rationale <<". Link not configured. Using SE limits";
+        }
     }
 
     // We may have a higher number of connections than available on the queue.

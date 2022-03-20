@@ -43,8 +43,10 @@ struct Range {
     int min, max;
     // Set to true if min,max is configured specifically, or is a *->* configuration
     bool specific;
+    // Set to true if min,max is configured with SE limits instead of link configuration
+    bool storageSpecific;
 
-    Range(): min(0), max(0), specific(false) {}
+    Range(): min(0), max(0), specific(false), storageSpecific(false) {}
 };
 
 
