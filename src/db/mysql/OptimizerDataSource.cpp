@@ -327,7 +327,7 @@ public:
         // If there are no terminal, use 100% success rate rather than 0 to avoid
         // the optimizer stepping back
         else {
-            return 1.0;
+            return 100.0;
         }
     }
 
