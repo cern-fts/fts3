@@ -50,11 +50,11 @@ struct Range {
 };
 
 
-struct Limits {
-    int source, destination, link;
+struct StorageLimits {
+    int source, destination;
     double throughputSource, throughputDestination;
 
-    Limits(): source(0), destination(0), link(0),
+    StorageLimits(): source(0), destination(0),
               throughputSource(0), throughputDestination(0) {}
 };
 
@@ -94,7 +94,7 @@ public:
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
 
     // Get configured limits
-    virtual void getPairLimits(const Pair &pair, Range *range, Limits *limits) = 0;
+    virtual void getPairLimits(const Pair &pair, Range *range, StorageLimits *limits) = 0;
 
     // Get the stored optimizer value (current value)
     virtual int getOptimizerValue(const Pair&) = 0;
@@ -155,7 +155,7 @@ protected:
     void optimizeStreamsForPair(OptimizerMode optMode, const Pair &);
 
     // Stores into rangeActiveMin and rangeActiveMax the working range for the optimizer
-    void getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits);
+    void getOptimizerWorkingRange(const Pair &pair, Range *range, StorageLimits *limits);
 
     // Updates decision
     void setOptimizerDecision(const Pair &pair, int decision, const PairState &current,

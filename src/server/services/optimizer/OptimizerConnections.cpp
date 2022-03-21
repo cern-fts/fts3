@@ -54,7 +54,7 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 }
 
 
-void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits *limits)
+void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, StorageLimits *limits)
 {
     // Query specific limits
     dataSource->getPairLimits(pair, range, limits);
@@ -71,7 +71,7 @@ void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Limits 
 
     bool isMaxConfigured = (range->max > 0);
     if (!isMaxConfigured) {
-        range->max = std::min({limits->source, limits->destination, limits->link});
+        range->max = std::min({limits->source, limits->destination});
         range->storageSpecific = true;
         if (range->max < range->min) {
             range->max = range->min;
@@ -167,7 +167,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // Optimizer working values
     Range range;
-    Limits limits;
+    StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;

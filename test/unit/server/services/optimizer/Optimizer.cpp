@@ -128,9 +128,9 @@ public:
         return false;
     }
 
-    void getPairLimits(const Pair&, Range *range, Limits *limits) {
+    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
         range->min = range->max = 0;
-        limits->destination = limits->source = limits->link = 200;
+        limits->destination = limits->source = 200;
         limits->throughputDestination = limits->throughputSource = 0;
     }
 
@@ -316,24 +316,23 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     Range range;
-    Limits limits;
+    StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
     BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
     BOOST_CHECK_NE(range.min, 0);
-    BOOST_CHECK_EQUAL(range.max, std::min({limits.link, limits.destination, limits.source}));
+    BOOST_CHECK_EQUAL(range.max, std::min({limits.destination, limits.source}));
     BOOST_CHECK_EQUAL(range.min, DEFAULT_MIN_ACTIVE);
 }
 
 // Working range for a pair where both storages are configured
 class OptimizerRangeSeFixture: public BaseOptimizerFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, Limits *limits) {
+    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
         range->min = range->max = 0;
         limits->destination = 60;
         limits->source = 60;
-        limits->link = 60;
         limits->throughputDestination = limits->throughputSource = 0;
     }
 };
@@ -343,7 +342,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     Range range;
-    Limits limits;
+    StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
     BOOST_CHECK(!range.specific);
@@ -356,7 +355,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
 // Working range is configured
 class OptimizerRangeSetFixture: public OptimizerRangeSeFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, Limits *limits) {
+    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
         range->min = 150;
         range->max = 200;
         range->specific = true;
@@ -370,7 +369,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     Range range;
-    Limits limits;
+    StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
     BOOST_CHECK(range.specific);
@@ -392,7 +391,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
     auto lastEntry = getLastEntry(pair);
 
     Range range;
-    Limits limits;
+    StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
     BOOST_CHECK_LE(lastEntry->activeDecision, range.max);

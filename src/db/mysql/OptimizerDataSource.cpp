@@ -131,10 +131,10 @@ public:
         return getOptimizerModeInner(sql, source, dest);
     }
 
-    void getPairLimits(const Pair &pair, Range *range, Limits *limits) {
+    void getPairLimits(const Pair &pair, Range *range, StorageLimits *limits) {
         soci::indicator nullIndicator;
 
-        limits->link = limits->source = limits->destination = 0;
+        limits->source = limits->destination = 0;
         limits->throughputSource = 0;
         limits->throughputDestination = 0;
 
