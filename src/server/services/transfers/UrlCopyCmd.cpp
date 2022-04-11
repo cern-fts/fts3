@@ -200,7 +200,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
             setFlag("reuse", true);
             break;
         case Job::kTypeMultipleReplica:
-            setFlag("job_m_replica", true);
+            setFlag("job-m-replica", true);
             break;
         case Job::kTypeMultiHop:
             setFlag("job-multihop", true);
@@ -246,7 +246,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     if (publishUserDn)
         setOption("user-dn", prepareMetadataString(transfer.userDn));
 
-    setFlag("last_replica", transfer.lastReplica);
+    setFlag("last-replica", transfer.lastReplica);
     setFlag("last-hop", transfer.lastHop);
 
     // On multiple jobs, this data is per transfer and is passed via a file

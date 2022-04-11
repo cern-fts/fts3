@@ -82,7 +82,6 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     completed.user_dn = replaceMetadataString(opts.userDn);
     completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
     completed.job_metadata = replaceMetadataString(opts.jobMetadata);
-    completed.job_m_replica = transfer.isMultipleReplicaJob;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
     completed.tr_timestamp_start = millisecondsSinceEpoch();
@@ -202,8 +201,6 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.is_lasthop = transfer.isLastHop;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
-
-    completed.job_m_replica = opts.isMultipleReplicaJob;
     completed.transfer_timeout = params.getTimeout();
 
     if (transfer.error) {

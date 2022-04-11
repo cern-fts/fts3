@@ -36,8 +36,8 @@ const option UrlCopyOpts::long_options[] =
     {"bulk-file",         required_argument, 0, 105},
 
     {"reuse",             no_argument,       0, 200},
-    {"job_m_replica",     no_argument,       0, 202},
-    {"last_replica",      no_argument,       0, 203},
+    {"job-m-replica",     no_argument,       0, 202},
+    {"last-replica",      no_argument,       0, 203},
     {"job-multihop",      no_argument,       0, 204},
     {"last-hop",          no_argument,       0, 205},
 
@@ -172,8 +172,7 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts():
-    isSessionReuse(false), isMultipleReplicaJob(false),
-    strictCopy(false), dstFileReport(false), retrieveSEToken(false),
+    isSessionReuse(false), strictCopy(false), dstFileReport(false), retrieveSEToken(false),
     optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
     noStreaming(false), evict(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
