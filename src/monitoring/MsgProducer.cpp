@@ -75,8 +75,6 @@ MsgProducer::~MsgProducer()
 
 void MsgProducer::sendMessage(const std::string &rawMsg)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << rawMsg << commit;
-
     std::string type = rawMsg.substr(0, 2);
 
     // Modify on the fly to add the endpoint
@@ -92,6 +90,9 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
 
     std::ostringstream output;
     json::Writer::Write(msg, output);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << type << " " << output.str() << commit;
+    // Add EOT character
     output << EOT;
 
     // Create message and set VO attribute if available
