@@ -38,6 +38,8 @@ const option UrlCopyOpts::long_options[] =
     {"reuse",             no_argument,       0, 200},
     {"job_m_replica",     no_argument,       0, 202},
     {"last_replica",      no_argument,       0, 203},
+    {"job-multihop",      no_argument,       0, 204},
+    {"last-hop",          no_argument,       0, 205},
 
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
@@ -244,6 +246,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 203:
                     referenceTransfer.isLastReplica = true;
+                    break;
+                case 204:
+                    referenceTransfer.isMultihopJob = true;
+                    break;
+                case 205:
+                    referenceTransfer.isLastHop = true;
                     break;
 
                 case 300:

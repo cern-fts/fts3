@@ -202,9 +202,10 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         case Job::kTypeMultipleReplica:
             setFlag("job_m_replica", true);
             break;
+        case Job::kTypeMultiHop:
+            setFlag("job-multihop", true);
+            break;
     }
-
-
 
     // setOption("source-site", std::string());
     // setOption("dest-site", std::string());
@@ -246,6 +247,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setOption("user-dn", prepareMetadataString(transfer.userDn));
 
     setFlag("last_replica", transfer.lastReplica);
+    setFlag("last-hop", transfer.lastHop);
 
     // On multiple jobs, this data is per transfer and is passed via a file
     // under /var/lib/fts3/<job-id>, so skip it

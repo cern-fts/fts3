@@ -198,6 +198,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
     completed.job_metadata = replaceMetadataString(opts.jobMetadata);
     completed.job_m_replica = transfer.isMultipleReplicaJob;
+    completed.job_multihop = transfer.isMultihopJob;
+    completed.is_lasthop = transfer.isLastHop;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
 
@@ -223,21 +225,27 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         if (transfer.isMultipleReplicaJob) {
             if (transfer.isLastReplica) {
                 completed.job_state = "FAILED";
-            }
-            else {
+            } else {
                 completed.job_state = "ACTIVE";
             }
-        }
-        else {
+        } else if (transfer.isMultihopJob) {
+            completed.job_state = "FAILED";
+        } else {
             completed.job_state = "UNKNOWN";
         }
     }
     else {
         completed.final_transfer_state = "Ok";
-        if(transfer.isMultipleReplicaJob) {
+
+        if (transfer.isMultipleReplicaJob) {
             completed.job_state = "FINISHED";
-        }
-        else {
+        } else if (transfer.isMultihopJob) {
+            if (transfer.isLastHop) {
+                completed.job_state = "FINISHED";
+            } else {
+                completed.job_state = "ACTIVE";
+            }
+        } else {
             completed.job_state = "UNKNOWN";
         }
     }

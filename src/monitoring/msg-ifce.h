@@ -44,7 +44,9 @@ public:
         time_spent_in_srm_preparation_start(0), time_spent_in_srm_preparation_end(0),
         time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0), tr_timestamp_start(0),
         tr_timestamp_complete(0),
-        retry(0), retry_max(0), job_m_replica(false), is_recoverable(false), ipv6(false)
+        retry(0), retry_max(0),
+        job_m_replica(false), job_multihop(false), is_lasthop(false),
+        is_recoverable(false), ipv6(false)
     {}
     ~TransferCompleted() {}
 
@@ -95,6 +97,8 @@ public:
     unsigned    retry;
     unsigned    retry_max;
     bool        job_m_replica;
+    bool        job_multihop;
+    bool        is_lasthop;
     std::string job_state;
     bool        is_recoverable;
     bool        ipv6;

@@ -223,6 +223,8 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["retry"] = json::Number(tr_completed.retry);
     message["retry_max"] = json::Number(tr_completed.retry_max);
     message["job_m_replica"] = json::Boolean(tr_completed.job_m_replica);
+    message["job_multihop"] = json::Boolean(tr_completed.job_multihop);
+    message["transfer_lasthop"] = json::Boolean(tr_completed.is_lasthop);
     message["job_state"] = json::String(tr_completed.job_state);
     message["is_recoverable"] = json::Boolean(tr_completed.is_recoverable);
     message["ipv6"] = json::Boolean(tr_completed.ipv6);

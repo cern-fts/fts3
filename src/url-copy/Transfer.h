@@ -93,6 +93,8 @@ public:
     std::string destTokenIssuer;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
+    bool        isMultihopJob;
+    bool        isLastHop;
 
     Checksum_mode checksumMode;
 
