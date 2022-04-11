@@ -36,7 +36,7 @@ struct TransferCompleted
 {
 public:
     TransferCompleted():
-        timestamp_transfer_started(0), timestamp_transfer_completed(0), timestamp_checksum_source_started(0),
+        file_id(0), timestamp_transfer_started(0), timestamp_transfer_completed(0), timestamp_checksum_source_started(0),
         timestamp_checksum_source_ended(0), timestamp_checksum_dest_started(0), timestamp_checksum_dest_ended(0),
         transfer_timeout(0), checksum_timeout(0), transfer_error_code(0), total_bytes_transferred(0),
         number_of_streams(0), tcp_buffer_size(0),
@@ -52,6 +52,8 @@ public:
 
     std::string agent_fqdn;
     std::string transfer_id;
+    std::string job_id;
+    uint64_t file_id;
     std::string endpoint;
     std::string source_srm_version;
     std::string destination_srm_version;

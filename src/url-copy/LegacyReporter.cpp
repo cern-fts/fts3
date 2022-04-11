@@ -63,6 +63,8 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
 
     completed.agent_fqdn = opts.alias;
     completed.transfer_id = transfer.getTransferId();
+    completed.job_id = transfer.jobId;
+    completed.file_id = transfer.fileId;
     completed.endpoint = opts.alias;
 
     if (transfer.source.protocol == "srm") {
@@ -177,6 +179,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     completed.agent_fqdn = opts.alias;
     completed.transfer_id = transfer.getTransferId();
+    completed.job_id = transfer.jobId;
+    completed.file_id = transfer.fileId;
     completed.endpoint = opts.alias;
 
     if (transfer.source.protocol == "srm") {

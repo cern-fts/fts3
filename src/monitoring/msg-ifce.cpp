@@ -107,6 +107,8 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
 
     message["agent_fqdn"] = json::String(tr_started.agent_fqdn);
     message["transfer_id"] = json::String(tr_started.transfer_id);
+    message["job_id"] = json::String(tr_started.job_id);
+    message["file_id"] = json::Number(tr_started.file_id);
     message["endpnt"] = json::String(tr_started.endpoint);
     message["timestamp"] = json::Number(getTimestampMillisecs());
     message["src_srm_v"] = json::String(tr_started.source_srm_version);
@@ -154,6 +156,8 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     json::Object message;
 
     message["tr_id"] = json::String(tr_completed.transfer_id);
+    message["job_id"] = json::String(tr_completed.job_id);
+    message["file_id"] = json::Number(tr_completed.file_id);
     message["endpnt"] = json::String(tr_completed.endpoint);
     message["src_srm_v"] = json::String(tr_completed.source_srm_version);
     message["dest_srm_v"] = json::String(tr_completed.destination_srm_version);
