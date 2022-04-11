@@ -105,7 +105,6 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
 {
     json::Object message;
 
-    message["agent_fqdn"] = json::String(tr_started.agent_fqdn);
     message["transfer_id"] = json::String(tr_started.transfer_id);
     message["job_id"] = json::String(tr_started.job_id);
     message["file_id"] = json::Number(tr_started.file_id);

@@ -67,11 +67,6 @@ BrokerConfig::BrokerConfig(const std::string &path)
         "Log file name"
     )
     (
-        "FQDN",
-        po::value<std::string>()->default_value(""),
-        "Obsolete"
-    )
-    (
         "PUBLISH_FQDN",
         po::value<bool>()->default_value(false),
         "Publish host FQDN on every message"

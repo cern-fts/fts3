@@ -58,10 +58,9 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
 
     producer.runProducerStatus(status);
 
-    // Transfer completed
+    // Fill transfer start
     TransferCompleted completed;
 
-    completed.agent_fqdn = opts.alias;
     completed.transfer_id = transfer.getTransferId();
     completed.job_id = transfer.jobId;
     completed.file_id = transfer.fileId;
@@ -174,10 +173,9 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     producer.runProducerStatus(status);
 
-    // Transfer completed
+    // Fill transfer completed
     TransferCompleted completed;
 
-    completed.agent_fqdn = opts.alias;
     completed.transfer_id = transfer.getTransferId();
     completed.job_id = transfer.jobId;
     completed.file_id = transfer.fileId;

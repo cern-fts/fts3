@@ -50,7 +50,6 @@ public:
     {}
     ~TransferCompleted() {}
 
-    std::string agent_fqdn;
     std::string transfer_id;
     std::string job_id;
     uint64_t file_id;
