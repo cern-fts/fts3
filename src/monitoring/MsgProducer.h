@@ -58,6 +58,7 @@ private:
     cms::MessageProducer* producer_optimizer;
 
     std::string FTSEndpoint;
+    std::string FQDN;
     const BrokerConfig& brokerConfig;
 
     bool getConnection();

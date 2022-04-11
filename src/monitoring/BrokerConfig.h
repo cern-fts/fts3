@@ -44,6 +44,9 @@ public:
     /// Password
     std::string GetPassword() const;
 
+    /// Publish FQDN flag
+    bool PublishFQDN() const;
+
     /// Return true if the destinations are topics instead of queues
     bool UseTopics() const;
 

@@ -21,6 +21,7 @@
 #include <memory>
 #include "MsgProducer.h"
 #include "common/Logger.h"
+#include "common/Uri.h"
 
 #include "config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
@@ -63,6 +64,7 @@ MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& co
     producer_optimizer = NULL;
     destination_optimizer = NULL;
     FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
+    FQDN = getFullHostname();
     connected = false;
 }
 
@@ -83,6 +85,10 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
     json::Reader::Read(msg, input);
 
     msg["endpnt"] = json::String(FTSEndpoint);
+
+    if (brokerConfig.PublishFQDN()) {
+        msg["fqdn"] = json::String(FQDN);
+    }
 
     std::ostringstream output;
     json::Writer::Write(msg, output);
