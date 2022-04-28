@@ -17,5 +17,8 @@ CREATE TABLE `t_gridmap` (
     PRIMARY KEY(`dn`)
 );
 
+ALTER TABLE `t_schema_vers`
+    ADD PRIMARY KEY(`major`, `minor`, `patch`);
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (8, 0, 0, 'FTS-1702: Schema changes for the eviction feature');
