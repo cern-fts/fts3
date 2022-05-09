@@ -120,7 +120,9 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
     fprintf(f, "ACCESS_KEY=%s\n", auth.accessToken.c_str());
     if (!auth.requestToken.empty())
         fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
-    fprintf(f, "ALTERNATE=%s\n", alternate ? "true" : "false");
+    if (alternate) {
+        fprintf(f, "ALTERNATE=true\n");
+    }
 }
 
 
