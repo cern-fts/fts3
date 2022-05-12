@@ -55,9 +55,12 @@ void BringOnlineTask::run(const boost::any &)
     }
 
     std::vector<const char*> urls;
+    std::vector<const char*> metadata;
     urls.reserve(urlSet.size());
+    metadata.reserve(urlSet.size());
     for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
-        urls.push_back(set_i->c_str());
+        urls.emplace_back(set_i->c_str());
+        metadata.emplace_back(ctx->getMetadata(*set_i).c_str());
     }
 
     std::vector<GError*> errors(urls.size(), NULL);
@@ -67,10 +70,11 @@ void BringOnlineTask::run(const boost::any &)
                                     << " bring-online-timeout=" << ctx->getBringonlineTimeout()
                                     << " storage=" << ctx->getStorageEndpoint() << commit;
 
-    int status = gfal2_bring_online_list(
+    int status = gfal2_bring_online_list_v2(
                      gfal2_ctx,
                      static_cast<int>(urls.size()),
                      urls.data(),
+                     metadata.data(),
                      ctx->getPinlifetime(),
                      ctx->getBringonlineTimeout(),
                      token,

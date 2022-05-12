@@ -45,7 +45,7 @@ void StagingContext::add(const StagingOperation &stagingOp)
         storageEndpoint = Uri::parse(stagingOp.surl).getSeName();
     }
 
-    add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
+    add(stagingOp.surl, stagingOp.stagingMetadata, stagingOp.jobId, stagingOp.fileId);
 }
 
 
