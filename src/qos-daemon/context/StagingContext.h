@@ -88,7 +88,7 @@ public:
 
     virtual ~StagingContext() {}
 
-    void add(const StagingOperation &stagingOp);
+    virtual void add(const StagingOperation &stagingOp);
 
     /**
      * Asynchronous update of a single transfer-file within a job
@@ -140,7 +140,7 @@ public:
         return (errorCount[surl] += 1);
     }
 
-private:
+protected:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
