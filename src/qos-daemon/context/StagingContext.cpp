@@ -23,6 +23,8 @@
 #include <sstream>
 #include <unordered_set>
 #include "cred/CredUtility.h"
+#include "HttpStagingContext.h"
+#include "common/Uri.h"
 
 
 void StagingContext::add(const StagingOperation &stagingOp)
@@ -78,4 +80,15 @@ std::set<std::string> StagingContext::getSurlsToAbort(
         ret.insert(url.c_str());
     }
     return ret;
+}
+
+
+StagingContext* StagingContext::getStagingContext(QoSServer &qosServer, const StagingOperation &stagingOp) {
+    std::string protocol = Uri::parse(stagingOp.surl).protocol;
+    if ( protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+        return new HttpStagingContext(qosServer, stagingOp);
+    }
+    else {
+        return new StagingContext(qosServer, stagingOp);
+    }
 }

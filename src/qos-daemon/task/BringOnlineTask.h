@@ -52,14 +52,14 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(const StagingContext &ctx) : Gfal2Task("STAGING"), ctx(ctx)
+    BringOnlineTask(StagingContext* const ctx) : Gfal2Task("STAGING"), ctx(ctx)
     {
         // set up the space token
-        setSpaceToken(ctx.getSpaceToken());
+        setSpaceToken(ctx->getSpaceToken());
         // set the proxy certificate
-        setProxy(ctx);
+        setProxy(*ctx);
         // add urls to active
-        auto surls = ctx.getSurls();
+        auto surls = ctx->getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_urls.insert(surls.begin(), surls.end());
     }
@@ -77,7 +77,7 @@ public:
     virtual ~BringOnlineTask()
     {
         if (gfal2_ctx)
-            cancel(ctx.getSurls());
+            cancel(ctx->getSurls());
     }
 
     /**
@@ -105,7 +105,7 @@ public:
 protected:
 
     /// staging details
-    StagingContext ctx;
+    std::shared_ptr<StagingContext> const ctx;
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     /// set of tokens (and respective URLs) for ongoing bring-online jobs

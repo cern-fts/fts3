@@ -35,7 +35,7 @@ void PollTask::run(const boost::any&)
     int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
     bool forcePoll = false;
 
-    std::set<std::string> urlSet = ctx.getUrls();
+    std::set<std::string> urlSet = ctx->getUrls();
     if (urlSet.empty())
         return;
 
@@ -47,9 +47,9 @@ void PollTask::run(const boost::any&)
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BringonlinePollTask starting"
         << " [ files=" << urls.size() << " / token=" << token
-        << " / minStagingStartTime=" << ctx.getStartTime()
-        << " / maxBringonlineTimeout=" << ctx.getBringonlineTimeout()
-        << " / storage=" << ctx.getStorageEndpoint() << " ]"
+        << " / minStagingStartTime=" << ctx->getStartTime()
+        << " / maxBringonlineTimeout=" << ctx->getBringonlineTimeout()
+        << " / storage=" << ctx->getStorageEndpoint() << " ]"
         << commit;
 
     std::vector<GError*> errors(urls.size(), NULL);
@@ -59,9 +59,9 @@ void PollTask::run(const boost::any&)
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx.getIDs(urls[i]);
+            auto ids = ctx->getIDs(urls[i]);
 
-            if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+            if (errors[i] && errors[i]->code == ECOMM && ctx->incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE NOT FINISHED for " << urls[i]
                     << ". Communication error, soft failure: " << errors[i]->message
@@ -77,7 +77,7 @@ void PollTask::run(const boost::any&)
                     << commit;
 
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
+                    ctx->updateState(it->first, it->second,
                         "FAILED", JobError("STAGING", errors[i])
                     );
                 }
@@ -89,7 +89,7 @@ void PollTask::run(const boost::any&)
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                  for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
+                    ctx->updateState(it->first, it->second,
                         "FINISHED", JobError()
                     );
                  }
@@ -103,7 +103,7 @@ void PollTask::run(const boost::any&)
                     << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
+                    ctx->updateState(it->first, it->second,
                         "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
                     );
                 }
@@ -117,7 +117,7 @@ void PollTask::run(const boost::any&)
     // whole staging job is finished
     else {
         for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx.getIDs(urls[i]);
+            auto ids = ctx->getIDs(urls[i]);
 
             if (errors[i] == NULL) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -125,9 +125,9 @@ void PollTask::run(const boost::any&)
                     << urls[i]
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
+                    ctx->updateState(it->first, it->second, "FINISHED", JobError());
                 }
-                ctx.removeUrl(urls[i]);
+                ctx->removeUrl(urls[i]);
             }
             else if (errors[i]->code == EAGAIN)
             {
@@ -136,7 +136,7 @@ void PollTask::run(const boost::any&)
                     << ": " << errors[i]->message
                     << commit;
             }
-            else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+            else if (errors[i] && errors[i]->code == ECOMM && ctx->incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE NOT FINISHED for " << urls[i]
                     << ". Communication error, soft failure: " << errors[i]->message
@@ -151,9 +151,9 @@ void PollTask::run(const boost::any&)
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
+                    ctx->updateState(it->first, it->second, "FINISHED", JobError());
                 }
-                ctx.removeUrl(urls[i]);
+                ctx->removeUrl(urls[i]);
             }
             else
             {
@@ -165,11 +165,11 @@ void PollTask::run(const boost::any&)
                     << commit;
 
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
+                    ctx->updateState(it->first, it->second,
                         "FAILED", JobError("STAGING", errors[i])
                     );
                 }
-                ctx.removeUrl(urls[i]);
+                ctx->removeUrl(urls[i]);
 
             }
             g_clear_error(&errors[i]);
@@ -206,9 +206,9 @@ void PollTask::run(const boost::any&)
         time_t now = time(NULL);
         wait_until = now + interval;
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling " << ctx.getLogMsg() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling " << ctx->getLogMsg() << commit;
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
-        ctx.getWaitingRoom().add(new PollTask(std::move(*this)));
+        ctx->getWaitingRoom().add(new PollTask(std::move(*this)));
     }
 }
 
@@ -220,7 +220,7 @@ void PollTask::handle_canceled()
     {
         boost::shared_lock<boost::shared_mutex> lock(mx);
         // get the URLs for the given task
-        auto surls = ctx.getSurls();
+        auto surls = ctx->getSurls();
         // check if some of the URLs should be aborted
         std::set_difference(
             surls.begin(), surls.end(),
@@ -231,7 +231,7 @@ void PollTask::handle_canceled()
     // check if there is something to do first
     if (remove.empty()) return;
     // get the urls for abortions
-    auto urls = ctx.getSurlsToAbort(remove);
+    auto urls = ctx->getSurlsToAbort(remove);
     abort(urls);
 }
 
@@ -239,12 +239,12 @@ void PollTask::handle_canceled()
 bool PollTask::timeout_occurred()
 {
     // first check if bring-online timeout was exceeded
-    if (!ctx.hasTimeoutExpired()) return false;
+    if (!ctx->hasTimeoutExpired()) return false;
     // get URLs
-    std::set<std::string> urls = ctx.getUrls();
+    std::set<std::string> urls = ctx->getUrls();
     // Log the event per file
     for (auto i = urls.begin(); i != urls.end(); ++i) {
-        auto ids = ctx.getIDs(*i);
+        auto ids = ctx->getIDs(*i);
         for (auto j = ids.begin(); j != ids.end(); ++j) {
             FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "BRINGONLINE timeout triggered for "
                 << j->first << "/" << j->second
@@ -254,7 +254,7 @@ bool PollTask::timeout_occurred()
     // and abort the bring-online operation
     abort(urls, false);
     // set the state
-    ctx.updateState("FAILED",
+    ctx->updateState("FAILED",
         JobError("STAGING", ETIMEDOUT, "bring-online timeout has been exceeded")
     );
     // confirm the timeout
@@ -281,7 +281,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx.getIDs(urls[i]);
+            auto ids = ctx->getIDs(urls[i]);
 
             if (errors[i]) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)<< "BRINGONLINE abort FAILED for " << urls[i] << ": "
@@ -290,7 +290,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                 if (report)
                 {
                     for (auto it = ids.begin(); it != ids.end(); ++it) {
-                        ctx.updateState(it->first, it->second,
+                        ctx->updateState(it->first, it->second,
                             "FAILED", JobError("STAGING", errors[i])
                         );
                     }
@@ -305,7 +305,7 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
                 if (report)
                 {
                     for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.updateState(it->first, it->second,
+                        ctx->updateState(it->first, it->second,
                             "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
                         );
                 }

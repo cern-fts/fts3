@@ -63,7 +63,7 @@ void FetchStaging::fetch()
                 continue;
             }
 
-            std::map<GroupByType, StagingContext> tasks;
+            std::map<GroupByType, StagingContext*> tasks;
             std::vector<StagingOperation> files;
 
             time_t start = time(0);
@@ -82,13 +82,11 @@ void FetchStaging::fetch()
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
                     tasks.insert(std::make_pair(
-                        key, StagingContext(
-                        		QoSServer::instance(), *it_f
-                        ))
+                        key, StagingContext::getStagingContext(QoSServer::instance(), *it_f))
                     );
                 }
                 else {
-                    it_t->second.add(*it_f);
+                    it_t->second->add(*it_f);
                 }
             }
 
@@ -140,23 +138,22 @@ void FetchStaging::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
-    std::map<std::string, StagingContext> tasks;
+    std::map<std::string, StagingContext*> tasks;
 
     for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f) {
         auto it_t = tasks.find(it_f->token);
         if (it_t == tasks.end())
             tasks.insert(std::make_pair(
-                it_f->token, StagingContext(
-                		QoSServer::instance(), *it_f
-                ))
+                it_f->token, StagingContext::getStagingContext(QoSServer::instance(), *it_f)
+                )
             );
         else
-            it_t->second.add(*it_f);
+            it_t->second->add(*it_f);
     }
 
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
         try {
-            std::set<std::string> urls = it_t->second.getUrls();
+            std::set<std::string> urls = it_t->second->getUrls();
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered with token " << it_t->first << commit;
             for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;

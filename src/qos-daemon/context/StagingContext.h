@@ -140,6 +140,8 @@ public:
         return (errorCount[surl] += 1);
     }
 
+    static StagingContext* getStagingContext(QoSServer &qosServer, const StagingOperation &stagingOp);
+
 protected:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
