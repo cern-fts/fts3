@@ -3670,37 +3670,15 @@ void MySqlAPI::updateFileStateToQosTerminal(const std::string& jobId, uint64_t f
 void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
-    std::vector<MinFileStatus> filesState;
     std::vector<fts3::events::MessageBringonline> messages;
 
-    Consumer consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
     int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
     int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
     int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
 
     try
     {
-        int exitCode = consumer.runConsumerStaging(messages);
-        if(exitCode != 0)
-        {
-            char buffer[128]= {0};
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:"
-                << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-        }
-
-        if(!messages.empty())
-        {
-            for (auto iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
-            {
-                //now restore messages
-                filesState.emplace_back(
-                    iterUpdater->job_id(), iterUpdater->file_id(),
-                    iterUpdater->transfer_status(), iterUpdater->transfer_message(), false
-                );
-            }
-        }
-
-        //now get frash states/files from the database
+        //now get fresh states/files from the database
         soci::rowset<soci::row> rs2 = (sql.prepare <<
             " SELECT DISTINCT vo_name, source_se "
             " FROM t_file "
@@ -3862,40 +3840,6 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                         copy_pin_lifetime, bring_online, 0,
                         source_space_token, std::string()
                     );
-
-                    if (!job_id.empty() && file_id > 0)
-                    {
-                        filesState.emplace_back(job_id, file_id, initState, reason, false);
-                    }
-                }
-            }
-        }
-
-        //now update the initial state
-        if(!filesState.empty())
-        {
-            try
-            {
-                updateStagingStateInternal(sql, filesState);
-                filesState.clear();
-            }
-            catch(...)
-            {
-                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
-                //save state and restore afterwards
-                if(!filesState.empty())
-                {
-                    fts3::events::MessageBringonline msg;
-                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
-                    {
-                        msg.set_file_id(itFind->fileId);
-                        msg.set_job_id(itFind->jobId);
-                        msg.set_transfer_status(itFind->state);
-                        msg.set_transfer_message(itFind->reason);
-
-                        //store the states into fs to be restored in the next run of this function
-                        producer.runProducerStaging(msg);
-                    }
                 }
             }
         }

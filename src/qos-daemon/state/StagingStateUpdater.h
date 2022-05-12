@@ -46,6 +46,39 @@ public:
     using StateUpdater::operator();
 
     /**
+     * Updates the file state to STARTED for the given job/file
+     *
+     * @param urlToIDs : every url with corresponding <jobId, fileId> pair
+     * @return true if the update was successful
+     */
+    bool operator()(std::unordered_multimap< std::string, std::pair<std::string, uint64_t> > urlToIDs)
+    {
+        if(urlToIDs.empty()) {
+            return false;
+        }
+
+        std::vector<MinFileStatus> filesState;
+
+        for(auto it: urlToIDs) {
+            auto ids = it.second;
+            filesState.emplace_back(ids.first, ids.second, "STARTED", "", false);
+        }
+
+        try {
+            db.updateStagingState(filesState);
+        }
+        catch (std::exception& ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            return false;
+        }
+        catch(...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Updates the bring-online token for the given jobs/files
      *
      * @param jobs : jobs with respective files

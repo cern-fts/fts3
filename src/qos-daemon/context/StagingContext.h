@@ -108,6 +108,16 @@ public:
         stateUpdater(jobs, token);
     }
 
+    /**
+     * Updates state of all the files in the context to STARTED
+     *
+     * @return true if the update was successful
+     */
+    bool updateState()
+    {
+        return stateUpdater(urlToIDs);
+    }
+
     int getBringonlineTimeout() const
     {
         return maxBringonlineTimeout;
