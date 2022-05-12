@@ -24,10 +24,12 @@
 
 struct StagingOperation {
     StagingOperation(const std::string& jobId, uint64_t fileId, const std::string& voName,
-        const std::string& userDn, const std::string& credId, const std::string& surl,
+        const std::string& userDn, const std::string& credId,
+        const std::string& stagingMetadata, const std::string& surl,
         time_t pinLifetime, time_t timeout, time_t startTime,
         const std::string& spaceToken, const std::string& token):
-        jobId(jobId), fileId(fileId), voName(voName), userDn(userDn), credId(credId), surl(surl),
+        jobId(jobId), fileId(fileId), voName(voName), userDn(userDn), credId(credId),
+        stagingMetadata(stagingMetadata), surl(surl),
         pinLifetime(pinLifetime), timeout(timeout), startTime(startTime),
         spaceToken(spaceToken), token(token)
     {
@@ -38,6 +40,7 @@ struct StagingOperation {
     std::string voName;
     std::string userDn;
     std::string credId;
+    std::string stagingMetadata;
     std::string surl;
     time_t pinLifetime;
     time_t timeout;

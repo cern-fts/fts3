@@ -3817,7 +3817,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 std::string cred_id = row.get<std::string>("cred_id");
 
                 soci::rowset<soci::row> rs3 = (sql.prepare <<
-                    "SELECT f.source_surl, f.job_id, f.file_id,"
+                    "SELECT f.source_surl, f.staging_metadata, f.job_id, f.file_id,"
                     "   j.copy_pin_lifetime, j.bring_online, j.cred_id, j.user_dn, j.source_space_token "
                     "FROM t_file f JOIN t_job j ON f.job_id = j.job_id "
                     "WHERE "
@@ -3841,6 +3841,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 {
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
+                    std::string metadata = row.get<std::string>("staging_metadata");
                     std::string job_id = row.get<std::string>("job_id");
                     uint64_t file_id = row.get<unsigned long long>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
@@ -3857,7 +3858,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,
-                        user_dn, cred_id, source_url,
+                        user_dn, cred_id, metadata, source_url,
                         copy_pin_lifetime, bring_online, 0,
                         source_space_token, std::string()
                     );
@@ -3992,8 +3993,8 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
         soci::rowset<soci::row> rs3 =
             (
                 sql.prepare <<
-                " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, f.staging_start, f.bringonline_token, "
-                " j.copy_pin_lifetime, j.bring_online, j.user_dn, j.cred_id, j.source_space_token "
+                " SELECT f.vo_name, f.source_surl, f.staging_metadata, f.job_id, f.file_id, f.staging_start, "
+                " f.bringonline_token, j.copy_pin_lifetime, j.bring_online, j.user_dn, j.cred_id, j.source_space_token "
                 " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                 " WHERE  "
                 " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
@@ -4008,6 +4009,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             soci::row const& row = *i3;
             std::string vo_name = row.get<std::string>("vo_name");
             std::string source_url = row.get<std::string>("source_surl");
+            std::string metadata = row.get<std::string>("staging_metadata");
             std::string job_id = row.get<std::string>("job_id");
             uint64_t file_id = row.get<unsigned long long>("file_id");
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
@@ -4034,7 +4036,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
 
             stagingOps.emplace_back(
                 job_id, file_id, vo_name,
-                user_dn, cred_id, source_url,
+                user_dn, cred_id, metadata, source_url,
                 copy_pin_lifetime, bring_online,
                 staging_start_time,
                 source_space_token,
