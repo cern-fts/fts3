@@ -319,6 +319,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk"
     )
     (
+        "StagingSchedulingInterval",
+        po::value<std::string>( &(_vars["StagingSchedulingInterval"]) )->default_value("60"),
+        "In seconds, how often to run the scheduler for bring online operations"
+    )
+    (
         "StagingPollRetries",
         po::value<std::string>( &(_vars["StagingPollRetries"]) )->default_value("3"),
         "Retry this number of times if a staging poll fails with ECOMM"

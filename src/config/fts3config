@@ -80,8 +80,10 @@ LogLevel=INFO
 # (StagingBulkSize*StagingConcurrentRequests). The larger the number, the more requests will FTS need to keep track of.
 # StagingConcurrentRequests=1000
 # Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk.
-# Note that the resolution is 60 seconds.
+# Note that the resolution is the StagingSchedulingInterval.
 # StagingWaitingFactor=300
+# In seconds, how often to run the scheduler for bring online operations
+# StagingSchedulingInterval=60
 # Retry this number of times if a staging poll fails with ECOMM
 # StagingPollRetries=3
 
