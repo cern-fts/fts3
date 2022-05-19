@@ -36,6 +36,7 @@
 
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "config/ServerConfig.h"
 
 using namespace db;
 using namespace fts3::common;
@@ -50,16 +51,16 @@ const char * const PROXY_NAME_PREFIX = "x509up_h";
 /*
  * encodeName
  *
- * Encode a string, is not url encoded since the hash is alweays prefixed
+ * Encode a string (not URL encoded since the hash is always prefixed)
  */
-static std::string encodeName(const std::string& str)
+static std::string encodeDN(const std::string& dn)
 {
     std::string encoded;
-    encoded.reserve(str.length());
+    encoded.reserve(dn.length());
 
     // for each character
     std::string::const_iterator s_it;
-    for (s_it = str.begin(); s_it != str.end(); ++s_it) {
+    for (s_it = dn.begin(); s_it != dn.end(); ++s_it) {
         if (isalnum((*s_it))) {
             encoded.push_back(static_cast<char>(tolower((*s_it))));
         }
@@ -80,29 +81,32 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
             throw SystemError("Invalid User DN specified");
         }
 
-        if(id.empty()) {
+        if (id.empty()) {
             throw SystemError("Invalid credential id specified");
         }
 
-        // Get the filename to be for the given DN
-        std::string filename = generateProxyName(userDn, id);
+        std::list<std::string> proxy_filenames;
+        proxy_filenames.push_back(generateProxyName(userDn, id));
 
-        // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
-        if(filename.length() > (FILENAME_MAX - 7))
-        {
-            throw SystemError("Invalid credential file name generated");
+        if (fts3::config::ServerConfig::instance().get<bool>("BackwardsCompatibleProxyNames")) {
+            proxy_filenames.push_back(generateProxyName(userDn, id, true));
         }
 
-        // Check if the Proxy Certificate is already there and it's valid
-        std::string message;
-        if(isValidProxy(filename, message))
-        {
-            return filename;
+        for (auto it = proxy_filenames.begin(); it != proxy_filenames.end(); it++) {
+            // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
+            if ((*it).length() > (FILENAME_MAX - 7)) {
+                throw SystemError("Invalid credential file name generated");
+            }
+
+            // Check if the Proxy Certificate is already there and is valid
+            std::string tmpMessage;
+            if (isValidProxy(*it, tmpMessage)) {
+                return *it;
+            }
         }
 
         // Check if the database contains a valid proxy for this dlg id and DN
-        if(DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn))
-        {
+        if (DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn)) {
             // This looks crazy, but right now I don't know what can happen if I throw here
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Proxy for dlg id "<< id << " and DN " << userDn
                 << " has expired in the DB, needs renewal!" << commit;
@@ -116,9 +120,9 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         getNewCertificate(userDn, id, tmp_proxy.name());
 
         // Rename the Temporary File
-        tmp_proxy.rename(filename);
+        tmp_proxy.rename(proxy_filenames.front());
 
-        return filename;
+        return proxy_filenames.front();
     }
     catch(const std::exception& exc)
     {
@@ -240,36 +244,47 @@ void DelegCred::getNewCertificate(const std::string &userDn,
 }
 
 
-std::string DelegCred::generateProxyName(const std::string& userDn, const std::string& id)
+std::string DelegCred::generateProxyName(const std::string& userDn, const std::string& id, bool legacy)
 {
-
-    std::string filename;
-
-    // Hash the DN:id
+    // Hash the <DN><cred_id>
     size_t h = std::hash<std::string>()(userDn + id);
     std::stringstream ss;
     ss << h;
-    std::string h_str = ss.str();
 
-    // Encode the DN
-    std::string encoded_dn = encodeName(userDn);
+    std::string hash_str = ss.str();
+    std::string encoded;
 
-    // Compute Max length
-    unsigned long filename_max = static_cast<unsigned long>(pathconf(TMP_DIRECTORY, _PC_NAME_MAX));
-    size_t max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
-    if (max_length == 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: prefix too long" << commit;
-        return std::string("");
+    if (legacy) {
+        encoded = encodeDN(userDn);
+    } else {
+        encoded += "_" + id;
     }
-    if (h_str.length() > (std::string::size_type) max_length) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: has too long" << commit;
-        return std::string("");
+
+    // Compute filename maximum length (ignore errors)
+    long sys_max_length = pathconf(TMP_DIRECTORY, _PC_NAME_MAX);
+    size_t max_length = FILENAME_MAX;
+
+    if (sys_max_length != -1) {
+        max_length = sys_max_length - 7 - strlen(PROXY_NAME_PREFIX);
+
+        if (max_length <= 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: prefix too long" << commit;
+            return "";
+        }
+
+        if (hash_str.length() > (std::string::size_type) max_length) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: hash too long" << commit;
+            return "";
+        }
     }
-    // Generate the filename using the has
-    filename = std::string(TMP_DIRECTORY) + PROXY_NAME_PREFIX + h_str;
-    if (h_str.length() < max_length) {
-        filename.append(encoded_dn.substr(0, (max_length - h_str.length())));
+
+    // Generate the filename using the hash and the encoded credential
+    std::string filename = std::string(TMP_DIRECTORY) + PROXY_NAME_PREFIX + hash_str;
+
+    if (hash_str.length() < max_length) {
+        filename.append(encoded.substr(0, (max_length - hash_str.length())));
     }
+
     return filename;
 }
 

@@ -154,6 +154,11 @@ AutoSessionReuse = False
 # Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default true)
 #RetrieveSEToken = true
 
+# Flag to enable backwards compatible names when searching for proxy credentials on the local filesystem (default true)
+# New naming convention: /tmp/x509up_h<hash>_<delegation_id>
+# Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
+#BackwardsCompatibleProxyNames = False
+
 # Time delta between bringonline timeout and expiration timeout
 # Value must be set with a suffix: s (seconds), m (minutes), h (hours), d (days)
 # No enforcement if config setting is missing
