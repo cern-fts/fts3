@@ -288,7 +288,8 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
 
     // Check if allowed to retrieve Storage Element issued tokens
     if (!opts.retrieveSEToken) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Configured to skip retrieval of SE-issued tokens" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Configured to skip retrieval of SE-issued tokens. "
+                                        << "Retrieval delegated to downstream Gfal2 client" << commit;
         return;
     }
 
