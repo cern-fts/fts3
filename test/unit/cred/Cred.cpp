@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(Rename)
     BOOST_CHECK(tempFile.name().empty());
     BOOST_CHECK_EQUAL(access(filename.c_str(), F_OK), -1);
     BOOST_CHECK_EQUAL(access(renamed.c_str(), F_OK), 0);
+    BOOST_CHECK_EQUAL(unlink(renamed.c_str()), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
