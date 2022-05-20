@@ -151,8 +151,8 @@ AutoSessionReuse = False
 # Cancel all NOT_USED files in a failed multihop job (default false)
 #CancelUnusedMultihopFiles = False
 
-# Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default true)
-#RetrieveSEToken = true
+# Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default false)
+#RetrieveSEToken = false
 
 # Flag to enable backwards compatible names when searching for proxy credentials on the local filesystem (default true)
 # New naming convention: /tmp/x509up_h<hash>_<delegation_id>

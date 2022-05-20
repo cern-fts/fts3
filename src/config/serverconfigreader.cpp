@@ -470,7 +470,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "RetrieveSEToken",
-        po::value<std::string>( &(_vars["RetrieveSEToken"]) )->default_value("true"),
+        po::value<std::string>( &(_vars["RetrieveSEToken"]) )->default_value("false"),
         "Enable or disable retrieval of SE-issued tokens in the transfer agent"
     )
     (
