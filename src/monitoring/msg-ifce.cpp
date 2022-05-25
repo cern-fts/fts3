@@ -206,10 +206,9 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["tr_timestamp_start"] = json::Number(tr_completed.tr_timestamp_start);
 
     if (tr_completed.tr_timestamp_complete) {
-        message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
-    }
-    else {
         message["tr_timestamp_complete"] = json::Number(tr_completed.tr_timestamp_complete);
+    } else {
+        message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
     }
 
     message["channel_type"] = json::String(tr_completed.channel_type);
