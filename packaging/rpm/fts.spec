@@ -513,6 +513,9 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Tue Jun 14 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.3-1
+- Fix for S3 alternate field
+
 * Wed Feb 16 2022 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.11.2-1
 - Introduce profiling logs
 - Introduce new sanity-checker to prevent stuck multihop jobs
