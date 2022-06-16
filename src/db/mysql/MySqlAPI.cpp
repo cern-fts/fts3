@@ -3841,7 +3841,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 soci::rowset<soci::row> rs3 = (sql.prepare <<
                     "SELECT f.source_surl, f.job_id, f.file_id,"
                     "   j.copy_pin_lifetime, j.bring_online, j.cred_id, j.user_dn, j.source_space_token "
-                    "FROM v_staging f JOIN t_job j ON f.job_id = j.job_id "
+                    "FROM t_file f JOIN t_job j ON f.job_id = j.job_id "
                     "WHERE "
                     "   f.hashed_id BETWEEN :hStart AND :hEnd "
                     "   AND f.source_se=:source_se "
