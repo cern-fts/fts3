@@ -146,6 +146,13 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     else if (e->stage == GFAL_EVENT_IPV6) {
         transfer->stats.ipv6Used = true;
     }
+    else if (e->stage == GFAL_EVENT_EVICT) {
+        try {
+            transfer->stats.evictionRetc = std::abs(std::stoi(e->description));
+        } catch(...) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Invalid eviction return code received: " << e->description << commit;
+        }
+    }
     else if (e->stage == GFAL_EVENT_TRANSFER_TYPE) {
         transfer->stats.transferType = e->description;
     }
