@@ -3,6 +3,7 @@
 -- [FTS-1744] Schema changes for the eviction feature
 -- [FTS-1768] SRM TURL protocol configurable per link
 -- [FTS01786] Add t_gripdmap table
+-- [FTS-1804] Add "staging_metadata" field to "t_file" table
 -- [FTS-1805] Remove "v_staging" view
 --
 
@@ -20,6 +21,9 @@ CREATE TABLE `t_gridmap` (
 
 ALTER TABLE `t_schema_vers`
     ADD PRIMARY KEY(`major`, `minor`, `patch`);
+
+ALTER TABLE `t_file`
+    ADD COLUMN `staging_metadata` text;
 
 DROP VIEW IF EXISTS `v_staging`;
 
