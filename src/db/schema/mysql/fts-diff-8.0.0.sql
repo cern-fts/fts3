@@ -1,5 +1,6 @@
 --
 -- FTS3 Schema 8.0.0
+-- [FTS-1709] Schema changes for SWIFT support
 -- [FTS-1744] Schema changes for the eviction feature
 -- [FTS-1759] Add primary key on t_schema_vers table
 -- [FTS-1768] SRM TURL protocol configurable per link
@@ -15,6 +16,9 @@ ALTER TABLE `t_link_config`
     ADD COLUMN `3rd_party_turl` varchar(150) DEFAULT NULL;
 
 ALTER TABLE `t_job`
+    ADD COLUMN `os_project_id` varchar(512) DEFAULT NULL;
+
+ALTER TABLE `t_job_backup`
     ADD COLUMN `os_project_id` varchar(512) DEFAULT NULL;
 
 CREATE TABLE `t_gridmap` (
