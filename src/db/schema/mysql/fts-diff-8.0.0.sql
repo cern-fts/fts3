@@ -29,6 +29,9 @@ ALTER TABLE `t_schema_vers`
 ALTER TABLE `t_file`
     ADD COLUMN `staging_metadata` text;
 
+ALTER TABLE `t_file_backup`
+    ADD COLUMN `staging_metadata` text;
+
 DROP VIEW IF EXISTS `v_staging`;
 
 --
