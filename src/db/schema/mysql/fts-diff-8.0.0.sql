@@ -14,6 +14,9 @@ ALTER TABLE `t_se`
 ALTER TABLE `t_link_config`
     ADD COLUMN `3rd_party_turl` varchar(150) DEFAULT NULL;
 
+ALTER TABLE `t_job`
+    ADD COLUMN `os_project_id` varchar(512) DEFAULT NULL;
+
 CREATE TABLE `t_gridmap` (
     `dn` VARCHAR(255) NOT NULL,
     `vo` VARCHAR(100) NOT NULL,
