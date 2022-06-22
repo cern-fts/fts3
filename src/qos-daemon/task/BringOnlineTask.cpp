@@ -38,6 +38,22 @@ void BringOnlineTask::run(const boost::any &)
     if (urlSet.empty())
         return;
 
+    // Cancel early if we are dealing with an HTTP endpoint
+    std::string protocol = Uri::parse(ctx.getStorageEndpoint()).protocol;
+
+    if ((protocol.find("http") == 0) || (protocol.find("dav") == 0)) {
+        bool allow_HTTP_endpoint = fts3::config::ServerConfig::instance().get<bool>("ExperimentalTapeRESTAPI");
+
+        if (!allow_HTTP_endpoint) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE not supported for HTTP endpoints. "
+                                            << "Cancelling task for storage=" << ctx.getStorageEndpoint()
+                                            << " (files=" << urlSet.size() << ")" << commit;
+            ctx.updateState("FAILED",
+                            JobError("STAGING", EOPNOTSUPP, "Bringonline operation not supported for HTTP endpoints"));
+            return;
+        }
+    }
+
     std::vector<const char*> urls;
     urls.reserve(urlSet.size());
     for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
