@@ -15,12 +15,8 @@
  */
 
 #include <cstdlib>
-#include <fstream>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
-#include "common/Logger.h"
 
 #include "LogHelper.h"
 #include "heuristics.h"
@@ -28,6 +24,8 @@
 #include "UrlCopyProcess.h"
 #include "version.h"
 #include "DestFile.h"
+#include "common/Logger.h"
+
 
 using fts3::common::commit;
 
@@ -70,30 +68,33 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     const std::string checksumType = transfer.checksumAlgorithm.empty() ? "ADLER32" :
-        transfer.checksumAlgorithm;
+                                     transfer.checksumAlgorithm;
     const std::string checksum = gfal2.getChecksum(transfer.destination,
-        transfer.checksumAlgorithm);
+                                                   transfer.checksumAlgorithm);
     const uint64_t destFileSize = gfal2.stat(params, transfer.destination, false).st_size;
+    const std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
+
     DestFile destFile;
     destFile.fileSize = destFileSize;
     destFile.checksumType = checksumType;
     destFile.checksumValue = checksum;
-    const std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
+
     if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
         destFile.fileOnDisk = true;
         destFile.fileOnTape = false;
     } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
         destFile.fileOnDisk = false;
         destFile.fileOnTape = true;
-    }else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
+    } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
         destFile.fileOnDisk = true;
         destFile.fileOnTape = true;
     } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
-    destFile.fileOnDisk = false;
-    destFile.fileOnTape = false;
+        destFile.fileOnDisk = false;
+        destFile.fileOnTape = false;
     } else {
         throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
     }
+
     return destFile;
 } 
 
@@ -113,8 +114,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     if (!opts.oauthFile.empty()) {
         try {
             gfal2.loadConfigFile(opts.oauthFile);
-        }
-        catch (const std::exception &ex) {
+        } catch (const std::exception &ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file: " << ex.what() << commit;
         }
         unlink(opts.oauthFile.c_str());
@@ -196,6 +196,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     if (!transfer.sourceTokenDescription.empty()) {
         params.setSourceSpacetoken(transfer.sourceTokenDescription);
     }
+
     if (!transfer.destTokenDescription.empty()) {
         params.setDestSpacetoken(transfer.destTokenDescription);
     }
@@ -203,16 +204,14 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     if (!transfer.checksumAlgorithm.empty()) {
     	try	{
     		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
-    	}
-    	catch (const Gfal2Exception &ex) {
+    	} catch (const Gfal2Exception &ex) {
     		if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {
     			throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, ex);
-    		}
-    		else if (transfer.checksumMode == Transfer::CHECKSUM_TARGET) {
+    		} else if (transfer.checksumMode == Transfer::CHECKSUM_TARGET) {
     			throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
-    		}
-    		else
-    		    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+    		} else {
+                throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+            }
     	}
     }
 
@@ -237,13 +236,11 @@ static void timeoutTask(boost::posix_time::time_duration &duration, UrlCopyProce
 {
     try {
         boost::this_thread::sleep(duration);
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Timeout expired" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Timeout expired!" << commit;
         urlCopyProcess->timeout();
-    }
-    catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Timeout stopped" << commit;
-    }
-    catch (const std::exception &ex) {
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Timeout thread stopped" << commit;
+    } catch (const std::exception &ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in the timeout task: " << ex.what() << commit;
     }
 }
@@ -256,11 +253,9 @@ static void pingTask(Transfer *transfer, Reporter *reporter)
             boost::this_thread::sleep(boost::posix_time::seconds(60));
             reporter->sendPing(*transfer);
         }
-    }
-    catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Ping stopped" << commit;
-    }
-    catch (const std::exception &ex) {
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Ping thread stopped" << commit;
+    } catch (const std::exception &ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in the ping task: " << ex.what() << commit;
     }
 }
@@ -268,13 +263,12 @@ static void pingTask(Transfer *transfer, Reporter *reporter)
 
 void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params)
 {
-    // Log info
     if (!opts.proxy.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy: " << opts.proxy << commit;
-    }
-    else {
+    } else {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running without proxy" << commit;
     }
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO: " << opts.voName << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << transfer.jobId << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << transfer.fileId << commit;
@@ -303,17 +297,14 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
         transfer.fileSize = transfer.userFileSize;
-    }
-    else {
+    } else {
         try {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Getting source file size" << commit;
             transfer.fileSize = gfal2.stat(params, transfer.source, true).st_size;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File size: " << transfer.fileSize << commit;
-        }
-        catch (const Gfal2Exception &ex) {
+        } catch (const Gfal2Exception &ex) {
             throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, ex);
-        }
-        catch (const std::exception &ex) {
+        } catch (const std::exception &ex) {
             throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, EINVAL, ex.what());
         }
 
@@ -321,21 +312,22 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             try {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
                 gfal2.stat(params, transfer.destination, false);
+
                 if (opts.dstFileReport) {
                     try {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: " <<
-                            transfer.destination << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: "
+                                                        << transfer.destination << commit;
                         auto destFile = createDestFileReport(transfer, gfal2, params);
                         transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
                     } catch (const std::exception &ex) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
-                            << transfer.destination << ": " << ex.what() << commit;
+                                                       << transfer.destination << " (error=" << ex.what() << ")" << commit;
                     }
                 }
+
                 throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
-                    "Destination file exists and overwrite is not enabled");
-            }
-            catch (const Gfal2Exception &ex) {
+                                   "Destination file exists and overwrite is not enabled");
+            } catch (const Gfal2Exception &ex) {
                 if (ex.code() != ENOENT) {
                     throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
                 }
@@ -378,16 +370,13 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;
     try {
         gfal2.copy(params, transfer.source, transfer.destination);
-    }
-    catch (const Gfal2Exception &ex) {
+    } catch (const Gfal2Exception &ex) {
         if (timeoutExpired) {
             throw UrlCopyError(TRANSFER, TRANSFER, ETIMEDOUT, ex.what());
-        }
-        else {
+        } else {
             throw UrlCopyError(TRANSFER, TRANSFER, ex);
         }
-    }
-    catch (const std::exception &ex) {
+    } catch (const std::exception &ex) {
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
 
@@ -396,8 +385,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing file for SRM source" << commit;
         try {
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
-        }
-        catch (const Gfal2Exception &ex) {
+        } catch (const Gfal2Exception &ex) {
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release file for SRM source: "
                                                << transfer.source << commit;
         }
@@ -408,19 +396,16 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         uint64_t destSize;
         try {
             destSize = gfal2.stat(params, transfer.destination, false).st_size;
-        }
-        catch (const Gfal2Exception &ex) {
+        } catch (const Gfal2Exception &ex) {
             throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, ex);
-        }
-        catch (const std::exception &ex) {
+        } catch (const std::exception &ex) {
             throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EINVAL, ex.what());
         }
 
         if (destSize != transfer.fileSize) {
             throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EINVAL,
-                "Source and destination file size mismatch");
-        }
-        else {
+                               "Source and destination file size mismatch");
+        } else {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Source and destination file size matching" << commit;
         }
     }
@@ -430,7 +415,6 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 void UrlCopyProcess::run(void)
 {
     while (!todoTransfers.empty() && !canceled) {
-
         Transfer transfer;
         {
             boost::lock_guard<boost::mutex> lock(transfersMutex);
@@ -440,10 +424,10 @@ void UrlCopyProcess::run(void)
         // Prepare logging
         transfer.stats.process.start = millisecondsSinceEpoch();
         transfer.logFile = generateLogPath(opts.logDir, transfer);
+
         if (opts.debugLevel) {
             transfer.debugLogFile = transfer.logFile + ".debug";
-        }
-        else {
+        } else {
             transfer.debugLogFile = "/dev/null";
         }
 
@@ -451,13 +435,12 @@ void UrlCopyProcess::run(void)
             fts3::common::theLogger().redirect(transfer.logFile, transfer.debugLogFile);
         }
 
-        // Prepare gfal2 transfer parameters
+        // Prepare Gfal2 transfer parameters
         Gfal2TransferParams params;
         try {
             setupTransferConfig(opts, transfer, gfal2, params);
-        }
-        catch (const UrlCopyError &ex) {
-                transfer.error.reset(new UrlCopyError(ex));
+        } catch (const UrlCopyError &ex) {
+            transfer.error.reset(new UrlCopyError(ex));
         }
 
         // Notify we got it
@@ -467,33 +450,24 @@ void UrlCopyProcess::run(void)
         // Run the transfer
         try {
             runTransfer(transfer, params);
-        }
-        catch (const UrlCopyError &ex) {
+        } catch (const UrlCopyError &ex) {
             transfer.error.reset(new UrlCopyError(ex));
-        }
-        catch (const std::exception &ex) {
+        } catch (const std::exception &ex) {
             transfer.error.reset(new UrlCopyError(AGENT, TRANSFER_SERVICE, EINVAL, ex.what()));
-        }
-        catch (...) {
+        } catch (...) {
             transfer.error.reset(new UrlCopyError(AGENT, TRANSFER_SERVICE, EINVAL, "Unknown exception"));
         }
 
         // Log error if any
         if (transfer.error) {
             if (transfer.error->isRecoverable()) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                    << "Recoverable error: [" << transfer.error->code() << "] "
-                    << transfer.error->what()
-                    << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Recoverable error: [" << transfer.error->code() << "] "
+                                               << transfer.error->what() << commit;
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Non recoverable error: [" << transfer.error->code() << "] "
+                                               << transfer.error->what() << commit;
             }
-            else {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                << "Non recoverable error: [" << transfer.error->code() << "] "
-                << transfer.error->what()
-                << commit;
-            }
-        }
-        else {
+        } else {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer finished successfully" << commit;
         }
 
@@ -505,6 +479,7 @@ void UrlCopyProcess::run(void)
         {
             boost::lock_guard<boost::mutex> lock(transfersMutex);
             doneTransfers.push_back(transfer);
+
             // todoTransfers may have been emptied by panic()
             if (!todoTransfers.empty()) {
                 todoTransfers.pop_front();
@@ -513,8 +488,8 @@ void UrlCopyProcess::run(void)
         }
     }
 
-    // On cancellation, todoTransfers will not be empty, and a termination message must be sent
-    // for them
+    // On cancellation, todoTransfers will not be empty
+    // and a termination message must be sent for them
     for (auto transfer = todoTransfers.begin(); transfer != todoTransfers.end(); ++transfer) {
         Gfal2TransferParams params;
         transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ECANCELED, "Transfer canceled"));
@@ -531,23 +506,20 @@ void UrlCopyProcess::archiveLogs(Transfer &transfer)
         archivedLogFile = generateArchiveLogPath(opts.logDir, transfer);
         boost::filesystem::rename(transfer.logFile, archivedLogFile);
         transfer.logFile = archivedLogFile;
-    }
-    catch (const std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to archive the log: "
-            << e.what() << commit;
+    } catch (const std::exception &e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to archive the log: " << e.what() << commit;
     }
 
-    try {
-        if (opts.debugLevel > 0) {
+    if (opts.debugLevel > 0) {
+        try {
             std::string archivedDebugLogFile = archivedLogFile + ".debug";
             boost::filesystem::rename(transfer.debugLogFile, archivedDebugLogFile);
             transfer.debugLogFile = archivedDebugLogFile;
+        } catch (const std::exception &e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to archive the debug log: " << e.what() << commit;
         }
     }
-    catch (const std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to archive the debug log: "
-            << e.what() << commit;
-    }
+
 }
 
 
