@@ -17,6 +17,8 @@
 #ifndef GFAL2_CPP_H
 #define GFAL2_CPP_H
 
+#include <vector>
+
 #include <gfal_api.h>
 #include "common/Uri.h"
 
@@ -416,6 +418,29 @@ public:
             g_free(cfgvalue);
         }
         return value;
+    }
+
+    std::string tokenRetrieve(const std::string& url, const std::string& issuer, unsigned validity,
+                              const std::vector<std::string>& activities) {
+        char buff[2048];
+        GError* error = NULL;
+        std::vector<const char*> activity_list;
+
+        activity_list.reserve(activities.size() + 1);
+        for (auto it = activities.begin(); it != activities.end(); it++) {
+            activity_list.push_back(it->c_str());
+        }
+        activity_list.push_back(NULL);
+
+
+        ssize_t ret = gfal2_token_retrieve(context, url.c_str(), issuer.c_str(), false, validity,
+                                           &activity_list[0], buff, sizeof(buff), &error);
+
+        if (ret == -1) {
+            throw Gfal2Exception(error);
+        }
+
+        return std::string(buff);
     }
 };
 

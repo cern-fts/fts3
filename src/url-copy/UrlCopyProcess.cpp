@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <dlfcn.h>
-
 #include <cstdlib>
 #include <fstream>
 #include <boost/algorithm/string/classification.hpp>
@@ -32,15 +30,6 @@
 #include "DestFile.h"
 
 using fts3::common::commit;
-
-// dlopen-style handle to the token issuer library.  Allows us to
-// simplify the build-time dependencies.
-int (*g_x509_scitokens_issuer_init_p)(char **) = NULL;
-char* (*g_x509_scitokens_issuer_get_token_p)(const char *, const char *, const char *,
-                                             char**) = NULL;
-char *(*g_x509_macaroon_issuer_retrieve_p)(const char *, const char *, const char *, int,
-                                           const char **, char **) = NULL;
-void *g_x509_scitokens_issuer_handle = NULL;
 
 
 static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
@@ -117,158 +106,9 @@ UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
 }
 
 
-static void initTokenLibrary()
-{
-    if (g_x509_scitokens_issuer_handle)
-    {
-        return;
-    }
-
-    char *error;
-    g_x509_scitokens_issuer_handle = dlopen("libX509SciTokensIssuer.so",
-                                            RTLD_NOW|RTLD_GLOBAL);
-    if (!g_x509_scitokens_issuer_handle)
-    {
-        char *error = dlerror();
-        std::stringstream ss;
-        ss <<  "Failed to load the token issuer library: " <<
-            (error ? error : "(unknown)");
-        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
-    }
-    // Clear any potential error message
-    dlerror();
-
-    *(void **)(&g_x509_scitokens_issuer_init_p) = dlsym(g_x509_scitokens_issuer_handle,
-                                                        "x509_scitokens_issuer_init");
-    if ((error = dlerror()) != NULL)
-    {
-        std::stringstream ss;
-        ss << "Failed to load the initializer handle: " << error;
-        dlclose(g_x509_scitokens_issuer_handle);
-        g_x509_scitokens_issuer_handle = NULL;
-        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
-    }
-    dlerror();
-
-    *(void **)(&g_x509_scitokens_issuer_get_token_p) =
-        dlsym(g_x509_scitokens_issuer_handle, "x509_scitokens_issuer_retrieve");
-    if ((error = dlerror()) != NULL)
-    {
-        std::stringstream ss;
-        ss << "Failed to load the token retrieval handle: " <<  error;
-        g_x509_scitokens_issuer_init_p = NULL;
-        dlclose(g_x509_scitokens_issuer_handle);
-        g_x509_scitokens_issuer_handle = NULL;
-        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
-    }
-    dlerror();
-
-    *(void **)(&g_x509_macaroon_issuer_retrieve_p) =
-        dlsym(g_x509_scitokens_issuer_handle, "x509_macaroon_issuer_retrieve");
-    if ((error = dlerror()) != NULL)
-    {
-        std::stringstream ss;
-        ss << "Failed to load the macaroon retrieval handle: " <<  error;
-        g_x509_scitokens_issuer_init_p = NULL;
-        g_x509_scitokens_issuer_get_token_p = NULL;
-        dlclose(g_x509_scitokens_issuer_handle);
-        g_x509_scitokens_issuer_handle = NULL;
-        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
-    }
-    dlerror();
-
-    char *err = NULL;
-    if ((*g_x509_scitokens_issuer_init_p)(&err))
-    {
-        std::stringstream ss;
-        ss << "Failed to initialize the client issuer library: " << err;
-        g_x509_scitokens_issuer_init_p = NULL;
-        g_x509_scitokens_issuer_get_token_p = NULL;
-        g_x509_macaroon_issuer_retrieve_p = NULL;
-        free(err);
-        dlclose(g_x509_scitokens_issuer_handle);
-        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ss.str());
-    }
-}
-
-
-static std::string setupBearerToken(const std::string &issuer, const std::string &proxy)
-{
-    initTokenLibrary();
-
-    char *err = NULL;
-    char *token = (*g_x509_scitokens_issuer_get_token_p)(issuer.c_str(),
-        proxy.c_str(), proxy.c_str(), &err);
-    if (token)
-    {
-        std::string token_retval(token);
-        free(token);
-        return token_retval;
-    }
-    std::stringstream ss;
-    ss << "Failed to retrieve token: " << err;
-    free(err);
-
-    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
-}
-
-
-static std::string setupMacaroon(const std::string &url, const std::string &proxy,
-                                 const std::vector<std::string> &activity,
-                                 unsigned validity)
-{
-    initTokenLibrary();
-
-    std::vector<const char*> activity_list;
-    activity_list.reserve(activity.size() + 1);
-    for (std::vector<std::string>::const_iterator iter = activity.begin();
-         iter != activity.end();
-         iter++)
-    {
-        activity_list.push_back(iter->c_str());
-    }
-    activity_list.push_back(NULL);
-
-    char *err = NULL;
-    char *token = (*g_x509_macaroon_issuer_retrieve_p)(url.c_str(),
-                                                     proxy.c_str(), proxy.c_str(),
-                                                     validity,
-                                                     &activity_list[0],
-                                                     &err);
-    if (token)
-    {
-        std::string token_retval(token);
-        free(token);
-        return token_retval;
-    }
-    std::stringstream ss;
-    ss << "Failed to retrieve macaroon: " << err;
-    free(err);
-
-    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, ss.str());
-}
-
-
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                              Gfal2 &gfal2, Gfal2TransferParams &params)
 {
-    bool macaroonRequestEnabledSource = false;
-    bool macaroonRequestEnabledDestination = false;
-    unsigned macaroonValidity = 180;
-
-    // Check source and destination protocol whether to enable macaroons
-    macaroonRequestEnabledSource = ((transfer.source.protocol.find("dav") == 0) || (transfer.source.protocol.find("http") == 0));
-    macaroonRequestEnabledDestination = ((transfer.destination.protocol.find("dav") == 0) || (transfer.destination.protocol.find("http") == 0));
-
-    if (macaroonRequestEnabledDestination || macaroonRequestEnabledSource) {
-        // Request a macaroon longer twice the timeout as we could run both push and pull mode
-        if (opts.timeout) {
-            macaroonValidity = ((unsigned) (2 * opts.timeout) / 60) + 10 ;
-        } else if (transfer.userFileSize) {
-            macaroonValidity = ((unsigned) (2 * adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb)) / 60) + 10;
-        }
-    }
-
     // Load Cloud + OIDC credentials
     if (!opts.oauthFile.empty()) {
         try {
@@ -293,53 +133,46 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         return;
     }
 
-    // Attempt to retrieve a bearer token from the VO's issuer.
-    // If not, try to retrieve a token from the SE itself.
-    if (!transfer.sourceTokenIssuer.empty()) {
-        params.setSourceBearerToken(setupBearerToken(transfer.sourceTokenIssuer, opts.proxy));
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for source" << commit;
+    // Bearer tokens can be issued in two ways:
+    // 1. Issued by a dedicated TokenIssuer
+    //    - Needs only the TokenIssuer endpoint
+    // 2. Issued by the SE itself (colloquially called macaroons)
+    //    - Can only be done against a https/davs endpoint
+    //    - Needs a validity time (in minutes) and list of activities
+    //
+    // Gfal2 can retrieve bearer tokens from both a TokenIssuer (first choice),
+    // then fallback to the SE itself
+
+    bool macaroonEnabledSource = ((transfer.source.protocol.find("davs") == 0) || (transfer.source.protocol.find("https") == 0));
+    bool macaroonEnabledDestination = ((transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0));
+    unsigned macaroonValidity = 180;
+
+    // Request a macaroon longer twice the timeout as we could run both push and pull mode
+    if (opts.timeout) {
+        macaroonValidity = ((unsigned) (2 * opts.timeout) / 60) + 10 ;
+    } else if (transfer.userFileSize) {
+        macaroonValidity = ((unsigned) (2 * adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb)) / 60) + 10;
     }
-    else if (macaroonRequestEnabledSource)
-    {
-        try
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for source" << commit;
-            std::vector<std::string> activity_list;
-            activity_list.reserve(2);
-            activity_list.push_back("DOWNLOAD");
-            activity_list.push_back("LIST");
-            params.setSourceBearerToken(setupMacaroon(transfer.source, opts.proxy, activity_list, macaroonValidity));
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for source"  << commit;
-        }
-        catch (const UrlCopyError &ex)
-        {
-            // As we always try for a macaroon, do not fail on error.
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for source; will use GSI proxy for authorization: " << ex.what() << commit;
+
+    if (!transfer.sourceTokenIssuer.empty() || macaroonEnabledSource) {
+        std::string tokenType = (!transfer.sourceTokenIssuer.empty()) ? "bearer token" : "macaroon";
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Will attempt retrieval of " << tokenType << " for source" << commit;
+        try {
+            params.setSourceBearerToken(gfal2.tokenRetrieve(transfer.source, transfer.sourceTokenIssuer,
+                                                            macaroonValidity, {"DOWNLOAD", "LIST"}));
+        } catch (const Gfal2Exception& ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve " << tokenType << " for source: " << ex.what() << commit;
         }
     }
 
-    if (!transfer.destTokenIssuer.empty()) {
-        params.setDestBearerToken(setupBearerToken(transfer.destTokenIssuer, opts.proxy));
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated bearer token for destination" << commit;
-    }
-    else if (macaroonRequestEnabledDestination)
-    {
-        try
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will attempt to generate a macaroon for destination" << commit;
-            std::vector<std::string> activity_list;
-            activity_list.reserve(4);
-            activity_list.push_back("MANAGE");
-            activity_list.push_back("UPLOAD");
-            activity_list.push_back("DELETE");
-            activity_list.push_back("LIST");
-            params.setDestBearerToken(setupMacaroon(transfer.destination, opts.proxy, activity_list, macaroonValidity));
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will use generated macaroon for destination" << commit;
-        }
-        catch (const UrlCopyError &ex)
-        {
-            // As we always try for a macaroon, do not fail on error.
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Macaroon issuing failed for destination; will use GSI proxy for authorization: " << ex.what() << commit;
+    if (!transfer.destTokenIssuer.empty() || macaroonEnabledDestination) {
+        std::string tokenType = (!transfer.destTokenIssuer.empty()) ? "bearer token" : "macaroon";
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Will attempt retrieval of " << tokenType << " for destination" << commit;
+        try {
+            params.setDestBearerToken(gfal2.tokenRetrieve(transfer.destination, transfer.destTokenIssuer,
+                                                          macaroonValidity, {"MANAGE", "UPLOAD", "DELETE", "LIST"}));
+        } catch (const Gfal2Exception& ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve " << tokenType << " for destination: " << ex.what() << commit;
         }
     }
 }
