@@ -32,7 +32,7 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
 /**
  * Return a reasonable timeout for the given filesize
  */
-unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned addSecPerMb);
+unsigned adjustTimeoutBasedOnSize(uint64_t sizeInBytes, unsigned addSecPerMb);
 
 std::string mapErrnoToString(int err);
 
