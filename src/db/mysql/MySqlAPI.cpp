@@ -445,14 +445,10 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
 void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
 {
     soci::session sql(*connectionPool);
-    uint64_t fileId = 0;
     unsigned activeCount;
     std::string sourceSe;
     std::string destSe;
     std::string voName;
-
-    std::vector<boost::tuple<std::string, std::string> > distinctSourceDest;
-    soci::indicator isNull = soci::i_ok;
 
     try
     {
@@ -461,18 +457,6 @@ void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
            "WHERE f.file_state = 'SUBMITTED' "
            "GROUP BY f.source_se, f.dest_se, f.file_state, f.vo_name "
            "ORDER BY null");
-
-        soci::statement stmt1 = (sql.prepare <<
-             "SELECT file_id FROM t_file "
-             "WHERE source_se = :source_se AND dest_se = :dest_se AND vo_name = :vo_name "
-             "  AND file_state='SUBMITTED' AND (hashed_id BETWEEN :hashStart AND :hashEnd) "
-             "LIMIT 1",
-             soci::use(sourceSe),
-             soci::use(destSe),
-             soci::use(voName),
-             soci::use(hashSegment.start),
-             soci::use(hashSegment.end),
-             soci::into(fileId, isNull));
 
         soci::statement activeStmt = (sql.prepare <<
             "SELECT COUNT(*) FROM t_file "
@@ -487,19 +471,13 @@ void MySqlAPI::getQueuesWithPending(std::vector<QueueId>& queues)
             sourceSe = r1.get<std::string>("source_se","");
             destSe = r1.get<std::string>("dest_se","");
 
-            fileId = 0; //reset
-            stmt1.execute(true);
-            if(isNull != soci::i_null && fileId > 0)
-            {
-                activeStmt.execute(true);
-
-                queues.emplace_back(
-                    sourceSe,
-                    destSe,
-                    voName,
-                    activeCount
-                );
-            }
+            activeStmt.execute(true);
+            queues.emplace_back(
+                 sourceSe,
+                 destSe,
+                 voName,
+                 activeCount
+            );
         }
     }
     catch (std::exception& e)
