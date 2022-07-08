@@ -5,8 +5,9 @@
 -- [FTS-1758] Add primary key on "t_schema_vers" table
 -- [FTS-1768] SRM TURL protocol configurable per link
 -- [FTS-1786] Add "t_gridmap" table
--- [FTS-1804] Add "staging_metadata" field to "t_file" table
+-- [FTS-1804] Add "staging_metadata" field to the "t_file" table
 -- [FTS-1805] Remove "v_staging" view
+-- [FTS-1814] Add "archive_metadata" field to the "t_file" table
 -- Cleanup old tables
 --
 
@@ -23,10 +24,12 @@ ALTER TABLE `t_job_backup`
     ADD COLUMN `os_project_id` varchar(512) DEFAULT NULL;
 
 ALTER TABLE `t_file`
-    ADD COLUMN `staging_metadata` text;
+    ADD COLUMN `staging_metadata` text,
+    ADD COLUMN `archive_metadata` text;
 
 ALTER TABLE `t_file_backup`
-    ADD COLUMN `staging_metadata` text;
+    ADD COLUMN `staging_metadata` text,
+    ADD COLUMN `archive_metadata` text;
 
 ALTER TABLE `t_schema_vers`
     ADD PRIMARY KEY(`major`, `minor`, `patch`);
