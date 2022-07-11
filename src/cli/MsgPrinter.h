@@ -61,6 +61,7 @@ public:
     }
 
     void print_info(std::string const & ostr_subject, std::string const & json_subject, long int h, long int m);
+    void print_info(std::string const & msg);
     void print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
     void print_info(std::string const & json_subject, std::string const & msg);
     void print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag);

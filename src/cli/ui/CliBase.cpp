@@ -55,6 +55,7 @@ CliBase::CliBase() : visible("Allowed options")
 
     version = getCliVersion();
     interface = version;
+    printDeprecationNote();
 }
 
 void CliBase::parse(int ac, char *av[])
@@ -120,6 +121,12 @@ void CliBase::validate()
     if (endpoint.empty()) {
         throw bad_option("service", "failed to determine the endpoint");
     }
+}
+
+void CliBase::printDeprecationNote() const
+{
+    MsgPrinter::instance().print_info("NOTICE: This command is deprecated! Please use fts-rest-* commands provided"
+                                      " by the \"fts-rest-client\" package.");
 }
 
 void CliBase::printCliDetails() const
