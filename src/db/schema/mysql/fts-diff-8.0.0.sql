@@ -8,6 +8,7 @@
 -- [FTS-1804] Add "staging_metadata" field to the "t_file" table
 -- [FTS-1805] Remove "v_staging" view
 -- [FTS-1814] Add "archive_metadata" field to the "t_file" table
+-- [FTS-1818] Add "FORCE_START" enum value to the "t_file.file_state" field
 -- Cleanup old tables
 --
 
@@ -26,10 +27,14 @@ ALTER TABLE `t_job_backup`
 ALTER TABLE `t_file`
     ADD COLUMN `staging_metadata` text,
     ADD COLUMN `archive_metadata` text;
+ALTER TABLE `t_file`
+    MODIFY COLUMN `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','FORCE_START','ON_HOLD','ON_HOLD_STAGING') NOT NULL;
 
 ALTER TABLE `t_file_backup`
     ADD COLUMN `staging_metadata` text,
     ADD COLUMN `archive_metadata` text;
+ALTER TABLE `t_file_backup`
+    MODIFY COLUMN `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','FORCE_START','ON_HOLD','ON_HOLD_STAGING') NOT NULL;
 
 ALTER TABLE `t_schema_vers`
     ADD PRIMARY KEY(`major`, `minor`, `patch`);
