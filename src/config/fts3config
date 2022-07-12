@@ -2,39 +2,38 @@
 User=fts3
 Group=fts3
 
-# mysql only
+# Database type (mysql only)
 DbType=mysql
 
-#db username
+# Database username
 DbUserName=replacethis
 
-#db password
+# Database password
 DbPassword=replacethis
 
-#For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
+# For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
 DbConnectString=replacethis
 
-#Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
+# Number of database connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
 DbThreadsNum=26
 
-#The alias used for the FTS endpoint, will be published as such in the dashboard transfers UI http://dashb-wlcg-transfers.cern.ch/ui/
+# The alias used for the FTS endpoint
+# Note: will be published in the FTS Transfers Dashboard
 Alias=replacethis
 
-#Infosys, either the fqdn:port of a BDII instance or false to disable BDII access
+# Infosys: <fqdn:port> of a BDII instance or false to disable BDII access
 Infosys=lcg-bdii.cern.ch:2170
 
-#Query the info systems specified in the order given, e.g. glue1;glue2
+# Query the info systems according to the given order (e.g.: glue1;glue2)
 InfoProviders=glue1
 
-#List of authorized VOs, separated by ;
-#Leave * to authorize any VO
-AuthorizedVO=*
-
-# site name
+# Site name running the FTS3 service (will be published to GLUE2)
 SiteName=replacethis
 
-#Enable/Disable monitoring using messaging monitoring (disabled=false / enabled=true)
+# Enable or disable monitoring messages (see fts-msg-monitoring.conf)
 MonitoringMessaging=true
+# Directory where the internal FTS3 messages are written
+MessagingDirectory=/var/lib/fts3
 
 # Profiling interval in seconds. If set to 0, it will be disabled
 Profiling=0
@@ -48,13 +47,15 @@ ServerLogDirectory=/var/log/fts3
 #   TRACE (every detail), DEBUG (internal behaviour), INFO (normal behaviour),
 #   NOTICE (final states), WARNING (things worth checking), ERR (internal FTS3 errors, as database connectivity),
 #   CRIT (fatal errors, as segmentation fault)
-# It is recommended to use DEBUG or INFO
+# It is recommended to use INFO or DEBUG
 LogLevel=INFO
 
-# Check for fts_url_copy processes that do not give their progress back
-# CheckStalledTransfers = true
-# Stalled timeout, in seconds
-# CheckStalledTimeout = 900
+## Scheduler and MessagingProcessing Service settings
+# Wait time between scheduler runs (measured in seconds)
+#SchedulingInterval = 2
+# How often to check for new inter-process messages (measured in seconds)
+# Note: should be less than CheckStalledTimeout / 2
+#MessagingConsumeInterval = 1
 
 # Minimum required free RAM (in MB) for FTS3 to work normally
 # If the amount of free RAM goes below the limit, FTS3 will enter auto-drain mode
@@ -65,36 +66,41 @@ LogLevel=INFO
 # The RAM limitation may not take into account other node limitations (i.e. IO)
 # or, depending on the swapping policy, may not even prevent overloads if the kernel
 # starts swapping before the free RAM decreases until it reaches the value of MinRequiredFreeRAM
-# 0 disables the check.
-# The default is 400.
+# The default is 400 / Use 0 to disable the check
 # MaxUrlCopyProcesses = 400
 
-# Parameters for Bring Online
-# Maximum bulk size.
-# If the size is too large, it will take more resources (memory and CPU) to generate the requests and
-# parse the responses. Some servers may reject the requests if they are too big.
+## Parameters for QoS daemon - BringOnline operation
+# Maximum bulk size
+# If the size is too large, it will take more resources (memory and CPU) to generate the requests
+# and parse the responses. Some servers may reject the requests if they are too big.
 # If it is too small, performance will be reduced.
 # Keep it to a sensible size (between 100 and 1k)
 # StagingBulkSize=200
-# Maximum number of concurrent requests. This gives a maximum of files sent to the storage system
-# (StagingBulkSize*StagingConcurrentRequests). The larger the number, the more requests will FTS need to keep track of.
+
+# Maximum number of concurrent requests
+# The maximum number of files sent to the Tape system = StagingBulkSize * StagingConcurrentRequests
+# The larger the number, the more requests the QoS daemon will need to keep track of.
 # StagingConcurrentRequests=1000
-# Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk.
+
+# Seconds to wait before submitting a bulk request
+# Allows the QoS daemon to accumulate more files per bulk request.
 # Note that the resolution is the StagingSchedulingInterval.
 # StagingWaitingFactor=300
-# In seconds, how often to run the scheduler for bring online operations
+
+# How often to run the scheduler for BringOnline operations (measured in seconds)
 # StagingSchedulingInterval=60
-# Retry this number of times if a staging poll fails with ECOMM
+# Number of times to retry if a staging poll fails with ECOMM
 # StagingPollRetries=3
 
-# In seconds, interval between heartbeats
+# Interval between heartbeats (measured in seconds)
 # HeartBeatInterval=60
-# I seconds, after this interval a host is considered down
+# After this interval a host is considered down (measured in seconds)
 # HeartBeatGraceInterval=120
 
-# Seconds between optimizer runs
+## Optimizer Service settings
+# Optimizer run time interval for active links (measured in seconds)
 # OptimizerInterval = 60
-# After this time without optimizer updates, force a run
+# Force an Optimizer run after this time without updates (measured in seconds)
 # OptimizerSteadyInterval = 300
 # Maximum number of streams per file
 # OptimizerMaxStreams = 16
@@ -108,15 +114,17 @@ LogLevel=INFO
 # Decrease step size when the optimizer considers the performance is bad
 # OptimizerDecreaseStep = 1
 
-
-# Set the bulk size, in number of jobs, used for cleaning the old records
+## Cleaner Service settings
+# Set the cleaning bulk size when purging old records (number of jobs)
 #CleanBulkSize=5000
-# In days. Entries older than this will be purged.
+# Entries older than this will be purged (measured in days)
 #CleanInterval=7
 
+## SanityChecks Service settings
+## Sanity checks are usually demanding as they scan through the database.
 ## The higher the values for the following parameters,
-## the higher the latency for some operations (as cancelations),
-## but can also reduce the system and/or database load
+## the higher the latency for some operations (such as cancellations).
+## At the same time, higher values reduce system and/or database load
 
 # In seconds, how often to purge the messaging directory
 #PurgeMessagingDirectoryInterval = 600
@@ -130,23 +138,13 @@ LogLevel=INFO
 #QueueTimeoutCheckInterval = 300
 # In seconds, how often to check for stalled transfers
 #ActiveTimeoutCheckInterval = 300
-# In seconds, how often to schedule new transfers
-#SchedulingInterval = 2
-# In seconds, how often to check for messages. Should be less than CheckStalledTimeout/2
-#MessagingConsumeInterval = 1
-#Enable or disable auto session reuse
-AutoSessionReuse = False
-#Max small file size for session reuse in bytes
-#AutoSessionReuseMaxSmallFileSize = 104857600
-#Max big file size for session reuse in bytes
-#AutoSessionReuseMaxBigFileSize = 1073741824
-#Max number of files per session reuse
-#AutoSessionReuseMaxFiles = 1000
-#Max number of big files  per session reuse
-#AutoSessionReuseMaxBigFiles = 2
+# Check for "fts_url_copy" processes that do not report back their activity
+#CheckStalledTransfers = true
+# In seconds, timeout for stalled "fts_url_copy" processes
+#CheckStalledTimeout = 900
 
-#flag to use a default job priority
-#by default it queries the system to honour the priorities specified by the users ( value = 0)
+# Enable or disable job priorities (1 = fixed, 0 = follow job priorities)
+# By default (value = 0), it honors the user-specified priorities
 #UseFixedJobPriority = 0
 
 # Behavior for failed multihop jobs
@@ -160,26 +158,3 @@ AutoSessionReuse = False
 # New naming convention: /tmp/x509up_h<hash>_<delegation_id>
 # Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
 #BackwardsCompatibleProxyNames = False
-
-# Time delta between bringonline timeout and expiration timeout
-# Value must be set with a suffix: s (seconds), m (minutes), h (hours), d (days)
-# No enforcement if config setting is missing
-#BringOnlineAndExpirationDelta = 3d
-
-ValidateAccessTokenOffline=True
-JWKCacheSeconds=86400
-TokenRefreshDaemonIntervalInSeconds=600
-
-[roles]
-Public = transfer
-lcgadmin = vo:transfer
-production = all:config
-
-# Uncomment and configure your provider(s)
-#[providers]
-#provider1=https://iam.extreme-datacloud.eu
-#provider1_ClientId=...
-#provider1_ClientSecret=...
-#provider2=https://wlcg.cloud.cnaf.infn.it
-#provider2_ClientId=...
-#provider2_ClientSecret=...
