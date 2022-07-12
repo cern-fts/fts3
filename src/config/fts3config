@@ -32,6 +32,7 @@ SiteName=replacethis
 
 # Enable or disable monitoring messages (see fts-msg-monitoring.conf)
 MonitoringMessaging=true
+
 # Directory where the internal FTS3 messages are written
 MessagingDirectory=/var/lib/fts3
 
