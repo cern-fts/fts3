@@ -557,6 +557,8 @@ CREATE TABLE `t_link_config` (
   UNIQUE KEY `symbolic_name` (`symbolic_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
+VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
 --
 -- Table structure for table `t_link_config_old`
@@ -781,6 +783,8 @@ CREATE TABLE `t_schema_vers` (
   PRIMARY KEY (`major`,`minor`,`patch`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_schema_vers (major, minor, patch, message)
+VALUES (8, 0, 0, 'Schema 8.0.0');
 
 --
 -- Table structure for table `t_se`
@@ -804,6 +808,8 @@ CREATE TABLE `t_se` (
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_se (storage, inbound_max_active, outbound_max_active)
+VALUES ('*', 200, 200);
 
 --
 -- Table structure for table `t_se_old`
@@ -847,6 +853,8 @@ CREATE TABLE `t_server_config` (
   `show_user_dn` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO t_server_config (vo_name)
+VALUES ('*');
 
 --
 -- Table structure for table `t_share_config`
