@@ -38,7 +38,7 @@ ALTER TABLE `t_file_backup`
 ALTER TABLE `t_schema_vers`
     ADD PRIMARY KEY(`major`, `minor`, `patch`);
 
-CREATE TABLE `t_gridmap` (
+CREATE TABLE IF NOT EXISTS `t_gridmap` (
     `dn` VARCHAR(255) NOT NULL,
     `vo` VARCHAR(100) NOT NULL,
     PRIMARY KEY(`dn`)
