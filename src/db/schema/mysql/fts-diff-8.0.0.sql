@@ -9,7 +9,6 @@
 -- [FTS-1805] Remove "v_staging" view
 -- [FTS-1814] Add "archive_metadata" field to the "t_file" table
 -- [FTS-1818] Add "FORCE_START" enum value to the "t_file.file_state" field
--- Cleanup old tables
 --
 
 ALTER TABLE `t_se`
@@ -44,22 +43,6 @@ CREATE TABLE `t_gridmap` (
     `vo` VARCHAR(100) NOT NULL,
     PRIMARY KEY(`dn`)
 );
-
-DROP VIEW IF EXISTS `v_staging`;
-
---
--- Cleanup
---
-
-DROP TABLE IF EXISTS t_vo_acl;
-DROP TABLE IF EXISTS t_group_members;
-DROP TABLE IF EXISTS t_se_old;
-DROP TABLE IF EXISTS t_link_config_old;
-DROP TABLE IF EXISTS t_debug;
-DROP TABLE IF EXISTS t_optimize;
-DROP TABLE IF EXISTS t_optimize_mode;
-DROP TABLE IF EXISTS t_optimize_streams;
-DROP TABLE IF EXISTS t_optimize_active;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (8, 0, 0, 'FTS v3.12.0 schema changes');
