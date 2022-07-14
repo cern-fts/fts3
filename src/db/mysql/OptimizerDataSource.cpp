@@ -131,10 +131,10 @@ public:
         return getOptimizerModeInner(sql, source, dest);
     }
 
-    void getPairLimits(const Pair &pair, Range *range, Limits *limits) {
+    void getPairLimits(const Pair &pair, Range *range, StorageLimits *limits) {
         soci::indicator nullIndicator;
 
-        limits->link = limits->source = limits->destination = 0;
+        limits->source = limits->destination = 0;
         limits->throughputSource = 0;
         limits->throughputDestination = 0;
 
@@ -327,7 +327,7 @@ public:
         // If there are no terminal, use 100% success rate rather than 0 to avoid
         // the optimizer stepping back
         else {
-            return 1.0;
+            return 100.0;
         }
     }
 

@@ -49,6 +49,7 @@ public:
 private:
     void recoverStartedTasks();
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
+    boost::posix_time::time_duration StagingSchedulingInterval;
 
 };
 

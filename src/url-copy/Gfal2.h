@@ -17,6 +17,8 @@
 #ifndef GFAL2_CPP_H
 #define GFAL2_CPP_H
 
+#include <vector>
+
 #include <gfal_api.h>
 #include "common/Uri.h"
 
@@ -230,6 +232,14 @@ public:
         }
     }
 
+    void setEvictionFlag(bool value)
+    {
+        GError *error = NULL;
+        if (gfalt_set_use_evict(params, value, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     void addEventCallback(gfalt_event_func callback, void *udata)
     {
         GError *error = NULL;
@@ -339,7 +349,6 @@ public:
         gfal2_cancel(context);
     }
 
-
     /// Stat a file
     struct stat stat(Gfal2TransferParams &params, const std::string &url, bool is_source) {
         bearerInit(params, is_source ? url : "",
@@ -387,7 +396,7 @@ public:
         return buffer;
     }
 
-    // Get the extended attribute of a resource
+    /// Get the extended attribute of a resource
     std::string getXattr(const std::string &url, const std::string &name) {
         char buffer[1024];
         GError *error = NULL;
@@ -395,6 +404,43 @@ public:
             throw Gfal2Exception(error);
         }
         return buffer;
+    }
+
+    /// Get a string config value
+    std::string get(const std::string &group, const std::string &key) {
+        std::string value = "N/A";
+        GError *error = NULL;
+        char* cfgvalue = gfal2_get_opt_string(context, group.c_str(), key.c_str(), &error);
+        if (error != NULL) {
+            g_error_free(error);
+        } else {
+            value = cfgvalue;
+            g_free(cfgvalue);
+        }
+        return value;
+    }
+
+    std::string tokenRetrieve(const std::string& url, const std::string& issuer, unsigned validity,
+                              const std::vector<std::string>& activities) {
+        char buff[2048];
+        GError* error = NULL;
+        std::vector<const char*> activity_list;
+
+        activity_list.reserve(activities.size() + 1);
+        for (auto it = activities.begin(); it != activities.end(); it++) {
+            activity_list.push_back(it->c_str());
+        }
+        activity_list.push_back(NULL);
+
+
+        ssize_t ret = gfal2_token_retrieve(context, url.c_str(), issuer.c_str(), false, validity,
+                                           &activity_list[0], buff, sizeof(buff), &error);
+
+        if (ret == -1) {
+            throw Gfal2Exception(error);
+        }
+
+        return std::string(buff);
     }
 };
 

@@ -21,6 +21,7 @@
 #include <memory>
 #include "MsgProducer.h"
 #include "common/Logger.h"
+#include "common/Uri.h"
 
 #include "config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
@@ -63,6 +64,7 @@ MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& co
     producer_optimizer = NULL;
     destination_optimizer = NULL;
     FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
+    FQDN = getFullHostname();
     connected = false;
 }
 
@@ -73,8 +75,6 @@ MsgProducer::~MsgProducer()
 
 void MsgProducer::sendMessage(const std::string &rawMsg)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << rawMsg << commit;
-
     std::string type = rawMsg.substr(0, 2);
 
     // Modify on the fly to add the endpoint
@@ -84,8 +84,15 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
 
     msg["endpnt"] = json::String(FTSEndpoint);
 
+    if (brokerConfig.PublishFQDN()) {
+        msg["fqdn"] = json::String(FQDN);
+    }
+
     std::ostringstream output;
     json::Writer::Write(msg, output);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << type << " " << output.str() << commit;
+    // Add EOT character
     output << EOT;
 
     // Create message and set VO attribute if available

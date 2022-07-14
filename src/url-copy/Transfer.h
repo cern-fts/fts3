@@ -52,11 +52,15 @@ public:
 
         Interval process;
 
+        ///< Flag for IPv6 transfer: true = IPv6 used, false = not known
         bool ipv6Used;
+        ///< Eviction return code: 0 = ok, > 0 error code, -1 = not set
+        int32_t evictionRetc;
+
         std::string finalDestination;
         std::string transferType;
 
-        Statistics(): ipv6Used(false){};
+        Statistics(): ipv6Used(false), evictionRetc(-1) {};
     };
 
     /**
@@ -93,6 +97,8 @@ public:
     std::string destTokenIssuer;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
+    bool        isMultihopJob;
+    bool        isLastHop;
 
     Checksum_mode checksumMode;
 

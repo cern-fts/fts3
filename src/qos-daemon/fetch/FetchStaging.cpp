@@ -21,6 +21,7 @@
 
 #include <map>
 
+#include "config/ServerConfig.h"
 #include "common/Uri.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/DrainMode.h"
@@ -35,6 +36,7 @@ void FetchStaging::fetch()
 {
     // VO, user dn, storage, space token
     typedef std::tuple<std::string, std::string, std::string> GroupByType;
+    StagingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("StagingSchedulingInterval");
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting" << commit;
 
@@ -53,7 +55,7 @@ void FetchStaging::fetch()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
+            boost::this_thread::sleep(StagingSchedulingInterval);
 
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {

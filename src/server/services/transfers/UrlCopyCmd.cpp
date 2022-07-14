@@ -147,6 +147,17 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
     }
 }
 
+void UrlCopyCmd::setEvict(boost::tribool set)
+{
+    if (boost::indeterminate(set)) {
+        setFlag("evict", false);
+    } else {
+        bool value = (set.value == true);
+        setFlag("evict", value);
+    }
+}
+
+
 
 bool UrlCopyCmd::isIPv6Explicit(void)
 {
@@ -189,11 +200,12 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
             setFlag("reuse", true);
             break;
         case Job::kTypeMultipleReplica:
-            setFlag("job_m_replica", true);
+            setFlag("job-m-replica", true);
+            break;
+        case Job::kTypeMultiHop:
+            setFlag("job-multihop", true);
             break;
     }
-
-
 
     // setOption("source-site", std::string());
     // setOption("dest-site", std::string());
@@ -234,7 +246,8 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     if (publishUserDn)
         setOption("user-dn", prepareMetadataString(transfer.userDn));
 
-    setFlag("last_replica", transfer.lastReplica);
+    setFlag("last-replica", transfer.lastReplica);
+    setFlag("last-hop", transfer.lastHop);
 
     // On multiple jobs, this data is per transfer and is passed via a file
     // under /var/lib/fts3/<job-id>, so skip it
@@ -317,6 +330,12 @@ void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
 void UrlCopyCmd::setOverwrite(bool overwrite)
 {
     setFlag("overwrite", overwrite);
+}
+
+
+void UrlCopyCmd::setThirdPartyTURL(const std::string& thirdPartyTURL)
+{
+    setOption("3rd-party-turl", thirdPartyTURL);
 }
 
 

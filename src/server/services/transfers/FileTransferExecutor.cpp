@@ -153,6 +153,12 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Disable delegation (according to link config)
             cmdBuilder.setDisableDelegation(db->getDisableDelegationFlag(tf.sourceSe, tf.destSe));
 
+            // Get SRM 3rd party TURL (according to link config)
+            auto thirdPartyTURL = db->getThirdPartyTURL(tf.sourceSe, tf.destSe);
+            if (!thirdPartyTURL.empty()) {
+                cmdBuilder.setThirdPartyTURL(thirdPartyTURL);
+            }
+
             // Disable streaming via local transfers (according to global config)
             cmdBuilder.setDisableStreaming(db->getDisableStreamingFlag(tf.voName));
 
@@ -175,6 +181,9 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setIPv6(db->isProtocolIPv6(tf.sourceSe, tf.destSe));
             }
 
+            // Enable source file eviction from disk buffer (according to SE config)
+            cmdBuilder.setEvict(db->getEvictionFlag(tf.sourceSe));
+
             // FTS3 host name
             cmdBuilder.setFTSName(ftsHostName);
 
@@ -186,6 +195,11 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setNumberOfRetries(retry_times < 0 ? 0 : retry_times);
 
             if ((retry_times > 0) && (tf.overwriteFlag == "R")) {
+                cmdBuilder.setOverwrite(true);
+            }
+
+            // If is multihop job, file is not the final destination and overwriteFlag is "M" => enable overwrite
+            if (tf.jobType == Job::kTypeMultiHop && !tf.lastHop && tf.overwriteFlag == "M") {
                 cmdBuilder.setOverwrite(true);
             }
 

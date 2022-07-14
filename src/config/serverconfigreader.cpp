@@ -319,6 +319,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Seconds to wait before submitting a bulk request, so FTS can accumulate more files per bulk"
     )
     (
+        "StagingSchedulingInterval",
+        po::value<std::string>( &(_vars["StagingSchedulingInterval"]) )->default_value("60"),
+        "In seconds, how often to run the scheduler for bring online operations"
+    )
+    (
         "StagingPollRetries",
         po::value<std::string>( &(_vars["StagingPollRetries"]) )->default_value("3"),
         "Retry this number of times if a staging poll fails with ECOMM"
@@ -470,8 +475,18 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "RetrieveSEToken",
-        po::value<std::string>( &(_vars["RetrieveSEToken"]) )->default_value("true"),
+        po::value<std::string>( &(_vars["RetrieveSEToken"]) )->default_value("false"),
         "Enable or disable retrieval of SE-issued tokens in the transfer agent"
+    )
+    (
+        "BackwardsCompatibleProxyNames",
+        po::value<std::string>( &(_vars["BackwardsCompatibleProxyNames"]) )->default_value("true"),
+        "Enable or disable backwards compatible naming when searching for proxy credentials stored on the local file system."
+    )
+    (
+        "ExperimentalTapeRESTAPI",
+        po::value<std::string>( &(_vars["ExperimentalTapeRESTAPI"]) )->default_value("false"),
+        "Enable or disable experimental features of the TAPE REST API"
     )
     ;
 

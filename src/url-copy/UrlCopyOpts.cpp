@@ -36,13 +36,16 @@ const option UrlCopyOpts::long_options[] =
     {"bulk-file",         required_argument, 0, 105},
 
     {"reuse",             no_argument,       0, 200},
-    {"job_m_replica",     no_argument,       0, 202},
-    {"last_replica",      no_argument,       0, 203},
+    {"job-m-replica",     no_argument,       0, 202},
+    {"last-replica",      no_argument,       0, 203},
+    {"job-multihop",      no_argument,       0, 204},
+    {"last-hop",          no_argument,       0, 205},
 
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
     {"strict-copy",       no_argument,       0, 302},
     {"dst-file-report",   no_argument,       0, 303},
+    {"3rd-party-turl",    required_argument, 0, 304},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -76,6 +79,7 @@ const option UrlCopyOpts::long_options[] =
     {"ipv4",              no_argument,       0, 809},
     {"no-delegation",     no_argument,       0, 810},
     {"no-streaming",      no_argument,       0, 811},
+    {"evict",             no_argument,       0, 812},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -168,11 +172,10 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts():
-    isSessionReuse(false), isMultipleReplicaJob(false),
-    strictCopy(false), dstFileReport(false), retrieveSEToken(false),
+    isSessionReuse(false), strictCopy(false), dstFileReport(false), retrieveSEToken(false),
     optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
     timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
-    noStreaming(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
+    noStreaming(false), evict(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
     debugLevel(0), logToStderr(false)
 {
@@ -243,6 +246,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 203:
                     referenceTransfer.isLastReplica = true;
                     break;
+                case 204:
+                    referenceTransfer.isMultihopJob = true;
+                    break;
+                case 205:
+                    referenceTransfer.isLastHop = true;
+                    break;
 
                 case 300:
                     setChecksum(referenceTransfer, optarg);
@@ -266,6 +275,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 303:
                     dstFileReport = true;
+                    break;
+                case 304:
+                    thirdPartyTURL = boost::lexical_cast<std::string>(optarg);
                     break;
 
                 case 400:
@@ -355,6 +367,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 811:
                     noStreaming = true;
+                    break;
+                case 812:
+                    evict = true;
                     break;
 
                 case 820:

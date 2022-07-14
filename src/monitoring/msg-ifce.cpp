@@ -105,8 +105,9 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
 {
     json::Object message;
 
-    message["agent_fqdn"] = json::String(tr_started.agent_fqdn);
     message["transfer_id"] = json::String(tr_started.transfer_id);
+    message["job_id"] = json::String(tr_started.job_id);
+    message["file_id"] = json::Number(tr_started.file_id);
     message["endpnt"] = json::String(tr_started.endpoint);
     message["timestamp"] = json::Number(getTimestampMillisecs());
     message["src_srm_v"] = json::String(tr_started.source_srm_version);
@@ -154,6 +155,8 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     json::Object message;
 
     message["tr_id"] = json::String(tr_completed.transfer_id);
+    message["job_id"] = json::String(tr_completed.job_id);
+    message["file_id"] = json::Number(tr_completed.file_id);
     message["endpnt"] = json::String(tr_completed.endpoint);
     message["src_srm_v"] = json::String(tr_completed.source_srm_version);
     message["dest_srm_v"] = json::String(tr_completed.destination_srm_version);
@@ -203,10 +206,9 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["tr_timestamp_start"] = json::Number(tr_completed.tr_timestamp_start);
 
     if (tr_completed.tr_timestamp_complete) {
-        message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
-    }
-    else {
         message["tr_timestamp_complete"] = json::Number(tr_completed.tr_timestamp_complete);
+    } else {
+        message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
     }
 
     message["channel_type"] = json::String(tr_completed.channel_type);
@@ -223,9 +225,12 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["retry"] = json::Number(tr_completed.retry);
     message["retry_max"] = json::Number(tr_completed.retry_max);
     message["job_m_replica"] = json::Boolean(tr_completed.job_m_replica);
+    message["job_multihop"] = json::Boolean(tr_completed.job_multihop);
+    message["transfer_lasthop"] = json::Boolean(tr_completed.is_lasthop);
     message["job_state"] = json::String(tr_completed.job_state);
     message["is_recoverable"] = json::Boolean(tr_completed.is_recoverable);
     message["ipv6"] = json::Boolean(tr_completed.ipv6);
+    message["eviction_code"] = json::Number(tr_completed.eviction_code);
     message["final_destination"] = json::String(tr_completed.final_destination);
     message["transfer_type"] = json::String(tr_completed.transfer_type);
 

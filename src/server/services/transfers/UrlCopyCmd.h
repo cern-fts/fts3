@@ -63,6 +63,7 @@ public:
     void setProxy(const std::string&);
     void setUDT(boost::tribool);
     void setIPv6(boost::tribool);
+    void setEvict(boost::tribool);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);
@@ -80,6 +81,7 @@ public:
     void setDisableDelegation(bool);
     void setDisableStreaming(bool);
     void setOverwrite(bool);
+    void setThirdPartyTURL(const std::string&);
 
     // Observers
     int getBuffersize();

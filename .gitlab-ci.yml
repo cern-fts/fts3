@@ -82,8 +82,7 @@ docker_tag:
   stage: test
   script:
     - yum install -y wget createrepo
-    - if [[ -z "$CI_COMMIT_TAG" ]]; then REPOFILE="dmc-ci-el7.repo" ; else REPOFILE="dmc-rc-el7.repo" ; fi
-    - wget "https://dmc-repo.web.cern.ch/dmc-repo/${REPOFILE}" -O /etc/yum.repos.d/gfal2.repo
+    - ci/write-repo-file.sh
     - mkdir -p /repo/fts ; cp -v cc7/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
     - echo -e "[fts]\nname=FTS\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
     - yum install -y fts-tests
@@ -126,11 +125,9 @@ cc7-test:
 rpms:
   <<: *publish-template_definition
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG!= null'
-
-testing-rpms:
-  <<: *publish-template_definition
-  rules:
+    - if: '$CI_PROJECT_NAMESPACE != "fts"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG != null'
     - if: '$CI_COMMIT_REF_NAME != "develop" && $CI_COMMIT_TAG == null'
       when: manual
 

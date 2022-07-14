@@ -198,7 +198,7 @@ public:
     /// Returns how many retries there is configured for the given jobId
     virtual int getRetry(const std::string & jobId) = 0;
 
-    /// Returns how many thime the given file has been already retried
+    /// Returns how many times the given file has been already retried
     virtual int getRetryTimes(const std::string & jobId, uint64_t fileId) = 0;
 
     /// Set to FAIL jobs that have been in the queue for more than its max in queue time
@@ -251,7 +251,7 @@ public:
         service_name = std::string("");
     }
 
-    /// Update the state of a trnasfer inside a session reuse job
+    /// Update the state of a transfer inside a session reuse job
     virtual unsigned int updateFileStatusReuse(const TransferFile &file, const std::string &status) = 0;
 
     /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
@@ -266,11 +266,17 @@ public:
     /// Returns if for the given link, IPv6 has been enabled
     virtual boost::tribool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe) = 0;
 
+    /// Returns if for the given storage endpoint, eviction has been enabled
+    virtual boost::tribool getEvictionFlag(const std::string &source) = 0;
+
     /// Returns how many streams must be used for the given link
     virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe) = 0;
 
-    /// Returns whether proxy delegation sould be disabled for the given link
+    /// Returns whether proxy delegation should be disabled for the given link
     virtual bool getDisableDelegationFlag(const std::string &sourceSe, const std::string &destSe) = 0;
+
+    /// Returns the 3rd-party TURL for the given link
+    virtual std::string getThirdPartyTURL(const std::string &sourceSe, const std::string &destSE) = 0;
 
     /// Returns the globally configured transfer timeout
     virtual int getGlobalTimeout(const std::string &voName) = 0;

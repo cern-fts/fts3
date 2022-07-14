@@ -154,6 +154,11 @@ public:
 protected:
 
     /**
+    * Print deprecation note on every command line tool
+    */
+    void printDeprecationNote() const;
+
+    /**
      * If verbose additional info is printed
      */
     void printCliDetails() const;

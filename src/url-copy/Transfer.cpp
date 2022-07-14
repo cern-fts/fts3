@@ -26,7 +26,7 @@
 
 
 Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
-                       checksumMode(Transfer::CHECKSUM_NONE),
+                       isMultihopJob(false), isLastHop(false), checksumMode(Transfer::CHECKSUM_NONE),
                        fileSize(0), throughput(0.0), transferredBytes(0)
 {
 }
@@ -84,7 +84,7 @@ std::ostream& operator << (std::ostream& out, const Transfer::Checksum_mode& c)
             out << "Source comparison";
             break;
         default:
-            out << "Uknown value!";
+            out << "Unknown value!";
     }
     return out;
 }

@@ -64,6 +64,11 @@ void MsgPrinter::print_info(std::string const & ostr_subject, std::string const 
     jout.print(json_subject, boost::lexical_cast<std::string>(h) + ":" + boost::lexical_cast<std::string>(m));
 }
 
+void MsgPrinter::print_info(std::string const & msg)
+{
+    print(msg);
+}
+
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
 {
     if (!verbose) return;

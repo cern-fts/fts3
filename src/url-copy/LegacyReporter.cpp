@@ -58,11 +58,12 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
 
     producer.runProducerStatus(status);
 
-    // Transfer completed
+    // Fill transfer start
     TransferCompleted completed;
 
-    completed.agent_fqdn = opts.alias;
     completed.transfer_id = transfer.getTransferId();
+    completed.job_id = transfer.jobId;
+    completed.file_id = transfer.fileId;
     completed.endpoint = opts.alias;
 
     if (transfer.source.protocol == "srm") {
@@ -82,7 +83,6 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     completed.user_dn = replaceMetadataString(opts.userDn);
     completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
     completed.job_metadata = replaceMetadataString(opts.jobMetadata);
-    completed.job_m_replica = transfer.isMultipleReplicaJob;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
     completed.tr_timestamp_start = millisecondsSinceEpoch();
@@ -173,11 +173,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     producer.runProducerStatus(status);
 
-    // Transfer completed
+    // Fill transfer completed
     TransferCompleted completed;
 
-    completed.agent_fqdn = opts.alias;
     completed.transfer_id = transfer.getTransferId();
+    completed.job_id = transfer.jobId;
+    completed.file_id = transfer.fileId;
     completed.endpoint = opts.alias;
 
     if (transfer.source.protocol == "srm") {
@@ -198,10 +199,10 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
     completed.job_metadata = replaceMetadataString(opts.jobMetadata);
     completed.job_m_replica = transfer.isMultipleReplicaJob;
+    completed.job_multihop = transfer.isMultihopJob;
+    completed.is_lasthop = transfer.isLastHop;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
-
-    completed.job_m_replica = opts.isMultipleReplicaJob;
     completed.transfer_timeout = params.getTimeout();
 
     if (transfer.error) {
@@ -223,21 +224,27 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         if (transfer.isMultipleReplicaJob) {
             if (transfer.isLastReplica) {
                 completed.job_state = "FAILED";
-            }
-            else {
+            } else {
                 completed.job_state = "ACTIVE";
             }
-        }
-        else {
+        } else if (transfer.isMultihopJob) {
+            completed.job_state = "FAILED";
+        } else {
             completed.job_state = "UNKNOWN";
         }
     }
     else {
         completed.final_transfer_state = "Ok";
-        if(transfer.isMultipleReplicaJob) {
+
+        if (transfer.isMultipleReplicaJob) {
             completed.job_state = "FINISHED";
-        }
-        else {
+        } else if (transfer.isMultihopJob) {
+            if (transfer.isLastHop) {
+                completed.job_state = "FINISHED";
+            } else {
+                completed.job_state = "ACTIVE";
+            }
+        } else {
             completed.job_state = "UNKNOWN";
         }
     }
@@ -262,6 +269,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.tr_timestamp_complete = transfer.stats.process.end;
 
     completed.ipv6 = transfer.stats.ipv6Used;
+    completed.eviction_code = transfer.stats.evictionRetc;
     completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;
 

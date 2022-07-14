@@ -288,6 +288,7 @@ void CancelerService::killRunningJob(const std::vector<int>& pids)
         int pid = *iter;
         if (kill(pid, 0) == 0) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SIGKILL pid: " << pid << commit;
+            kill(pid, SIGKILL);
         }
     }
 }

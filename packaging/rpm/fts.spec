@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.11.3
+Version:    3.12.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -17,11 +17,11 @@ License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.11.0
-#  cd fts-3.11.0
-#  git checkout v3.11.0
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.12.0
+#  cd fts-3.12.0
+#  git checkout v3.12.0
 #  cd ..
-#  tar --exclude-vcs -vczf fts-3.11.0.tar.gz fts-3.11.0
+#  tar --exclude-vcs -vczf fts-3.12.0.tar.gz fts-3.12.0
 Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -45,7 +45,7 @@ BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  gfal2-devel >= 2.20.0
+BuildRequires:  gfal2-devel >= 2.21.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -85,10 +85,10 @@ Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.20.0
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.20.0
-Requires: gfal2-plugin-http%{?_isa} >= 2.20.0
-Requires: gfal2-plugin-srm%{?_isa} >= 2.20.0
+Requires: gfal2%{?_isa} >= 2.21.0
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.21.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.21.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -513,6 +513,14 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Thu Jul 14 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.0-1
+- New minor release
+- Tape REST API functionality for Eviction and ArchiveInfo
+- OC11/GDPR compliance with regards to temporary proxy certifcate file names
+- Eviction property configurable per SE
+- Multihop overwrite-hop feature
+- Improved gitlab-CI
+
 * Tue Jun 14 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.11.3-1
 - Fix for S3 alternate field
 

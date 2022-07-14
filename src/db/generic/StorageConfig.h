@@ -33,7 +33,7 @@ public:
                      inboundMaxThroughput(0), outboundMaxThroughput(0) {};
 
     // Merge the configuration from b into this
-    // This is, everything that is not set in this, is picked from b
+    // In other words, everything that is not set in this, is picked from b
     void merge(const StorageConfig &b) {
         if (boost::indeterminate(ipv6)) {
             ipv6 = b.ipv6;
@@ -54,7 +54,7 @@ public:
             inboundMaxThroughput = b.inboundMaxThroughput;
         }
         if (outboundMaxThroughput <= 0) {
-            outboundMaxThroughput <= b.outboundMaxThroughput;
+            outboundMaxThroughput = b.outboundMaxThroughput;
         }
     }
 

@@ -29,6 +29,9 @@ find_package (Protobuf REQUIRED)
 include_directories (${DIRQ_INCLUDE_DIR})
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
+# Disable "-Wconversion" warning during Protobuf generation
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
+
 # Protocol buffers
 file (GLOB EVENTS "events/*.proto")
 

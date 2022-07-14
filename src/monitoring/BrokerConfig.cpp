@@ -67,9 +67,9 @@ BrokerConfig::BrokerConfig(const std::string &path)
         "Log file name"
     )
     (
-        "FQDN",
-        po::value<std::string>()->default_value(""),
-        "Obsolete"
+        "PUBLISH_FQDN",
+        po::value<bool>()->default_value(false),
+        "Publish host FQDN on every message"
     )
     (
         "USERNAME",
@@ -170,6 +170,12 @@ std::string BrokerConfig::GetUserName() const
 std::string BrokerConfig::GetPassword() const
 {
     return vm["PASSWORD"].as<std::string>();
+}
+
+
+bool BrokerConfig::PublishFQDN() const
+{
+    return vm["PUBLISH_FQDN"].as<bool>();
 }
 
 

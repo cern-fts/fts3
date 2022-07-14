@@ -43,10 +43,10 @@ public:
     std::string bulkFile;
 
     bool isSessionReuse;
-    bool isMultipleReplicaJob;
 
     bool strictCopy;
     bool dstFileReport;
+    std::string thirdPartyTURL;
 
     std::string voName;
     std::string userDn;
@@ -71,6 +71,7 @@ public:
     boost::tribool enableIpv6;
     unsigned addSecPerMb;
     bool     noStreaming;
+    bool     evict;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option
 

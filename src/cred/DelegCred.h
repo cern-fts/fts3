@@ -23,8 +23,7 @@
 
 /**
  * DelegCred API.
- * Define the interface for retrieving a the User Credentials for a given user
- * DN
+ * Define the interface for retrieving the User Credentials for a given user DN
  */
 class DelegCred
 {
@@ -34,28 +33,30 @@ public:
      * Get name of a file containing the credentials for the requested user
      * @param userDn [IN] The distinguished name of the user
      * @param id [IN] The credential id needed to retrieve the user's
-     *        credentials (may be a passoword or an identifier, depending on the
+     *        credentials (may be a password or an identifier, depending on the
      *        implementation)
      */
     static std::string getProxyFile(const std::string &userDn, const std::string &id);
 
     /**
      * Returns true if the certificate in the given file name is still valid
-     * @param filename [IN] trhe name of the file containing the proxy certificate
+     * @param filename [IN] the name of the file containing the proxy certificate
      * @return true if the certificate in the given file name is still valid
      */
     static bool isValidProxy(const std::string &filename, std::string &message);
 
-private:
     /**
      * Generate a name for the file that should contain the proxy certificate.
-     * The length of this name shoud be (MAX_FILENAME - 7) maximum.
+     * The length of this name should be (MAX_FILENAME - 7) maximum.
      * @param userDn [IN] the user DN passed to the get method
      * @param id [IN] the credential id passed to the get method
+     * @param legacy [IN] when true, generate the proxy file name by encoding the user DN,
+     *                    otherwise append the credential ID
      * @return the generated file name
      */
-    static std::string generateProxyName(const std::string &userDn, const std::string &id);
+    static std::string generateProxyName(const std::string &userDn, const std::string &id, bool legacy = false);
 
+private:
     /**
      * Get a new Certificate and store in into a file
      * @param userDn [IN] the user DN passed to the get method
