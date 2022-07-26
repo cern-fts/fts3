@@ -54,7 +54,7 @@ void SupervisorService::runService()
                 }
                 events.emplace_back(event);
 
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor"
                     << "\nJob id: " << event.job_id()
                     << "\nFile id: " << event.file_id()
                     << "\nPid: " << event.process_id()
@@ -62,6 +62,16 @@ void SupervisorService::runService()
                     << "\nThroughput: " << event.throughput()
                     << "\nTransferred: " << event.transferred()
                     << commit;
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
+                    << " File_ID=" << event.file_id() // File_ID Is unique NOT job_ID (multiple transfers per job)!
+                    << " Timestamp=" << event.timestamp()
+                    << " Throughput=" << event.throughput()
+                    << " Transferred=" << event.transferred()
+                    << " SourceSE=" << Uri::parse(event.source_surl()).getSeName()
+                    << " DestSE=" << Uri::parse(event.dest_surl()).getSeName()
+                    << commit;
+
                 ThreadSafeList::get_instance().updateMsg(event);
             }
 
