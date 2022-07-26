@@ -23,4 +23,7 @@ message Message {
     optional int32 errcode = 16;
 
     optional string file_metadata = 17;
+
+    optional double instantaneous_throughput = 18;
+    optional uint64 gfal_perf_timestamp = 19;
 }
