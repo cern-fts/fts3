@@ -3819,7 +3819,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 {
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
-                    std::string metadata = row.get<std::string>("staging_metadata");
+                    std::string metadata = row.get<std::string>("staging_metadata", "");
                     std::string job_id = row.get<std::string>("job_id");
                     uint64_t file_id = row.get<unsigned long long>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
@@ -3953,7 +3953,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             soci::row const& row = *i3;
             std::string vo_name = row.get<std::string>("vo_name");
             std::string source_url = row.get<std::string>("source_surl");
-            std::string metadata = row.get<std::string>("staging_metadata");
+            std::string metadata = row.get<std::string>("staging_metadata", "");
             std::string job_id = row.get<std::string>("job_id");
             uint64_t file_id = row.get<unsigned long long>("file_id");
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
