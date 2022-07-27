@@ -64,12 +64,12 @@ void SupervisorService::runService()
                     << commit;
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
-                    << " File_ID=" << event.file_id() // File_ID Is unique NOT job_ID (multiple transfers per job)!
-                    << " Timestamp=" << event.timestamp()
-                    << " Throughput=" << event.throughput()
-                    << " Transferred=" << event.transferred()
-                    << " SourceSE=" << Uri::parse(event.source_surl()).getSeName()
-                    << " DestSE=" << Uri::parse(event.dest_surl()).getSeName()
+                    << " file_id=" << event.file_id() // File_ID Is unique NOT job_ID (multiple transfers per job)!
+                    << " timestamp=" << event.timestamp()
+                    << " throughput=" << event.throughput()
+                    << " transferred=" << event.transferred()
+                    << " source_se=" << Uri::parse(event.source_surl()).getSeName()
+                    << " dest_se=" << Uri::parse(event.dest_surl()).getSeName()
                     << commit;
 
                 ThreadSafeList::get_instance().updateMsg(event);
