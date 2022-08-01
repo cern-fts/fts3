@@ -101,14 +101,13 @@ JobContext::JobContext(const std::string &dn, const std::string &vo,
 }
 
 
-void JobContext::add(std::string const & surl, std::string const & metadata, std::string const & jobId, uint64_t fileId)
+void JobContext::add(const std::string& surl, const std::string& jobId, uint64_t fileId)
 {
     if (!surl.empty() && !jobId.empty() && fileId > 0) {
         jobs[jobId][surl].push_back(fileId);
         urlToIDs.insert(
         { surl,
         { jobId, fileId } });
-        urlToMetadata.insert({surl, metadata});
     }
 }
 
@@ -129,17 +128,6 @@ std::set<std::string> JobContext::getUrls() const
             ret.insert(it_u->first);
         }
     }
-    return ret;
-}
-
-
-std::string JobContext::getMetadata(const std::string url) const
-{
-    std::string ret = "";
-
-    auto it = urlToMetadata.find(url);
-    if (it != urlToMetadata.end())
-        ret = it->second;
     return ret;
 }
 

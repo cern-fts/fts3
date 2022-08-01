@@ -53,7 +53,7 @@ public:
      * @param ctx : staging context (recover from DB after crash)
      * @param token : token that is needed for polling
      */
-    PollTask(StagingContext &ctx, const std::string &token) :
+    PollTask(StagingContext& ctx, const std::string& token) :
         BringOnlineTask(&ctx), token(token), nPolls(0), wait_until(0)
     {
         auto surls = ctx.getSurls();

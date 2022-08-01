@@ -95,7 +95,7 @@ public:
      * @param jobId : job ID
      * @param fileId : file ID
      */
-    void add(const std::string &surl, const std::string &metadata, const std::string &jobId, uint64_t fileId);
+    void add(const std::string& surl, const std::string& jobId, uint64_t fileId);
 
     /**
      * Updates the state of the job (pure virtual)
@@ -118,13 +118,6 @@ public:
      * Using std::set we make sure we do not get duplicates
      */
     std::set<std::string> getUrls() const;
-
-    /**
-    * For a given URL return the corresponding metadata
-    * @param : url
-    * @return : metadata
-    */
-    std::string getMetadata(const std::string url) const;
 
     /**
      * @return  Set of pairs <jobId, surl>
@@ -181,8 +174,6 @@ protected:
     std::string spaceToken;
     /// URL -> (job_id, file_id)
     std::unordered_multimap< std::string, std::pair<std::string, uint64_t> > urlToIDs;
-    /// URL -> Staging metadata
-    std::map<std::string ,std::string > urlToMetadata;
 };
 
 #endif // JOBCONTEXT_H_

@@ -88,7 +88,7 @@ public:
 
     virtual ~StagingContext() {}
 
-    virtual void add(const StagingOperation &stagingOp);
+    virtual void add(const StagingOperation& stagingOp);
 
     /**
      * Asynchronous update of a single transfer-file within a job
@@ -138,6 +138,13 @@ public:
         return minStagingStartTime;
     }
 
+    /**
+    * For a given URL return the corresponding metadata
+    * @param : url
+    * @return : metadata
+    */
+    std::string getMetadata(const std::string& url) const;
+
     bool hasTimeoutExpired();
 
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
@@ -150,7 +157,7 @@ public:
         return (errorCount[surl] += 1);
     }
 
-    static StagingContext* getStagingContext(QoSServer &qosServer, const StagingOperation &stagingOp);
+    static StagingContext* getStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp);
 
 protected:
     StagingStateUpdater &stateUpdater;
@@ -160,6 +167,8 @@ protected:
     int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
     time_t minStagingStartTime; ///< first staging start timestamp of the batch
     std::string storageEndpoint; ///< storage endpoint of the batch
+    /// URL -> Staging metadata
+    std::map<std::string ,std::string> urlToMetadata;
 };
 
 #endif // STAGINGCONTEXT_H_

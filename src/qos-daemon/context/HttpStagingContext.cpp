@@ -16,7 +16,8 @@
 
 #include "HttpStagingContext.h"
 
-void HttpStagingContext::add(const StagingOperation &stagingOp)
+// Only add unique surls to urlToIDs
+void HttpStagingContext::add(const StagingOperation& stagingOp)
 {
     if (!urlToIDs.count(stagingOp.surl)) {
         StagingContext::add(stagingOp);

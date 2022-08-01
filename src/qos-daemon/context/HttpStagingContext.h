@@ -24,18 +24,18 @@ class HttpStagingContext : public StagingContext {
 
 public:
 
-    HttpStagingContext(QoSServer &qosServer, const StagingOperation &stagingOp) :
+    HttpStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) :
             StagingContext(qosServer, stagingOp)
     {}
 
-    HttpStagingContext(const HttpStagingContext &copy) :
+    HttpStagingContext(const HttpStagingContext& copy) :
             StagingContext(copy)
     {}
-    HttpStagingContext(HttpStagingContext && copy) :
+    HttpStagingContext(HttpStagingContext&& copy) :
             StagingContext(copy)
     {}
 
-    void add(const StagingOperation &stagingOp) override;
+    void add(const StagingOperation& stagingOp) override;
 
 };
 

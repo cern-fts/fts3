@@ -24,7 +24,7 @@
 
 void DeletionContext::add(const DeleteOperation &nsOp)
 {
-    add(nsOp.surl, "", nsOp.jobId, nsOp.fileId);
+    add(nsOp.surl, nsOp.jobId, nsOp.fileId);
 }
 
 

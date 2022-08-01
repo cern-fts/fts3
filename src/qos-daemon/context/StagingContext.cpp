@@ -27,7 +27,7 @@
 #include "common/Uri.h"
 
 
-void StagingContext::add(const StagingOperation &stagingOp)
+void StagingContext::add(const StagingOperation& stagingOp)
 {
     if (stagingOp.pinLifetime > maxPinLifetime) {
         maxPinLifetime = stagingOp.pinLifetime;
@@ -45,7 +45,21 @@ void StagingContext::add(const StagingOperation &stagingOp)
         storageEndpoint = Uri::parse(stagingOp.surl).getSeName();
     }
 
-    add(stagingOp.surl, stagingOp.stagingMetadata, stagingOp.jobId, stagingOp.fileId);
+    if (!stagingOp.surl.empty() && !stagingOp.jobId.empty() && stagingOp.fileId > 0) {
+        urlToMetadata.insert({stagingOp.surl, stagingOp.stagingMetadata});
+        add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
+    }
+}
+
+
+std::string StagingContext::getMetadata(const std::string& url) const
+{
+    std::string ret = "";
+
+    auto it = urlToMetadata.find(url);
+    if (it != urlToMetadata.end())
+        ret = it->second;
+    return ret;
 }
 
 
@@ -83,7 +97,7 @@ std::set<std::string> StagingContext::getSurlsToAbort(
 }
 
 
-StagingContext* StagingContext::getStagingContext(QoSServer &qosServer, const StagingOperation &stagingOp) {
+StagingContext* StagingContext::getStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) {
     std::string protocol = Uri::parse(stagingOp.surl).protocol;
     if ( protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
         return new HttpStagingContext(qosServer, stagingOp);
