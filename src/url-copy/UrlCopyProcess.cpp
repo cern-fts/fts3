@@ -484,7 +484,6 @@ void UrlCopyProcess::run(void)
             if (!todoTransfers.empty()) {
                 todoTransfers.pop_front();
                 reporter.sendTransferCompleted(transfer, params);
-                reporter.sendPing(transfer);
             }
         }
     }
@@ -495,7 +494,6 @@ void UrlCopyProcess::run(void)
         Gfal2TransferParams params;
         transfer->error.reset(new UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ECANCELED, "Transfer canceled"));
         reporter.sendTransferCompleted(*transfer, params);
-        reporter.sendPing(*transfer);
     }
 }
 

@@ -17,4 +17,6 @@ message MessageUpdater {
 
     required double throughput = 10;
     required uint64 transferred = 11;
+
+    optional double instantaneous_throughput = 12;
 }

@@ -55,22 +55,23 @@ void SupervisorService::runService()
                 events.emplace_back(event);
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor"
-                    << "\nJob id: " << event.job_id()
-                    << "\nFile id: " << event.file_id()
-                    << "\nPid: " << event.process_id()
-                    << "\nTimestamp: " << event.timestamp()
-                    << "\nThroughput: " << event.throughput()
-                    << "\nTransferred: " << event.transferred()
-                    << commit;
+                                                << "\nJob id: " << event.job_id()
+                                                << "\nFile id: " << event.file_id()
+                                                << "\nPid: " << event.process_id()
+                                                << "\nTimestamp: " << event.timestamp()
+                                                << "\nThroughput: " << event.throughput()
+                                                << "\nTransferred: " << event.transferred()
+                                                << commit;
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
-                    << " file_id=" << event.file_id() // File_ID Is unique NOT job_ID (multiple transfers per job)!
-                    << " timestamp=" << event.timestamp()
-                    << " throughput=" << event.throughput()
-                    << " transferred=" << event.transferred()
-                    << " source_se=" << Uri::parse(event.source_surl()).getSeName()
-                    << " dest_se=" << Uri::parse(event.dest_surl()).getSeName()
-                    << commit;
+                                                << " file_id=" << event.file_id()
+                                                << " timestamp=" << event.timestamp()
+                                                << " avg_throughput=" << event.throughput()
+                                                << " inst_throughput=" << event.instantaneous_throughput()
+                                                << " transferred=" << event.transferred()
+                                                << " source_se=" << Uri::parse(event.source_surl()).getSeName()
+                                                << " dest_se=" << Uri::parse(event.dest_surl()).getSeName()
+                                                << commit;
 
                 ThreadSafeList::get_instance().updateMsg(event);
             }
