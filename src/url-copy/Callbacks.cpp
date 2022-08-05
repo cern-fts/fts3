@@ -35,15 +35,15 @@ void performanceCallback(gfalt_transfer_status_t h, const char*, const char*, gp
         time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "bytes: " << trans
-            << ", avg KiB/sec:" << avg
-            << ", inst KiB/sec:" << inst
-            << ", elapsed:" << elapsed
-            << commit;
+                                        << ", avg KiB/sec:" << avg
+                                        << ", inst KiB/sec:" << inst
+                                        << ", elapsed sec:" << elapsed
+                                        << commit;
 
         transfer->averageThroughput = avg;
         transfer->instantaneousThroughput = inst;
         transfer->transferredBytes = trans;
-        transfer->stats.elapsedAtPerf = elapsed;
+        transfer->stats.elapsedAtPerf = elapsed*1000;
     }
 }
 

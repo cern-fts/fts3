@@ -250,7 +250,7 @@ static void pingTask(Transfer *transfer, Reporter *reporter)
 {
     try {
         while (!boost::this_thread::interruption_requested()) {
-            boost::this_thread::sleep(boost::posix_time::seconds(5));
+            boost::this_thread::sleep(boost::posix_time::seconds(7));
             reporter->sendPing(*transfer);
         }
     } catch (const boost::thread_interrupted&) {

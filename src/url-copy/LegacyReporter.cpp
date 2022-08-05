@@ -131,11 +131,11 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     // Status
     events::Message status;
 
-    status.set_timestamp(transfer.stats.transfer.end);
+    status.set_timestamp(transfer.stats.elapsedAtPerf + transfer.stats.transfer.start);
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
-    status.set_source_se(transfer.source.host);
-    status.set_dest_se(transfer.destination.host);
+    status.set_source_se(Uri::parse(transfer.source.fullUri).getSeName());
+    status.set_dest_se(Uri::parse(transfer.destination.fullUri).getSeName());
     status.set_process_id(getpid());
     status.set_filesize(transfer.fileSize);
     status.set_time_in_secs(transfer.getTransferDurationInSeconds());
@@ -163,6 +163,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         // Message Throughput in MiB/sec
         if (transfer.averageThroughput > 0) { // Throughput from gfal PerformanceCallback's
             status.set_throughput(transfer.averageThroughput / 1024.0);
+            status.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
         }
         else { // Throughput must be computed manually (short transfers)
             double transferDuration = transfer.getTransferDurationInSeconds(); // in s
