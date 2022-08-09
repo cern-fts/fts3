@@ -131,7 +131,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     // Status
     events::Message status;
 
-    status.set_timestamp(transfer.stats.elapsedAtPerf + transfer.stats.transfer.start);
+    status.set_timestamp(millisecondsSinceEpoch());
+    status.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
     status.set_source_se(Uri::parse(transfer.source.fullUri).getSeName());
@@ -288,7 +289,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 void LegacyReporter::sendPing(const Transfer &transfer)
 {
     events::MessageUpdater ping;
-    ping.set_timestamp(transfer.stats.elapsedAtPerf + transfer.stats.transfer.start);
+    ping.set_timestamp(millisecondsSinceEpoch());
+    ping.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
     ping.set_job_id(transfer.jobId);
     ping.set_file_id(transfer.fileId);
     ping.set_transfer_status("ACTIVE");

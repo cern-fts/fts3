@@ -214,7 +214,7 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
         if (msg.transfer_status().compare("FINISHED") == 0) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
                                             << " file_id=" << msg.file_id()
-                                            << " timestamp=" << msg.timestamp()/1000
+                                            << " timestamp=" << msg.gfal_perf_timestamp()/1000
                                             << " avg_throughput=" << msg.throughput()
                                             << " inst_throughput=" << msg.instantaneous_throughput()
                                             << " transferred=" << msg.filesize()
@@ -363,9 +363,9 @@ void MessageProcessingService::handleOtherMessages(const std::vector<fts3::event
             msgUpdater.set_file_id((*iter).file_id());
             msgUpdater.set_process_id((*iter).process_id());
             msgUpdater.set_timestamp((*iter).timestamp());
-            msgUpdater.set_throughput((*iter).throughput());
-            msgUpdater.set_instantaneous_throughput((*iter).instantaneous_throughput());
-            msgUpdater.set_transferred((*iter).filesize());
+            msgUpdater.set_throughput(0.0);
+            msgUpdater.set_instantaneous_throughput(0.0);
+            msgUpdater.set_transferred(0);
             ThreadSafeList::get_instance().updateMsg(msgUpdater);
 
             if ((*iter).transfer_status().compare("UPDATE") != 0)

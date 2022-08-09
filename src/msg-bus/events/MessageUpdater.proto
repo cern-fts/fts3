@@ -19,4 +19,5 @@ message MessageUpdater {
     required uint64 transferred = 11;
 
     required double instantaneous_throughput = 12;
+    optional double gfal_perf_timestamp = 13;
 }
