@@ -212,8 +212,7 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
                                         << "\nDest: " << msg.dest_se() << commit;
 
         if (msg.transfer_status().compare("FINISHED") == 0) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << std::fixed
-                                            << "[profiling:transfer]"
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
                                             << " file_id=" << msg.file_id()
                                             << " timestamp=" << msg.gfal_perf_timestamp()/1000
                                             << " avg_throughput=" << msg.throughput()
