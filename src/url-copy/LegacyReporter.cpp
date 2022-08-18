@@ -140,6 +140,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     status.set_process_id(getpid());
     status.set_filesize(transfer.fileSize);
     status.set_time_in_secs(transfer.getTransferDurationInSeconds());
+    status.set_transferred_since_last_ping(transfer.fileSize-transfer.previousPingTransferredBytes);
 
     if (transfer.error) {
         std::stringstream fullErrMsg;
@@ -286,7 +287,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 }
 
 
-void LegacyReporter::sendPing(const Transfer &transfer)
+void LegacyReporter::sendPing(Transfer &transfer)
 {
     events::MessageUpdater ping;
     ping.set_timestamp(millisecondsSinceEpoch());
@@ -300,6 +301,7 @@ void LegacyReporter::sendPing(const Transfer &transfer)
     ping.set_throughput(transfer.averageThroughput / 1024.0);
     ping.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
     ping.set_transferred(transfer.transferredBytes);
+    ping.set_transferred_since_last_ping(transfer.transferredBytes-transfer.previousPingTransferredBytes);
     ping.set_source_turl("gsiftp:://fake");
     ping.set_dest_turl("gsiftp:://fake");
 
@@ -308,6 +310,7 @@ void LegacyReporter::sendPing(const Transfer &transfer)
         zmq::message_t message(serialized.size());
         memcpy(message.data(), serialized.c_str(), serialized.size());
         zmqPingSocket.send(message, 0);
+        transfer.previousPingTransferredBytes = transfer.transferredBytes;
     }
     catch (const std::exception &error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;

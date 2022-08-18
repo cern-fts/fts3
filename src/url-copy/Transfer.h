@@ -110,6 +110,7 @@ public:
     double averageThroughput; // In KiB/s
     double instantaneousThroughput; // In KiB/s
     uint64_t transferredBytes;
+    uint64_t previousPingTransferredBytes;
 
     // Log file
     std::string logFile;

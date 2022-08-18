@@ -37,7 +37,7 @@ public:
 
     virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&);
 
-    virtual void sendPing(const Transfer&);
+    virtual void sendPing(Transfer&);
 };
 
 #endif // FTS3_LEGACYREPORTER_H

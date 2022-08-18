@@ -215,9 +215,8 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
                                             << " file_id=" << msg.file_id()
                                             << " timestamp=" << msg.gfal_perf_timestamp()/1000
-                                            << " avg_throughput=" << msg.throughput()
                                             << " inst_throughput=" << msg.instantaneous_throughput()
-                                            << " transferred=" << msg.filesize()
+                                            << " dif_transferred=" << msg.transferred_since_last_ping()
                                             << " source_se=" << msg.source_se()
                                             << " dest_se=" << msg.dest_se()
                                             << commit;

@@ -45,7 +45,7 @@ public:
         completedMsgs.push_back(t);
     }
 
-    void sendPing(const Transfer &t) {
+    void sendPing(Transfer &t) {
         pingMsgs.push_back(t);
     }
 };
