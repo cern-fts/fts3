@@ -79,11 +79,12 @@ public:
     {
         TRACE,
         DEBUG,
+        PROF,
         INFO,
         NOTICE,
         WARNING,
         ERR,
-        CRIT
+        CRIT,
     } LogLevel;
 
     /// Get the corresponding log level for the given string
@@ -99,6 +100,9 @@ public:
 
     /// Switch logging on. Log messages will be displayed.
     Logger& setLogLevel(LogLevel level);
+
+    /// Set Profiling to Logs On/Off
+    Logger& setProfiling(bool value);
 
     /// Start a new log message. But this is not the recommended way,
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
@@ -118,6 +122,9 @@ private:
 
     /// Log level
     LogLevel _logLevel;
+
+    /// Profiling On/Off
+    bool _profiling;
 
     /// Separator for the logging
     std::string _separator;

@@ -63,7 +63,7 @@ void SupervisorService::runService()
                                                 << "\nTransferred: " << event.transferred()
                                                 << commit;
 
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "[profiling:transfer]"
+                FTS3_COMMON_LOGGER_NEWLOG(PROF) << "[profiling:transfer]"
                                                 << " file_id=" << event.file_id()
                                                 << " timestamp=" << event.gfal_perf_timestamp()/1000
                                                 << " inst_throughput=" << event.instantaneous_throughput()

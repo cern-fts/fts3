@@ -36,8 +36,8 @@ MonitoringMessaging=true
 # Directory where the internal FTS3 messages are written
 MessagingDirectory=/var/lib/fts3
 
-# Profiling interval in seconds. If set to 0, it will be disabled
-Profiling=0
+# Enable Profiling log messages
+Profiling=false
 
 # Log directories
 TransferLogDirectory=/var/log/fts3/transfers

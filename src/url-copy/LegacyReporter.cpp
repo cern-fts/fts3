@@ -129,10 +129,26 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     producer.runProducerLog(log);
 
     // Status
+
+    if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred Bytes Decreased, not sending perf to server: previous="
+                                           << transfer.previousPingTransferredBytes
+                                           << " next="
+                                           << transfer.transferredBytes
+                                           << commit;
+        return;
+    }
+    if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
+                                           << transfer.averageThroughput
+                                           << " instantaneous="
+                                           << transfer.instantaneousThroughput
+                                           << commit;
+        return;
+    }
     events::Message status;
 
     status.set_timestamp(millisecondsSinceEpoch());
-    status.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
     status.set_source_se(Uri::parse(transfer.source.fullUri).getSeName());
@@ -140,7 +156,6 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     status.set_process_id(getpid());
     status.set_filesize(transfer.fileSize);
     status.set_time_in_secs(transfer.getTransferDurationInSeconds());
-    status.set_transferred_since_last_ping(transfer.fileSize-transfer.previousPingTransferredBytes);
 
     if (transfer.error) {
         std::stringstream fullErrMsg;
@@ -162,10 +177,35 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         status.set_errcode(0);
         status.set_transfer_status("FINISHED");
 
+        status.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
+
+        if (transfer.fileSize < transfer.previousPingTransferredBytes) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred More Bytes Than filesize: fileSize="
+                                               << transfer.fileSize
+                                               << " previousPingTransferredBytes="
+                                               << transfer.previousPingTransferredBytes
+                                               << commit;
+            status.set_transferred_since_last_ping(0);
+        }
+        else {
+            status.set_transferred_since_last_ping(transfer.fileSize-transfer.previousPingTransferredBytes);
+        }
+
         // Message Throughput in MiB/sec
         if (transfer.averageThroughput > 0) { // Throughput from gfal PerformanceCallback's
-            status.set_throughput(transfer.averageThroughput / 1024.0);
-            status.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
+            if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
+                                                   << transfer.averageThroughput
+                                                   << " instantaneous="
+                                                   << transfer.instantaneousThroughput
+                                                   << commit;
+                status.set_throughput(0.0);
+                status.set_instantaneous_throughput(0.0);
+            }
+            else {
+                status.set_throughput(transfer.averageThroughput / 1024.0);
+                status.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
+            }
         }
         else { // Throughput must be computed manually (short transfers)
             double transferDuration = transfer.getTransferDurationInSeconds(); // in s
@@ -174,6 +214,9 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
                 double throughput = transferred/transferDuration; // in MiB/s
                 status.set_throughput(throughput);
                 status.set_instantaneous_throughput(throughput);
+            } else {
+                status.set_throughput(0.0);
+                status.set_instantaneous_throughput(0.0);
             }
         }
     }
@@ -289,8 +332,25 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
 void LegacyReporter::sendPing(Transfer &transfer)
 {
+    if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred Bytes Decreased, not sending perf to server: previous="
+                                           << transfer.previousPingTransferredBytes
+                                           << " next="
+                                           << transfer.transferredBytes
+                                           << commit;
+        return;
+    }
+    if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
+                                           << transfer.averageThroughput
+                                           << " instantaneous="
+                                           << transfer.instantaneousThroughput
+                                           << commit;
+        return;
+    }
     events::MessageUpdater ping;
     ping.set_timestamp(millisecondsSinceEpoch());
+    // Note: elapsedAtPerf does not start when transfer.start is set. (gfal bug)
     ping.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
     ping.set_job_id(transfer.jobId);
     ping.set_file_id(transfer.fileId);
@@ -310,9 +370,9 @@ void LegacyReporter::sendPing(Transfer &transfer)
         zmq::message_t message(serialized.size());
         memcpy(message.data(), serialized.c_str(), serialized.size());
         zmqPingSocket.send(message, 0);
-        transfer.previousPingTransferredBytes = transfer.transferredBytes;
     }
     catch (const std::exception &error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;
     }
+    transfer.previousPingTransferredBytes = transfer.transferredBytes;
 }
