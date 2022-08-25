@@ -83,7 +83,7 @@ void BringOnlineTask::run(const boost::any &)
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);
 
-            if (errors[i] && errors[i]->code != EOPNOTSUPP) {
+            if (errors[i]) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) <<
                     "BRINGONLINE FAILED for " << urls[i] << ": "
                     << errors[i]->code << " " << errors[i]->message
@@ -94,19 +94,7 @@ void BringOnlineTask::run(const boost::any &)
                         "FAILED", JobError("STAGING", errors[i])
                     );
                 }
-            }
-            else if (errors[i] && errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i] << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-            }
-            else
-            {
+            } else {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR)
                     << "BRINGONLINE FAILED for " << urls[i] << ": returned -1 but error was not set "
                     << commit;
@@ -139,20 +127,7 @@ void BringOnlineTask::run(const boost::any &)
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
                     ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
-            }
-            else if (errors[i]->code == EOPNOTSUPP) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrl(urls[i]);
-            }
-            else
-            {
+            } else {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE FAILED for " << urls[i] << ": "
                     << errors[i]->code << " " << errors[i]->message
