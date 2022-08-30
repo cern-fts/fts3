@@ -68,7 +68,7 @@ void PollTask::run(const boost::any&)
                     << commit;
                 forcePoll = true;
             }
-            else if (errors[i] && errors[i]->code != EOPNOTSUPP) {
+            else if (errors[i]) {
                 failedUrls.push_back(urls[i]);
 
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -81,21 +81,7 @@ void PollTask::run(const boost::any&)
                         "FAILED", JobError("STAGING", errors[i])
                     );
                 }
-            }
-            else if (errors[i] && errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for " << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                        "FINISHED", JobError()
-                    );
-                 }
-            }
-            else
-            {
+            } else {
                 failedUrls.push_back(urls[i]);
 
                 FTS3_COMMON_LOGGER_NEWLOG(ERR)
@@ -142,21 +128,7 @@ void PollTask::run(const boost::any&)
                     << ". Communication error, soft failure: " << errors[i]->message
                     << commit;
                 forcePoll = true;
-            }
-            else if (errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrl(urls[i]);
-            }
-            else
-            {
+            } else {
                 failedUrls.push_back(urls[i]);
 
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)

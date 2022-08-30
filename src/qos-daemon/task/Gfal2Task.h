@@ -111,15 +111,23 @@ protected:
                     (char *) infosys.c_str(), NULL);
             }
 
-            const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
+            // Make sure "TURL_PROTOCOLS" is configured. If empty, assign default values
+            const char* default_turl_protocols[] = {"https", "gsiftp", "root"};
+            gsize protocols_len = 0;
 
-            gfal2_set_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
+            gfal2_get_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", &protocols_len, &error);
+
             if (error) {
-                std::stringstream ss;
-                ss << operation << " could not set the protocol list " << error->code << " "
-                    << error->message;
                 g_clear_error(&error);
-                throw fts3::common::UserError(ss.str());
+                gfal2_set_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", default_turl_protocols, 3, &error);
+
+                if (error) {
+                    std::stringstream ss;
+                    ss << operation << " failed to set the TURL protocols default list " << error->code << " "
+                       << error->message;
+                    g_clear_error(&error);
+                    throw fts3::common::UserError(ss.str());
+                }
             }
 
             gfal2_set_opt_boolean(gfal2_ctx, "GRIDFTP PLUGIN", "SESSION_REUSE", true, &error);
