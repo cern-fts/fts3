@@ -112,7 +112,7 @@ protected:
             }
 
             // Make sure "TURL_PROTOCOLS" is configured. If empty, assign default values
-            const char* default_turl_protocols[] = {"davs", "https", "gsiftp"};
+            const char* default_turl_protocols[] = {"https", "gsiftp", "root"};
             gsize protocols_len = 0;
 
             gfal2_get_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", &protocols_len, &error);
