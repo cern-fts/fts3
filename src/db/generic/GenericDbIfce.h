@@ -257,6 +257,9 @@ public:
     /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 
+    // Returns list of transfers that need to be force started
+    virtual std::list<TransferFile> getForceStartTransfers() = 0;
+
     /// Returns if this host has been set to drain
     virtual bool getDrain() = 0;
 

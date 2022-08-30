@@ -44,10 +44,9 @@ namespace server
 
 
 FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
-    TransferFileHandler &tfh, bool monitoringMsg, std::string infosys,
+    bool monitoringMsg, std::string infosys,
     std::string ftsHostName, std::string proxy, std::string logDir, std::string msgDir) :
     tf(tf),
-    tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),

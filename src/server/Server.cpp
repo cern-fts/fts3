@@ -30,6 +30,7 @@
 #include "services/optimizer/OptimizerService.h"
 #include "services/transfers/MessageProcessingService.h"
 #include "services/transfers/SupervisorService.h"
+#include "services/transfers/ForceStartTransferService.h"
 
 
 namespace fts3 {
@@ -92,6 +93,7 @@ void Server::start()
     addService(new TransfersService);
     addService(new ReuseTransfersService);
     addService(new SupervisorService);
+    addService(new ForceStartTransferService(heartBeatService));
 }
 
 
