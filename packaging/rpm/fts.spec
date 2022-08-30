@@ -9,7 +9,7 @@
 %endif
 
 Name:       fts
-Version:    3.12.0
+Version:    3.12.1
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -513,6 +513,10 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Tue Aug 30 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.1-1
+- Fail staging transfers met with operation not supported
+- Use the Gfal2 configured bringonline TURL setting
+
 * Thu Jul 14 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.0-1
 - New minor release
 - Tape REST API functionality for Eviction and ArchiveInfo
