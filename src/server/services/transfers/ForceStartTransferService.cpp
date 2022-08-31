@@ -27,7 +27,7 @@ using namespace db;
 namespace fts3 {
 namespace server {
 
-ForceStartTransferService::ForceStartTransferService(HeartBeat *beat): BaseService("ForceStartTransferService"), beat(beat) {
+ForceStartTransferService::ForceStartTransferService(HeartBeat *beat) : BaseService("ForceStartTransferService"), beat(beat) {
     logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
@@ -57,7 +57,7 @@ void ForceStartTransferService::forceRunJobs() {
 
         std::map<std::pair<std::string, std::string>, std::string> proxies;
 
-        for (auto & tf : tfs) {
+        for (auto &tf: tfs) {
             if (boost::this_thread::interruption_requested()) {
                 execPool.interrupt();
                 return;
@@ -72,8 +72,8 @@ void ForceStartTransferService::forceRunJobs() {
                 proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
             }
 
-            FileTransferExecutor *exec = new FileTransferExecutor(tf, monitoringMessages, infosys,
-                                                                  ftsHostName,proxies[proxy_key], logDir, msgDir);
+            FileTransferExecutor *exec = new FileTransferExecutor(tf, monitoringMessages, infosys, ftsHostName,
+                                                                  proxies[proxy_key], logDir, msgDir);
             execPool.start(exec);
 
             if (--availableUrlCopySlots <= 0) {
@@ -85,14 +85,14 @@ void ForceStartTransferService::forceRunJobs() {
         // wait for all the workers to finish
         execPool.join();
         int scheduled = execPool.reduce(std::plus<int>());
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<"Force Start Threadpool processed: " << tfs.size()
-                                        << " files (" << scheduled << " have been scheduled)" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Force Start Threadpool processed: " << tfs.size() << " files ("
+                                        << scheduled << " have been scheduled)" << commit;
 
-    } catch (const boost::thread_interrupted&) {
+    } catch (const boost::thread_interrupted &) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;
         execPool.interrupt();
         execPool.join();
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
@@ -113,10 +113,10 @@ void ForceStartTransferService::runService() {
             if (beat->isLeadNode()) {
                 forceRunJobs();
             }
-        } catch(std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() <<  fts3::common::commit;
-        } catch(...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  fts3::common::commit;
+        } catch (std::exception &e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() << fts3::common::commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" << fts3::common::commit;
         }
     }
 }
