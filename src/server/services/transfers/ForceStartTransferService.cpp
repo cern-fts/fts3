@@ -120,7 +120,9 @@ void ForceStartTransferService::runService() {
                 continue;
             }
 
-            forceRunJobs();
+            if (beat->isLeadNode()) {
+                forceRunJobs();
+            }
         }
         catch(std::exception& e)
         {
