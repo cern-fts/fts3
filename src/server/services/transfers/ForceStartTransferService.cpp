@@ -55,6 +55,10 @@ void ForceStartTransferService::forceRunJobs() {
     try {
         std::list<TransferFile> tfs = db::DBSingleton::instance().getDBObjectInstance()->getForceStartTransfers();
 
+        if (tfs.empty()) {
+            return;
+        }
+
         std::map<std::pair<std::string, std::string>, std::string> proxies;
 
         for (auto &tf: tfs) {
