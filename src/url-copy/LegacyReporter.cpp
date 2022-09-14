@@ -268,7 +268,10 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.tr_timestamp_start = transfer.stats.process.start;
     completed.tr_timestamp_complete = transfer.stats.process.end;
 
-    completed.ipv6 = transfer.stats.ipv6Used;
+    // Keep 'ipv6' flag for legacy purposes
+    completed.ipv6 = transfer.stats.ipver == Transfer::IPver::IPv6;
+    // New 'ipver' field keyword ("ipv6" | "ipv4" | "unknown")
+    completed.ipver = Transfer::IPverToIPv6String(transfer.stats.ipver);
     completed.eviction_code = transfer.stats.evictionRetc;
     completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;

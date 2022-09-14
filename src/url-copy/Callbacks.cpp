@@ -143,8 +143,11 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     else if (e->stage == GFAL_EVENT_CLOSE_EXIT && e->domain == SRM_DOMAIN) {
         transfer->stats.srmFinalization.end = e->timestamp;
     }
+    else if (e->stage == GFAL_EVENT_IPV4) {
+        transfer->stats.ipver = Transfer::IPver::IPv4;
+    }
     else if (e->stage == GFAL_EVENT_IPV6) {
-        transfer->stats.ipv6Used = true;
+        transfer->stats.ipver = Transfer::IPver::IPv6;
     }
     else if (e->stage == GFAL_EVENT_EVICT) {
         try {

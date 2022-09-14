@@ -104,6 +104,7 @@ public:
     bool        is_recoverable;
     bool        ipv6;
     int         eviction_code;
+    std::string ipver;
     std::string final_destination;
     std::string transfer_type;
 };

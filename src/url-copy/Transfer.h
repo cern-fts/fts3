@@ -38,6 +38,23 @@ class Transfer
 public:
     typedef std::list<Transfer> TransferList;
 
+    enum class IPver {
+        UNKNOWN,
+        IPv4,
+        IPv6
+    };
+
+    // Transform IPver enum to 'ipver' keyword ("ipv6" | "ipv4" | "unknown")
+    static std::string IPverToIPv6String(const IPver ipver) {
+        if (ipver == IPver::UNKNOWN) {
+            return "unknown";
+        } else if (ipver == IPver::IPv6) {
+            return "ipv6";
+        } else {
+            return "ipv4";
+        }
+    }
+
     struct Statistics {
         struct Interval {
             uint64_t start, end;
@@ -52,15 +69,15 @@ public:
 
         Interval process;
 
-        ///< Flag for IPv6 transfer: true = IPv6 used, false = not known
-        bool ipv6Used;
+        ///< Flag for IP version used during transfer
+        IPver ipver;
         ///< Eviction return code: 0 = ok, > 0 error code, -1 = not set
         int32_t evictionRetc;
 
         std::string finalDestination;
         std::string transferType;
 
-        Statistics(): ipv6Used(false), evictionRetc(-1) {};
+        Statistics(): ipver(IPver::UNKNOWN), evictionRetc(-1) {};
     };
 
     /**
