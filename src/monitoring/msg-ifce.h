@@ -46,7 +46,7 @@ public:
         tr_timestamp_complete(0),
         retry(0), retry_max(0),
         job_m_replica(false), job_multihop(false), is_lasthop(false),
-        is_recoverable(false), ipv6(false), eviction_code(-1)
+        is_recoverable(false), eviction_code(-1)
     {}
     ~TransferCompleted() {}
 
@@ -102,8 +102,8 @@ public:
     bool        is_lasthop;
     std::string job_state;
     bool        is_recoverable;
-    bool        ipv6;
     int         eviction_code;
+    std::string ipv6;
     std::string final_destination;
     std::string transfer_type;
 };

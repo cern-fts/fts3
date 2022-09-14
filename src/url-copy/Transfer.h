@@ -25,6 +25,7 @@
 #include <list>
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <map>
 
 #include "common/Uri.h"
 #include "UrlCopyError.h"
@@ -37,6 +38,23 @@ class Transfer
 {
 public:
     typedef std::list<Transfer> TransferList;
+
+    enum class IPver {
+        UNKNOWN,
+        IPv4,
+        IPv6
+    };
+
+    // Transform IPver to 'ipv6' keyword ("true | false | N/A")
+    static std::string IPverToIPv6String(const IPver ipver) {
+        if (ipver == IPver::UNKNOWN) {
+            return "N/A";
+        } else if (ipver == IPver::IPv6) {
+            return "true";
+        } else {
+            return "false";
+        }
+    }
 
     struct Statistics {
         struct Interval {
@@ -52,15 +70,15 @@ public:
 
         Interval process;
 
-        ///< Flag for IPv6 transfer: true = IPv6 used, false = not known
-        bool ipv6Used;
+        ///< Flag for IP version used during transfer
+        IPver ipver;
         ///< Eviction return code: 0 = ok, > 0 error code, -1 = not set
         int32_t evictionRetc;
 
         std::string finalDestination;
         std::string transferType;
 
-        Statistics(): ipv6Used(false), evictionRetc(-1) {};
+        Statistics(): ipver(IPver::UNKNOWN), evictionRetc(-1) {};
     };
 
     /**
