@@ -188,11 +188,19 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         completed.destination_srm_version = "2.2.0";
     }
 
+    std::string protocol = transfer.destination.protocol;
+    if (protocol.empty()) {
+        protocol = transfer.source.protocol;
+    }
+
     completed.vo = opts.voName;
     completed.source_url = transfer.source.fullUri;
     completed.dest_url = transfer.destination.fullUri;
     completed.source_hostname = transfer.source.host;
     completed.dest_hostname = transfer.destination.host;
+    completed.source_se = transfer.source.getSeName();
+    completed.dest_se = transfer.destination.getSeName();
+    completed.protocol = protocol;
     completed.t_channel = transfer.getChannel();
     completed.channel_type = "urlcopy";
     completed.user_dn = replaceMetadataString(opts.userDn);
@@ -249,6 +257,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         }
     }
 
+    if (completed.final_transfer_state == "Ok") {
+        completed.final_transfer_state_flag = 1;
+    } else if (completed.final_transfer_state == "Error") {
+        completed.final_transfer_state_flag = 0;
+    }
+
     completed.total_bytes_transferred = transfer.transferredBytes;
     completed.number_of_streams = params.getNumberOfStreams();
     completed.tcp_buffer_size = params.getTcpBuffersize();
@@ -267,6 +281,18 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.time_spent_in_srm_finalization_end = transfer.stats.srmFinalization.end;
     completed.tr_timestamp_start = transfer.stats.process.start;
     completed.tr_timestamp_complete = transfer.stats.process.end;
+
+    completed.transfer_time_ms = transfer.stats.transfer.end - transfer.stats.transfer.start;
+    completed.operation_time_ms = transfer.stats.process.end - transfer.stats.process.start;
+    completed.throughput_bps = (completed.file_size > 0) ? ((double) completed.file_size / (completed.transfer_time_ms / 1000.0)) : -1;
+
+    completed.srm_preparation_time_ms = transfer.stats.srmPreparation.end - transfer.stats.srmPreparation.start;
+    completed.srm_finalization_time_ms = transfer.stats.srmFinalization.end - transfer.stats.srmFinalization.start;
+    completed.srm_overhead_time_ms = completed.srm_preparation_time_ms + completed.srm_finalization_time_ms;
+    completed.srm_overhead_percentage = ((double) completed.srm_overhead_time_ms * 100 / completed.operation_time_ms);
+
+    completed.checksum_source_time_ms = transfer.stats.sourceChecksum.end - transfer.stats.sourceChecksum.start;
+    completed.checksum_dest_time_ms = transfer.stats.destChecksum.end - transfer.stats.destChecksum.start;
 
     completed.ipv6 = transfer.stats.ipv6Used;
     completed.eviction_code = transfer.stats.evictionRetc;
