@@ -33,7 +33,7 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "msg-bus/producer.h"
-#include "../context/JobContext.h"
+#include "qos-daemon/context/JobContext.h"
 
 /**
  * A base class for carrying out asynchronous state updates,

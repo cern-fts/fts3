@@ -27,7 +27,7 @@
 
 #include "common/ThreadPool.h"
 
-#include "../task/Gfal2Task.h"
+#include "qos-daemon/task/Gfal2Task.h"
 
 
 /**

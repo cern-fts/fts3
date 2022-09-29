@@ -34,12 +34,12 @@ std::set<std::pair<std::string, std::string>> BringOnlineTask::active_urls;
 void BringOnlineTask::run(const boost::any &)
 {
     char token[512] = {0};
-    std::set<std::string> urlSet = ctx->getUrls();
+    std::set<std::string> urlSet = ctx.getUrls();
     if (urlSet.empty())
         return;
 
     // Cancel early if we are dealing with an HTTP endpoint
-    std::string protocol = Uri::parse(ctx->getStorageEndpoint()).protocol;
+    std::string protocol = Uri::parse(ctx.getStorageEndpoint()).protocol;
 
     std::vector<const char*> urls;
     std::vector<const char*> metadata;
@@ -47,23 +47,23 @@ void BringOnlineTask::run(const boost::any &)
     metadata.reserve(urlSet.size());
     for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
         urls.emplace_back(set_i->c_str());
-        metadata.emplace_back(ctx->getMetadata(*set_i).c_str());
+        metadata.emplace_back(ctx.getMetadata(*set_i).c_str());
     }
 
     std::vector<GError*> errors(urls.size(), NULL);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing bring-online for: " << urls.size() << " files"
-                                    << " copy-pin-lifetime=" << ctx->getPinlifetime()
-                                    << " bring-online-timeout=" << ctx->getBringonlineTimeout()
-                                    << " storage=" << ctx->getStorageEndpoint() << commit;
+                                    << " copy-pin-lifetime=" << ctx.getPinlifetime()
+                                    << " bring-online-timeout=" << ctx.getBringonlineTimeout()
+                                    << " storage=" << ctx.getStorageEndpoint() << commit;
 
     int status = gfal2_bring_online_list_v2(
                      gfal2_ctx,
                      static_cast<int>(urls.size()),
                      urls.data(),
                      metadata.data(),
-                     ctx->getPinlifetime(),
-                     ctx->getBringonlineTimeout(),
+                     ctx.getPinlifetime(),
+                     ctx.getBringonlineTimeout(),
                      token,
                      sizeof(token),
                      1,
@@ -72,7 +72,7 @@ void BringOnlineTask::run(const boost::any &)
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
-            auto ids = ctx->getIDs(urls[i]);
+            auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i] && errors[i]->code != EOPNOTSUPP) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) <<
@@ -81,7 +81,7 @@ void BringOnlineTask::run(const boost::any &)
                     << commit;
 
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx->updateState(it->first, it->second,
+                    ctx.updateState(it->first, it->second,
                         "FAILED", JobError("STAGING", errors[i])
                     );
                 }
@@ -93,7 +93,7 @@ void BringOnlineTask::run(const boost::any &)
                     << urls[i] << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx->updateState(it->first, it->second, "FINISHED", JobError());
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
             }
             else
@@ -102,7 +102,7 @@ void BringOnlineTask::run(const boost::any &)
                     << "BRINGONLINE FAILED for " << urls[i] << ": returned -1 but error was not set "
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx->updateState(it->first, it->second,
+                    ctx.updateState(it->first, it->second,
                         "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
                     );
                 }
@@ -111,16 +111,16 @@ void BringOnlineTask::run(const boost::any &)
     }
     else if (status == 0) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << ": "
-        << ctx->getLogMsg() << commit;
+        << ctx.getLogMsg() << commit;
 
-        ctx->updateState(token);
-        ctx->getWaitingRoom().add(new PollTask(std::move(*this), token));
+        ctx.updateState(token);
+        ctx.getWaitingRoom().add(new PollTask(std::move(*this), token));
     }
     else {
         // No need to poll
         for (size_t i = 0; i < urls.size(); ++i)
         {
-            auto ids = ctx->getIDs(urls[i]);
+            auto ids = ctx.getIDs(urls[i]);
 
             if (errors[i] == NULL) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -128,7 +128,7 @@ void BringOnlineTask::run(const boost::any &)
                     << urls[i] << " , got token " << token
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx->updateState(it->first, it->second, "FINISHED", JobError());
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
             }
             else if (errors[i]->code == EOPNOTSUPP) {
@@ -138,9 +138,9 @@ void BringOnlineTask::run(const boost::any &)
                     << ": not supported, keep going (" << errors[i]->message << ")"
                     << commit;
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx->updateState(it->first, it->second, "FINISHED", JobError());
+                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
                 }
-                ctx->removeUrl(urls[i]);
+                ctx.removeUrl(urls[i]);
             }
             else
             {
@@ -150,7 +150,7 @@ void BringOnlineTask::run(const boost::any &)
                     << commit;
 
                 for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx->updateState(it->first, it->second,
+                    ctx.updateState(it->first, it->second,
                         "FAILED", JobError("STAGING", errors[i])
                     );
                 }

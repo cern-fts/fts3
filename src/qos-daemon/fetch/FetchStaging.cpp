@@ -63,7 +63,7 @@ void FetchStaging::fetch()
                 continue;
             }
 
-            std::map<GroupByType, StagingContext*> tasks;
+            std::map<GroupByType, std::unique_ptr<StagingContext>> tasks;
             std::vector<StagingOperation> files;
 
             time_t start = time(0);
@@ -82,7 +82,7 @@ void FetchStaging::fetch()
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
                     tasks.insert(std::make_pair(
-                        key, StagingContext::getStagingContext(QoSServer::instance(), *it_f))
+                        key, StagingContext::createStagingContext(QoSServer::instance(), *it_f))
                     );
                 }
                 else {
@@ -95,7 +95,7 @@ void FetchStaging::fetch()
                 try
                 {
                     if(it_t->second->updateState()) {
-                        threadpool.start(new BringOnlineTask(it_t->second));
+                        threadpool.start(new BringOnlineTask(std::move(*(it_t->second.get()))));
                     }
                 }
                 catch(UserError const & ex)
@@ -140,17 +140,17 @@ void FetchStaging::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
-    std::map<std::string, StagingContext*> tasks;
+    std::map<std::string, std::unique_ptr<StagingContext>> tasks;
 
     for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f) {
         auto it_t = tasks.find(it_f->token);
-        if (it_t == tasks.end())
-            tasks.insert(std::make_pair(
-                it_f->token, StagingContext::getStagingContext(QoSServer::instance(), *it_f)
-                )
-            );
-        else
+        if (it_t == tasks.end()) {
+            tasks.insert(std::make_pair(it_f->token,
+                                        StagingContext::createStagingContext(QoSServer::instance(), *it_f))
+                                        );
+        } else {
             it_t->second->add(*it_f);
+        }
     }
 
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
@@ -160,7 +160,7 @@ void FetchStaging::recoverStartedTasks()
             for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
             }
-            threadpool.start(new PollTask(it_t->second, it_t->first));
+            threadpool.start(new PollTask(std::move(*it_t->second.get()), it_t->first));
         }
         catch (UserError const & ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;

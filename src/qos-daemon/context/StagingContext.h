@@ -32,7 +32,7 @@
 #include "cred/DelegCred.h"
 
 #include "JobContext.h"
-#include "../QoSServer.h"
+#include "qos-daemon/QoSServer.h"
 
 
 /**
@@ -157,7 +157,7 @@ public:
         return (errorCount[surl] += 1);
     }
 
-    static StagingContext* getStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp);
+    static std::unique_ptr<StagingContext> createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp);
 
 protected:
     StagingStateUpdater &stateUpdater;

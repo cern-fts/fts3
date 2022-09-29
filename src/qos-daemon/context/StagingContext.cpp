@@ -97,12 +97,12 @@ std::set<std::string> StagingContext::getSurlsToAbort(
 }
 
 
-StagingContext* StagingContext::getStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) {
+std::unique_ptr<StagingContext> StagingContext::createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) {
     std::string protocol = Uri::parse(stagingOp.surl).protocol;
     if ( protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
-        return new HttpStagingContext(qosServer, stagingOp);
+        return std::unique_ptr<StagingContext>(new HttpStagingContext(qosServer, stagingOp));
     }
     else {
-        return new StagingContext(qosServer, stagingOp);
+        return std::unique_ptr<StagingContext>(new StagingContext(qosServer, stagingOp));
     }
 }
