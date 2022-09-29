@@ -18,13 +18,11 @@
  * limitations under the License.
  */
 
-#include "StagingContext.h"
-
-#include <sstream>
 #include <unordered_set>
-#include "cred/CredUtility.h"
-#include "HttpStagingContext.h"
 #include "common/Uri.h"
+
+#include "StagingContext.h"
+#include "HttpStagingContext.h"
 
 
 void StagingContext::add(const StagingOperation& stagingOp)
@@ -45,21 +43,7 @@ void StagingContext::add(const StagingOperation& stagingOp)
         storageEndpoint = Uri::parse(stagingOp.surl).getSeName();
     }
 
-    if (!stagingOp.surl.empty() && !stagingOp.jobId.empty() && stagingOp.fileId > 0) {
-        urlToMetadata.insert({stagingOp.surl, stagingOp.stagingMetadata});
-        add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
-    }
-}
-
-
-std::string StagingContext::getMetadata(const std::string& url) const
-{
-    std::string ret = "";
-
-    auto it = urlToMetadata.find(url);
-    if (it != urlToMetadata.end())
-        ret = it->second;
-    return ret;
+    add(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
 }
 
 

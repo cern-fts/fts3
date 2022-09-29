@@ -138,13 +138,6 @@ public:
         return minStagingStartTime;
     }
 
-    /**
-    * For a given URL return the corresponding metadata
-    * @param : url
-    * @return : metadata
-    */
-    std::string getMetadata(const std::string& url) const;
-
     bool hasTimeoutExpired();
 
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
@@ -167,8 +160,6 @@ protected:
     int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
     time_t minStagingStartTime; ///< first staging start timestamp of the batch
     std::string storageEndpoint; ///< storage endpoint of the batch
-    /// URL -> Staging metadata
-    std::map<std::string ,std::string> urlToMetadata;
 };
 
 #endif // STAGINGCONTEXT_H_

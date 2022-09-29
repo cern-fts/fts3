@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma  once
+#pragma once
 #ifndef FTS3_HTTPSTAGINGCONTEXT_H
 #define FTS3_HTTPSTAGINGCONTEXT_H
 
@@ -24,19 +24,31 @@ class HttpStagingContext : public StagingContext {
 
 public:
 
+    using JobContext::isValidOp;
+
     HttpStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) :
             StagingContext(qosServer, stagingOp)
     {}
 
     HttpStagingContext(const HttpStagingContext& copy) :
-            StagingContext(copy)
+            StagingContext(copy), urlToMetadata(copy.urlToMetadata)
     {}
     HttpStagingContext(HttpStagingContext&& copy) :
-            StagingContext(copy)
+            StagingContext(std::move(copy)), urlToMetadata(std::move(copy.urlToMetadata))
     {}
 
     void add(const StagingOperation& stagingOp) override;
 
+    /**
+    * For a given URL return the corresponding metadata
+    * @param : url
+    * @return : metadata
+    */
+    std::string getMetadata(const std::string& url) const;
+
+private:
+    /// URL -> Staging metadata
+    std::map<std::string, std::string> urlToMetadata;
 };
 
 

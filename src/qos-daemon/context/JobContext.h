@@ -165,6 +165,10 @@ public:
     }
 
 protected:
+    /**
+     * Checks if the SURL, jobId and fileId are valid
+     */
+    bool isValidOp(const std::string& url, const std::string& jobId, int fileId);
 
     /// Job ID -> URL -> list of file IDs
     std::map< std::string, std::map<std::string, std::vector<uint64_t> > > jobs;

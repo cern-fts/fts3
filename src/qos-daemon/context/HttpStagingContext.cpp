@@ -19,7 +19,22 @@
 // Only add unique surls to urlToIDs
 void HttpStagingContext::add(const StagingOperation& stagingOp)
 {
-    if (!urlToIDs.count(stagingOp.surl)) {
+    bool validOp = isValidOp(stagingOp.surl, stagingOp.jobId, stagingOp.fileId);
+
+    if (validOp && !urlToIDs.count(stagingOp.surl)) {
+        urlToMetadata.insert({stagingOp.surl, stagingOp.stagingMetadata});
         StagingContext::add(stagingOp);
     }
+}
+
+
+std::string HttpStagingContext::getMetadata(const std::string& url) const
+{
+    auto it = urlToMetadata.find(url);
+
+    if (it != urlToMetadata.end()) {
+        return it->second;
+    }
+
+    return "";
 }

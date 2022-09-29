@@ -103,7 +103,7 @@ JobContext::JobContext(const std::string &dn, const std::string &vo,
 
 void JobContext::add(const std::string& surl, const std::string& jobId, uint64_t fileId)
 {
-    if (!surl.empty() && !jobId.empty() && fileId > 0) {
+    if (isValidOp(surl, jobId, fileId)) {
         jobs[jobId][surl].push_back(fileId);
         urlToIDs.insert(
         { surl,
@@ -166,4 +166,8 @@ std::string JobContext::getLogMsg() const
     }
 
     return ss.str();
+}
+
+bool JobContext::isValidOp(const std::string& surl, const std::string& jobId, int fileId) {
+    return (!surl.empty() && !jobId.empty() && fileId > 0);
 }
