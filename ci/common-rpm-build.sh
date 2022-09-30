@@ -3,12 +3,12 @@ set -e
 
 function print_info {
   printf "======================\n"
-  printf "Distribution:\t%s\n" "${DIST}"
-  printf "Dist name:\t%s\n" "${DISTNAME}"
-  printf "Build type:\t%s\n" "${BUILD}"
-  printf "Branch:\t\t%s\n" "${BRANCH}"
-  printf "Release:\t%s\n" "${RELEASE}"
-  printf "DMC Repository:\t%s\n" "${REPO_FILE}"
+  printf "%-16s%s\n" "Distribution:" "${DIST}"
+  printf "%-16s%s\n" "Dist name:" "${DISTNAME}"
+  printf "%-16s%s\n" "Build type:" "${BUILD}"
+  printf "%-16s%s\n" "Branch:" "${BRANCH}"
+  printf "%-16s%s\n" "Release:" "${RELEASE}"
+  printf "%-16s%s\n" "DMC Repository:" "${REPO_FILE}"
   printf "======================\n"
 }
 
@@ -23,23 +23,16 @@ else
   printf "Using environment set variable BRANCH=%s\n" "${BRANCH}"
 fi
 
-if [[ $BRANCH =~ ^(tags/)?(v)[.0-9]+(-[0-9]+)?$ ]]; then
-  RELEASE=
+if [[ $BRANCH =~ ^(tags/)?(v)[.0-9]+(-(rc)?([0-9]+))?$ ]]; then
+  RELEASE="${BASH_REMATCH[4]}${BASH_REMATCH[5]}"
   BUILD="rc"
 fi
 
 DIST=$(rpm --eval "%{dist}" | cut -d. -f2)
 DISTNAME=${DIST}
 
-# Write repository files to /etc/yum.repos.d/
-./ci/write-repo-file.sh
-
-if [[ -z ${DMC_REPO} ]]; then
-  REPO_FILE="dmc-develop-${DISTNAME}.repo"
-else
-  REPO_FILE="dmc-${DMC_REPO}-${DISTNAME}.repo"
-fi
-
+# Write repository files to /etc/yum.repos.d/ based on the branch name
+REPO_FILE=$(./ci/write-repo-file.sh)
 print_info
 
 RPMBUILD=${PWD}/build
