@@ -27,8 +27,10 @@
 #include "server/DrainMode.h"
 
 #include "FetchStaging.h"
-#include "../task/BringOnlineTask.h"
-#include "../task/PollTask.h"
+#include "qos-daemon/task/BringOnlineTask.h"
+#include "qos-daemon/task/HttpBringOnlineTask.h"
+#include "qos-daemon/task/PollTask.h"
+#include "qos-daemon/task/HttpPollTask.h"
 
 #include <ctime>
 
@@ -63,7 +65,7 @@ void FetchStaging::fetch()
                 continue;
             }
 
-            std::map<GroupByType, StagingContext> tasks;
+            std::map<GroupByType, std::unique_ptr<StagingContext>> tasks;
             std::vector<StagingOperation> files;
 
             time_t start = time(0);
@@ -82,13 +84,11 @@ void FetchStaging::fetch()
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {
                     tasks.insert(std::make_pair(
-                        key, StagingContext(
-                        		QoSServer::instance(), *it_f
-                        ))
+                        key, StagingContext::createStagingContext(QoSServer::instance(), *it_f))
                     );
                 }
                 else {
-                    it_t->second.add(*it_f);
+                    it_t->second->add(*it_f);
                 }
             }
 
@@ -96,7 +96,14 @@ void FetchStaging::fetch()
             {
                 try
                 {
-                    threadpool.start(new BringOnlineTask(it_t->second));
+                    if (it_t->second->updateStateToStarted()) {
+                        std::string protocol = it_t->second->getStorageProtocol();
+                        if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+                            threadpool.start(new HttpBringOnlineTask(static_cast<HttpStagingContext&&>(std::move(*(it_t->second)))));
+                        } else {
+                            threadpool.start(new BringOnlineTask(std::move(*(it_t->second))));
+                        }
+                    }
                 }
                 catch(UserError const & ex)
                 {
@@ -140,28 +147,34 @@ void FetchStaging::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
-    std::map<std::string, StagingContext> tasks;
+    std::map<std::string, std::unique_ptr<StagingContext>> tasks;
 
     for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f) {
         auto it_t = tasks.find(it_f->token);
-        if (it_t == tasks.end())
-            tasks.insert(std::make_pair(
-                it_f->token, StagingContext(
-                		QoSServer::instance(), *it_f
-                ))
-            );
-        else
-            it_t->second.add(*it_f);
+        if (it_t == tasks.end()) {
+            tasks.insert(std::make_pair(it_f->token,
+                                        StagingContext::createStagingContext(QoSServer::instance(), *it_f))
+                                        );
+        } else {
+            it_t->second->add(*it_f);
+        }
     }
 
     for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
         try {
-            std::set<std::string> urls = it_t->second.getUrls();
+            std::set<std::string> urls = it_t->second->getUrls();
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered with token " << it_t->first << commit;
             for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
             }
-            threadpool.start(new PollTask(it_t->second, it_t->first));
+
+            std::string protocol = it_t->second->getStorageProtocol();
+
+            if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+                threadpool.start(new HttpPollTask(static_cast<HttpStagingContext&&>(std::move(*it_t->second)), it_t->first));
+            } else {
+                threadpool.start(new PollTask(std::move(*it_t->second), it_t->first));
+            }
         }
         catch (UserError const & ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;

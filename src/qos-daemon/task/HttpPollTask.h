@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2022
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef POLLTASK_H_
-#define POLLTASK_H_
 
 #include <algorithm>
 #include <iterator>
@@ -32,8 +30,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "BringOnlineTask.h"
-
+#include "HttpBringOnlineTask.h"
 
 /**
  * A poll task: checks whether a given bring-online operation was successful
@@ -44,7 +41,7 @@
  * @see StagingTask
  * @see BringOnlineTask
  */
-class PollTask : public BringOnlineTask
+class HttpPollTask : public HttpBringOnlineTask
 {
 public:
     /**
@@ -53,8 +50,8 @@ public:
      * @param ctx : staging context (recover from DB after crash)
      * @param token : token that is needed for polling
      */
-    PollTask(StagingContext&& copy_ctx, const std::string& token) :
-        BringOnlineTask(std::move(copy_ctx)), token(token), nPolls(0), wait_until(0)
+    HttpPollTask(HttpStagingContext&& copy_ctx, const std::string& token) :
+            HttpBringOnlineTask(std::move(copy_ctx)), token(token), nPolls(0), wait_until(0)
     {
         auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
@@ -66,16 +63,16 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(BringOnlineTask && copy, const std::string &token) :
-        BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
+    HttpPollTask(HttpBringOnlineTask && copy, const std::string &token) :
+            HttpBringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
     {
     }
 
     /**
      * Move constructor
      */
-    PollTask(PollTask && copy) :
-        BringOnlineTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(
+    HttpPollTask(HttpPollTask && copy) :
+            HttpBringOnlineTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(
             copy.wait_until)
     {
     }
@@ -83,7 +80,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~PollTask() {}
+    virtual ~HttpPollTask() {}
 
     /**
      * The routine is executed by the thread pool
@@ -130,5 +127,3 @@ private:
     /// wait in the wait room until given time
     time_t wait_until;
 };
-
-#endif // POLLTASK_H_

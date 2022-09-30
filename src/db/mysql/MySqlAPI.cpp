@@ -3670,37 +3670,15 @@ void MySqlAPI::updateFileStateToQosTerminal(const std::string& jobId, uint64_t f
 void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 {
     soci::session sql(*connectionPool);
-    std::vector<MinFileStatus> filesState;
     std::vector<fts3::events::MessageBringonline> messages;
 
-    Consumer consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
     int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
     int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
     int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
 
     try
     {
-        int exitCode = consumer.runConsumerStaging(messages);
-        if(exitCode != 0)
-        {
-            char buffer[128]= {0};
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:"
-                << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-        }
-
-        if(!messages.empty())
-        {
-            for (auto iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
-            {
-                //now restore messages
-                filesState.emplace_back(
-                    iterUpdater->job_id(), iterUpdater->file_id(),
-                    iterUpdater->transfer_status(), iterUpdater->transfer_message(), false
-                );
-            }
-        }
-
-        //now get frash states/files from the database
+        //now get fresh states/files from the database
         soci::rowset<soci::row> rs2 = (sql.prepare <<
             " SELECT DISTINCT vo_name, source_se "
             " FROM t_file "
@@ -3817,7 +3795,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 std::string cred_id = row.get<std::string>("cred_id");
 
                 soci::rowset<soci::row> rs3 = (sql.prepare <<
-                    "SELECT f.source_surl, f.job_id, f.file_id,"
+                    "SELECT f.source_surl, f.staging_metadata, f.job_id, f.file_id,"
                     "   j.copy_pin_lifetime, j.bring_online, j.cred_id, j.user_dn, j.source_space_token "
                     "FROM t_file f JOIN t_job j ON f.job_id = j.job_id "
                     "WHERE "
@@ -3841,6 +3819,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 {
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
+                    std::string metadata = row.get<std::string>("staging_metadata", "");
                     std::string job_id = row.get<std::string>("job_id");
                     uint64_t file_id = row.get<unsigned long long>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
@@ -3857,44 +3836,10 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,
-                        user_dn, cred_id, source_url,
+                        user_dn, cred_id, source_url, metadata,
                         copy_pin_lifetime, bring_online, 0,
                         source_space_token, std::string()
                     );
-
-                    if (!job_id.empty() && file_id > 0)
-                    {
-                        filesState.emplace_back(job_id, file_id, initState, reason, false);
-                    }
-                }
-            }
-        }
-
-        //now update the initial state
-        if(!filesState.empty())
-        {
-            try
-            {
-                updateStagingStateInternal(sql, filesState);
-                filesState.clear();
-            }
-            catch(...)
-            {
-                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
-                //save state and restore afterwards
-                if(!filesState.empty())
-                {
-                    fts3::events::MessageBringonline msg;
-                    for (auto itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
-                    {
-                        msg.set_file_id(itFind->fileId);
-                        msg.set_job_id(itFind->jobId);
-                        msg.set_transfer_status(itFind->state);
-                        msg.set_transfer_message(itFind->reason);
-
-                        //store the states into fs to be restored in the next run of this function
-                        producer.runProducerStaging(msg);
-                    }
                 }
             }
         }
@@ -3992,8 +3937,8 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
         soci::rowset<soci::row> rs3 =
             (
                 sql.prepare <<
-                " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, f.staging_start, f.bringonline_token, "
-                " j.copy_pin_lifetime, j.bring_online, j.user_dn, j.cred_id, j.source_space_token "
+                " SELECT f.vo_name, f.source_surl, f.staging_metadata, f.job_id, f.file_id, f.staging_start, "
+                " f.bringonline_token, j.copy_pin_lifetime, j.bring_online, j.user_dn, j.cred_id, j.source_space_token "
                 " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                 " WHERE  "
                 " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
@@ -4008,6 +3953,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             soci::row const& row = *i3;
             std::string vo_name = row.get<std::string>("vo_name");
             std::string source_url = row.get<std::string>("source_surl");
+            std::string metadata = row.get<std::string>("staging_metadata", "");
             std::string job_id = row.get<std::string>("job_id");
             uint64_t file_id = row.get<unsigned long long>("file_id");
             int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
@@ -4034,7 +3980,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
 
             stagingOps.emplace_back(
                 job_id, file_id, vo_name,
-                user_dn, cred_id, source_url,
+                user_dn, cred_id, metadata, source_url,
                 copy_pin_lifetime, bring_online,
                 staging_start_time,
                 source_space_token,

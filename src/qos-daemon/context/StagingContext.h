@@ -32,7 +32,7 @@
 #include "cred/DelegCred.h"
 
 #include "JobContext.h"
-#include "../QoSServer.h"
+#include "qos-daemon/QoSServer.h"
 
 
 /**
@@ -88,7 +88,7 @@ public:
 
     virtual ~StagingContext() {}
 
-    void add(const StagingOperation &stagingOp);
+    virtual void add(const StagingOperation& stagingOp);
 
     /**
      * Asynchronous update of a single transfer-file within a job
@@ -106,6 +106,16 @@ public:
     void updateState(const std::string &token)
     {
         stateUpdater(jobs, token);
+    }
+
+    /**
+     * Updates state of all the files in the context to STARTED
+     *
+     * @return true if the update was successful
+     */
+    bool updateStateToStarted()
+    {
+        return stateUpdater(urlToIDs);
     }
 
     int getBringonlineTimeout() const
@@ -140,7 +150,11 @@ public:
         return (errorCount[surl] += 1);
     }
 
-private:
+    std::string getStorageProtocol() const;
+
+    static std::unique_ptr<StagingContext> createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp);
+
+protected:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
