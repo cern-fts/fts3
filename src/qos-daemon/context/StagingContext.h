@@ -113,7 +113,7 @@ public:
      *
      * @return true if the update was successful
      */
-    bool updateState()
+    bool updateStateToStarted()
     {
         return stateUpdater(urlToIDs);
     }

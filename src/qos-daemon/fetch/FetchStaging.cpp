@@ -96,7 +96,7 @@ void FetchStaging::fetch()
             {
                 try
                 {
-                    if (it_t->second->updateState()) {
+                    if (it_t->second->updateStateToStarted()) {
                         std::string protocol = it_t->second->getStorageProtocol();
                         if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
                             threadpool.start(new HttpBringOnlineTask(static_cast<HttpStagingContext&&>(std::move(*(it_t->second)))));
