@@ -27,8 +27,10 @@
 #include "server/DrainMode.h"
 
 #include "FetchStaging.h"
-#include "../task/BringOnlineTask.h"
-#include "../task/PollTask.h"
+#include "qos-daemon/task/BringOnlineTask.h"
+#include "qos-daemon/task/HttpBringOnlineTask.h"
+#include "qos-daemon/task/PollTask.h"
+#include "qos-daemon/task/HttpPollTask.h"
 
 #include <ctime>
 
@@ -94,8 +96,13 @@ void FetchStaging::fetch()
             {
                 try
                 {
-                    if(it_t->second->updateState()) {
-                        threadpool.start(new BringOnlineTask(std::move(*(it_t->second.get()))));
+                    if (it_t->second->updateState()) {
+                        std::string protocol = it_t->second->getStorageProtocol();
+                        if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+                            threadpool.start(new HttpBringOnlineTask(static_cast<HttpStagingContext&&>(std::move(*(it_t->second)))));
+                        } else {
+                            threadpool.start(new BringOnlineTask(std::move(*(it_t->second))));
+                        }
                     }
                 }
                 catch(UserError const & ex)
@@ -160,7 +167,14 @@ void FetchStaging::recoverStartedTasks()
             for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
             }
-            threadpool.start(new PollTask(std::move(*it_t->second.get()), it_t->first));
+
+            std::string protocol = it_t->second->getStorageProtocol();
+
+            if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+                threadpool.start(new HttpPollTask(static_cast<HttpStagingContext&&>(std::move(*it_t->second)), it_t->first));
+            } else {
+                threadpool.start(new PollTask(std::move(*it_t->second), it_t->first));
+            }
         }
         catch (UserError const & ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;

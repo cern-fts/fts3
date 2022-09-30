@@ -15,8 +15,6 @@
  */
 
 #pragma once
-#ifndef FTS3_HTTPSTAGINGCONTEXT_H
-#define FTS3_HTTPSTAGINGCONTEXT_H
 
 #include "StagingContext.h"
 
@@ -27,17 +25,21 @@ public:
     using JobContext::isValidOp;
 
     HttpStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) :
-            StagingContext(qosServer, stagingOp)
+            StagingContext(qosServer, stagingOp), httpWaitingRoom(qosServer.getHttpWaitingRoom())
     {}
 
     HttpStagingContext(const HttpStagingContext& copy) :
-            StagingContext(copy), urlToMetadata(copy.urlToMetadata)
+            StagingContext(copy), urlToMetadata(copy.urlToMetadata), httpWaitingRoom(copy.httpWaitingRoom)
     {}
     HttpStagingContext(HttpStagingContext&& copy) :
-            StagingContext(std::move(copy)), urlToMetadata(std::move(copy.urlToMetadata))
+            StagingContext(std::move(copy)), urlToMetadata(std::move(copy.urlToMetadata)), httpWaitingRoom(copy.httpWaitingRoom)
     {}
 
     void add(const StagingOperation& stagingOp) override;
+
+    WaitingRoom<HttpPollTask>& getHttpWaitingRoom() {
+        return httpWaitingRoom;
+    }
 
     /**
     * For a given URL return the corresponding metadata
@@ -49,7 +51,5 @@ public:
 private:
     /// URL -> Staging metadata
     std::map<std::string, std::string> urlToMetadata;
+    WaitingRoom<HttpPollTask> &httpWaitingRoom;
 };
-
-
-#endif //FTS3_HTTPSTAGINGCONTEXT_H

@@ -150,6 +150,8 @@ public:
         return (errorCount[surl] += 1);
     }
 
+    std::string getStorageProtocol() const;
+
     static std::unique_ptr<StagingContext> createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp);
 
 protected:
