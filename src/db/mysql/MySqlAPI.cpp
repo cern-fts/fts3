@@ -3836,7 +3836,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,
-                        user_dn, cred_id, metadata, source_url,
+                        user_dn, cred_id, source_url, metadata,
                         copy_pin_lifetime, bring_online, 0,
                         source_space_token, std::string()
                     );
