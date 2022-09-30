@@ -25,6 +25,7 @@
 #include "server/DrainMode.h"
 
 #include "task/PollTask.h"
+#include "task/HttpPollTask.h"
 #include "task/CDMIPollTask.h"
 #include "task/ArchivingPollTask.h"
 #include "task/WaitingRoom.h"
@@ -120,10 +121,12 @@ void QoSServer::start(void)
     FetchCancelArchiving fca(threadpool);
 
     waitingRoom.attach(threadpool);
+    httpWaitingRoom.attach(threadpool);
     cdmiWaitingRoom.attach(threadpool);
     archivingWaitingRoom.attach(threadpool);
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
+    systemThreads.create_thread(boost::bind(&WaitingRoom<HttpPollTask>::run, &httpWaitingRoom));
     systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
     systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
 

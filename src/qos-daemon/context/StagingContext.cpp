@@ -18,14 +18,14 @@
  * limitations under the License.
  */
 
-#include "StagingContext.h"
-
-#include <sstream>
 #include <unordered_set>
-#include "cred/CredUtility.h"
+#include "common/Uri.h"
+
+#include "StagingContext.h"
+#include "HttpStagingContext.h"
 
 
-void StagingContext::add(const StagingOperation &stagingOp)
+void StagingContext::add(const StagingOperation& stagingOp)
 {
     if (stagingOp.pinLifetime > maxPinLifetime) {
         maxPinLifetime = stagingOp.pinLifetime;
@@ -78,4 +78,20 @@ std::set<std::string> StagingContext::getSurlsToAbort(
         ret.insert(url.c_str());
     }
     return ret;
+}
+
+
+std::string StagingContext::getStorageProtocol() const {
+    return Uri::parse(storageEndpoint).protocol;
+}
+
+
+std::unique_ptr<StagingContext> StagingContext::createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) {
+    std::string protocol = Uri::parse(stagingOp.surl).protocol;
+    if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+        return std::unique_ptr<StagingContext>(new HttpStagingContext(qosServer, stagingOp));
+    }
+    else {
+        return std::unique_ptr<StagingContext>(new StagingContext(qosServer, stagingOp));
+    }
 }

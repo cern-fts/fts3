@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2022
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef BRINGONLINETASK_H_
-#define BRINGONLINETASK_H_
 
 #include <string>
 #include <utility>
@@ -33,7 +31,7 @@
 #include "cred/DelegCred.h"
 
 #include "Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "qos-daemon/context/HttpStagingContext.h"
 
 
 /**
@@ -42,7 +40,7 @@
  *
  * @see StagingTask
  */
-class BringOnlineTask : public Gfal2Task
+class HttpBringOnlineTask : public Gfal2Task
 {
 
 public:
@@ -52,7 +50,7 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(StagingContext&& copy_ctx) : Gfal2Task("STAGING"), ctx(std::move(copy_ctx))
+    HttpBringOnlineTask(HttpStagingContext&& copy_ctx) : Gfal2Task("HTTP_STAGING"), ctx(std::move(copy_ctx))
     {
         // set up the space token
         setSpaceToken(ctx.getSpaceToken());
@@ -65,19 +63,19 @@ public:
     }
 
     /// Copy constructor (deleted)
-    BringOnlineTask(const BringOnlineTask& copy) = delete;
+    HttpBringOnlineTask(const HttpBringOnlineTask& copy) = delete;
 
     /**
      * Creates a new BringOnlineTask from another BringOnlineTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    BringOnlineTask(BringOnlineTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)) {}
+    HttpBringOnlineTask(HttpBringOnlineTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)) {}
 
     /**
      * Destructor
      */
-    virtual ~BringOnlineTask()
+    virtual ~HttpBringOnlineTask()
     {
         if (gfal2_ctx)
             cancel(ctx.getSurls());
@@ -108,12 +106,9 @@ public:
 protected:
 
     /// staging details
-    StagingContext ctx;
+    HttpStagingContext ctx;
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     /// set of tokens (and respective URLs) for ongoing bring-online jobs
     static std::set<std::pair<std::string, std::string>> active_urls;
 };
-
-
-#endif // BRINGONLINETASK_H_

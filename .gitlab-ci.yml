@@ -81,7 +81,7 @@ docker_tag:
 .test-template: &test-template_definition
   stage: test
   script:
-    - yum install -y wget createrepo
+    - yum install -y git createrepo
     - ci/write-repo-file.sh
     - mkdir -p /repo/fts ; cp -v cc7/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
     - echo -e "[fts]\nname=FTS\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
