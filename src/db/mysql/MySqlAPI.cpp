@@ -3980,7 +3980,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
 
             stagingOps.emplace_back(
                 job_id, file_id, vo_name,
-                user_dn, cred_id, metadata, source_url,
+                user_dn, cred_id, source_url, metadata,
                 copy_pin_lifetime, bring_online,
                 staging_start_time,
                 source_space_token,
