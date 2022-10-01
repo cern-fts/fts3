@@ -86,9 +86,6 @@ class Package(object):
             self.platform = tmp.split(".")[-1]
             tmp = tmp[0:-len(self.platform)-1]
 
-        if self.platform in RAWHIDE_VERSIONS:
-            self.platform = "fc-rawhide"
-
         self.packagename = tmp
 
 def construct_location(platform, arch, filename):
