@@ -26,7 +26,11 @@ public:
 
     HttpStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) :
             StagingContext(qosServer, stagingOp), httpWaitingRoom(qosServer.getHttpWaitingRoom())
-    {}
+    {
+        if (isValidOp(stagingOp.surl, stagingOp.jobId, stagingOp.fileId)) {
+            urlToMetadata.insert({stagingOp.surl, stagingOp.stagingMetadata});
+        }
+    }
 
     HttpStagingContext(const HttpStagingContext& copy) :
             StagingContext(copy), urlToMetadata(copy.urlToMetadata), httpWaitingRoom(copy.httpWaitingRoom)
