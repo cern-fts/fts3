@@ -1,6 +1,7 @@
 %global _hardened_build 1
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
+%define devtoolset devtoolset-8
 
 %if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
 %global systemd 1
@@ -33,6 +34,10 @@ BuildRequires:  activemq-cpp-devel
 BuildRequires:  boost-devel
 %else
 BuildRequires:  boost148-devel
+%endif
+
+%if 0%{?rhel} == 7
+BuildRequires: %{devtoolset}
 %endif
 
 BuildRequires:  cajun-jsonapi-devel
@@ -215,6 +220,10 @@ if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
     exit 1
 fi
 
+%if 0%{?rhel} == 7
+source /opt/rh/%{devtoolset}/enable
+%endif
+
 # Build
 mkdir build
 cd build
@@ -241,6 +250,13 @@ done
 cd -
 
 %install
+
+# We have to activate devtoolset in install section as well
+# Generation of debuginfo happens here
+%if 0%{?rhel} == 7
+source /opt/rh/%{devtoolset}/enable
+%endif
+
 cd build
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
