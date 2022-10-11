@@ -3,71 +3,42 @@
 %global selinux_variants mls targeted
 %define devtoolset devtoolset-8
 
-%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
-%global systemd 1
-%else
-%global systemd 0
-%endif
-
 Name:       fts
 Version:    3.12.2
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
-Group:      System Environment/Daemons
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# The source for this package was pulled from upstream's vcs.  Use the
-# following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.12.0
-#  cd fts-3.12.0
-#  git checkout v3.12.0
-#  cd ..
-#  tar --exclude-vcs -vczf fts-3.12.0.tar.gz fts-3.12.0
+# git clone --depth=1 --branch v3.12.0 https://gitlab.cern.ch/fts/fts3.git fts-3.12.0
+# tar -vczf fts-3.12.0.tar.gz --exclude-vcs fts-3.12.0/
 Source0: %{name}-%{version}.tar.gz
 
-%if 0%{?el5}
-BuildRequires:  activemq-cpp-library
-%else
+BuildRequires:  gcc
+BuildRequires:  gcc-c++
 BuildRequires:  activemq-cpp-devel
-%endif
-%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  boost-devel
-%else
-BuildRequires:  boost148-devel
-%endif
 
 %if 0%{?rhel} == 7
 BuildRequires: %{devtoolset}
 %endif
 
 BuildRequires:  cajun-jsonapi-devel
-BuildRequires:  cmake
 BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
-%if 0%{?el5}
-BuildRequires:  e2fsprogs-devel
-%else
 BuildRequires:  libuuid-devel
-%endif
 BuildRequires:  gfal2-devel >= 2.21.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
+BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  protobuf-devel
 BuildRequires:  pugixml-devel
 BuildRequires:  voms-devel
 BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
-%if %systemd
-BuildRequires:	systemd
-%endif
-%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
+BuildRequires:  systemd
 BuildRequires:  cppzmq-devel
-%else
-BuildRequires:  zeromq-devel
-%endif
-
 Requires(pre):  shadow-utils
 
 %description
@@ -78,7 +49,6 @@ by CERN's LHC into the computing GRID.
 
 %package devel
 Summary: Development files for File Transfer Service V3
-Group: Applications/Internet
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 
 %description devel
@@ -87,7 +57,6 @@ This package contains development files
 
 %package server
 Summary: File Transfer Service version 3 server
-Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2%{?_isa} >= 2.21.0
@@ -97,16 +66,9 @@ Requires: gfal2-plugin-srm%{?_isa} >= 2.21.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
-%if %systemd
-Requires(post):		systemd
-Requires(preun):	systemd
-Requires(postun):	systemd
-%else
-Requires(post):     chkconfig
-Requires(preun):    chkconfig
-Requires(preun):    initscripts
-Requires(postun):   initscripts
-%endif
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
 
 %description server
 The FTS server is a service which accepts transfer jobs,
@@ -119,7 +81,6 @@ utilization and allows for configuring so called VO-shares.
 
 %package libs
 Summary:    File Transfer Service version 3 libraries
-Group:      System Environment/Libraries
 
 Obsoletes:  fts-mysql-debuginfo < %{version}
 
@@ -131,28 +92,19 @@ well as, common definitions and interfaces
 
 %package infosys
 Summary:    File Transfer Service version 3 infosys integration
-Group:      System Environment/Daemons
 Requires:   bdii
 Requires:   fts-server%{?_isa} = %{version}-%{release}
 Requires:   glue-schema
 
-%if %systemd
-Requires(post):		systemd
-Requires(preun):	systemd
-Requires(postun):	systemd
-%else
-Requires(post):		chkconfig
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
-Requires(postun):	initscripts
-%endif
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
 
 %description infosys
 FTS infosys integration
 
 %package msg
 Summary:    File Transfer Service version 3 messaging integration
-Group:      System Environment/Daemons
 Requires:   fts-server%{?_isa} = %{version}-%{release}
 
 %description msg
@@ -160,7 +112,6 @@ FTS messaging integration
 
 %package client
 Summary:    File Transfer Service version 3 client
-Group:      Applications/Internet
 Requires:   fts-libs%{?_isa} = %{version}-%{release}
 
 %description client
@@ -171,7 +122,6 @@ administering purposes.
 
 %package server-selinux
 Summary:    SELinux support for fts-server
-Group:      Applications/Internet
 Requires:   fts-server%{?_isa} = %{version}-%{release}
 %if "%{_selinux_policy_version}" != ""
 Requires:   selinux-policy >= %{_selinux_policy_version}
@@ -186,7 +136,6 @@ This package setup the SELinux policies for the FTS3 server.
 
 %package mysql
 Summary:    File Transfer Service V3 mysql plug-in
-Group:      Applications/Internet
 
 BuildRequires:  soci-mysql-devel
 Requires:   soci-mysql%{?_isa}
@@ -224,21 +173,13 @@ fi
 source /opt/rh/%{devtoolset}/enable
 %endif
 
-# Build
-mkdir build
-cd build
-%cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
+%cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX='' \
-%if %systemd
-    -DSYSTEMD_INSTALL_DIR=%{_unitdir} \
-%endif
-    ..
+    -DSYSTEMD_INSTALL_DIR=%{_unitdir}
 
-make %{?_smp_mflags}
-
-cd -
+%cmake3_build
 
 # SELinux
 cd selinux
@@ -257,7 +198,6 @@ cd -
 source /opt/rh/%{devtoolset}/enable
 %endif
 
-cd build
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
 mkdir -p %{buildroot}%{_var}/lib/fts3/status
@@ -265,9 +205,7 @@ mkdir -p %{buildroot}%{_var}/lib/fts3/stalled
 mkdir -p %{buildroot}%{_var}/lib/fts3/logs
 mkdir -p %{buildroot}%{_var}/log/fts3
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
-make install DESTDIR=%{buildroot}
-
-cd -
+%cmake3_install
 
 # SELinux
 for selinuxvariant in %{selinux_variants}; do
@@ -284,117 +222,65 @@ getent passwd fts3 >/dev/null || \
 exit 0
 
 %post server
-%if %systemd
 /bin/systemctl daemon-reload > /dev/null 2>&1 || :
-%else
-/sbin/chkconfig --add fts-server
-/sbin/chkconfig --add fts-bringonline
-/sbin/chkconfig --add fts-records-cleaner
-%endif
 exit 0
 
 %preun server
 if [ $1 -eq 0 ] ; then
-%if %systemd
-    /bin/systemctl stop fts-server.service > /dev/null 2>&1 || :
-    /bin/systemctl stop fts-bringonline.service > /dev/null 2>&1 || :
-    /bin/systemctl stop fts-records-cleaner.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-server.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-bringonline.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-records-cleaner.service > /dev/null 2>&1 || :
-%else
-    /sbin/service fts-server stop >/dev/null 2>&1
-    /sbin/service fts-bringonline stop >/dev/null 2>&1
-    /sbin/service fts-records-cleaner stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-server
-    /sbin/chkconfig --del fts-bringonline
-    /sbin/chkconfig --del fts-records-cleaner
-%endif
+  /bin/systemctl stop fts-server.service > /dev/null 2>&1 || :
+  /bin/systemctl stop fts-bringonline.service > /dev/null 2>&1 || :
+  /bin/systemctl stop fts-records-cleaner.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-server.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-bringonline.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-records-cleaner.service > /dev/null 2>&1 || :
 fi
 exit 0
 
 %postun server
 if [ "$1" -ge "1" ] ; then
-%if %systemd
-    /bin/systemctl try-restart fts-server.service > /dev/null 2>&1 || :
-    /bin/systemctl try-restart fts-bringonline.service > /dev/null 2>&1 || :
-    /bin/systemctl try-restart fts-records-cleaner.service > /dev/null 2>&1 || :
-%else
-    /sbin/service fts-server condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-bringonline condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :
-%endif
+  /bin/systemctl try-restart fts-server.service > /dev/null 2>&1 || :
+  /bin/systemctl try-restart fts-bringonline.service > /dev/null 2>&1 || :
+  /bin/systemctl try-restart fts-records-cleaner.service > /dev/null 2>&1 || :
 fi
 exit 0
 
 # Infosys scriptlets
 %post infosys
-%if %systemd
-    /bin/systemctl daemon-reload > /dev/null 2>&1 || :
-%else
-    /sbin/chkconfig --add fts-info-publisher
-    /sbin/chkconfig --add fts-bdii-cache-updater
-%endif
+/bin/systemctl daemon-reload > /dev/null 2>&1 || :
 exit 0
 
 %preun infosys
 if [ $1 -eq 0 ] ; then
-%if %systemd
-    /bin/systemctl stop fts-info-publisher.service > /dev/null 2>&1 || :
-    /bin/systemctl stop fts-bdii-cache-updater.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-info-publisher.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-bdii-cache-updater.service > /dev/null 2>&1 || :
-%else
-    /sbin/service fts-info-publisher stop >/dev/null 2>&1
-    /sbin/service fts-bdii-cache-updater stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-info-publisher
-    /sbin/chkconfig --del fts-bdii-cache-updater
-%endif
+  /bin/systemctl stop fts-info-publisher.service > /dev/null 2>&1 || :
+  /bin/systemctl stop fts-bdii-cache-updater.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-info-publisher.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-bdii-cache-updater.service > /dev/null 2>&1 || :
 fi
 exit 0
 
 %postun infosys
 if [ "$1" -ge "1" ] ; then
-%if %systemd
-    /bin/systemctl try-restart fts-info-publisher.service > /dev/null 2>&1 || :
-    /bin/systemctl stop fts-myosg-updater.service > /dev/null 2>&1 || :
-    /bin/systemctl try-restart fts-bdii-cache-updater.service > /dev/null 2>&1 || :
-%else
-    /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-myosg-updater stop >/dev/null 2>&1 || :
-    /sbin/service fts-bdii-cache-updater condrestart >/dev/null 2>&1 || :
-%endif
+  /bin/systemctl try-restart fts-info-publisher.service > /dev/null 2>&1 || :
+  /bin/systemctl stop fts-myosg-updater.service > /dev/null 2>&1 || :
+  /bin/systemctl try-restart fts-bdii-cache-updater.service > /dev/null 2>&1 || :
 fi
 exit 0
 
 # Messaging scriptlets
 %post msg
-%if %systemd
-    /bin/systemctl daemon-reload > /dev/null 2>&1 || :
-%else
-    /sbin/chkconfig --add fts-msg-bulk
-%endif
+/bin/systemctl daemon-reload > /dev/null 2>&1 || :
 exit 0
 
 %preun msg
 if [ $1 -eq 0 ] ; then
-%if %systemd
-    /bin/systemctl stop fts-msg-bulk.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable fts-msg-bulk.service > /dev/null 2>&1 || :
-%else
-    /sbin/service fts-msg-bulk stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-msg-bulk
-%endif
+  /bin/systemctl stop fts-msg-bulk.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-msg-bulk.service > /dev/null 2>&1 || :
 fi
 exit 0
 
 %postun msg
 if [ "$1" -ge "1" ] ; then
-%if %systemd
-    /bin/systemctl try-restart fts-msg-bulk.service > /dev/null 2>&1 || :
-%else
-    /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
-%endif
+  /bin/systemctl try-restart fts-msg-bulk.service > /dev/null 2>&1 || :
 fi
 exit 0
 
@@ -408,17 +294,16 @@ exit 0
 #SELinux scriptlets
 %post server-selinux
 if [ $1 -eq 1 ] ; then
-	for selinuxvariant in %{selinux_variants}; do
-	  /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
-	done
-	/sbin/restorecon -R %{_var}/log/fts3 || :
+  for selinuxvariant in %{selinux_variants}; do
+    /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
+  done
+  /sbin/restorecon -R %{_var}/log/fts3 || :
 fi
 exit 0
 
 %postun server-selinux
 if [ $1 -eq 0 ] ; then
-  for selinuxvariant in %{selinux_variants}
-  do
+  for selinuxvariant in %{selinux_variants} ; do
     /usr/sbin/semodule -s ${selinuxvariant} -r fts &> /dev/null || :
   done
   [ -d %{_var}/log/fts3 ]  && /sbin/restorecon -R %{_var}/log/fts3 &> /dev/null || :
@@ -443,17 +328,10 @@ fi
 %dir %attr(0755,root,root) %{_datadir}/fts/
 %{_datadir}/fts/fts-database-upgrade.py*
 
-%if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-server.service
 %attr(0644,root,root) %{_unitdir}/fts-bringonline.service
 %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %attr(0644,root,root) %{_unitdir}/fts-qos.service
-%else
-%attr(0755,root,root) %{_initddir}/fts-server
-%attr(0755,root,root) %{_initddir}/fts-bringonline
-%attr(0755,root,root) %{_initddir}/fts-records-cleaner
-%attr(0755,root,root) %{_initddir}/fts-qos
-%endif
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
@@ -472,13 +350,8 @@ fi
 %{_sbindir}/fts_info_publisher
 %config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
 
-%if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-info-publisher.service
 %attr(0644,root,root) %{_unitdir}/fts-bdii-cache-updater.service
-%else
-%attr(0755,root,root) %{_initddir}/fts-info-publisher
-%attr(0755,root,root) %{_initddir}/fts-bdii-cache-updater
-%endif
 
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
@@ -488,11 +361,7 @@ fi
 %files msg
 %{_sbindir}/fts_msg_bulk
 
-%if %systemd
 %attr(0644,root,root) %{_unitdir}/fts-msg-bulk.service
-%else
-%attr(0755,root,root) %{_initddir}/fts-msg-bulk
-%endif
 
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %{_mandir}/man8/fts_msg_bulk.8.gz
@@ -516,7 +385,6 @@ fi
 %doc LICENSE
 
 %files server-selinux
-%defattr(-,root,root,0755)
 %doc selinux/*
 %{_datadir}/selinux/*/fts.pp
 
@@ -742,47 +610,62 @@ fi
 
 * Thu Sep 04 2014 Orion Poplawski <orion@cora.nwra.com> - 3.2.26.2-4
 - Rebuild for pugixml 1.4
+
 * Sat Aug 16 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.26.2-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Wed Aug 13 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
 - Update for new upstream releas
+
 * Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-1
 - introduced dist back in the release
+
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-2
 - separated rpms for messaging and infosys subsystems
+
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
 - Added missing changelog entry
 - Fixed bogus date
+
 * Tue Oct 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.33-1
 - Update for new upstream release
+
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
 - no longer linking explicitly to boost libraries with '-mt' sufix
+
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
 * Sat Jul 27 2013 Petr Machata <pmachata@redhat.com> - 3.1.0-2
 - rebuild for boost 1.54.0
 - boost package doesn't use tagged sonames anymore, drop the -mt
-suffix from several boost libraries (fts-3.1.0-boost_mt.patch)
+  suffix from several boost libraries (fts-3.1.0-boost_mt.patch)
+
 * Wed Jul 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-15
 - compatible with rawhide (f20)
+
 * Tue Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
 - mysql queries optimization
+
 * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
 - dependency on 'gfal2-plugin-http' has been removed
 - the calls to mktemp have been removed
 - cmake build type changed from Release to RelWithDebInfo
 - EPEL5 specifics have been removed from spec files
 - changelog has been fixed
+
 * Fri May 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.2-1
 - speling has been fixed in package's description
 - man pages added to devel package
 - services are disabled by default
 - missing 'Requires(post): chkconfig' and 'Requires(preun): chkconfig' added
+
 * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-1
 - BuildRequires and Requires entries have been sorted alphabetically
 - the non standard compilation options have been removed
 - package and the subpackages descriptions have been updated
 - documentation files listed as %%doc
 - trailing white-spaces have been removed
+
 * Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1
 - First EPEL release
