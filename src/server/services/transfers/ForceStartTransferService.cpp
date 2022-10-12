@@ -1,28 +1,36 @@
-//
-// Created by Tom Hepworth on 29/08/2022.
-//
-
-#include "ForceStartTransferService.h"
+/*
+ * Copyright (c) CERN 2022
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "common/Logger.h"
+#include "common/ThreadPool.h"
+#include "common/DaemonTools.h"
+
 #include "config/ServerConfig.h"
+#include "cred/DelegCred.h"
+
 #include "db/generic/SingleDbInstance.h"
+#include "db/generic/TransferFile.h"
 
 #include "server/DrainMode.h"
 
+#include "ForceStartTransferService.h"
 #include "FileTransferExecutor.h"
-
-#include "common/ThreadPool.h"
-
-#include "common/DaemonTools.h"
-
-#include "cred/DelegCred.h"
-
-#include "db/generic/TransferFile.h"
 
 using namespace fts3::config;
 using namespace fts3::common;
-using namespace db;
 
 namespace fts3 {
 namespace server {
@@ -40,20 +48,21 @@ ForceStartTransferService::ForceStartTransferService(HeartBeat *beat) : BaseServ
 
 void ForceStartTransferService::forceRunJobs() {
 
-    // Bail out as soon as possible if there are too many url-copy processes
+    // Bail out as soon as possible if there are too many fts_url_copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     int urlCopyCount = countProcessesWithName("fts_url_copy");
     int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
 
     if (availableUrlCopySlots <= 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses (ForceStartTransfer)"
+                                           << commit;
         return;
     }
 
     ThreadPool<FileTransferExecutor> execPool(execPoolSize);
 
     try {
-        std::list<TransferFile> tfs = db::DBSingleton::instance().getDBObjectInstance()->getForceStartTransfers();
+        auto tfs = db::DBSingleton::instance().getDBObjectInstance()->getForceStartTransfers();
 
         if (tfs.empty()) {
             return;
@@ -61,7 +70,7 @@ void ForceStartTransferService::forceRunJobs() {
 
         std::map<std::pair<std::string, std::string>, std::string> proxies;
 
-        for (auto &tf: tfs) {
+        for (auto& tf: tfs) {
             if (boost::this_thread::interruption_requested()) {
                 execPool.interrupt();
                 return;
@@ -72,6 +81,7 @@ void ForceStartTransferService::forceRunJobs() {
             }
 
             std::pair<std::string, std::string> proxy_key(tf.credId, tf.userDn);
+
             if (proxies.find(proxy_key) == proxies.end()) {
                 proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
             }
@@ -81,25 +91,26 @@ void ForceStartTransferService::forceRunJobs() {
             execPool.start(exec);
 
             if (--availableUrlCopySlots <= 0) {
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses (ForceStartTransfer)"
+                                                   << commit;
                 break;
             }
         }
 
-        // wait for all the workers to finish
+        // Wait for all the workers to finish
         execPool.join();
         int scheduled = execPool.reduce(std::plus<int>());
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Force Start Threadpool processed: " << tfs.size() << " files ("
                                         << scheduled << " have been scheduled)" << commit;
 
     } catch (const boost::thread_interrupted &) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in ForceStartTransferService:forceRunJobs" << commit;
         execPool.interrupt();
         execPool.join();
     } catch (std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransferService:forceRunJobs " << e.what() << commit;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransferService!" << commit;
     }
 }
 

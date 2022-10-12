@@ -25,12 +25,12 @@
 #include "services/cleaner/CleanerService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/ReuseTransfersService.h"
+#include "services/transfers/ForceStartTransferService.h"
 #include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
 #include "services/transfers/MessageProcessingService.h"
 #include "services/transfers/SupervisorService.h"
-#include "services/transfers/ForceStartTransferService.h"
 
 
 namespace fts3 {
