@@ -119,11 +119,7 @@ void ForceStartTransfersService::runService() {
         try {
             boost::this_thread::sleep(pollInterval);
 
-            if (DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more force start transfers for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::seconds(15));
-                continue;
-            }
+            // This service intentionally does not follow the drain mechanism
 
             if (beat->isLeadNode()) {
                 forceRunJobs();
