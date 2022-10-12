@@ -399,8 +399,8 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, how often to check for messages"
     )
     (
-        "ForceStartTransferCheckInterval",
-        po::value<std::string>( &(_vars["ForceStartTransferCheckInterval"]) )->default_value("30"),
+        "ForceStartTransfersCheckInterval",
+        po::value<std::string>( &(_vars["ForceStartTransfersCheckInterval"]) )->default_value("30"),
         "In seconds, how often to check for transfers to force start"
     )
 	(

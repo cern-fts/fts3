@@ -25,7 +25,7 @@
 #include "services/cleaner/CleanerService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/ReuseTransfersService.h"
-#include "services/transfers/ForceStartTransferService.h"
+#include "services/transfers/ForceStartTransfersService.h"
 #include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
 #include "services/optimizer/OptimizerService.h"
@@ -93,7 +93,7 @@ void Server::start()
     addService(new TransfersService);
     addService(new ReuseTransfersService);
     addService(new SupervisorService);
-    addService(new ForceStartTransferService(heartBeatService));
+    addService(new ForceStartTransfersService(heartBeatService));
 }
 
 

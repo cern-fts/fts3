@@ -22,10 +22,10 @@
 namespace fts3 {
 namespace server {
 
-class ForceStartTransferService: public BaseService
+class ForceStartTransfersService: public BaseService
 {
 public:
-    ForceStartTransferService(HeartBeat *beat);
+    ForceStartTransfersService(HeartBeat *beat);
     virtual void runService();
 
 protected:

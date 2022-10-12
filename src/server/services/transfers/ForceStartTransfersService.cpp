@@ -26,7 +26,7 @@
 
 #include "server/DrainMode.h"
 
-#include "ForceStartTransferService.h"
+#include "ForceStartTransfersService.h"
 #include "FileTransferExecutor.h"
 
 using namespace fts3::config;
@@ -35,7 +35,7 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-ForceStartTransferService::ForceStartTransferService(HeartBeat *beat) : BaseService("ForceStartTransferService"), beat(beat) {
+ForceStartTransfersService::ForceStartTransfersService(HeartBeat *beat) : BaseService("ForceStartTransfersService"), beat(beat) {
     logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
@@ -43,10 +43,10 @@ ForceStartTransferService::ForceStartTransferService(HeartBeat *beat) : BaseServ
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-    pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransferCheckInterval");
+    pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransfersCheckInterval");
 }
 
-void ForceStartTransferService::forceRunJobs() {
+void ForceStartTransfersService::forceRunJobs() {
 
     // Bail out as soon as possible if there are too many fts_url_copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
@@ -54,7 +54,7 @@ void ForceStartTransferService::forceRunJobs() {
     int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
 
     if (availableUrlCopySlots <= 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses (ForceStartTransfer)"
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses (ForceStartTransfers)"
                                            << commit;
         return;
     }
@@ -91,7 +91,7 @@ void ForceStartTransferService::forceRunJobs() {
             execPool.start(exec);
 
             if (--availableUrlCopySlots <= 0) {
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses (ForceStartTransfer)"
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Reached limitation of MaxUrlCopyProcesses (ForceStartTransfers)"
                                                    << commit;
                 break;
             }
@@ -104,17 +104,17 @@ void ForceStartTransferService::forceRunJobs() {
                                         << scheduled << " have been scheduled)" << commit;
 
     } catch (const boost::thread_interrupted &) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in ForceStartTransferService:forceRunJobs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in ForceStartTransfersService:forceRunJobs" << commit;
         execPool.interrupt();
         execPool.join();
     } catch (std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransferService:forceRunJobs " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService:forceRunJobs " << e.what() << commit;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransferService!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService!" << commit;
     }
 }
 
-void ForceStartTransferService::runService() {
+void ForceStartTransfersService::runService() {
     while (!boost::this_thread::interruption_requested()) {
         try {
             boost::this_thread::sleep(pollInterval);
