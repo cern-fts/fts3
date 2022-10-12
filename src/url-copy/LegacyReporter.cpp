@@ -58,37 +58,37 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
 
     producer.runProducerStatus(status);
 
-    // Fill transfer start
-    TransferCompleted completed;
+    // Fill transfer started
+    TransferCompleted started;
 
-    completed.transfer_id = transfer.getTransferId();
-    completed.job_id = transfer.jobId;
-    completed.file_id = transfer.fileId;
-    completed.endpoint = opts.alias;
+    started.transfer_id = transfer.getTransferId();
+    started.job_id = transfer.jobId;
+    started.file_id = transfer.fileId;
+    started.endpoint = opts.alias;
 
     if (transfer.source.protocol == "srm") {
-        completed.source_srm_version = "2.2.0";
+        started.source_srm_version = "2.2.0";
     }
     if (transfer.destination.protocol == "srm") {
-        completed.destination_srm_version = "2.2.0";
+        started.destination_srm_version = "2.2.0";
     }
 
-    completed.vo = opts.voName;
-    completed.source_url = transfer.source.fullUri;
-    completed.dest_url = transfer.destination.fullUri;
-    completed.source_hostname = transfer.source.host;
-    completed.dest_hostname = transfer.destination.host;
-    completed.t_channel = transfer.getChannel();
-    completed.channel_type = "urlcopy";
-    completed.user_dn = replaceMetadataString(opts.userDn);
-    completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
-    completed.job_metadata = replaceMetadataString(opts.jobMetadata);
-    completed.srm_space_token_source = transfer.sourceTokenDescription;
-    completed.srm_space_token_dest = transfer.destTokenDescription;
-    completed.tr_timestamp_start = millisecondsSinceEpoch();
+    started.vo = opts.voName;
+    started.source_url = transfer.source.fullUri;
+    started.dest_url = transfer.destination.fullUri;
+    started.source_hostname = transfer.source.host;
+    started.dest_hostname = transfer.destination.host;
+    started.t_channel = transfer.getChannel();
+    started.channel_type = "urlcopy";
+    started.user_dn = replaceMetadataString(opts.userDn);
+    started.file_metadata = replaceMetadataString(transfer.fileMetadata);
+    started.job_metadata = replaceMetadataString(opts.jobMetadata);
+    started.srm_space_token_source = transfer.sourceTokenDescription;
+    started.srm_space_token_dest = transfer.destTokenDescription;
+    started.tr_timestamp_start = millisecondsSinceEpoch();
 
     if (opts.enableMonitoring) {
-        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, completed);
+        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, started);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer start message content: " << msgReturnValue << commit;
     }
 }
@@ -188,11 +188,19 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         completed.destination_srm_version = "2.2.0";
     }
 
+    std::string protocol = transfer.destination.protocol;
+    if (protocol.empty()) {
+        protocol = transfer.source.protocol;
+    }
+
     completed.vo = opts.voName;
     completed.source_url = transfer.source.fullUri;
     completed.dest_url = transfer.destination.fullUri;
     completed.source_hostname = transfer.source.host;
     completed.dest_hostname = transfer.destination.host;
+    completed.source_se = transfer.source.getSeName();
+    completed.dest_se = transfer.destination.getSeName();
+    completed.protocol = protocol;
     completed.t_channel = transfer.getChannel();
     completed.channel_type = "urlcopy";
     completed.user_dn = replaceMetadataString(opts.userDn);
@@ -249,6 +257,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         }
     }
 
+    if (completed.final_transfer_state == "Ok") {
+        completed.final_transfer_state_flag = 1;
+    } else if (completed.final_transfer_state == "Error") {
+        completed.final_transfer_state_flag = 0;
+    }
+
     completed.total_bytes_transferred = transfer.transferredBytes;
     completed.number_of_streams = params.getNumberOfStreams();
     completed.tcp_buffer_size = params.getTcpBuffersize();
@@ -267,6 +281,18 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.time_spent_in_srm_finalization_end = transfer.stats.srmFinalization.end;
     completed.tr_timestamp_start = transfer.stats.process.start;
     completed.tr_timestamp_complete = transfer.stats.process.end;
+
+    completed.transfer_time_ms = transfer.stats.transfer.end - transfer.stats.transfer.start;
+    completed.operation_time_ms = transfer.stats.process.end - transfer.stats.process.start;
+    completed.throughput_bps = (completed.transfer_time_ms > 0) ? ((double) completed.file_size / (completed.transfer_time_ms / 1000.0)) : -1;
+
+    completed.srm_preparation_time_ms = transfer.stats.srmPreparation.end - transfer.stats.srmPreparation.start;
+    completed.srm_finalization_time_ms = transfer.stats.srmFinalization.end - transfer.stats.srmFinalization.start;
+    completed.srm_overhead_time_ms = completed.srm_preparation_time_ms + completed.srm_finalization_time_ms;
+    completed.srm_overhead_percentage = (completed.operation_time_ms > 0) ? ((double) completed.srm_overhead_time_ms * 100 / completed.operation_time_ms) : -1;
+
+    completed.checksum_source_time_ms = transfer.stats.sourceChecksum.end - transfer.stats.sourceChecksum.start;
+    completed.checksum_dest_time_ms = transfer.stats.destChecksum.end - transfer.stats.destChecksum.start;
 
     // Keep 'ipv6' flag for legacy purposes
     completed.ipv6 = transfer.stats.ipver == Transfer::IPver::IPv6;

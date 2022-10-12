@@ -165,6 +165,9 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["dst_url"] = json::String(tr_completed.dest_url);
     message["src_hostname"] = json::String(tr_completed.source_hostname);
     message["dst_hostname"] = json::String(tr_completed.dest_hostname);
+    message["src_se"] = json::String(tr_completed.source_se);
+    message["dst_se"] = json::String(tr_completed.dest_se);
+    message["protocol"] = json::String(tr_completed.protocol);
     message["src_site_name"] = json::String(tr_completed.source_site_name);
     message["dst_site_name"] = json::String(tr_completed.dest_site_name);
     message["t_channel"] = json::String(tr_completed.t_channel);
@@ -181,12 +184,15 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["t_failure_phase"] = json::String(tr_completed.failure_phase);
     message["tr_error_category"] = json::String(tr_completed.transfer_error_category);
     message["t_final_transfer_state"] = json::String(tr_completed.final_transfer_state);
+    message["t_final_transfer_state_flag"] = json::Number(tr_completed.final_transfer_state_flag);
     message["tr_bt_transfered"] = json::Number(tr_completed.total_bytes_transferred);
     message["nstreams"] = json::Number(tr_completed.number_of_streams);
     message["buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["tcp_buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["block_size"] = json::Number(tr_completed.block_size);
+    // Prepare to drop "f_size" field in the future
     message["f_size"] = json::Number(tr_completed.file_size);
+    message["file_size"] = json::Number(tr_completed.file_size);
     message["time_srm_prep_st"] = json::Number(tr_completed.time_spent_in_srm_preparation_start);
     message["time_srm_prep_end"] = json::Number(tr_completed.time_spent_in_srm_preparation_end);
     message["time_srm_fin_st"] = json::Number(tr_completed.time_spent_in_srm_finalization_start);
@@ -210,6 +216,18 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     } else {
         message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
     }
+
+    message["transfer_time"] = json::Number(tr_completed.transfer_time_ms);
+    message["operation_time"] = json::Number(tr_completed.operation_time_ms);
+    message["throughput"] = json::Number(tr_completed.throughput_bps);
+
+    message["srm_preparation_time"] = json::Number(tr_completed.srm_preparation_time_ms);
+    message["srm_finalization_time"] = json::Number(tr_completed.srm_finalization_time_ms);
+    message["srm_overhead_time"] = json::Number(tr_completed.srm_overhead_time_ms);
+    message["srm_overhead_percentage"] = json::Number(tr_completed.srm_overhead_percentage);
+
+    message["timestamp_checksum_src_diff"] = json::Number(tr_completed.checksum_source_time_ms);
+    message["timestamp_checksum_dst_diff"] = json::Number(tr_completed.checksum_dest_time_ms);
 
     message["channel_type"] = json::String(tr_completed.channel_type);
     message["user_dn"] = json::String(tr_completed.user_dn);
