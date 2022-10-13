@@ -139,6 +139,8 @@ LogLevel=INFO
 #QueueTimeoutCheckInterval = 300
 # In seconds, how often to check for stalled transfers
 #ActiveTimeoutCheckInterval = 300
+# In seconds, how often to check for force start transfers
+#ForceStartTransfersCheckInterval = 30
 # Check for "fts_url_copy" processes that do not report back their activity
 #CheckStalledTransfers = true
 # In seconds, timeout for stalled "fts_url_copy" processes

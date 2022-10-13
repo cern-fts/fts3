@@ -398,6 +398,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["MessagingConsumeInterval"]) )->default_value("1"),
         "In seconds, how often to check for messages"
     )
+    (
+        "ForceStartTransfersCheckInterval",
+        po::value<std::string>( &(_vars["ForceStartTransfersCheckInterval"]) )->default_value("30"),
+        "In seconds, how often to check for transfers to force start"
+    )
 	(
 	    "OptimizerMaxSuccessRate",
 	     po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
