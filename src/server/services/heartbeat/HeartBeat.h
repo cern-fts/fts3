@@ -39,7 +39,7 @@ public:
     HeartBeat();
     virtual void runService();
 
-    bool isLeadNode();
+    bool isLeadNode(bool bypassDraining = false);
 
 private:
     unsigned index, count, start, end;

@@ -120,8 +120,7 @@ void ForceStartTransfersService::runService() {
             boost::this_thread::sleep(pollInterval);
 
             // This service intentionally does not follow the drain mechanism
-
-            if (beat->isLeadNode()) {
+            if (beat->isLeadNode(true)) {
                 forceRunJobs();
             }
         } catch (std::exception &e) {
