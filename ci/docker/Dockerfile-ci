@@ -21,7 +21,7 @@ RUN createrepo /repo/fts
 RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
 
 # Add DMC repo
-ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo
+ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
 ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN yum clean metadata
 
