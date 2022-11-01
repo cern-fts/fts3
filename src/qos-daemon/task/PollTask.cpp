@@ -251,6 +251,9 @@ void PollTask::abort(std::set<std::string> const & urlSet, bool report)
         token.c_str(), errors.data()
     );
 
+    if (status == 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE task canceled with token " << token << commit;
+    }
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);
