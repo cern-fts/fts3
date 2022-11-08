@@ -187,6 +187,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
     params.setEvictionFlag(opts.evict);
+    if (opts.evict && !transfer.tokenBringOnline.empty()) {
+        params.setBringonlineToken(transfer.tokenBringOnline);
+    }
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
