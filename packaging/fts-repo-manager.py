@@ -11,7 +11,6 @@ import sys
 
 DRY_RUN = False
 NO_CREATE_REPO = False
-RAWHIDE_VERSIONS = ["fc35", "fc36"]
 
 def sh(cmd):
     # poor man's subprocess.check_output, not supported on SL6
@@ -87,16 +86,13 @@ class Package(object):
             self.platform = tmp.split(".")[-1]
             tmp = tmp[0:-len(self.platform)-1]
 
-        if self.platform in RAWHIDE_VERSIONS:
-            self.platform = "fc-rawhide"
-
         self.packagename = tmp
 
 def construct_location(platform, arch, filename):
     return "{0}/{1}/{2}".format(platform, arch, filename)
 
 def is_tag(ref):
-    return (re.compile("""^(v)(\d+)\.(\d+)\.(\d+)$""").match(ref) != None or
+    return (re.compile("""^(v)(\d+)\.(\d+)\.(\d+)(-(rc)?(\d+))?$""").match(ref) != None or
            re.compile("""^(v)(\d+)\.(\d+)$""").match(ref) != None)
 
 def mkdir_p(path):
@@ -139,7 +135,7 @@ class Repository(object):
 
         tag = is_tag(ref)
 
-        if tag: 
+        if tag:
             base = "{0}/rc".format(self.base)
         else:
             base = "{0}/testing".format(self.base)
