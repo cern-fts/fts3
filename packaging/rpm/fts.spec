@@ -513,7 +513,7 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
-* Fri Sep 30 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.2-1
+* Thu Nov 10 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.2-1
 - HTTP Staging functionality
 
 * Tue Aug 30 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.1-1
