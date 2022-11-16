@@ -319,6 +319,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                                                         << transfer.destination << commit;
                         auto destFile = createDestFileReport(transfer, gfal2, params);
                         transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file report: " << destFile.toString() << commit;
                     } catch (const std::exception &ex) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
                                                        << transfer.destination << " (error=" << ex.what() << ")" << commit;
