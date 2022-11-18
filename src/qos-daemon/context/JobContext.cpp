@@ -168,6 +168,6 @@ std::string JobContext::getLogMsg() const
     return ss.str();
 }
 
-bool JobContext::isValidOp(const std::string& surl, const std::string& jobId, int fileId) {
+bool JobContext::isValidOp(const std::string& surl, const std::string& jobId, uint64_t fileId) {
     return (!surl.empty() && !jobId.empty() && fileId > 0);
 }

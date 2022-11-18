@@ -4,7 +4,7 @@
 %define devtoolset devtoolset-8
 
 Name:       fts
-Version:    3.12.2
+Version:    3.12.3
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -397,6 +397,9 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Fri Nov 18 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.3-1
+- QoS task generation critical fix
+
 * Thu Nov 10 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.2-1
 - HTTP Staging functionality
 
