@@ -24,9 +24,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(GLIB2)
 find_package(ZMQ)
+find_package(JSONCPP)
+
 include_directories(
 	${GLIB2_INCLUDE_DIRS}
 	${ZMQ_INCLUDE_DIRS}
+	${JSONCPP_INCLUDE_DIRS}
 )
 
 # Server lib
@@ -48,6 +51,7 @@ target_link_libraries(fts_server_lib
 	${GLIB2_LIBRARIES}
 	${Boost_LIBRARIES}
     ${ZMQ_LIBRARIES}
+	JSONCPP::JSONCPP
 )
 set_target_properties(fts_server_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/server
@@ -55,7 +59,6 @@ set_target_properties(fts_server_lib PROPERTIES
     SOVERSION ${VERSION_MAJOR}
     CLEAN_DIRECT_OUTPUT 1
 )
-
 
 # Server executable
 add_executable(fts_server main.cpp)
@@ -79,7 +82,6 @@ install(FILES "${MAN_INPUT_DIR}/fts_url_copy.8" DESTINATION ${MAN_INSTALL_DIR}/m
 install(FILES "${MAN_INPUT_DIR}/fts_bringonline.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_qos.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_info_publisher.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-
 
 # Artifacts
 install(TARGETS fts_server_lib
