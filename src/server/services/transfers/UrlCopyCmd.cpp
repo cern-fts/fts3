@@ -22,10 +22,11 @@
  * See url-copy/args.cpp to see the list of supported arguments
  */
 
-#include "UrlCopyCmd.h"
-#include <cajun/json/elements.h>
-#include <cajun/json/reader.h>
 #include <boost/algorithm/string/replace.hpp>
+#include <json/json.h>
+
+#include "UrlCopyCmd.h"
+
 
 namespace fts3 {
 namespace server {
@@ -258,25 +259,20 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
 
-    if (!transfer.fileMetadata.empty())
-    {
-        std::istringstream ss(transfer.fileMetadata);
-        json::Object obj;
+    if (!transfer.fileMetadata.empty()) {
         try {
-            json::Reader::Read(obj, ss);
-            json::Object::const_iterator it = obj.Find("source-issuer");
-            if (it != obj.End())
-            {
-                const json::String issuer = it->element;
-                setOption("source-issuer", issuer.Value());
+            Json::Value json;
+            std::istringstream ss(transfer.fileMetadata);
+            ss >> json;
+
+            for (const auto& issuerType: {"source-issuer", "dest-issuer"}) {
+                auto issuer = json.get(issuerType, "").asString();
+
+                if (!issuer.empty()) {
+                    setOption(issuerType, issuer);
+                }
             }
-            it = obj.Find("dest-issuer");
-            if (it != obj.End())
-            {
-                const json::String issuer = it->element;
-                setOption("dest-issuer", issuer.Value());
-            }
-        } catch (const json::Exception&) {
+        } catch (const Json::Exception&) {
             // Ignore for now.
         }
     }

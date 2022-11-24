@@ -71,6 +71,7 @@ target_link_libraries(fts_msg_bulk
 	fts_msg_bus
     rt
     ${Boost_LIBRARIES}
+	JSONCPP::JSONCPP
 )
 
 # Artifacts

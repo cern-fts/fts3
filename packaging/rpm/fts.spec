@@ -24,7 +24,6 @@ BuildRequires:  boost-devel
 BuildRequires: %{devtoolset}
 %endif
 
-BuildRequires:  cajun-jsonapi-devel
 BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
