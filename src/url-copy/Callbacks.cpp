@@ -43,7 +43,7 @@ void performanceCallback(gfalt_transfer_status_t h, const char*, const char*, gp
         transfer->averageThroughput = avg;
         transfer->instantaneousThroughput = inst;
         transfer->transferredBytes = trans;
-        transfer->stats.elapsedAtPerf = elapsed*1000;
+        transfer->stats.elapsedAtPerf = elapsed * 1000;
     }
 }
 

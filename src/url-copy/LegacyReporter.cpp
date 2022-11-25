@@ -128,8 +128,6 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     producer.runProducerLog(log);
 
-    // Status
-
     if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred Bytes Decreased, not sending perf to server: previous="
                                            << transfer.previousPingTransferredBytes
@@ -138,6 +136,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
                                            << commit;
         return;
     }
+
     if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
                                            << transfer.averageThroughput
@@ -146,6 +145,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
                                            << commit;
         return;
     }
+
+    // Status
     events::Message status;
 
     status.set_timestamp(millisecondsSinceEpoch());
@@ -188,7 +189,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
             status.set_transferred_since_last_ping(0);
         }
         else {
-            status.set_transferred_since_last_ping(transfer.fileSize-transfer.previousPingTransferredBytes);
+            status.set_transferred_since_last_ping(transfer.fileSize - transfer.previousPingTransferredBytes);
         }
 
         // Message Throughput in MiB/sec
@@ -208,10 +209,11 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
             }
         }
         else { // Throughput must be computed manually (short transfers)
-            double transferDuration = transfer.getTransferDurationInSeconds(); // in s
+            double transferDuration = transfer.getTransferDurationInSeconds();
+
             if (transferDuration > 0) {
                 double transferred = static_cast<double>(transfer.fileSize) / 1048576.0; // in MiB
-                double throughput = transferred/transferDuration; // in MiB/s
+                double throughput = transferred / transferDuration; // in MiB/s
                 status.set_throughput(throughput);
                 status.set_instantaneous_throughput(throughput);
             } else {
@@ -361,7 +363,7 @@ void LegacyReporter::sendPing(Transfer &transfer)
     ping.set_throughput(transfer.averageThroughput / 1024.0);
     ping.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
     ping.set_transferred(transfer.transferredBytes);
-    ping.set_transferred_since_last_ping(transfer.transferredBytes-transfer.previousPingTransferredBytes);
+    ping.set_transferred_since_last_ping(transfer.transferredBytes - transfer.previousPingTransferredBytes);
     ping.set_source_turl("gsiftp:://fake");
     ping.set_dest_turl("gsiftp:://fake");
 

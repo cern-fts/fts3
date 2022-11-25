@@ -65,7 +65,7 @@ void SupervisorService::runService()
 
                 FTS3_COMMON_LOGGER_NEWLOG(PROF) << "[profiling:transfer]"
                                                 << " file_id=" << event.file_id()
-                                                << " timestamp=" << event.gfal_perf_timestamp()/1000
+                                                << " timestamp=" << event.gfal_perf_timestamp() / 1000
                                                 << " inst_throughput=" << event.instantaneous_throughput()
                                                 << " dif_transferred=" << event.transferred_since_last_ping()
                                                 << " source_se=" << Uri::parse(event.source_surl()).getSeName()

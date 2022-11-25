@@ -84,7 +84,7 @@ public:
         NOTICE,
         WARNING,
         ERR,
-        CRIT,
+        CRIT
     } LogLevel;
 
     /// Get the corresponding log level for the given string
@@ -101,12 +101,12 @@ public:
     /// Switch logging on. Log messages will be displayed.
     Logger& setLogLevel(LogLevel level);
 
-    /// Set Profiling to Logs On/Off
+    /// Set Profiling Logs On/Off
     Logger& setProfiling(bool value);
 
     /// Start a new log message. But this is not the recommended way,
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
-    /// proper debug information. Th einteher LOGLEVEL template parameter
+    /// proper debug information. The integer LOGLEVEL template parameter
     /// is understood by the logger traits.
     LoggerEntry newLog(LogLevel logLevel, const char* aFile,
             const char* aFunc, const int aLineNo);

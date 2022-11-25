@@ -214,7 +214,7 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
         if (msg.transfer_status().compare("FINISHED") == 0) {
             FTS3_COMMON_LOGGER_NEWLOG(PROF) << "[profiling:transfer]"
                                             << " file_id=" << msg.file_id()
-                                            << " timestamp=" << msg.gfal_perf_timestamp()/1000
+                                            << " timestamp=" << msg.gfal_perf_timestamp() / 1000
                                             << " inst_throughput=" << msg.instantaneous_throughput()
                                             << " dif_transferred=" << msg.transferred_since_last_ping()
                                             << " source_se=" << msg.source_se()

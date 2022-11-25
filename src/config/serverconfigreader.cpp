@@ -241,7 +241,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     (
         "Profiling",
         po::value<std::string>( &(_vars["Profiling"]) )->default_value("false"),
-        "Enable or disable internal profiling log lines"
+        "Enable or disable internal profiling logs"
     )
     (
         "InternalThreadPool",

@@ -70,10 +70,10 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
         {"debug", DEBUG},
         {"info",  INFO},
         {"notice", NOTICE},
-        {"warn", WARNING},{"warning", WARNING},
-        {"err", ERR},{"error", ERR},
-        {"crit", CRIT}, {"critical", CRIT},
         {"prof", PROF}, {"profiling", PROF},
+        {"warn", WARNING}, {"warning", WARNING},
+        {"err", ERR}, {"error", ERR},
+        {"crit", CRIT}, {"critical", CRIT}
     };
     static const int N_REPR = sizeof(LEVEL_REPR) / sizeof(LevelRepr);
 
