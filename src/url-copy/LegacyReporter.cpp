@@ -128,24 +128,6 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     producer.runProducerLog(log);
 
-    if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred Bytes Decreased, not sending perf to server: previous="
-                                           << transfer.previousPingTransferredBytes
-                                           << " next="
-                                           << transfer.transferredBytes
-                                           << commit;
-        return;
-    }
-
-    if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
-                                           << transfer.averageThroughput
-                                           << " instantaneous="
-                                           << transfer.instantaneousThroughput
-                                           << commit;
-        return;
-    }
-
     // Status
     events::Message status;
 
@@ -161,11 +143,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     if (transfer.error) {
         std::stringstream fullErrMsg;
         fullErrMsg << transfer.error->scope() << " [" << transfer.error->code() << "] " << transfer.error->what();
+
         if (transfer.error->code() == ECANCELED) {
             status.set_transfer_status("CANCELED");
-        }
-        else {
+        } else {
             status.set_transfer_status("FAILED");
+
             if ((transfer.error->code() == EEXIST) && (opts.dstFileReport) && (!opts.overwrite)) {
                 status.set_file_metadata(replaceMetadataString(transfer.fileMetadata));
             }
@@ -173,18 +156,22 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         status.set_transfer_message(fullErrMsg.str());
         status.set_retry(transfer.error->isRecoverable());
         status.set_errcode(transfer.error->code());
-    }
-    else {
+    } else {
         status.set_errcode(0);
         status.set_transfer_status("FINISHED");
 
         status.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
 
-        if (transfer.fileSize < transfer.previousPingTransferredBytes) {
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred More Bytes Than filesize: fileSize="
-                                               << transfer.fileSize
-                                               << " previousPingTransferredBytes="
-                                               << transfer.previousPingTransferredBytes
+        if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred bytes decreased:"
+                                               << " transferred=" << transfer.transferredBytes
+                                               << " previous_transferred=" << transfer.previousPingTransferredBytes
+                                               << commit;
+            status.set_transferred_since_last_ping(0);
+        } else if (transfer.fileSize < transfer.previousPingTransferredBytes) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred more bytes than file size:"
+                                               << " file_size=" << transfer.fileSize
+                                               << " previous_transferred=" << transfer.previousPingTransferredBytes
                                                << commit;
             status.set_transferred_since_last_ping(0);
         }
@@ -193,22 +180,19 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         }
 
         // Message Throughput in MiB/sec
-        if (transfer.averageThroughput > 0) { // Throughput from gfal PerformanceCallback's
+        if (transfer.averageThroughput > 0) { // Throughput from Gfal PerformanceCallback
             if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
-                                                   << transfer.averageThroughput
-                                                   << " instantaneous="
-                                                   << transfer.instantaneousThroughput
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, setting throughput and instantaneous throughput to zero:"
+                                                   << " average=" << transfer.averageThroughput
+                                                   << " instantaneous=" << transfer.instantaneousThroughput
                                                    << commit;
                 status.set_throughput(0.0);
                 status.set_instantaneous_throughput(0.0);
-            }
-            else {
+            } else {
                 status.set_throughput(transfer.averageThroughput / 1024.0);
                 status.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
             }
-        }
-        else { // Throughput must be computed manually (short transfers)
+        } else { // Throughput must be computed manually (short transfers)
             double transferDuration = transfer.getTransferDurationInSeconds();
 
             if (transferDuration > 0) {
@@ -326,7 +310,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.transfer_type = transfer.stats.transferType;
 
     if (opts.enableMonitoring) {
-        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
+        auto msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer complete message content: " << msgReturnValue << commit;
     }
 }
@@ -335,21 +319,21 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 void LegacyReporter::sendPing(Transfer &transfer)
 {
     if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred Bytes Decreased, not sending perf to server: previous="
-                                           << transfer.previousPingTransferredBytes
-                                           << " next="
-                                           << transfer.transferredBytes
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred bytes decreased, not sending perf to server:"
+                                           << " transferred=" << transfer.transferredBytes
+                                           << " previous_transferred=" << transfer.previousPingTransferredBytes
                                            << commit;
         return;
     }
+
     if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server: average="
-                                           << transfer.averageThroughput
-                                           << " instantaneous="
-                                           << transfer.instantaneousThroughput
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server:"
+                                           << " average=" << transfer.averageThroughput
+                                           << " instantaneous=" << transfer.instantaneousThroughput
                                            << commit;
         return;
     }
+
     events::MessageUpdater ping;
     ping.set_timestamp(millisecondsSinceEpoch());
     // Note: elapsedAtPerf does not start when transfer.start is set. (gfal bug)
