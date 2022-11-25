@@ -29,6 +29,7 @@
 #include "state/ArchivingStateUpdater.h"
 #include "task/Gfal2Task.h"
 #include "task/WaitingRoom.h"
+#include "health/QoSHealthMonitoring.h"
 
 class PollTask;
 class CDMIPollTask;
@@ -73,6 +74,10 @@ public:
         return archivingWaitingRoom;
     }
 
+    QoSHealthMonitoring& getMonitoring() {
+        return monitoring;
+    }
+
 private:
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
@@ -84,6 +89,11 @@ private:
     DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;
     ArchivingStateUpdater archivingStateUpdater;
+
+    // Health monitoring class
+    QoSHealthMonitoring monitoring;
+
+
 };
 
 

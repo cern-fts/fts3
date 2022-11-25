@@ -48,7 +48,8 @@ public:
      */
     DeletionContext(QoSServer &bringOnlineServer, const DeleteOperation &nsOp):
         JobContext(nsOp.userDn, nsOp.voName, nsOp.credId),
-        stateUpdater(bringOnlineServer.getDeletionStateUpdater())
+        stateUpdater(bringOnlineServer.getDeletionStateUpdater()),
+        monitoring(bringOnlineServer.getMonitoring())
     {
         add(nsOp);
     }
@@ -58,7 +59,7 @@ public:
      *
      * @param copy : other DeletionContext instance
      */
-    DeletionContext(const DeletionContext &copy): JobContext(copy), stateUpdater(copy.stateUpdater)
+    DeletionContext(const DeletionContext &copy): JobContext(copy), stateUpdater(copy.stateUpdater), monitoring(copy.monitoring)
     {}
 
 
@@ -67,7 +68,7 @@ public:
      *
      * @param copy : the context to be moved
      */
-    DeletionContext(DeletionContext && copy): JobContext(std::move(copy)), stateUpdater(copy.stateUpdater)
+    DeletionContext(DeletionContext && copy): JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), monitoring(copy.monitoring)
     {}
 
     /**
@@ -93,8 +94,17 @@ public:
      */
     void updateState(const std::string &state, const JobError &error) const;
 
+    void incrementTaskCounter() override {
+        monitoring.getDeletionTaskCounter().increment();
+    }
+
+    void decrementTaskCounter() override {
+        monitoring.getDeletionTaskCounter().decrement();
+    }
+
 private:
     DeletionStateUpdater &stateUpdater;
+    QoSHealthMonitoring& monitoring; ///< class that holds QoS daemon health statistics
 };
 
 #endif // DELETIONCONTEXT_H_

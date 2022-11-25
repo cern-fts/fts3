@@ -52,6 +52,15 @@ public:
     */
     std::string getMetadata(const std::string& url) const;
 
+
+    void incrementTaskCounter() override {
+        monitoring.getHttpStagingTaskCounter().increment();
+    }
+
+    void decrementTaskCounter() override {
+        monitoring.getHttpStagingTaskCounter().decrement();
+    }
+
 private:
     /// URL -> Staging metadata
     std::map<std::string, std::string> urlToMetadata;

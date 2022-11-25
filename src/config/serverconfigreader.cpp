@@ -344,6 +344,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "After this many seconds, a host is considered to be down"
     )
     (
+        "QosMonitoringInterval",
+        po::value<std::string>( &(_vars["QosMonitoringInterval"]) )->default_value("60"),
+        "In seconds, how often to run the QoS health monitoring service"
+    )
+    (
         "OptimizerSteadyInterval",
         po::value<std::string>( &(_vars["OptimizerSteadyInterval"]) )->default_value("300"),
         "After this time without optimizer updates, force a run"

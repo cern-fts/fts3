@@ -51,13 +51,14 @@ public:
      *
      * @param ctx : staging context (recover from DB after crash)
      */
-	ArchivingPollTask(const ArchivingContext &ctx) : Gfal2Task("ARCHIVING"), ctx(ctx), nPolls(0), wait_until(0)
+	ArchivingPollTask(const ArchivingContext &cp_ctx) : Gfal2Task("ARCHIVING"), ctx(cp_ctx), nPolls(0), wait_until(0)
     {
         // set the proxy certificate
         setProxy(ctx);
         auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_urls.insert(surls.begin(), surls.end());
+        ctx.incrementTaskCounter();
     }
 
     /**
@@ -68,14 +69,18 @@ public:
     ArchivingPollTask(ArchivingPollTask &&copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),
         nPolls(copy.nPolls), wait_until(copy.wait_until)
     {
+        ctx.incrementTaskCounter();
     }
 
     /**
      * Destructor
      */
     virtual ~ArchivingPollTask() {
-         if (gfal2_ctx)
-            cancel(ctx.getSurls());
+         if (gfal2_ctx) {
+             cancel(ctx.getSurls());
+         }
+
+         ctx.decrementTaskCounter();
     }
 
     /**

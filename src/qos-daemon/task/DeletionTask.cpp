@@ -26,14 +26,6 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 
-
-DeletionTask::DeletionTask(const DeletionContext &ctx) : Gfal2Task("DELETION"), ctx(ctx)
-{
-    // set the proxy certificate
-    setProxy(ctx);
-}
-
-
 void DeletionTask::run(boost::any const &)
 {
     run_impl();

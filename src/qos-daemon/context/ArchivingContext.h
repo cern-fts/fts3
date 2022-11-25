@@ -67,7 +67,8 @@ public:
 
     ArchivingContext(QoSServer &qosServer, const ArchivingOperation &archiveOp):
         JobContext(archiveOp.user, archiveOp.voName, archiveOp.credId, ""),
-        stateUpdater(qosServer.getArchivingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom())
+        stateUpdater(qosServer.getArchivingStateUpdater()), waitingRoom(qosServer.getArchivingWaitingRoom()),
+        monitoring(qosServer.getMonitoring())
     {
         add(archiveOp);
         startTime = time(0);
@@ -76,13 +77,13 @@ public:
     ArchivingContext(const ArchivingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime),
-        storageEndpoint(copy.storageEndpoint)
+        storageEndpoint(copy.storageEndpoint), monitoring(copy.monitoring)
     {}
 
     ArchivingContext(ArchivingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime),
-        storageEndpoint(std::move(copy.storageEndpoint))
+        storageEndpoint(std::move(copy.storageEndpoint)), monitoring(copy.monitoring)
     {}
 
     virtual ~ArchivingContext() {}
@@ -165,6 +166,14 @@ public:
         return storageEndpoint;
     }
 
+    void incrementTaskCounter() {
+        monitoring.getArchivingTaskCounter().increment();
+    }
+
+    void decrementTaskCounter() {
+        monitoring.getArchivingTaskCounter().decrement();
+    }
+
 private:
     ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
@@ -173,6 +182,7 @@ private:
     std::map<uint64_t, time_t> expiryMap;
     time_t startTime;
     std::string storageEndpoint;
+    QoSHealthMonitoring& monitoring; ///< class that holds QoS daemon health statistics
 
     friend class ArchivingPollTask;
 };

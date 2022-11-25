@@ -164,6 +164,16 @@ public:
         return ret;
     }
 
+    /**
+     * Increment correspondent task counter
+     */
+    virtual void incrementTaskCounter() = 0;
+
+    /**
+     * Decrement correspondent task counter
+     */
+    virtual void decrementTaskCounter() = 0;
+
 protected:
     /**
      * Checks if the SURL, jobId and fileId are valid

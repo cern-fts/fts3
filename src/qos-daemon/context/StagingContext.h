@@ -69,7 +69,7 @@ public:
         JobContext(stagingOp.userDn, stagingOp.voName, stagingOp.credId, stagingOp.spaceToken),
         stateUpdater(qosServer.getStagingStateUpdater()), waitingRoom(qosServer.getWaitingRoom()),
         maxPinLifetime(stagingOp.pinLifetime), maxBringonlineTimeout(stagingOp.timeout), minStagingStartTime(time(0)),
-        storageEndpoint()
+        storageEndpoint(), monitoring(qosServer.getMonitoring())
     {
         add(stagingOp);
     }
@@ -77,13 +77,13 @@ public:
     StagingContext(const StagingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
         maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
-        storageEndpoint(copy.storageEndpoint)
+        storageEndpoint(copy.storageEndpoint), monitoring(copy.monitoring)
     {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
         maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
-        storageEndpoint(std::move(copy.storageEndpoint))
+        storageEndpoint(std::move(copy.storageEndpoint)), monitoring(copy.monitoring)
     {}
 
     virtual ~StagingContext() {}
@@ -154,6 +154,14 @@ public:
 
     static std::unique_ptr<StagingContext> createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp);
 
+    void incrementTaskCounter() override {
+        monitoring.getStagingTaskCounter().increment();
+    }
+
+    void decrementTaskCounter() override {
+        monitoring.getStagingTaskCounter().decrement();
+    }
+
 protected:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
@@ -162,6 +170,7 @@ protected:
     int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
     time_t minStagingStartTime; ///< first staging start timestamp of the batch
     std::string storageEndpoint; ///< storage endpoint of the batch
+    QoSHealthMonitoring& monitoring; ///< class that holds QoS daemon health statistics
 };
 
 #endif // STAGINGCONTEXT_H_

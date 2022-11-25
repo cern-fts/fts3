@@ -60,6 +60,7 @@ public:
         auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_urls.insert(surls.begin(), surls.end());
+        ctx.incrementTaskCounter();
     }
 
     /// Copy constructor (deleted)
@@ -70,15 +71,21 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    HttpBringOnlineTask(HttpBringOnlineTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)) {}
+    HttpBringOnlineTask(HttpBringOnlineTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx))
+    {
+        ctx.incrementTaskCounter();
+    }
 
     /**
      * Destructor
      */
     virtual ~HttpBringOnlineTask()
     {
-        if (gfal2_ctx)
+        if (gfal2_ctx) {
             cancel(ctx.getSurls());
+        }
+
+        ctx.decrementTaskCounter();
     }
 
     /**

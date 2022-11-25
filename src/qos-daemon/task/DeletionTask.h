@@ -47,19 +47,28 @@ public:
      *
      * @param ctx : deletion task details
      */
-    DeletionTask(const DeletionContext &ctx);
+    DeletionTask(const DeletionContext &copy_ctx) : Gfal2Task("DELETION"), ctx(copy_ctx)
+    {
+        // set the proxy certificate
+        setProxy(ctx);
+        ctx.incrementTaskCounter();
+    }
 
     /**
      * Creates a new DeletionTask from another Gfal2Task
      *
      * @param copy : a gfal2 task
      */
-    DeletionTask(DeletionTask && copy) : Gfal2Task(std::move(copy)), ctx(copy.ctx) {}
+    DeletionTask(DeletionTask && copy) : Gfal2Task(std::move(copy)), ctx(copy.ctx) {
+        ctx.incrementTaskCounter();
+    }
 
     /**
      * Destructor
      */
-    virtual ~DeletionTask() {}
+    virtual ~DeletionTask() {
+        ctx.decrementTaskCounter();
+    }
 
     /**
      * The routine is executed by the thread pool
@@ -71,7 +80,7 @@ private:
     void run_impl();
 
     /// deletion details
-    const DeletionContext ctx;
+    DeletionContext ctx;
 };
 
 

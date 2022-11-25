@@ -133,6 +133,9 @@ void QoSServer::start(void)
     // Heartbeat
     systemThreads.create_thread(heartBeat);
 
+    // Health monitoring
+    systemThreads.create_thread(boost::bind(&QoSHealthMonitoring::run, &monitoring));
+
     // Give heartbeat some time to be processed
     if (!ServerConfig::instance().get<bool>("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(8));

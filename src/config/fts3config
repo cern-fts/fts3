@@ -103,6 +103,9 @@ LogLevel=INFO
 # After this interval a host is considered down (measured in seconds)
 # HeartBeatGraceInterval=120
 
+# How often to run the QoS health monitoring service
+# QosMonitoringInterval=60
+
 ## Optimizer Service settings
 # Optimizer run time interval for active links (measured in seconds)
 # OptimizerInterval = 60
