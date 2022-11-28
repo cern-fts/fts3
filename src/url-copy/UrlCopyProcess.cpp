@@ -365,6 +365,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
     // Ping thread
     AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
 
     // Transfer
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;
