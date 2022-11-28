@@ -244,6 +244,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Enable or disable internal profiling logs"
     )
     (
+        "UrlCopyProcessPingInterval",
+        po::value<std::string>( &(_vars["UrlCopyProcessPingInterval"]) )->default_value("60"),
+        "Set the UrlCopyProcess ping and transfer update interval"
+    )
+    (
         "InternalThreadPool",
         po::value<std::string>( &(_vars["InternalThreadPool"]) )->default_value("5"),
         "Set the number of threads in the internal threadpool"

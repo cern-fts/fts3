@@ -64,6 +64,7 @@ const option UrlCopyOpts::long_options[] =
     {"alias",             required_argument, 0, 601},
     {"monitoring",        no_argument,       0, 602},
     {"active",            required_argument, 0, 603},
+    {"ping-interval",     required_argument, 0, 604},
 
     {"file-metadata",     required_argument, 0, 700},
     {"job-metadata",      required_argument, 0, 701},
@@ -327,6 +328,8 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 603:
                     active = boost::lexical_cast<unsigned>(optarg);
                     break;
+                case 604:
+                    pingInterval = boost::lexical_cast<unsigned>(optarg);
 
                 case 700:
                     referenceTransfer.fileMetadata = optarg;
