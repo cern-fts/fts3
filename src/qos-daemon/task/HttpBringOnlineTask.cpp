@@ -57,6 +57,7 @@ void HttpBringOnlineTask::run(const boost::any &)
                                     << " bring-online-timeout=" << ctx.getBringonlineTimeout()
                                     << " storage=" << ctx.getStorageEndpoint() << commit;
 
+    time_t start = time(0);
     int status = gfal2_bring_online_list_v2(
                      gfal2_ctx,
                      static_cast<int>(urls.size()),
@@ -69,6 +70,12 @@ void HttpBringOnlineTask::run(const boost::any &)
                      1,
                      errors.data()
                  );
+    time_t end = time(0);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Gfal2time=\"HttpBringOnlineTask\" "
+                                    << "func=\"run\" "
+                                    << "Gfal2call=\"gfal2_bring_online_list_v2\" "
+                                    << "time=\"" << end - start << "\""
+                                    << commit;
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {

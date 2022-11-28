@@ -55,7 +55,15 @@ void ArchivingPollTask::run(const boost::any&)
         << commit;
 
 	std::vector<GError*> errors(urls.size(), NULL);
-	int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
+
+    time_t start = time(0);
+    int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
+    time_t end = time(0);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Gfal2time=\"ArchivingPollTask\" "
+                                    << "func=\"run\" "
+                                    << "Gfal2call=\"gfal2_archive_poll_list\" "
+                                    << "time=\"" << end - start << "\""
+                                    << commit;
 
 	// Status return code meaning:
 	//  0  - Not all files are in terminal state

@@ -55,7 +55,14 @@ void PollTask::run(const boost::any&)
     std::vector<GError*> errors(urls.size(), NULL);
     std::vector<const char*> failedUrls;
 
+    time_t start = time(0);
     int status = gfal2_bring_online_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
+    time_t end = time(0);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Gfal2time=\"PollTask\" "
+                                    << "func=\"run\" "
+                                    << "Gfal2call=\"gfal2_bring_online_poll_list\" "
+                                    << "time=\"" << end - start << "\""
+                                    << commit;
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {

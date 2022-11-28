@@ -56,7 +56,14 @@ void DeletionTask::run_impl()
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Bulk of " << urls.size() << " files" << commit;
 
+    time_t start = time(0);
     int status = gfal2_unlink_list(gfal2_ctx, (int)urls.size(), urls.data(), error.data());
+    time_t end = time(0);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Gfal2time=\"DeletionTask\" "
+                                    << "func=\"run_impl\" "
+                                    << "Gfal2call=\"gfal2_unlink_list\" "
+                                    << "time=\"" << end - start << "\""
+                                    << commit;
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
