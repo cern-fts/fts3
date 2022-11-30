@@ -54,14 +54,24 @@ void SupervisorService::runService()
                 }
                 events.emplace_back(event);
 
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
-                    << "\nJob id: " << event.job_id()
-                    << "\nFile id: " << event.file_id()
-                    << "\nPid: " << event.process_id()
-                    << "\nTimestamp: " << event.timestamp()
-                    << "\nThroughput: " << event.throughput()
-                    << "\nTransferred: " << event.transferred()
-                    << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor"
+                                                << "\nJob id: " << event.job_id()
+                                                << "\nFile id: " << event.file_id()
+                                                << "\nPid: " << event.process_id()
+                                                << "\nTimestamp: " << event.timestamp()
+                                                << "\nThroughput: " << event.throughput()
+                                                << "\nTransferred: " << event.transferred()
+                                                << commit;
+
+                FTS3_COMMON_LOGGER_NEWLOG(PROF) << "[profiling:transfer]"
+                                                << " file_id=" << event.file_id()
+                                                << " timestamp=" << event.gfal_perf_timestamp() / 1000
+                                                << " inst_throughput=" << event.instantaneous_throughput()
+                                                << " dif_transferred=" << event.transferred_since_last_ping()
+                                                << " source_se=" << Uri::parse(event.source_surl()).getSeName()
+                                                << " dest_se=" << Uri::parse(event.dest_surl()).getSeName()
+                                                << commit;
+
                 ThreadSafeList::get_instance().updateMsg(event);
             }
 

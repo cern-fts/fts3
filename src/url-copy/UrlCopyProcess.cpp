@@ -246,11 +246,11 @@ static void timeoutTask(boost::posix_time::time_duration &duration, UrlCopyProce
 }
 
 
-static void pingTask(Transfer *transfer, Reporter *reporter)
+static void pingTask(Transfer *transfer, Reporter *reporter, unsigned pingInterval)
 {
     try {
         while (!boost::this_thread::interruption_requested()) {
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
+            boost::this_thread::sleep(boost::posix_time::seconds(pingInterval));
             reporter->sendPing(*transfer);
         }
     } catch (const boost::thread_interrupted&) {
@@ -365,7 +365,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << timeout << commit;
 
     // Ping thread
-    AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter));
+    AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
 
     // Transfer
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;

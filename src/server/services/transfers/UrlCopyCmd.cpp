@@ -97,6 +97,12 @@ void UrlCopyCmd::setMonitoring(bool set, const std::string &msgDir)
 }
 
 
+void UrlCopyCmd::setPingInterval(int interval)
+{
+    setOption("ping-interval", interval);
+}
+
+
 void UrlCopyCmd::setInfosystem(const std::string &infosys)
 {
     setOption("infosystem", infosys);

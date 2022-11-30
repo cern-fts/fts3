@@ -74,6 +74,7 @@ public:
     bool     evict;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option
+    unsigned pingInterval;
 
     unsigned retry;
     unsigned retryMax;

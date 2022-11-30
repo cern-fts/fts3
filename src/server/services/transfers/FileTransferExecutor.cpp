@@ -164,6 +164,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Enable monitoring
             cmdBuilder.setMonitoring(monitoringMsg, msgDir);
 
+            // Set UrlCopyProcess ping interval (in seconds)
+            cmdBuilder.setPingInterval(fts3::config::ServerConfig::instance().get<int>("UrlCopyProcessPingInterval"));
+
             // Proxy
             if (!proxy.empty()) {
                 cmdBuilder.setProxy(proxy);

@@ -64,6 +64,7 @@ const option UrlCopyOpts::long_options[] =
     {"alias",             required_argument, 0, 601},
     {"monitoring",        no_argument,       0, 602},
     {"active",            required_argument, 0, 603},
+    {"ping-interval",     required_argument, 0, 604},
 
     {"file-metadata",     required_argument, 0, 700},
     {"job-metadata",      required_argument, 0, 701},
@@ -174,8 +175,8 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 UrlCopyOpts::UrlCopyOpts():
     isSessionReuse(false), strictCopy(false), dstFileReport(false), retrieveSEToken(false),
     optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
-    timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
-    noStreaming(false), evict(false), enableMonitoring(false), active(0), retry(0), retryMax(0),
+    timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
+    evict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
     logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
     debugLevel(0), logToStderr(false)
 {
@@ -327,6 +328,8 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 603:
                     active = boost::lexical_cast<unsigned>(optarg);
                     break;
+                case 604:
+                    pingInterval = boost::lexical_cast<unsigned>(optarg);
 
                 case 700:
                     referenceTransfer.fileMetadata = optarg;

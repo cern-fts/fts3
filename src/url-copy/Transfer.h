@@ -66,6 +66,7 @@ public:
         Interval destChecksum;
         Interval srmPreparation;
         Interval srmFinalization;
+        uint64_t elapsedAtPerf;
 
         Interval process;
 
@@ -77,7 +78,7 @@ public:
         std::string finalDestination;
         std::string transferType;
 
-        Statistics(): ipver(IPver::UNKNOWN), evictionRetc(-1) {};
+        Statistics(): elapsedAtPerf(0), ipver(IPver::UNKNOWN), evictionRetc(-1) {};
     };
 
     /**
@@ -123,8 +124,10 @@ public:
     uint64_t fileSize;
 
     // Progress markers
-    double throughput;
+    double averageThroughput; // In KiB/s
+    double instantaneousThroughput; // In KiB/s
     uint64_t transferredBytes;
+    uint64_t previousPingTransferredBytes;
 
     // Log file
     std::string logFile;

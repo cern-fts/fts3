@@ -36,8 +36,13 @@ MonitoringMessaging=true
 # Directory where the internal FTS3 messages are written
 MessagingDirectory=/var/lib/fts3
 
-# Profiling interval in seconds. If set to 0, it will be disabled
-Profiling=0
+# Enable Profiling log messages
+Profiling=false
+
+# Set the UrlCopyProcess ping and transfer update interval.
+# For throughput monitoring (Profiling is enabled), a lower value is better.
+# Lowest recommended value should exceed the Gfal2 performance markers (as often as every 5 seconds)
+UrlCopyProcessPingInterval=60
 
 # Log directories
 TransferLogDirectory=/var/log/fts3/transfers

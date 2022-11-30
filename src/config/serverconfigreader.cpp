@@ -240,8 +240,13 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "Profiling",
-        po::value<std::string>( &(_vars["Profiling"]) )->default_value("0"),
-        "Enable or disable internal profiling"
+        po::value<std::string>( &(_vars["Profiling"]) )->default_value("false"),
+        "Enable or disable internal profiling logs"
+    )
+    (
+        "UrlCopyProcessPingInterval",
+        po::value<std::string>( &(_vars["UrlCopyProcessPingInterval"]) )->default_value("60"),
+        "Set the UrlCopyProcess ping and transfer update interval"
     )
     (
         "InternalThreadPool",

@@ -17,4 +17,8 @@ message MessageUpdater {
 
     required double throughput = 10;
     required uint64 transferred = 11;
+
+    required double instantaneous_throughput = 12;
+    required uint64 gfal_perf_timestamp = 13;
+    required uint64 transferred_since_last_ping = 14;
 }

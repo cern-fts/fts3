@@ -141,7 +141,7 @@ inline bool ServerConfig::get<bool> (const std::string& aVariable /**< A config 
     boost::to_lower(str);
 
     // if the string is 'false' return false
-    if (str == "false") return false;
+    if (str == "false" || str == "0") return false;
     // otherwise return true (it may be 'true' or other string containing respective value)
     else return true;
 }

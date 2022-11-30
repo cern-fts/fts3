@@ -79,6 +79,7 @@ public:
     {
         TRACE,
         DEBUG,
+        PROF,
         INFO,
         NOTICE,
         WARNING,
@@ -100,9 +101,12 @@ public:
     /// Switch logging on. Log messages will be displayed.
     Logger& setLogLevel(LogLevel level);
 
+    /// Set Profiling Logs On/Off
+    Logger& setProfiling(bool value);
+
     /// Start a new log message. But this is not the recommended way,
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
-    /// proper debug information. Th einteher LOGLEVEL template parameter
+    /// proper debug information. The integer LOGLEVEL template parameter
     /// is understood by the logger traits.
     LoggerEntry newLog(LogLevel logLevel, const char* aFile,
             const char* aFunc, const int aLineNo);
@@ -118,6 +122,9 @@ private:
 
     /// Log level
     LogLevel _logLevel;
+
+    /// Profiling On/Off
+    bool _profiling;
 
     /// Separator for the logging
     std::string _separator;
