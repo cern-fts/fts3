@@ -4,7 +4,7 @@
 %define devtoolset devtoolset-8
 
 Name:       fts
-Version:    3.12.3
+Version:    3.12.4
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -397,6 +397,14 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Fri Dec 02 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4-1
+- Add throughput profiling logs
+- Implement Force Start Transfers mechanism
+- Provide more TransferComplete Monitoring Messages fields directly at source
+- Introduce new "ipver" field in TransferComplete Monitoring Message
+- Pass bringonline token to copy eviction
+- Upgrade compiler support to C++17
+
 * Fri Nov 18 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.3-1
 - QoS task generation critical fix
 
