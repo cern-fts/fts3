@@ -28,22 +28,32 @@ public:
         return output;
     }
 
-    static std::string appendDestFileToFileMetadata(std::string file_metadata, json::Object dst_file) 
+    std::string toString()
+    {
+        std::ostringstream oss;
+
+        oss << "file_size=" << fileSize << " checksum=" << checksumType << ":" << checksumValue << " "
+            << "file_on_disk=" << fileOnDisk << " file_on_tape=" << fileOnTape;
+
+        return oss.str();
+    }
+
+    static std::string appendDestFileToFileMetadata(const std::string& file_metadata, json::Object dst_file)
     {
         json::UnknownElement metadata;
 
         if (!file_metadata.empty()) {
             try {
-                std::string new_file_metadata = replaceMetadataString(file_metadata);
+                auto new_file_metadata = replaceMetadataString(file_metadata);
                 std::istringstream valueStream(new_file_metadata);
                 json::Reader::Read(metadata, valueStream);
             }
             catch (...) {
-                metadata["file_metada"] = json::String(file_metadata);
+                metadata["file_metadata"] = json::String(file_metadata);
             }
         }
         
-        metadata["dst_file"] = json::Object(dst_file);
+        metadata["dst_file"] = json::Object(std::move(dst_file));
         
         std::ostringstream stream;
         json::Writer::Write(metadata, stream);

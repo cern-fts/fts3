@@ -29,30 +29,21 @@ void performanceCallback(gfalt_transfer_status_t h, const char*, const char*, gp
     if (h) {
         Transfer *transfer = (Transfer*)(udata);
 
-        size_t avg = gfalt_copy_get_average_baudrate(h, NULL);
-        if (avg > 0) {
-            avg = avg / 1024;
-        }
-        else {
-            avg = 0;
-        }
-        size_t inst = gfalt_copy_get_instant_baudrate(h, NULL);
-        if (inst > 0) {
-            inst = inst / 1024;
-        }
-        else {
-            inst = 0;
-        }
-
+        double avg = static_cast<double>(gfalt_copy_get_average_baudrate(h, NULL)) / 1024.0;
+        double inst = static_cast<double>(gfalt_copy_get_instant_baudrate(h, NULL)) / 1024.0;
         size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
         time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
+
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "bytes: " << trans
-            << ", avg KB/sec:" << avg
-            << ", inst KB/sec:" << inst
-            << ", elapsed:" << elapsed
-            << commit;
-        transfer->throughput = (double) avg;
+                                        << ", avg KiB/sec:" << avg
+                                        << ", inst KiB/sec:" << inst
+                                        << ", elapsed sec:" << elapsed
+                                        << commit;
+
+        transfer->averageThroughput = avg;
+        transfer->instantaneousThroughput = inst;
         transfer->transferredBytes = trans;
+        transfer->stats.elapsedAtPerf = elapsed * 1000;
     }
 }
 
@@ -143,8 +134,11 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     else if (e->stage == GFAL_EVENT_CLOSE_EXIT && e->domain == SRM_DOMAIN) {
         transfer->stats.srmFinalization.end = e->timestamp;
     }
+    else if (e->stage == GFAL_EVENT_IPV4) {
+        transfer->stats.ipver = Transfer::IPver::IPv4;
+    }
     else if (e->stage == GFAL_EVENT_IPV6) {
-        transfer->stats.ipv6Used = true;
+        transfer->stats.ipver = Transfer::IPver::IPv6;
     }
     else if (e->stage == GFAL_EVENT_EVICT) {
         try {

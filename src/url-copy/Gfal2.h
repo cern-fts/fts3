@@ -240,6 +240,14 @@ public:
         }
     }
 
+    void setBringonlineToken(const std::string &token)
+    {
+        GError *error = NULL;
+        if (gfalt_set_stage_request_id(params, token.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     void addEventCallback(gfalt_event_func callback, void *udata)
     {
         GError *error = NULL;

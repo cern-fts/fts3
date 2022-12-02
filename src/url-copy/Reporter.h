@@ -42,7 +42,7 @@ public:
     virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&) = 0;
 
     /// Periodic notifications
-    virtual void sendPing(const Transfer&) = 0;
+    virtual void sendPing(Transfer&) = 0;
 };
 
 #endif // FTS3_REPORTER_H

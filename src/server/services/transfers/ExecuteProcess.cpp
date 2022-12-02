@@ -94,8 +94,7 @@ static void closeAllFilesExcept(int exception)
 {
     long maxfd = sysconf(_SC_OPEN_MAX);
 
-    register int fdAll;
-    for (fdAll = 3; fdAll < maxfd; fdAll++) {
+    for (int fdAll = 3; fdAll < maxfd; fdAll++) {
         if (fdAll != exception)
             close(fdAll);
     }

@@ -58,37 +58,37 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
 
     producer.runProducerStatus(status);
 
-    // Fill transfer start
-    TransferCompleted completed;
+    // Fill transfer started
+    TransferCompleted started;
 
-    completed.transfer_id = transfer.getTransferId();
-    completed.job_id = transfer.jobId;
-    completed.file_id = transfer.fileId;
-    completed.endpoint = opts.alias;
+    started.transfer_id = transfer.getTransferId();
+    started.job_id = transfer.jobId;
+    started.file_id = transfer.fileId;
+    started.endpoint = opts.alias;
 
     if (transfer.source.protocol == "srm") {
-        completed.source_srm_version = "2.2.0";
+        started.source_srm_version = "2.2.0";
     }
     if (transfer.destination.protocol == "srm") {
-        completed.destination_srm_version = "2.2.0";
+        started.destination_srm_version = "2.2.0";
     }
 
-    completed.vo = opts.voName;
-    completed.source_url = transfer.source.fullUri;
-    completed.dest_url = transfer.destination.fullUri;
-    completed.source_hostname = transfer.source.host;
-    completed.dest_hostname = transfer.destination.host;
-    completed.t_channel = transfer.getChannel();
-    completed.channel_type = "urlcopy";
-    completed.user_dn = replaceMetadataString(opts.userDn);
-    completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
-    completed.job_metadata = replaceMetadataString(opts.jobMetadata);
-    completed.srm_space_token_source = transfer.sourceTokenDescription;
-    completed.srm_space_token_dest = transfer.destTokenDescription;
-    completed.tr_timestamp_start = millisecondsSinceEpoch();
+    started.vo = opts.voName;
+    started.source_url = transfer.source.fullUri;
+    started.dest_url = transfer.destination.fullUri;
+    started.source_hostname = transfer.source.host;
+    started.dest_hostname = transfer.destination.host;
+    started.t_channel = transfer.getChannel();
+    started.channel_type = "urlcopy";
+    started.user_dn = replaceMetadataString(opts.userDn);
+    started.file_metadata = replaceMetadataString(transfer.fileMetadata);
+    started.job_metadata = replaceMetadataString(opts.jobMetadata);
+    started.srm_space_token_source = transfer.sourceTokenDescription;
+    started.srm_space_token_dest = transfer.destTokenDescription;
+    started.tr_timestamp_start = millisecondsSinceEpoch();
 
     if (opts.enableMonitoring) {
-        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, completed);
+        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, started);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer start message content: " << msgReturnValue << commit;
     }
 }
@@ -134,8 +134,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     status.set_timestamp(millisecondsSinceEpoch());
     status.set_job_id(transfer.jobId);
     status.set_file_id(transfer.fileId);
-    status.set_source_se(transfer.source.host);
-    status.set_dest_se(transfer.destination.host);
+    status.set_source_se(Uri::parse(transfer.source.fullUri).getSeName());
+    status.set_dest_se(Uri::parse(transfer.destination.fullUri).getSeName());
     status.set_process_id(getpid());
     status.set_filesize(transfer.fileSize);
     status.set_time_in_secs(transfer.getTransferDurationInSeconds());
@@ -143,11 +143,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     if (transfer.error) {
         std::stringstream fullErrMsg;
         fullErrMsg << transfer.error->scope() << " [" << transfer.error->code() << "] " << transfer.error->what();
+
         if (transfer.error->code() == ECANCELED) {
             status.set_transfer_status("CANCELED");
-        }
-        else {
+        } else {
             status.set_transfer_status("FAILED");
+
             if ((transfer.error->code() == EEXIST) && (opts.dstFileReport) && (!opts.overwrite)) {
                 status.set_file_metadata(replaceMetadataString(transfer.fileMetadata));
             }
@@ -155,19 +156,54 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         status.set_transfer_message(fullErrMsg.str());
         status.set_retry(transfer.error->isRecoverable());
         status.set_errcode(transfer.error->code());
-    }
-    else {
+    } else {
         status.set_errcode(0);
         status.set_transfer_status("FINISHED");
 
-        // Throughput in MB/sec
-        if (transfer.throughput > 0) {
-            status.set_throughput(transfer.throughput / 1024.0);
+        status.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
+
+        if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred bytes decreased:"
+                                               << " transferred=" << transfer.transferredBytes
+                                               << " previous_transferred=" << transfer.previousPingTransferredBytes
+                                               << commit;
+            status.set_transferred_since_last_ping(0);
+        } else if (transfer.fileSize < transfer.previousPingTransferredBytes) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred more bytes than file size:"
+                                               << " file_size=" << transfer.fileSize
+                                               << " previous_transferred=" << transfer.previousPingTransferredBytes
+                                               << commit;
+            status.set_transferred_since_last_ping(0);
         }
         else {
-            status.set_throughput(
-                (static_cast<double>(transfer.fileSize) / std::max(transfer.getTransferDurationInSeconds(), 1.0)) / (1048576.0)
-            );
+            status.set_transferred_since_last_ping(transfer.fileSize - transfer.previousPingTransferredBytes);
+        }
+
+        // Message Throughput in MiB/sec
+        if (transfer.averageThroughput > 0) { // Throughput from Gfal PerformanceCallback
+            if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, setting throughput and instantaneous throughput to zero:"
+                                                   << " average=" << transfer.averageThroughput
+                                                   << " instantaneous=" << transfer.instantaneousThroughput
+                                                   << commit;
+                status.set_throughput(0.0);
+                status.set_instantaneous_throughput(0.0);
+            } else {
+                status.set_throughput(transfer.averageThroughput / 1024.0);
+                status.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
+            }
+        } else { // Throughput must be computed manually (short transfers)
+            double transferDuration = transfer.getTransferDurationInSeconds();
+
+            if (transferDuration > 0) {
+                double transferred = static_cast<double>(transfer.fileSize) / 1048576.0; // in MiB
+                double throughput = transferred / transferDuration; // in MiB/s
+                status.set_throughput(throughput);
+                status.set_instantaneous_throughput(throughput);
+            } else {
+                status.set_throughput(0.0);
+                status.set_instantaneous_throughput(0.0);
+            }
         }
     }
 
@@ -188,11 +224,19 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         completed.destination_srm_version = "2.2.0";
     }
 
+    std::string protocol = transfer.destination.protocol;
+    if (protocol.empty()) {
+        protocol = transfer.source.protocol;
+    }
+
     completed.vo = opts.voName;
     completed.source_url = transfer.source.fullUri;
     completed.dest_url = transfer.destination.fullUri;
     completed.source_hostname = transfer.source.host;
     completed.dest_hostname = transfer.destination.host;
+    completed.source_se = transfer.source.getSeName();
+    completed.dest_se = transfer.destination.getSeName();
+    completed.protocol = protocol;
     completed.t_channel = transfer.getChannel();
     completed.channel_type = "urlcopy";
     completed.user_dn = replaceMetadataString(opts.userDn);
@@ -249,6 +293,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
         }
     }
 
+    if (completed.final_transfer_state == "Ok") {
+        completed.final_transfer_state_flag = 1;
+    } else if (completed.final_transfer_state == "Error") {
+        completed.final_transfer_state_flag = 0;
+    }
+
     completed.total_bytes_transferred = transfer.transferredBytes;
     completed.number_of_streams = params.getNumberOfStreams();
     completed.tcp_buffer_size = params.getTcpBuffersize();
@@ -268,30 +318,65 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.tr_timestamp_start = transfer.stats.process.start;
     completed.tr_timestamp_complete = transfer.stats.process.end;
 
-    completed.ipv6 = transfer.stats.ipv6Used;
+    completed.transfer_time_ms = transfer.stats.transfer.end - transfer.stats.transfer.start;
+    completed.operation_time_ms = transfer.stats.process.end - transfer.stats.process.start;
+    completed.throughput_bps = (completed.transfer_time_ms > 0) ? ((double) completed.file_size / (completed.transfer_time_ms / 1000.0)) : -1;
+
+    completed.srm_preparation_time_ms = transfer.stats.srmPreparation.end - transfer.stats.srmPreparation.start;
+    completed.srm_finalization_time_ms = transfer.stats.srmFinalization.end - transfer.stats.srmFinalization.start;
+    completed.srm_overhead_time_ms = completed.srm_preparation_time_ms + completed.srm_finalization_time_ms;
+    completed.srm_overhead_percentage = (completed.operation_time_ms > 0) ? ((double) completed.srm_overhead_time_ms * 100 / completed.operation_time_ms) : -1;
+
+    completed.checksum_source_time_ms = transfer.stats.sourceChecksum.end - transfer.stats.sourceChecksum.start;
+    completed.checksum_dest_time_ms = transfer.stats.destChecksum.end - transfer.stats.destChecksum.start;
+
+    // Keep 'ipv6' flag for legacy purposes
+    completed.ipv6 = transfer.stats.ipver == Transfer::IPver::IPv6;
+    // New 'ipver' field keyword ("ipv6" | "ipv4" | "unknown")
+    completed.ipver = Transfer::IPverToIPv6String(transfer.stats.ipver);
     completed.eviction_code = transfer.stats.evictionRetc;
     completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;
 
     if (opts.enableMonitoring) {
-        std::string msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
+        auto msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer complete message content: " << msgReturnValue << commit;
     }
 }
 
 
-void LegacyReporter::sendPing(const Transfer &transfer)
+void LegacyReporter::sendPing(Transfer &transfer)
 {
+    if (transfer.transferredBytes < transfer.previousPingTransferredBytes) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transferred bytes decreased, not sending perf to server:"
+                                           << " transferred=" << transfer.transferredBytes
+                                           << " previous_transferred=" << transfer.previousPingTransferredBytes
+                                           << commit;
+        return;
+    }
+
+    if (transfer.instantaneousThroughput > 10000000000 || transfer.averageThroughput > 10000000000) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Throughput nonsensical, not sending perf to server:"
+                                           << " average=" << transfer.averageThroughput
+                                           << " instantaneous=" << transfer.instantaneousThroughput
+                                           << commit;
+        return;
+    }
+
     events::MessageUpdater ping;
     ping.set_timestamp(millisecondsSinceEpoch());
+    // Note: elapsedAtPerf does not start when transfer.start is set. (gfal bug)
+    ping.set_gfal_perf_timestamp(transfer.stats.transfer.start + transfer.stats.elapsedAtPerf);
     ping.set_job_id(transfer.jobId);
     ping.set_file_id(transfer.fileId);
     ping.set_transfer_status("ACTIVE");
     ping.set_source_surl(transfer.source.fullUri);
     ping.set_dest_surl(transfer.destination.fullUri);
     ping.set_process_id(getpid());
-    ping.set_throughput(transfer.throughput / 1024.0);
+    ping.set_throughput(transfer.averageThroughput / 1024.0);
+    ping.set_instantaneous_throughput(transfer.instantaneousThroughput / 1024.0);
     ping.set_transferred(transfer.transferredBytes);
+    ping.set_transferred_since_last_ping(transfer.transferredBytes - transfer.previousPingTransferredBytes);
     ping.set_source_turl("gsiftp:://fake");
     ping.set_dest_turl("gsiftp:://fake");
 
@@ -304,4 +389,5 @@ void LegacyReporter::sendPing(const Transfer &transfer)
     catch (const std::exception &error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;
     }
+    transfer.previousPingTransferredBytes = transfer.transferredBytes;
 }

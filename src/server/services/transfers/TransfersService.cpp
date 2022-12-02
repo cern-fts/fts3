@@ -212,7 +212,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                     scheduledByActivity[tf.activity]++;
 
                     FileTransferExecutor *exec = new FileTransferExecutor(tf,
-                        tfh, monitoringMessages, infosys, ftsHostName,
+                        monitoringMessages, infosys, ftsHostName,
                         proxies[proxy_key], logDir, msgDir);
 
                     execPool.start(exec);

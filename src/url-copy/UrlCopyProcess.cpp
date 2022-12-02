@@ -187,6 +187,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
     params.setEvictionFlag(opts.evict);
+    if (opts.evict && !transfer.tokenBringOnline.empty()) {
+        params.setBringonlineToken(transfer.tokenBringOnline);
+    }
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
@@ -246,11 +249,11 @@ static void timeoutTask(boost::posix_time::time_duration &duration, UrlCopyProce
 }
 
 
-static void pingTask(Transfer *transfer, Reporter *reporter)
+static void pingTask(Transfer *transfer, Reporter *reporter, unsigned pingInterval)
 {
     try {
         while (!boost::this_thread::interruption_requested()) {
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
+            boost::this_thread::sleep(boost::posix_time::seconds(pingInterval));
             reporter->sendPing(*transfer);
         }
     } catch (const boost::thread_interrupted&) {
@@ -319,6 +322,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                                                         << transfer.destination << commit;
                         auto destFile = createDestFileReport(transfer, gfal2, params);
                         transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file report: " << destFile.toString() << commit;
                     } catch (const std::exception &ex) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
                                                        << transfer.destination << " (error=" << ex.what() << ")" << commit;
@@ -364,7 +368,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << timeout << commit;
 
     // Ping thread
-    AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter));
+    AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
 
     // Transfer
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;

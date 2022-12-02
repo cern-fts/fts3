@@ -57,13 +57,12 @@ public:
     /**
      * Constructor.
      *
-     * @param tfh - the TransferFileHandler reference
      * @param optimize - flag stating if optimization is ON
      * @param monitoringMsg - is true if monitoring messages are in use
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFile& tf, TransferFileHandler& tfh,
+    FileTransferExecutor(TransferFile& tf,
         bool monitoringMsg, std::string infosys, std::string ftsHostName, std::string proxy,
         std::string logDir, std::string msgDir);
 
@@ -86,7 +85,6 @@ private:
 
     /// variables from process_service_handler
     TransferFile tf;
-    TransferFileHandler const & tfh;
     bool monitoringMsg;
     std::string infosys;
     std::string ftsHostName;

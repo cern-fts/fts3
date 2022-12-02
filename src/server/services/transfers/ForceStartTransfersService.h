@@ -1,9 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
- *
- * Copyright (c) Members of the EMI Collaboration. 2010-2013
- *  See  http://www.eu-emi.eu/partners for details on the copyright
- *  holders.
+ * Copyright (c) CERN 2022
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,38 +15,31 @@
  */
 
 #pragma once
-#ifndef HEARTBEAT_H_
-#define HEARTBEAT_H_
 
-#include <ctime>
-#include "../BaseService.h"
-
+#include "services/BaseService.h"
+#include "services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-extern time_t updateRecords;
-extern time_t stallRecords;
-
-class HeartBeat: public BaseService
+class ForceStartTransfersService: public BaseService
 {
 public:
-    HeartBeat();
+    ForceStartTransfersService(HeartBeat *beat);
     virtual void runService();
 
-    bool isLeadNode(bool bypassDraining = false);
+protected:
+    std::string ftsHostName;
+    std::string infosys;
+    bool monitoringMessages;
+    int execPoolSize;
+    std::string logDir;
+    std::string msgDir;
+    boost::posix_time::time_duration pollInterval;
 
-private:
-    unsigned index, count, start, end;
-
-    bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords,
-            time_t stallRecords);
-
-    void orderedShutdown();
+    HeartBeat *beat;
+    void forceRunJobs();
 };
 
 } // end namespace server
 } // end namespace fts3
-
-#endif // HEARTBEAT_H_

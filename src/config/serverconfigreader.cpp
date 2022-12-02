@@ -240,8 +240,13 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "Profiling",
-        po::value<std::string>( &(_vars["Profiling"]) )->default_value("0"),
-        "Enable or disable internal profiling"
+        po::value<std::string>( &(_vars["Profiling"]) )->default_value("false"),
+        "Enable or disable internal profiling logs"
+    )
+    (
+        "UrlCopyProcessPingInterval",
+        po::value<std::string>( &(_vars["UrlCopyProcessPingInterval"]) )->default_value("60"),
+        "Set the UrlCopyProcess ping and transfer update interval"
     )
     (
         "InternalThreadPool",
@@ -397,6 +402,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "MessagingConsumeInterval",
         po::value<std::string>( &(_vars["MessagingConsumeInterval"]) )->default_value("1"),
         "In seconds, how often to check for messages"
+    )
+    (
+        "ForceStartTransfersCheckInterval",
+        po::value<std::string>( &(_vars["ForceStartTransfersCheckInterval"]) )->default_value("30"),
+        "In seconds, how often to check for transfers to force start"
     )
 	(
 	    "OptimizerMaxSuccessRate",

@@ -38,17 +38,23 @@ public:
     TransferCompleted():
         file_id(0), timestamp_transfer_started(0), timestamp_transfer_completed(0), timestamp_checksum_source_started(0),
         timestamp_checksum_source_ended(0), timestamp_checksum_dest_started(0), timestamp_checksum_dest_ended(0),
-        transfer_timeout(0), checksum_timeout(0), transfer_error_code(0), total_bytes_transferred(0),
+        transfer_timeout(0), checksum_timeout(0), transfer_error_code(0), final_transfer_state_flag(-1),
+        total_bytes_transferred(0),
         number_of_streams(0), tcp_buffer_size(0),
-        block_size(0), file_size(0),
+        block_size(0), file_size(0), throughput_bps(0),
         time_spent_in_srm_preparation_start(0), time_spent_in_srm_preparation_end(0),
-        time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0), tr_timestamp_start(0),
-        tr_timestamp_complete(0),
+        time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0),
+        tr_timestamp_start(0), tr_timestamp_complete(0),
+        transfer_time_ms(0), operation_time_ms(0),
+        srm_preparation_time_ms(0), srm_finalization_time_ms(0),
+        srm_overhead_time_ms(0), srm_overhead_percentage(0),
+        checksum_source_time_ms(0), checksum_dest_time_ms(0),
         retry(0), retry_max(0),
         job_m_replica(false), job_multihop(false), is_lasthop(false),
         is_recoverable(false), ipv6(false), eviction_code(-1)
     {}
-    ~TransferCompleted() {}
+
+    ~TransferCompleted() = default;
 
     std::string transfer_id;
     std::string job_id;
@@ -61,6 +67,9 @@ public:
     std::string dest_url;
     std::string source_hostname;
     std::string dest_hostname;
+    std::string source_se;
+    std::string dest_se;
+    std::string protocol;
     std::string source_site_name;
     std::string dest_site_name;
     std::string t_channel;
@@ -78,11 +87,13 @@ public:
     std::string failure_phase; // (preparation, transfer, checksum, etc)
     std::string transfer_error_category; //permission, etc
     std::string final_transfer_state; //OK/Error/Abort
+    int         final_transfer_state_flag; // 1/0/-1
     off_t       total_bytes_transferred; // (this will include the info retrieved from the performance markers)
     int         number_of_streams;
     unsigned    tcp_buffer_size;
     unsigned    block_size;
     off_t       file_size;
+    double      throughput_bps;
     uint64_t    time_spent_in_srm_preparation_start;
     uint64_t    time_spent_in_srm_preparation_end;
     uint64_t    time_spent_in_srm_finalization_start;
@@ -91,6 +102,14 @@ public:
     std::string srm_space_token_dest;
     uint64_t    tr_timestamp_start;
     uint64_t    tr_timestamp_complete;
+    int64_t     transfer_time_ms;
+    int64_t     operation_time_ms;
+    int64_t     srm_preparation_time_ms;
+    int64_t     srm_finalization_time_ms;
+    uint64_t    srm_overhead_time_ms;
+    double      srm_overhead_percentage;
+    int64_t     checksum_source_time_ms;
+    int64_t     checksum_dest_time_ms;
     std::string channel_type;
     std::string user_dn;
     std::string file_metadata;
@@ -104,6 +123,7 @@ public:
     bool        is_recoverable;
     bool        ipv6;
     int         eviction_code;
+    std::string ipver;
     std::string final_destination;
     std::string transfer_type;
 };

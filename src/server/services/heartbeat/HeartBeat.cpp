@@ -163,14 +163,13 @@ void HeartBeat::orderedShutdown()
     exit(1);
 }
 
-bool HeartBeat::isLeadNode()
+bool HeartBeat::isLeadNode(bool bypassDraining)
 {   
-    if (DrainMode::instance()) 
-    {
+    if (DrainMode::instance() && !bypassDraining) {
         return false;
     } 
-    else 
-        return index == 0;
+
+    return index == 0;
 }
 
 } // end namespace server

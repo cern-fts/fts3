@@ -66,8 +66,11 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
         LogLevel level;
     } ;
     static const LevelRepr LEVEL_REPR[] = {
-        {"trace", TRACE}, {"debug", DEBUG},
-        {"info",  INFO}, {"notice", NOTICE},
+        {"trace", TRACE},
+        {"debug", DEBUG},
+        {"info",  INFO},
+        {"notice", NOTICE},
+        {"prof", PROF}, {"profiling", PROF},
         {"warn", WARNING}, {"warning", WARNING},
         {"err", ERR}, {"error", ERR},
         {"crit", CRIT}, {"critical", CRIT}
@@ -84,7 +87,7 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 }
 
 
-Logger::Logger(): _logLevel(DEBUG), _separator("; "), _nCommits(0)
+Logger::Logger(): _logLevel(DEBUG), _profiling(false), _separator("; "), _nCommits(0)
 {
     ostream = &std::cout;
     newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
@@ -103,6 +106,15 @@ Logger & Logger::setLogLevel(LogLevel level)
         << "Setting debug level to " << logLevelStringRepresentation(level)
         << commit;
     _logLevel = level;
+    return *this;
+}
+
+Logger & Logger::setProfiling(bool value)
+{
+    newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
+            << "Setting profiling to " << value
+            << commit;
+    _profiling = value;
     return *this;
 }
 
@@ -132,7 +144,13 @@ void LoggerEntry::_commit()
 LoggerEntry Logger::newLog(LogLevel level, const char* aFile,
         const char* aFunc, const int aLineNo)
 {
-    LoggerEntry entry(level >= this->_logLevel);
+    bool can_write;
+    if (level == PROF) {
+        can_write = this->_profiling;
+    } else {
+        can_write = (level >= this->_logLevel);
+    }
+    LoggerEntry entry(can_write);
     entry << logLevelStringRepresentation(level) << timestamp() << _separator;
     if (level >= ERR && this->_logLevel <= DEBUG) {
         entry << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
@@ -208,6 +226,8 @@ std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
             return std::string("ERR     ");
         case NOTICE:
             return std::string("NOTICE  ");
+        case PROF:
+            return std::string("PROF    ");
         default:
             return std::string("INFO    ");
     }

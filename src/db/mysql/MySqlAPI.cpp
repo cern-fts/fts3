@@ -1767,6 +1767,35 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
     }
 }
 
+std::list<TransferFile> MySqlAPI::getForceStartTransfers()
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const soci::rowset<TransferFile> rs = (sql.prepare <<
+                                         " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
+                                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
+                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
+                                         " FROM t_file f USE INDEX(idx_link_state_vo), t_job j "
+                                         " WHERE f.job_id = j.job_id and f.file_state = 'FORCE_START'"
+                                         " ORDER BY null");
+
+        return {rs.begin(), rs.end()};
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+}
+
 
 bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
         const std::string & destStorage, int &currentActive)

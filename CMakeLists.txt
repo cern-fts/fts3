@@ -29,7 +29,7 @@ set(CMAKE_MODULE_PATH
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 12)
-set(VERSION_PATCH 3)
+set(VERSION_PATCH 4)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Generate include header with the version string
@@ -72,8 +72,8 @@ add_definitions(-DOPENSSL_THREADS)
 add_definitions(-DSOCKET_CLOSE_ON_EXIT)
 add_definitions(-D_REENTRANT)
 
-# Enable C++11 if possible
-include(EnableCpp11 REQUIRED)
+# Require C++17
+include(EnableCpp17 REQUIRED)
 
 # Define where to install the generated artifacts
 include(DefineInstallationPaths REQUIRED)
@@ -137,4 +137,3 @@ if (TESTBUILD)
     include (CTest)
     add_subdirectory (test)
 endif (TESTBUILD)
-

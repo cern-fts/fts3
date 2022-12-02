@@ -173,7 +173,7 @@ std::string stack_dump(void *array[], int stack_size)
     std::string stackTrace;
 
     char **symbols = backtrace_symbols(array, stack_size);
-    for (register int i = 0; i < stack_size; ++i) {
+    for (int i = 0; i < stack_size; ++i) {
         if (symbols && symbols[i]) {
             stackTrace += std::string(symbols[i]) + '\n';
         }

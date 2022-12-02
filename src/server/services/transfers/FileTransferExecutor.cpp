@@ -44,10 +44,9 @@ namespace server
 
 
 FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
-    TransferFileHandler &tfh, bool monitoringMsg, std::string infosys,
+    bool monitoringMsg, std::string infosys,
     std::string ftsHostName, std::string proxy, std::string logDir, std::string msgDir) :
     tf(tf),
-    tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),
@@ -164,6 +163,9 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // Enable monitoring
             cmdBuilder.setMonitoring(monitoringMsg, msgDir);
+
+            // Set UrlCopyProcess ping interval (in seconds)
+            cmdBuilder.setPingInterval(fts3::config::ServerConfig::instance().get<int>("UrlCopyProcessPingInterval"));
 
             // Proxy
             if (!proxy.empty()) {
