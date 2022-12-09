@@ -330,6 +330,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 604:
                     pingInterval = boost::lexical_cast<unsigned>(optarg);
+                    break;
 
                 case 700:
                     referenceTransfer.fileMetadata = optarg;
