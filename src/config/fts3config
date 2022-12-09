@@ -101,6 +101,8 @@ LogLevel=INFO
 ## Parameters for Archiving operation
 # Maximum bulk size
 # ArchivingBulkSize=200
+# How often to run the scheduler for Archiving operations (measured in seconds)
+# ArchivingSchedulingInterval=60
 
 # Interval between heartbeats (measured in seconds)
 # HeartBeatInterval=60

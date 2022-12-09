@@ -339,6 +339,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Archiving bulk size"
     )
     (
+        "ArchivingSchedulingInterval",
+        po::value<std::string>( &(_vars["ArchivingSchedulingInterval"]) )->default_value("60"),
+        "In seconds, how often to run the scheduler for archiving operations"
+    )
+    (
         "HeartBeatInterval",
         po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
         "Interval in seconds between beats"

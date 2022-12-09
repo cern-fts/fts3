@@ -41,7 +41,10 @@ class FetchArchiving
 {
 
 public:
-    FetchArchiving(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
+    FetchArchiving(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool)
+    {
+        archivingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("ArchivingSchedulingInterval");
+    }
     virtual ~FetchArchiving() {}
 
     void fetch();
@@ -52,6 +55,7 @@ public:
 private:
     void recoverStartedTasks();
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
+    boost::posix_time::time_duration archivingSchedulingInterval;
 
 };
 
