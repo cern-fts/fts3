@@ -3464,35 +3464,57 @@ void MySqlAPI::requeueStartedDeletes()
 void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps)
 {
     soci::session sql(*connectionPool);
+
+    int maxArchivingBulkSize = ServerConfig::instance().get<int>("ArchivingBulkSize");
+
     //TODO: query for credentials to be checked when integrating OIDC
     //TODO: create a view as for staging
     try {
-        soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                                   " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, f.vo_name,  c.dn, c.dlg_id, j.archive_timeout"
-                                                   " FROM t_file f "
-                                                   " INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                   " INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
-                                                   " WHERE "
-                                                   "         f.file_state = 'ARCHIVING' AND "
-                                                   "         f.archive_start_time IS NULL AND "
-                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+        soci::rowset<soci::row> rs1 = (sql.prepare <<
+                " SELECT DISTINCT f.dest_se, j.cred_id "
+                " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                " WHERE "
+                "  f.file_state = 'ARCHIVING' "
+                "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
         );
 
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+        for (auto & r1 : rs1)
         {
-            soci::row const& r = *i2;
-            std::string job_id = r.get<std::string>("job_id");
-            uint64_t file_id = r.get<unsigned long long>("file_id");
-            std::string dest_surl = r.get<std::string>("dest_surl");
-            std::string voname = r.get<std::string>("vo_name");
-            std::string dn = r.get<std::string>("dn");
-            std::string dlg_id = r.get<std::string>("dlg_id");
-            int archive_timeout = r.get<int>("archive_timeout",0);
-            archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, 0, archive_timeout);
-        }
+            auto dest_se = r1.get<std::string>("dest_se","");
+            auto cred_id = r1.get<std::string>("cred_id","");
 
-        //TODO: add throttling
+            soci::rowset<soci::row> rs2 = (sql.prepare <<
+                    " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, f.vo_name,"
+                    "    c.dn, c.dlg_id, j.archive_timeout"
+                    " FROM t_file f "
+                    " INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                    " INNER JOIN t_credential c ON (j.cred_id = c.dlg_id) "
+                    " WHERE "
+                    "   f.file_state = 'ARCHIVING' "
+                    "   AND f.archive_start_time IS NULL "
+                    "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd) "
+                    "   AND f.dest_se=:dest_se "
+                    "   AND j.cred_id=:cred_id "
+                    "LIMIT :limit",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end),
+                    soci::use(dest_se),
+                    soci::use(cred_id),
+                    soci::use(maxArchivingBulkSize)
+            );
+
+            for (auto & r2 : rs2)
+            {
+                auto job_id = r2.get<std::string>("job_id");
+                uint64_t file_id = r2.get<unsigned long long>("file_id");
+                auto dest_surl = r2.get<std::string>("dest_surl");
+                auto vo_name = r2.get<std::string>("vo_name");
+                auto dn = r2.get<std::string>("dn");
+                auto dlg_id = r2.get<std::string>("dlg_id");
+                int archive_timeout = r2.get<int>("archive_timeout",0);
+                archivingOps.emplace_back(job_id, file_id,vo_name,dn, dlg_id, dest_surl, 0, archive_timeout);
+            }
+        }
     }
     catch (std::exception& e)
     {

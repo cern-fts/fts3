@@ -334,6 +334,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Retry this number of times if a staging poll fails with ECOMM"
     )
     (
+        "ArchivingBulkSize",
+        po::value<std::string>( &(_vars["ArchivingBulkSize"]) )->default_value("200"),
+        "Archiving bulk size"
+    )
+    (
         "HeartBeatInterval",
         po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
         "Interval in seconds between beats"
