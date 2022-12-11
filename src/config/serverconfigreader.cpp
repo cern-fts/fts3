@@ -344,6 +344,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, how often to run the scheduler for archiving operations"
     )
     (
+        "ArchivingPollRetries",
+        po::value<std::string>( &(_vars["ArchivingPollRetries"]) )->default_value("3"),
+        "Retry this number of times if an archiving poll operation fails"
+    )
+    (
+        "ArchivingPollInterval",
+        po::value<std::string>( &(_vars["ArchivingPollInterval"]) )->default_value("600"),
+        "Time interval between archiving poll operations (measured in seconds)"
+    )
+    (
         "HeartBeatInterval",
         po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
         "Interval in seconds between beats"

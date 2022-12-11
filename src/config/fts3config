@@ -101,8 +101,15 @@ LogLevel=INFO
 ## Parameters for Archiving operation
 # Maximum bulk size
 # ArchivingBulkSize=200
+
 # How often to run the scheduler for Archiving operations (measured in seconds)
 # ArchivingSchedulingInterval=60
+
+# Number of times to retry if a archiving poll operation fails
+# ArchivingPollRetries=3
+
+# Time interval between archiving poll operations (measured in seconds)
+# ArchivingPollInterval=600
 
 # Interval between heartbeats (measured in seconds)
 # HeartBeatInterval=60

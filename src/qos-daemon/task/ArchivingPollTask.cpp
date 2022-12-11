@@ -35,8 +35,7 @@ void ArchivingPollTask::run(const boost::any&)
 {
     handle_timeouts();
 
-	// Use the same var for staging pool retries now
-	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+	int maxPollRetries = ctx.getMaxPollRetries();
 	bool forcePoll = false;
 
 	std::set<std::string> urlSet = ctx.getUrls();
@@ -118,16 +117,16 @@ void ArchivingPollTask::run(const boost::any&)
         g_clear_error(&errors[i]);
     }
 
-	// Schedule a new poll
-	if (status == 0 || forcePoll) {
-		time_t interval = getPollInterval(++nPolls);
-		time_t now = time(NULL);
-		wait_until = now + interval;
+    // Schedule a new poll
+    if (status == 0 || forcePoll) {
+        time_t interval = ctx.getPollInterval();
+        time_t now = time(NULL);
+        wait_until = now + interval;
 
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling " << ctx.getLogMsg() << commit;
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
-		ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
-	}
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling " << ctx.getLogMsg() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
+        ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
+    }
 }
 
 

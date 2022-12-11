@@ -119,19 +119,6 @@ private:
     /// aborts the operation for the given URLs
     void abort(std::set<std::string> const & urls, bool report = true);
 
-    /**
-     * Gets the interval after next polling should be done
-     *
-     * @param nPolls : number of polls already done
-     */
-    static time_t getPollInterval(int nPolls)
-    {
-        if (nPolls > 8)
-            return 600;
-        else
-            return (2 << nPolls);
-    }
-
     /// archiving details
     ArchivingContext ctx;
 

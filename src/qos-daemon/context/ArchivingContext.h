@@ -71,19 +71,25 @@ public:
         monitoring(qosServer.getMonitoring())
     {
         add(archiveOp);
+        maxPollRetries = fts3::config::ServerConfig::instance().get<int>("ArchivingPollRetries");
+        pollInterval = fts3::config::ServerConfig::instance().get<int>("ArchivingPollInterval");
         startTime = time(0);
     }
 
     ArchivingContext(const ArchivingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime),
-        storageEndpoint(copy.storageEndpoint), monitoring(copy.monitoring)
+        storageEndpoint(copy.storageEndpoint),
+        pollInterval(copy.pollInterval), maxPollRetries(copy.maxPollRetries),
+        monitoring(copy.monitoring)
     {}
 
     ArchivingContext(ArchivingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime),
-        storageEndpoint(std::move(copy.storageEndpoint)), monitoring(copy.monitoring)
+        storageEndpoint(std::move(copy.storageEndpoint)),
+        pollInterval(copy.pollInterval), maxPollRetries(copy.maxPollRetries),
+        monitoring(copy.monitoring)
     {}
 
     virtual ~ArchivingContext() {}
@@ -174,6 +180,14 @@ public:
         monitoring.getArchivingTaskCounter().decrement();
     }
 
+    int getMaxPollRetries() {
+        return maxPollRetries;
+    }
+
+    time_t getPollInterval() {
+        return pollInterval;
+    }
+
 private:
     ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
@@ -182,6 +196,8 @@ private:
     std::map<uint64_t, time_t> expiryMap;
     time_t startTime;
     std::string storageEndpoint;
+    int maxPollRetries;
+    time_t pollInterval;
     QoSHealthMonitoring& monitoring; ///< class that holds QoS daemon health statistics
 
     friend class ArchivingPollTask;
