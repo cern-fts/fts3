@@ -4229,18 +4229,24 @@ void MySqlAPI::getArchivingFilesForCanceling(std::set< std::pair<std::string, st
 {
     soci::session sql(*connectionPool);
     uint64_t file_id = 0;
-    std::string source_surl;
+    std::string dest_surl;
     std::string job_id;
 
     try
     {
-        soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl from t_file WHERE "
-                "  file_state='CANCELED' and archive_finish_time is NULL "
-                "  AND transfer_host = :hostname AND archive_start_time is NOT NULL ",
+        soci::rowset<soci::row> rs = (sql.prepare <<
+                "SELECT job_id, file_id, dest_surl from t_file "
+                "WHERE"
+                "   file_state='CANCELED' and archive_finish_time is NULL"
+                "   AND transfer_host = :hostname AND archive_start_time is NOT NULL ",
                 soci::use(hostname));
 
-        soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET archive_finish_time = UTC_TIMESTAMP() "
-                "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
+        soci::statement stmt1 = (sql.prepare <<
+                "UPDATE t_file "
+                "SET archive_finish_time = UTC_TIMESTAMP() "
+                "WHERE"
+                "   file_id = :file_id ",
+                soci::use(file_id, "file_id"));
 
         // Cancel staging files
         sql.begin();
@@ -4249,8 +4255,8 @@ void MySqlAPI::getArchivingFilesForCanceling(std::set< std::pair<std::string, st
             soci::row const& row = *i2;
             job_id  = row.get<std::string>("job_id", "");
             file_id = row.get<unsigned long long>("file_id",0);
-            source_surl = row.get<std::string>("source_surl","");
-            files.insert({job_id, source_surl});
+            dest_surl = row.get<std::string>("dest_surl","");
+            files.insert({job_id, dest_surl});
             stmt1.execute(true);
         }
         sql.commit();
