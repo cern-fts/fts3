@@ -56,12 +56,13 @@ bool StagingContext::hasTimeoutExpired()
 std::set<std::string> StagingContext::getSurlsToAbort(
     const std::set<std::pair<std::string, std::string>> &urls)
 {
-    // remove respective URLs from the task
+    // remove URLs from the correspondent job_id
     for (auto it = urls.begin(); it != urls.end(); ++it) {
         jobs[it->first].erase(it->second);
     }
 
-    std::unordered_set<std::string> not_canceled, unique;
+    // write in "not_canceled" all the urls still in the "jobs" data structure
+    std::unordered_set<std::string> not_canceled;
     for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j) {
         auto const & urls = it_j->second;
         for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {
@@ -70,10 +71,12 @@ std::set<std::string> StagingContext::getSurlsToAbort(
         }
     }
 
+    // from all the "urls" to be aborted does any still belong to a job_id that was not cancelled
     std::set<std::string> ret;
     for (auto it = urls.begin(); it != urls.end(); ++it) {
         std::string const & url = it->second;
-        if (not_canceled.count(url) || unique.count(url))
+        // only abort the urls that don't belong to other active job_ids
+        if (not_canceled.count(url))
             continue;
         ret.insert(url.c_str());
     }
