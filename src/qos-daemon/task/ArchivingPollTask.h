@@ -47,9 +47,9 @@ class ArchivingPollTask : public Gfal2Task
 {
 public:
     /**
-     * Creates a ArchivingPollTask from ArchiveContext (for recovery purposes only)
+     * Creates a ArchivingPollTask from ArchiveContext
      *
-     * @param ctx : staging context (recover from DB after crash)
+     * @param ctx : staging context
      */
 	ArchivingPollTask(const ArchivingContext &cp_ctx) : Gfal2Task("ARCHIVING"), ctx(cp_ctx), nPolls(0), wait_until(0)
     {
@@ -64,7 +64,7 @@ public:
     /**
      * Creates a new ArchivingPollTask task from a ArchivingTask
      *
-     * @param copy : a archive task (stills the gfal2 context of this object)
+     * @param copy : a archive task (steals the gfal2 context of this object)
      */
     ArchivingPollTask(ArchivingPollTask &&copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)),
         nPolls(copy.nPolls), wait_until(copy.wait_until)
@@ -97,20 +97,20 @@ public:
     }
 
     static void cancel(const std::set<std::pair<std::string, std::string> > &urls)
-        {
-            if (urls.empty()) return;
-            boost::unique_lock<boost::shared_mutex> lock(mx);
-            auto begin = active_urls.lower_bound(*urls.begin());
-            auto end   = active_urls.upper_bound(*urls.rbegin());
-            for (auto it = begin; it != end;) {
-                if (urls.count(*it)) {
-                    active_urls.erase(it++);
-                }
-                else {
-                    ++it;
-                }
+    {
+        if (urls.empty()) return;
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        auto begin = active_urls.lower_bound(*urls.begin());
+        auto end   = active_urls.upper_bound(*urls.rbegin());
+        for (auto it = begin; it != end;) {
+            if (urls.count(*it)) {
+                active_urls.erase(it++);
+            }
+            else {
+                ++it;
             }
         }
+    }
 
 private:
     /// check each transfer for timeout
