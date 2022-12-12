@@ -4248,7 +4248,7 @@ void MySqlAPI::getArchivingFilesForCanceling(std::set< std::pair<std::string, st
                 "   file_id = :file_id ",
                 soci::use(file_id, "file_id"));
 
-        // Cancel staging files
+        // Cancel archiving files
         sql.begin();
         for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
         {
