@@ -80,7 +80,7 @@ public:
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime),
         storageEndpoint(copy.storageEndpoint),
-        pollInterval(copy.pollInterval), maxPollRetries(copy.maxPollRetries),
+        maxPollRetries(copy.maxPollRetries), pollInterval(copy.pollInterval),
         monitoring(copy.monitoring)
     {}
 
@@ -88,7 +88,7 @@ public:
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
         errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime),
         storageEndpoint(std::move(copy.storageEndpoint)),
-        pollInterval(copy.pollInterval), maxPollRetries(copy.maxPollRetries),
+        maxPollRetries(copy.maxPollRetries), pollInterval(copy.pollInterval),
         monitoring(copy.monitoring)
     {}
 
