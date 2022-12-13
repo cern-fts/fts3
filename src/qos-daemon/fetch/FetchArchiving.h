@@ -44,6 +44,7 @@ public:
     FetchArchiving(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool)
     {
         archivingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("ArchivingSchedulingInterval");
+        maxArchivingBulkSize = ServerConfig::instance().get<uint64_t>("ArchivingBulkSize");
     }
     virtual ~FetchArchiving() {}
 
@@ -56,6 +57,7 @@ private:
     void recoverStartedTasks();
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
     boost::posix_time::time_duration archivingSchedulingInterval;
+    uint64_t maxArchivingBulkSize;
 
 };
 

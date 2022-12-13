@@ -124,7 +124,6 @@ void FetchArchiving::recoverStartedTasks()
 {
     std::vector<ArchivingOperation> startedArchivingOps;
 
-
     try {
     	// Retrieve the files with archive_start_time not null
         db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedArchiving(startedArchivingOps);
@@ -137,37 +136,43 @@ void FetchArchiving::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
-    std::map<GroupByType, ArchivingContext> tasks;
+    std::map<GroupByType, std::vector<ArchivingContext>> tasks;
 
-    for (auto it_f = startedArchivingOps.begin(); it_f != startedArchivingOps.end(); ++it_f) {
+    for (const auto& startedArchivingOp : startedArchivingOps) {
         // Apply grouping by credential ID and storage endpoint
-        std::string storage = Uri::parse(it_f->surl).host;
-        GroupByType key(it_f->credId, storage);
+        std::string storage = Uri::parse(startedArchivingOp.surl).host;
+        GroupByType key(startedArchivingOp.credId, storage);
         auto it_t = tasks.find(key);
         if (it_t == tasks.end()) {
             tasks.insert(std::make_pair(
-                    key, ArchivingContext(
-                            QoSServer::instance(), *it_f
-                    ))
-            );
+                    key,
+                    std::vector<ArchivingContext>{ArchivingContext(QoSServer::instance(),startedArchivingOp)}
+                    ));
         }
         else {
-            it_t->second.add(*it_f);
+            if(it_t->second.back().getUrlCount() < maxArchivingBulkSize) {
+                it_t->second.back().add(startedArchivingOp);
+            }
+            else {
+                it_t->second.emplace_back(ArchivingContext(QoSServer::instance(), startedArchivingOp));
+            }
         }
     }
 
-    for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
-        try {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for storage " << it_t->first.second << ": "
-                                            <<  it_t->second.getLogMsg() << commit;
-            threadpool.start(new ArchivingPollTask(it_t->second));
-        }
-        catch (UserError const & ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        }
-        catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+    for (const auto& task : tasks) {
+        for (const auto& context : task.second) {
+            try {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for storage " << task.first.second << ": "
+                                                <<  context.getLogMsg() << commit;
+                threadpool.start(new ArchivingPollTask(context));
+            }
+            catch (UserError const & ex) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            }
+            catch(...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+            }
         }
     }
 }
