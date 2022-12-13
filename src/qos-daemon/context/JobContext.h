@@ -131,6 +131,13 @@ public:
         return surls;
     }
 
+    /**
+    * @return Returns the number of distinct URLs inside the context.
+    */
+    uint64_t getUrlCount() {
+        return urlToIDs.size();
+    }
+
     void removeUrl(const std::string& url);
 
     /**
