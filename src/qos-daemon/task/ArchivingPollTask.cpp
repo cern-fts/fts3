@@ -54,6 +54,9 @@ void ArchivingPollTask::run(const boost::any&)
         << " / storage=" << ctx.getStorageEndpoint() << " ]"
         << commit;
 
+    // Refresh the proxy, if needed
+    ctx.refreshProxy();
+
 	std::vector<GError*> errors(urls.size(), NULL);
 	int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
 
