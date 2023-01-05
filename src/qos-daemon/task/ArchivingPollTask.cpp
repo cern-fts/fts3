@@ -74,7 +74,6 @@ void ArchivingPollTask::run(const boost::any&)
 	// -1  - All files are in error state
 
     for (size_t i = 0 ; i < urls.size(); i++) {
-        auto ids = ctx.getIDs(urls[i]);
 
         if (errors[i]) {
             if (errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
@@ -89,31 +88,22 @@ void ArchivingPollTask::run(const boost::any&)
                     FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << "."
                                                        << " EAGAIN error code not expected in terminal state: "
                                                        << errors[i]->message << commit;
-                    for (auto it = ids.begin(); it != ids.end(); ++it) {
-                        ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
-                    }
+
+                    set_terminal_state(urls[i], "FAILED", JobError("ARCHIVING", errors[i]));
                 }
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
                                                   << errors[i]->code << " " << errors[i]->message << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
-                }
+                set_terminal_state(urls[i], "FAILED", JobError("ARCHIVING", errors[i]));
             }
         } else {
             if (status >= 0) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING FINISHED for " << urls[i] << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrlWithIds(urls[i], ids);
+                set_terminal_state(urls[i], "FINISHED", JobError());
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
                                                   << errors[i]->code << " " << errors[i]->message << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED",
-                                    JobError("ARCHIVING", -1, "Error not set by Gfal2"));
-                }
+                set_terminal_state(urls[i], "FAILED", JobError("ARCHIVING", -1, "Error not set by Gfal2"));
             }
         }
 
@@ -151,6 +141,27 @@ void ArchivingPollTask::handle_timeouts()
     if (!timeout_transfers.empty()) {
         ctx.removeTransfers(timeout_transfers);
         cancel(timeout_transfers);
+    }
+}
+
+
+void ArchivingPollTask::set_terminal_state(const std::string& url, const std::string& state, const JobError& error)
+{
+    // Set of tuples <url, job_id, file_id> to remove from active urls
+    std::set<std::tuple<std::string, std::string, uint64_t>> to_remove;
+
+    auto range = ctx.urlToIDs.equal_range(url);
+
+    for (auto it = range.first; it != range.second; ++it) {
+        const auto& job_id = it->second.first;
+        const auto& file_id = it->second.second;
+        ctx.updateState(job_id, file_id, state, error);
+        to_remove.emplace(url, job_id, file_id);
+    }
+
+    if (!to_remove.empty()) {
+        ctx.removeTransfers(to_remove);
+        cancel(to_remove);
     }
 }
 

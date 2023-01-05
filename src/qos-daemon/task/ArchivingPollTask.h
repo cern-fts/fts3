@@ -121,6 +121,9 @@ private:
     /// check each transfer for timeout
     void handle_timeouts();
 
+    /// Updates the state of a url in a terminal state and removes it from all the internal data structures
+    void set_terminal_state(const std::string& url, const std::string& state, const JobError& error);
+
     /// aborts the operation for the given URLs
     void abort(std::set<std::string> const & urls, bool report = true);
 
