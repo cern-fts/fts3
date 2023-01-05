@@ -144,7 +144,7 @@ public:
      *
      * @param transfers : list of tuples(sURL, job_id, file_id)
      */
-    void removeTransfers(const std::list<std::tuple<std::string, std::string, uint64_t>>& timeout_transfers);
+    void removeTransfers(const std::set<std::tuple<std::string, std::string, uint64_t>>& transfers);
 
     /**
      * Remove a surl and list of IDs from all internal data structures.

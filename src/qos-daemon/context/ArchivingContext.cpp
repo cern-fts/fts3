@@ -44,7 +44,7 @@ bool ArchivingContext::hasTransferTimedOut(uint64_t file_id)
 }
 
 
-void ArchivingContext::removeTransfers(const std::list<std::tuple<std::string, std::string, uint64_t>>& transfers)
+void ArchivingContext::removeTransfers(const std::set<std::tuple<std::string, std::string, uint64_t>>& transfers)
 {
     for (auto it_t = transfers.begin(); it_t != transfers.end(); it_t++)
     {

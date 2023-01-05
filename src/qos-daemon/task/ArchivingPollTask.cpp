@@ -135,7 +135,7 @@ void ArchivingPollTask::run(const boost::any&)
 
 void ArchivingPollTask::handle_timeouts()
 {
-    std::list<std::tuple<std::string, std::string, uint64_t>> timeout_transfers;
+    std::set<std::tuple<std::string, std::string, uint64_t>> timeout_transfers;
 
     for (auto it = ctx.urlToIDs.begin(); it != ctx.urlToIDs.end(); it++) {
         const auto& job_id = it->second.first;
@@ -144,12 +144,13 @@ void ArchivingPollTask::handle_timeouts()
         if (ctx.hasTransferTimedOut(file_id)) {
             ctx.updateState(job_id, file_id, "FAILED",
                             JobError("ARCHIVING", ETIMEDOUT, "archive timeout has been exceeded"));
-            timeout_transfers.emplace_back(it->first, job_id, file_id);
+            timeout_transfers.emplace(it->first, job_id, file_id);
         }
     }
 
     if (!timeout_transfers.empty()) {
         ctx.removeTransfers(timeout_transfers);
+        cancel(timeout_transfers);
     }
 }
 
