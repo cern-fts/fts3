@@ -132,6 +132,22 @@ public:
     }
 
     /**
+    * @return  Set containing all the tuples <URL, jobid, fileid>
+    */
+    std::set<std::tuple<std::string, std::string, uint64_t>> getJobs() const
+    {
+        std::set<std::tuple<std::string, std::string, uint64_t>> surls;
+        for (const auto& job: jobs) {
+            for (const auto& url: job.second) {
+                for (const auto& file_id: url.second) {
+                    surls.insert({url.first, job.first, file_id});
+                }
+            }
+        }
+        return surls;
+    }
+
+    /**
     * @return Returns the number of distinct URLs inside the context.
     */
     uint64_t getUrlCount() {

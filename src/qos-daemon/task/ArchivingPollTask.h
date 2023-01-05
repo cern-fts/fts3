@@ -55,10 +55,10 @@ public:
     {
         // set the proxy certificate
         setProxy(ctx);
-        auto surls = ctx.getSurls();
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_urls.insert(surls.begin(), surls.end());
         ctx.incrementTaskCounter();
+        auto jobs = ctx.getJobs();
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_urls.insert(jobs.begin(), jobs.end());
     }
 
     /**
@@ -78,7 +78,7 @@ public:
     virtual ~ArchivingPollTask()
     {
          if (gfal2_ctx) {
-             cancel(ctx.getSurls());
+             cancel(ctx.getJobs());
          }
 
          ctx.decrementTaskCounter();
