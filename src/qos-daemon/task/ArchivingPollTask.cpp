@@ -33,7 +33,10 @@ std::set<std::tuple<std::string, std::string, uint64_t>> ArchivingPollTask::acti
 ///   3. Remove the sURLs presented by gfal2_archive_poll_list as finished
 void ArchivingPollTask::run(const boost::any&)
 {
+    // Check if archiving timeout has expired for some jobs
     handle_timeouts();
+    // Check if some jobs were canceled
+    handle_canceled();
 
 	int maxPollRetries = ctx.getMaxPollRetries();
 	bool forcePoll = false;
@@ -148,4 +151,26 @@ void ArchivingPollTask::handle_timeouts()
     if (!timeout_transfers.empty()) {
         ctx.removeTransfers(timeout_transfers);
     }
+}
+
+
+void ArchivingPollTask::handle_canceled()
+{
+    std::set<std::tuple<std::string, std::string, uint64_t>> to_remove;
+    {
+        // critical section
+        boost::shared_lock<boost::shared_mutex> lock(mx);
+        // get the URLs for the given task
+        auto surls = ctx.getJobs();
+        // check if some of the URLs should be aborted
+        std::set_difference(
+                surls.begin(), surls.end(),
+                active_urls.begin(), active_urls.end(),
+                std::inserter(to_remove, to_remove.end())
+        );
+    }
+    // check if there is something to do first
+    if (to_remove.empty()) return;
+    // remove set of tuples from all the internal data structures
+    ctx.removeTransfers(to_remove);
 }

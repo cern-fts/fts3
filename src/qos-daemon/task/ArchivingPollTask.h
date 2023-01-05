@@ -115,6 +115,9 @@ public:
     }
 
 private:
+    /// checks if the bring online task was canceled and removes those URLs that were from the context
+    void handle_canceled();
+
     /// check each transfer for timeout
     void handle_timeouts();
 
