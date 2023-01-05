@@ -75,7 +75,8 @@ public:
     /**
      * Destructor
      */
-    virtual ~ArchivingPollTask() {
+    virtual ~ArchivingPollTask()
+    {
          if (gfal2_ctx) {
              cancel(ctx.getSurls());
          }
@@ -96,9 +97,10 @@ public:
         return wait_until > now;
     }
 
-    static void cancel(const std::set<std::pair<std::string, std::string> > &urls)
+    static void cancel(const std::set<std::tuple<std::string, std::string, uint64_t>>& urls)
     {
         if (urls.empty()) return;
+        // critical section
         boost::unique_lock<boost::shared_mutex> lock(mx);
         auto begin = active_urls.lower_bound(*urls.begin());
         auto end   = active_urls.upper_bound(*urls.rbegin());
@@ -130,9 +132,9 @@ private:
 
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
-    
-    /// set of jobid (and respective URLs) for ongoing archiving 
-    static std::set<std::pair<std::string, std::string>> active_urls;
+
+    /// set of tuples <URL, jobid, fileid> for ongoing archiving
+    static std::set<std::tuple<std::string, std::string, uint64_t>> active_urls;
 };
 
 #endif // ARCHIVINGPOLLTASK_H_

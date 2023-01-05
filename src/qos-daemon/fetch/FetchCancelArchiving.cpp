@@ -46,7 +46,7 @@ void FetchCancelArchiving::fetch()
                 continue;
             }
 
-            std::set<std::pair<std::string, std::string>> urls;
+            std::set<std::tuple<std::string, std::string, uint64_t>> urls;
             db::DBSingleton::instance().getDBObjectInstance()->getArchivingFilesForCanceling(urls);
 
             if (!urls.empty())

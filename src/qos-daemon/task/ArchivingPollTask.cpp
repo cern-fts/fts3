@@ -25,7 +25,7 @@
 
 boost::shared_mutex ArchivingPollTask::mx;
 
-std::set<std::pair<std::string, std::string>> ArchivingPollTask::active_urls;
+std::set<std::tuple<std::string, std::string, uint64_t>> ArchivingPollTask::active_urls;
 
 /// Steps taken by the ArchivingPollTask:
 ///   1. Iterate transfers once and remove timeouts
