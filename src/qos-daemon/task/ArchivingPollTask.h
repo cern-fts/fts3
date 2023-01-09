@@ -114,6 +114,11 @@ public:
         }
     }
 
+    static uint64_t countActiveUrls()
+    {
+        return active_urls.size();
+    }
+
 private:
     /// checks if the bring online task was canceled and removes those URLs that were from the context
     void handle_canceled();

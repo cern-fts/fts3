@@ -112,6 +112,11 @@ public:
         }
     }
 
+    static uint64_t countActiveUrls()
+    {
+        return active_urls.size();
+    }
+
 protected:
 
     /// staging details
