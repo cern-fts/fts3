@@ -26,10 +26,14 @@
 #include "LogHelper.h"
 
 
-static void gfal2LogCallback(const gchar *, GLogLevelFlags, const gchar *message, gpointer)
+static void gfal2LogCallback(const gchar *, GLogLevelFlags log_level, const gchar *message, gpointer)
 {
     if (message) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << message << fts3::common::commit;
+        if (log_level == G_LOG_LEVEL_DEBUG) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << message << fts3::common::commit;
+        } else {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << message << fts3::common::commit;
+        }
     }
 }
 
@@ -58,8 +62,10 @@ void setupLogging(unsigned debugLevel)
             setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
             setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
             setenv("GFAL2_GRIDFTP_DEBUG", "1", 1);
-        case 1:
             gfal2_log_set_level(G_LOG_LEVEL_DEBUG);
+            break;
+        case 1:
+            gfal2_log_set_level(G_LOG_LEVEL_INFO);
             break;
         default:
             gfal2_log_set_level(G_LOG_LEVEL_MESSAGE);

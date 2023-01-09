@@ -191,6 +191,14 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         params.setBringonlineToken(transfer.tokenBringOnline);
     }
 
+    // Set useful log verbosity for HTTP transfers
+    if (transfer.source.protocol.find("http") == 0 ||
+        transfer.source.protocol.find("dav") == 0 ||
+        transfer.destination.protocol.find("http") == 0 ||
+        transfer.destination.protocol.find("dav") == 0) {
+        gfal2_log_set_level(std::max(gfal2_log_get_level(), G_LOG_LEVEL_INFO));
+    }
+
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Source protocol: " << transfer.source.protocol << commit;
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination protocol: " << transfer.destination.protocol << commit;
 
