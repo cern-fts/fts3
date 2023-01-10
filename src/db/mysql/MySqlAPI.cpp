@@ -1780,7 +1780,7 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
-                                         " FROM t_file f USE INDEX(idx_link_state_vo), t_job j "
+                                         " FROM t_file f USE INDEX(idx_state), t_job j "
                                          " WHERE f.job_id = j.job_id and f.file_state = 'FORCE_START'"
                                          " ORDER BY null");
 
