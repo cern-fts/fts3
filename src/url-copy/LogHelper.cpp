@@ -63,6 +63,7 @@ void setupLogging(unsigned debugLevel)
             setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
             setenv("XRD_LOGLEVEL", "Dump", 1);
             setenv("GFAL2_GRIDFTP_DEBUG", "1", 1);
+            [[fallthrough]];
         case 2:
             setenv("CGSI_TRACE", "1", 1);
             setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);

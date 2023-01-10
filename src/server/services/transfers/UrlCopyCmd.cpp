@@ -242,6 +242,8 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         case Job::kTypeMultiHop:
             setFlag("job-multihop", true);
             break;
+        case Job::kTypeRegular:
+            break;
     }
 
     // setOption("source-site", std::string());
