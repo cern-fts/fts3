@@ -246,8 +246,6 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
             break;
     }
 
-    // setOption("source-site", std::string());
-    // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
     if (!transfer.checksumMode.empty())
         setOption("checksum-mode", transfer.checksumMode);
@@ -278,7 +276,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
                 const json::String issuer = it->element;
                 setOption("dest-issuer", issuer.Value());
             }
-        } catch (json::Exception) {
+        } catch (const json::Exception&) {
             // Ignore for now.
         }
     }
