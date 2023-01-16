@@ -397,7 +397,7 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
-* Fri Dec 09 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4-rc2
+* Mon Jan 16 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4-rc3
 - Add throughput profiling logs
 - Implement Force Start Transfers mechanism
 - Provide more TransferComplete Monitoring Messages fields directly at source
