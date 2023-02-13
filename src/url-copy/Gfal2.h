@@ -248,6 +248,14 @@ public:
         }
     }
 
+    void setTransferMetadata(const std::string &metadata)
+    {
+        GError *error = NULL;
+        if (gfalt_set_transfer_metadata(params, metadata.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     void addEventCallback(gfalt_event_func callback, void *udata)
     {
         GError *error = NULL;

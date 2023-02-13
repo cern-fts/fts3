@@ -126,6 +126,7 @@ public:
     int64_t userFilesize;
     std::string fileMetadata;
     std::string jobMetadata;
+    std::string transferMetadata;
     std::string bringOnlineToken;
     Job::JobType jobType; // See Job constants
     int lastReplica;

@@ -108,6 +108,7 @@ public:
     std::string checksumValue;
     uint64_t    userFileSize;
     std::string fileMetadata;
+    std::string transferMetadata;
     std::string tokenBringOnline;
     std::string sourceTokenDescription;
     std::string destTokenDescription;

@@ -191,6 +191,10 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         params.setBringonlineToken(transfer.tokenBringOnline);
     }
 
+    if (!transfer.transferMetadata.empty()) {
+        params.setTransferMetadata(transfer.transferMetadata);
+    }
+
     // Set useful log verbosity for HTTP transfers
     if (transfer.source.protocol.find("http") == 0 ||
         transfer.source.protocol.find("dav") == 0 ||
@@ -295,6 +299,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled: " << transfer.checksumMode << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize: " << transfer.userFileSize << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata: " << transfer.fileMetadata << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer metadata: " << transfer.transferMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata: " << opts.jobMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Bringonline token: " << transfer.tokenBringOnline << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enableUdt << commit;
