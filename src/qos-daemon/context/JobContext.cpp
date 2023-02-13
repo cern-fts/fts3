@@ -19,7 +19,6 @@
  */
 
 #include <algorithm>
-#include <memory>
 #include <set>
 #include <sstream>
 
@@ -94,7 +93,7 @@ bool JobError::IsRecoverable() const
 
 JobContext::JobContext(const std::string &dn, const std::string &vo,
     const std::string &delegationId, const std::string &spaceToken) :
-    spaceToken(spaceToken)
+    userDn(dn), delegationId(delegationId), spaceToken(spaceToken)
 {
     (void) vo;
     proxy = DelegCred::getProxyFile(dn, delegationId);
@@ -170,4 +169,14 @@ std::string JobContext::getLogMsg() const
 
 bool JobContext::isValidOp(const std::string& surl, const std::string& jobId, uint64_t fileId) {
     return (!surl.empty() && !jobId.empty() && fileId > 0);
+}
+
+void JobContext::refreshProxy() const {
+    auto proxyPath = DelegCred::getProxyFile(userDn, delegationId);
+
+    if (proxyPath.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to refresh proxy!"
+                                       << " [ delegationID=" << delegationId << " / proxyPath=" << proxy << " ]"
+                                       << fts3::common::commit;
+    }
 }

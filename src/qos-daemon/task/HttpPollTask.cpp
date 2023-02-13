@@ -52,6 +52,9 @@ void HttpPollTask::run(const boost::any&)
         << " / storage=" << ctx.getStorageEndpoint() << " ]"
         << commit;
 
+    // Refresh the proxy, if needed
+    ctx.refreshProxy();
+
     std::vector<GError*> errors(urls.size(), NULL);
     std::vector<const char*> failedUrls;
 
