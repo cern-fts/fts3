@@ -245,6 +245,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.job_m_replica = transfer.isMultipleReplicaJob;
     completed.job_multihop = transfer.isMultihopJob;
     completed.is_lasthop = transfer.isLastHop;
+    completed.is_archiving = transfer.isArchiving;
     completed.srm_space_token_source = transfer.sourceTokenDescription;
     completed.srm_space_token_dest = transfer.destTokenDescription;
     completed.transfer_timeout = params.getTimeout();

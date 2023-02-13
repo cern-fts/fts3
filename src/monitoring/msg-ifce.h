@@ -50,7 +50,7 @@ public:
         srm_overhead_time_ms(0), srm_overhead_percentage(0),
         checksum_source_time_ms(0), checksum_dest_time_ms(0),
         retry(0), retry_max(0),
-        job_m_replica(false), job_multihop(false), is_lasthop(false),
+        job_m_replica(false), job_multihop(false), is_lasthop(false), is_archiving(false),
         is_recoverable(false), ipv6(false), eviction_code(-1)
     {}
 
@@ -119,6 +119,7 @@ public:
     bool        job_m_replica;
     bool        job_multihop;
     bool        is_lasthop;
+    bool        is_archiving;
     std::string job_state;
     bool        is_recoverable;
     bool        ipv6;

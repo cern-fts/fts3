@@ -117,6 +117,7 @@ public:
     bool        isLastReplica;
     bool        isMultihopJob;
     bool        isLastHop;
+    bool        isArchiving;
 
     Checksum_mode checksumMode;
 

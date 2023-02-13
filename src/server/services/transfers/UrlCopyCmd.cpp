@@ -221,7 +221,8 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", transfer.overwriteFlag == "Y");
     if (transfer.archiveTimeout > 0) {
-        setFlag("dst-file-report", !transfer.dstFileReport.empty());   
+        setFlag("archiving", true);
+        setFlag("dst-file-report", !transfer.dstFileReport.empty());
     }
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);

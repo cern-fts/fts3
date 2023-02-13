@@ -40,6 +40,7 @@ const option UrlCopyOpts::long_options[] =
     {"last-replica",      no_argument,       0, 203},
     {"job-multihop",      no_argument,       0, 204},
     {"last-hop",          no_argument,       0, 205},
+    {"archiving",         no_argument,       0, 206},
 
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
@@ -252,6 +253,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 205:
                     referenceTransfer.isLastHop = true;
+                    break;
+                case 206:
+                    referenceTransfer.isArchiving = true;
                     break;
 
                 case 300:
