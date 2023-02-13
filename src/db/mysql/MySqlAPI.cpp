@@ -1404,7 +1404,7 @@ bool MySqlAPI::updateJobStatus(const std::string& jobId, const std::string& jobS
 }
 
 
-bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state)
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string& state)
 {
     try
     {
@@ -1437,6 +1437,30 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
         if(currentState == "STAGING" && state == "STARTED")
             return true;
+
+        if(jobType == Job::kTypeMultipleReplica && currentState == "ARCHIVING" && state == "FAILED") {
+            // FTS-1882: Fail multi-replica archiving jobs when archive monitoring step fails
+            std::string reason = "Archive monitoring failed in a multiple replica job";
+
+            sql <<  " SELECT source_se FROM t_file WHERE job_id=:job_id AND file_state='FAILED' LIMIT 1 ",
+            soci::use(jobId), soci::into(sourceSe);
+
+
+            sql.begin();
+            // Update job
+            soci::statement stmt = (
+                    sql.prepare << "UPDATE t_job SET "
+                                   "    job_state = :state, job_finished = UTC_TIMESTAMP(), "
+                                   "    reason = :reason, source_se = :sourceSe "
+                                   "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
+                            soci::use(state, "state"), soci::use(reason, "reason"),
+                            soci::use(sourceSe, "sourceSe"),
+                            soci::use(jobId, "jobId"));
+            stmt.execute(true);
+            sql.commit();
+
+            return true;
+        }
 
         if(state == "ACTIVE" && jobType == Job::kTypeRegular)
         {
