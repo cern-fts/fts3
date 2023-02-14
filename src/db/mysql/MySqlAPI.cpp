@@ -2964,16 +2964,25 @@ void MySqlAPI::updateArchivingStateInternal(soci::session& sql, const std::vecto
     // Updates to ARCHIVING state always lead to terminal state
     try
     {
+        std::string state;
+        std::string reason;
+        uint64_t fileId;
+
         sql.begin();
 
-        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i) {
-            sql <<
+        soci::statement stmt = (sql.prepare <<
                 "UPDATE t_file "
-                "SET archive_finish_time = UTC_TIMESTAMP(), file_state = :fileState, reason = :reason "
-                "WHERE file_id = :fileId",
-                soci::use(i->state),
-                soci::use(i->reason),
-                soci::use(i->fileId);
+                "SET archive_finish_time = UTC_TIMESTAMP(), file_state = :state , reason = :reason "
+                "WHERE file_id = :fileId ",
+                soci::use(state), soci::use(reason),
+                soci::use(fileId));
+
+        for (auto i = archivingOpStatus.begin(); i < archivingOpStatus.end(); ++i) {
+            state = i->state;
+            reason = i->reason;
+            fileId = i->fileId;
+
+            stmt.execute(true);
         }
 
         sql.commit();
