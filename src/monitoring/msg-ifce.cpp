@@ -289,10 +289,13 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
     message["retry_max"] = json::Number(tr_state.retry_max);
     message["user_filesize"] = json::Number(tr_state.user_filesize);
     message["timestamp"] = json::Number(tr_state.timestamp);
-    message["staging"] = json::Boolean(tr_state.staging);
+    message["submit_time"] = json::Number(tr_state.submit_time);
     message["staging_start"] = json::Number(tr_state.staging_start);
     message["staging_finished"] = json::Number(tr_state.staging_finished);
-    message["submit_time"] = json::Number(tr_state.submit_time);
+    message["staging"] = json::Boolean(tr_state.staging);
+    message["archiving_start"] = json::Number(tr_state.archiving_start);
+    message["archiving_finished"] = json::Number(tr_state.archiving_finished);
+    message["archiving"] = json::Boolean(tr_state.archiving);
     message["reason"] = json::String(tr_state.reason);
 
     set_metadata(message, "job_metadata", tr_state.job_metadata);
