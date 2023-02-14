@@ -22,7 +22,8 @@
 struct TransferState
 {
     TransferState() : file_id(0), retry_counter(0), retry_max(0), user_filesize(0), timestamp(0),
-        submit_time(0), staging_start(0), staging_finished(0), staging(false)
+        submit_time(0), staging_start(0), staging_finished(0), staging(false),
+        archiving_start(0), archiving_finished(0), archiving(false)
     {
     }
 
@@ -42,7 +43,10 @@ struct TransferState
     uint64_t    submit_time;
     uint64_t    staging_start;
     uint64_t    staging_finished;
-    bool staging;
+    bool        staging;
+    uint64_t    archiving_start;
+    uint64_t    archiving_finished;
+    bool        archiving;
     std::string user_dn;
     std::string source_url;
     std::string dest_url;

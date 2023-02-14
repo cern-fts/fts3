@@ -284,6 +284,32 @@ struct type_conversion<FileTransferStatus>
             {
                 transfer.stagingStart = transfer.stagingFinished = 0;
             }
+
+        try
+        {
+            if (v.get_indicator("f.archive_start_time,") == soci::i_ok)
+            {
+                aux_tm = v.get<struct tm>("f.archive_start_time,");
+                transfer.stagingStart = timegm(&aux_tm);
+            }
+            else
+            {
+                transfer.stagingStart = 0;
+            }
+            if (v.get_indicator("f.archive_finish_time") == soci::i_ok)
+            {
+                aux_tm = v.get<struct tm>("f.archive_finish_time");
+                transfer.stagingFinished = timegm(&aux_tm);
+            }
+            else
+            {
+                transfer.stagingFinished = 0;
+            }
+        }
+        catch (...)
+        {
+            transfer.stagingStart = transfer.stagingFinished = 0;
+        }
     }
 };
 

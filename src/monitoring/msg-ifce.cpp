@@ -293,6 +293,8 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
     message["staging_start"] = json::Number(tr_state.staging_start);
     message["staging_finished"] = json::Number(tr_state.staging_finished);
     message["submit_time"] = json::Number(tr_state.submit_time);
+    message["archive_start"] = json::Number(tr_state.archiving_start);
+    message["archive_finished"] = json::Number(tr_state.archiving_finished);
     message["reason"] = json::String(tr_state.reason);
 
     set_metadata(message, "job_metadata", tr_state.job_metadata);
