@@ -27,7 +27,7 @@ BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.21.2
+BuildRequires:  gfal2-devel >= 2.21.3
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -59,10 +59,10 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.21.2
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.2
-Requires: gfal2-plugin-http%{?_isa} >= 2.21.2
-Requires: gfal2-plugin-srm%{?_isa} >= 2.21.2
+Requires: gfal2%{?_isa} >= 2.21.3
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.3
+Requires: gfal2-plugin-http%{?_isa} >= 2.21.3
+Requires: gfal2-plugin-srm%{?_isa} >= 2.21.3
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
