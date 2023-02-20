@@ -1404,7 +1404,7 @@ bool MySqlAPI::updateJobStatus(const std::string& jobId, const std::string& jobS
 }
 
 
-bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state)
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string& state)
 {
     try
     {
@@ -1437,6 +1437,30 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
         if(currentState == "STAGING" && state == "STARTED")
             return true;
+
+        if(jobType == Job::kTypeMultipleReplica && currentState == "ARCHIVING" && state == "FAILED") {
+            // FTS-1882: Fail multi-replica archiving jobs when archive monitoring step fails
+            std::string reason = "Archive monitoring failed in a multiple replica job";
+
+            sql <<  " SELECT source_se FROM t_file WHERE job_id=:job_id AND file_state='FAILED' LIMIT 1 ",
+            soci::use(jobId), soci::into(sourceSe);
+
+
+            sql.begin();
+            // Update job
+            soci::statement stmt = (
+                    sql.prepare << "UPDATE t_job SET "
+                                   "    job_state = :state, job_finished = UTC_TIMESTAMP(), "
+                                   "    reason = :reason, source_se = :sourceSe "
+                                   "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
+                            soci::use(state, "state"), soci::use(reason, "reason"),
+                            soci::use(sourceSe, "sourceSe"),
+                            soci::use(jobId, "jobId"));
+            stmt.execute(true);
+            sql.commit();
+
+            return true;
+        }
 
         if(state == "ACTIVE" && jobType == Job::kTypeRegular)
         {
@@ -2548,7 +2572,8 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
                                          "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, f.staging_start, f.staging_finished "
+                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
+                                         "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
                                          "  j.job_id = :jobId "
@@ -2588,6 +2613,18 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
 
             if(ret.staging_start != 0)
                 ret.staging = true;
+
+            if (it->get_indicator("archive_start_time") == soci::i_ok) {
+                aux_tm = it->get<struct tm>("archive_start_time");
+                ret.archiving_start = (timegm(&aux_tm) * 1000);
+            }
+            if (it->get_indicator("archive_finish_time") == soci::i_ok) {
+                aux_tm = it->get<struct tm>("archive_finish_time");
+                ret.archiving_finished = (timegm(&aux_tm) * 1000);
+            }
+
+            if(ret.archiving_start != 0)
+                ret.archiving = true;
 
             ret.retry_counter = it->get<int>("retry_counter",0);
             ret.file_metadata = it->get<std::string>("file_metadata","");

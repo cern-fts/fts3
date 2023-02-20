@@ -360,7 +360,7 @@ private:
         std::string newFileState, std::string transferMessage, int processId, double filesize, double duration, bool retry,
         std::string fileMetadata = "");
 
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string state);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string jobId, const std::string& state);
 
     bool resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times);
 

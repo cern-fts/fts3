@@ -4,7 +4,7 @@
 %define devtoolset devtoolset-8
 
 Name:       fts
-Version:    3.12.4
+Version:    3.12.5
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -27,7 +27,7 @@ BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.21.2
+BuildRequires:  gfal2-devel >= 2.21.3
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -59,10 +59,10 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.21.2
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.2
-Requires: gfal2-plugin-http%{?_isa} >= 2.21.2
-Requires: gfal2-plugin-srm%{?_isa} >= 2.21.2
+Requires: gfal2%{?_isa} >= 2.21.3
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.3
+Requires: gfal2-plugin-http%{?_isa} >= 2.21.3
+Requires: gfal2-plugin-srm%{?_isa} >= 2.21.3
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -397,6 +397,12 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Mon Feb 20 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.5-1
+- Monitoring messages support for tape archive monitoring
+- Fail multiple replica archiving jobs if archive monitoring fails
+- Provide more useful information on default HTTP transfer logs
+- Log 3rd party pull/push client IPs
+
 * Tue Jan 24 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4-1
 - Add throughput profiling logs
 - Implement Force Start Transfers mechanism
