@@ -3943,6 +3943,10 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
                         soci::use(hashSegment.start), soci::use(hashSegment.end)
                 );
 
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering archiving tasks with hashed_id between "
+                                        << hashSegment.start << " and "
+                                        << hashSegment.end << commit;
+
         for (soci::rowset<soci::row>::const_iterator i3 = rs.begin(); i3 != rs.end(); ++i3)
         {
             soci::row const& row = *i3;
@@ -4014,6 +4018,10 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
                 " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
             );
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering staging tasks with hashed_id between "
+                                        << hashSegment.start << " and "
+                                        << hashSegment.end << commit;
 
         for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
         {
