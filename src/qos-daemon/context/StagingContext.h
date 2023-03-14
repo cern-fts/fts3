@@ -72,17 +72,22 @@ public:
         storageEndpoint()
     {
         add(stagingOp);
+        maxRetryTimeout = fts3::config::ServerConfig::instance().get<int>("StagingPollRetryTimeout");
     }
 
     StagingContext(const StagingContext &copy) :
-        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(copy.errorCount),
-        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
+        JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        lastErrorTimestamp(copy.lastErrorTimestamp),
+        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout),
+        maxRetryTimeout(copy.maxRetryTimeout), minStagingStartTime(copy.minStagingStartTime),
         storageEndpoint(copy.storageEndpoint)
     {}
 
     StagingContext(StagingContext && copy) :
-        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom), errorCount(std::move(copy.errorCount)),
-        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
+        JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
+        lastErrorTimestamp(std::move(copy.lastErrorTimestamp)),
+        maxPinLifetime(copy.maxPinLifetime), maxBringonlineTimeout(copy.maxBringonlineTimeout),
+        maxRetryTimeout(copy.maxBringonlineTimeout), minStagingStartTime(copy.minStagingStartTime),
         storageEndpoint(std::move(copy.storageEndpoint))
     {}
 
@@ -140,14 +145,14 @@ public:
 
     bool hasTimeoutExpired();
 
+    bool isRetryTimeoutExpired(const std::string& url);
+
+    void cleanErrorTimestamp(const std::string& url);
+
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
 
     WaitingRoom<PollTask>& getWaitingRoom() {
         return waitingRoom;
-    }
-
-    int incrementErrorCountForSurl(const std::string &surl) {
-        return (errorCount[surl] += 1);
     }
 
     std::string getStorageProtocol() const;
@@ -157,9 +162,10 @@ public:
 protected:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
-    std::map<std::string, int> errorCount;
+    std::map<std::string, time_t> lastErrorTimestamp; ///< Map of url --> last polling error timestamp
     int maxPinLifetime; ///< maximum copy pin lifetime of the batch
     int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
+    int maxRetryTimeout; ///< maximum timeout for retrying polling a file
     time_t minStagingStartTime; ///< first staging start timestamp of the batch
     std::string storageEndpoint; ///< storage endpoint of the batch
 };

@@ -53,6 +53,28 @@ bool StagingContext::hasTimeoutExpired()
 }
 
 
+bool StagingContext::isRetryTimeoutExpired(const std::string& url)
+{
+    // url is not in the map
+    if (lastErrorTimestamp.find(url) == lastErrorTimestamp.end()) {
+        lastErrorTimestamp[url] = time(0);
+        return false;
+    }
+    // url is in the map; check if maxRetryTimeout has expired
+    return difftime(time(nullptr), lastErrorTimestamp[url]) > maxRetryTimeout;
+}
+
+
+void StagingContext::cleanErrorTimestamp(const std::string& url)
+{
+    // Delete url from the map with the last error timestamp
+    auto iter = lastErrorTimestamp.find(url);
+    if (iter != lastErrorTimestamp.end()) {
+        lastErrorTimestamp.erase(url);
+    }
+}
+
+
 std::set<std::string> StagingContext::getSurlsToAbort(
     const std::set<std::pair<std::string, std::string>> &urls)
 {

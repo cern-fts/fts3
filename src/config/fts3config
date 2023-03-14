@@ -95,8 +95,9 @@ LogLevel=INFO
 
 # How often to run the scheduler for BringOnline operations (measured in seconds)
 # StagingSchedulingInterval=60
-# Number of times to retry if a staging poll fails with ECOMM
-# StagingPollRetries=3
+
+# Number of seconds to retry if staging poll fails
+# StagingPollRetryTimeout=900
 
 # Interval between heartbeats (measured in seconds)
 # HeartBeatInterval=60

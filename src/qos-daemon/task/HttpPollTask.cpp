@@ -32,7 +32,6 @@ void HttpPollTask::run(const boost::any&)
     // handle cancelled jobs/files
     handle_canceled();
 
-    int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
     bool forcePoll = false;
 
     std::set<std::string> urlSet = ctx.getUrls();
@@ -64,51 +63,50 @@ void HttpPollTask::run(const boost::any&)
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);
 
-            if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ". Communication error, soft failure: " << errors[i]->message
-                    << commit;
-                forcePoll = true;
-            }
-            else if (errors[i] && errors[i]->code != EOPNOTSUPP) {
-                failedUrls.push_back(urls[i]);
+            if (errors[i]) {
+                if (!ctx.isRetryTimeoutExpired(urls[i])) {
+                    // Found error but retry timeout is not expired; Do not fail task yet
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE NOT FINISHED for " << urls[i]
+                        << ". Found error: " << errors[i]->message
+                        << ". Retrying later"
+                        << commit;
+                    forcePoll = true;
+                } else {
+                    // Found error and retry timeout has expired. Mark task as failed
+                    failedUrls.push_back(urls[i]);
 
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE polling FAILED for " << urls[i] << ": "
-                    << errors[i]->code << " " << errors[i]->message
-                    << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE polling FAILED for " << urls[i] << ": "
+                        << errors[i]->code << " " << errors[i]->message
+                        << commit;
 
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FAILED", JobError("STAGING", errors[i])
-                    );
+                    for (auto & id : ids) {
+                        ctx.updateState(id.first, id.second, "FAILED", JobError("STAGING", errors[i]));
+                    }
                 }
-            }
-            else if (errors[i] && errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for " << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FINISHED", JobError()
-                    );
-                }
-            }
-            else
-            {
-                failedUrls.push_back(urls[i]);
+            } else {
+                if (!ctx.isRetryTimeoutExpired(urls[i])) {
+                    // Polling failed but retry timeout is not expired; Do not fail task yet
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE NOT FINISHED for " << urls[i]
+                        << ": returned -1 but error was not set"
+                        << ". Retrying later"
+                        << commit;
+                    forcePoll = true;
+                } else {
+                    // Retry timeout has expired; Fail the task
+                    failedUrls.push_back(urls[i]);
 
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                    << "BRINGONLINE FAILED for " << urls[i]
-                    << ": returned -1 but error was not set "
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
-                    );
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR)
+                        << "BRINGONLINE FAILED for " << urls[i]
+                        << ": returned -1 but error was not set "
+                        << commit;
+                    for (auto & id : ids) {
+                        ctx.updateState(id.first, id.second,
+                                        "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
+                        );
+                    }
                 }
             }
             g_clear_error(&errors[i]);
@@ -127,39 +125,25 @@ void HttpPollTask::run(const boost::any&)
                     << "BRINGONLINE FINISHED for "
                     << urls[i]
                     << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
+                for (auto & id : ids) {
+                    ctx.updateState(id.first, id.second, "FINISHED", JobError());
                 }
                 ctx.removeUrl(urls[i]);
-            }
-            else if (errors[i]->code == EAGAIN)
-            {
+            } else if (errors[i]->code == EAGAIN) {
+                // Clean last failed poll timestamp
+                ctx.cleanErrorTimestamp(urls[i]);
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE NOT FINISHED for " << urls[i]
                     << ": " << errors[i]->message
                     << commit;
-            }
-            else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+            } else if (errors[i] && !ctx.isRetryTimeoutExpired(urls[i])) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
                     << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ". Communication error, soft failure: " << errors[i]->message
+                    << ". Found an error: " << errors[i]->message
+                    << ". Retrying later"
                     << commit;
                 forcePoll = true;
-            }
-            else if (errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrl(urls[i]);
-            }
-            else
-            {
+            } else {
                 failedUrls.push_back(urls[i]);
 
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -167,10 +151,8 @@ void HttpPollTask::run(const boost::any&)
                     << errors[i]->code << " " << errors[i]->message
                     << commit;
 
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FAILED", JobError("STAGING", errors[i])
-                    );
+                for (auto & id : ids) {
+                    ctx.updateState(id.first, id.second, "FAILED", JobError("STAGING", errors[i]));
                 }
                 ctx.removeUrl(urls[i]);
 

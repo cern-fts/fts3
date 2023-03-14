@@ -334,6 +334,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Retry this number of times if a staging poll fails with ECOMM"
     )
     (
+        "StagingPollRetryTimeout",
+        po::value<std::string>( &(_vars["StagingPollRetryTimeout"]) )->default_value("900"),
+        "Retry for this number of seconds if a staging poll fails"
+    )
+    (
         "HeartBeatInterval",
         po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
         "Interval in seconds between beats"
