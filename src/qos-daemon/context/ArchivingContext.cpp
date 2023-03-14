@@ -97,3 +97,25 @@ void ArchivingContext::removeUrlWithIds(const std::string& url,
         expiryMap.erase(it->second);
     }
 }
+
+
+bool ArchivingContext::isRetryTimeoutExpired(const std::string& url)
+{
+    // url is not in the map
+    if (lastErrorTimestamp.find(url) == lastErrorTimestamp.end()) {
+        lastErrorTimestamp[url] = time(0);
+        return false;
+    }
+    // url is in the map; check if maxRetryTimeout has expired
+    return difftime(time(nullptr), lastErrorTimestamp[url]) > maxRetryTimeout;
+}
+
+
+void ArchivingContext::cleanErrorTimestamp(const std::string& url)
+{
+    // Delete url from the map with the last error timestamp
+    auto iter = lastErrorTimestamp.find(url);
+    if (iter != lastErrorTimestamp.end()) {
+        lastErrorTimestamp.erase(url);
+    }
+}

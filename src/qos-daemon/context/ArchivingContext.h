@@ -71,17 +71,18 @@ public:
     {
         add(archiveOp);
         startTime = time(0);
+        maxRetryTimeout = fts3::config::ServerConfig::instance().get<int>("StagingPollRetryTimeout");
     }
 
     ArchivingContext(const ArchivingContext &copy) :
         JobContext(copy), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
-        errorCount(copy.errorCount), expiryMap(copy.expiryMap), startTime(copy.startTime),
+        lastErrorTimestamp(copy.lastErrorTimestamp), expiryMap(copy.expiryMap), startTime(copy.startTime),
         storageEndpoint(copy.storageEndpoint)
     {}
 
     ArchivingContext(ArchivingContext && copy) :
         JobContext(std::move(copy)), stateUpdater(copy.stateUpdater), waitingRoom(copy.waitingRoom),
-        errorCount(std::move(copy.errorCount)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime),
+        lastErrorTimestamp(std::move(copy.lastErrorTimestamp)), expiryMap(std::move(copy.expiryMap)), startTime(copy.startTime),
         storageEndpoint(std::move(copy.storageEndpoint))
     {}
 
@@ -147,9 +148,9 @@ public:
      */
     void removeUrlWithIds(const std::string& url, const std::vector<std::pair<std::string, uint64_t>>& ids);
 
-    int incrementErrorCountForSurl(const std::string &surl) {
-        return (errorCount[surl] += 1);
-    }
+    bool isRetryTimeoutExpired(const std::string& url);
+
+    void cleanErrorTimestamp(const std::string& url);
 
     WaitingRoom<ArchivingPollTask>& getWaitingRoom() {
         return waitingRoom;
@@ -168,7 +169,8 @@ public:
 private:
     ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;
-    std::map<std::string, int> errorCount;
+    std::map<std::string, time_t> lastErrorTimestamp; ///< Map of url --> last polling error timestamp
+    int maxRetryTimeout; ///< maximum timeout for retrying polling a file
     /// Map of FileID --> expire timestamp
     std::map<uint64_t, time_t> expiryMap;
     time_t startTime;

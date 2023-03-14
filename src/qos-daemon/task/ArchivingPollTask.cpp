@@ -36,7 +36,6 @@ void ArchivingPollTask::run(const boost::any&)
     handle_timeouts();
 
 	// Use the same var for staging pool retries now
-	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
 	bool forcePoll = false;
 
 	std::set<std::string> urlSet = ctx.getUrls();
@@ -70,27 +69,42 @@ void ArchivingPollTask::run(const boost::any&)
         auto ids = ctx.getIDs(urls[i]);
 
         if (errors[i]) {
-            if (errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING ONGOING for " << urls[i] << "."
-                                                  << " Communication error, soft failure: " << errors[i]->message
-                                                  << commit;
-                forcePoll = true;
-            } else if (errors[i]->code == EAGAIN) {
+            if (errors[i]->code == EAGAIN) {
                 if (status == 0) {
+                    ctx.cleanErrorTimestamp(urls[i]);
                     FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING ONGOING for " << urls[i] << commit;
                 } else {
-                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << "."
-                                                       << " EAGAIN error code not expected in terminal state: "
-                                                       << errors[i]->message << commit;
-                    for (auto it = ids.begin(); it != ids.end(); ++it) {
-                        ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
+                    if (ctx.isRetryTimeoutExpired(urls[i])) {
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << "."
+                                                          << " EAGAIN error code not expected in terminal state: "
+                                                          << errors[i]->message << commit;
+                        for (auto it = ids.begin(); it != ids.end(); ++it) {
+                            ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
+                        }
+                    } else {
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i]
+                                                          << " [" << errors[i]->code << "] "
+                                                          << errors[i]->message
+                                                          << ". Retrying later"
+                                                          << commit;
+                        forcePoll = true;
                     }
                 }
             } else {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
-                                                  << errors[i]->code << " " << errors[i]->message << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
+                if (ctx.isRetryTimeoutExpired(urls[i])) {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i]
+                                                      << " [" << errors[i]->code << "] "
+                                                      << errors[i]->message << commit;
+                    for (auto it = ids.begin(); it != ids.end(); ++it) {
+                        ctx.updateState(it->first, it->second, "FAILED", JobError("ARCHIVING", errors[i]));
+                    }
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i]
+                                                      << " [" << errors[i]->code << "] "
+                                                      << errors[i]->message
+                                                      << ". Retrying later"
+                                                      << commit;
+                    forcePoll = true;
                 }
             }
         } else {
@@ -101,11 +115,20 @@ void ArchivingPollTask::run(const boost::any&)
                 }
                 ctx.removeUrlWithIds(urls[i], ids);
             } else {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i] << ": "
-                                                  << errors[i]->code << " " << errors[i]->message << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FAILED",
-                                    JobError("ARCHIVING", -1, "Error not set by Gfal2"));
+                if (ctx.isRetryTimeoutExpired(urls[i])) {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i]
+                                                      << " but no error was set "
+                                                      << commit;
+                    for (auto it = ids.begin(); it != ids.end(); ++it) {
+                        ctx.updateState(it->first, it->second, "FAILED",
+                                        JobError("ARCHIVING", -1, "Error not set by Gfal2"));
+                    }
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE) << "ARCHIVING polling FAILED for " << urls[i]
+                                                      << " but no error was set "
+                                                      << ". Retrying later"
+                                                      << commit;
+                    forcePoll = true;
                 }
             }
         }
