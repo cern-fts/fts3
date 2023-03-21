@@ -68,7 +68,8 @@ const option UrlCopyOpts::long_options[] =
     {"ping-interval",     required_argument, 0, 604},
 
     {"file-metadata",     required_argument, 0, 700},
-    {"job-metadata",      required_argument, 0, 701},
+    {"transfer-metadata", required_argument, 0, 701},
+    {"job-metadata",      required_argument, 0, 702},
 
     {"level",             required_argument, 0, 801},
     {"overwrite",         no_argument,       0, 802},
@@ -120,7 +121,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
 {
     typedef boost::tokenizer <boost::char_separator<char>> tokenizer;
 
-    std::string strArray[7];
+    std::string strArray[8];
     tokenizer tokens(line, boost::char_separator<char>(" "));
     std::copy(tokens.begin(), tokens.end(), strArray);
 
@@ -133,7 +134,8 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     setChecksum(t, strArray[3]);
     t.userFileSize = boost::lexical_cast<uint64_t>(strArray[4]);
     t.fileMetadata = strArray[5];
-    t.tokenBringOnline = strArray[6];
+    t.transferMetadata = strArray[6];
+    t.tokenBringOnline = strArray[7];
     if (t.tokenBringOnline == "x") {
         t.tokenBringOnline.clear();
     }
@@ -340,6 +342,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.fileMetadata = optarg;
                     break;
                 case 701:
+                    referenceTransfer.transferMetadata = replaceMetadataString(optarg);
+                    break;
+                case 702:
                     jobMetadata = optarg;
                     break;
 

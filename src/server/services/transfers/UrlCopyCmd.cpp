@@ -200,6 +200,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
 {
     setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
+    setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
 
     switch (transfer.jobType) {
         case Job::kTypeSessionReuse:

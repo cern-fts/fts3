@@ -155,6 +155,7 @@ struct type_conversion<TransferFile>
         file.bringOnline   = v.get<int>("bring_online",0);
         file.pinLifetime  = v.get<int>("copy_pin_lifetime",0);
         file.fileMetadata = v.get<std::string>("file_metadata", "");
+        file.transferMetadata = v.get<std::string>("archive_metadata", "");
         file.jobMetadata  = v.get<std::string>("job_metadata", "");
         file.userFilesize = v.get<long long>("user_filesize", 0);
         file.fileIndex    = v.get<int>("file_index", 0);
