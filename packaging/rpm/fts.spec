@@ -4,7 +4,7 @@
 %define devtoolset devtoolset-8
 
 Name:       fts
-Version:    3.12.5
+Version:    3.12.6
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -27,7 +27,7 @@ BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.21.3
+BuildRequires:  gfal2-devel >= 2.21.4
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -397,6 +397,11 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Wed Mar 22 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.6-rc1
+- Send archive metadata to Url-Copy process
+- Remove invalid export keyword from /etc/sysconfig/fts-qos
+- Log host hashSegment when restarting the QoS daemon recovering already started tasks
+
 * Mon Feb 20 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.5-1
 - Monitoring messages support for tape archive monitoring
 - Fail multiple replica archiving jobs if archive monitoring fails
