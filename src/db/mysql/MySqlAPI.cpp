@@ -641,7 +641,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                       "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
                       "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                       "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                      "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                      "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata,"
+                      "       f.file_index, f.bringonline_token, "
                       "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
                       " FROM t_file f USE INDEX(idx_link_state_vo), t_job j "
                       " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
@@ -730,7 +731,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                                          "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
                                          "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                         "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, "
+                                         "       f.file_index, f.bringonline_token, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
                                          " FROM t_file f USE INDEX(idx_link_state_vo), t_job j "
                                          " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
@@ -1156,7 +1158,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                        "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
+                        "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, f.file_index, "
                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
                         "       j.internal_job_params, j.job_type "
                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
@@ -1802,7 +1804,7 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
                                          "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
                                          "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                         "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
                                          " FROM t_file f USE INDEX(idx_state), t_job j "
                                          " WHERE f.job_id = j.job_id and f.file_state = 'FORCE_START'"
@@ -2559,7 +2561,8 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                                          "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                          "  j.job_metadata, j.retry AS retry_max, f.file_id, "
                                          "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, f.staging_start, f.staging_finished "
+                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
+                                         "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                          " WHERE "
                                          "  j.job_id = :jobId ",
@@ -3942,6 +3945,10 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
                         soci::use(hashSegment.start), soci::use(hashSegment.end)
                 );
 
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering archiving tasks with hashed_id between "
+                                        << hashSegment.start << " and "
+                                        << hashSegment.end << commit;
+
         for (soci::rowset<soci::row>::const_iterator i3 = rs.begin(); i3 != rs.end(); ++i3)
         {
             soci::row const& row = *i3;
@@ -4013,6 +4020,10 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
                 " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
             );
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering staging tasks with hashed_id between "
+                                        << hashSegment.start << " and "
+                                        << hashSegment.end << commit;
 
         for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
         {
