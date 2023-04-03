@@ -59,10 +59,10 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.21.3
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.3
-Requires: gfal2-plugin-http%{?_isa} >= 2.21.3
-Requires: gfal2-plugin-srm%{?_isa} >= 2.21.3
+Requires: gfal2%{?_isa} >= 2.21.4
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.4
+Requires: gfal2-plugin-http%{?_isa} >= 2.21.4
+Requires: gfal2-plugin-srm%{?_isa} >= 2.21.4
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -397,7 +397,7 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
-* Wed Mar 22 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.6-rc1
+* Mon Apr 03 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.6
 - Send archive metadata to Url-Copy process
 - Remove invalid export keyword from /etc/sysconfig/fts-qos
 - Log host hashSegment when restarting the QoS daemon recovering already started tasks
