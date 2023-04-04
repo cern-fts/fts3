@@ -26,8 +26,9 @@
 
 
 Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
-                       isMultihopJob(false), isLastHop(false), checksumMode(Transfer::CHECKSUM_NONE),
-                       fileSize(0), averageThroughput(0.0), instantaneousThroughput(0.0),
+                       isMultihopJob(false), isLastHop(false), isArchiving(false),
+                       checksumMode(Transfer::CHECKSUM_NONE), fileSize(0),
+                       averageThroughput(0.0), instantaneousThroughput(0.0),
                        transferredBytes(0), previousPingTransferredBytes(0)
 {
 }
