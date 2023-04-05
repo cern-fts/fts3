@@ -334,6 +334,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Retry this number of times if a staging poll fails with ECOMM"
     )
     (
+        "DefaultBringOnlineTimeout",
+        po::value<std::string>( &(_vars["DefaultBringOnlineTimeout"]) )->default_value("604800"),
+        "Default bring-online timeout for BringOnline operations"
+    )
+    (
+         "DefaultCopyPinLifetime",
+         po::value<std::string>( &(_vars["DefaultCopyPinLifetime"]) )->default_value("604800"),
+         "Default copy-pin-lifetime for BringOnline operations"
+    )
+    (
         "HeartBeatInterval",
         po::value<std::string>( &(_vars["HeartBeatInterval"]) )->default_value("60"),
         "Interval in seconds between beats"

@@ -98,6 +98,11 @@ LogLevel=INFO
 # Number of times to retry if a staging poll fails with ECOMM
 # StagingPollRetries=3
 
+# Default value for bring-online timeout if none if provided by the user
+# DefaultBringOnlineTimeout = 604800
+# Default value for copy-pin-lifetime if none if provided by the user
+# DefaultCopyPinLifetime = 604800
+
 # Interval between heartbeats (measured in seconds)
 # HeartBeatInterval=60
 # After this interval a host is considered down (measured in seconds)

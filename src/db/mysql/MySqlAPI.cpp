@@ -3895,9 +3895,9 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     int bring_online = row.get<int>("bring_online",0);
 
                     if(copy_pin_lifetime > 0 && bring_online <= 0)
-                        bring_online = 28800;
+                        bring_online = ServerConfig::instance().get<int>("DefaultBringOnlineTimeout");
                     else if (bring_online > 0 && copy_pin_lifetime <= 0)
-                        copy_pin_lifetime = 28800;
+                        copy_pin_lifetime = ServerConfig::instance().get<int>("DefaultCopyPinLifetime");
 
                     std::string user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
@@ -4043,9 +4043,9 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOp
             }
 
             if (copy_pin_lifetime > 0 && bring_online <= 0)
-                bring_online = 28800;
+                bring_online = ServerConfig::instance().get<int>("DefaultBringOnlineTimeout");
             else if (bring_online > 0 && copy_pin_lifetime <= 0)
-                copy_pin_lifetime = 28800;
+                copy_pin_lifetime = ServerConfig::instance().get<int>("DefaultCopyPinLifetime");
 
             std::string user_dn = row.get<std::string>("user_dn");
             std::string cred_id = row.get<std::string>("cred_id");
