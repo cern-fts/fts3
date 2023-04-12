@@ -82,6 +82,7 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
         "File exists",
         "checksum do not match",
         "CHECKSUM MISMATCH",
+        "The source file is not ONLINE",
         NULL
     };
 

@@ -4,7 +4,7 @@
 %define devtoolset devtoolset-8
 
 Name:       fts
-Version:    3.12.6
+Version:    3.12.7
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -397,6 +397,10 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Wed Apr 12 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.7
+- Make default pin-lifetime and bring-online timeout configurable
+- Optimizer ignore "Staged file does not exist" errors
+
 * Mon Apr 03 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.6
 - Send archive metadata to Url-Copy process
 - Remove invalid export keyword from /etc/sysconfig/fts-qos
