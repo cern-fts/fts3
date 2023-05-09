@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #   Copyright notice:
 #   Copyright CERN, 2016.
@@ -16,22 +16,22 @@
 #   limitations under the License.
 #
 
-import logging
 import os
-import subprocess
 import sys
+import logging
+import subprocess
+
 from distutils.util import strtobool
 from optparse import OptionParser
 from pkg_resources import parse_version
 from sqlalchemy import create_engine
 from sqlalchemy.exc import ProgrammingError
 from tempfile import NamedTemporaryFile
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 from fts3.util.config import fts3_config_load
 
 log = logging.getLogger(__name__)
-
 ASSUME_YES = False
 
 
@@ -92,6 +92,7 @@ def get_running_services(conn):
         services.append((row['hostname'], row['service_name']))
     return services
 
+
 def ask_confirmation(question):
     """
     Ask a yes/no question
@@ -100,8 +101,8 @@ def ask_confirmation(question):
     """
     if ASSUME_YES:
         return True
-    print "%s [Y/N]" % question
-    return strtobool(raw_input().lower())
+    print("%s [Y/N]" % question)
+    return strtobool(input().lower())
 
 
 def get_full_schema_path(sql_location):
@@ -151,12 +152,12 @@ def run_sql_script_mysql(config, sql):
     """
     parsed = urlparse('mysql://' + config['fts3.DbConnectString'])
 
-    creds = NamedTemporaryFile(delete=True)
-    print >> creds, """
+    creds = NamedTemporaryFile(delete=True, mode='w')
+    print("""
 [client]
 user=%(fts3.DbUserName)s
 password=%(fts3.DbPassword)s
-""" % config
+""" % config, file=creds)
     creds.flush()
 
     cmd = [
@@ -185,6 +186,7 @@ def run_sql_script(config, sql):
     """
     log.info('Running %s' % sql)
     run_sql_script_mysql(config, sql)
+
 
 def populate_schema(config, sql_location):
     """
