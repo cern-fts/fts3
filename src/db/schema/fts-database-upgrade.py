@@ -27,12 +27,27 @@ from pkg_resources import parse_version
 from sqlalchemy import create_engine
 from sqlalchemy.exc import ProgrammingError
 from tempfile import NamedTemporaryFile
-from urllib.parse import urlparse
-
-from fts3.util.config import fts3_config_load
+from urllib.parse import urlparse, quote_plus
 
 log = logging.getLogger(__name__)
 ASSUME_YES = False
+
+
+def fts3_database_config_load(config_path):
+    config = {}
+
+    # config['DbType'] = parse_from_config
+    # config['DbUserName'] = parse_from_config
+    # config['DbPassword'] = parse_from_config
+    # config['DbConnectString'] = parse_from_config
+
+    config['sqlalchemy.url'] = "{}://{}:{}@{}".format(
+        config['DbType'],
+        config['DbUserName'],
+        quote_plus(config['DbPassword']),
+        config['DbConnectString'],
+    )
+    return config
 
 
 def infer_sql_location(config):
@@ -43,9 +58,9 @@ def infer_sql_location(config):
     :return: The inferred SQL script location
     """
     base = '/usr/share'
-    if config['fts3.DbType'] not in ['mysql']:
-        raise NotImplementedError('Database type %s not supported', config['fts3.DbType'])
-    return os.path.join(base, 'fts-%s' % config['fts3.DbType'])
+    if config['DbType'] not in ['mysql']:
+        raise NotImplementedError('Database type %s not supported', config['DbType'])
+    return os.path.join(base, 'fts-%s' % config['DbType'])
 
 
 def connect_database(config):
@@ -150,7 +165,7 @@ def run_sql_script_mysql(config, sql):
     :param config: FTS3 config file parsed
     :param sql: The SQL script
     """
-    parsed = urlparse('mysql://' + config['fts3.DbConnectString'])
+    parsed = urlparse('mysql://' + config['DbConnectString'])
 
     creds = NamedTemporaryFile(delete=True, mode='w')
     print("""
@@ -250,11 +265,11 @@ def prepare_schema(config, sql_location):
     :param sql_location: SQL scripts location
     :return:
     """
-    db_type = config['fts3.DbType']
+    db_type = config['DbType']
     log.info('Database type: %s' % db_type)
     log.info('SQL Scripts location: %s' % sql_location)
-    log.info('Database: %s' % config['fts3.DbConnectString'])
-    log.info('User: %s' % config['fts3.DbUserName'])
+    log.info('Database: %s' % config['DbConnectString'])
+    log.info('User: %s' % config['DbUserName'])
 
     conn = connect_database(config)
 
@@ -287,7 +302,7 @@ if __name__ == '__main__':
     log.addHandler(log_handler)
     log.setLevel(logging.DEBUG)
 
-    config = fts3_config_load(opts.config_file)
+    config = fts3_database_config_load(opts.config_file)
 
     if opts.sql_location is None:
         opts.sql_location = infer_sql_location(config)
