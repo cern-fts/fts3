@@ -35,12 +35,16 @@ ASSUME_YES = False
 
 def fts3_database_config_load(config_path):
     config = {}
-
-    # config['DbType'] = parse_from_config
-    # config['DbUserName'] = parse_from_config
-    # config['DbPassword'] = parse_from_config
-    # config['DbConnectString'] = parse_from_config
-
+    with open(config_path, 'r') as myfile:
+        for line in myfile:
+            key, val = line.partition("=")[::2]
+            key = key.strip()
+            if key in ['DbType', 'DbUserName', 'DbPassword', 'DbConnectString'] :
+                config[key] = val.strip()
+    for key in ['DbType', 'DbUserName', 'DbPassword', 'DbConnectString'] :
+        if key not in config:
+            log.error("The " + key + " is missing from the config file")
+            sys.exit(1)  
     config['sqlalchemy.url'] = "{}://{}:{}@{}".format(
         config['DbType'],
         config['DbUserName'],
@@ -48,7 +52,6 @@ def fts3_database_config_load(config_path):
         config['DbConnectString'],
     )
     return config
-
 
 def infer_sql_location(config):
     """
@@ -170,8 +173,8 @@ def run_sql_script_mysql(config, sql):
     creds = NamedTemporaryFile(delete=True, mode='w')
     print("""
 [client]
-user=%(fts3.DbUserName)s
-password=%(fts3.DbPassword)s
+user=%(DbUserName)s
+password=%(DbPassword)s
 """ % config, file=creds)
     creds.flush()
 
@@ -290,7 +293,7 @@ if __name__ == '__main__':
     if len(args) > 0:
         optparser.error('No arguments are expected')
     if opts.assume_yes:
-        global ASSUME_YES
+        #global ASSUME_YES
         ASSUME_YES = True
 
     log_handler = logging.StreamHandler(sys.stderr)
