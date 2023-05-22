@@ -2,6 +2,8 @@
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
 %define devtoolset devtoolset-8
+# Compile Python scripts using Python3
+%define __python python3
 
 Name:       fts
 Version:    3.12.7
