@@ -293,7 +293,6 @@ if __name__ == '__main__':
     if len(args) > 0:
         optparser.error('No arguments are expected')
     if opts.assume_yes:
-        #global ASSUME_YES
         ASSUME_YES = True
 
     log_handler = logging.StreamHandler(sys.stderr)
