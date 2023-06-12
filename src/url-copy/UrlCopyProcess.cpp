@@ -398,13 +398,13 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
 
-    // Release file for SRM source bring online
-    if (transfer.source.protocol == "srm" && !transfer.tokenBringOnline.empty()) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing file for SRM source" << commit;
+    // Release source file if we have a bring-online token
+    if (!transfer.tokenBringOnline.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
         try {
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
         } catch (const Gfal2Exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release file for SRM source: "
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release source file: "
                                                << transfer.source << commit;
         }
     }

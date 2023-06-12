@@ -124,9 +124,9 @@ void ForceStartTransfersService::runService() {
                 forceRunJobs();
             }
         } catch (std::exception &e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << fts3::common::commit;
         } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService!" << fts3::common::commit;
         }
     }
 }

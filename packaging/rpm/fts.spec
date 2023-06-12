@@ -2,9 +2,11 @@
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
 %define devtoolset devtoolset-8
+# Compile Python scripts using Python3
+%define __python python3
 
 Name:       fts
-Version:    3.12.7
+Version:    3.12.8
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -397,6 +399,10 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Mon Jun 12 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.8
+- Always release a file after a copy if we have a bringonline token
+- Migrate database upgrade script from Python2 to Python3
+
 * Wed Apr 12 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.7
 - Make default pin-lifetime and bring-online timeout configurable
 - Optimizer ignore "Staged file does not exist" errors
