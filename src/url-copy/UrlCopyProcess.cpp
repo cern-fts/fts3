@@ -230,6 +230,24 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     	}
     }
 
+    // Set HTTP copy mode
+    if (!opts.copyMode.empty()) {
+        if (opts.copyMode == "pull") {
+            gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", GFAL_TRANSFER_TYPE_PULL);
+        } else if (opts.copyMode == "push") {
+            gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", GFAL_TRANSFER_TYPE_PUSH);
+        } else if (opts.copyMode == "streamed") {
+            gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", GFAL_TRANSFER_TYPE_STREAMED);
+        } else {
+            // Invalid copy mode. Do nothing
+        }
+    }
+
+    // Disable TPC copy fallback
+    if (opts.disableCopyFallback) {
+        gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
+    }
+
     // Avoid TPC attempts in S3 to S3 transfers
     if ((transfer.source.protocol.find("s3") == 0) && (transfer.destination.protocol.find("s3") == 0)) {
         gfal2.set("HTTP PLUGIN", "ENABLE_REMOTE_COPY", false);

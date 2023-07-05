@@ -59,7 +59,9 @@ const option UrlCopyOpts::long_options[] =
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
 	{"authMethod",        required_argument, 0, 506},
-    {"retrieve-se-token", no_argument,       0, 507},
+    {"copy-mode",         required_argument, 0, 507},
+    {"disable-fallback",  no_argument,       0, 508},
+    {"retrieve-se-token", no_argument,       0, 509},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -176,12 +178,12 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts():
-    isSessionReuse(false), strictCopy(false), dstFileReport(false), retrieveSEToken(false),
-    optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
-    timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
-    evict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
-    logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
-    debugLevel(0), logToStderr(false)
+        isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
+        optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+        timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
+        evict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
+        logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+        debugLevel(0), logToStderr(false)
 {
 }
 
@@ -319,6 +321,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 	authMethod = optarg;
                     break;
                 case 507:
+                    copyMode = boost::lexical_cast<std::string>(optarg);
+                    break;
+                case 508:
+                    disableCopyFallback = true;
+                    break;
+                case 509:
                     retrieveSEToken = true;
                     break;
 
