@@ -65,6 +65,7 @@ public:
     void setUDT(boost::tribool);
     void setIPv6(boost::tribool);
     void setEvict(boost::tribool);
+    void setCopyMode(CopyMode);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);

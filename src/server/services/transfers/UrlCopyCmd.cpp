@@ -153,6 +153,7 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
     }
 }
 
+
 void UrlCopyCmd::setEvict(boost::tribool set)
 {
     if (boost::indeterminate(set)) {
@@ -163,6 +164,33 @@ void UrlCopyCmd::setEvict(boost::tribool set)
     }
 }
 
+
+void UrlCopyCmd::setCopyMode(CopyMode copyMode)
+{
+    std::string mode;
+
+    switch (copyMode) {
+        case (CopyMode::ANY):
+            mode = "pull";
+            break;
+        case (CopyMode::PULL):
+            mode = "pull";
+            // Explicitly disable fallback because only PULL will work
+            setFlag("disable-fallback", true);
+            break;
+        case(CopyMode::PUSH):
+            mode = "push";
+            break;
+        case(CopyMode::STREAMING):
+            mode = "streamed";
+            break;
+        default:
+            // Do not set copy-mode and let the url-copy use its own default copy mode
+            return;
+    }
+
+    setOption("copy-mode", mode);
+}
 
 
 bool UrlCopyCmd::isIPv6Explicit(void)

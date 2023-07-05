@@ -30,6 +30,13 @@
 
 #include "Job.h"
 
+enum class CopyMode {
+    ANY,
+    PULL,
+    PUSH,
+    STREAMING,
+};
+
 /**
  * Describes the status of one file in a transfer job.
  */
