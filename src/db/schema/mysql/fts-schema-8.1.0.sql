@@ -657,7 +657,7 @@ CREATE TABLE `t_schema_vers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (8, 0, 1, 'Schema 8.0.1');
+VALUES (8, 1, 0, 'Schema 8.1.0');
 
 --
 -- Table structure for table `t_se`
@@ -678,7 +678,7 @@ CREATE TABLE `t_se` (
   `outbound_max_active` int(11) DEFAULT NULL,
   `outbound_max_throughput` float DEFAULT NULL,
   `eviction` char(1) DEFAULT NULL,
-  `tpc_support` varchar(10) DEFAULT NULL;
+  `tpc_support` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
