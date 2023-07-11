@@ -1937,12 +1937,27 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
 
         if (force || doUpdate)
         {
+            // Select all the rows to be updated
+            soci::rowset<soci::row> rs = (sql.prepare <<
+                    "SELECT file_id FROM t_file WHERE job_id = :jobId"
+                    " AND file_state NOT IN ('FINISHED', 'FAILED', 'CANCELED')"
+                    " ORDER BY file_id",
+                    soci::use(jobId)
+            );
+
+            // Prepare statement for update
+            uint64_t file_id;
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET file_state  = 'FAILED',"
+                                                    " finish_time = UTC_TIMESTAMP(),"
+                                                    " dest_surl_uuid = NULL, reason = :message"
+                                                    " WHERE file_id = :file_id",
+                                                    soci::use(file_id));
+
             sql.begin();
-            sql << "UPDATE t_file SET file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
-                    "reason = :message WHERE (job_id = :job_id OR pid = :pid) AND file_state NOT IN ('FINISHED', 'FAILED', 'CANCELED')",
-                soci::use(message),
-                soci::use(job_id),
-                soci::use(pid);
+            for (auto & row : rs) {
+                file_id = row.get<uint64_t>("file_id");
+                stmt1.execute(true);
+            }
             sql.commit();
         }
     }
