@@ -29,10 +29,16 @@
 static void gfal2LogCallback(const gchar *, GLogLevelFlags log_level, const gchar *message, gpointer)
 {
     if (message) {
+        const char* prefix = "Gfal2: ";
+
+        if (strncmp(message, "Davix: ", 7) == 0) {
+            prefix = "";
+        }
+
         if (log_level == G_LOG_LEVEL_DEBUG) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << message << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << message << fts3::common::commit;
         } else {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << message << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << prefix << message << fts3::common::commit;
         }
     }
 }
