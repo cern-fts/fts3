@@ -51,7 +51,7 @@ public:
         checksum_source_time_ms(0), checksum_dest_time_ms(0),
         retry(0), retry_max(0),
         job_m_replica(false), job_multihop(false), is_lasthop(false), is_archiving(false),
-        is_recoverable(false), ipv6(false), eviction_code(-1)
+        is_recoverable(false), ipv6(false), eviction_code(-1), cleanup_code(-1)
     {}
 
     ~TransferCompleted() = default;
@@ -124,6 +124,7 @@ public:
     bool        is_recoverable;
     bool        ipv6;
     int         eviction_code;
+    int         cleanup_code;
     std::string ipver;
     std::string final_destination;
     std::string transfer_type;
