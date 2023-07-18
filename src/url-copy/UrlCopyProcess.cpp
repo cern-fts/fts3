@@ -232,19 +232,13 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
 
     // Set HTTP copy mode
     if (!opts.copyMode.empty()) {
-        if (opts.copyMode == "pull") {
-            gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", GFAL_TRANSFER_TYPE_PULL);
-        } else if (opts.copyMode == "push") {
-            gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", GFAL_TRANSFER_TYPE_PUSH);
-        } else if (opts.copyMode == "streamed") {
-            gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", GFAL_TRANSFER_TYPE_STREAMED);
-        } else {
-            // Invalid copy mode. Do nothing
-        }
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: DEFAULT_COPY_MODE=" << opts.copyMode << commit;
+        gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", opts.copyMode);
     }
 
     // Disable TPC copy fallback
     if (opts.disableCopyFallback) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: ENABLE_FALLBACK_TPC_COPY=false" << commit;
         gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
     }
 

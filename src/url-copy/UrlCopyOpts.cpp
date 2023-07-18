@@ -24,6 +24,9 @@
 #include <boost/filesystem.hpp>
 #include "Transfer.h"
 #include "UrlCopyOpts.h"
+#include "common/Logger.h"
+
+using fts3::common::commit;
 
 
 const option UrlCopyOpts::long_options[] =
@@ -117,6 +120,22 @@ static void setChecksum(Transfer &transfer, const std::string &checksum)
     }
 }
 
+
+std::string translateCopyMode(const std::string &text)
+{
+    std::string mode;
+    // Translate the copy mode from the url-copy options to the Gfal2 defined types
+    if (text == "pull") {
+        mode = GFAL_TRANSFER_TYPE_PULL;
+    } else if (text == "push") {
+        mode = GFAL_TRANSFER_TYPE_PUSH;
+    } else if (text == "streamed") {
+        mode = GFAL_TRANSFER_TYPE_STREAMED;
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Invalid copy-mode in the fts_url_copy options: " << text << commit;
+    }
+    return mode;
+}
 
 // Create a transfer out of a string
 static Transfer createFromString(const Transfer &reference, const std::string &line)
@@ -321,7 +340,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 	authMethod = optarg;
                     break;
                 case 507:
-                    copyMode = boost::lexical_cast<std::string>(optarg);
+                    copyMode = translateCopyMode(optarg);
                     break;
                 case 508:
                     disableCopyFallback = true;
