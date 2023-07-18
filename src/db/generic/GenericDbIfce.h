@@ -272,7 +272,7 @@ public:
     /// Returns if for the given storage endpoint, eviction has been enabled
     virtual boost::tribool getEvictionFlag(const std::string &source) = 0;
 
-    /// Returns TPC mode for a pair of source destination endpoints
+    /// Returns TPC mode for a pair of source/destination endpoints
     virtual CopyMode getCopyMode(const std::string &source, const std::string &destination) = 0;
 
     /// Returns how many streams must be used for the given link

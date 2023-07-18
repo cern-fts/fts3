@@ -178,10 +178,10 @@ void UrlCopyCmd::setCopyMode(CopyMode copyMode)
             // Explicitly disable fallback because only PULL will work
             setFlag("disable-fallback", true);
             break;
-        case(CopyMode::PUSH):
+        case (CopyMode::PUSH):
             mode = "push";
             break;
-        case(CopyMode::STREAMING):
+        case (CopyMode::STREAMING):
             mode = "streamed";
             break;
         default:
