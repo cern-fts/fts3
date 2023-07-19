@@ -180,6 +180,7 @@ void UrlCopyCmd::setCopyMode(CopyMode copyMode)
             break;
         case (CopyMode::PUSH):
             mode = "push";
+            // Explicitly disable fallback because only PUSH will work
             setFlag("disable-fallback", true);
             break;
         case (CopyMode::STREAMING):
