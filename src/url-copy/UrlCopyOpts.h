@@ -59,6 +59,8 @@ public:
     std::string jobMetadata;
 
     std::string authMethod;
+    std::string copyMode;
+    bool disableCopyFallback;
     bool retrieveSEToken;
 
     unsigned optimizerLevel;

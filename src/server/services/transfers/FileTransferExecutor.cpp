@@ -186,6 +186,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Enable source file eviction from disk buffer (according to SE config)
             cmdBuilder.setEvict(db->getEvictionFlag(tf.sourceSe));
 
+            // Set TPC mode (according to SE config)
+            cmdBuilder.setCopyMode(db->getCopyMode(tf.sourceSe, tf.destSe));
+
             // FTS3 host name
             cmdBuilder.setFTSName(ftsHostName);
 
