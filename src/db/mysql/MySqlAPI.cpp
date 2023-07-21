@@ -2697,8 +2697,8 @@ std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId
 }
 
 
-void MySqlAPI::setRetryTransfer(const std::string &jobId, uint64_t fileId, int retry,
-    const std::string &reason, int errcode)
+void MySqlAPI::setRetryTransfer(const std::string& jobId, uint64_t fileId, int retryNo,
+                                const std::string& reason, const std::string& logFile, int errcode)
 {
     soci::session sql(*connectionPool);
 
@@ -2760,7 +2760,7 @@ void MySqlAPI::setRetryTransfer(const std::string &jobId, uint64_t fileId, int r
             sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', "
                 "internal_file_params=NULL, transfer_host=NULL,start_time=NULL, pid=NULL, "
                 " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','STAGING','SUBMITTED','FAILED','CANCELED') ",
-                soci::use(retry),
+                soci::use(retryNo),
                 soci::use(fileId),
                 soci::use(jobId);
         }
@@ -2770,15 +2770,16 @@ void MySqlAPI::setRetryTransfer(const std::string &jobId, uint64_t fileId, int r
                 "transfer_host=NULL, log_file=NULL,"
                 " log_file_debug=NULL, throughput = 0, current_failures = 1 "
                 " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
+                soci::use(tTime), soci::use(retryNo), soci::use(fileId), soci::use(jobId);
 
         }
 
         // Keep log
         sql << "INSERT IGNORE INTO t_file_retry_errors "
-            "    (file_id, attempt, datetime, reason) "
-            "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
-            soci::use(fileId), soci::use(retry), soci::use(reason);
+            "    (file_id, attempt, datetime, reason, transfer_host, log_file) "
+            "VALUES (:fileId, :retryNo, UTC_TIMESTAMP(), :reason, :hostname, :logFile)",
+            soci::use(fileId), soci::use(retryNo),
+            soci::use(reason), soci::use(hostname), soci::use(logFile);
 
         sql.commit();
     }

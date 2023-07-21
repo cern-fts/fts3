@@ -247,7 +247,8 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
                     if (retryTimes <= retry - 1)
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(
-                            msg.job_id(), msg.file_id(), retryTimes+1, msg.transfer_message(), msg.errcode());
+                            msg.job_id(), msg.file_id(), retryTimes + 1,
+                            msg.transfer_message(), msg.log_path(), msg.errcode());
                         return;
                     }
                 }
