@@ -152,6 +152,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
             if ((transfer.error->code() == EEXIST) && (opts.dstFileReport) && (!opts.overwrite)) {
                 status.set_file_metadata(replaceMetadataString(transfer.fileMetadata));
             }
+
+            status.set_log_path(transfer.logFile);
         }
         status.set_transfer_message(fullErrMsg.str());
         status.set_retry(transfer.error->isRecoverable());

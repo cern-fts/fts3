@@ -223,10 +223,12 @@ public:
     /// Add a new retry to the transfer identified by fileId
     /// @param jobId    Job identifier
     /// @param fileId   Transfer identifier
+    /// @param retryNo  The retry attempt number
     /// @param reason   String representation of the failure
     /// @param errcode  An integer representing the failure
-    virtual void setRetryTransfer(const std::string & jobId, uint64_t fileId, int retry, const std::string& reason,
-        int errcode) = 0;
+    /// @param logFile  The log file path
+    virtual void setRetryTransfer(const std::string& jobId, uint64_t fileId, int retryNo,
+                                  const std::string& reason, const std::string& logFile, int errcode) = 0;
 
     /// Bulk update of transfer progress
     virtual void updateFileTransferProgressVector(const std::vector<fts3::events::MessageUpdater> &messages) = 0;
