@@ -1704,6 +1704,7 @@ void MySqlAPI::updateFileTransferProgressVector(const std::vector<fts3::events::
         uint64_t file_id = 0;
         std::string file_state;
 
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN; hello" << commit;
         soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
                                 soci::use(throughput), soci::use(transferred), soci::use(file_id));
 

@@ -609,8 +609,10 @@ CREATE TABLE `t_optimizer` (
   `dest_se` varchar(150) NOT NULL,
   `datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `ema` double DEFAULT '0',
+  -- `throughput` double DEFAULT '0',
   `active` int(11) DEFAULT '2',
   `nostreams` int(11) DEFAULT '1',
+  -- `queue_size` int(11) DEFAULT NULL,
   PRIMARY KEY (`source_se`,`dest_se`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -657,7 +659,11 @@ CREATE TABLE `t_schema_vers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 INSERT INTO t_schema_vers (major, minor, patch, message)
+<<<<<<< HEAD
 VALUES (8, 1, 0, 'Schema 8.1.0');
+=======
+VALUES (8, 0, 1, 'Schema 8.0.1');
+>>>>>>> 130054eb6 (adding throughput values)
 
 --
 -- Table structure for table `t_se`
@@ -678,7 +684,10 @@ CREATE TABLE `t_se` (
   `outbound_max_active` int(11) DEFAULT NULL,
   `outbound_max_throughput` float DEFAULT NULL,
   `eviction` char(1) DEFAULT NULL,
+<<<<<<< HEAD
   `tpc_support` varchar(10) DEFAULT NULL,
+=======
+>>>>>>> 130054eb6 (adding throughput values)
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

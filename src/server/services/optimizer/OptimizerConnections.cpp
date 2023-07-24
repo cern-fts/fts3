@@ -159,6 +159,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // of connections.
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: entered main optimizer (july20)"  << commit;    
     int decision = 0;
     std::stringstream rationale;
 
@@ -182,6 +183,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     boost::posix_time::time_duration timeFrame = calculateTimeFrame(current.avgDuration);
 
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: OptimizerConnections calls getThroughputInfo" << commit;
     dataSource->getThroughputInfo(pair, timeFrame,
         &current.throughput, &current.filesizeAvg, &current.filesizeStdDev);
     current.successRate = dataSource->getSuccessRateForPair(pair, timeFrame, &current.retryCount);
@@ -226,8 +228,11 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     }
 
     // Apply bandwidth limits
+
+
     if (limits.throughputSource > 0) {
         double throughput = dataSource->getThroughputAsSource(pair.source);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: getThroughputAsSource: " << throughput  << commit;
         if (throughput > limits.throughputSource) {
             decision = previousValue - decreaseStepSize;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";

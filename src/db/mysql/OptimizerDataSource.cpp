@@ -32,16 +32,17 @@ using namespace fts3::optimizer;
 
 // Set the new number of actives
 static void setNewOptimizerValue(soci::session &sql,
-    const Pair &pair, int optimizerDecision, double ema)
+    const Pair &pair, int optimizerDecision, double ema, double throughput)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: setNewOptimizerValue" << commit;
     sql.begin();
     sql <<
-        "INSERT INTO t_optimizer (source_se, dest_se, active, ema, datetime) "
-        "VALUES (:source, :dest, :active, :ema, UTC_TIMESTAMP()) "
+        "INSERT INTO t_optimizer (source_se, dest_se, active, ema, throughput, datetime) "
+        "VALUES (:source, :dest, :active, :ema, :throughput, UTC_TIMESTAMP()) "
         "ON DUPLICATE KEY UPDATE "
-        "   active = :active, ema = :ema, datetime = UTC_TIMESTAMP()",
+        "   active = :active, ema = :ema, throughput= :throughput, datetime = UTC_TIMESTAMP()",
         soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
-        soci::use(optimizerDecision, "active"), soci::use(ema, "ema");
+        soci::use(optimizerDecision, "active"), soci::use(ema, "ema"), soci::use(throughput, "throughput");
     sql.commit();
 }
 
@@ -51,6 +52,7 @@ static void updateOptimizerEvolution(soci::session &sql,
     const Pair &pair, int active, int diff, const std::string &rationale, const PairState &newState)
 {
     try {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: updating t_optimizer_evolution with queueSize: " << newState.queueSize << commit;
         sql.begin();
         sql << " INSERT INTO t_optimizer_evolution "
             " (datetime, source_se, dest_se, "
@@ -70,6 +72,11 @@ static void updateOptimizerEvolution(soci::session &sql,
             soci::use(newState.activeCount), soci::use(newState.queueSize),
             soci::use(rationale), soci::use(diff);
         sql.commit();
+    
+        if(newState.queueSize) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: queueSize is " << newState.queueSize << commit;
+        }
+
     }
     catch (std::exception &e) {
         sql.rollback();
@@ -190,6 +197,7 @@ public:
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
         double *throughput, double *filesizeAvg, double *filesizeStdDev)
     {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: getThroughputInfo" << commit;
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
         *throughput = *filesizeAvg = *filesizeStdDev = 0;
@@ -252,6 +260,8 @@ public:
         }
 
         *throughput = totalBytes / interval.total_seconds();
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: Throughput: " << *throughput << commit;
         // Statistics on the file size
         if (!filesizes.empty()) {
             for (auto i = filesizes.begin(); i != filesizes.end(); ++i) {
@@ -348,6 +358,18 @@ public:
             "WHERE source_se= :name AND file_state='ACTIVE' AND throughput IS NOT NULL",
             soci::use(se), soci::into(throughput, isNull);
 
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: Throughput (old)" << throughput << commit;
+
+        // double throughput2 = 0;
+        // int dead_window = 300;
+        // sql <<
+        //     "SELECT SUM(ema) from t_optimizer "
+        //     "WHERE source_se= :name AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
+        //     soci::use(se, "name"), soci::use(dead_window, "interval"),
+        //     soci::into(throughput2);
+
+        // FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Throughput (new)" << commit;
+
         return throughput;
     }
 
@@ -365,11 +387,14 @@ public:
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
 
-        setNewOptimizerValue(sql, pair, activeDecision, newState.ema);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: storeOptimizerDecision throughput: " << newState.throughput << commit; 
+
+        setNewOptimizerValue(sql, pair, activeDecision, newState.ema, newState.throughput);
         updateOptimizerEvolution(sql, pair, activeDecision, diff, rationale, newState);
     }
 
     void storeOptimizerStreams(const Pair &pair, int streams) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: update t_optimizer" << commit;
         sql.begin();
 
         sql << "UPDATE t_optimizer "
