@@ -159,6 +159,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // of connections.
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: OC July 25th" << commit;
     int decision = 0;
     std::stringstream rationale;
 

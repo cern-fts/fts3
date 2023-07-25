@@ -190,6 +190,8 @@ public:
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
         double *throughput, double *filesizeAvg, double *filesizeStdDev)
     {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: ODC July 25th" << commit;
+
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
         *throughput = *filesizeAvg = *filesizeStdDev = 0;
