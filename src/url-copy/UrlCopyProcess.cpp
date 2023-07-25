@@ -79,20 +79,17 @@ static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfa
     destFile.checksumType = checksumType;
     destFile.checksumValue = checksum;
 
+    // Set file and disk locality booleans to true if on a valid userStatus
     if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
         destFile.fileOnDisk = true;
-        destFile.fileOnTape = false;
     } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
-        destFile.fileOnDisk = false;
         destFile.fileOnTape = true;
     } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
         destFile.fileOnDisk = true;
         destFile.fileOnTape = true;
-    } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
-        destFile.fileOnDisk = false;
-        destFile.fileOnTape = false;
     } else {
-        throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Could not determine file locality from"
+                                              " the Gfal2 user.status extended attribute : " << userStatus << commit;
     }
 
     return destFile;
