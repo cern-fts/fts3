@@ -52,6 +52,7 @@ by CERN's LHC into the computing GRID.
 %package devel
 Summary: Development files for File Transfer Service V3
 Requires: fts-libs%{?_isa} = %{version}-%{release}
+Requires: fts-mysql%{?_isa} = %{version}-%{release}
 
 %description devel
 This package contains development files
@@ -61,6 +62,7 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
+Requires: fts-mysql%{?_isa} = %{version}-%{release}
 Requires: gfal2%{?_isa} >= 2.21.5
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.5
 Requires: gfal2-plugin-http%{?_isa} >= 2.21.5
