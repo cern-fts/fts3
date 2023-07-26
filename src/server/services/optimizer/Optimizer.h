@@ -101,7 +101,7 @@ public:
 
     // Get the weighted throughput for the pair
     virtual void getThroughputInfo(const Pair &, const boost::posix_time::time_duration &,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev) = 0;
+        double *throughput, double *filesizeAvg, double *filesizeStdDev, int actualActive) = 0;
 
     virtual time_t getAverageDuration(const Pair&, const boost::posix_time::time_duration&) = 0;
 

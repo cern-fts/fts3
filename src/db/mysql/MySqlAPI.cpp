@@ -135,15 +135,14 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {8, 0};
+    static const unsigned expect[] = {8, 2};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
     sql << "SELECT major, minor FROM t_schema_vers ORDER BY major DESC, minor DESC, patch DESC",
         soci::into(major), soci::into(minor);
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "major: " << major << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "minor: " << minor << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "FTS SQL Schema (major, minor): (" << major << ", " << minor << ")" << commit;
 
     if (major > expect[0]) {
         throw SystemError("The database schema major version is higher than expected. Please, upgrade fts");
@@ -171,7 +170,6 @@ void MySqlAPI::init(const std::string& username, const std::string& password,
     std::string host, db;
     int port;
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN. connectString: " << connectString << commit;
     try
     {
         connectionPool = new soci::connection_pool(pooledConn);
@@ -1708,7 +1706,6 @@ void MySqlAPI::updateFileTransferProgressVector(const std::vector<fts3::events::
         uint64_t file_id = 0;
         std::string file_state;
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN; hello" << commit;
         soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
                                 soci::use(throughput), soci::use(transferred), soci::use(file_id));
 

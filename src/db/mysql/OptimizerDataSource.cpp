@@ -32,17 +32,18 @@ using namespace fts3::optimizer;
 
 // Set the new number of actives
 static void setNewOptimizerValue(soci::session &sql,
-    const Pair &pair, int optimizerDecision, double ema, double throughput)
+    const Pair &pair, int optimizerDecision, const PairState &newState)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: setNewOptimizerValue" << commit;
     sql.begin();
     sql <<
-        "INSERT INTO t_optimizer (source_se, dest_se, active, ema, throughput, datetime) "
-        "VALUES (:source, :dest, :active, :ema, :throughput, UTC_TIMESTAMP()) "
+        "INSERT INTO t_optimizer (source_se, dest_se, active, actual_active, ema, throughput, queue_size, datetime) "
+        "VALUES (:source, :dest, :active, :actualActive, :ema, :throughput, :queueSize, UTC_TIMESTAMP()) "
         "ON DUPLICATE KEY UPDATE "
-        "   active = :active, ema = :ema, throughput= :throughput, datetime = UTC_TIMESTAMP()",
+        "   active = :active, actual_active = :actualActive, ema = :ema, throughput= :throughput, queue_size = :queueSize, datetime = UTC_TIMESTAMP()",
         soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
-        soci::use(optimizerDecision, "active"), soci::use(ema, "ema"), soci::use(throughput, "throughput");
+        soci::use(optimizerDecision, "active"), soci::use(newState.activeCount, "actualActive"),
+        soci::use(newState.ema, "ema"), soci::use(newState.throughput, "throughput"), 
+        soci::use(newState.queueSize, "queueSize");
     sql.commit();
 }
 
@@ -52,7 +53,6 @@ static void updateOptimizerEvolution(soci::session &sql,
     const Pair &pair, int active, int diff, const std::string &rationale, const PairState &newState)
 {
     try {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: updating t_optimizer_evolution with queueSize: " << newState.queueSize << commit;
         sql.begin();
         sql << " INSERT INTO t_optimizer_evolution "
             " (datetime, source_se, dest_se, "
@@ -73,9 +73,6 @@ static void updateOptimizerEvolution(soci::session &sql,
             soci::use(rationale), soci::use(diff);
         sql.commit();
     
-        if(newState.queueSize) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: queueSize is " << newState.queueSize << commit;
-        }
 
     }
     catch (std::exception &e) {
@@ -195,9 +192,8 @@ public:
     }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev)
+        double *throughput, double *filesizeAvg, double *filesizeStdDev, int actualActive)
     {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: getThroughputInfo" << commit;
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
         *throughput = *filesizeAvg = *filesizeStdDev = 0;
@@ -260,8 +256,25 @@ public:
         }
 
         *throughput = totalBytes / interval.total_seconds();
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Throughput for " << pair << ": " << *throughput << commit;
+        
+        double avgThroughput = 0;
+        soci::indicator isAvgNull;
+        sql << 
+            "SELECT AVG(throughput) from t_file WHERE throughput>0 "
+            "AND file_state = 'ACTIVE' "
+            "AND source_se= :sourceSe AND dest_se= :destSe",
+            soci::use(pair.source), soci::use(pair.destination),
+            soci::into(avgThroughput, isAvgNull);
+        if(isAvgNull == soci::i_null) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No active files with perf markers yet." << commit;
+            avgThroughput = 0;
+        }
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: Throughput: " << *throughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "(Average Nonzero Throughput) * (actualActive): " << avgThroughput*actualActive << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "avgThroughput: " << avgThroughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "actualActive: " << actualActive << commit;
+
         // Statistics on the file size
         if (!filesizes.empty()) {
             for (auto i = filesizes.begin(); i != filesizes.end(); ++i) {
@@ -350,6 +363,7 @@ public:
     }
 
     double getThroughputAsSource(const std::string &se) {
+        // Estimation of total outbound throughput (throughput).
         double throughput = 0;
         soci::indicator isNull;
 
@@ -358,17 +372,23 @@ public:
             "WHERE source_se= :name AND file_state='ACTIVE' AND throughput IS NOT NULL",
             soci::use(se), soci::into(throughput, isNull);
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: Throughput (old)" << throughput << commit;
-
-        // double throughput2 = 0;
-        // int dead_window = 300;
-        // sql <<
-        //     "SELECT SUM(ema) from t_optimizer "
-        //     "WHERE source_se= :name AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
-        //     soci::use(se, "name"), soci::use(dead_window, "interval"),
-        //     soci::into(throughput2);
-
-        // FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Throughput (new)" << commit;
+        // [FTS-1782] New estimation method (throughput2).
+        // Note: An alternative is to pass in the throughput from (src,dst) and then
+        // add this to SUM(throughput) where source_se=se and dest_se!=de.
+        // This removes the delay that comes from having to wait until the end of the Optimizer cycle
+        // in order for the (src,dst) throughput value to be added to t_optimizer.
+        soci::indicator isThroughputNull;
+        double throughput2 = 0;
+        sql <<
+            "SELECT SUM(throughput) from t_optimizer "
+            "WHERE source_se= :name AND queue_size IS NOT NULL AND queue_size>0",
+            soci::use(se, "name"), soci::into(throughput2, isThroughputNull);
+        if (isThroughputNull == soci::i_null) {
+            throughput2 = 0;
+        } 
+        
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSource for " << se << ": " << throughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSource (new): " << throughput2 << commit;
 
         return throughput;
     }
@@ -384,19 +404,16 @@ public:
         return throughput;
     }
 
+    // Stores value in both the snapshot database t_optimizer as well as t_optimizer_evolution
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: storeOptimizerDecision throughput: " << newState.throughput << commit; 
-
-        setNewOptimizerValue(sql, pair, activeDecision, newState.ema, newState.throughput);
+        setNewOptimizerValue(sql, pair, activeDecision, newState);
         updateOptimizerEvolution(sql, pair, activeDecision, diff, rationale, newState);
     }
 
     void storeOptimizerStreams(const Pair &pair, int streams) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: update t_optimizer" << commit;
+        
         sql.begin();
-
         sql << "UPDATE t_optimizer "
                "SET nostreams = :nostreams, datetime = UTC_TIMESTAMP() "
                "WHERE source_se = :source AND dest_se = :dest",

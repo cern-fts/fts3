@@ -143,7 +143,7 @@ public:
     }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev)
+        double *throughput, double *filesizeAvg, double *filesizeStdDev, int actualActive)
     {
         *throughput = *filesizeAvg = *filesizeStdDev = 0;
 
