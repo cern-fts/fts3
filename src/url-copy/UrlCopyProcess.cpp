@@ -408,7 +408,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     }
 
     // Release source file if we have a bring-online token
-    if (!transfer.tokenBringOnline.empty()) {
+    if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
         try {
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);

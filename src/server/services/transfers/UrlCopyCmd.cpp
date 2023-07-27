@@ -165,6 +165,17 @@ void UrlCopyCmd::setEvict(boost::tribool set)
 }
 
 
+void UrlCopyCmd::setSkipEvict(boost::tribool set)
+    {
+        if (boost::indeterminate(set)) {
+            setFlag("skip-evict", false);
+        } else {
+            bool value = (set.value == true);
+            setFlag("skip-evict", value);
+        }
+    }
+
+
 void UrlCopyCmd::setCopyMode(CopyMode copyMode)
 {
     std::string mode;

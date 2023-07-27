@@ -5,7 +5,8 @@
 --
 
 ALTER TABLE `t_se`
-    ADD COLUMN `tpc_support` VARCHAR(10) DEFAULT NULL;
+    ADD COLUMN `tpc_support` VARCHAR(10) DEFAULT NULL,
+    ADD COLUMN `skip_eviction` CHAR(1) DEFAULT NULL;
 
 ALTER TABLE `t_file_retry_errors`
     ADD COLUMN `transfer_host` varchar(255) DEFAULT NULL,

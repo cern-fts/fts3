@@ -186,6 +186,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Enable source file eviction from disk buffer (according to SE config)
             cmdBuilder.setEvict(db->getEvictionFlag(tf.sourceSe));
 
+            // Disable source file eviction from disk buffer (according to SE config)
+            cmdBuilder.setSkipEvict(db->getSkipEvictionFlag(tf.sourceSe));
+
             // Set TPC mode (according to SE config)
             cmdBuilder.setCopyMode(db->getCopyMode(tf.sourceSe, tf.destSe));
 

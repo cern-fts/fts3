@@ -451,6 +451,32 @@ boost::tribool MySqlAPI::getEvictionFlag(const std::string &source)
 }
 
 
+boost::tribool MySqlAPI::getSkipEvictionFlag(const std::string &source)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        boost::logic::tribool skipEviction(boost::indeterminate);
+        soci::statement stmt = (sql.prepare << "SELECT skip_eviction FROM t_se WHERE storage = :source",
+                                soci::use(source), soci::into(skipEviction));
+
+        stmt.execute(true);
+
+        if (boost::indeterminate(skipEviction)) {
+            return false;
+        } else {
+            return skipEviction;
+        }
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
 CopyMode MySqlAPI::getCopyMode(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);
