@@ -408,9 +408,11 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
         try {
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
+            transfer.stats.evictionRetc = 0;
         } catch (const Gfal2Exception &ex) {
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release source file: "
                                                << transfer.source << commit;
+            transfer.stats.evictionRetc = std::abs(ex.code());
         }
     }
 
