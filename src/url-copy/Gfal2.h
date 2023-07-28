@@ -232,14 +232,6 @@ public:
         }
     }
 
-    void setEvictionFlag(bool value)
-    {
-        GError *error = NULL;
-        if (gfalt_set_use_evict(params, value, &error) < 0) {
-            throw Gfal2Exception(error);
-        }
-    }
-
     void setBringonlineToken(const std::string &token)
     {
         GError *error = NULL;

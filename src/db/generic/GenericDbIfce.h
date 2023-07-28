@@ -271,9 +271,6 @@ public:
     /// Returns if for the given link, IPv6 has been enabled
     virtual boost::tribool isProtocolIPv6(const std::string &sourceSe, const std::string &destSe) = 0;
 
-    /// Returns if for the given storage endpoint, eviction has been enabled
-    virtual boost::tribool getEvictionFlag(const std::string &source) = 0;
-
     /// Returns if for the given storage endpoint, skip eviction has been enabled
     virtual boost::tribool getSkipEvictionFlag(const std::string &source) = 0;
 

@@ -73,7 +73,6 @@ public:
     boost::tribool enableIpv6;
     unsigned addSecPerMb;
     bool     noStreaming;
-    bool     evict; // Legacy option
     bool     skipEvict;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option
