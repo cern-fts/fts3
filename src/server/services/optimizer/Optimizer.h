@@ -72,6 +72,7 @@ struct PairState {
     double filesizeAvg, filesizeStdDev;
     // Optimizer last decision
     int connections;
+    double avgTput;
 
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
                  queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1) {}
@@ -99,9 +100,12 @@ public:
     // Get the stored optimizer value (current value)
     virtual int getOptimizerValue(const Pair&) = 0;
 
+    // Get the average instantaneous throughput of all active files
+    virtual double getInstThroughputPerConn(const Pair&) = 0;
+
     // Get the weighted throughput for the pair
     virtual void getThroughputInfo(const Pair &, const boost::posix_time::time_duration &,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev, int actualActive) = 0;
+        double *throughput, double *filesizeAvg, double *filesizeStdDev) = 0;
 
     virtual time_t getAverageDuration(const Pair&, const boost::posix_time::time_duration&) = 0;
 
@@ -114,7 +118,10 @@ public:
 
     // Get current throughput
     virtual double getThroughputAsSource(const std::string&) = 0;
+    virtual double getThroughputAsSourceInst(const std::string&) = 0;
     virtual double getThroughputAsDestination(const std::string&) = 0;
+    virtual double getThroughputAsDestinationInst(const std::string&) = 0;
+    
 
     // Permanently register the optimizer decision
     virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,

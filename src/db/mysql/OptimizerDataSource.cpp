@@ -191,8 +191,24 @@ public:
         return currentActive;
     }
 
+    double getInstThroughputPerConn(const Pair &pair) {
+        double avgTput = 0;
+        soci::indicator isAvgNull;
+        sql << 
+            "SELECT SUM(throughput) from t_file WHERE throughput>0 "
+            "AND file_state = 'ACTIVE' "
+            "AND source_se= :sourceSe AND dest_se= :destSe",
+            soci::use(pair.source), soci::use(pair.destination),
+            soci::into(avgTput, isAvgNull);
+        if(isAvgNull == soci::i_null) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No active files with performance markers yet." << commit;
+            avgTput = 0;
+        }
+        return avgTput;
+    }
+
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev, int actualActive)
+        double *throughput, double *filesizeAvg, double *filesizeStdDev)
     {
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -257,23 +273,6 @@ public:
 
         *throughput = totalBytes / interval.total_seconds();
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Throughput for " << pair << ": " << *throughput << commit;
-        
-        double avgThroughput = 0;
-        soci::indicator isAvgNull;
-        sql << 
-            "SELECT AVG(throughput) from t_file WHERE throughput>0 "
-            "AND file_state = 'ACTIVE' "
-            "AND source_se= :sourceSe AND dest_se= :destSe",
-            soci::use(pair.source), soci::use(pair.destination),
-            soci::into(avgThroughput, isAvgNull);
-        if(isAvgNull == soci::i_null) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No active files with perf markers yet." << commit;
-            avgThroughput = 0;
-        }
-
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "(Average Nonzero Throughput) * (actualActive): " << avgThroughput*actualActive << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "avgThroughput: " << avgThroughput << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "actualActive: " << actualActive << commit;
 
         // Statistics on the file size
         if (!filesizes.empty()) {
@@ -362,7 +361,27 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
+    // [FTS-1782] & [FTS-1944]: Instead of computing the
+    // throughput again (migrated to AsSourceInst), getThroughputAsSource
+    // reads in the saved values from t_optimizer which come from
+    // getThroughputInfo's estimation.
+
+    // Note: Possible future work item is reducing delay in updating t_optimizer
     double getThroughputAsSource(const std::string &se) {
+        // Estimation of total outbound throughput (throughput).
+        soci::indicator isThroughputNull;
+        double throughput = 0;
+        sql <<
+            "SELECT SUM(throughput) from t_optimizer "
+            "WHERE source_se= :name AND queue_size IS NOT NULL AND queue_size>0",
+            soci::use(se, "name"), soci::into(throughput, isThroughputNull);
+        if (isThroughputNull == soci::i_null) {
+            throughput = 0;
+        } 
+        return throughput/(1024*1024); //Returns value in MB/s
+    }
+
+    double getThroughputAsSourceInst(const std::string &se) {
         // Estimation of total outbound throughput (throughput).
         double throughput = 0;
         soci::indicator isNull;
@@ -371,29 +390,24 @@ public:
             "SELECT SUM(throughput) FROM t_file "
             "WHERE source_se= :name AND file_state='ACTIVE' AND throughput IS NOT NULL",
             soci::use(se), soci::into(throughput, isNull);
-
-        // [FTS-1782] New estimation method (throughput2).
-        // Note: An alternative is to pass in the throughput from (src,dst) and then
-        // add this to SUM(throughput) where source_se=se and dest_se!=de.
-        // This removes the delay that comes from having to wait until the end of the Optimizer cycle
-        // in order for the (src,dst) throughput value to be added to t_optimizer.
-        soci::indicator isThroughputNull;
-        double throughput2 = 0;
-        sql <<
-            "SELECT SUM(throughput) from t_optimizer "
-            "WHERE source_se= :name AND queue_size IS NOT NULL AND queue_size>0",
-            soci::use(se, "name"), soci::into(throughput2, isThroughputNull);
-        if (isThroughputNull == soci::i_null) {
-            throughput2 = 0;
-        } 
         
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSource for " << se << ": " << throughput << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSource (new): " << throughput2 << commit;
-
-        return throughput;
-    }
+        return throughput; //Returns value in MB/s
+    }    
 
     double getThroughputAsDestination(const std::string &se) {
+        soci::indicator isThroughputNull;
+        double throughput = 0;
+        sql <<
+            "SELECT SUM(throughput) from t_optimizer "
+            "WHERE dest_se= :name AND queue_size IS NOT NULL AND queue_size>0",
+            soci::use(se, "name"), soci::into(throughput, isThroughputNull);
+        if (isThroughputNull == soci::i_null) {
+            throughput = 0;
+        }
+        return throughput/(1024*1024);
+    } 
+
+    double getThroughputAsDestinationInst(const std::string &se) {
         double throughput = 0;
         soci::indicator isNull;
 

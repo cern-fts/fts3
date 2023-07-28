@@ -187,7 +187,12 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     current.queueSize = dataSource->getSubmitted(pair);
     
     dataSource->getThroughputInfo(pair, timeFrame,
-        &current.throughput, &current.filesizeAvg, &current.filesizeStdDev, current.activeCount);
+        &current.throughput, &current.filesizeAvg, &current.filesizeStdDev);
+    
+    double avgInstTput = dataSource->getInstThroughputPerConn(pair);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "On " << pair << ", avgThroughput per connection is: " << avgInstTput << commit;
+
 
     // There is no value yet. In this case, pick the high value if configured, mid-range otherwise.
     if (previousValue == 0) {
@@ -229,21 +234,41 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Apply bandwidth limits
     if (limits.throughputSource > 0) {
         double throughput = dataSource->getThroughputAsSource(pair.source);
+        double throughputInst = dataSource->getThroughputAsSourceInst(pair.source);;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSource for " << pair.source << ": " << throughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSourceInst for " << pair.source << ": " << throughputInst << commit;
+
         if (throughput > limits.throughputSource) {
-            decision = previousValue - decreaseStepSize;
+            decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
+            return true;
+        }
+        if (throughputInst > limits.throughputSource) {
+            decision = std::max(previousValue - decreaseStepSize, range.min);
+            rationale << "Source (instantaneous) throughput limitation reached (" << limits.throughputSource << ")";
+            setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
     }
     if (limits.throughputDestination > 0) {
         double throughput = dataSource->getThroughputAsDestination(pair.destination);
+        double throughputInst = dataSource->getThroughputAsDestinationInst(pair.destination);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsDestination for " << pair.destination << ": " << throughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsDestinationInst for " << pair.destination << ": " << throughputInst << commit;
+        
         if (throughput > limits.throughputDestination) {
-            decision = previousValue - decreaseStepSize;
+            decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
+        if (throughputInst > limits.throughputDestination) {
+            decision = std::max(previousValue - decreaseStepSize, range.min);
+            rationale << "Destination (instantaneous) throughput limitation reached (" << limits.throughputDestination << ")";
+            setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
+            return true;
+        }        
     }
 
     // Run only when it makes sense

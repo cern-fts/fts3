@@ -142,8 +142,29 @@ public:
         return i->second.back().activeDecision;
     }
 
+    double getInstThroughputPerConn(const Pair &pair) {
+        auto tsi = transferStore.find(pair);
+        if (tsi == transferStore.end()) {
+            return 0;
+        }
+        auto &transfers = tsi->second;
+
+        // Each entry i in transfers is equivalent to a row in t_file.
+        int numNonZero = 0;
+        double totalTput;
+        for (auto i = transfers.begin(); i != transfers.end(); ++i) {
+            if (i->state == "ACTIVE") {
+                totalTput += i->throughput;
+                if (i->throughput > 0) {
+                    ++numNonZero;
+                }
+            }
+        }
+        return totalTput;
+    }
+
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev, int actualActive)
+        double *throughput, double *filesizeAvg, double *filesizeStdDev)
     {
         *throughput = *filesizeAvg = *filesizeStdDev = 0;
 
@@ -266,8 +287,16 @@ public:
     }
 
     double getThroughputAsSource(const std::string &storage) {
-        double acc = 0;
+        return getThroughputAsSourceInst(storage);
+    }
 
+    // In the test environment, throughput=transferred/duration
+    // and the two methods are the same.
+    double getThroughputAsSourceInst(const std::string &storage) {
+        // transferStore is a map from Pair to TransferList
+        // TransferList is a list of MockTransfers
+        // MockTransfer is a struct with most of the t_file values.
+        double acc = 0;
         for (auto i = transferStore.begin(); i != transferStore.end(); ++i) {
             if (i->first.source == storage) {
                 auto &transfers = i->second;
@@ -279,10 +308,14 @@ public:
                 }
             }
         }
-        return acc;
+        return acc;    
     }
 
     double getThroughputAsDestination(const std::string &storage) {
+        return getThroughputAsDestinationInst(storage);
+    }
+
+    double getThroughputAsDestinationInst(const std::string &storage) {
         double acc = 0;
 
         for (auto i = transferStore.begin(); i != transferStore.end(); ++i) {
@@ -297,7 +330,7 @@ public:
             }
         }
         return acc;
-    }
+    }    
 
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
