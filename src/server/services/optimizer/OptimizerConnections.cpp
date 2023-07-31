@@ -152,29 +152,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
     return decision;
 }
 
-// This algorithm idea is similar to the TCP congestion window.
-// It gives priority to success rate. If it gets worse, it will back off reducing
-// the total number of connections between storages.
-// If the success rate is good, and the throughput improves, it will increase the number
-// of connections.
-bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
-{
-    int decision = 0;
-    std::stringstream rationale;
-
-    // Start ticking!
-    boost::timer::cpu_timer timer;
-
-    // Optimizer working values
-    Range range;
-    StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
-
-    // Previous decision
-    int previousValue = dataSource->getOptimizerValue(pair);
-
+PairState Optimizer::getPairState(const Pair &pair) {
     // Initialize current state
     PairState current;
     current.timestamp = time(NULL);
@@ -189,9 +167,39 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     dataSource->getThroughputInfo(pair, timeFrame,
         &current.throughput, &current.filesizeAvg, &current.filesizeStdDev);
     
-    double avgInstTput = dataSource->getInstThroughputPerConn(pair);
+    current.avgTput = dataSource->getInstThroughputPerConn(pair);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "On " << pair << ", avgThroughput per connection is: " << current.avgTput << commit;
+    
+    return current;
+}
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "On " << pair << ", avgThroughput per connection is: " << avgInstTput << commit;
+// This algorithm idea is similar to the TCP congestion window.
+// It gives priority to success rate. If it gets worse, it will back off reducing
+// the total number of connections between storages.
+// If the success rate is good, and the throughput improves, it will increase the number
+// of connections.
+bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
+{
+    int decision = 0;
+    std::stringstream rationale;
+
+    // Start ticking!
+    boost::timer::cpu_timer timer;
+
+    // READ IN PAIRSTATE with current:
+    // timestamp, avgDuration, (timeFrame not needed), activeCount
+    // successRate, retryCount, queueSize, throughput, filesizeAvg, filesizeStdDev
+    // avgInstTput
+    PairState current = stateCollectionStore[pair];    
+
+    // Optimizer working values
+    Range range;
+    StorageLimits limits;
+    getOptimizerWorkingRange(pair, &range, &limits);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
+
+    // Previous decision
+    int previousValue = dataSource->getOptimizerValue(pair);
 
 
     // There is no value yet. In this case, pick the high value if configured, mid-range otherwise.

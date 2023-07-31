@@ -160,7 +160,7 @@ public:
                 }
             }
         }
-        return totalTput;
+        return totalTput/numNonZero;
     }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
