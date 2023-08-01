@@ -207,6 +207,11 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setOverwrite(true);
             }
 
+            // If it is archiving job and overwriteFlag is "D" => enable overwrite on disk
+            if (tf.archiveTimeout > 0 && tf.overwriteFlag == "D") {
+                cmdBuilder.setOverwriteOnDisk(true);
+            }
+
             int retry_max = db->getRetry(tf.jobId);
             cmdBuilder.setMaxNumberOfRetries(retry_max < 0 ? 0 : retry_max);
 

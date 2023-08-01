@@ -66,6 +66,7 @@ public:
 
     unsigned optimizerLevel;
     bool     overwrite;
+    bool     overwriteOnDisk;
     bool     noDelegation;
     unsigned nStreams;
     unsigned tcpBuffersize;

@@ -90,6 +90,7 @@ const option UrlCopyOpts::long_options[] =
     {"no-delegation",     no_argument,       0, 810},
     {"no-streaming",      no_argument,       0, 811},
     {"skip-evict",        no_argument,       0, 812},
+    {"overwrite-on-disk", no_argument,       0, 813},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -200,7 +201,7 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 UrlCopyOpts::UrlCopyOpts():
         isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
-        optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+        optimizerLevel(0), overwrite(false), overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
         timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
         skipEvict(false), enableMonitoring(false), pingInterval(60), retry(0), retryMax(0),
         logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
@@ -418,6 +419,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 812:
                     skipEvict = true;
+                    break;
+                case 813:
+                    overwriteOnDisk = true;
                     break;
 
                 case 820:

@@ -336,6 +336,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source url: " << transfer.source << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest url: " << transfer.destination << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled: " << opts.overwrite << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite on disk: " << opts.overwriteOnDisk << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable delegation: " << opts.noDelegation << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skip eviction of source file: " << opts.skipEvict << commit;
@@ -376,7 +377,30 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
                 gfal2.stat(params, transfer.destination, false);
 
-                if (opts.dstFileReport) {
+                // File exists
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file exists" << commit;
+                bool overwrite_on_disk = false;
+
+                if (opts.overwriteOnDisk) {
+                    try {
+                        // Check file locality
+                        std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
+                        // Overwrite if file is not on tape
+                        overwrite_on_disk = !(userStatus == GFAL_XATTR_STATUS_NEARLINE || userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE);
+
+                        if (overwrite_on_disk) {
+                            // File is not on tape, set overwrite flag
+                            params.setReplaceExistingFile(overwrite_on_disk);
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file is not on tape. Enabling overwrite" << commit;
+                        } else {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file is on tape. Do not enable overwrite" << commit;
+                        }
+                    } catch (const std::exception &ex) {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check locality of destination tape file " << commit;
+                    }
+                }
+
+                if (opts.dstFileReport && !overwrite_on_disk) {
                     try {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: "
                                                         << transfer.destination << commit;
@@ -389,8 +413,10 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                     }
                 }
 
-                throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
-                                   "Destination file exists and overwrite is not enabled");
+                if (!overwrite_on_disk) {
+                    throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
+                                       "Destination file exists and overwrite is not enabled");
+                }
             } catch (const Gfal2Exception &ex) {
                 if (ex.code() != ENOENT) {
                     throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
