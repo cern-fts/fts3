@@ -376,6 +376,12 @@ void UrlCopyCmd::setOverwrite(bool overwrite)
 }
 
 
+void UrlCopyCmd::setOverwriteOnDisk(bool overwrite)
+{
+    setFlag("overwrite-on-disk", overwrite);
+}
+
+
 void UrlCopyCmd::setThirdPartyTURL(const std::string& thirdPartyTURL)
 {
     setOption("3rd-party-turl", thirdPartyTURL);
