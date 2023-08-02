@@ -24,6 +24,8 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "sociConversions.h"
+#include <config/ServerConfig.h>
+
 
 using namespace db;
 using namespace fts3;
@@ -124,6 +126,26 @@ public:
 
         for (auto i = rs.begin(); i != rs.end(); ++i) {
             result.push_back(Pair(i->get<std::string>("source_se"), i->get<std::string>("dest_se")));
+        }
+
+        return result;
+    }
+
+    std::list<std::string> getActiveStorages(void) {
+        std::list<std::string> result;
+
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT DISTINCT source_se AS se "
+            "FROM t_file  "
+            "WHERE file_state='ACTIVE'"
+            "UNION "
+            "SELECT DISTINCT dest_se AS se "
+            "FROM t_file  "
+            "WHERE file_state='ACTIVE'"            
+        );
+
+        for (auto i = rs.begin(); i != rs.end(); ++i) {
+            result.push_back(i->get<std::string>("se"));
         }
 
         return result;
@@ -360,20 +382,22 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
-    // [FTS-1782] & [FTS-1944]: Instead of computing the
-    // throughput again (migrated to AsSourceInst), getThroughputAsSource
-    // reads in the saved values from t_optimizer which come from
-    // getThroughputInfo's estimation.
+    // [FTS-1782] & [FTS-1944]: We now use two estimates
+    // 1. asSource. This is window-based and comes from getThroughputInfo's values
+    // 2. asSourceInst. This is the old method, and uses inst. throughput values from t_file.
 
-    // Note: Possible future work item is reducing delay in updating t_optimizer
-    double getThroughputAsSource(const std::string &se) {
+    double getThroughputAsSource(const std::string &se, const boost::posix_time::time_duration &optimizerInterval) {
         // Estimation of total outbound throughput (throughput).
         soci::indicator isThroughputNull;
         double throughput = 0;
+
+        int timeout = optimizerInterval.total_seconds() - 5;
+
         sql <<
             "SELECT SUM(throughput) from t_optimizer "
-            "WHERE source_se= :name AND queue_size IS NOT NULL AND queue_size>0",
-            soci::use(se, "name"), soci::into(throughput, isThroughputNull);
+            "WHERE source_se= :name AND datetime >= UTC_TIMESTAMP() - INTERVAL :optimizerInterval SECOND",
+            soci::use(se, "name"), soci::use(timeout, "optimizerInterval"),
+            soci::into(throughput, isThroughputNull);
         if (isThroughputNull == soci::i_null) {
             throughput = 0;
         } 
@@ -393,13 +417,17 @@ public:
         return throughput; //Returns value in MB/s
     }    
 
-    double getThroughputAsDestination(const std::string &se) {
+    double getThroughputAsDestination(const std::string &se, const boost::posix_time::time_duration &optimizerInterval) {
         soci::indicator isThroughputNull;
         double throughput = 0;
+
+        int timeout = optimizerInterval.total_seconds() - 5;
+
         sql <<
             "SELECT SUM(throughput) from t_optimizer "
-            "WHERE dest_se= :name AND queue_size IS NOT NULL AND queue_size>0",
-            soci::use(se, "name"), soci::into(throughput, isThroughputNull);
+            "WHERE dest_se= :name AND datetime >= UTC_TIMESTAMP() - INTERVAL :optimizerInterval SECOND",
+            soci::use(se, "name"), soci::use(timeout, "optimizerInterval"),
+            soci::into(throughput, isThroughputNull);
         if (isThroughputNull == soci::i_null) {
             throughput = 0;
         }

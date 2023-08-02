@@ -23,6 +23,7 @@
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include <config/ServerConfig.h>
 
 using namespace fts3::common;
 
@@ -175,6 +176,24 @@ void Optimizer::getPairState(const Pair &pair) {
     dataSource->updateOptimizerState(pair, current);
 }
 
+void Optimizer::getStorageState(const std::string &se) {
+    typedef boost::posix_time::time_duration TDuration;
+    auto optimizerInterval = config::ServerConfig::instance().get<TDuration>("OptimizerInterval");
+
+    storageStates[se].asSourceThroughput = dataSource->getThroughputAsSource(se, optimizerInterval);
+    storageStates[se].asSourceThroughputInst = dataSource->getThroughputAsSourceInst(se);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Total outbound (window, instantaneous) from " << se << ": (" 
+            << storageStates[se].asSourceThroughput << ", " << storageStates[se].asSourceThroughputInst << ")" << commit;
+
+    storageStates[se].asDestThroughput = dataSource->getThroughputAsDestination(se, optimizerInterval);
+    storageStates[se].asDestThroughputInst = dataSource->getThroughputAsDestinationInst(se);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Total inbound (window, instantaneous) into " << se << ": (" 
+            << storageStates[se].asDestThroughput << ", " << storageStates[se].asDestThroughputInst << ")" << commit;       
+    return;
+}
+
 // This algorithm idea is similar to the TCP congestion window.
 // It gives priority to success rate. If it gets worse, it will back off reducing
 // the total number of connections between storages.
@@ -238,39 +257,31 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         return true;
     }
 
-    // Apply bandwidth limits
+    // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
     if (limits.throughputSource > 0) {
-        double throughput = dataSource->getThroughputAsSource(pair.source);
-        double throughputInst = dataSource->getThroughputAsSourceInst(pair.source);;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSource for " << pair.source << ": " << throughput << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsSourceInst for " << pair.source << ": " << throughputInst << commit;
-
-        if (throughput > limits.throughputSource) {
+        if (storageStates[pair.source].asSourceThroughput > limits.throughputSource) {
             decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
             setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
-        if (throughputInst > limits.throughputSource) {
+        if (storageStates[pair.source].asSourceThroughputInst > limits.throughputSource) {
             decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Source (instantaneous) throughput limitation reached (" << limits.throughputSource << ")";
             setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
     }
+
+    // Apply bandwidth limits (destination)
     if (limits.throughputDestination > 0) {
-        double throughput = dataSource->getThroughputAsDestination(pair.destination);
-        double throughputInst = dataSource->getThroughputAsDestinationInst(pair.destination);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsDestination for " << pair.destination << ": " << throughput << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "getThroughputAsDestinationInst for " << pair.destination << ": " << throughputInst << commit;
-        
-        if (throughput > limits.throughputDestination) {
+        if (storageStates[pair.destination].asDestThroughput > limits.throughputDestination) {
             decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
             setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
-        if (throughputInst > limits.throughputDestination) {
+        if (storageStates[pair.destination].asDestThroughputInst > limits.throughputDestination) {
             decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Destination (instantaneous) throughput limitation reached (" << limits.throughputDestination << ")";
             setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());

@@ -84,6 +84,7 @@ void Optimizer::setStepSize(int increase, int increaseAggressive, int decrease)
 }
 
 
+
 void Optimizer::setEmaAlpha(double alpha)
 {
     emaAlpha = alpha;
@@ -107,11 +108,19 @@ void Optimizer::run(void)
         // See FTS-1094
         pairs.sort();
 
-        std::list<StorageLimits> storages = dataSource->getActiveStorages();
-
+        // Compute necessary statistics
         for (auto i = pairs.begin(); i != pairs.end(); ++i) {
             Optimizer::getPairState(*i);
         }
+
+        // Compute global statistics that will be used for every pair
+        std::list<std::string> storages = dataSource->getActiveStorages();
+        for (auto i = storages.begin(); i != storages.end(); ++i) {
+            Optimizer::getStorageState(*i);
+        }
+        
+
+        // Use statistics to optimize
         for (auto i = pairs.begin(); i != pairs.end(); ++i) {
             runOptimizerForPair(*i);
         }

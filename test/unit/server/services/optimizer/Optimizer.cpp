@@ -120,6 +120,22 @@ public:
         return pairs;
     }
 
+    std::list<std::string> getActiveStorages(void) {
+        std::list<std::string> storages;
+        std::list<Pair> pairs = getActivePairs();
+
+        for (const Pair& pair : pairs) {
+            storages.push_back(pair.source); // assuming Pair has a getSource method
+            storages.push_back(pair.destination);   // assuming Pair has a getDest method
+        }
+
+        // Remove duplicates
+        storages.sort();
+        storages.unique();
+
+        return storages;
+    }
+
     OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
         return mockOptimizerMode;
     }
@@ -286,7 +302,7 @@ public:
         return counter;
     }
 
-    double getThroughputAsSource(const std::string &storage) {
+    double getThroughputAsSource(const std::string &storage, const boost::posix_time::time_duration &interval) {
         return getThroughputAsSourceInst(storage);
     }
 
@@ -311,7 +327,7 @@ public:
         return acc;    
     }
 
-    double getThroughputAsDestination(const std::string &storage) {
+    double getThroughputAsDestination(const std::string &storage, const boost::posix_time::time_duration &interval) {
         return getThroughputAsDestinationInst(storage);
     }
 

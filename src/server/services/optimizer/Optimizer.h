@@ -83,6 +83,27 @@ struct PairState {
         avgTput(0) {}
 };
 
+struct StorageState {
+    time_t timestamp;
+    double asSourceThroughput;
+    double asSourceThroughputInst;
+    double asDestThroughput;
+    double asDestThroughputInst;
+
+    
+    int totalDecision;
+    int totalActive;
+
+    StorageState(): timestamp(0), asSourceThroughput(0), asSourceThroughputInst(0),
+                    asDestThroughput(0), asDestThroughputInst(0),
+                    totalDecision(0), totalActive(0) {}
+    
+    StorageState(time_t ts, double st, double sti, double dt, double dti, int td, int ta):
+        timestamp(ts), asSourceThroughput(st), asSourceThroughputInst(sti),
+        asDestThroughput(dt), asDestThroughputInst(dti),
+        totalDecision(td), totalActive(ta) {}         
+};
+
 // To decouple the optimizer core logic from the data storage/representation
 class OptimizerDataSource {
 public:
@@ -91,6 +112,9 @@ public:
 
     // Return a list of pairs with active or submitted transfers
     virtual std::list<Pair> getActivePairs(void) = 0;
+
+    // Return a list of SEs with active transfers
+    virtual std::list<std::string> getActiveStorages(void) = 0;
 
     // Return the optimizer configuration value
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
@@ -118,9 +142,9 @@ public:
     virtual int getSubmitted(const Pair&) = 0;
 
     // Get current throughput
-    virtual double getThroughputAsSource(const std::string&) = 0;
+    virtual double getThroughputAsSource(const std::string&, const boost::posix_time::time_duration&) = 0;
     virtual double getThroughputAsSourceInst(const std::string&) = 0;
-    virtual double getThroughputAsDestination(const std::string&) = 0;
+    virtual double getThroughputAsDestination(const std::string&, const boost::posix_time::time_duration&) = 0;
     virtual double getThroughputAsDestinationInst(const std::string&) = 0;
     
 
@@ -147,6 +171,7 @@ class Optimizer: public boost::noncopyable {
 protected:
     std::map<Pair, PairState> inMemoryStore;
     std::map<Pair, PairState> stateCollectionStore;
+    std::map<std::string, StorageState> storageStates;
 
     OptimizerDataSource *dataSource;
     OptimizerCallbacks *callbacks;
@@ -166,7 +191,9 @@ protected:
     // // Use information from InputState to optimize
     // void updateOptimizerDecisions(const std::list<Pair> &);
 
+    // Get states of Pair and Storage
     void getPairState(const Pair &);
+    void getStorageState(const std::string &);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
