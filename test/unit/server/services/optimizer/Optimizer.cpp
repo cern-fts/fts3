@@ -340,6 +340,10 @@ public:
     void storeOptimizerStreams(const Pair &pair, int streams) {
         streamsRegistry[pair] = streams;
     }
+
+    void updateOptimizerState(const Pair &pair, const PairState &newState) {
+        return;
+    }
 };
 
 

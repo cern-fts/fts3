@@ -152,7 +152,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
     return decision;
 }
 
-PairState Optimizer::getPairState(const Pair &pair) {
+void Optimizer::getPairState(const Pair &pair) {
     // Initialize current state
     PairState current;
     current.timestamp = time(NULL);
@@ -170,7 +170,9 @@ PairState Optimizer::getPairState(const Pair &pair) {
     current.avgTput = dataSource->getInstThroughputPerConn(pair);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "On " << pair << ", avgThroughput per connection is: " << current.avgTput << commit;
     
-    return current;
+    // Saves all the computed information in the local store and database
+    stateCollectionStore[pair] = current;
+    dataSource->updateOptimizerState(pair, current);
 }
 
 // This algorithm idea is similar to the TCP congestion window.
@@ -186,10 +188,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Start ticking!
     boost::timer::cpu_timer timer;
 
-    // READ IN PAIRSTATE with current:
-    // timestamp, avgDuration, (timeFrame not needed), activeCount
-    // successRate, retryCount, queueSize, throughput, filesizeAvg, filesizeStdDev
-    // avgInstTput
+    // Read in current pairstate
     PairState current = stateCollectionStore[pair];    
 
     // Optimizer working values

@@ -30,20 +30,19 @@ using namespace fts3;
 using namespace fts3::common;
 using namespace fts3::optimizer;
 
+
 // Set the new number of actives
 static void setNewOptimizerValue(soci::session &sql,
-    const Pair &pair, int optimizerDecision, const PairState &newState)
+    const Pair &pair, int optimizerDecision, double ema)
 {
     sql.begin();
     sql <<
-        "INSERT INTO t_optimizer (source_se, dest_se, active, actual_active, ema, throughput, queue_size, datetime) "
-        "VALUES (:source, :dest, :active, :actualActive, :ema, :throughput, :queueSize, UTC_TIMESTAMP()) "
+        "INSERT INTO t_optimizer (source_se, dest_se, active, ema, datetime) "
+        "VALUES (:source, :dest, :active, :ema, UTC_TIMESTAMP()) "
         "ON DUPLICATE KEY UPDATE "
-        "   active = :active, actual_active = :actualActive, ema = :ema, throughput= :throughput, queue_size = :queueSize, datetime = UTC_TIMESTAMP()",
+        "   active = :active, ema = :ema, datetime = UTC_TIMESTAMP()",
         soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
-        soci::use(optimizerDecision, "active"), soci::use(newState.activeCount, "actualActive"),
-        soci::use(newState.ema, "ema"), soci::use(newState.throughput, "throughput"), 
-        soci::use(newState.queueSize, "queueSize");
+        soci::use(optimizerDecision, "active"), soci::use(ema, "ema");
     sql.commit();
 }
 
@@ -421,7 +420,7 @@ public:
     // Stores value in both the snapshot database t_optimizer as well as t_optimizer_evolution
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
-        setNewOptimizerValue(sql, pair, activeDecision, newState);
+        setNewOptimizerValue(sql, pair, activeDecision, newState.ema);
         updateOptimizerEvolution(sql, pair, activeDecision, diff, rationale, newState);
     }
 
@@ -434,6 +433,22 @@ public:
             soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
             soci::use(streams, "nostreams");
 
+        sql.commit();
+    }
+
+    // Update the database with pairstate values
+    void updateOptimizerState(const Pair &pair, const PairState &newState)
+    {
+        sql.begin();
+        sql <<
+            "INSERT INTO t_optimizer (source_se, dest_se, actual_active, throughput, queue_size) "
+            "VALUES (:source, :dest, :actualActive, :throughput, :queueSize) "
+            "ON DUPLICATE KEY UPDATE "
+            "   actual_active = :actualActive, throughput= :throughput, queue_size = :queueSize",
+            soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
+            soci::use(newState.activeCount, "actualActive"),
+            soci::use(newState.throughput, "throughput"), 
+            soci::use(newState.queueSize, "queueSize");    
         sql.commit();
     }
 };

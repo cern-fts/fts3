@@ -89,19 +89,14 @@ void Optimizer::setEmaAlpha(double alpha)
     emaAlpha = alpha;
 }
 
-void Optimizer::updateOptimizerInputState(const std::list<Pair> &pairs) {
-    
-    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-        stateCollectionStore[*i] = Optimizer::getPairState(*i);
-    }
-}
+// void Optimizer::updateOptimizerInputState(const std::list<Pair> &pairs) {
 
-void Optimizer::updateOptimizerDecisions(const std::list<Pair> &pairs) {
-    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-        runOptimizerForPair(*i);
-    }
-}
 
+// }
+
+// void Optimizer::updateOptimizerDecisions(const std::list<Pair> &pairs) {
+
+// }
 
 void Optimizer::run(void)
 {
@@ -112,8 +107,15 @@ void Optimizer::run(void)
         // See FTS-1094
         pairs.sort();
 
-        Optimizer::updateOptimizerInputState(pairs);
-        Optimizer::updateOptimizerDecisions(pairs);
+        std::list<StorageLimits> storages = dataSource->getActiveStorages();
+
+        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+            Optimizer::getPairState(*i);
+        }
+        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+            runOptimizerForPair(*i);
+        }
+
     }
     catch (std::exception &e) {
         throw SystemError(std::string(__func__) + ": Caught exception " + e.what());

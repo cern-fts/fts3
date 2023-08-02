@@ -130,6 +130,9 @@ public:
 
     // Permanently register the number of streams per active
     virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
+
+    // Save information in database
+    virtual void updateOptimizerState(const Pair &pair, const PairState &newState) = 0;
 };
 
 // Used by the optimizer to notify decisions
@@ -157,10 +160,13 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
-    // Collect all the necessary data into the PairState struct
-    void updateOptimizerInputState(const std::list<Pair> &);
+    // // Collect all the necessary data into the PairState struct
+    // void updateOptimizerInputState(const std::list<Pair> &);
 
-    PairState getPairState(const Pair &);
+    // // Use information from InputState to optimize
+    // void updateOptimizerDecisions(const std::list<Pair> &);
+
+    void getPairState(const Pair &);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
