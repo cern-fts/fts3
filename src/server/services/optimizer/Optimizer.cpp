@@ -26,6 +26,7 @@
 
 using namespace fts3::common;
 using namespace fts3::config;
+using namespace fts3::optimizer;
 
 namespace fts3 {
 namespace optimizer {
@@ -90,14 +91,16 @@ void Optimizer::setEmaAlpha(double alpha)
     emaAlpha = alpha;
 }
 
-// void Optimizer::updateOptimizerInputState(const std::list<Pair> &pairs) {
 
+void Optimizer::updateDecisions(const std::list<Pair> &pairs) {
+    // Update every pair's decision based on network state
+    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+        runOptimizerForPair(*i);
+    }
 
-// }
-
-// void Optimizer::updateOptimizerDecisions(const std::list<Pair> &pairs) {
-
-// }
+    currentPairStateMap.clear();
+    currentSEStateMap.clear();
+}
 
 void Optimizer::run(void)
 {
@@ -108,22 +111,12 @@ void Optimizer::run(void)
         // See FTS-1094
         pairs.sort();
 
-        // Compute necessary statistics
-        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-            Optimizer::getPairState(*i);
-        }
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: in run loop" << commit;
+        Optimizer::getCurrentIntervalInputState(pairs);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: update1 done" << commit;
+        Optimizer::updateDecisions(pairs);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: update2 done" << commit;
 
-        // Compute global statistics that will be used for every pair
-        std::list<std::string> storages = dataSource->getActiveStorages();
-        for (auto i = storages.begin(); i != storages.end(); ++i) {
-            Optimizer::getStorageState(*i);
-        }
-        
-
-        // Use statistics to optimize
-        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-            runOptimizerForPair(*i);
-        }
 
     }
     catch (std::exception &e) {

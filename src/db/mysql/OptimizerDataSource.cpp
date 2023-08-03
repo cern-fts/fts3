@@ -24,7 +24,6 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "sociConversions.h"
-#include <config/ServerConfig.h>
 
 
 using namespace db;
@@ -212,21 +211,21 @@ public:
         return currentActive;
     }
 
-    double getInstThroughputPerConn(const Pair &pair) {
-        double avgTput = 0;
-        soci::indicator isAvgNull;
-        sql << 
-            "SELECT SUM(throughput) from t_file WHERE throughput>0 "
-            "AND file_state = 'ACTIVE' "
-            "AND source_se= :sourceSe AND dest_se= :destSe",
-            soci::use(pair.source), soci::use(pair.destination),
-            soci::into(avgTput, isAvgNull);
-        if(isAvgNull == soci::i_null) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No active files with performance markers yet." << commit;
-            avgTput = 0;
-        }
-        return avgTput;
-    }
+    // double getInstThroughputPerConn(const Pair &pair) {
+    //     double avgTput = 0;
+    //     soci::indicator isAvgNull;
+    //     sql << 
+    //         "SELECT SUM(throughput) from t_file WHERE throughput>0 "
+    //         "AND file_state = 'ACTIVE' "
+    //         "AND source_se= :sourceSe AND dest_se= :destSe",
+    //         soci::use(pair.source), soci::use(pair.destination),
+    //         soci::into(avgTput, isAvgNull);
+    //     if(isAvgNull == soci::i_null) {
+    //         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No active files with performance markers yet." << commit;
+    //         avgTput = 0;
+    //     }
+    //     return avgTput;
+    // }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
         double *throughput, double *filesizeAvg, double *filesizeStdDev)
@@ -464,21 +463,21 @@ public:
         sql.commit();
     }
 
-    // Update the database with pairstate values
-    void updateOptimizerState(const Pair &pair, const PairState &newState)
-    {
-        sql.begin();
-        sql <<
-            "INSERT INTO t_optimizer (source_se, dest_se, actual_active, throughput, queue_size) "
-            "VALUES (:source, :dest, :actualActive, :throughput, :queueSize) "
-            "ON DUPLICATE KEY UPDATE "
-            "   actual_active = :actualActive, throughput= :throughput, queue_size = :queueSize",
-            soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
-            soci::use(newState.activeCount, "actualActive"),
-            soci::use(newState.throughput, "throughput"), 
-            soci::use(newState.queueSize, "queueSize");    
-        sql.commit();
-    }
+    // // Update the database with pairstate values
+    // void updateOptimizerState(const Pair &pair, const PairState &newState)
+    // {
+    //     sql.begin();
+    //     sql <<
+    //         "INSERT INTO t_optimizer (source_se, dest_se, actual_active, throughput, queue_size) "
+    //         "VALUES (:source, :dest, :actualActive, :throughput, :queueSize) "
+    //         "ON DUPLICATE KEY UPDATE "
+    //         "   actual_active = :actualActive, throughput= :throughput, queue_size = :queueSize",
+    //         soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
+    //         soci::use(newState.activeCount, "actualActive"),
+    //         soci::use(newState.throughput, "throughput"), 
+    //         soci::use(newState.queueSize, "queueSize");    
+    //     sql.commit();
+    // }
 };
 
 

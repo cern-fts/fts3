@@ -26,7 +26,7 @@
 #include "server/services/optimizer/Optimizer.h"
 #include "server/services/optimizer/OptimizerConstants.h"
 
-using namespace fts3::optimizer;
+using namespace fts::optimizer;
 
 BOOST_AUTO_TEST_SUITE(server)
 BOOST_AUTO_TEST_SUITE(OptimizerTestSuite)
@@ -158,26 +158,26 @@ public:
         return i->second.back().activeDecision;
     }
 
-    double getInstThroughputPerConn(const Pair &pair) {
-        auto tsi = transferStore.find(pair);
-        if (tsi == transferStore.end()) {
-            return 0;
-        }
-        auto &transfers = tsi->second;
+    // double getInstThroughputPerConn(const Pair &pair) {
+    //     auto tsi = transferStore.find(pair);
+    //     if (tsi == transferStore.end()) {
+    //         return 0;
+    //     }
+    //     auto &transfers = tsi->second;
 
-        // Each entry i in transfers is equivalent to a row in t_file.
-        int numNonZero = 0;
-        double totalTput;
-        for (auto i = transfers.begin(); i != transfers.end(); ++i) {
-            if (i->state == "ACTIVE") {
-                totalTput += i->throughput;
-                if (i->throughput > 0) {
-                    ++numNonZero;
-                }
-            }
-        }
-        return totalTput/numNonZero;
-    }
+    //     // Each entry i in transfers is equivalent to a row in t_file.
+    //     int numNonZero = 0;
+    //     double totalTput;
+    //     for (auto i = transfers.begin(); i != transfers.end(); ++i) {
+    //         if (i->state == "ACTIVE") {
+    //             totalTput += i->throughput;
+    //             if (i->throughput > 0) {
+    //                 ++numNonZero;
+    //             }
+    //         }
+    //     }
+    //     return totalTput/numNonZero;
+    // }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
         double *throughput, double *filesizeAvg, double *filesizeStdDev)
@@ -324,7 +324,7 @@ public:
                 }
             }
         }
-        return acc;    
+        return acc;
     }
 
     double getThroughputAsDestination(const std::string &storage, const boost::posix_time::time_duration &interval) {
@@ -357,9 +357,9 @@ public:
         streamsRegistry[pair] = streams;
     }
 
-    void updateOptimizerState(const Pair &pair, const PairState &newState) {
-        return;
-    }
+    // void updateOptimizerState(const Pair &pair, const PairState &newState) {
+    //     return;
+    // }
 };
 
 
