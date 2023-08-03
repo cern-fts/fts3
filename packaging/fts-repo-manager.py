@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author: Georgios Bitzes <georgios.bitzes@cern.ch>
 
 import argparse

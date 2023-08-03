@@ -104,16 +104,13 @@ cc7-test:
 
 .publish-template: &publish-template_definition
   stage: publish
-  image: gitlab-registry.cern.ch/eos/gitlab-eos/cc7:latest
+  image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
     - cc7
   script:
-    - yum install -y python sssd-client sudo createrepo
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - eosfusebind
     - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
-    - sleep 60
   tags:
     - docker-privileged
   retry: 2
