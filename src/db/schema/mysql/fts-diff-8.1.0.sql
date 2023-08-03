@@ -2,6 +2,7 @@
 -- FTS3 Schema 8.1.0
 -- [FTS-1914] TPC-support configuration per SE
 -- [FTS-1920] Retry log file
+-- [FTS-1923] SkipEviction config option per SE
 --
 
 ALTER TABLE `t_se`
