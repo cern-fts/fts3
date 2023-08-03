@@ -92,30 +92,27 @@ void Optimizer::setEmaAlpha(double alpha)
 }
 
 
-void Optimizer::updateDecisions(const std::list<Pair> &pairs) {
-    // Update every pair's decision based on network state
-    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-        runOptimizerForPair(*i);
-    }
-
-    currentPairStateMap.clear();
-    currentSEStateMap.clear();
-}
-
 void Optimizer::run(void)
 {
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt1" << commit;
+
         std::list<Pair> pairs = dataSource->getActivePairs();
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt2" << commit;
         // Make sure the order is always the same
         // See FTS-1094
         pairs.sort();
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3" << commit;
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: in run loop" << commit;
+
+        // Part 1 of Optimizer: Updating global information about performance on all pairs.
         Optimizer::getCurrentIntervalInputState(pairs);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: update1 done" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt4" << commit;
+
+        // Part 2 of Optimizer: Using state to compute "decisions" for number of concurrent connections
+        // on each pair.
         Optimizer::updateDecisions(pairs);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN: update2 done" << commit;
 
 
     }
@@ -127,12 +124,22 @@ void Optimizer::run(void)
     }
 }
 
+// Runs runOptimizerForPair for all active pairs, and 
+// is responsible for changing decision values.
+void Optimizer::updateDecisions(const std::list<Pair> &pairs) {
+    // Update every pair's decision.
+    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+        runOptimizerForPair(*i);
+    }
+}
 
 void Optimizer::runOptimizerForPair(const Pair &pair)
 {
     OptimizerMode optMode = dataSource->getOptimizerMode(pair.source, pair.destination);
+
     if(optimizeConnectionsForPair(optMode, pair)) {
-        // Optimize streams only if optimizeConnectionsForPair did store something
+        // optimizeConnectionsForPair stores the new decision through SQL, and
+        // returns a boolean signifiying whether or not it modified the decision.
         optimizeStreamsForPair(optMode, pair);
     }
 }

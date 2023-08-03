@@ -26,7 +26,7 @@
 #include "server/services/optimizer/Optimizer.h"
 #include "server/services/optimizer/OptimizerConstants.h"
 
-using namespace fts::optimizer;
+using namespace fts3::optimizer;
 
 BOOST_AUTO_TEST_SUITE(server)
 BOOST_AUTO_TEST_SUITE(OptimizerTestSuite)
@@ -66,6 +66,8 @@ protected:
     std::map<Pair, OptimizerRegister> registry;
     std::map<Pair, int> streamsRegistry;
     std::map<Pair, TransferList> transferStore;
+    std::map<std::string, StorageState> mockStorageStore;
+
     OptimizerMode mockOptimizerMode;
 
     void populateTransfers(const Pair &pair, const std::string &state, int count,
@@ -120,20 +122,8 @@ public:
         return pairs;
     }
 
-    std::list<std::string> getActiveStorages(void) {
-        std::list<std::string> storages;
-        std::list<Pair> pairs = getActivePairs();
+    void dumpStorageStates(std::map<std::string, StorageState> *result) {
 
-        for (const Pair& pair : pairs) {
-            storages.push_back(pair.source); // assuming Pair has a getSource method
-            storages.push_back(pair.destination);   // assuming Pair has a getDest method
-        }
-
-        // Remove duplicates
-        storages.sort();
-        storages.unique();
-
-        return storages;
     }
 
     OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
@@ -144,10 +134,13 @@ public:
         return false;
     }
 
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
-        range->min = range->max = 0;
+    void getStorageLimits(const Pair&, StorageLimits *limits) {
         limits->destination = limits->source = 200;
         limits->throughputDestination = limits->throughputSource = 0;
+    }
+
+    void getPairLimits(const Pair&, Range *range) {
+        range->min = range->max = 0;
     }
 
     int getOptimizerValue(const Pair &pair) {
@@ -370,7 +363,9 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getStorageLimits(pair, &limits);
+
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
@@ -382,11 +377,14 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
 // Working range for a pair where both storages are configured
 class OptimizerRangeSeFixture: public BaseOptimizerFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
-        range->min = range->max = 0;
+    void getStorageLimits(const Pair&, StorageLimits *limits) {
         limits->destination = 60;
         limits->source = 60;
         limits->throughputDestination = limits->throughputSource = 0;
+    }
+
+    void getPairLimits(const Pair &pair, Range *range) {
+        range->min = range->max = 0;
     }
 };
 
@@ -396,7 +394,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
@@ -408,12 +406,15 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
 // Working range is configured
 class OptimizerRangeSetFixture: public OptimizerRangeSeFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
+    void getStorageLimits(const Pair&, StorageLimits *limits) {
+        limits->destination = 40;
+        limits->source = 20;
+    }
+
+    void getPairLimits(const Pair&, Range *range) {
         range->min = 150;
         range->max = 200;
         range->specific = true;
-        limits->destination = 40;
-        limits->source = 20;
     }
 };
 
@@ -423,7 +424,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK(range.specific);
     BOOST_CHECK_EQUAL(range.max, 200);
@@ -445,7 +446,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK_LE(lastEntry->activeDecision, range.max);
     BOOST_CHECK_GE(lastEntry->activeDecision, range.min);

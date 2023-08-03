@@ -84,23 +84,45 @@ struct PairState {
 };
 
 struct StorageState {
-    time_t timestamp;
+    // time_t timestamp;
     double asSourceThroughput;
     double asSourceThroughputInst;
     double asDestThroughput;
     double asDestThroughputInst;
-    
-    int totalDecision;
-    int totalActive;
 
-    StorageState(): timestamp(0), asSourceThroughput(0), asSourceThroughputInst(0),
-                    asDestThroughput(0), asDestThroughputInst(0),
-                    totalDecision(0), totalActive(0) {}
+    int inbound_max_active;
+    double inbound_max_throughput;
+    int outbound_max_active;
+    double outbound_max_throughput;
     
-    StorageState(time_t ts, double st, double sti, double dt, double dti, int td, int ta):
+    // int totalDecision;
+    // int totalActive;
+
+    StorageState(): asSourceThroughput(0), asSourceThroughputInst(0),
+                    asDestThroughput(0), asDestThroughputInst(0),
+                    inbound_max_active(0), inbound_max_throughput(0),
+                    outbound_max_active(0), outbound_max_throughput(0) {}
+    
+    StorageState(int ia, double it, int oa, double ot):
+        inbound_max_active(ia), inbound_max_throughput(it),
+        outbound_max_active(oa), outbound_max_throughput(ot),
+        asSourceThroughput(0), asSourceThroughputInst(0),
+        asDestThroughput(0), asDestThroughputInst(0) {}
+    
+    /* StorageState(time_t ts, double st, double sti, double dt, double dti, int td, int ta):
         timestamp(ts), asSourceThroughput(st), asSourceThroughputInst(sti),
         asDestThroughput(dt), asDestThroughputInst(dti),
-        totalDecision(td), totalActive(ta) {}         
+        totalDecision(td), totalActive(ta) {}
+    */    
+
+    /*friend std::ostream& operator<<(std::ostream& os, const StorageLimits& limits) {
+        os << "Source: " << limits.source << "\n"
+           << "Destination: " << limits.destination << "\n"
+           << "ThroughputSource: " << limits.throughputSource << "\n"
+           << "ThroughputDestination: " << limits.throughputDestination;
+        return os;
+    }
+    */
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -112,14 +134,13 @@ public:
     // Return a list of pairs with active or submitted transfers
     virtual std::list<Pair> getActivePairs(void) = 0;
 
-    // Return a list of SEs with active throughput/numconnections limits
-    virtual std::list<std::string> getActiveStorages(void) = 0;
+    virtual void dumpStorageStates(std::map<std::string, StorageState> *currentSEStateMap) = 0;
 
     // Return the optimizer configuration value
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
 
-    // Get configured limits
-    virtual void getPairLimits(const Pair &pair, Range *range, StorageLimits *limits) = 0;
+    // Get configured storage and pair limits
+    virtual void getPairLimits(const Pair &pair, Range *range) = 0;
 
     // Get the stored optimizer value (current value)
     virtual int getOptimizerValue(const Pair&) = 0;
@@ -189,7 +210,6 @@ class Optimizer: public boost::noncopyable {
 protected:
     std::map<Pair, PairState> memoryPairStateMap;
     std::map<Pair, PairState> currentPairStateMap;
-    std::map<std::string, StorageState> memorySEStateMap;
     std::map<std::string, StorageState> currentSEStateMap;
 
     OptimizerDataSource *dataSource;
@@ -204,6 +224,8 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
+    // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
+    void getStorageLimits(const Pair &pair, StorageLimits *limits);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
@@ -212,10 +234,8 @@ protected:
     // Run the optimization algorithm for the number of streams.
     void optimizeStreamsForPair(OptimizerMode optMode, const Pair &);
 
-
-
     // Stores into rangeActiveMin and rangeActiveMax the working range for the optimizer
-    void getOptimizerWorkingRange(const Pair &pair, Range *range, StorageLimits *limits);
+    void getOptimizerWorkingRange(const Pair &pair, const StorageLimits &limits, Range *range);
 
     // Updates decision
     void setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
