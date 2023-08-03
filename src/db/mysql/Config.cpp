@@ -428,18 +428,21 @@ boost::tribool MySqlAPI::isProtocolIPv6(const std::string &source, const std::st
 }
 
 
-boost::tribool MySqlAPI::getEvictionFlag(const std::string &source)
+boost::tribool MySqlAPI::getSkipEvictionFlag(const std::string &source)
 {
     soci::session sql(*connectionPool);
 
     try {
-        boost::logic::tribool evictionEnabled(boost::indeterminate);
-        sql << "SELECT eviction FROM t_se WHERE storage = :source", soci::use(source), soci::into(evictionEnabled);
+        boost::logic::tribool skipEviction(boost::indeterminate);
+        soci::statement stmt = (sql.prepare << "SELECT skip_eviction FROM t_se WHERE storage = :source",
+                                soci::use(source), soci::into(skipEviction));
 
-        if (boost::indeterminate(evictionEnabled)) {
+        stmt.execute(true);
+
+        if (boost::indeterminate(skipEviction)) {
             return false;
         } else {
-            return evictionEnabled;
+            return skipEviction;
         }
     }
     catch (std::exception &e) {

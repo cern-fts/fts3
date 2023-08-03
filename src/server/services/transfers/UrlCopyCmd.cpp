@@ -154,15 +154,15 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
 }
 
 
-void UrlCopyCmd::setEvict(boost::tribool set)
-{
-    if (boost::indeterminate(set)) {
-        setFlag("evict", false);
-    } else {
-        bool value = (set.value == true);
-        setFlag("evict", value);
+void UrlCopyCmd::setSkipEvict(boost::tribool set)
+    {
+        if (boost::indeterminate(set)) {
+            setFlag("skip-evict", false);
+        } else {
+            bool value = (set.value == true);
+            setFlag("skip-evict", value);
+        }
     }
-}
 
 
 void UrlCopyCmd::setCopyMode(CopyMode copyMode)

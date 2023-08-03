@@ -183,10 +183,6 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setReplaceExistingFile(opts.overwrite);
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
-    params.setEvictionFlag(opts.evict);
-    if (opts.evict && !transfer.tokenBringOnline.empty()) {
-        params.setBringonlineToken(transfer.tokenBringOnline);
-    }
 
     if (!transfer.transferMetadata.empty()) {
         params.setTransferMetadata(transfer.transferMetadata);
@@ -301,7 +297,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled: " << opts.overwrite << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable delegation: " << opts.noDelegation << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Evict source file: " << opts.evict << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skip eviction of source file: " << opts.skipEvict << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
@@ -408,13 +404,15 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     }
 
     // Release source file if we have a bring-online token
-    if (!transfer.tokenBringOnline.empty()) {
+    if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
         try {
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
+            transfer.stats.evictionRetc = 0;
         } catch (const Gfal2Exception &ex) {
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release source file: "
                                                << transfer.source << commit;
+            transfer.stats.evictionRetc = std::abs(ex.code());
         }
     }
 
