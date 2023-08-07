@@ -3,7 +3,7 @@
 --
 
 ALTER TABLE `t_se`
-    DROP COLUMN `tpc_support`;
+    DROP COLUMN `tpc_support`,
     DROP COLUMN `skip_eviction`;
 
 ALTER TABLE `t_file_retry_errors`
