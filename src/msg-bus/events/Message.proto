@@ -27,4 +27,6 @@ message Message {
     optional double instantaneous_throughput = 18;
     optional uint64 gfal_perf_timestamp = 19;
     optional uint64 transferred_since_last_ping = 20;
+
+    optional string log_path = 21;
 }

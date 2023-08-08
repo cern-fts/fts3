@@ -140,11 +140,11 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
     else if (e->stage == GFAL_EVENT_IPV6) {
         transfer->stats.ipver = Transfer::IPver::IPv6;
     }
-    else if (e->stage == GFAL_EVENT_EVICT) {
+    else if (e->stage == GFAL_EVENT_CLEANUP) {
         try {
-            transfer->stats.evictionRetc = std::abs(std::stoi(e->description));
+            transfer->stats.cleanupRetc = std::abs(std::stoi(e->description));
         } catch(...) {
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Invalid eviction return code received: " << e->description << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Invalid cleanup return code received: " << e->description << commit;
         }
     }
     else if (e->stage == GFAL_EVENT_TRANSFER_TYPE) {

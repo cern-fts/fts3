@@ -28,14 +28,15 @@ For convenience, the tool `fts-database-upgrade.py` can be used.
 We use a three number version: major, minor and patch.
 When to increment each?
 
-  * **major** version must be increased when older versions of fts will *not*
-  work with the new schema, and probably the new version of fts will
+  * **major** version must be increased when older versions of FTS will *not*
+  work with the new schema, and probably the new version of FTS will
   not work with the older either. These sort of upgrades require downtime.
   
   * **minor** version must be increased when the production version can still run with the new schema,
-  but the newer fts version will *not* be able to run with the old schema.
-  The upgrade can be done in two steps to avoid downtime: first database, then fts.
+  but the newer FTS version will *not* be able to run with the old schema.
+  The upgrade can be done in two steps to avoid downtime: first database, then FTS.
+  For instance, adding new columns or tables often fits in a minor schema change.
   
   * **patch** version must be increased for minor changes. Both older and
-  newer fts version can work with the schema patched or not. For instance,
+  newer FTS version can work with the schema patched or not. For instance,
   indexes changes, dropping unused columns...

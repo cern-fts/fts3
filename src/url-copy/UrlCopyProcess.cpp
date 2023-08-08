@@ -79,20 +79,17 @@ static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfa
     destFile.checksumType = checksumType;
     destFile.checksumValue = checksum;
 
+    // Set file and disk locality booleans to true if on a valid userStatus
     if (userStatus == GFAL_XATTR_STATUS_ONLINE) {
         destFile.fileOnDisk = true;
-        destFile.fileOnTape = false;
     } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE) {
-        destFile.fileOnDisk = false;
         destFile.fileOnTape = true;
     } else if (userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE) {
         destFile.fileOnDisk = true;
         destFile.fileOnTape = true;
-    } else if (userStatus == GFAL_XATTR_STATUS_LOST) {
-        destFile.fileOnDisk = false;
-        destFile.fileOnTape = false;
     } else {
-        throw std::runtime_error("Failed to determine if destination file is on disk and/or tape");
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Could not determine file locality from"
+                                              " the Gfal2 user.status extended attribute : " << userStatus << commit;
     }
 
     return destFile;
@@ -186,10 +183,6 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setReplaceExistingFile(opts.overwrite);
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
-    params.setEvictionFlag(opts.evict);
-    if (opts.evict && !transfer.tokenBringOnline.empty()) {
-        params.setBringonlineToken(transfer.tokenBringOnline);
-    }
 
     if (!transfer.transferMetadata.empty()) {
         params.setTransferMetadata(transfer.transferMetadata);
@@ -228,6 +221,18 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
                 throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
             }
     	}
+    }
+
+    // Set HTTP copy mode
+    if (!opts.copyMode.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: DEFAULT_COPY_MODE=" << opts.copyMode << commit;
+        gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", opts.copyMode);
+    }
+
+    // Disable TPC copy fallback
+    if (opts.disableCopyFallback) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: ENABLE_FALLBACK_TPC_COPY=false" << commit;
+        gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
     }
 
     // Avoid TPC attempts in S3 to S3 transfers
@@ -292,7 +297,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled: " << opts.overwrite << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable delegation: " << opts.noDelegation << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Evict source file: " << opts.evict << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skip eviction of source file: " << opts.skipEvict << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
@@ -399,13 +404,15 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     }
 
     // Release source file if we have a bring-online token
-    if (!transfer.tokenBringOnline.empty()) {
+    if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
         try {
             gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
+            transfer.stats.evictionRetc = 0;
         } catch (const Gfal2Exception &ex) {
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release source file: "
                                                << transfer.source << commit;
+            transfer.stats.evictionRetc = std::abs(ex.code());
         }
     }
 

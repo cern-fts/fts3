@@ -59,6 +59,8 @@ public:
     std::string jobMetadata;
 
     std::string authMethod;
+    std::string copyMode;
+    bool disableCopyFallback;
     bool retrieveSEToken;
 
     unsigned optimizerLevel;
@@ -71,7 +73,7 @@ public:
     boost::tribool enableIpv6;
     unsigned addSecPerMb;
     bool     noStreaming;
-    bool     evict;
+    bool     skipEvict;
     bool     enableMonitoring; // Legacy option
     unsigned active; // Legacy option
     unsigned pingInterval;

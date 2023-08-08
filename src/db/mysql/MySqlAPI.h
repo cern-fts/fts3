@@ -181,10 +181,12 @@ public:
     /// Add a new retry to the transfer identified by fileId
     /// @param jobId    Job identifier
     /// @param fileId   Transfer identifier
+    /// @param retryNo  The retry attempt number
     /// @param reason   String representation of the failure
     /// @param errcode  An integer representing the failure
-    virtual void setRetryTransfer(const std::string & jobId, uint64_t fileId, int retry, const std::string& reason,
-        int errcode);
+    /// @param logFile  The log file path
+    virtual void setRetryTransfer(const std::string& jobId, uint64_t fileId, int retryNo,
+                                  const std::string& reason, const std::string& logFile, int errcode);
 
     /// Bulk update of transfer progress
     virtual void updateFileTransferProgressVector(const std::vector<fts3::events::MessageUpdater> &messages);
@@ -221,8 +223,11 @@ public:
     /// Returns if for the given link, IPv6 has been enabled
     virtual boost::tribool isProtocolIPv6(const std::string &source, const std::string &dest);
 
-    /// Returns if for the given storage endpoint, eviction has been enabled
-    virtual boost::tribool getEvictionFlag(const std::string &source);
+    /// Returns if for the given storage endpoint, skip eviction has been enabled
+    virtual boost::tribool getSkipEvictionFlag(const std::string &source);
+
+    /// Returns TPC mode for a pair of source/destination endpoints
+    virtual CopyMode getCopyMode(const std::string &source, const std::string &destination);
 
     /// Returns how many streams must be used for the given link
     virtual int getStreamsOptimization(const std::string &sourceSe, const std::string &destSe);

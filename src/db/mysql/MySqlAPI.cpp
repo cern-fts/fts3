@@ -1937,12 +1937,27 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
 
         if (force || doUpdate)
         {
+            // Select all the rows to be updated
+            soci::rowset<soci::row> rs = (sql.prepare <<
+                    "SELECT file_id FROM t_file WHERE job_id = :jobId"
+                    " AND file_state NOT IN ('FINISHED', 'FAILED', 'CANCELED')"
+                    " ORDER BY file_id",
+                    soci::use(jobId)
+            );
+
+            // Prepare statement for update
+            uint64_t file_id;
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET file_state  = 'FAILED',"
+                                                    " finish_time = UTC_TIMESTAMP(),"
+                                                    " dest_surl_uuid = NULL, reason = :message"
+                                                    " WHERE file_id = :file_id",
+                                                    soci::use(file_id));
+
             sql.begin();
-            sql << "UPDATE t_file SET file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
-                    "reason = :message WHERE (job_id = :job_id OR pid = :pid) AND file_state NOT IN ('FINISHED', 'FAILED', 'CANCELED')",
-                soci::use(message),
-                soci::use(job_id),
-                soci::use(pid);
+            for (auto & row : rs) {
+                file_id = row.get<uint64_t>("file_id");
+                stmt1.execute(true);
+            }
             sql.commit();
         }
     }
@@ -2682,39 +2697,34 @@ std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId
 }
 
 
-void MySqlAPI::setRetryTransfer(const std::string &jobId, uint64_t fileId, int retry,
-    const std::string &reason, int errcode)
+void MySqlAPI::setRetryTransfer(const std::string& jobId, uint64_t fileId, int retryNo,
+                                const std::string& reason, const std::string& logFile, int errcode)
 {
     soci::session sql(*connectionPool);
 
-    //expressed in secs, default delay
+    // Expressed in secs, default delay
     const int default_retry_delay = DEFAULT_RETRY_DELAY;
     int retry_delay = 0;
     std::string job_type;
-    soci::indicator ind = soci::i_ok;
+    auto ind = soci::i_ok;
 
     try
     {
-        sql <<
-            " select RETRY_DELAY, job_type  from t_job where job_id=:jobId ",
-            soci::use(jobId),
-            soci::into(retry_delay),
-            soci::into(job_type, ind)
-            ;
+        sql << "SELECT retry_delay, job_type FROM t_job WHERE job_id = :jobId ",
+                soci::use(jobId),
+                soci::into(retry_delay),
+                soci::into(job_type, ind);
 
         sql.begin();
 
-        if ( (ind == soci::i_ok) && job_type == "Y")
+        if ((ind == soci::i_ok) && (job_type == "Y"))
         {
-
             sql << "UPDATE t_job SET "
-                "    job_state = 'ACTIVE' "
-                "WHERE job_id = :jobId AND "
-                "      job_state NOT IN ('FINISHEDDIRTY','FAILED','CANCELED','FINISHED') AND "
-                "      job_type = 'Y'",
-                soci::use(jobId);
+                   "    job_state = 'ACTIVE' "
+                   "WHERE job_id = :jobId AND job_type = 'Y' AND "
+                   "      job_state NOT IN ('FINISHEDDIRTY', 'FAILED', 'CANCELED', 'FINISHED')",
+                    soci::use(jobId);
         }
-
 
         struct tm tTime;
         if (retry_delay > 0)
@@ -2733,37 +2743,45 @@ void MySqlAPI::setRetryTransfer(const std::string &jobId, uint64_t fileId, int r
         int bring_online = -1;
         int copy_pin_lifetime = -1;
 
-        // query for the file state in DB
-        sql << "SELECT bring_online, copy_pin_lifetime FROM t_job WHERE job_id=:jobId",
-            soci::use(jobId),
-            soci::into(bring_online),
-            soci::into(copy_pin_lifetime);
+        // Query for the file state in DB
+        sql << "SELECT bring_online, copy_pin_lifetime FROM t_job WHERE job_id = :jobId",
+                soci::use(jobId),
+                soci::into(bring_online),
+                soci::into(copy_pin_lifetime);
 
-        //staging exception, if file failed with timeout and was staged before, reset it
-        if( (bring_online > 0 || copy_pin_lifetime > 0) && errcode == ETIMEDOUT)
+        // Staging exception: if file failed with timeout and was staged before, reset it
+        if ((bring_online > 0 || copy_pin_lifetime > 0) && (errcode == ETIMEDOUT))
         {
-            sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', "
-                "internal_file_params=NULL, transfer_host=NULL,start_time=NULL, pid=NULL, "
-                " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','STAGING','SUBMITTED','FAILED','CANCELED') ",
-                soci::use(retry),
-                soci::use(fileId),
-                soci::use(jobId);
+            sql << "UPDATE t_file SET "
+                   "    retry = :retryNo, current_failures = 0, file_state = 'STAGING', "
+                   "    filesize = 0, internal_file_params = NULL, transfer_host = NULL, pid = NULL, "
+                   "    start_time = NULL, staging_start = NULL, staging_finished = NULL "
+                   "WHERE file_id = :fileId AND job_id = :jobId AND "
+                   "      file_state NOT IN ('FINISHED', 'STAGING', 'SUBMITTED', 'FAILED', 'CANCELED')",
+                    soci::use(retryNo),
+                    soci::use(fileId),
+                    soci::use(jobId);
         }
         else
         {
-            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, "
-                "transfer_host=NULL, log_file=NULL,"
-                " log_file_debug=NULL, throughput = 0, current_failures = 1 "
-                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
-
+            sql << "UPDATE t_file SET "
+                   "    retry = :retryNo, retry_timestamp = :tTime, file_state = 'SUBMITTED', "
+                   "    throughput = 0, current_failures = 1, start_time = NULL, "
+                   "    transfer_host = NULL, log_file = NULL, log_file_debug = NULL "
+                   " WHERE file_id = :fileId AND job_id = :jobId AND "
+                   "       file_state NOT IN ('FINISHED', 'SUBMITTED', 'FAILED', 'CANCELED')",
+                    soci::use(retryNo),
+                    soci::use(tTime),
+                    soci::use(fileId),
+                    soci::use(jobId);
         }
 
-        // Keep log
+        // Keep transfer retry log
         sql << "INSERT IGNORE INTO t_file_retry_errors "
-            "    (file_id, attempt, datetime, reason) "
-            "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
-            soci::use(fileId), soci::use(retry), soci::use(reason);
+               "       (file_id, attempt, datetime, reason, transfer_host, log_file) "
+               "VALUES (:fileId, :retryNo, UTC_TIMESTAMP(), :reason, :hostname, :logFile)",
+                soci::use(fileId), soci::use(retryNo),
+                soci::use(reason), soci::use(hostname), soci::use(logFile);
 
         sql.commit();
     }

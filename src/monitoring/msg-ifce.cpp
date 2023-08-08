@@ -251,6 +251,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["ipv6"] = json::Boolean(tr_completed.ipv6);
     message["ipver"] = json::String(tr_completed.ipver);
     message["eviction_code"] = json::Number(tr_completed.eviction_code);
+    message["cleanup_code"] = json::Number(tr_completed.cleanup_code);
     message["final_destination"] = json::String(tr_completed.final_destination);
     message["transfer_type"] = json::String(tr_completed.transfer_type);
 

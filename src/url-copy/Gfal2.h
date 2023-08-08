@@ -232,14 +232,6 @@ public:
         }
     }
 
-    void setEvictionFlag(bool value)
-    {
-        GError *error = NULL;
-        if (gfalt_set_use_evict(params, value, &error) < 0) {
-            throw Gfal2Exception(error);
-        }
-    }
-
     void setBringonlineToken(const std::string &token)
     {
         GError *error = NULL;
@@ -340,6 +332,14 @@ public:
     void set(const std::string &group, const std::string &key, const std::string &value) {
         GError *error = NULL;
         if (gfal2_set_opt_string(context, group.c_str(), key.c_str(), value.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
+    /// Set a C string config value
+    void set(const std::string &group, const std::string &key, const char* value) {
+        GError *error = NULL;
+        if (gfal2_set_opt_string(context, group.c_str(), key.c_str(), value, &error) < 0) {
             throw Gfal2Exception(error);
         }
     }

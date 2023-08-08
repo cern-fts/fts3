@@ -24,6 +24,9 @@
 #include <boost/filesystem.hpp>
 #include "Transfer.h"
 #include "UrlCopyOpts.h"
+#include "common/Logger.h"
+
+using fts3::common::commit;
 
 
 const option UrlCopyOpts::long_options[] =
@@ -59,7 +62,9 @@ const option UrlCopyOpts::long_options[] =
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
 	{"authMethod",        required_argument, 0, 506},
-    {"retrieve-se-token", no_argument,       0, 507},
+    {"copy-mode",         required_argument, 0, 507},
+    {"disable-fallback",  no_argument,       0, 508},
+    {"retrieve-se-token", no_argument,       0, 509},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -82,7 +87,7 @@ const option UrlCopyOpts::long_options[] =
     {"ipv4",              no_argument,       0, 809},
     {"no-delegation",     no_argument,       0, 810},
     {"no-streaming",      no_argument,       0, 811},
-    {"evict",             no_argument,       0, 812},
+    {"skip-evict",        no_argument,       0, 812},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -115,6 +120,22 @@ static void setChecksum(Transfer &transfer, const std::string &checksum)
     }
 }
 
+
+std::string translateCopyMode(const std::string &text)
+{
+    std::string mode;
+    // Translate the copy mode from the url-copy options to the Gfal2 defined types
+    if (text == "pull") {
+        mode = GFAL_TRANSFER_TYPE_PULL;
+    } else if (text == "push") {
+        mode = GFAL_TRANSFER_TYPE_PUSH;
+    } else if (text == "streamed") {
+        mode = GFAL_TRANSFER_TYPE_STREAMED;
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Invalid copy-mode in the fts_url_copy options: " << text << commit;
+    }
+    return mode;
+}
 
 // Create a transfer out of a string
 static Transfer createFromString(const Transfer &reference, const std::string &line)
@@ -176,12 +197,12 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts():
-    isSessionReuse(false), strictCopy(false), dstFileReport(false), retrieveSEToken(false),
-    optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
-    timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
-    evict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
-    logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
-    debugLevel(0), logToStderr(false)
+        isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
+        optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+        timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
+        skipEvict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
+        logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+        debugLevel(0), logToStderr(false)
 {
 }
 
@@ -319,6 +340,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 	authMethod = optarg;
                     break;
                 case 507:
+                    copyMode = translateCopyMode(optarg);
+                    break;
+                case 508:
+                    disableCopyFallback = true;
+                    break;
+                case 509:
                     retrieveSEToken = true;
                     break;
 
@@ -382,7 +409,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     noStreaming = true;
                     break;
                 case 812:
-                    evict = true;
+                    skipEvict = true;
                     break;
 
                 case 820:

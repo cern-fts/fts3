@@ -428,18 +428,86 @@ boost::tribool MySqlAPI::isProtocolIPv6(const std::string &source, const std::st
 }
 
 
-boost::tribool MySqlAPI::getEvictionFlag(const std::string &source)
+boost::tribool MySqlAPI::getSkipEvictionFlag(const std::string &source)
 {
     soci::session sql(*connectionPool);
 
     try {
-        boost::logic::tribool evictionEnabled(boost::indeterminate);
-        sql << "SELECT eviction FROM t_se WHERE storage = :source", soci::use(source), soci::into(evictionEnabled);
+        boost::logic::tribool skipEviction(boost::indeterminate);
+        soci::statement stmt = (sql.prepare << "SELECT skip_eviction FROM t_se WHERE storage = :source",
+                                soci::use(source), soci::into(skipEviction));
 
-        if (boost::indeterminate(evictionEnabled)) {
+        stmt.execute(true);
+
+        if (boost::indeterminate(skipEviction)) {
             return false;
         } else {
-            return evictionEnabled;
+            return skipEviction;
+        }
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
+CopyMode MySqlAPI::getCopyMode(const std::string &source, const std::string &destination)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        std::string src_tpc_support;
+        std::string dest_tpc_support;
+
+        soci::statement stmt1 = (sql.prepare << "SELECT tpc_support FROM t_se WHERE storage = :endpoint");
+
+        auto tpc_support = [&](const std::string& endpoint) -> std::string {
+            std::string mode;
+            soci::indicator ind;
+
+            stmt1.exchange(soci::use(endpoint, "endpoint"));
+            stmt1.exchange(soci::into(mode, ind));
+            stmt1.define_and_bind();
+            stmt1.execute(true);
+            stmt1.bind_clean_up();
+
+            // If configuration is not found in the DB assume that storages have full support for TPC
+            if (!sql.got_data() || ind == soci::i_null || ind == soci::i_truncated) {
+                return "FULL";
+            }
+
+            // If configuration in the DB is not a recognized copy mode assume that storages have full support for TPC
+            if (mode != "FULL" && mode != "PULL" && mode != "PUSH" && mode != "NONE") {
+                return "FULL";
+            }
+
+            return mode;
+        };
+
+        src_tpc_support = tpc_support(source);
+        dest_tpc_support = tpc_support(destination);
+
+        // First check if destination can PULL the file
+        if (dest_tpc_support == "FULL" || dest_tpc_support == "PULL") {
+            if (src_tpc_support == "FULL" || src_tpc_support == "PUSH") {
+                // If source supports PUSH, the TPC can later fall back to PUSH if PULL fails
+                return CopyMode::ANY;
+            } else {
+                // Only PULL will work
+                return CopyMode::PULL;
+            }
+        } else {
+            // Destination can't PULL the file form source
+            if (src_tpc_support == "FULL" || src_tpc_support == "PUSH") {
+                // The source must be the active party and do a PUSH
+                return CopyMode::PUSH;
+            } else {
+                // The source can't PUSH a file to the destination. Only solution is STREAMING
+                return CopyMode::STREAMING;
+            }
         }
     }
     catch (std::exception &e) {

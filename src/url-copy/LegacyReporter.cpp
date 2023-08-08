@@ -152,6 +152,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
             if ((transfer.error->code() == EEXIST) && (opts.dstFileReport) && (!opts.overwrite)) {
                 status.set_file_metadata(replaceMetadataString(transfer.fileMetadata));
             }
+
+            status.set_log_path(transfer.logFile);
         }
         status.set_transfer_message(fullErrMsg.str());
         status.set_retry(transfer.error->isRecoverable());
@@ -336,6 +338,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     // New 'ipver' field keyword ("ipv6" | "ipv4" | "unknown")
     completed.ipver = Transfer::IPverToIPv6String(transfer.stats.ipver);
     completed.eviction_code = transfer.stats.evictionRetc;
+    completed.cleanup_code = transfer.stats.cleanupRetc;
     completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;
 

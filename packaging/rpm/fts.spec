@@ -6,7 +6,7 @@
 %define __python python3
 
 Name:       fts
-Version:    3.12.8
+Version:    3.12.9
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -29,7 +29,7 @@ BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.21.4
+BuildRequires:  gfal2-devel >= 2.21.5
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -61,10 +61,10 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.21.4
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.4
-Requires: gfal2-plugin-http%{?_isa} >= 2.21.4
-Requires: gfal2-plugin-srm%{?_isa} >= 2.21.4
+Requires: gfal2%{?_isa} >= 2.21.5
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.21.5
+Requires: gfal2-plugin-http%{?_isa} >= 2.21.5
+Requires: gfal2-plugin-srm%{?_isa} >= 2.21.5
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 
@@ -399,6 +399,12 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.9
+- Create TPC role property configurable per Storage Endpoint
+- Turn configurable eviction flag into skip-eviction
+- Send transfer clean-up result to monitoring messages
+- Add GFAL2 prefix to the messages from the GFAL2 library in the UrlCopy logs
+
 * Mon Jun 12 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.8
 - Always release a file after a copy if we have a bringonline token
 - Migrate database upgrade script from Python2 to Python3
