@@ -6,7 +6,7 @@
 %define __python python3
 
 Name:       fts
-Version:    3.12.8
+Version:    3.12.9
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -399,6 +399,12 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.9
+- Create TPC role property configurable per Storage Endpoint
+- Turn configurable eviction flag into skip-eviction
+- Send transfer clean-up result to monitoring messages
+- Add GFAL2 prefix to the messages from the GFAL2 library in the UrlCopy logs
+
 * Mon Jun 12 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.8
 - Always release a file after a copy if we have a bringonline token
 - Migrate database upgrade script from Python2 to Python3
