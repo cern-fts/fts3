@@ -2470,50 +2470,36 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 
     try
     {
-        soci::rowset<soci::row> rs = (fileId ==-1) ? (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.start_time , f.source_surl "
-                                         " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId ",
-                                         soci::use(jobId)
-                                     )
-                                     :
-                                     (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.start_time , f.source_surl "
-                                         " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId "
-                                         "  AND f.file_id = :fileId ",
-                                         soci::use(jobId),
-                                         soci::use(fileId)
-                                     );
-
+        soci::rowset<soci::row> rs = (
+                sql.prepare <<
+                            " SELECT "
+                            "   j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                            "   j.job_metadata, j.retry AS retry_max, f.file_id, "
+                            "   f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
+                            "   f.source_se, f.start_time, f.source_surl "
+                            " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                            " WHERE "
+                            "   j.job_id = :jobId AND f.file_id = :fileId",
+                        soci::use(jobId),
+                        soci::use(fileId)
+        );
 
         soci::rowset<soci::row>::const_iterator it;
 
-        for (it = rs.begin(); it != rs.end(); ++it)
-        {
+        for (it = rs.begin(); it != rs.end(); ++it) {
             ret.job_id = it->get<std::string>("job_id");
             ret.job_state = it->get<std::string>("job_state");
             ret.vo_name = it->get<std::string>("vo_name");
 
             soci::indicator isNull1 = it->get_indicator("job_metadata");
-            if (isNull1 == soci::i_ok)
-                ret.job_metadata = it->get<std::string>("job_metadata","");
-            else
-                ret.job_metadata = "";
 
-            ret.retry_max = it->get<int>("retry_max",0);
+            if (isNull1 == soci::i_ok) {
+                ret.job_metadata = it->get<std::string>("job_metadata", "");
+            } else {
+                ret.job_metadata = "";
+            }
+
+            ret.retry_max = it->get<int>("retry_max", 0);
             ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = millisecondsSinceEpoch();
@@ -2521,13 +2507,15 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.submit_time = (timegm(&aux_tm) * 1000);
             ret.staging = false;
 
-            ret.retry_counter = it->get<int>("retry_counter",0);
+            ret.retry_counter = it->get<int>("retry_counter", 0);
 
             soci::indicator isNull2 = it->get_indicator("file_metadata");
-            if (isNull2 == soci::i_ok)
-                ret.file_metadata = it->get<std::string>("file_metadata","");
-            else
+
+            if (isNull2 == soci::i_ok) {
+                ret.file_metadata = it->get<std::string>("file_metadata", "");
+            } else {
                 ret.file_metadata = "";
+            }
 
             ret.user_filesize = it->get<long long>("user_filesize", 0);
 
@@ -2535,17 +2523,21 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.dest_se = "";
 
             bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
-            if(!publishUserDn)
+
+            if (!publishUserDn) {
                 ret.user_dn = std::string("");
-            else
-                ret.user_dn = it->get<std::string>("user_dn","");
+            } else {
+                ret.user_dn = it->get<std::string>("user_dn", "");
+            }
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = "";
-            if (ret.job_state == "FAILED")
+
+            if (ret.job_state == "FAILED") {
                 ret.reason = it->get<std::string>("reason");
-            else
+            } else {
                 ret.reason = std::string("");
+            }
 
             temp.push_back(ret);
         }
@@ -2560,7 +2552,6 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
     }
 
     return temp;
-
 }
 
 
@@ -2571,41 +2562,23 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
 
     try
     {
-        soci::rowset<soci::row> rs = (fileId ==-1) ? (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
-                                         "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
-                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId ",
-                                         soci::use(jobId)
-                                     )
-                                     :
-                                     (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
-                                         "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
-                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId "
-                                         "  AND f.file_id = :fileId ",
-                                         soci::use(jobId),
-                                         soci::use(fileId)
-                                     );
-
-
+        soci::rowset<soci::row> rs = (
+                sql.prepare <<
+                            " SELECT "
+                            "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                            "  j.job_metadata, j.retry AS retry_max, f.file_id, "
+                            "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
+                            "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
+                            "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
+                            " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                            " WHERE "
+                            "  j.job_id = :jobId AND f.file_id = :fileId",
+                        soci::use(jobId),
+                        soci::use(fileId)
+        );
 
         soci::rowset<soci::row>::const_iterator it;
 
-        struct tm aux_tm;
         for (it = rs.begin(); it != rs.end(); ++it)
         {
             ret.job_id = it->get<std::string>("job_id");
@@ -2618,7 +2591,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.file_state = it->get<std::string>("file_state");
             ret.reason = it->get<std::string>("reason", "");
             ret.timestamp = millisecondsSinceEpoch();
-            aux_tm = it->get<struct tm>("submit_time");
+            auto aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
 
             if (it->get_indicator("staging_start") == soci::i_ok) {
@@ -2630,8 +2603,9 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                 ret.staging_finished = (timegm(&aux_tm) * 1000);
             }
 
-            if(ret.staging_start != 0)
+            if (ret.staging_start != 0) {
                 ret.staging = true;
+            }
 
             if (it->get_indicator("archive_start_time") == soci::i_ok) {
                 aux_tm = it->get<struct tm>("archive_start_time");
@@ -2642,8 +2616,9 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                 ret.archiving_finished = (timegm(&aux_tm) * 1000);
             }
 
-            if(ret.archiving_start != 0)
+            if (ret.archiving_start != 0) {
                 ret.archiving = true;
+            }
 
             ret.retry_counter = it->get<int>("retry_counter",0);
             ret.file_metadata = it->get<std::string>("file_metadata","");
@@ -2651,11 +2626,11 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.dest_se = it->get<std::string>("dest_se");
 
             bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
-            if(!publishUserDn)
+            if (!publishUserDn) {
                 ret.user_dn = std::string("");
-            else
-                ret.user_dn = it->get<std::string>("user_dn","");
-
+            } else {
+                ret.user_dn = it->get<std::string>("user_dn", "");
+            }
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = it->get<std::string>("dest_surl","");
@@ -2673,7 +2648,6 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
     }
 
     return temp;
-
 }
 
 std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId, uint64_t fileId)
