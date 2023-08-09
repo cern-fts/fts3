@@ -162,7 +162,7 @@ public:
     /// @param force    Force termination regardless of job_type
     /// @note           If jobId is empty, the implementation may look for the job bound to the pid.
     ///                 Note that I am not completely sure you can get an empty jobId.
-    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message, bool force = false) = 0;
+    virtual bool terminateReuseProcess(const std::string& jobId, int pid, const std::string& message, bool force) = 0;
 
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
     /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled

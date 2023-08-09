@@ -267,7 +267,7 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
         if (isUnrecoverableErrorMessage(msg.transfer_message()))
         {
             db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
-                msg.job_id(), msg.process_id(), msg.transfer_message());
+                msg.job_id(), msg.process_id(), msg.transfer_message(), false);
         }
 
         // update file and job state

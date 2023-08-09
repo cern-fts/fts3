@@ -555,7 +555,7 @@ static int getActiveCount(soci::session& sql, const std::string &source, const s
 {
     int activeCount = 0;
 
-    //Running Transefers (R+N+Y+H job type)
+    // Running Transfers (R+N+Y+H job type)
     sql << "SELECT COUNT(*) FROM t_file f JOIN t_job j ON j.job_id = f.job_id "
         " WHERE f.source_se = :source_se AND f.dest_se = :dest_se"
         " AND f.file_state = 'ACTIVE'",
@@ -1913,7 +1913,7 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
 }
 
 
-bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message, bool force)
+bool MySqlAPI::terminateReuseProcess(const std::string& jobId, int pid, const std::string& message, bool force)
 {
     soci::session sql(*connectionPool);
     std::string job_id = jobId;
