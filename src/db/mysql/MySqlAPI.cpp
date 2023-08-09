@@ -2743,8 +2743,8 @@ void MySqlAPI::setRetryTransfer(const std::string& jobId, uint64_t fileId, int r
                    "    retry = :retryNo, retry_timestamp = :tTime, file_state = 'SUBMITTED', "
                    "    throughput = 0, current_failures = 1, start_time = NULL, "
                    "    transfer_host = NULL, log_file = NULL, log_file_debug = NULL "
-                   " WHERE file_id = :fileId AND job_id = :jobId AND "
-                   "       file_state NOT IN ('FINISHED', 'SUBMITTED', 'FAILED', 'CANCELED')",
+                   "WHERE file_id = :fileId AND job_id = :jobId AND "
+                   "      file_state NOT IN ('FINISHED', 'SUBMITTED', 'FAILED', 'CANCELED')",
                     soci::use(retryNo),
                     soci::use(tTime),
                     soci::use(fileId),
@@ -2792,20 +2792,24 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 }
 
 
-void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string serviceName)
+void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
+                                       const std::string& serviceName)
 {
     try
     {
-
         auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
 
-        sql.begin();
-
         // Update beat
+        sql.begin();
         soci::statement stmt1 = (
-                                    sql.prepare << "INSERT INTO t_hosts (hostname, beat, service_name) VALUES (:host, UTC_TIMESTAMP(), :service_name) "
-                                    "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
-                                    soci::use(hostname), soci::use(serviceName));
+                sql.prepare
+                        << "INSERT INTO t_hosts (hostname, beat, service_name) "
+                           "    VALUES (:host, UTC_TIMESTAMP(), :service_name) "
+                           "ON DUPLICATE KEY "
+                           "    UPDATE beat = UTC_TIMESTAMP()",
+                        soci::use(hostname),
+                        soci::use(serviceName)
+        );
         stmt1.execute(true);
 
         // Will be replaced by a simple count later on since we get the total number of hosts
@@ -2820,25 +2824,28 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         // This instance index
         // Mind that MySQL does not have rownum
-        soci::rowset<soci::row> rsHosts = (sql.prepare <<
-                                             "SELECT (SELECT count(hostname) FROM t_hosts WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name) as totalhosts, "
-                                             "hostname FROM t_hosts "
-                                             "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
-                                             "ORDER BY hostname",
-                                             soci::use(heartBeatGraceInterval), soci::use(serviceName), soci::use(heartBeatGraceInterval), soci::use(serviceName)
-                                            );
-        soci::rowset<soci::row>::const_iterator i;
+        soci::rowset<soci::row> rsHosts = (
+                sql.prepare
+                        << "SELECT ("
+                           "    SELECT COUNT(hostname) FROM t_hosts "
+                           "    WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) AND service_name = :service_name"
+                           ") AS totalhosts, hostname FROM t_hosts "
+                           "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) AND service_name = :service_name "
+                           "ORDER BY hostname",
+                        soci::use(heartBeatGraceInterval),
+                        soci::use(serviceName),
+                        soci::use(heartBeatGraceInterval),
+                        soci::use(serviceName)
+        );
 
         *count = 0;
+        soci::rowset<soci::row>::const_iterator i;
+        for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index)) {
+            soci::row const& row = *i;
 
-        for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
-        {
-        soci::row const& row = *i;
-            if (row.get<std::string>(1) == hostname)
-            {
-            *count = row.get<unsigned>(0);
-            std::string& host = hostname;
-            break;
+            if (row.get<std::string>(1) == hostname) {
+                *count = row.get<unsigned>(0);
+                break;
             }
         }
 
@@ -2858,15 +2865,17 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         this->hashSegment.start = *start;
         this->hashSegment.end   = *end;
 
-        if(hashSegment.start == 0)
+        if (hashSegment.start == 0)
         {
             // Delete old entries
             sql.begin();
-            soci::statement stmt3 = (sql.prepare <<
-                                     "DELETE FROM t_hosts "
-                                     "WHERE "
-                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) AND drain = 0) OR "
-                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 15 DAY)) ");
+            soci::statement stmt3 = (
+                    sql.prepare <<
+                                "DELETE FROM t_hosts "
+                                "WHERE "
+                                "  (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) AND drain = 0) OR "
+                                "  (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 15 DAY))"
+            );
             stmt3.execute(true);
             sql.commit();
         }

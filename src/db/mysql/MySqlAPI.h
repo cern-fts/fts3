@@ -343,7 +343,7 @@ private:
     std::map<std::string, boost::posix_time::ptime> queuedStagingFiles;
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
-        std::string serviceName);
+                                 const std::string& serviceName);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql,
         std::string src, std::string dst, std::string vo, int filesNum,
