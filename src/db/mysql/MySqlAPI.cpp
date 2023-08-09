@@ -1951,6 +1951,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                                                     " finish_time = UTC_TIMESTAMP(),"
                                                     " dest_surl_uuid = NULL, reason = :message"
                                                     " WHERE file_id = :file_id",
+                                                    soci::use(message),
                                                     soci::use(file_id));
 
             sql.begin();
