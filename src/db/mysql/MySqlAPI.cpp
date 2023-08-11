@@ -3549,7 +3549,7 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
 }
 
 
-void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp, bool matchHost)
+void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string& qosOp, bool matchHost)
 {
     soci::session sql(*connectionPool);
 
@@ -3578,7 +3578,7 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
                 std::string target_qos = r.get<std::string>("target_qos");
                 std::string token = r.get<std::string>("proxy").substr(0, r.get<std::string>("proxy").find(":"));
 
-                qosTranstionOps.emplace_back(job_id, file_id, dest_surl, target_qos, token);
+                qosTransitionOps.emplace_back(job_id, file_id, dest_surl, target_qos, token);
             }
     }
     catch (std::exception& e)

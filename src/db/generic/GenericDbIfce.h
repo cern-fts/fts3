@@ -338,12 +338,12 @@ public:
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps) = 0;
 
     /// Get archiving operations ready to be started
-    /// @params[out] archivingops The list of archiving operations will be put here
+    /// @params[out] archivingOps The list of archiving operations will be put here
     virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps) = 0;
 
     /// Get qosTransition operations ready to be started
-    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string &qosOp,
+    /// @params[out] qosTransitionOps The list of QoS Transition operations will be put here
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string &qosOp,
                                           bool matchHost = false) = 0;
 
     /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
