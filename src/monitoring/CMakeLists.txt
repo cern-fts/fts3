@@ -38,6 +38,7 @@ set(fts_msg_ifce_SOURCES
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
 target_link_libraries(fts_msg_ifce
     fts_common
+    fts_msg_bus
 )
 set_target_properties(fts_msg_ifce PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/monitoring
@@ -51,7 +52,7 @@ set(fts_msg_bulk_SOURCES
     msg-bulk-send.cpp
     MsgPipe.cpp
     MsgProducer.cpp
-        BrokerConfig.cpp
+    BrokerConfig.cpp
 )
 
 add_executable(fts_msg_bulk ${fts_msg_bulk_SOURCES})
