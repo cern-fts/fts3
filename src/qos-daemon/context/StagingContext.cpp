@@ -47,9 +47,10 @@ void StagingContext::add(const StagingOperation& stagingOp)
 }
 
 
-bool StagingContext::hasTimeoutExpired()
+bool StagingContext::hasTimeoutExpired() const
 {
-    return difftime(time(0), minStagingStartTime) > maxBringonlineTimeout;
+    return static_cast<time_t>(difftime(time(0), minStagingStartTime)) >
+           maxBringonlineTimeout;
 }
 
 
