@@ -186,13 +186,12 @@ void CancelerService::runService()
     unsigned int counterQueueTimeouts = 0;
     unsigned int counterCanceled = 0;
 
-    int cancelInterval = ServerConfig::instance().get<int>("CancelCheckInterval");
-    int queueTimeoutInterval = ServerConfig::instance().get<int>("QueueTimeoutCheckInterval");
-    int activeTimeoutInterval = ServerConfig::instance().get<int>("ActiveTimeoutCheckInterval");
+    auto cancelInterval = static_cast<unsigned int>(ServerConfig::instance().get<int>("CancelCheckInterval"));
+    auto queueTimeoutInterval = static_cast<unsigned int>(ServerConfig::instance().get<int>("QueueTimeoutCheckInterval"));
+    auto activeTimeoutInterval = static_cast<unsigned int>(ServerConfig::instance().get<int>("ActiveTimeoutCheckInterval"));
     bool checkStalledTransfers = ServerConfig::instance().get<bool>("CheckStalledTransfers");
 
     recoverProcessesFromDb();
-
 
     while (!boost::this_thread::interruption_requested())
     {
