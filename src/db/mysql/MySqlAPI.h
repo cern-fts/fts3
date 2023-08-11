@@ -111,8 +111,7 @@ public:
     /// Checks if there are available slots to run transfers for the given pair
     /// @param sourceStorage        The source storage  (as protocol://host)
     /// @param destStorage          The destination storage  (as protocol://host)
-    /// @param[out] currentActive   The current number of running transfers is put here
-    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive);
+    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage);
 
     /// Mark a reuse job (and its files) as failed
     /// @param jobId    The job id

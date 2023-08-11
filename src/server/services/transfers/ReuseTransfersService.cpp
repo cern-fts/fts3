@@ -243,8 +243,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     std::map<uint64_t, std::string> fileIds = generateJobFile(representative.jobId, files);
 
     // Can we run?
-    int currentActive = 0;
-    if (!db->isTrAllowed(representative.sourceSe, representative.destSe, currentActive)) {
+    if (!db->isTrAllowed(representative.sourceSe, representative.destSe)) {
         return;
     }
 
@@ -298,9 +297,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 
     // FTS3 name
     cmdBuilder.setFTSName(ftsHostName);
-
-    // Current number of actives
-    cmdBuilder.setNumberOfActive(currentActive);
 
     // Number of retries and maximum number allowed
     int retry_times = db->getRetryTimes(representative.jobId, representative.fileId);

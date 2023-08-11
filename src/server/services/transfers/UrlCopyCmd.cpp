@@ -335,12 +335,6 @@ void UrlCopyCmd::setSecondsPerMB(long value)
 }
 
 
-void UrlCopyCmd::setNumberOfActive(int active)
-{
-    setOption("active", active);
-}
-
-
 void UrlCopyCmd::setNumberOfRetries(int count)
 {
     setOption("retry", count);

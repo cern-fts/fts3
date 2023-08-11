@@ -1823,8 +1823,7 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
 }
 
 
-bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
-        const std::string & destStorage, int &currentActive)
+bool MySqlAPI::isTrAllowed(const std::string& sourceStorage, const std::string& destStorage)
 {
     soci::session sql(*connectionPool);
 
@@ -1836,6 +1835,7 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
                "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
                soci::use(sourceStorage), soci::use(destStorage),
                soci::into(maxActive);
+
         if (!sql.got_data()) {
             maxActive = DEFAULT_MIN_ACTIVE;
         }

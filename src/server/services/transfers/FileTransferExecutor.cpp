@@ -102,9 +102,8 @@ void FileTransferExecutor::run(boost::any & ctx)
         // check if manual config exist for this pair and vo
         std::vector< std::shared_ptr<ShareConfig> > cfgs;
 
-        int currentActive = 0;
         // Set to READY state when true
-        if (db->isTrAllowed(tf.sourceSe, tf.destSe, currentActive))
+        if (db->isTrAllowed(tf.sourceSe, tf.destSe))
         {
             UrlCopyCmd cmdBuilder;
 
@@ -191,9 +190,6 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // FTS3 host name
             cmdBuilder.setFTSName(ftsHostName);
-
-            // Pass the number of active transfers for this link to url_copy
-            cmdBuilder.setNumberOfActive(currentActive);
 
             // Number of retries and maximum number allowed
             int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);

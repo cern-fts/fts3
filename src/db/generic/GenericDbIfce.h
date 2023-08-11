@@ -152,8 +152,7 @@ public:
     /// Checks if there are available slots to run transfers for the given pair
     /// @param sourceStorage        The source storage  (as protocol://host)
     /// @param destStorage          The destination storage  (as protocol://host)
-    /// @param[out] currentActive   The current number of running transfers is put here
-    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive) = 0;
+    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
     /// Mark a reuse job (and its files) as failed
     /// @param jobId    The job id
@@ -167,7 +166,6 @@ public:
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
     /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
     virtual void reapStalledTransfers(std::vector<TransferFile>& transfers) = 0;
-
 
     /// Set the PID for a transfer
     /// @param jobId    The job id for which the files will be updated
