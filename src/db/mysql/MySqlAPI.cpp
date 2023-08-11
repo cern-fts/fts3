@@ -3603,7 +3603,8 @@ bool MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
         sql.begin();
 
         // Get the current file state
-        sql << "SELECT file_state FROM t_file WHERE file_id = :fileId",
+        sql << "SELECT file_state FROM t_file WHERE job_id = :jobId AND file_id = :fileId",
+            soci::use(jobId),
             soci::use(fileId),
             soci::into(storedState);
 
@@ -3613,8 +3614,13 @@ bool MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
         }
 
         sql << "UPDATE t_file SET "
-               "file_state = 'QOS_REQUEST_SUBMITTED',  start_time = UTC_TIMESTAMP(), transfer_host = :hostname "
-               "WHERE file_id = :fileId", soci::use(hostname), soci::use(fileId);
+               "    file_state = 'QOS_REQUEST_SUBMITTED', "
+               "    start_time = UTC_TIMESTAMP(), "
+               "    transfer_host = :hostname "
+               "WHERE job_id = :jobId AND file_id = :fileId",
+               soci::use(hostname),
+               soci::use(jobId),
+               soci::use(fileId);
         sql.commit();
     }
     catch (std::exception& e)
