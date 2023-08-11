@@ -45,8 +45,8 @@ public:
 
     OptimizerNotifier(const OptimizerNotifier &) = delete;
 
-    void notifyDecision(const Pair &pair, int decision, const PairState &current,
-        int diff, const std::string &rationale)
+    void notifyDecision(const Pair& pair, int decision, const PairState& current,
+                        int diff, const std::string& rationale)
     {
         if (!enabled) {
             return;
@@ -71,6 +71,7 @@ public:
         msg.filesizeStdDev = current.filesizeStdDev;
         msg.connections = decision;
         msg.rationale = rationale;
+        msg.diff = diff;
 
         MsgIfce::getInstance()->SendOptimizer(msgProducer, msg);
     }

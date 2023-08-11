@@ -144,8 +144,10 @@ public:
     int activeCount;
     int queueSize;
     double ema;
-    double filesizeAvg, filesizeStdDev;
+    double filesizeAvg;
+    double filesizeStdDev;
     int connections;
+    int diff;
 
     std::string rationale;
 };

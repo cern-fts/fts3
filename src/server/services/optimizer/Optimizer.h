@@ -69,7 +69,8 @@ struct PairState {
     // Exponential Moving Average
     double ema;
     // Filesize statistics
-    double filesizeAvg, filesizeStdDev;
+    double filesizeAvg;
+    double filesizeStdDev;
     // Optimizer last decision
     int connections;
 
