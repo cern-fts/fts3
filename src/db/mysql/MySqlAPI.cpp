@@ -135,7 +135,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {8, 0};
+    static const unsigned expect[] = {8, 1};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
@@ -1951,11 +1951,12 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                                                     " finish_time = UTC_TIMESTAMP(),"
                                                     " dest_surl_uuid = NULL, reason = :message"
                                                     " WHERE file_id = :file_id",
+                                                    soci::use(message),
                                                     soci::use(file_id));
 
             sql.begin();
             for (auto & row : rs) {
-                file_id = row.get<uint64_t>("file_id");
+                file_id = row.get<unsigned long long>("file_id");
                 stmt1.execute(true);
             }
             sql.commit();
