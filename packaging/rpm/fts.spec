@@ -6,7 +6,7 @@
 %define __python python3
 
 Name:       fts
-Version:    3.12.9
+Version:    3.12.10
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -399,6 +399,9 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Mon Aug 14 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.10
+- New upstream release
+
 * Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.9
 - Create TPC role property configurable per Storage Endpoint
 - Turn configurable eviction flag into skip-eviction
