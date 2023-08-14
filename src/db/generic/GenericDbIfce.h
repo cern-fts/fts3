@@ -106,21 +106,22 @@ public:
     /// Update the status of a transfer
     /// @param jobId            The job ID
     /// @param fileId           The file ID
-    /// @param throughput       Transfer throughput
+    /// @param processId        fts_url_copy process ID running the transfer
     /// @param transferState    Transfer statue
     /// @param errorReason      For failed states, the error message
-    /// @param processId        fts_url_copy process ID running the transfer
     /// @param filesize         Actual filesize reported by the storage
     /// @param duration         How long (in seconds) took to transfer the file
+    /// @param throughput       Transfer throughput
     /// @param retry            If the error is considered recoverable by fts_url_copy
     /// @param fileMetadata     The new file metadata in case it needs to be updated
     /// @return                 (true, newState) if an updated was done into the DB, (false, oldState) otherwise
     ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
     /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
     ///                         which transfers to update
-    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
-            const std::string& transferState, const std::string& errorReason,
-            int processId, double filesize, double duration, bool retry, std::string fileMetadata = "") = 0;
+    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, int processId,
+                                                                 const std::string& transferState, const std::string& errorReason,
+                                                                 uint64_t filesize, double duration, double throughput,
+                                                                 bool retry, const std::string& fileMetadata) = 0;
 
     /// Update the status of a job
     /// @param jobId            The job ID

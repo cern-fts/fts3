@@ -1195,21 +1195,26 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 }
 
 
-boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
-        const std::string& transferState, const std::string& errorReason,
-        int processId, double filesize, double duration, bool retry, std::string fileMetadata)
+boost::tuple<bool, std::string>
+MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, int processId,
+                               const std::string& transferState, const std::string& errorReason,
+                               uint64_t filesize, double duration, double throughput,
+                               bool retry, const std::string& fileMetadata)
 {
     soci::session sql(*connectionPool);
-    return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-            transferState, errorReason, processId, filesize, duration, retry, fileMetadata);
+    return updateFileTransferStatusInternal(sql, jobId, fileId, processId,
+                                            transferState, errorReason,
+                                            filesize, duration, throughput,
+                                            retry, fileMetadata);
 }
 
 
-boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
-        std::string jobId, uint64_t fileId,
-        std::string newFileState, std::string transferMessage,
-        int processId, double filesize, double duration, bool retry,
-        std::string fileMetadata)
+boost::tuple<bool, std::string>
+MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
+                                           std::string jobId, uint64_t fileId, int processId,
+                                           std::string newFileState, const std::string& errorReason,
+                                           uint64_t filesize, double duration, double throughput,
+                                           bool retry, const std::string& fileMetadata)
 {
     std::string storedState;
     soci::indicator destSurlUuidInd;
@@ -1279,7 +1284,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         query << "UPDATE t_file SET "
               "    file_state = :state, reason = :reason";
         stmt.exchange(soci::use(newFileState, "state"));
-        stmt.exchange(soci::use(transferMessage, "reason"));
+        stmt.exchange(soci::use(errorReason, "reason"));
 
         if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
         {
@@ -1395,7 +1400,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-    return  boost::tuple<bool, std::string>(true, storedState);
+    return boost::tuple<bool, std::string>(true, storedState);
 }
 
 

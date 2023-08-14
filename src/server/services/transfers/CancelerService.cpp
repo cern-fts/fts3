@@ -70,29 +70,30 @@ void CancelerService::markAsStalled()
 
         if (diskFull) {
             reason << "No space left on device";
-        }
-        else {
+        } else {
             reason << "No FTS server has updated the transfer status the last "
-                << timeout.total_seconds() << " seconds"
-                << ". Probably stalled";
+                   << timeout.total_seconds() << " seconds. "
+                   << "Probably stalled";
         }
 
-        for (auto i = messages.begin(); i != messages.end(); ++i) {
+        for (const auto& message: messages) {
             // Make sure we don't kill ourselves
-            if (i->process_id()) {
-                kill(i->process_id(), SIGKILL);
+            if (message.process_id()) {
+                kill(message.process_id(), SIGKILL);
             }
-            boost::tuple<bool, std::string> updated = db->updateTransferStatus(i->job_id(), i->file_id(), 0,
-                "FAILED", reason.str(), i->process_id(),
-                0, 0, false);
-            db->updateJobStatus(i->job_id(), "FAILED");
+
+            boost::tuple<bool, std::string> updated =
+                    db->updateTransferStatus(message.job_id(), message.file_id(), message.process_id(),
+                                             "FAILED", reason.str(),
+                                             0, 0, 0.0, false, "");
+            db->updateJobStatus(message.job_id(), "FAILED");
 
             if (updated.get<0>()) {
-                SingleTrStateInstance::instance().sendStateMessage(i->job_id(), i->file_id());
-            }
-            else {
+                SingleTrStateInstance::instance().sendStateMessage(message.job_id(), message.file_id());
+            } else {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Tried to mark as stalled, but already terminated: "
-                    << i->job_id() << "/" << i->file_id() << " "  << updated.get<1>() << commit;
+                                               << message.job_id() << "/" << message.file_id() << " " << updated.get<1>()
+                                               << commit;
             }
         }
         ThreadSafeList::get_instance().deleteMsg(messages);
@@ -150,9 +151,9 @@ void CancelerService::applyActiveTimeouts()
                 << "Killing jobid:" << i->jobId << ", fileid:" << i->fileId
                 << " because it was stalled (no pid available!)" << commit;
         }
-        db->updateTransferStatus(i->jobId, i->fileId, 0.0,
-            "FAILED", "Transfer has been forced-killed because it was stalled",
-            i->pid, 0, 0, false);
+        db->updateTransferStatus(i->jobId, i->fileId, i->pid,
+                                 "FAILED", "Transfer has been forced-killed because it was stalled",
+                                 0, 0, 0.0, false, "");
         db->updateJobStatus(i->jobId, "FAILED");
         SingleTrStateInstance::instance().sendStateMessage(i->jobId, i->fileId);
 

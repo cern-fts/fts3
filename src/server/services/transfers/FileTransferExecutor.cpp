@@ -223,9 +223,8 @@ void FileTransferExecutor::run(boost::any & ctx)
             scheduled += 1;
 
             boost::tuple<bool, std::string> fileUpdated = db->updateTransferStatus(
-                tf.jobId, tf.fileId, 0.0, "READY", "",
-                0, 0.0, 0.0, false
-            );
+                    tf.jobId, tf.fileId, 0, "READY", "",
+                    0, 0, 0.0, false, "");
             db->updateJobStatus(tf.jobId, "ACTIVE");
 
             // If fileUpdated == false, the transfer was *not* updated, which means we got
@@ -251,11 +250,9 @@ void FileTransferExecutor::run(boost::any & ctx)
             std::string forkMessage;
             if (-1 == pr.executeProcessShell(forkMessage)) {
                 failed = true;
-                db->updateTransferStatus(
-                    tf.jobId, tf.fileId, 0.0, "FAILED",
-                    "Transfer failed to fork, check fts3server.log for more details",
-                    (int) pr.getPid(), 0, 0, false
-                );
+                db->updateTransferStatus(tf.jobId, tf.fileId, pr.getPid(),
+                                         "FAILED", "Transfer failed to fork, check fts3server.log for more details",
+                                         0, 0, 0.0, false, "");
                 db->updateJobStatus(tf.jobId, "FAILED");
 
                 if (forkMessage.empty()) {
@@ -268,10 +265,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                 }
             }
             else {
-                db->updateTransferStatus(
-                    tf.jobId, tf.fileId, 0.0, "READY", "",
-                    pr.getPid(), 0.0, 0.0, false
-                );
+                db->updateTransferStatus(tf.jobId, tf.fileId, pr.getPid(), "READY", "",
+                                         0, 0, 0.0, false, "");
             }
 
             // Send current state
