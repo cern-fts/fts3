@@ -18,8 +18,9 @@ public:
     json::Object toJSON()
     {    
         json::Object output;
-        
-        output["file_size"] = json::Number(fileSize);
+
+        // Silence conversion warning ("cajun-json" library soon to be replaced)
+        output["file_size"] = json::Number(static_cast<double>(fileSize));
         output["checksum_type"] = json::String(checksumType);
         output["checksum_value"] = json::String(checksumValue);
         output["file_on_tape"] = json::Boolean(fileOnTape);
