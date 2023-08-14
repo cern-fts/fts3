@@ -211,7 +211,7 @@ public:
         soci::use(pair.source, "sourceSe"), soci::use(pair.destination, "destSe"),
         soci::use(interval.total_seconds(), "interval"));
 
-        int64_t totalBytes = 0;
+        double totalBytes = 0;
         std::vector<int64_t> filesizes;
 
         for (auto j = transfers.begin(); j != transfers.end(); ++j) {
@@ -225,12 +225,15 @@ public:
             time_t periodInWindow = 0;
             double bytesInWindow = 0;
 
+            // Note: the calculations here disregard the variable types and
+            //       resort to using double in most places
+
             // Not finish information
             if (endtm.tm_year <= 0) {
                 periodInWindow = now - std::max(start, windowStart);
                 long duration = now - start;
                 if (duration > 0) {
-                    bytesInWindow = double(transferred / duration) * periodInWindow;
+                    bytesInWindow = double(transferred / duration) * (double) periodInWindow;
                 }
             }
             // Finished
@@ -238,10 +241,10 @@ public:
                 periodInWindow = end - std::max(start, windowStart);
                 long duration = end - start;
                 if (duration > 0 && filesize > 0) {
-                    bytesInWindow = double(filesize / duration) * periodInWindow;
+                    bytesInWindow = double(filesize / duration) * (double) periodInWindow;
                 }
                 else if (duration <= 0) {
-                    bytesInWindow = filesize;
+                    bytesInWindow = (double) filesize;
                 }
             }
 
@@ -254,17 +257,17 @@ public:
         *throughput = totalBytes / interval.total_seconds();
         // Statistics on the file size
         if (!filesizes.empty()) {
-            for (auto i = filesizes.begin(); i != filesizes.end(); ++i) {
-                *filesizeAvg += *i;
+            for (auto& filesize: filesizes) {
+                *filesizeAvg += (double) filesize;
             }
-            *filesizeAvg /= filesizes.size();
+            *filesizeAvg /= (double) filesizes.size();
 
             double deviations = 0.0;
-            for (auto i = filesizes.begin(); i != filesizes.end(); ++i) {
-                deviations += pow(*filesizeAvg - *i, 2);
+            for (auto& filesize: filesizes) {
+                deviations += pow(*filesizeAvg - (double) filesize, 2);
 
             }
-            *filesizeStdDev = sqrt(deviations / filesizes.size());
+            *filesizeStdDev = sqrt(deviations / (double) filesizes.size());
         }
     }
 
@@ -279,7 +282,7 @@ public:
             soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds()),
             soci::into(avgDuration, isNullAvg);
 
-        return avgDuration;
+        return static_cast<time_t>(avgDuration);
     }
 
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
