@@ -2320,40 +2320,38 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
 {
     soci::session sql(*connectionPool);
 
-    std::stringstream internalParams;
-    double filesize = 0;
+    uint64_t filesize = 0;
     uint64_t fileId = 0;
     std::string params;
 
     soci::statement stmt = (
-                               sql.prepare << "UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
-                               soci::use(params),
-                               soci::use(filesize),
-                               soci::use(fileId));
+            sql.prepare << "UPDATE t_file SET "
+                           "    internal_file_params = :params, "
+                           "    filesize = :filesize "
+                           "WHERE file_id = :fileId",
+                    soci::use(params),
+                    soci::use(filesize),
+                    soci::use(fileId)
+    );
 
     try
     {
         sql.begin();
 
-        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-        {
-            internalParams.str(std::string());
-            internalParams.clear();
-
-            auto msg = *iter;
-            if (msg.transfer_status().compare("UPDATE") == 0)
-            {
-                fileId = msg.file_id();
-                filesize = msg.filesize();
-                internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
-                << ",timeout:" << static_cast<int> (msg.timeout())
-                << ",buffersize:" << static_cast<int> (msg.buffersize());
+        for (const auto& message: messages) {
+            if (message.transfer_status() == "UPDATE") {
+                std::ostringstream internalParams;
+                fileId = message.file_id();
+                filesize = message.filesize();
+                internalParams << "nostreams:" << static_cast<int> (message.nostreams())
+                               << ",timeout:" << static_cast<int> (message.timeout())
+                               << ",buffersize:" << static_cast<int> (message.buffersize());
                 params = internalParams.str();
                 stmt.execute(true);
             }
         }
-        sql.commit();
 
+        sql.commit();
     }
     catch (std::exception& e)
     {
