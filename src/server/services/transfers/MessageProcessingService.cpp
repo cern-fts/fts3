@@ -172,7 +172,7 @@ void MessageProcessingService::performUpdateMessageDbChange(const fts3::events::
                                          << " file_params=" << internal_params.str()
                                          << commit;
 
-        db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(msg);
+        db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(std::vector<events::Message>{msg});
     }
     catch (const std::exception& e)
     {

@@ -2366,46 +2366,6 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
 }
 
 
-void MySqlAPI::updateProtocol(const fts3::events::Message& msg)
-{
-    soci::session sql(*connectionPool);
-
-    if (msg.transfer_status().compare("UPDATE") != 0)
-        return;
-
-    try
-    {
-        double filesize = msg.filesize();
-        uint64_t fileId = msg.file_id();
-
-        std::ostringstream internalParams;
-        internalParams << "nostreams:" << static_cast<int>(msg.nostreams())
-                       << ",timeout:" << static_cast<int>(msg.timeout())
-                       << ",buffersize:" << static_cast<int>(msg.buffersize());
-        std::string params = internalParams.str();
-
-        soci::statement stmt = (
-                sql.prepare << "UPDATE t_file set internal_file_params=:params, filesize=:filesize WHERE file_id=:fileId",
-                        soci::use(params),
-                        soci::use(filesize),
-                        soci::use(fileId));
-
-        sql.begin();
-        stmt.execute(true);
-        sql.commit();
-    } catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
 void MySqlAPI::transferLogFileVector(std::map<int, fts3::events::MessageLog>& messagesLog)
 {
     soci::session sql(*connectionPool);

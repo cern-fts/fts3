@@ -165,9 +165,6 @@ public:
     /// Update the protocol parameters used for each transfer
     virtual void updateProtocol(const std::vector<fts3::events::Message>& messages);
 
-    /// Update the protocol parameters for this particular transfer
-    virtual void updateProtocol(const fts3::events::Message& message);
-
     /// Get the state the transfer identified by jobId/fileId
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, uint64_t fileId);
 
