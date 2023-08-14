@@ -1700,34 +1700,31 @@ void MySqlAPI::updateFileTransferProgressVector(const std::vector<fts3::events::
     try
     {
         double throughput = 0.0;
-        double transferred = 0.0;
-        uint64_t file_id = 0;
-        std::string file_state;
+        uint64_t transferred = 0.0;
+        uint64_t fileId = 0;
 
-        soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
-                                soci::use(throughput), soci::use(transferred), soci::use(file_id));
+        soci::statement stmt = (
+                sql.prepare << "UPDATE t_file SET "
+                               "    throughput = :throughput, "
+                               "    transferred = :transferred "
+                               "WHERE file_id = :fileId",
+                        soci::use(throughput),
+                        soci::use(transferred),
+                        soci::use(fileId)
+        );
 
         sql.begin();
 
-        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-        {
-            throughput = 0.0;
-            transferred = 0.0;
-            file_id = 0;
-            file_state = "";
+        for (const auto& message:  messages) {
+            if (message.file_id() > 0) {
+                const auto& fileState = message.transfer_status();
 
-            if ((*iter).file_id() > 0)
-            {
-                file_state = (*iter).transfer_status();
+                if (fileState == "ACTIVE") {
+                    fileId = message.file_id();
 
-                if(file_state == "ACTIVE")
-                {
-                    file_id = (*iter).file_id();
-
-                    if((*iter).throughput() > 0.0 && file_id > 0 )
-                    {
-                        throughput = (*iter).throughput();
-                        transferred = (*iter).transferred();
+                    if (message.throughput() > 0.0 && fileId > 0 ) {
+                        throughput = message.throughput();
+                        transferred = message.transferred();
                         stmt.execute(true);
                     }
                 }
