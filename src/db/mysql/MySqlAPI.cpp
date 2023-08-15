@@ -815,41 +815,6 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 }
 
 
-/// Return how many free slots there are for the given pair
-/// @param visited Transfers not yet updated on the DB, but scheduled by the caller
-/// @param source_se Source storage
-/// @param dest_se Destination storage
-static
-int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
-                    const std::string& source_se, const std::string& dest_se)
-{
-    int maxActive = 0, limit = 0;
-    soci::indicator activeIndicator = soci::i_ok;
-
-    int active = getActiveCount(sql, source_se, dest_se);
-
-    sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
-        soci::use(source_se), soci::use(dest_se), soci::into(maxActive, activeIndicator);
-
-    if (!activeIndicator) {
-        limit = (maxActive - active);
-    }
-    if (limit <= 0) {
-        return 0;
-    }
-
-    // This pair may have transfers already queued, so take them into account
-    for (auto i = visited.begin(); i != visited.end(); ++i)
-    {
-        if (i->first == source_se && i->second == dest_se) {
-            --limit;
-        }
-    }
-
-    return limit;
-}
-
-
 void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd )
 {
     soci::indicator selectionStrategyInd = soci::i_ok;
