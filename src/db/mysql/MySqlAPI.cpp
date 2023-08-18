@@ -142,20 +142,21 @@ static void validateSchemaVersion(soci::connection_pool *connectionPool)
     sql << "SELECT major, minor FROM t_schema_vers ORDER BY major DESC, minor DESC, patch DESC",
         soci::into(major), soci::into(minor);
 
-    if (major > expect[0]) {
-        throw SystemError("The database schema major version is higher than expected. Please, upgrade fts");
-    }
-    else if (major < expect[0]) {
-        throw SystemError("The database schema major version is lower than expected. Please, upgrade the database");
-    }
-    else if (minor > expect[1]) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
-            << " Database minor version is higher than expected. FTS should be able to run, but it should be upgraded."
-            << commit;
-    }
-    else if (minor < expect[1]) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
-            << " Database minor version is lower than expected. FTS should be able to run, but the schema should be upgraded."
+    auto schemaComparisonMessage = [&](const std::string& action) -> std::string {
+        std::ostringstream out;
+        out << "The database schema version is different than expected"
+            << " (expected: " << expect[0] << "." << expect[1] << ", found: " << major << "." << minor << ")! "
+            << action;
+        return out.str();
+    };
+
+    if (expect[0] < major) {
+        throw SystemError(schemaComparisonMessage("Please upgrade FTS"));
+    } else if (expect[0] > major || expect[1] > minor) {
+        throw SystemError(schemaComparisonMessage("Please upgrade the database schema"));
+    } else if (expect[1] < minor) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__ << " "
+            << schemaComparisonMessage("FTS should be able to run, but it should be upgraded")
             << commit;
     }
 }
