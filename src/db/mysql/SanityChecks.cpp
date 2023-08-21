@@ -262,7 +262,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
             const std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost +
                                              " is offline and the transfer is still assigned to it";
 
-            updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "CANCELED", errorMessage, 0, 0, 0, false);
+            updateFileTransferStatusInternal(sql, jobId, fileId, 0, "CANCELED", errorMessage, 0, 0, 0.0, false, "");
             updateJobTransferStatusInternal(sql, jobId, "CANCELED");
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling assigned transfer " << jobId << " / " << fileId
@@ -310,7 +310,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
         int diffInt = boost::lexical_cast<int>(diff);
 
         if (diffInt > (bringOnline + 800)) {
-            updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
+            updateFileTransferStatusInternal(sql, jobId, fileId, 0, "FAILED", errorMessage, 0, 0, 0.0, false, "");
             updateJobTransferStatusInternal(sql, jobId, "FAILED");
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
@@ -352,7 +352,7 @@ void MySqlAPI::recoverStalledArchiving(soci::session &sql)
         int diffInt = boost::lexical_cast<int>(diff);
 
         if (diffInt > (archiveTimeout + 800)) {
-            updateFileTransferStatusInternal(sql, 0.0, jobId, fileId, "FAILED", errorMessage, 0, 0, 0, false);
+            updateFileTransferStatusInternal(sql, jobId, fileId, 0, "FAILED", errorMessage, 0, 0, 0.0, false, "");
             updateJobTransferStatusInternal(sql, jobId, "FAILED");
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling archiving operation " << jobId << " / " << fileId << commit;

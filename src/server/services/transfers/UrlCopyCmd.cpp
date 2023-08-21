@@ -242,10 +242,10 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         case Job::kTypeMultiHop:
             setFlag("job-multihop", true);
             break;
+        case Job::kTypeRegular:
+            break;
     }
 
-    // setOption("source-site", std::string());
-    // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
     if (!transfer.checksumMode.empty())
         setOption("checksum-mode", transfer.checksumMode);
@@ -276,7 +276,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
                 const json::String issuer = it->element;
                 setOption("dest-issuer", issuer.Value());
             }
-        } catch (json::Exception) {
+        } catch (const json::Exception&) {
             // Ignore for now.
         }
     }
@@ -332,12 +332,6 @@ void UrlCopyCmd::setFromProtocol(const TransferFile::ProtocolParameters &protoco
 void UrlCopyCmd::setSecondsPerMB(long value)
 {
     setOption("sec-per-mb", value);
-}
-
-
-void UrlCopyCmd::setNumberOfActive(int active)
-{
-    setOption("active", active);
 }
 
 

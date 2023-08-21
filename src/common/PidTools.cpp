@@ -114,12 +114,12 @@ uint64_t getPidStartime(pid_t pid)
     }
 
     // info.starttime has the start time of the process *in clock ticks since boot*
-    // That means we still need to convert to seconds, and get the system boot time
-    float clocksPerMilliSec = sysconf(_SC_CLK_TCK) / 1000.0;
-    uint64_t bootTime = getSystemBootTime() * 1000;
-
-    float runningTime = info.starttime / clocksPerMilliSec;
-    uint64_t procStartTime = bootTime + (uint64_t)runningTime;
+    // We need to convert this value into milliseconds and add it to the system boot time
+    // The final result resolution is in milliseconds
+    auto clocksPerMilliSec = (double) sysconf(_SC_CLK_TCK) / 1000.0;
+    auto runningTime_ms = static_cast<uint64_t>((double) info.starttime / clocksPerMilliSec);
+    auto bootTime_ms = static_cast<uint64_t>(getSystemBootTime() * 1000);
+    uint64_t procStartTime = bootTime_ms + runningTime_ms;
 
     return procStartTime;
 }

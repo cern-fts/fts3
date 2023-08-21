@@ -323,12 +323,12 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
 
     completed.transfer_time_ms = transfer.stats.transfer.end - transfer.stats.transfer.start;
     completed.operation_time_ms = transfer.stats.process.end - transfer.stats.process.start;
-    completed.throughput_bps = (completed.transfer_time_ms > 0) ? ((double) completed.file_size / (completed.transfer_time_ms / 1000.0)) : -1;
+    completed.throughput_bps = (completed.transfer_time_ms > 0) ? ((double) completed.file_size / ((double) completed.transfer_time_ms / 1000.0)) : -1;
 
     completed.srm_preparation_time_ms = transfer.stats.srmPreparation.end - transfer.stats.srmPreparation.start;
     completed.srm_finalization_time_ms = transfer.stats.srmFinalization.end - transfer.stats.srmFinalization.start;
     completed.srm_overhead_time_ms = completed.srm_preparation_time_ms + completed.srm_finalization_time_ms;
-    completed.srm_overhead_percentage = (completed.operation_time_ms > 0) ? ((double) completed.srm_overhead_time_ms * 100 / completed.operation_time_ms) : -1;
+    completed.srm_overhead_percentage = (completed.operation_time_ms > 0) ? ((double) completed.srm_overhead_time_ms * 100 / (double) completed.operation_time_ms) : -1;
 
     completed.checksum_source_time_ms = transfer.stats.sourceChecksum.end - transfer.stats.sourceChecksum.start;
     completed.checksum_dest_time_ms = transfer.stats.destChecksum.end - transfer.stats.destChecksum.start;

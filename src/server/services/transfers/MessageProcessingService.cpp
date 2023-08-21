@@ -172,7 +172,7 @@ void MessageProcessingService::performUpdateMessageDbChange(const fts3::events::
                                          << " file_params=" << internal_params.str()
                                          << commit;
 
-        db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(msg);
+        db::DBSingleton::instance().getDBObjectInstance()->updateProtocol(std::vector<events::Message>{msg});
     }
     catch (const std::exception& e)
     {
@@ -267,15 +267,16 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
         if (isUnrecoverableErrorMessage(msg.transfer_message()))
         {
             db::DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(
-                msg.job_id(), msg.process_id(), msg.transfer_message());
+                msg.job_id(), msg.process_id(), msg.transfer_message(), false);
         }
 
         // update file and job state
         boost::tuple<bool, std::string> updated = db::DBSingleton::instance()
             .getDBObjectInstance()->updateTransferStatus(
-                msg.job_id(), msg.file_id(), msg.throughput(), msg.transfer_status(),
-                msg.transfer_message(), msg.process_id(), msg.filesize(), msg.time_in_secs(), msg.retry(),
-                msg.file_metadata());
+                msg.job_id(), msg.file_id(), msg.process_id(),
+                msg.transfer_status(), msg.transfer_message(),
+                msg.filesize(), msg.time_in_secs(), msg.throughput(),
+                msg.retry(), msg.file_metadata());
 
         db::DBSingleton::instance().getDBObjectInstance()->updateJobStatus(
             msg.job_id(), msg.transfer_status());

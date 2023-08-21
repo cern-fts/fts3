@@ -78,7 +78,6 @@ public:
     void setFromProtocol(const TransferFile::ProtocolParameters& protocol);
     void setSecondsPerMB(long);
 
-    void setNumberOfActive(int);
     void setNumberOfRetries(int);
     void setMaxNumberOfRetries(int);
     void setDisableDelegation(bool);

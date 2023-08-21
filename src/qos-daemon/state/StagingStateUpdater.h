@@ -118,8 +118,8 @@ public:
         db.updateFileStateToQosTerminal(jobId, fileId, "FAILED", reason);
     }
 
-    void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp) {
-        db.getFilesForQosTransition(qosTranstionOps, qosOp, true);
+    void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string& qosOp) {
+        db.getFilesForQosTransition(qosTransitionOps, qosOp, true);
     }
 
     bool cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) {

@@ -20,6 +20,9 @@ add_definitions ("-DBOOST_TEST_DYN_LINK")
 
 set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
 
+# Disable "-Wconversion" warnings in unit tests
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
+
 # Use RPATH to link with individual FTS test libraries
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)

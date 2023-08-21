@@ -74,8 +74,7 @@ public:
     unsigned addSecPerMb;
     bool     noStreaming;
     bool     skipEvict;
-    bool     enableMonitoring; // Legacy option
-    unsigned active; // Legacy option
+    bool     enableMonitoring;
     unsigned pingInterval;
 
     unsigned retry;

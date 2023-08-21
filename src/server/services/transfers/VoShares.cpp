@@ -42,7 +42,7 @@ boost::optional<QueueId> selectQueueForPair(const Pair &pair,
 {
     // Weights per position in vos vector
     std::vector<double> finalWeights(vos.size());
-    int unschedulableCount = 0;
+    unsigned int unschedulableCount = 0;
 
     // Get the public (catchall weight)
     // If there is no config, this is the only weight!

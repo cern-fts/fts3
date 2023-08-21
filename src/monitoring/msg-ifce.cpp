@@ -325,7 +325,6 @@ std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_
 
     message["source_se"] = json::String(opt_info.source_se);
     message["dest_se"] = json::String(opt_info.dest_se);
-    message["timestamp"] = json::Number(opt_info.timestamp);
 
     message["throughput"] = json::Number(opt_info.throughput);
     message["throughput_ema"] = json::Number(opt_info.ema);
@@ -333,7 +332,7 @@ std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_
     message["duration_avg"] = json::Number(opt_info.avgDuration);
 
     message["filesize_avg"] = json::Number(opt_info.filesizeAvg);
-    message["filesize_stddev"] = json::Number(opt_info.filesizeAvg);
+    message["filesize_stddev"] = json::Number(opt_info.filesizeStdDev);
 
     message["success_rate"] = json::Number(opt_info.successRate);
     message["retry_count"] = json::Number(opt_info.retryCount);
@@ -342,7 +341,10 @@ std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_
     message["submitted_count"] = json::Number(opt_info.queueSize);
 
     message["connections"] = json::Number(opt_info.connections);
+    message["diff"] = json::Number(opt_info.diff);
+
     message["rationale"] = json::String(opt_info.rationale);
+    message["timestamp"] = json::Number(opt_info.timestamp);
 
     std::ostringstream stream;
 

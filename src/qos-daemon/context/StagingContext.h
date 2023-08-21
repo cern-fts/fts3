@@ -118,12 +118,12 @@ public:
         return stateUpdater(urlToIDs);
     }
 
-    int getBringonlineTimeout() const
+    time_t getBringonlineTimeout() const
     {
         return maxBringonlineTimeout;
     }
 
-    int getPinlifetime() const
+    time_t getPinLifetime() const
     {
         return maxPinLifetime;
     }
@@ -138,7 +138,7 @@ public:
         return minStagingStartTime;
     }
 
-    bool hasTimeoutExpired();
+    bool hasTimeoutExpired() const;
 
     std::set<std::string> getSurlsToAbort(const std::set<std::pair<std::string, std::string>>&);
 
@@ -158,8 +158,8 @@ protected:
     StagingStateUpdater &stateUpdater;
     WaitingRoom<PollTask> &waitingRoom;
     std::map<std::string, int> errorCount;
-    int maxPinLifetime; ///< maximum copy pin lifetime of the batch
-    int maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
+    time_t maxPinLifetime; ///< maximum copy pin lifetime of the batch
+    time_t maxBringonlineTimeout; ///< maximum bringonline timeout of the batch
     time_t minStagingStartTime; ///< first staging start timestamp of the batch
     std::string storageEndpoint; ///< storage endpoint of the batch
 };

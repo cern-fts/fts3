@@ -556,7 +556,7 @@ static int getActiveCount(soci::session& sql, const std::string &source, const s
 {
     int activeCount = 0;
 
-    //Running Transefers (R+N+Y+H job type)
+    // Running Transfers (R+N+Y+H job type)
     sql << "SELECT COUNT(*) FROM t_file f JOIN t_job j ON j.job_id = f.job_id "
         " WHERE f.source_se = :source_se AND f.dest_se = :dest_se"
         " AND f.file_state = 'ACTIVE'",
@@ -813,41 +813,6 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         files.clear();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-}
-
-
-/// Return how many free slots there are for the given pair
-/// @param visited Transfers not yet updated on the DB, but scheduled by the caller
-/// @param source_se Source storage
-/// @param dest_se Destination storage
-static
-int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
-                    const std::string& source_se, const std::string& dest_se)
-{
-    int maxActive = 0, limit = 0;
-    soci::indicator activeIndicator = soci::i_ok;
-
-    int active = getActiveCount(sql, source_se, dest_se);
-
-    sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
-        soci::use(source_se), soci::use(dest_se), soci::into(maxActive, activeIndicator);
-
-    if (!activeIndicator) {
-        limit = (maxActive - active);
-    }
-    if (limit <= 0) {
-        return 0;
-    }
-
-    // This pair may have transfers already queued, so take them into account
-    for (auto i = visited.begin(); i != visited.end(); ++i)
-    {
-        if (i->first == source_se && i->second == dest_se) {
-            --limit;
-        }
-    }
-
-    return limit;
 }
 
 
@@ -1196,21 +1161,26 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 }
 
 
-boost::tuple<bool, std::string>  MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
-        const std::string& transferState, const std::string& errorReason,
-        int processId, double filesize, double duration, bool retry, std::string fileMetadata)
+boost::tuple<bool, std::string>
+MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, int processId,
+                               const std::string& transferState, const std::string& errorReason,
+                               uint64_t filesize, double duration, double throughput,
+                               bool retry, const std::string& fileMetadata)
 {
     soci::session sql(*connectionPool);
-    return updateFileTransferStatusInternal(sql, throughput, jobId, fileId,
-            transferState, errorReason, processId, filesize, duration, retry, fileMetadata);
+    return updateFileTransferStatusInternal(sql, jobId, fileId, processId,
+                                            transferState, errorReason,
+                                            filesize, duration, throughput,
+                                            retry, fileMetadata);
 }
 
 
-boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughput,
-        std::string jobId, uint64_t fileId,
-        std::string newFileState, std::string transferMessage,
-        int processId, double filesize, double duration, bool retry,
-        std::string fileMetadata)
+boost::tuple<bool, std::string>
+MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
+                                           std::string jobId, uint64_t fileId, int processId,
+                                           std::string newFileState, const std::string& errorReason,
+                                           uint64_t filesize, double duration, double throughput,
+                                           bool retry, const std::string& fileMetadata)
 {
     std::string storedState;
     soci::indicator destSurlUuidInd;
@@ -1280,7 +1250,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         query << "UPDATE t_file SET "
               "    file_state = :state, reason = :reason";
         stmt.exchange(soci::use(newFileState, "state"));
-        stmt.exchange(soci::use(transferMessage, "reason"));
+        stmt.exchange(soci::use(errorReason, "reason"));
 
         if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
         {
@@ -1396,7 +1366,7 @@ boost::tuple<bool, std::string>  MySqlAPI::updateFileTransferStatusInternal(soci
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
-    return  boost::tuple<bool, std::string>(true, storedState);
+    return boost::tuple<bool, std::string>(true, storedState);
 }
 
 
@@ -1701,34 +1671,31 @@ void MySqlAPI::updateFileTransferProgressVector(const std::vector<fts3::events::
     try
     {
         double throughput = 0.0;
-        double transferred = 0.0;
-        uint64_t file_id = 0;
-        std::string file_state;
+        uint64_t transferred = 0.0;
+        uint64_t fileId = 0;
 
-        soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
-                                soci::use(throughput), soci::use(transferred), soci::use(file_id));
+        soci::statement stmt = (
+                sql.prepare << "UPDATE t_file SET "
+                               "    throughput = :throughput, "
+                               "    transferred = :transferred "
+                               "WHERE file_id = :fileId",
+                        soci::use(throughput),
+                        soci::use(transferred),
+                        soci::use(fileId)
+        );
 
         sql.begin();
 
-        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-        {
-            throughput = 0.0;
-            transferred = 0.0;
-            file_id = 0;
-            file_state = "";
+        for (const auto& message:  messages) {
+            if (message.file_id() > 0) {
+                const auto& fileState = message.transfer_status();
 
-            if ((*iter).file_id() > 0)
-            {
-                file_state = (*iter).transfer_status();
+                if (fileState == "ACTIVE") {
+                    fileId = message.file_id();
 
-                if(file_state == "ACTIVE")
-                {
-                    file_id = (*iter).file_id();
-
-                    if((*iter).throughput() > 0.0 && file_id > 0 )
-                    {
-                        throughput = (*iter).throughput();
-                        transferred = (*iter).transferred();
+                    if (message.throughput() > 0.0 && fileId > 0 ) {
+                        throughput = message.throughput();
+                        transferred = message.transferred();
                         stmt.execute(true);
                     }
                 }
@@ -1824,8 +1791,7 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
 }
 
 
-bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
-        const std::string & destStorage, int &currentActive)
+bool MySqlAPI::isTrAllowed(const std::string& sourceStorage, const std::string& destStorage)
 {
     soci::session sql(*connectionPool);
 
@@ -1837,6 +1803,7 @@ bool MySqlAPI::isTrAllowed(const std::string& sourceStorage,
                "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
                soci::use(sourceStorage), soci::use(destStorage),
                soci::into(maxActive);
+
         if (!sql.got_data()) {
             maxActive = DEFAULT_MIN_ACTIVE;
         }
@@ -1914,7 +1881,7 @@ void MySqlAPI::reapStalledTransfers(std::vector<TransferFile>& transfers)
 }
 
 
-bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message, bool force)
+bool MySqlAPI::terminateReuseProcess(const std::string& jobId, int pid, const std::string& message, bool force)
 {
     soci::session sql(*connectionPool);
     std::string job_id = jobId;
@@ -2324,82 +2291,40 @@ void MySqlAPI::updateProtocol(const std::vector<fts3::events::Message>& messages
 {
     soci::session sql(*connectionPool);
 
-    std::stringstream internalParams;
-    double filesize = 0;
+    uint64_t filesize = 0;
     uint64_t fileId = 0;
     std::string params;
 
     soci::statement stmt = (
-                               sql.prepare << "UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
-                               soci::use(params),
-                               soci::use(filesize),
-                               soci::use(fileId));
+            sql.prepare << "UPDATE t_file SET "
+                           "    internal_file_params = :params, "
+                           "    filesize = :filesize "
+                           "WHERE file_id = :fileId",
+                    soci::use(params),
+                    soci::use(filesize),
+                    soci::use(fileId)
+    );
 
     try
     {
         sql.begin();
 
-        for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-        {
-            internalParams.str(std::string());
-            internalParams.clear();
-
-            auto msg = *iter;
-            if (msg.transfer_status().compare("UPDATE") == 0)
-            {
-                fileId = msg.file_id();
-                filesize = msg.filesize();
-                internalParams << "nostreams:" << static_cast<int> (msg.nostreams())
-                << ",timeout:" << static_cast<int> (msg.timeout())
-                << ",buffersize:" << static_cast<int> (msg.buffersize());
+        for (const auto& message: messages) {
+            if (message.transfer_status() == "UPDATE") {
+                std::ostringstream internalParams;
+                fileId = message.file_id();
+                filesize = message.filesize();
+                internalParams << "nostreams:" << static_cast<int> (message.nostreams())
+                               << ",timeout:" << static_cast<int> (message.timeout())
+                               << ",buffersize:" << static_cast<int> (message.buffersize());
                 params = internalParams.str();
                 stmt.execute(true);
             }
         }
-        sql.commit();
 
+        sql.commit();
     }
     catch (std::exception& e)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
-    }
-}
-
-
-void MySqlAPI::updateProtocol(const fts3::events::Message& msg)
-{
-    soci::session sql(*connectionPool);
-
-    if (msg.transfer_status().compare("UPDATE") != 0)
-        return;
-
-    try
-    {
-        double filesize = msg.filesize();
-        uint64_t fileId = msg.file_id();
-
-        std::ostringstream internalParams;
-        internalParams << "nostreams:" << static_cast<int>(msg.nostreams())
-                       << ",timeout:" << static_cast<int>(msg.timeout())
-                       << ",buffersize:" << static_cast<int>(msg.buffersize());
-        std::string params = internalParams.str();
-
-        soci::statement stmt = (
-                sql.prepare << "UPDATE t_file set internal_file_params=:params, filesize=:filesize WHERE file_id=:fileId",
-                        soci::use(params),
-                        soci::use(filesize),
-                        soci::use(fileId));
-
-        sql.begin();
-        stmt.execute(true);
-        sql.commit();
-    } catch (std::exception& e)
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
@@ -2471,50 +2396,36 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
 
     try
     {
-        soci::rowset<soci::row> rs = (fileId ==-1) ? (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.start_time , f.source_surl "
-                                         " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId ",
-                                         soci::use(jobId)
-                                     )
-                                     :
-                                     (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.start_time , f.source_surl "
-                                         " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId "
-                                         "  AND f.file_id = :fileId ",
-                                         soci::use(jobId),
-                                         soci::use(fileId)
-                                     );
-
+        soci::rowset<soci::row> rs = (
+                sql.prepare <<
+                            " SELECT "
+                            "   j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                            "   j.job_metadata, j.retry AS retry_max, f.file_id, "
+                            "   f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
+                            "   f.source_se, f.start_time, f.source_surl "
+                            " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                            " WHERE "
+                            "   j.job_id = :jobId AND f.file_id = :fileId",
+                        soci::use(jobId),
+                        soci::use(fileId)
+        );
 
         soci::rowset<soci::row>::const_iterator it;
 
-        for (it = rs.begin(); it != rs.end(); ++it)
-        {
+        for (it = rs.begin(); it != rs.end(); ++it) {
             ret.job_id = it->get<std::string>("job_id");
             ret.job_state = it->get<std::string>("job_state");
             ret.vo_name = it->get<std::string>("vo_name");
 
             soci::indicator isNull1 = it->get_indicator("job_metadata");
-            if (isNull1 == soci::i_ok)
-                ret.job_metadata = it->get<std::string>("job_metadata","");
-            else
-                ret.job_metadata = "";
 
-            ret.retry_max = it->get<int>("retry_max",0);
+            if (isNull1 == soci::i_ok) {
+                ret.job_metadata = it->get<std::string>("job_metadata", "");
+            } else {
+                ret.job_metadata = "";
+            }
+
+            ret.retry_max = it->get<int>("retry_max", 0);
             ret.file_id = it->get<unsigned long long>("file_id");
             ret.file_state = it->get<std::string>("file_state");
             ret.timestamp = millisecondsSinceEpoch();
@@ -2522,13 +2433,15 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.submit_time = (timegm(&aux_tm) * 1000);
             ret.staging = false;
 
-            ret.retry_counter = it->get<int>("retry_counter",0);
+            ret.retry_counter = it->get<int>("retry_counter", 0);
 
             soci::indicator isNull2 = it->get_indicator("file_metadata");
-            if (isNull2 == soci::i_ok)
-                ret.file_metadata = it->get<std::string>("file_metadata","");
-            else
+
+            if (isNull2 == soci::i_ok) {
+                ret.file_metadata = it->get<std::string>("file_metadata", "");
+            } else {
                 ret.file_metadata = "";
+            }
 
             ret.user_filesize = it->get<long long>("user_filesize", 0);
 
@@ -2536,17 +2449,21 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
             ret.dest_se = "";
 
             bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
-            if(!publishUserDn)
+
+            if (!publishUserDn) {
                 ret.user_dn = std::string("");
-            else
-                ret.user_dn = it->get<std::string>("user_dn","");
+            } else {
+                ret.user_dn = it->get<std::string>("user_dn", "");
+            }
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = "";
-            if (ret.job_state == "FAILED")
+
+            if (ret.job_state == "FAILED") {
                 ret.reason = it->get<std::string>("reason");
-            else
+            } else {
                 ret.reason = std::string("");
+            }
 
             temp.push_back(ret);
         }
@@ -2561,7 +2478,6 @@ std::vector<TransferState> MySqlAPI::getStateOfDeleteInternal(soci::session& sql
     }
 
     return temp;
-
 }
 
 
@@ -2572,41 +2488,23 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
 
     try
     {
-        soci::rowset<soci::row> rs = (fileId ==-1) ? (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
-                                         "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
-                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId ",
-                                         soci::use(jobId)
-                                     )
-                                     :
-                                     (
-                                         sql.prepare <<
-                                         " SELECT "
-                                         "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
-                                         "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                         "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
-                                         "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
-                                         "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
-                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE "
-                                         "  j.job_id = :jobId "
-                                         "  AND f.file_id = :fileId ",
-                                         soci::use(jobId),
-                                         soci::use(fileId)
-                                     );
-
-
+        soci::rowset<soci::row> rs = (
+                sql.prepare <<
+                            " SELECT "
+                            "  j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                            "  j.job_metadata, j.retry AS retry_max, f.file_id, "
+                            "  f.file_state, f.retry AS retry_counter, f.user_filesize, f.file_metadata, f.reason, "
+                            "  f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl, "
+                            "  f.staging_start, f.staging_finished, f.archive_start_time, f.archive_finish_time "
+                            " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                            " WHERE "
+                            "  j.job_id = :jobId AND f.file_id = :fileId",
+                        soci::use(jobId),
+                        soci::use(fileId)
+        );
 
         soci::rowset<soci::row>::const_iterator it;
 
-        struct tm aux_tm;
         for (it = rs.begin(); it != rs.end(); ++it)
         {
             ret.job_id = it->get<std::string>("job_id");
@@ -2619,7 +2517,7 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.file_state = it->get<std::string>("file_state");
             ret.reason = it->get<std::string>("reason", "");
             ret.timestamp = millisecondsSinceEpoch();
-            aux_tm = it->get<struct tm>("submit_time");
+            auto aux_tm = it->get<struct tm>("submit_time");
             ret.submit_time = (timegm(&aux_tm) * 1000);
 
             if (it->get_indicator("staging_start") == soci::i_ok) {
@@ -2631,8 +2529,9 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                 ret.staging_finished = (timegm(&aux_tm) * 1000);
             }
 
-            if(ret.staging_start != 0)
+            if (ret.staging_start != 0) {
                 ret.staging = true;
+            }
 
             if (it->get_indicator("archive_start_time") == soci::i_ok) {
                 aux_tm = it->get<struct tm>("archive_start_time");
@@ -2643,8 +2542,9 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
                 ret.archiving_finished = (timegm(&aux_tm) * 1000);
             }
 
-            if(ret.archiving_start != 0)
+            if (ret.archiving_start != 0) {
                 ret.archiving = true;
+            }
 
             ret.retry_counter = it->get<int>("retry_counter",0);
             ret.file_metadata = it->get<std::string>("file_metadata","");
@@ -2652,11 +2552,11 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
             ret.dest_se = it->get<std::string>("dest_se");
 
             bool publishUserDn = publishUserDnInternal(sql, ret.vo_name);
-            if(!publishUserDn)
+            if (!publishUserDn) {
                 ret.user_dn = std::string("");
-            else
-                ret.user_dn = it->get<std::string>("user_dn","");
-
+            } else {
+                ret.user_dn = it->get<std::string>("user_dn", "");
+            }
 
             ret.source_url = it->get<std::string>("source_surl","");
             ret.dest_url = it->get<std::string>("dest_surl","");
@@ -2674,7 +2574,6 @@ std::vector<TransferState> MySqlAPI::getStateOfTransferInternal(soci::session& s
     }
 
     return temp;
-
 }
 
 std::vector<TransferState> MySqlAPI::getStateOfTransfer(const std::string& jobId, uint64_t fileId)
@@ -2770,8 +2669,8 @@ void MySqlAPI::setRetryTransfer(const std::string& jobId, uint64_t fileId, int r
                    "    retry = :retryNo, retry_timestamp = :tTime, file_state = 'SUBMITTED', "
                    "    throughput = 0, current_failures = 1, start_time = NULL, "
                    "    transfer_host = NULL, log_file = NULL, log_file_debug = NULL "
-                   " WHERE file_id = :fileId AND job_id = :jobId AND "
-                   "       file_state NOT IN ('FINISHED', 'SUBMITTED', 'FAILED', 'CANCELED')",
+                   "WHERE file_id = :fileId AND job_id = :jobId AND "
+                   "      file_state NOT IN ('FINISHED', 'SUBMITTED', 'FAILED', 'CANCELED')",
                     soci::use(retryNo),
                     soci::use(tTime),
                     soci::use(fileId),
@@ -2819,20 +2718,24 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 }
 
 
-void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string serviceName)
+void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
+                                       const std::string& serviceName)
 {
     try
     {
-
         auto heartBeatGraceInterval = ServerConfig::instance().get<int>("HeartBeatGraceInterval");
 
-        sql.begin();
-
         // Update beat
+        sql.begin();
         soci::statement stmt1 = (
-                                    sql.prepare << "INSERT INTO t_hosts (hostname, beat, service_name) VALUES (:host, UTC_TIMESTAMP(), :service_name) "
-                                    "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
-                                    soci::use(hostname), soci::use(serviceName));
+                sql.prepare
+                        << "INSERT INTO t_hosts (hostname, beat, service_name) "
+                           "    VALUES (:host, UTC_TIMESTAMP(), :service_name) "
+                           "ON DUPLICATE KEY "
+                           "    UPDATE beat = UTC_TIMESTAMP()",
+                        soci::use(hostname),
+                        soci::use(serviceName)
+        );
         stmt1.execute(true);
 
         // Will be replaced by a simple count later on since we get the total number of hosts
@@ -2847,25 +2750,28 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
         // This instance index
         // Mind that MySQL does not have rownum
-        soci::rowset<soci::row> rsHosts = (sql.prepare <<
-                                             "SELECT (SELECT count(hostname) FROM t_hosts WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name) as totalhosts, "
-                                             "hostname FROM t_hosts "
-                                             "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) and service_name = :service_name "
-                                             "ORDER BY hostname",
-                                             soci::use(heartBeatGraceInterval), soci::use(serviceName), soci::use(heartBeatGraceInterval), soci::use(serviceName)
-                                            );
-        soci::rowset<soci::row>::const_iterator i;
+        soci::rowset<soci::row> rsHosts = (
+                sql.prepare
+                        << "SELECT ("
+                           "    SELECT COUNT(hostname) FROM t_hosts "
+                           "    WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) AND service_name = :service_name"
+                           ") AS totalhosts, hostname FROM t_hosts "
+                           "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval :grace second) AND service_name = :service_name "
+                           "ORDER BY hostname",
+                        soci::use(heartBeatGraceInterval),
+                        soci::use(serviceName),
+                        soci::use(heartBeatGraceInterval),
+                        soci::use(serviceName)
+        );
 
         *count = 0;
+        soci::rowset<soci::row>::const_iterator i;
+        for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index)) {
+            soci::row const& row = *i;
 
-        for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
-        {
-        soci::row const& row = *i;
-            if (row.get<std::string>(1) == hostname)
-            {
-            *count = row.get<unsigned>(0);
-            std::string& host = hostname;
-            break;
+            if (row.get<std::string>(1) == hostname) {
+                *count = row.get<unsigned>(0);
+                break;
             }
         }
 
@@ -2885,15 +2791,17 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
         this->hashSegment.start = *start;
         this->hashSegment.end   = *end;
 
-        if(hashSegment.start == 0)
+        if (hashSegment.start == 0)
         {
             // Delete old entries
             sql.begin();
-            soci::statement stmt3 = (sql.prepare <<
-                                     "DELETE FROM t_hosts "
-                                     "WHERE "
-                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) AND drain = 0) OR "
-                                     " (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 15 DAY)) ");
+            soci::statement stmt3 = (
+                    sql.prepare <<
+                                "DELETE FROM t_hosts "
+                                "WHERE "
+                                "  (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) AND drain = 0) OR "
+                                "  (beat <= DATE_SUB(UTC_TIMESTAMP(), interval 15 DAY))"
+            );
             stmt3.execute(true);
             sql.commit();
         }
@@ -3567,7 +3475,7 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
 }
 
 
-void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string& qosOp, bool matchHost)
+void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string& qosOp, bool matchHost)
 {
     soci::session sql(*connectionPool);
 
@@ -3596,7 +3504,7 @@ void MySqlAPI::getFilesForQosTransition(std::vector<QosTransitionOperation> &qos
                 std::string target_qos = r.get<std::string>("target_qos");
                 std::string token = r.get<std::string>("proxy").substr(0, r.get<std::string>("proxy").find(":"));
 
-                qosTranstionOps.emplace_back(job_id, file_id, dest_surl, target_qos, token);
+                qosTransitionOps.emplace_back(job_id, file_id, dest_surl, target_qos, token);
             }
     }
     catch (std::exception& e)
@@ -3621,7 +3529,8 @@ bool MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
         sql.begin();
 
         // Get the current file state
-        sql << "SELECT file_state FROM t_file WHERE file_id = :fileId",
+        sql << "SELECT file_state FROM t_file WHERE job_id = :jobId AND file_id = :fileId",
+            soci::use(jobId),
             soci::use(fileId),
             soci::into(storedState);
 
@@ -3631,8 +3540,13 @@ bool MySqlAPI::updateFileStateToQosRequestSubmitted(const std::string& jobId, ui
         }
 
         sql << "UPDATE t_file SET "
-               "file_state = 'QOS_REQUEST_SUBMITTED',  start_time = UTC_TIMESTAMP(), transfer_host = :hostname "
-               "WHERE file_id = :fileId", soci::use(hostname), soci::use(fileId);
+               "    file_state = 'QOS_REQUEST_SUBMITTED', "
+               "    start_time = UTC_TIMESTAMP(), "
+               "    transfer_host = :hostname "
+               "WHERE job_id = :jobId AND file_id = :fileId",
+               soci::use(hostname),
+               soci::use(jobId),
+               soci::use(fileId);
         sql.commit();
     }
     catch (std::exception& e)

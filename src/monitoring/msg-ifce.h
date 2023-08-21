@@ -79,7 +79,7 @@ public:
     uint64_t    timestamp_checksum_source_ended;
     uint64_t    timestamp_checksum_dest_started;
     uint64_t    timestamp_checksum_dest_ended;
-    unsigned    transfer_timeout;
+    uint64_t    transfer_timeout;
     int         checksum_timeout;
     int         transfer_error_code;
     std::string transfer_error_scope; //source/destination
@@ -88,9 +88,9 @@ public:
     std::string transfer_error_category; //permission, etc
     std::string final_transfer_state; //OK/Error/Abort
     int         final_transfer_state_flag; // 1/0/-1
-    off_t       total_bytes_transferred; // (this will include the info retrieved from the performance markers)
-    int         number_of_streams;
-    unsigned    tcp_buffer_size;
+    uint64_t    total_bytes_transferred; // (this will include the info retrieved from the performance markers)
+    unsigned    number_of_streams;
+    uint64_t    tcp_buffer_size;
     unsigned    block_size;
     off_t       file_size;
     double      throughput_bps;
@@ -144,8 +144,10 @@ public:
     int activeCount;
     int queueSize;
     double ema;
-    double filesizeAvg, filesizeStdDev;
+    double filesizeAvg;
+    double filesizeStdDev;
     int connections;
+    int diff;
 
     std::string rationale;
 };
