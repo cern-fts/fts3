@@ -19,17 +19,14 @@
  */
 
 #include <memory>
+#include <json/json.h>
+#include <decaf/lang/System.h>
+
 #include "MsgProducer.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
-
-#include "config/ServerConfig.h"
 #include "common/ConcurrentQueue.h"
-#include "common/Exceptions.h"
-
-#include <cajun/json/reader.h>
-#include <cajun/json/writer.h>
-#include <decaf/lang/System.h>
+#include "config/ServerConfig.h"
 
 using namespace fts3::config;
 
@@ -78,18 +75,18 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
     std::string type = rawMsg.substr(0, 2);
 
     // Modify on the fly to add the endpoint
+    Json::Value msg;
     std::istringstream input(rawMsg.substr(2));
-    json::Object msg;
-    json::Reader::Read(msg, input);
+    input >> msg;
 
-    msg["endpnt"] = json::String(FTSEndpoint);
+    msg["endpnt"] = FTSEndpoint;
 
     if (brokerConfig.PublishFQDN()) {
-        msg["fqdn"] = json::String(FQDN);
+        msg["fqdn"] = FQDN;
     }
 
     std::ostringstream output;
-    json::Writer::Write(msg, output);
+    output << msg;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << type << " " << output.str() << commit;
     // Add EOT character
@@ -97,58 +94,46 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
 
     // Create message and set VO attribute if available
     std::unique_ptr<cms::TextMessage> message(session->createTextMessage(output.str()));
-    auto iVo = msg.Find("vo_name");
-    if (iVo != msg.End()) {
-        message->setStringProperty("vo", json::String(iVo->element).Value());
+
+    if (msg.isMember("vo_name")) {
+        message->setStringProperty("vo", msg.get("vo_name", "").asString());
     }
 
     // Route
     if (type == "ST") {
         producer_transfer_started->send(message.get());
+        auto transferId = msg.get("transfer_id", "").asString();
 
-        auto transferId = msg.Find("transfer_id");
-        if (transferId != msg.End()) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message: "
-                << json::String(transferId->element).Value()
-                << commit;
+        if (!transferId.empty()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message: " << transferId << commit;
         }
-    }
-    else if (type == "CO") {
+    } else if (type == "CO") {
         producer_transfer_completed->send(message.get());
-        auto transferId = msg.Find("tr_id");
-        if (transferId != msg.End()) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Completion message: "
-                << json::String(transferId->element).Value()
-                << commit;
+        auto transferId = msg.get("tr_id", "").asString();
+
+        if (!transferId.empty()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Completion message: " << transferId << commit;
         }
-    }
-    else if (type == "SS") {
+    } else if (type == "SS") {
         producer_transfer_state->send(message.get());
+        auto state = msg.get("file_state", "INVALID").asString();
+        auto jobId = msg.get("job_id", "").asString();
 
-        auto state = msg.Find("file_state");
-        auto jobId = msg.Find("job_id");
-        auto fileId = msg.Find("file_id");
-        if (jobId != msg.End() && fileId != msg.End()) {
+        if (!jobId.empty() && msg.isMember("file_id")) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "State change: "
-                << json::String(state->element).Value() << " "
-                << json::String(jobId->element).Value() << "/"
-                << uint64_t(json::Number(fileId->element).Value())
+                << state << " " << jobId << "/" << msg.get("file_id", 0).asUInt64()
                 << commit;
         }
-    }
-    else if (type == "OP") {
+    } else if (type == "OP") {
         producer_optimizer->send(message.get());
-        auto sourceSe = msg.Find("source_se");
-        auto destSe = msg.Find("dest_se");
+        auto sourceSe = msg.get("source_se", "").asString();
+        auto destSe = msg.get("dest_se", "").asString();
 
-        if (sourceSe != msg.End() && destSe != msg.End()) {
+        if (!sourceSe.empty() && !destSe.empty()) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer update: "
-                << json::String(sourceSe->element).Value() << " => "
-                << json::String(destSe->element).Value()
-                << commit;
+                << sourceSe << " => " << destSe << commit;
         }
-    }
-    else {
+    } else {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Dropping unknown message type: " << type << commit;
     }
 }

@@ -24,7 +24,6 @@ BuildRequires:  boost-devel
 BuildRequires: %{devtoolset}
 %endif
 
-BuildRequires:  cajun-jsonapi-devel
 BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
@@ -41,6 +40,7 @@ BuildRequires:  voms-devel
 BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 BuildRequires:  systemd
 BuildRequires:  cppzmq-devel
+BuildRequires:  jsoncpp-devel
 Requires(pre):  shadow-utils
 
 %description
@@ -67,6 +67,7 @@ Requires: gfal2-plugin-http%{?_isa} >= 2.21.5
 Requires: gfal2-plugin-srm%{?_isa} >= 2.21.5
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
+Requires: jsoncpp
 
 Requires(post):   systemd
 Requires(preun):  systemd
