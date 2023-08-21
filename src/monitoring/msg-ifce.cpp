@@ -174,7 +174,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["timestamp_chk_src_ended"] = (Json::Value::UInt64) tr_completed.timestamp_checksum_source_ended;
     message["timestamp_checksum_dest_st"] = (Json::Value::UInt64) tr_completed.timestamp_checksum_dest_started;
     message["timestamp_checksum_dest_ended"] = (Json::Value::UInt64) tr_completed.timestamp_checksum_dest_ended;
-    message["t_timeout"] = (Json::Value::UInt) tr_completed.transfer_timeout;
+    message["t_timeout"] = (Json::Value::UInt64) tr_completed.transfer_timeout;
     message["chk_timeout"] = (Json::Value::Int) tr_completed.checksum_timeout;
     message["t_error_code"] = (Json::Value::Int) tr_completed.transfer_error_code;
     message["tr_error_scope"] = tr_completed.transfer_error_scope;
@@ -182,10 +182,10 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["tr_error_category"] = tr_completed.transfer_error_category;
     message["t_final_transfer_state"] = tr_completed.final_transfer_state;
     message["t_final_transfer_state_flag"] = (Json::Value::Int) tr_completed.final_transfer_state_flag;
-    message["tr_bt_transfered"] = (Json::Value::Int64) tr_completed.total_bytes_transferred;
-    message["nstreams"] = (Json::Value::Int) tr_completed.number_of_streams;
-    message["buf_size"] = (Json::Value::UInt) tr_completed.tcp_buffer_size;
-    message["tcp_buf_size"] = (Json::Value::UInt) tr_completed.tcp_buffer_size;
+    message["tr_bt_transfered"] = (Json::Value::UInt64) tr_completed.total_bytes_transferred;
+    message["nstreams"] = (Json::Value::UInt) tr_completed.number_of_streams;
+    message["buf_size"] = (Json::Value::UInt64) tr_completed.tcp_buffer_size;
+    message["tcp_buf_size"] = (Json::Value::UInt64) tr_completed.tcp_buffer_size;
     message["block_size"] = (Json::Value::UInt) tr_completed.block_size;
     // Prepare to drop "f_size" field in the future
     message["f_size"] = (Json::Value::Int64) tr_completed.file_size;
