@@ -460,8 +460,8 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "SigKillDelay",
-        po::value<std::string>( &(_vars["SigKillDelay"]) )->default_value("500"),
-        "In milliseconds, delay between graceful SIGTERM and SIGKILL"
+        po::value<std::string>( &(_vars["SigKillDelay"]) )->default_value("2000"),
+        "In milliseconds, delay between graceful SIGTERM and SIGKILL when terminating UrlCopyProcess"
     )
     (   "AutoSessionReuse",
     	po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),

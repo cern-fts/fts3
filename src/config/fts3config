@@ -156,6 +156,10 @@ LogLevel=INFO
 # In seconds, timeout for stalled "fts_url_copy" processes
 #CheckStalledTimeout = 900
 
+# In milliseconds, delay between graceful SIGTERM and SIGKILL
+# when terminating UrlCopyProcess (default: 2000ms)
+#SigKillDelay=2000
+
 # Enable or disable job priorities (1 = fixed, 0 = follow job priorities)
 # By default (value = 0), it honors the user-specified priorities
 #UseFixedJobPriority = 0
