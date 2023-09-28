@@ -612,8 +612,10 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "FROM t_file "
                    "WHERE "
                    "    vo_name=:voName AND source_se=:source AND dest_se=:dest AND "
-                   "    file_state = 'SUBMITTED'",
+                   "    file_state = 'SUBMITTED' AND "
+                   "    hashed_id BETWEEN :hStart AND :hEnd",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
+                   soci::use(hashSegment.start), soci::use(hashSegment.end),
                    soci::into(maxPriority, isMaxPriorityNull);
                 if (isMaxPriorityNull == soci::i_null) {
                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
