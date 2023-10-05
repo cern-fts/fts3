@@ -154,8 +154,8 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.checksumMode = reference.checksumMode;
     setChecksum(t, strArray[3]);
     t.userFileSize = boost::lexical_cast<uint64_t>(strArray[4]);
-    t.fileMetadata = strArray[5];
-    t.transferMetadata = strArray[6];
+    t.fileMetadata = strArray[5] == "x" ? "" : strArray[5];
+    t.transferMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
     t.tokenBringOnline = strArray[7];
     if (t.tokenBringOnline == "x") {
         t.tokenBringOnline.clear();

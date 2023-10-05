@@ -228,9 +228,7 @@ void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_tokens)
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
-    setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
-    setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
 
     switch (transfer.jobType) {
         case Job::kTypeSessionReuse:
@@ -297,6 +295,8 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         if (transfer.userFilesize > 0)
             setOption("user-filesize", transfer.userFilesize);
         setOption("token-bringonline", transfer.bringOnlineToken);
+        setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
+        setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
     }
     else {
         setOption("bulk-file", msgDir + "/" + transfer.jobId);
