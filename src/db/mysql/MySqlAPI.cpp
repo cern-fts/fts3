@@ -135,7 +135,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {8, 2};
+    static const unsigned expect[] = {9, 0};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
