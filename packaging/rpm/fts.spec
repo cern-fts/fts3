@@ -32,10 +32,8 @@ BuildRequires:  gfal2-devel >= 2.22.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
-BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  protobuf-devel
-BuildRequires:  pugixml-devel
 BuildRequires:  voms-devel
 BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 BuildRequires:  systemd
@@ -93,35 +91,12 @@ server. This includes among others: configuration
 parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
-%package infosys
-Summary:    File Transfer Service version 3 infosys integration
-Requires:   bdii
-Requires:   fts-server%{?_isa} = %{version}-%{release}
-Requires:   glue-schema
-
-Requires(post):   systemd
-Requires(preun):  systemd
-Requires(postun): systemd
-
-%description infosys
-FTS infosys integration
-
 %package msg
 Summary:    File Transfer Service version 3 messaging integration
 Requires:   fts-server%{?_isa} = %{version}-%{release}
 
 %description msg
 FTS messaging integration
-
-%package client
-Summary:    File Transfer Service version 3 client
-Requires:   fts-libs%{?_isa} = %{version}-%{release}
-
-%description client
-A set of command line tools for submitting, querying
-and canceling transfer-jobs to the FTS service. Additionally,
-there is a CLI that can be used for configuration and
-administering purposes.
 
 %package server-selinux
 Summary:    SELinux support for fts-server
@@ -176,7 +151,7 @@ fi
 source /opt/rh/%{devtoolset}/enable
 %endif
 
-%cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
+%cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX='' \
@@ -231,10 +206,8 @@ exit 0
 %preun server
 if [ $1 -eq 0 ] ; then
   /bin/systemctl stop fts-server.service > /dev/null 2>&1 || :
-  /bin/systemctl stop fts-bringonline.service > /dev/null 2>&1 || :
   /bin/systemctl stop fts-records-cleaner.service > /dev/null 2>&1 || :
   /bin/systemctl --no-reload disable fts-server.service > /dev/null 2>&1 || :
-  /bin/systemctl --no-reload disable fts-bringonline.service > /dev/null 2>&1 || :
   /bin/systemctl --no-reload disable fts-records-cleaner.service > /dev/null 2>&1 || :
 fi
 exit 0
@@ -242,30 +215,7 @@ exit 0
 %postun server
 if [ "$1" -ge "1" ] ; then
   /bin/systemctl try-restart fts-server.service > /dev/null 2>&1 || :
-  /bin/systemctl try-restart fts-bringonline.service > /dev/null 2>&1 || :
   /bin/systemctl try-restart fts-records-cleaner.service > /dev/null 2>&1 || :
-fi
-exit 0
-
-# Infosys scriptlets
-%post infosys
-/bin/systemctl daemon-reload > /dev/null 2>&1 || :
-exit 0
-
-%preun infosys
-if [ $1 -eq 0 ] ; then
-  /bin/systemctl stop fts-info-publisher.service > /dev/null 2>&1 || :
-  /bin/systemctl stop fts-bdii-cache-updater.service > /dev/null 2>&1 || :
-  /bin/systemctl --no-reload disable fts-info-publisher.service > /dev/null 2>&1 || :
-  /bin/systemctl --no-reload disable fts-bdii-cache-updater.service > /dev/null 2>&1 || :
-fi
-exit 0
-
-%postun infosys
-if [ "$1" -ge "1" ] ; then
-  /bin/systemctl try-restart fts-info-publisher.service > /dev/null 2>&1 || :
-  /bin/systemctl stop fts-myosg-updater.service > /dev/null 2>&1 || :
-  /bin/systemctl try-restart fts-bdii-cache-updater.service > /dev/null 2>&1 || :
 fi
 exit 0
 
@@ -321,7 +271,6 @@ fi
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
 %dir %attr(0755,fts3,root) %{_sysconfdir}/fts3
 
-%{_sbindir}/fts_bringonline
 %{_sbindir}/fts_qos
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_server
@@ -332,34 +281,18 @@ fi
 %{_datadir}/fts/fts-database-upgrade.py*
 
 %attr(0644,root,root) %{_unitdir}/fts-server.service
-%attr(0644,root,root) %{_unitdir}/fts-bringonline.service
 %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %attr(0644,root,root) %{_unitdir}/fts-qos.service
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-server
-%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-bringonline
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
-%{_mandir}/man8/fts_bringonline.8.gz
 %{_mandir}/man8/fts_qos.8.gz
 %{_mandir}/man8/fts_db_cleaner.8.gz
 %{_mandir}/man8/fts_server.8.gz
 %{_mandir}/man8/fts_url_copy.8.gz
-
-%files infosys
-%{_sbindir}/fts_bdii_cache_updater
-%{_sbindir}/fts_info_publisher
-%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
-
-%attr(0644,root,root) %{_unitdir}/fts-info-publisher.service
-%attr(0644,root,root) %{_unitdir}/fts-bdii-cache-updater.service
-
-%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
-%attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
-%{_mandir}/man8/fts_bdii_cache_updater.8.gz
-%{_mandir}/man8/fts_info_publisher.8.gz
 
 %files msg
 %{_sbindir}/fts_msg_bulk
@@ -369,19 +302,13 @@ fi
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %{_mandir}/man8/fts_msg_bulk.8.gz
 
-%files client
-%{_bindir}/fts-*
-%{_mandir}/man1/fts*
-
 %files libs
 %{_libdir}/libfts_common.so*
 %{_libdir}/libfts_config.so*
-%{_libdir}/libfts_infosys.so*
 %{_libdir}/libfts_db_generic.so*
 %{_libdir}/libfts_msg_ifce.so*
 %{_libdir}/libfts_proxy.so*
 %{_libdir}/libfts_server_lib.so*
-%{_libdir}/libfts_cli_common.so*
 %{_libdir}/libfts_msg_bus.so*
 %{_libdir}/libfts_url_copy.so*
 %doc README.md
