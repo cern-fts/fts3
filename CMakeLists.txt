@@ -44,10 +44,6 @@ option(ALLBUILD "Build fts all including db plug-ins" OFF)
 
 include(CMakeDependentOption REQUIRED)
 cmake_dependent_option(
-    ORACLEBUILD "Build oracle plug-in" OFF
-    "NOT ALLBUILD" ON
-)
-cmake_dependent_option(
     MYSQLBUILD "Build for EPEL" OFF
     "NOT ALLBUILD" ON
 )
