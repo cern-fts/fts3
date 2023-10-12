@@ -60,8 +60,3 @@ if(SERVERBUILD)
         add_subdirectory(bdii-cache-update)
     endif(PUGIXML_FOUND)
 endif()
-
-# Used only by the client
-if(CLIENTBUILD)
-    add_subdirectory(cli)
-endif()
