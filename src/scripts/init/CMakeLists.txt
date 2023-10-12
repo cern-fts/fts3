@@ -24,10 +24,6 @@ if (SYSTEMD_INSTALL_DIR)
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
 
-    install(FILES fts-bringonline.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-
     install(FILES fts-msg-bulk.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
@@ -44,12 +40,6 @@ else ()
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
         PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
         RENAME fts-server
-    )
-
-    install(FILES fts-bringonline.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-        RENAME fts-bringonline
     )
 
     install(FILES fts-msg-bulk.initd
