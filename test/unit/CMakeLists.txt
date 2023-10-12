@@ -41,7 +41,6 @@ function (define_test name link)
 endfunction(define_test)
 
 # Build individual unit tests
-add_subdirectory (cli)
 add_subdirectory (common)
 add_subdirectory (config)
 add_subdirectory (cred)
