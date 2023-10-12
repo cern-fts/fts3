@@ -27,12 +27,6 @@ include_directories(
 find_package (GLIB2 REQUIRED)
 include_directories(${GLIB2_INCLUDE_DIRS})
 
-# Required by bdii-cache-update and conditionally by infosys
-find_package(PugiXML)
-if(NOT PUGIXML_FOUND)
-    add_definitions(-DWITHOUT_PUGI)
-endif(NOT PUGIXML_FOUND)
-
 # Used by all submodules
 add_subdirectory(common)
 
@@ -45,18 +39,11 @@ endif()
 
 # Used only by the server
 if(SERVERBUILD)
-    add_subdirectory(infosys)
     add_subdirectory(cred)
     add_subdirectory(server)
-    add_subdirectory(bringonline-daemon)
     add_subdirectory(monitoring)
     add_subdirectory(url-copy)
     add_subdirectory(scripts)
     add_subdirectory(dbClear)
-    add_subdirectory(glue2-publisher)
     add_subdirectory(qos-daemon)
-
-    if(PUGIXML_FOUND)
-        add_subdirectory(bdii-cache-update)
-    endif(PUGIXML_FOUND)
 endif()
