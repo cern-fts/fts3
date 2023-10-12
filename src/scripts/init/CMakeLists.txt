@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 # Sytemd services
 if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-server.service

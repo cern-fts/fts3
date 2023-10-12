@@ -18,9 +18,6 @@
 # limitations under the License.
 #
 
-
-cmake_minimum_required(VERSION 2.8)
-
 find_package(MySQL REQUIRED)
 
 include_directories (${MYSQL_INCLUDE_DIR})

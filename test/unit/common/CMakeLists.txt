@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 define_test (ConcurrentQueue fts_common)
 define_test (DaemonTools fts_common)
 define_test (Logger fts_common)

@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 # Set this directory as an include, since it is the root for the source
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
