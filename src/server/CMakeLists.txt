@@ -65,7 +65,6 @@ target_link_libraries(fts_server
     fts_server_lib
     fts_config
     fts_common
-    fts_infosys
 	fts_msg_ifce
     ${Boost_LIBRARIES}
 )
