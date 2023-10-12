@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 find_package (GLOBUS)
 include_directories (${GLOBUS_INCLUDE_DIRS})
 

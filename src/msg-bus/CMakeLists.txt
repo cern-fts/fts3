@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 # Find boost
 find_package (Boost COMPONENTS filesystem REQUIRED)
 find_package (DIRQ REQUIRED)

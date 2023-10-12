@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 define_test (CfgParser fts_cli_common)
 define_test (CliBaseTest fts_cli_common)
 define_test (DnCliTest fts_cli_common)

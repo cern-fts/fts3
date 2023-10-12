@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 # Dependencies
 find_package(GFAL2)
 find_package(GLIB2)

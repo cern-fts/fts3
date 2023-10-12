@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 set(fts_bdii_cache_updater_SOURCES updater.cpp)
 
 # Extra boost package

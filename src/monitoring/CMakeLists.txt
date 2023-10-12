@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system)
 find_package(APR)
