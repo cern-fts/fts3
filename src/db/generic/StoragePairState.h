@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-//
-// Created by aalvarez on 11/20/15.
-//
-
 #pragma once
 #ifndef STORAGEPAIRSTATE_H
 #define STORAGEPAIRSTATE_H
