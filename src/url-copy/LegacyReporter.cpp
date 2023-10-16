@@ -305,6 +305,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.total_bytes_transferred = transfer.transferredBytes;
     completed.number_of_streams = params.getNumberOfStreams();
     completed.tcp_buffer_size = params.getTcpBuffersize();
+    completed.scitag = transfer.scitag;
     completed.file_size = transfer.fileSize;
 
     completed.timestamp_transfer_started = transfer.stats.transfer.start;
