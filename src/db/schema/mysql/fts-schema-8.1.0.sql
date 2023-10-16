@@ -267,7 +267,7 @@ CREATE TABLE `t_file` (
   `file_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `file_index` int DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','FORCE_START','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
+  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
@@ -295,7 +295,7 @@ CREATE TABLE `t_file` (
   `log_file` varchar(2048) DEFAULT NULL,
   `t_log_file_debug` int DEFAULT NULL,
   `hashed_id` int unsigned DEFAULT '0',
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `activity` varchar(255) DEFAULT 'default',
   `transferred` bigint DEFAULT '0',
   `priority` int DEFAULT '3',
@@ -309,10 +309,9 @@ CREATE TABLE `t_file` (
   KEY `idx_job_id` (`job_id`),
   KEY `idx_activity` (`vo_name`,`activity`),
   KEY `idx_link_state_vo` (`source_se`,`dest_se`,`file_state`,`vo_name`),
+  KEY `idx_finish_time` (`finish_time`),
   KEY `idx_staging` (`file_state`,`vo_name`,`source_se`),
   KEY `idx_state_host` (`file_state`,`transfer_host`),
-  KEY `idx_finish_time` (`finish_time`),
-  KEY `idx_transfer_host_finish_time` (`transfer_host`,`finish_time`),
   KEY `idx_state` (`file_state`),
   KEY `idx_host` (`transfer_host`),
   CONSTRAINT `job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -331,7 +330,7 @@ CREATE TABLE `t_file_backup` (
   `file_id` bigint unsigned NOT NULL DEFAULT '0',
   `file_index` int DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
+  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
@@ -359,11 +358,14 @@ CREATE TABLE `t_file_backup` (
   `log_file` varchar(2048) DEFAULT NULL,
   `t_log_file_debug` int DEFAULT NULL,
   `hashed_id` int unsigned DEFAULT '0',
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `activity` varchar(255) DEFAULT 'default',
   `transferred` bigint DEFAULT '0',
+  `priority` int DEFAULT '3',
+  `dest_surl_uuid` char(36) DEFAULT NULL,
   `archive_start_time` timestamp NULL DEFAULT NULL,
   `archive_finish_time` timestamp NULL DEFAULT NULL,
+  `staging_metadata` text,
   `archive_metadata` text
 ) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -434,7 +436,7 @@ CREATE TABLE `t_job` (
   `dest_se` varchar(255) DEFAULT NULL,
   `user_dn` varchar(1024) DEFAULT NULL,
   `cred_id` char(16) DEFAULT NULL,
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `reason` varchar(2048) DEFAULT NULL,
   `submit_time` timestamp NULL DEFAULT NULL,
   `priority` int DEFAULT '3',
@@ -450,8 +452,8 @@ CREATE TABLE `t_job` (
   `bring_online` int DEFAULT NULL,
   `retry` int DEFAULT '0',
   `retry_delay` int DEFAULT '0',
-  `job_metadata` text,
   `target_qos` varchar(255) DEFAULT NULL,
+  `job_metadata` text,
   `archive_timeout` int DEFAULT NULL,
   `dst_file_report` char(1) DEFAULT NULL,
   `os_project_id` varchar(512) DEFAULT NULL,
@@ -480,7 +482,7 @@ CREATE TABLE `t_job_backup` (
   `dest_se` varchar(255) DEFAULT NULL,
   `user_dn` varchar(1024) DEFAULT NULL,
   `cred_id` char(16) DEFAULT NULL,
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `reason` varchar(2048) DEFAULT NULL,
   `submit_time` timestamp NULL DEFAULT NULL,
   `priority` int DEFAULT '3',
@@ -496,10 +498,11 @@ CREATE TABLE `t_job_backup` (
   `bring_online` int DEFAULT NULL,
   `retry` int DEFAULT '0',
   `retry_delay` int DEFAULT '0',
-  `job_metadata` text,
   `target_qos` varchar(255) DEFAULT NULL,
+  `job_metadata` text,
   `archive_timeout` int DEFAULT NULL,
-  `dst_file_report` char(1) DEFAULT NULL
+  `dst_file_report` char(1) DEFAULT NULL,
+  `os_project_id` varchar(512) DEFAULT NULL
 ) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -698,8 +701,8 @@ CREATE TABLE `t_server_config` (
   `sec_per_mb` int DEFAULT '0',
   `global_timeout` int DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL,
-  `show_user_dn` varchar(3) DEFAULT NULL,
-  `no_streaming` varchar(3) DEFAULT NULL
+  `no_streaming` varchar(3) DEFAULT NULL,
+  `show_user_dn` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 INSERT INTO t_server_config (vo_name)
