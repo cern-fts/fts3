@@ -154,12 +154,11 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.checksumMode = reference.checksumMode;
     setChecksum(t, strArray[3]);
     t.userFileSize = boost::lexical_cast<uint64_t>(strArray[4]);
-    t.fileMetadata = strArray[5];
-    t.transferMetadata = strArray[6];
-    t.tokenBringOnline = strArray[7];
-    if (t.tokenBringOnline == "x") {
-        t.tokenBringOnline.clear();
-    }
+    t.fileMetadata = strArray[5] == "x" ? "" : strArray[5];
+    // Must deserialize metadata string here, as value will be used in Gfal copy
+    // Other metadata fields deserialize in the LegacyReporter
+    t.transferMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
+    t.tokenBringOnline = strArray[7] == "x" ? "" : strArray[7];
     t.sourceTokenDescription = reference.sourceTokenDescription;
     t.destTokenDescription = reference.destTokenDescription;
     t.sourceTokenIssuer = reference.sourceTokenIssuer;
