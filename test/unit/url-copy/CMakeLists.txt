@@ -26,3 +26,4 @@ include_directories (
 
 define_test (AutoInterruptThread fts_url_copy_lib)
 define_test (UrlCopyProcess fts_url_copy_lib)
+define_test (DestFileReport fts_url_copy_lib)

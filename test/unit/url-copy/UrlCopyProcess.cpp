@@ -16,40 +16,9 @@
 
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/test_tools.hpp>
-#include "url-copy/UrlCopyProcess.h"
-
+#include "UrlCopyFixture.h"
 
 BOOST_AUTO_TEST_SUITE(url_copy)
-
-
-class UrlCopyFixture: public Reporter {
-protected:
-    UrlCopyOpts opts;
-    std::list<Transfer> completedMsgs, startMsgs, pingMsgs, protoMsgs;
-
-public:
-    UrlCopyFixture() {
-        opts.logToStderr = false;
-        opts.logDir = "/tmp/fts3-tests";
-    }
-
-    void sendTransferStart(const Transfer &t, Gfal2TransferParams&) {
-        startMsgs.push_back(t);
-    }
-
-    void sendProtocol(const Transfer &t, Gfal2TransferParams&) {
-        protoMsgs.push_back(t);
-    }
-
-    void sendTransferCompleted(const Transfer &t, Gfal2TransferParams&) {
-        completedMsgs.push_back(t);
-    }
-
-    void sendPing(Transfer &t) {
-        pingMsgs.push_back(t);
-    }
-};
-
 
 BOOST_FIXTURE_TEST_CASE (simpleTransfer, UrlCopyFixture)
 {
