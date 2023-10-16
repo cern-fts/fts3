@@ -248,6 +248,14 @@ public:
         }
     }
 
+    void setScitag(const uint scitag)
+    {
+        GError *error = NULL;
+        if (gfalt_set_scitag(params, scitag, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     void addEventCallback(gfalt_event_func callback, void *udata)
     {
         GError *error = NULL;

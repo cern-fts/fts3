@@ -50,6 +50,7 @@ const option UrlCopyOpts::long_options[] =
     {"strict-copy",       no_argument,       0, 302},
     {"dst-file-report",   no_argument,       0, 303},
     {"3rd-party-turl",    required_argument, 0, 304},
+    {"scitag",            required_argument, 0, 305},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -142,7 +143,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
 {
     typedef boost::tokenizer <boost::char_separator<char>> tokenizer;
 
-    std::string strArray[8];
+    std::string strArray[9];
     tokenizer tokens(line, boost::char_separator<char>(" "));
     std::copy(tokens.begin(), tokens.end(), strArray);
 
@@ -159,6 +160,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     // Other metadata fields deserialize in the LegacyReporter
     t.transferMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
     t.tokenBringOnline = strArray[7] == "x" ? "" : strArray[7];
+    t.scitag = boost::lexical_cast<unsigned>(strArray[8]);
     t.sourceTokenDescription = reference.sourceTokenDescription;
     t.destTokenDescription = reference.destTokenDescription;
     t.sourceTokenIssuer = reference.sourceTokenIssuer;
@@ -305,6 +307,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 304:
                     thirdPartyTURL = boost::lexical_cast<std::string>(optarg);
+                    break;
+                case 305:
+                    referenceTransfer.scitag = boost::lexical_cast<unsigned>(optarg);
                     break;
 
                 case 400:
