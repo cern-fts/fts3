@@ -200,7 +200,7 @@ void MySqlAPI::init(const std::string& username, const std::string& password,
         std::string connStr = connParams.str();
 
         // Connect
-        static const my_bool reconnect = 1;
+        static const bool reconnect = 1;
 
         poolSize = (size_t) pooledConn;
 
