@@ -1,6 +1,7 @@
+syntax = "proto2";
+
 package fts3.events;
 
-import "Agent.proto";
 import "Interval.proto";
 import "EndpointInfo.proto";
 
