@@ -1,8 +1,8 @@
+syntax = "proto2";
+
 package fts3.events;
 
-import "Agent.proto";
 import "EndpointInfo.proto";
-import "ProtocolInfo.proto";
 
 message TransferStart {
     required uint64 timestamp = 1;
