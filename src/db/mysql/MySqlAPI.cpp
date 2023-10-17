@@ -135,7 +135,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {8, 1};
+    static const unsigned expect[] = {8, 2};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
@@ -643,7 +643,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                       "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                       "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                       "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata,"
-                      "       f.file_index, f.bringonline_token, "
+                      "       f.file_index, f.bringonline_token, f.scitag, "
                       "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
                       " FROM t_file f USE INDEX(idx_link_state_vo), t_job j "
                       " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND "
@@ -733,7 +733,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                                          "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, "
-                                         "       f.file_index, f.bringonline_token, "
+                                         "       f.file_index, f.bringonline_token, f.scitag, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
                                          " FROM t_file f USE INDEX(idx_link_state_vo), t_job j "
                                          " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
@@ -1160,7 +1160,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, f.file_index, "
-                        "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
+                        "       f.bringonline_token, f.scitag, f.source_se, f.dest_se, f.selection_strategy, "
                         "       j.internal_job_params, j.job_type "
                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
                         " WHERE j.job_id = :job_id AND "
@@ -1805,7 +1805,8 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
                                          "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
                                          "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                         "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                         "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, "
+                                         "       f.file_index, f.bringonline_token, f.scitag, "
                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.job_type "
                                          " FROM t_file f USE INDEX(idx_state), t_job j "
                                          " WHERE f.job_id = j.job_id and f.file_state = 'FORCE_START'"

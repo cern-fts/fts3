@@ -137,10 +137,16 @@ std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
         if (checksum.empty())
             checksum = "x";
 
-        line << std::fixed << it->fileId << " " << it->sourceSurl << " "
-                << it->destSurl << " " << checksum << " "
-                << boost::lexical_cast<long long>(it->userFilesize) << " "
-                << fileMetadata << " " << archiveMetadata << " " << bringOnlineToken;
+        line << std::fixed
+             << it->fileId << " "
+             << it->sourceSurl << " "
+             << it->destSurl << " "
+             << checksum << " "
+             << boost::lexical_cast<long long>(it->userFilesize) << " "
+             << fileMetadata << " "
+             << archiveMetadata << " "
+             << bringOnlineToken << " "
+             << it->scitag;
         urls.push_back(line.str());
         line.str(std::string());
     }

@@ -242,13 +242,14 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
             break;
     }
 
-    // setOption("source-site", std::string());
-    // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
-    if (!transfer.checksumMode.empty())
-        setOption("checksum-mode", transfer.checksumMode);
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", transfer.overwriteFlag == "Y");
+
+    if (!transfer.checksumMode.empty()) {
+        setOption("checksum-mode", transfer.checksumMode);
+    }
+
     if (transfer.archiveTimeout > 0) {
         setFlag("archiving", true);
         setFlag("dst-file-report", !transfer.dstFileReport.empty());
@@ -292,8 +293,12 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setOption("source", transfer.sourceSurl);
         setOption("destination", transfer.destSurl);
         setOption("checksum", transfer.checksum);
-        if (transfer.userFilesize > 0)
+        if (transfer.userFilesize > 0) {
             setOption("user-filesize", transfer.userFilesize);
+        }
+        if (transfer.scitag > 0) {
+            setOption("scitag", transfer.scitag);
+        }
         setOption("token-bringonline", transfer.bringOnlineToken);
         setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
         setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));

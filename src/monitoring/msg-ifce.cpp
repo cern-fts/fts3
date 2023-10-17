@@ -190,6 +190,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["tcp_buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["block_size"] = json::Number(tr_completed.block_size);
+    message["scitag"] = json::Number(tr_completed.scitag);
     // Prepare to drop "f_size" field in the future
     message["f_size"] = json::Number(tr_completed.file_size);
     message["file_size"] = json::Number(tr_completed.file_size);

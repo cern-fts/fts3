@@ -116,6 +116,7 @@ public:
     std::string destTokenDescription;
     std::string sourceTokenIssuer;
     std::string destTokenIssuer;
+    unsigned    scitag;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
     bool        isMultihopJob;
