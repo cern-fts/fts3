@@ -215,7 +215,7 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 
 void UrlCopyCmd::setAuthMethod(const std::string &method)
 {
-    setOption("authMethod", method);
+    setOption("auth-method", method);
 }
 
 

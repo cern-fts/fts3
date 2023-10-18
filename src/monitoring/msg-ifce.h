@@ -129,6 +129,7 @@ public:
     std::string ipver;
     std::string final_destination;
     std::string transfer_type;
+    std::string auth_method;
 };
 
 

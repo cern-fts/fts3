@@ -255,6 +255,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["cleanup_code"] = json::Number(tr_completed.cleanup_code);
     message["final_destination"] = json::String(tr_completed.final_destination);
     message["transfer_type"] = json::String(tr_completed.transfer_type);
+    message["auth_method"] = json::String(tr_completed.auth_method);
 
     std::ostringstream stream;
 

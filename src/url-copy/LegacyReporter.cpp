@@ -342,6 +342,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.cleanup_code = transfer.stats.cleanupRetc;
     completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;
+    completed.auth_method = opts.authMethod;
 
     if (opts.enableMonitoring) {
         auto msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);

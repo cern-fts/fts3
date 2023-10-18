@@ -62,7 +62,7 @@ const option UrlCopyOpts::long_options[] =
     {"oauth",             required_argument, 0, 503},
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
-	{"authMethod",        required_argument, 0, 506},
+    {"auth-method",       required_argument, 0, 506},
     {"copy-mode",         required_argument, 0, 507},
     {"disable-fallback",  no_argument,       0, 508},
     {"retrieve-se-token", no_argument,       0, 509},
