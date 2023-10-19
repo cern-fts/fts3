@@ -6,7 +6,7 @@
 %define __python python3
 
 Name:       fts
-Version:    3.12.10
+Version:    3.12.11
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
@@ -399,6 +399,9 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.11
+- Add Scitag label to transfers
+
 * Mon Aug 14 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.10
 - New upstream release
 
