@@ -18,14 +18,13 @@
  * limitations under the License.
  */
 
-#include <cstring>
 #include <iomanip>
 #include <sstream>
 #include "Transfer.h"
-#include "UrlCopyOpts.h"
 
 
-Transfer::Transfer() : fileId(0), userFileSize(0), isMultipleReplicaJob(false), isLastReplica(false),
+Transfer::Transfer() : fileId(0), userFileSize(0), scitag(0),
+                       isMultipleReplicaJob(false), isLastReplica(false),
                        isMultihopJob(false), isLastHop(false), isArchiving(false),
                        checksumMode(Transfer::CHECKSUM_NONE), fileSize(0),
                        averageThroughput(0.0), instantaneousThroughput(0.0),

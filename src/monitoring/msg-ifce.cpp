@@ -190,6 +190,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["tcp_buf_size"] = json::Number(tr_completed.tcp_buffer_size);
     message["block_size"] = json::Number(tr_completed.block_size);
+    message["scitag"] = json::Number(tr_completed.scitag);
     // Prepare to drop "f_size" field in the future
     message["f_size"] = json::Number(tr_completed.file_size);
     message["file_size"] = json::Number(tr_completed.file_size);
@@ -254,6 +255,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["cleanup_code"] = json::Number(tr_completed.cleanup_code);
     message["final_destination"] = json::String(tr_completed.final_destination);
     message["transfer_type"] = json::String(tr_completed.transfer_type);
+    message["auth_method"] = json::String(tr_completed.auth_method);
 
     std::ostringstream stream;
 

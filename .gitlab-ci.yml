@@ -112,7 +112,7 @@ cc7-test:
     - cat "$repo_passwd" | kinit "$repo_user"
     - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
   tags:
-    - docker-privileged
+    - docker-privileged-xl
   retry: 2
 
 #--------------------------

@@ -91,9 +91,9 @@ public:
 
 
     TransferFile() :
-            fileId(0), fileIndex(0),  numFailures(0),filesize(0.0),
-            finishTime(0), jobFinished(0), pinLifetime(0), bringOnline(0),
-            userFilesize(0.0), jobType(Job::kTypeRegular), lastReplica(0), lastHop(0), pid(0)
+            fileId(0), fileIndex(0), numFailures(0), filesize(0.0), userFilesize(0.0),
+            finishTime(0), jobFinished(0), pinLifetime(0), bringOnline(0), archiveTimeout(0),
+            scitag(0), jobType(Job::kTypeRegular), lastReplica(0), lastHop(0), pid(0)
     {
     }
 
@@ -113,13 +113,13 @@ public:
     std::string reason;
     unsigned numFailures;
     int64_t filesize;
+    int64_t userFilesize;
     time_t finishTime;
     std::string internalFileParams;
     time_t jobFinished;
     std::string voName;
     std::string overwriteFlag;
     std::string dstFileReport;
-    int archiveTimeout;
     std::string userDn;
     std::string credId;
     std::string checksumMode;
@@ -130,7 +130,8 @@ public:
     std::string activity;
     int pinLifetime;
     int bringOnline;
-    int64_t userFilesize;
+    int archiveTimeout;
+    int scitag;
     std::string fileMetadata;
     std::string jobMetadata;
     std::string transferMetadata;

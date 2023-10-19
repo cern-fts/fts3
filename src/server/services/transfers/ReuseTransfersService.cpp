@@ -124,6 +124,11 @@ std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
         if (fileMetadata.empty())
             fileMetadata = "x";
 
+        std::string archiveMetadata = UrlCopyCmd::prepareMetadataString(
+                it->transferMetadata);
+        if (archiveMetadata.empty())
+            archiveMetadata = "x";
+
         std::string bringOnlineToken = it->bringOnlineToken;
         if (bringOnlineToken.empty())
             bringOnlineToken = "x";
@@ -132,10 +137,16 @@ std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
         if (checksum.empty())
             checksum = "x";
 
-        line << std::fixed << it->fileId << " " << it->sourceSurl << " "
-                << it->destSurl << " " << checksum << " "
-                << boost::lexical_cast<long long>(it->userFilesize) << " "
-                << fileMetadata << " " << bringOnlineToken;
+        line << std::fixed
+             << it->fileId << " "
+             << it->sourceSurl << " "
+             << it->destSurl << " "
+             << checksum << " "
+             << boost::lexical_cast<long long>(it->userFilesize) << " "
+             << fileMetadata << " "
+             << archiveMetadata << " "
+             << bringOnlineToken << " "
+             << it->scitag;
         urls.push_back(line.str());
         line.str(std::string());
     }

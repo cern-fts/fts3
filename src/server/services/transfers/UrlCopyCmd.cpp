@@ -215,7 +215,7 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 
 void UrlCopyCmd::setAuthMethod(const std::string &method)
 {
-    setOption("authMethod", method);
+    setOption("auth-method", method);
 }
 
 
@@ -228,9 +228,7 @@ void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_tokens)
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
-    setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
     setOption("job-metadata", prepareMetadataString(transfer.jobMetadata));
-    setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
 
     switch (transfer.jobType) {
         case Job::kTypeSessionReuse:
@@ -244,13 +242,14 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
             break;
     }
 
-    // setOption("source-site", std::string());
-    // setOption("dest-site", std::string());
     setOption("vo", transfer.voName);
-    if (!transfer.checksumMode.empty())
-        setOption("checksum-mode", transfer.checksumMode);
     setOption("job-id", transfer.jobId);
     setFlag("overwrite", transfer.overwriteFlag == "Y");
+
+    if (!transfer.checksumMode.empty()) {
+        setOption("checksum-mode", transfer.checksumMode);
+    }
+
     if (transfer.archiveTimeout > 0) {
         setFlag("archiving", true);
         setFlag("dst-file-report", !transfer.dstFileReport.empty());
@@ -294,9 +293,15 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setOption("source", transfer.sourceSurl);
         setOption("destination", transfer.destSurl);
         setOption("checksum", transfer.checksum);
-        if (transfer.userFilesize > 0)
+        if (transfer.userFilesize > 0) {
             setOption("user-filesize", transfer.userFilesize);
+        }
+        if (transfer.scitag > 0) {
+            setOption("scitag", transfer.scitag);
+        }
         setOption("token-bringonline", transfer.bringOnlineToken);
+        setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
+        setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
     }
     else {
         setOption("bulk-file", msgDir + "/" + transfer.jobId);
