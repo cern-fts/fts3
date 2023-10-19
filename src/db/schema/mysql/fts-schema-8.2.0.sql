@@ -31,15 +31,6 @@ CREATE TABLE `t_activity_share_config` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_activity_share_config`
---
-
-LOCK TABLES `t_activity_share_config` WRITE;
-/*!40000 ALTER TABLE `t_activity_share_config` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_activity_share_config` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_authz_dn`
 --
 
@@ -52,15 +43,6 @@ CREATE TABLE `t_authz_dn` (
   PRIMARY KEY (`dn`,`operation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_authz_dn`
---
-
-LOCK TABLES `t_authz_dn` WRITE;
-/*!40000 ALTER TABLE `t_authz_dn` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_authz_dn` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_bad_dns`
@@ -79,15 +61,6 @@ CREATE TABLE `t_bad_dns` (
   PRIMARY KEY (`dn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_bad_dns`
---
-
-LOCK TABLES `t_bad_dns` WRITE;
-/*!40000 ALTER TABLE `t_bad_dns` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_bad_dns` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_bad_ses`
@@ -109,15 +82,6 @@ CREATE TABLE `t_bad_ses` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_bad_ses`
---
-
-LOCK TABLES `t_bad_ses` WRITE;
-/*!40000 ALTER TABLE `t_bad_ses` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_bad_ses` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_cloudStorage`
 --
 
@@ -132,15 +96,6 @@ CREATE TABLE `t_cloudStorage` (
   PRIMARY KEY (`cloudStorage_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_cloudStorage`
---
-
-LOCK TABLES `t_cloudStorage` WRITE;
-/*!40000 ALTER TABLE `t_cloudStorage` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_cloudStorage` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_cloudStorageUser`
@@ -164,15 +119,6 @@ CREATE TABLE `t_cloudStorageUser` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_cloudStorageUser`
---
-
-LOCK TABLES `t_cloudStorageUser` WRITE;
-/*!40000 ALTER TABLE `t_cloudStorageUser` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_cloudStorageUser` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_config_audit`
 --
 
@@ -186,15 +132,6 @@ CREATE TABLE `t_config_audit` (
   `action` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_config_audit`
---
-
-LOCK TABLES `t_config_audit` WRITE;
-/*!40000 ALTER TABLE `t_config_audit` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_config_audit` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_credential`
@@ -215,15 +152,6 @@ CREATE TABLE `t_credential` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_credential`
---
-
-LOCK TABLES `t_credential` WRITE;
-/*!40000 ALTER TABLE `t_credential` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_credential` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_credential_cache`
 --
 
@@ -239,15 +167,6 @@ CREATE TABLE `t_credential_cache` (
   PRIMARY KEY (`dlg_id`,`dn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_credential_cache`
---
-
-LOCK TABLES `t_credential_cache` WRITE;
-/*!40000 ALTER TABLE `t_credential_cache` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_credential_cache` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_dm`
@@ -295,15 +214,6 @@ CREATE TABLE `t_dm` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_dm`
---
-
-LOCK TABLES `t_dm` WRITE;
-/*!40000 ALTER TABLE `t_dm` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_dm` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_dm_backup`
 --
 
@@ -344,15 +254,6 @@ CREATE TABLE `t_dm_backup` (
   `vo_name` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_dm_backup`
---
-
-LOCK TABLES `t_dm_backup` WRITE;
-/*!40000 ALTER TABLE `t_dm_backup` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_dm_backup` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_file`
@@ -419,15 +320,6 @@ CREATE TABLE `t_file` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_file`
---
-
-LOCK TABLES `t_file` WRITE;
-/*!40000 ALTER TABLE `t_file` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_file` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_file_backup`
 --
 
@@ -481,15 +373,6 @@ CREATE TABLE `t_file_backup` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_file_backup`
---
-
-LOCK TABLES `t_file_backup` WRITE;
-/*!40000 ALTER TABLE `t_file_backup` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_file_backup` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_file_retry_errors`
 --
 
@@ -510,15 +393,6 @@ CREATE TABLE `t_file_retry_errors` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_file_retry_errors`
---
-
-LOCK TABLES `t_file_retry_errors` WRITE;
-/*!40000 ALTER TABLE `t_file_retry_errors` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_file_retry_errors` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_gridmap`
 --
 
@@ -531,15 +405,6 @@ CREATE TABLE `t_gridmap` (
   PRIMARY KEY (`dn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_gridmap`
---
-
-LOCK TABLES `t_gridmap` WRITE;
-/*!40000 ALTER TABLE `t_gridmap` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_gridmap` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_hosts`
@@ -556,15 +421,6 @@ CREATE TABLE `t_hosts` (
   PRIMARY KEY (`hostname`,`service_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_hosts`
---
-
-LOCK TABLES `t_hosts` WRITE;
-/*!40000 ALTER TABLE `t_hosts` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_hosts` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_job`
@@ -613,15 +469,6 @@ CREATE TABLE `t_job` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_job`
---
-
-LOCK TABLES `t_job` WRITE;
-/*!40000 ALTER TABLE `t_job` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_job` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_job_backup`
 --
 
@@ -662,15 +509,6 @@ CREATE TABLE `t_job_backup` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_job_backup`
---
-
-LOCK TABLES `t_job_backup` WRITE;
-/*!40000 ALTER TABLE `t_job_backup` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_job_backup` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_link_config`
 --
 
@@ -693,15 +531,8 @@ CREATE TABLE `t_link_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `t_link_config`
---
-
-LOCK TABLES `t_link_config` WRITE;
-/*!40000 ALTER TABLE `t_link_config` DISABLE KEYS */;
-INSERT INTO `t_link_config` VALUES ('*','*','*',2,130,2,NULL,0,'off',NULL);
-/*!40000 ALTER TABLE `t_link_config` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
+VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
 --
 -- Table structure for table `t_oauth2_apps`
@@ -723,15 +554,6 @@ CREATE TABLE `t_oauth2_apps` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_oauth2_apps`
---
-
-LOCK TABLES `t_oauth2_apps` WRITE;
-/*!40000 ALTER TABLE `t_oauth2_apps` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_oauth2_apps` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_oauth2_codes`
 --
 
@@ -748,15 +570,6 @@ CREATE TABLE `t_oauth2_codes` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_oauth2_codes`
---
-
-LOCK TABLES `t_oauth2_codes` WRITE;
-/*!40000 ALTER TABLE `t_oauth2_codes` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_oauth2_codes` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_oauth2_providers`
 --
 
@@ -769,15 +582,6 @@ CREATE TABLE `t_oauth2_providers` (
   PRIMARY KEY (`provider_url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_oauth2_providers`
---
-
-LOCK TABLES `t_oauth2_providers` WRITE;
-/*!40000 ALTER TABLE `t_oauth2_providers` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_oauth2_providers` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_oauth2_tokens`
@@ -799,15 +603,6 @@ CREATE TABLE `t_oauth2_tokens` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_oauth2_tokens`
---
-
-LOCK TABLES `t_oauth2_tokens` WRITE;
-/*!40000 ALTER TABLE `t_oauth2_tokens` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_oauth2_tokens` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_optimizer`
 --
 
@@ -824,15 +619,6 @@ CREATE TABLE `t_optimizer` (
   PRIMARY KEY (`source_se`,`dest_se`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_optimizer`
---
-
-LOCK TABLES `t_optimizer` WRITE;
-/*!40000 ALTER TABLE `t_optimizer` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_optimizer` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `t_optimizer_evolution`
@@ -861,15 +647,6 @@ CREATE TABLE `t_optimizer_evolution` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_optimizer_evolution`
---
-
-LOCK TABLES `t_optimizer_evolution` WRITE;
-/*!40000 ALTER TABLE `t_optimizer_evolution` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_optimizer_evolution` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_schema_vers`
 --
 
@@ -885,15 +662,8 @@ CREATE TABLE `t_schema_vers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `t_schema_vers`
---
-
-LOCK TABLES `t_schema_vers` WRITE;
-/*!40000 ALTER TABLE `t_schema_vers` DISABLE KEYS */;
-INSERT INTO `t_schema_vers` VALUES (8,1,0,'Schema 8.1.0'),(8,2,0,'FTS-1829: Add SciTags support');
-/*!40000 ALTER TABLE `t_schema_vers` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO t_schema_vers (major, minor, patch, message)
+VALUES (8, 2, 0, 'Schema 8.2.0');
 
 --
 -- Table structure for table `t_se`
@@ -920,15 +690,8 @@ CREATE TABLE `t_se` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `t_se`
---
-
-LOCK TABLES `t_se` WRITE;
-/*!40000 ALTER TABLE `t_se` DISABLE KEYS */;
-INSERT INTO `t_se` VALUES ('*',NULL,NULL,NULL,NULL,NULL,200,NULL,200,NULL,NULL,NULL,NULL);
-/*!40000 ALTER TABLE `t_se` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO t_se (storage, inbound_max_active, outbound_max_active)
+VALUES ('*', 200, 200);
 
 --
 -- Table structure for table `t_server_config`
@@ -948,14 +711,8 @@ CREATE TABLE `t_server_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `t_server_config`
---
-
-LOCK TABLES `t_server_config` WRITE;
-/*!40000 ALTER TABLE `t_server_config` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_server_config` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO t_server_config (vo_name)
+VALUES ('*');
 
 --
 -- Table structure for table `t_share_config`
@@ -975,15 +732,6 @@ CREATE TABLE `t_share_config` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `t_share_config`
---
-
-LOCK TABLES `t_share_config` WRITE;
-/*!40000 ALTER TABLE `t_share_config` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_share_config` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_stage_req`
 --
 
@@ -998,15 +746,6 @@ CREATE TABLE `t_stage_req` (
   PRIMARY KEY (`vo_name`,`host`,`operation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `t_stage_req`
---
-
-LOCK TABLES `t_stage_req` WRITE;
-/*!40000 ALTER TABLE `t_stage_req` DISABLE KEYS */;
-/*!40000 ALTER TABLE `t_stage_req` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
