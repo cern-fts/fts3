@@ -50,6 +50,7 @@ const option UrlCopyOpts::long_options[] =
     {"strict-copy",       no_argument,       0, 302},
     {"dst-file-report",   no_argument,       0, 303},
     {"3rd-party-turl",    required_argument, 0, 304},
+    {"scitag",            required_argument, 0, 305},
 
     {"token-bringonline", required_argument, 0, 400},
     {"dest-token-desc",   required_argument, 0, 401},
@@ -61,7 +62,7 @@ const option UrlCopyOpts::long_options[] =
     {"oauth",             required_argument, 0, 503},
     {"source-issuer",     required_argument, 0, 504},
     {"dest-issuer",       required_argument, 0, 505},
-	{"authMethod",        required_argument, 0, 506},
+    {"auth-method",       required_argument, 0, 506},
     {"copy-mode",         required_argument, 0, 507},
     {"disable-fallback",  no_argument,       0, 508},
     {"retrieve-se-token", no_argument,       0, 509},
@@ -141,7 +142,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
 {
     typedef boost::tokenizer <boost::char_separator<char>> tokenizer;
 
-    std::string strArray[8];
+    std::string strArray[9];
     tokenizer tokens(line, boost::char_separator<char>(" "));
     std::copy(tokens.begin(), tokens.end(), strArray);
 
@@ -153,12 +154,12 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.checksumMode = reference.checksumMode;
     setChecksum(t, strArray[3]);
     t.userFileSize = boost::lexical_cast<uint64_t>(strArray[4]);
-    t.fileMetadata = strArray[5];
-    t.transferMetadata = strArray[6];
-    t.tokenBringOnline = strArray[7];
-    if (t.tokenBringOnline == "x") {
-        t.tokenBringOnline.clear();
-    }
+    t.fileMetadata = strArray[5] == "x" ? "" : strArray[5];
+    // Must deserialize metadata string here, as value will be used in Gfal copy
+    // Other metadata fields deserialize in the LegacyReporter
+    t.transferMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
+    t.tokenBringOnline = strArray[7] == "x" ? "" : strArray[7];
+    t.scitag = boost::lexical_cast<unsigned>(strArray[8]);
     t.sourceTokenDescription = reference.sourceTokenDescription;
     t.destTokenDescription = reference.destTokenDescription;
     t.sourceTokenIssuer = reference.sourceTokenIssuer;
@@ -305,6 +306,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 304:
                     thirdPartyTURL = boost::lexical_cast<std::string>(optarg);
+                    break;
+                case 305:
+                    referenceTransfer.scitag = boost::lexical_cast<unsigned>(optarg);
                     break;
 
                 case 400:

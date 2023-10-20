@@ -40,8 +40,8 @@ public:
         timestamp_checksum_source_ended(0), timestamp_checksum_dest_started(0), timestamp_checksum_dest_ended(0),
         transfer_timeout(0), checksum_timeout(0), transfer_error_code(0), final_transfer_state_flag(-1),
         total_bytes_transferred(0),
-        number_of_streams(0), tcp_buffer_size(0),
-        block_size(0), file_size(0), throughput_bps(0),
+        number_of_streams(0), tcp_buffer_size(0), block_size(0), scitag(0),
+        file_size(0), throughput_bps(0),
         time_spent_in_srm_preparation_start(0), time_spent_in_srm_preparation_end(0),
         time_spent_in_srm_finalization_start(0), time_spent_in_srm_finalization_end(0),
         tr_timestamp_start(0), tr_timestamp_complete(0),
@@ -92,6 +92,7 @@ public:
     unsigned    number_of_streams;
     uint64_t    tcp_buffer_size;
     unsigned    block_size;
+    unsigned    scitag;
     off_t       file_size;
     double      throughput_bps;
     uint64_t    time_spent_in_srm_preparation_start;
@@ -128,6 +129,7 @@ public:
     std::string ipver;
     std::string final_destination;
     std::string transfer_type;
+    std::string auth_method;
 };
 
 

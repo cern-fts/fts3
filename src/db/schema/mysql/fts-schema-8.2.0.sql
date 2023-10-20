@@ -1,6 +1,6 @@
 -- MySQL dump 10.14  Distrib 5.5.68-MariaDB, for Linux (x86_64)
 --
--- Host: dbod-fts-dev.cern.ch    Database: fts3
+-- Host: dbod-fts-dev.cern.ch    Database: fts_schema_8_2_0
 -- ------------------------------------------------------
 -- Server version	8.0.28
 
@@ -186,7 +186,7 @@ CREATE TABLE `t_dm` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -231,7 +231,7 @@ CREATE TABLE `t_dm_backup` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -252,7 +252,7 @@ CREATE TABLE `t_dm_backup` (
   `wait_timeout` int DEFAULT NULL,
   `hashed_id` int unsigned DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL
-) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -274,7 +274,7 @@ CREATE TABLE `t_file` (
   `source_se` varchar(255) DEFAULT NULL,
   `dest_se` varchar(255) DEFAULT NULL,
   `staging_host` varchar(1024) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `current_failures` int DEFAULT NULL,
   `filesize` bigint DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
@@ -304,6 +304,7 @@ CREATE TABLE `t_file` (
   `archive_finish_time` timestamp NULL DEFAULT NULL,
   `staging_metadata` text,
   `archive_metadata` text,
+  `scitag` int DEFAULT NULL,
   PRIMARY KEY (`file_id`),
   UNIQUE KEY `dest_surl_uuid` (`dest_surl_uuid`),
   KEY `idx_job_id` (`job_id`),
@@ -337,7 +338,7 @@ CREATE TABLE `t_file_backup` (
   `source_se` varchar(255) DEFAULT NULL,
   `dest_se` varchar(255) DEFAULT NULL,
   `staging_host` varchar(1024) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `current_failures` int DEFAULT NULL,
   `filesize` bigint DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
@@ -366,8 +367,9 @@ CREATE TABLE `t_file_backup` (
   `archive_start_time` timestamp NULL DEFAULT NULL,
   `archive_finish_time` timestamp NULL DEFAULT NULL,
   `staging_metadata` text,
-  `archive_metadata` text
-) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
+  `archive_metadata` text,
+  `scitag` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -381,7 +383,7 @@ CREATE TABLE `t_file_retry_errors` (
   `file_id` bigint unsigned NOT NULL,
   `attempt` int NOT NULL,
   `datetime` timestamp NULL DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `log_file` varchar(2048) DEFAULT NULL,
   PRIMARY KEY (`file_id`,`attempt`),
@@ -503,7 +505,7 @@ CREATE TABLE `t_job_backup` (
   `archive_timeout` int DEFAULT NULL,
   `dst_file_report` char(1) DEFAULT NULL,
   `os_project_id` varchar(512) DEFAULT NULL
-) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -528,6 +530,7 @@ CREATE TABLE `t_link_config` (
   UNIQUE KEY `symbolic_name` (`symbolic_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
 VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
@@ -658,8 +661,9 @@ CREATE TABLE `t_schema_vers` (
   PRIMARY KEY (`major`,`minor`,`patch`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (8, 1, 0, 'Schema 8.1.0');
+VALUES (8, 2, 0, 'Schema 8.2.0');
 
 --
 -- Table structure for table `t_se`
@@ -685,6 +689,7 @@ CREATE TABLE `t_se` (
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_se (storage, inbound_max_active, outbound_max_active)
 VALUES ('*', 200, 200);
 
@@ -705,6 +710,7 @@ CREATE TABLE `t_server_config` (
   `show_user_dn` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_server_config (vo_name)
 VALUES ('*');
 
@@ -750,4 +756,4 @@ CREATE TABLE `t_stage_req` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-04 13:31:41
+-- Dump completed on 2023-10-19 15:11:09

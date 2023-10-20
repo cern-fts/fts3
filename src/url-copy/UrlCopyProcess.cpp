@@ -184,6 +184,11 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
 
+    // SciTag value should always be in the [65, 65535] range
+    if (transfer.scitag > 0) {
+        params.setScitag(transfer.scitag);
+    }
+
     if (!transfer.transferMetadata.empty()) {
         params.setTransferMetadata(transfer.transferMetadata);
     }
@@ -303,6 +308,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled: " << transfer.checksumMode << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize: " << transfer.userFileSize << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scitag: " << transfer.scitag << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata: " << transfer.fileMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer metadata: " << transfer.transferMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata: " << opts.jobMetadata << commit;
