@@ -1,6 +1,6 @@
 -- MySQL dump 10.14  Distrib 5.5.68-MariaDB, for Linux (x86_64)
 --
--- Host: dbod-fts3-plt.cern.ch    Database: fts3_smurray
+-- Host: dbod-fts3-plt.cern.ch    Database: fts_schema_9_0_0
 -- ------------------------------------------------------
 -- Server version	8.0.28
 
@@ -186,7 +186,7 @@ CREATE TABLE `t_dm` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -231,7 +231,7 @@ CREATE TABLE `t_dm_backup` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -252,7 +252,7 @@ CREATE TABLE `t_dm_backup` (
   `wait_timeout` int DEFAULT NULL,
   `hashed_id` int unsigned DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL
-) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -267,14 +267,14 @@ CREATE TABLE `t_file` (
   `file_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `file_index` int DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','FORCE_START','ON_HOLD','ON_HOLD_STAGING', 'TOKEN_PREP') NOT NULL,
+  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START','TOKEN_PREP') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
   `source_se` varchar(255) DEFAULT NULL,
   `dest_se` varchar(255) DEFAULT NULL,
   `staging_host` varchar(1024) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `current_failures` int DEFAULT NULL,
   `filesize` bigint DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
@@ -295,7 +295,7 @@ CREATE TABLE `t_file` (
   `log_file` varchar(2048) DEFAULT NULL,
   `t_log_file_debug` int DEFAULT NULL,
   `hashed_id` int unsigned DEFAULT '0',
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `activity` varchar(255) DEFAULT 'default',
   `transferred` bigint DEFAULT '0',
   `priority` int DEFAULT '3',
@@ -304,6 +304,7 @@ CREATE TABLE `t_file` (
   `archive_finish_time` timestamp NULL DEFAULT NULL,
   `staging_metadata` text,
   `archive_metadata` text,
+  `scitag` int DEFAULT NULL,
   `src_token_id` char(16) DEFAULT NULL,
   `dst_token_id` char(16) DEFAULT NULL,
   PRIMARY KEY (`file_id`),
@@ -311,12 +312,13 @@ CREATE TABLE `t_file` (
   KEY `idx_job_id` (`job_id`),
   KEY `idx_activity` (`vo_name`,`activity`),
   KEY `idx_link_state_vo` (`source_se`,`dest_se`,`file_state`,`vo_name`),
+  KEY `idx_finish_time` (`finish_time`),
   KEY `idx_staging` (`file_state`,`vo_name`,`source_se`),
   KEY `idx_state_host` (`file_state`,`transfer_host`),
-  KEY `idx_finish_time` (`finish_time`),
-  KEY `idx_transfer_host_finish_time` (`transfer_host`,`finish_time`),
   KEY `idx_state` (`file_state`),
   KEY `idx_host` (`transfer_host`),
+  KEY `src_token_id` (`src_token_id`),
+  KEY `dst_token_id` (`dst_token_id`),
   CONSTRAINT `job_id` FOREIGN KEY (`job_id`) REFERENCES `t_job` (`job_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `src_token_id` FOREIGN KEY (`src_token_id`) REFERENCES `t_token` (`token_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `dst_token_id` FOREIGN KEY (`dst_token_id`) REFERENCES `t_token` (`token_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -335,14 +337,14 @@ CREATE TABLE `t_file_backup` (
   `file_id` bigint unsigned NOT NULL DEFAULT '0',
   `file_index` int DEFAULT NULL,
   `job_id` char(36) NOT NULL,
-  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING') NOT NULL,
+  `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START','TOKEN_PREP') NOT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
   `source_se` varchar(255) DEFAULT NULL,
   `dest_se` varchar(255) DEFAULT NULL,
   `staging_host` varchar(1024) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `current_failures` int DEFAULT NULL,
   `filesize` bigint DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
@@ -363,13 +365,19 @@ CREATE TABLE `t_file_backup` (
   `log_file` varchar(2048) DEFAULT NULL,
   `t_log_file_debug` int DEFAULT NULL,
   `hashed_id` int unsigned DEFAULT '0',
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `activity` varchar(255) DEFAULT 'default',
   `transferred` bigint DEFAULT '0',
+  `priority` int DEFAULT '3',
+  `dest_surl_uuid` char(36) DEFAULT NULL,
   `archive_start_time` timestamp NULL DEFAULT NULL,
   `archive_finish_time` timestamp NULL DEFAULT NULL,
-  `archive_metadata` text
-) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
+  `staging_metadata` text,
+  `archive_metadata` text,
+  `scitag` int DEFAULT NULL,
+  `src_token_id` char(16) DEFAULT NULL,
+  `dst_token_id` char(16) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -383,7 +391,7 @@ CREATE TABLE `t_file_retry_errors` (
   `file_id` bigint unsigned NOT NULL,
   `attempt` int NOT NULL,
   `datetime` timestamp NULL DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `log_file` varchar(2048) DEFAULT NULL,
   PRIMARY KEY (`file_id`,`attempt`),
@@ -438,7 +446,7 @@ CREATE TABLE `t_job` (
   `dest_se` varchar(255) DEFAULT NULL,
   `user_dn` varchar(1024) DEFAULT NULL,
   `cred_id` char(16) DEFAULT NULL,
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `reason` varchar(2048) DEFAULT NULL,
   `submit_time` timestamp NULL DEFAULT NULL,
   `priority` int DEFAULT '3',
@@ -454,8 +462,8 @@ CREATE TABLE `t_job` (
   `bring_online` int DEFAULT NULL,
   `retry` int DEFAULT '0',
   `retry_delay` int DEFAULT '0',
-  `job_metadata` text,
   `target_qos` varchar(255) DEFAULT NULL,
+  `job_metadata` text,
   `archive_timeout` int DEFAULT NULL,
   `dst_file_report` char(1) DEFAULT NULL,
   `os_project_id` varchar(512) DEFAULT NULL,
@@ -484,7 +492,7 @@ CREATE TABLE `t_job_backup` (
   `dest_se` varchar(255) DEFAULT NULL,
   `user_dn` varchar(1024) DEFAULT NULL,
   `cred_id` char(16) DEFAULT NULL,
-  `vo_name` varchar(100) DEFAULT NULL,
+  `vo_name` varchar(50) DEFAULT NULL,
   `reason` varchar(2048) DEFAULT NULL,
   `submit_time` timestamp NULL DEFAULT NULL,
   `priority` int DEFAULT '3',
@@ -500,11 +508,12 @@ CREATE TABLE `t_job_backup` (
   `bring_online` int DEFAULT NULL,
   `retry` int DEFAULT '0',
   `retry_delay` int DEFAULT '0',
-  `job_metadata` text,
   `target_qos` varchar(255) DEFAULT NULL,
+  `job_metadata` text,
   `archive_timeout` int DEFAULT NULL,
-  `dst_file_report` char(1) DEFAULT NULL
-) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
+  `dst_file_report` char(1) DEFAULT NULL,
+  `os_project_id` varchar(512) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -529,6 +538,7 @@ CREATE TABLE `t_link_config` (
   UNIQUE KEY `symbolic_name` (`symbolic_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
 VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
@@ -659,6 +669,7 @@ CREATE TABLE `t_schema_vers` (
   PRIMARY KEY (`major`,`minor`,`patch`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (9, 0, 0, 'Schema 9.0.0');
 
@@ -686,6 +697,7 @@ CREATE TABLE `t_se` (
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_se (storage, inbound_max_active, outbound_max_active)
 VALUES ('*', 200, 200);
 
@@ -702,10 +714,11 @@ CREATE TABLE `t_server_config` (
   `sec_per_mb` int DEFAULT '0',
   `global_timeout` int DEFAULT '0',
   `vo_name` varchar(100) DEFAULT NULL,
-  `show_user_dn` varchar(3) DEFAULT NULL,
-  `no_streaming` varchar(3) DEFAULT NULL
+  `no_streaming` varchar(3) DEFAULT NULL,
+  `show_user_dn` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 INSERT INTO t_server_config (vo_name)
 VALUES ('*');
 
@@ -767,4 +780,4 @@ CREATE TABLE `t_token` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-06 20:05:04
+-- Dump completed on 2023-10-23 14:11:15
