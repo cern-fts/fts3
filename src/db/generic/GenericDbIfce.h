@@ -47,6 +47,7 @@
 #include "StagingOperation.h"
 #include "ArchivingOperation.h"
 #include "QosTransitionOperation.h"
+#include "Token.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -366,6 +367,9 @@ public:
     /// Put into files a set of bring online requests that must be cancelled
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
+
+    /// Returns list of access tokens without an associated refresh token
+    virtual std::list<Token> getAccessTokensWithoutRefresh() = 0;
 
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,

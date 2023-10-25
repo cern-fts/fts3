@@ -320,6 +320,9 @@ public:
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
+    /// Returns list of access tokens without an associated refresh token
+    virtual std::list<Token> getAccessTokensWithoutRefresh();
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
         const std::string& voName,

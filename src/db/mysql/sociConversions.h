@@ -96,6 +96,20 @@ struct type_conversion<UserCredentialCache>
     }
 };
 
+template<>
+struct type_conversion<Token>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, Token& token)
+    {
+        token.tokenId      = v.get<std::string>("token_id");
+        token.accessToken  = v.get<std::string>("access_token", "");
+        token.refreshToken = v.get<std::string>("refresh_token", "");
+        token.issuer       = v.get<std::string>("issuer");
+    }
+};
+
 template <>
 struct type_conversion<Job>
 {

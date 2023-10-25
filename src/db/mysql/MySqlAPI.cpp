@@ -4279,6 +4279,32 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
 }
 
 
+std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const soci::rowset<Token> rs = (sql.prepare <<
+                                " SELECT token_id, access_token, refresh_token, issuer "
+                                " FROM t_token WHERE refresh_token IS NULL ORDER BY NULL");
+
+//        std::list<Token> l;
+//        l.assign(rs.begin(), rs.end());
+//        return l;
+        return {rs.begin(), rs.end()};
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
 bool MySqlAPI::resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times)
 {
     bool willBeRetried = false;
