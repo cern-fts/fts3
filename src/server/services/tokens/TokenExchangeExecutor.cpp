@@ -15,7 +15,10 @@
  */
 
 #include "common/Logger.h"
+#include "common/Exceptions.h"
 #include "TokenExchangeExecutor.h"
+
+#include <cstdlib>
 
 using namespace fts3::common;
 
@@ -25,9 +28,36 @@ namespace server {
 void TokenExchangeExecutor::run(boost::any & ctx)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting token-exchange: "
+                                    << "token_id=" << token.tokenId << " "
                                     << "access_token=" << token.accessTokentoString() << " "
                                     << "issuer=" << token.getIssuer()
                                     << commit;
+
+    try {
+        auto refresh_token = performTokenExchange();
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtained refresh token: "
+                                        << "token_id=" << token.tokenId << " "
+                                        << "refresh_token=" << refresh_token
+                                        << commit;
+
+        tokenExchangeService.registerRefreshToken(token.tokenId, refresh_token);
+    } catch (const std::exception& e) {
+        throw UserError(std::string(__func__) + "Failed to obtain refresh token: " + e.what());
+    }
+}
+
+std::string TokenExchangeExecutor::performTokenExchange()
+{
+    auto get_rand_char = []() -> char {
+        const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        const size_t max_index = (sizeof(charset) - 1);
+        return charset[rand() % max_index];
+    };
+
+    std::string refresh_token(128, 0);
+    std::generate_n(refresh_token.begin(), 128, get_rand_char);
+    return refresh_token;
 }
 
 } // end namespace server

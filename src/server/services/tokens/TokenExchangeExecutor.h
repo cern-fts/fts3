@@ -20,6 +20,7 @@
 #include <boost/any.hpp>
 
 #include "db/generic/Token.h"
+#include "TokenExchangeService.h"
 
 namespace fts3 {
 namespace server {
@@ -36,20 +37,32 @@ class TokenExchangeExecutor
 {
 public:
 
-    TokenExchangeExecutor(const Token& token) : token(token) {}
+    TokenExchangeExecutor(const Token& token, TokenExchangeService& tokenExchangeService)
+        : token(token), tokenExchangeService(tokenExchangeService) {}
     virtual ~TokenExchangeExecutor() = default;
 
     /**
-     * Performs token-exchange for the provided access token
-     * in order to obtain a refresh token
+     * Perform token-exchange for the provided access token
+     * in order to obtain a refresh token.
      *
-     * @return string containing the refresh token
-     * @throws error in case refresh token could not be retrieved
+     * @return If successful, the refresh token string is uploaded
+     *         to the TokenExchange services
+     * @throws UserError in case refresh token could not be retrieved
      */
     virtual void run(boost::any &);
 
 private:
+
+    /** Perform token exchange workflow.
+     *
+     * @return string containing refresh token
+     */
+    std::string performTokenExchange();
+
+    /// Token object
     Token token;
+    /// Reference to TokenExchange service
+    TokenExchangeService& tokenExchangeService;
 };
 
 } // end namespace server

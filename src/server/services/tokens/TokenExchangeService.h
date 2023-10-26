@@ -26,7 +26,10 @@ class TokenExchangeService: public BaseService
 {
 public:
     TokenExchangeService(HeartBeat *beat);
+
     virtual void runService();
+
+    void registerRefreshToken(const std::string& token_id, const std::string& refreshToken);
 
 protected:
     int execPoolSize;
@@ -34,6 +37,15 @@ protected:
 
     HeartBeat *beat;
     void getRefreshTokens();
+
+private:
+    /// Protect concurrent access to "refresh_tokens" set
+    boost::shared_mutex mx;
+
+    /// Set of <token_id, refresh_token> for refresh tokens
+    /// The set is populated by the worker threads
+    /// and will be collected at the end of a cycle
+    std::set<std::pair<std::string, std::string>> refresh_tokens;
 };
 
 } // end namespace server

@@ -24,6 +24,8 @@
 #include "TokenExchangeService.h"
 #include "TokenExchangeExecutor.h"
 
+#include <cstdlib>
+
 using namespace fts3::config;
 using namespace fts3::common;
 
@@ -64,12 +66,22 @@ void TokenExchangeService::getRefreshTokens() {
                 return;
             }
 
-            TokenExchangeExecutor *exec = new TokenExchangeExecutor(token);
+            TokenExchangeExecutor *exec = new TokenExchangeExecutor(token, *this);
             execPool.start(exec);
         }
 
         // Wait for all the workers to finish
         execPool.join();
+
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+
+        for (const auto& it: refresh_tokens) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Printing time: "
+                                            << "token_id=" << it.first << " "
+                                            << "refresh_token=" << it.second
+                                            << commit;
+        }
+        refresh_tokens.clear();
 
     } catch (const boost::thread_interrupted &) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TokenExchangeService:getRefreshTokens" << commit;
@@ -83,6 +95,9 @@ void TokenExchangeService::getRefreshTokens() {
 }
 
 void TokenExchangeService::runService() {
+    // Initialize random seed
+    srand(time(nullptr));
+
     while (!boost::this_thread::interruption_requested()) {
         tokenExchangeRecords = time(nullptr);
 
@@ -105,6 +120,12 @@ void TokenExchangeService::runService() {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService!" << commit;
         }
     }
+}
+
+void TokenExchangeService::registerRefreshToken(const std::string& token_id, const std::string& refreshToken)
+{
+    boost::unique_lock<boost::shared_mutex> lock(mx);
+    refresh_tokens.emplace(token_id, refreshToken);
 }
 
 } // end namespace server
