@@ -42,11 +42,14 @@ TokenExchangeService::TokenExchangeService(HeartBeat *beat) : BaseService("Token
 }
 
 void TokenExchangeService::getRefreshTokens() {
+    auto db = db::DBSingleton::instance().getDBObjectInstance();
     ThreadPool<TokenExchangeExecutor> execPool(execPoolSize);
 
     try {
+        auto providers = db->getTokenProviders();
+
         time_t start = time(nullptr);
-        auto tokens = db::DBSingleton::instance().getDBObjectInstance()->getAccessTokensWithoutRefresh();
+        auto tokens = db->getAccessTokensWithoutRefresh();
         time_t end = time(nullptr);
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TokenExchangeService\" "
                                         << "func=\"getRefreshTokens\" "
@@ -66,7 +69,8 @@ void TokenExchangeService::getRefreshTokens() {
                 return;
             }
 
-            TokenExchangeExecutor *exec = new TokenExchangeExecutor(token, *this);
+            TokenExchangeExecutor *exec =
+                    new TokenExchangeExecutor(token, providers[token.issuer], *this);
             execPool.start(exec);
         }
 

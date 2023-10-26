@@ -4289,9 +4289,6 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
                                 " SELECT token_id, access_token, refresh_token, issuer "
                                 " FROM t_token WHERE refresh_token IS NULL ORDER BY NULL");
 
-//        std::list<Token> l;
-//        l.assign(rs.begin(), rs.end());
-//        return l;
         return {rs.begin(), rs.end()};
     }
     catch (std::exception& e)

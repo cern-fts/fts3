@@ -20,6 +20,7 @@
 #include <boost/any.hpp>
 
 #include "db/generic/Token.h"
+#include "db/generic/TokenProvider.h"
 #include "TokenExchangeService.h"
 
 namespace fts3 {
@@ -37,8 +38,10 @@ class TokenExchangeExecutor
 {
 public:
 
-    TokenExchangeExecutor(const Token& token, TokenExchangeService& tokenExchangeService)
-        : token(token), tokenExchangeService(tokenExchangeService) {}
+    TokenExchangeExecutor(const Token& token, const TokenProvider& tokenProvider,
+                          TokenExchangeService& tokenExchangeService)
+        : token(token), tokenProvider(tokenProvider),
+          tokenExchangeService(tokenExchangeService) {}
     virtual ~TokenExchangeExecutor() = default;
 
     /**
@@ -61,6 +64,8 @@ private:
 
     /// Token object
     Token token;
+    /// Reference to the TokenProvider
+    TokenProvider tokenProvider;
     /// Reference to TokenExchange service
     TokenExchangeService& tokenExchangeService;
 };

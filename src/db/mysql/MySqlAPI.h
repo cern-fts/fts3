@@ -335,6 +335,9 @@ public:
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage);
 
+    /// Get the list of Token Providers
+    virtual std::map<std::string, TokenProvider> getTokenProviders();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

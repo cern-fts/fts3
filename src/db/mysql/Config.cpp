@@ -822,3 +822,29 @@ StorageConfig MySqlAPI::getStorageConfig(const std::string &storage)
 
     return seConfig;
 }
+
+std::map<std::string, TokenProvider> MySqlAPI::getTokenProviders()
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        std::map<std::string, TokenProvider> providers;
+
+        const soci::rowset<TokenProvider> rs = ( sql.prepare << "SELECT * FROM t_token_provider;" );
+
+        for (const auto& row: rs) {
+            providers.emplace(row.issuer, row);
+        }
+
+        return providers;
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}

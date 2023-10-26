@@ -27,6 +27,7 @@
 #include "db/generic/LinkConfig.h"
 #include "db/generic/ShareConfig.h"
 #include "db/generic/CloudStorageAuth.h"
+#include "db/generic/TokenProvider.h"
 #include <soci.h>
 #include <time.h>
 #include "../generic/Job.h"
@@ -420,7 +421,7 @@ struct type_conversion<OptimizerMode>
     }
 };
 
-template <>
+template<>
 struct type_conversion<StorageConfig>
 {
     typedef values base_type;
@@ -437,6 +438,25 @@ struct type_conversion<StorageConfig>
         seConfig.outboundMaxActive = v.get<int>("outbound_max_active", 0);
         seConfig.inboundMaxThroughput = v.get<double>("inbound_max_throughput", 0.0);
         seConfig.outboundMaxThroughput = v.get<double>("outbound_max_throughput", 0.0);
+    }
+};
+
+template<>
+struct type_conversion<TokenProvider>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, TokenProvider& tokenProvider)
+    {
+        tokenProvider.name = v.get<std::string>("name");
+        tokenProvider.issuer = v.get<std::string>("issuer");
+        tokenProvider.clientId = v.get<std::string>("client_id");
+        tokenProvider.clientSecret = v.get<std::string>("client_secret");
+
+        auto issuer_size = tokenProvider.issuer.size();
+        if (tokenProvider.issuer[issuer_size - 1] != '/') {
+            tokenProvider.issuer += "/";
+        }
     }
 };
 

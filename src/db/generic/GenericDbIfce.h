@@ -48,6 +48,7 @@
 #include "ArchivingOperation.h"
 #include "QosTransitionOperation.h"
 #include "Token.h"
+#include "TokenProvider.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -382,6 +383,9 @@ public:
 
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage) = 0;
+
+    /// Get the list of Token Providers
+    virtual std::map<std::string, TokenProvider> getTokenProviders() = 0;
 };
 
 #endif // GENERICDBIFCE_H_
