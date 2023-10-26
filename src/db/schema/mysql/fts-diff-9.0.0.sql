@@ -11,6 +11,14 @@ CREATE TABLE `t_token` (
   PRIMARY KEY (`token_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+CREATE TABLE `t_token_provider` (
+    `name` varchar(255) NOT NULL,
+    `issuer` varchar(1024) NOT NULL,
+    `client_id` varchar(255) NOT NULL,
+    `client_secret` varchar(255) NOT NULL,
+    PRIMARY KEY (`issuer`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 ALTER TABLE `t_file`
   ADD COLUMN `src_token_id` char(16) DEFAULT NULL,
   ADD COLUMN `dst_token_id` char(16) DEFAULT NULL,
