@@ -29,8 +29,8 @@ void TokenExchangeExecutor::run(boost::any & ctx)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting token-exchange: "
                                     << "token_id=" << token.tokenId << " "
-                                    << "access_token=" << token.accessTokentoString() << " "
-                                    << "issuer=" << token.getIssuer()
+                                    << "access_token=" << token.accessTokenToString() << " "
+                                    << "issuer=" << token.issuer
                                     << commit;
 
     try {

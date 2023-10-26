@@ -108,6 +108,11 @@ struct type_conversion<Token>
         token.accessToken  = v.get<std::string>("access_token", "");
         token.refreshToken = v.get<std::string>("refresh_token", "");
         token.issuer       = v.get<std::string>("issuer");
+
+        auto issuer_size = token.issuer.size();
+        if (token.issuer[issuer_size - 1] != '/') {
+            token.issuer += "/";
+        }
     }
 };
 

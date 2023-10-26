@@ -27,15 +27,7 @@ public:
     Token() = default;
     ~Token() = default;
 
-    std::string getIssuer() const {
-        if (issuer[issuer.size() - 1] != '/') {
-            return issuer + "/";
-        }
-
-        return issuer;
-    }
-
-    std::string accessTokentoString() const {
+    std::string accessTokenToString() const {
         std::ostringstream out;
         out << accessToken.substr(0, 5) << "..."
             << accessToken.substr(accessToken.size() - 5);
