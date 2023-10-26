@@ -103,8 +103,6 @@ void TokenExchangeService::getRefreshTokens() {
 }
 
 void TokenExchangeService::runService() {
-    // Initialize random seed
-    srand(time(nullptr));
 
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 

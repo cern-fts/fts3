@@ -107,6 +107,8 @@ struct type_conversion<Token>
         token.tokenId      = v.get<std::string>("token_id");
         token.accessToken  = v.get<std::string>("access_token", "");
         token.refreshToken = v.get<std::string>("refresh_token", "");
+        token.scope        = v.get<std::string>("scope");
+        token.audience     = v.get<std::string>("audience", "");
         token.issuer       = v.get<std::string>("issuer");
 
         auto issuer_size = token.issuer.size();

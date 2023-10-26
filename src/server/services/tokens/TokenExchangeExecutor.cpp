@@ -18,7 +18,7 @@
 #include "common/Exceptions.h"
 #include "TokenExchangeExecutor.h"
 
-#include <cstdlib>
+#include <cryptopp/base64.h>
 
 using namespace fts3::common;
 
@@ -43,21 +43,87 @@ void TokenExchangeExecutor::run(boost::any & ctx)
 
         tokenExchangeService.registerRefreshToken(token.tokenId, refresh_token);
     } catch (const std::exception& e) {
-        throw UserError(std::string(__func__) + "Failed to obtain refresh token: " + e.what());
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
+                                       << "token_id=" << token.tokenId << " "
+                                       << e.what() << commit;
     }
 }
 
 std::string TokenExchangeExecutor::performTokenExchange()
 {
-    auto get_rand_char = []() -> char {
-        const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        const size_t max_index = (sizeof(charset) - 1);
-        return charset[rand() % max_index];
-    };
+    // GET token exchange endpoint url
+    std::string token_endpoint = getTokenEndpoint();
+    Davix::Uri uri(token_endpoint);
+    validateUri(uri);
 
-    std::string refresh_token(128, 0);
-    std::generate_n(refresh_token.begin(), 128, get_rand_char);
+    // Build the POST request
+    Davix::DavixError* err = nullptr;
+    Davix::PostRequest req(context, uri, &err);
+
+    // Set request parameters
+    Davix::RequestParams params;
+    params.addHeader("Authorization", getAuthorizationHeader());
+    params.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    req.setParameters(params);
+    req.setRequestBody(getExchangeData());
+
+    // Execute the request
+    std::string exchange_result = executeHttpRequest(req);
+
+    // Extract refresh_token field from the JSON response
+    std::string refresh_token = parseJson(exchange_result, "refresh_token");
+
     return refresh_token;
+}
+
+std::string TokenExchangeExecutor::getTokenEndpoint()
+{
+    std::string endpoint = token.issuer + "/.well-known/openid-configuration";
+
+    Davix::Uri uri(endpoint);
+    validateUri(uri);
+
+    // Build the GET Request
+    Davix::DavixError* err = nullptr;
+    Davix::GetRequest req(context, uri, &err);
+
+    // Execute the request
+    std::string response = executeHttpRequest(req);
+
+    // Extract token_endpoint field from the JSON response
+    std::string token_endpoint = parseJson(response, "token_endpoint");
+
+    return token_endpoint;
+}
+
+std::string TokenExchangeExecutor::getAuthorizationHeader() const
+{
+    std::string auth_data = tokenProvider.clientId + ":" + tokenProvider.clientSecret;
+    std::string encoded_data;
+    // Base64 encode the authorization information
+    const bool noNewLineInBase64Output = false;
+    CryptoPP::StringSource ss1(auth_data, true,
+                               new CryptoPP::Base64Encoder(
+                                       new CryptoPP::StringSink(encoded_data), noNewLineInBase64Output)
+                                       );
+    return "Basic " + encoded_data;
+}
+
+std::string TokenExchangeExecutor::getExchangeData() const
+{
+    std::stringstream ss;
+    ss << "grant_type=urn:ietf:params:oauth:grant-type:token-exchange"
+          "&requested_token_type=urn:ietf:params:oauth:token-type:refresh_token"
+          "&subject_token_type=urn:ietf:params:oauth:token-type:access_token"
+          "&subject_token=" << token.accessToken <<
+          "&scope=" << token.scope;
+
+    // Add optional audience to the token exchange request
+    if (!token.audience.empty()) {
+        ss << "&audience=" << token.audience;
+    }
+
+    return ss.str();
 }
 
 } // end namespace server

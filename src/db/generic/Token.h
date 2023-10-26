@@ -38,4 +38,6 @@ public:
     std::string accessToken;
     std::string refreshToken;
     std::string issuer;
+    std::string scope;
+    std::string audience;
 };

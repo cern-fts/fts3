@@ -4286,7 +4286,7 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
     try
     {
         const soci::rowset<Token> rs = (sql.prepare <<
-                                " SELECT token_id, access_token, refresh_token, issuer "
+                                " SELECT token_id, access_token, refresh_token, issuer, scope, audience "
                                 " FROM t_token WHERE refresh_token IS NULL ORDER BY NULL");
 
         return {rs.begin(), rs.end()};
