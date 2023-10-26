@@ -41,6 +41,8 @@ BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 BuildRequires:  systemd
 BuildRequires:  cppzmq-devel
 BuildRequires:  jsoncpp-devel
+BuildRequires:  davix-devel >= 0.8.4
+BuildRequires:  cryptopp-devel >= 5.6.2
 Requires(pre):  shadow-utils
 
 %description

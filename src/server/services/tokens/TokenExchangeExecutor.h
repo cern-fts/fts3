@@ -18,10 +18,13 @@
 
 #include <boost/thread.hpp>
 #include <boost/any.hpp>
+#include <davix.hpp>
+#include <json/json.h>
 
+#include "TokenExchangeService.h"
 #include "db/generic/Token.h"
 #include "db/generic/TokenProvider.h"
-#include "TokenExchangeService.h"
+#include "db/generic/TokenProvider.h"
 
 namespace fts3 {
 namespace server {
@@ -41,7 +44,7 @@ public:
     TokenExchangeExecutor(const Token& token, const TokenProvider& tokenProvider,
                           TokenExchangeService& tokenExchangeService)
         : token(token), tokenProvider(tokenProvider),
-          tokenExchangeService(tokenExchangeService) {}
+          tokenExchangeService(tokenExchangeService), context() {}
     virtual ~TokenExchangeExecutor() = default;
 
     /**
@@ -62,12 +65,90 @@ private:
      */
     std::string performTokenExchange();
 
+    /** Finds the token exchange endpoint.
+    *
+    * @return string containing token exchange url
+    */
+    std::string getTokenEndpoint();
+
+    /** Generates the contents of the basic authorization header.
+    *
+    * @return string containing authorization
+    */
+    std::string getAuthorizationHeader() const;
+
+    /** Generates the payload to be sent to the authorization server during the token exchange workflow.
+    *
+    * @return string containing authorization
+    */
+    std::string getExchangeData() const;
+
+    /** Executes a Davix HTTP request.
+    *
+    * @param request reference to a Davix HTTP request object
+    * @return string reply form the server
+    */
+    static std::string executeHttpRequest(Davix::HttpRequest& request)
+    {
+        Davix::DavixError* error = nullptr;
+
+        // Execute the request and check if request execution failed
+        if (request.executeRequest(&error)) {
+            // Throws Davix exception if error is not null
+            Davix::checkDavixError(&error);
+        }
+
+        if (request.getRequestCode() != 200) {
+            // Throws Davix exception if error is not null
+            Davix::checkDavixError(&error);
+        }
+
+        return request.getAnswerContent();
+    }
+
+    /** Parse and find the value of a given key in a JSON message.
+    *
+    * @param msg a message in JSON format
+    * @param key the key to find in the JSON
+    * @return string value associated with key
+    */
+    static std::string parseJson(const std::string& msg, const::std::string& key)
+    {
+        // Parse the JSON
+        Json::Value obj;
+        std::stringstream(msg) >> obj;
+
+        std::string res = obj.get(key, "").asString();
+
+        if (res.empty()) {
+            std::stringstream error;
+            error << "Response JSON did not contain " << key << " key";
+            Json::throwLogicError(error.str());
+        }
+
+        return res;
+    }
+
+    /** Checks that a Davix Uri is valid
+    *
+    * @return
+    */
+    static void validateUri(const Davix::Uri& uri)
+    {
+        Davix::DavixError* err = nullptr;
+        Davix::uriCheckError(uri, &err);
+        // Throws Davix exception if error is not empty
+        Davix::checkDavixError(&err);
+    }
+
     /// Token object
     Token token;
-    /// Reference to the TokenProvider
+    /// TokenProvider object
     TokenProvider tokenProvider;
     /// Reference to TokenExchange service
     TokenExchangeService& tokenExchangeService;
+    /// Davix context
+    Davix::Context context;
 };
 
 } // end namespace server

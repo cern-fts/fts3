@@ -8,6 +8,8 @@ CREATE TABLE `t_token` (
   `access_token` longtext NOT NULL,
   `refresh_token` longtext,
   `issuer` varchar(1024) NOT NULL,
+  `scope` varchar(1024) NOT NULL,
+  `audience` varchar(1024) NOT NULL,
   PRIMARY KEY (`token_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

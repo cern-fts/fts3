@@ -99,8 +99,6 @@ void TokenExchangeService::getRefreshTokens() {
 }
 
 void TokenExchangeService::runService() {
-    // Initialize random seed
-    srand(time(nullptr));
 
     while (!boost::this_thread::interruption_requested()) {
         tokenExchangeRecords = time(nullptr);
