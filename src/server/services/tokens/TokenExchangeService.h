@@ -39,13 +39,15 @@ protected:
     void getRefreshTokens();
 
 private:
-    /// Protect concurrent access to "refresh_tokens" set
+    /// Protect concurrent access to "refreshTokens" set
     boost::shared_mutex mx;
 
     /// Set of <token_id, refresh_token> for refresh tokens
     /// The set is populated by the worker threads
     /// and will be collected at the end of a cycle
-    std::set<std::pair<std::string, std::string>> refresh_tokens;
+    std::set<std::pair<std::string, std::string>> refreshTokens;
+
+    bool impatientDebugger;
 };
 
 } // end namespace server

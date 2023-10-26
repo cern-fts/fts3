@@ -4302,6 +4302,128 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
 }
 
 
+void MySqlAPI::storeRefreshTokens(const std::set< std::pair<std::string, std::string> >& refreshTokens)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        sql.begin();
+
+        // Prepare statement for storing refresh token
+        std::string tokenId;
+        std::string refreshToken;
+        soci::statement stmt = (sql.prepare <<
+                                            " UPDATE t_token SET refresh_token = :refreshToken "
+                                            " WHERE token_id = :tokenId",
+                                soci::use(refreshToken),
+                                soci::use(tokenId));
+
+        sql.begin();
+        for (const auto& pair: refreshTokens) {
+            tokenId = pair.first;
+            refreshToken = pair.second;
+            stmt.execute(true);
+        }
+        sql.commit();
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::updateTokenPrepFiles()
+{
+    struct TokenPrepFile {
+        TokenPrepFile(uint64_t file_id, const std::string& job_id,
+                      const std::string& src_token_id,
+                      const std::string& dst_token_id) :
+              file_id(file_id), job_id(job_id),
+              src_token_id(src_token_id), dst_token_id(dst_token_id) {}
+
+        uint64_t file_id;
+        std::string job_id;
+        std::string src_token_id;
+        std::string dst_token_id;
+    };
+
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const soci::rowset<soci::row> rs = (sql.prepare <<
+                                    " SELECT f.job_id, f.file_id, f.src_token_id, f.dst_token_id "
+                                    " FROM t_file f "
+                                    "     INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id "
+                                    "     INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id "
+                                    " WHERE f.file_state = 'TOKEN_PREP' "
+                                    "     AND t_src.refresh_token IS NOT NULL "
+                                    "     AND t_dst.refresh_token IS NOT NULL "
+                                    " ORDER BY NULL");
+
+        // Store all data into memory structure in order to reiterate
+        // (there might be a way to reset the rowset iterator
+        std::list<TokenPrepFile> tokenPrepFiles;
+
+        for (const auto& row: rs) {
+            tokenPrepFiles.emplace_back(
+                    row.get<unsigned long long>("file_id", 0),
+                    row.get<std::string>("job_id", ""),
+                    row.get<std::string>("src_token_id", ""),
+                    row.get<std::string>("dst_token_id", "")
+            );
+        }
+
+        // Prepare statement for "TOKEN_PREP" --> "SUBMITTED" update
+        uint64_t file_id;
+        soci::statement stmt = (sql.prepare <<
+                                    " UPDATE t_file SET file_state = 'SUBMITTED' "
+                                    " WHERE file_id = :fileId AND file_state = 'TOKEN_PREP'",
+                                soci::use(file_id));
+
+        sql.begin();
+        for (const auto& file: tokenPrepFiles) {
+            file_id = file.file_id;
+            stmt.execute(true);
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Updated 'TOKEN PREP' file:"
+                            << " job_id = " << file.job_id << " file_id=" << file.file_id
+                            << " src_token_id=" << file.src_token_id
+                            << " dst_token_id=" << file.dst_token_id
+                            << commit;
+        }
+        sql.commit();
+
+        // Send Monitoring Transfer State messages
+        for (const auto& file: tokenPrepFiles) {
+            auto transferStates = getStateOfTransferInternal(sql, file.job_id, file.file_id);
+
+            if (!transferStates.empty()) {
+                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+
+                for (const auto &state: transferStates) {
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, state);
+                }
+            }
+        }
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
 bool MySqlAPI::resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times)
 {
     bool willBeRetried = false;

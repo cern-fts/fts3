@@ -323,6 +323,12 @@ public:
     /// Returns list of access tokens without an associated refresh token
     virtual std::list<Token> getAccessTokensWithoutRefresh();
 
+    /// Store a list of refresh tokens identified by token ID
+    virtual void storeRefreshTokens(const std::set< std::pair<std::string, std::string> >& refreshTokens);
+
+    /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
+    virtual void updateTokenPrepFiles();
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
         const std::string& voName,

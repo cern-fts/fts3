@@ -35,7 +35,8 @@ namespace server {
 extern time_t tokenExchangeRecords;
 
 
-TokenExchangeService::TokenExchangeService(HeartBeat *beat) : BaseService("TokenExchangeService"), beat(beat)
+TokenExchangeService::TokenExchangeService(HeartBeat *beat) :
+    BaseService("TokenExchangeService"), beat(beat), impatientDebugger(true)
 {
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
     pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
@@ -77,16 +78,19 @@ void TokenExchangeService::getRefreshTokens() {
         // Wait for all the workers to finish
         execPool.join();
 
-        boost::unique_lock<boost::shared_mutex> lock(mx);
+        {
+            boost::unique_lock<boost::shared_mutex> lock(mx);
 
-        for (const auto& it: refresh_tokens) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Printing time: "
-                                            << "token_id=" << it.first << " "
-                                            << "refresh_token=" << it.second
-                                            << commit;
+            for (const auto &it: refreshTokens) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Storing refresh token: "
+                                                << "token_id=" << it.first << " "
+                                                << "refresh_token=" << it.second
+                                                << commit;
+            }
+
+            db->storeRefreshTokens(refreshTokens);
+            refreshTokens.clear();
         }
-        refresh_tokens.clear();
-
     } catch (const boost::thread_interrupted &) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TokenExchangeService:getRefreshTokens" << commit;
         execPool.interrupt();
@@ -102,11 +106,17 @@ void TokenExchangeService::runService() {
     // Initialize random seed
     srand(time(nullptr));
 
+    auto db = db::DBSingleton::instance().getDBObjectInstance();
+
     while (!boost::this_thread::interruption_requested()) {
         tokenExchangeRecords = time(nullptr);
 
         try {
-            boost::this_thread::sleep(pollInterval);
+            if (!impatientDebugger) {
+                boost::this_thread::sleep(pollInterval);
+            } else {
+                boost::this_thread::sleep(boost::posix_time::seconds(5));
+            }
 
             if (DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more token-exchange for this instance!" << commit;
@@ -117,6 +127,7 @@ void TokenExchangeService::runService() {
             // This service intentionally runs only on the first node
             if (beat->isLeadNode(true)) {
                 getRefreshTokens();
+                db->updateTokenPrepFiles();
             }
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;
@@ -129,7 +140,7 @@ void TokenExchangeService::runService() {
 void TokenExchangeService::registerRefreshToken(const std::string& token_id, const std::string& refreshToken)
 {
     boost::unique_lock<boost::shared_mutex> lock(mx);
-    refresh_tokens.emplace(token_id, refreshToken);
+    refreshTokens.emplace(token_id, refreshToken);
 }
 
 } // end namespace server
