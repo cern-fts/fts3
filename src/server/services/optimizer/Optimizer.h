@@ -72,13 +72,57 @@ struct PairState {
     double filesizeAvg, filesizeStdDev;
     // Optimizer last decision
     int connections;
-
+    double avgTput;
+    
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1) {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0) {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
-        activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn) {}
+        activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn),
+        avgTput(0) {}
+};
+
+struct StorageState {
+    // time_t timestamp;
+    double asSourceThroughput;
+    double asSourceThroughputInst;
+    double asDestThroughput;
+    double asDestThroughputInst;
+
+    int inbound_max_active;
+    double inbound_max_throughput;
+    int outbound_max_active;
+    double outbound_max_throughput;
+    
+    // int totalDecision;
+    // int totalActive;
+
+    StorageState(): asSourceThroughput(0), asSourceThroughputInst(0),
+                    asDestThroughput(0), asDestThroughputInst(0),
+                    inbound_max_active(0), inbound_max_throughput(0),
+                    outbound_max_active(0), outbound_max_throughput(0) {}
+    
+    StorageState(int ia, double it, int oa, double ot):
+        inbound_max_active(ia), inbound_max_throughput(it),
+        outbound_max_active(oa), outbound_max_throughput(ot),
+        asSourceThroughput(0), asSourceThroughputInst(0),
+        asDestThroughput(0), asDestThroughputInst(0) {}
+    
+    /* StorageState(time_t ts, double st, double sti, double dt, double dti, int td, int ta):
+        timestamp(ts), asSourceThroughput(st), asSourceThroughputInst(sti),
+        asDestThroughput(dt), asDestThroughputInst(dti),
+        totalDecision(td), totalActive(ta) {}
+    */    
+
+    /*friend std::ostream& operator<<(std::ostream& os, const StorageLimits& limits) {
+        os << "Source: " << limits.source << "\n"
+           << "Destination: " << limits.destination << "\n"
+           << "ThroughputSource: " << limits.throughputSource << "\n"
+           << "ThroughputDestination: " << limits.throughputDestination;
+        return os;
+    }
+    */
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -90,14 +134,19 @@ public:
     // Return a list of pairs with active or submitted transfers
     virtual std::list<Pair> getActivePairs(void) = 0;
 
+    virtual void dumpStorageStates(std::map<std::string, StorageState> *currentSEStateMap) = 0;
+
     // Return the optimizer configuration value
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
 
-    // Get configured limits
-    virtual void getPairLimits(const Pair &pair, Range *range, StorageLimits *limits) = 0;
+    // Get configured storage and pair limits
+    virtual void getPairLimits(const Pair &pair, Range *range) = 0;
 
     // Get the stored optimizer value (current value)
     virtual int getOptimizerValue(const Pair&) = 0;
+
+    // // Get the average instantaneous throughput of all active files
+    // virtual double getInstThroughputPerConn(const Pair&) = 0;
 
     // Get the weighted throughput for the pair
     virtual void getThroughputInfo(const Pair &, const boost::posix_time::time_duration &,
@@ -113,8 +162,10 @@ public:
     virtual int getSubmitted(const Pair&) = 0;
 
     // Get current throughput
-    virtual double getThroughputAsSource(const std::string&) = 0;
-    virtual double getThroughputAsDestination(const std::string&) = 0;
+    virtual double getThroughputAsSource(const std::string&, const boost::posix_time::time_duration&) = 0;
+    virtual double getThroughputAsSourceInst(const std::string&) = 0;
+    virtual double getThroughputAsDestination(const std::string&, const boost::posix_time::time_duration&) = 0;
+    virtual double getThroughputAsDestinationInst(const std::string&) = 0;
 
     // Permanently register the optimizer decision
     virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,
@@ -122,6 +173,9 @@ public:
 
     // Permanently register the number of streams per active
     virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
+
+    // // Save information in database
+    // virtual void updateOptimizerState(const Pair &pair, const PairState &newState) = 0;
 };
 
 // Used by the optimizer to notify decisions
@@ -131,10 +185,33 @@ public:
         int diff, const std::string &rationale) = 0;
 };
 
+/*
+ * Conceptually the optimizer is a dynamic system, of the form
+ * y(n) = f( x(n-1), x(n), y(n-1) ),
+ * where n: current interval
+ *       x(n): input state
+ *       y(n): persistent, decision state
+ * 
+ * Note that the input state can be broken down into three components
+ *     x1(n): is local and will be used only by a pair
+ *     x2(n): is also local, but will be needed to compute x3
+ *     x3(n): more global state and depends on the sum of x2(n)
+ * 
+ * At the moment, the optimizer has the following structure 
+ *     y(n) = f( x1(n), x2(n), x3(n), y(n-1))
+ * 
+ * But for sake of clarity, we save the entire vectors:
+ *     x_{1,2}(n-1) in memoryPairStateMap
+ *     x_{1,2}(n) in currentPairStateMap
+ *     x_{3}(n) in currentSEStateMap
+*/
 // Optimizer implementation
 class Optimizer: public boost::noncopyable {
 protected:
-    std::map<Pair, PairState> inMemoryStore;
+    std::map<Pair, PairState> memoryPairStateMap;
+    std::map<Pair, PairState> currentPairStateMap;
+    std::map<std::string, StorageState> currentSEStateMap;
+
     OptimizerDataSource *dataSource;
     OptimizerCallbacks *callbacks;
     boost::posix_time::time_duration optimizerSteadyInterval;
@@ -147,6 +224,9 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
+    // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
+    void getStorageLimits(const Pair &pair, StorageLimits *limits);
+
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
     bool optimizeConnectionsForPair(OptimizerMode optMode, const Pair &);
@@ -155,15 +235,19 @@ protected:
     void optimizeStreamsForPair(OptimizerMode optMode, const Pair &);
 
     // Stores into rangeActiveMin and rangeActiveMax the working range for the optimizer
-    void getOptimizerWorkingRange(const Pair &pair, Range *range, StorageLimits *limits);
+    void getOptimizerWorkingRange(const Pair &pair, const StorageLimits &limits, Range *range);
 
     // Updates decision
     void setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
         int diff, const std::string &rationale, boost::timer::cpu_times elapsed);
 
+    void getCurrentIntervalInputState(const std::list<Pair> &);
 public:
     Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks);
     ~Optimizer();
+
+    // Calculates the ideal window size for throughput estimation
+    boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration);
 
     void setSteadyInterval(boost::posix_time::time_duration);
     void setMaxNumberOfStreams(int);
@@ -172,6 +256,7 @@ public:
     void setBaseSuccessRate(int);
     void setStepSize(int increase, int increaseAggressive, int decrease);
     void setEmaAlpha(double);
+    void updateDecisions(const std::list<Pair> &);
     void run(void);
     void runOptimizerForPair(const Pair&);
 };

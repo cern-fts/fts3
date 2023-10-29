@@ -53,11 +53,67 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
     }
 }
 
+// Purpose: Gets and saves current performance on all pairs in 
+// memory stores in currentPairStateMap and currentSEStateMap
+// Input: List of active pairs, as well as SQL database data.
+void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.0" << commit;
+    // Initializes currentSEStateMap with limit information from
+    // t_se table in the SQL database.
+    dataSource->dumpStorageStates(&currentSEStateMap);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.1" << commit;
 
-void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, StorageLimits *limits)
+    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3." << *i << commit;
+        // ===============================================        
+        // STEP 1: DERIVING PAIR STATE
+        // ===============================================        
+       
+        // Initialize the PairState object we will store information in
+        Pair pair = *i;
+        PairState current;
+
+        // Compute the values that will be saved in PairState
+        current.timestamp = time(NULL);
+        current.avgDuration = dataSource->getAverageDuration(pair, boost::posix_time::minutes(30));
+        boost::posix_time::time_duration timeFrame = fts3::optimizer::calculateTimeFrame(current.avgDuration);
+
+        current.activeCount = dataSource->getActive(pair);
+        current.successRate = dataSource->getSuccessRateForPair(pair, timeFrame, &current.retryCount);
+        current.queueSize = dataSource->getSubmitted(pair);
+
+        // Compute throughput values (used in Step 2)      
+        dataSource->getThroughputInfo(pair, timeFrame,
+          &(current.throughput), &(current.filesizeAvg), &(current.filesizeStdDev));
+        
+        // Save to map
+        currentPairStateMap[pair] = current;
+        
+        // ===============================================        
+        // STEP 2: DERIVING SE STATE FROM PAIR STATE
+        // ===============================================   
+
+        // Increments SE throughput value by the pair's throughput value.
+        // Because the default and current majority state is no throughput limitation,
+        // the if condition is added.
+        if(currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
+           && currentSEStateMap[pair.source].outbound_max_throughput > 0) {
+            currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
+        }
+
+        if(currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
+           && currentSEStateMap[pair.destination].inbound_max_throughput > 0) {
+            currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
+        }
+    }
+}
+
+// Reads limits into Range object for a pair.
+// Uses StorageLimits for a hard max.
+void Optimizer::getOptimizerWorkingRange(const Pair &pair, const StorageLimits &limits, Range *range)
 {
     // Query specific limits
-    dataSource->getPairLimits(pair, range, limits);
+    dataSource->getPairLimits(pair, range);
 
     // If range not set, use defaults
     if (range->min <= 0) {
@@ -71,7 +127,7 @@ void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, Storage
 
     bool isMaxConfigured = (range->max > 0);
     if (!isMaxConfigured) {
-        range->max = std::min({limits->source, limits->destination});
+        range->max = std::min({limits.source, limits.destination});
         range->storageSpecific = true;
         if (range->max < range->min) {
             range->max = range->min;
@@ -152,11 +208,45 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
     return decision;
 }
 
+// Extracts only the limits from currentSEStateMap
+void Optimizer::getStorageLimits(const Pair &pair, StorageLimits *limits) {
+
+    for (const auto& pair : currentSEStateMap) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "SE: " << pair.first << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << pair.second.outbound_max_throughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << pair.second.outbound_max_active << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << pair.second.inbound_max_throughput << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << pair.second.inbound_max_active << commit;
+    }
+
+    if (currentSEStateMap.find(pair.source) != currentSEStateMap.end()) {
+        limits->throughputSource = currentSEStateMap[pair.source].outbound_max_throughput;
+        limits->source = currentSEStateMap[pair.source].outbound_max_active;
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "Source SE not in t_se." << commit;
+        limits->throughputSource = currentSEStateMap["*"].outbound_max_throughput;
+        limits->source = currentSEStateMap["*"].outbound_max_active;
+    }
+    if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()) {
+        limits->throughputDestination = currentSEStateMap[pair.destination].inbound_max_throughput;
+        limits->destination = currentSEStateMap[pair.destination].inbound_max_active;          
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "Destination SE not in t_se." << commit;
+        limits->throughputDestination = currentSEStateMap["*"].inbound_max_throughput;
+        limits->destination = currentSEStateMap["*"].inbound_max_active;        
+    }
+           
+}
+
 // This algorithm idea is similar to the TCP congestion window.
 // It gives priority to success rate. If it gets worse, it will back off reducing
 // the total number of connections between storages.
 // If the success rate is good, and the throughput improves, it will increase the number
 // of connections.
+// Purpose: Save new decision to database based on network state.
+// Return: Boolean signifying whether or not the decision was modified.
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
     int decision = 0;
@@ -165,29 +255,27 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Start ticking!
     boost::timer::cpu_timer timer;
 
-    // Optimizer working values
+    // Reads in range (pair decision's bounds) and limits (total throughut per SE limits)
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+
+    getStorageLimits(pair, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
+    
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Storage limits for " << pair << ": " << limits.throughputSource
+                                    << "/" << limits.throughputDestination
+                                    << ", " << limits.source
+                                    << "/" << limits.destination << commit;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
 
-    // Previous decision
+    // Previous decision 
     int previousValue = dataSource->getOptimizerValue(pair);
 
-    // Initialize current state
-    PairState current;
-    current.timestamp = time(NULL);
-    current.avgDuration = dataSource->getAverageDuration(pair, boost::posix_time::minutes(30));
+    // Read in current pair state information.
+    PairState currentPair = currentPairStateMap[pair];
 
-    boost::posix_time::time_duration timeFrame = calculateTimeFrame(current.avgDuration);
-
-    dataSource->getThroughputInfo(pair, timeFrame,
-        &current.throughput, &current.filesizeAvg, &current.filesizeStdDev);
-    current.successRate = dataSource->getSuccessRateForPair(pair, timeFrame, &current.retryCount);
-    current.activeCount = dataSource->getActive(pair);
-    current.queueSize = dataSource->getSubmitted(pair);
-
+    // Case 1a:
     // There is no value yet. In this case, pick the high value if configured, mid-range otherwise.
     if (previousValue == 0) {
         if (range.specific) {
@@ -198,58 +286,76 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
             rationale << "No information. Start halfway.";
         }
 
-        setOptimizerDecision(pair, decision, current, decision, rationale.str(), timer.elapsed());
+        currentPair.ema = currentPair.throughput;
+        // memoryPairStateMap[pair] = currentPair; 
 
-        current.ema = current.throughput;
-        inMemoryStore[pair] = current;
+        // Update memoryPairStateMap variable + SQL tables (t_optimizer and t_optimizer_evolution)
+        setOptimizerDecision(pair, decision, currentPair, decision, rationale.str(), timer.elapsed());
 
         return true;
     }
 
-    // There is information, but it is the first time seen since the restart
-    if (inMemoryStore.find(pair) == inMemoryStore.end()) {
-        current.ema = current.throughput;
-        inMemoryStore[pair] = current;
+    // Case 1b: There is information, but it is the first time seen since the restart
+    if (memoryPairStateMap.find(pair) == memoryPairStateMap.end()) {
+        currentPair.ema = currentPair.throughput;
+        memoryPairStateMap[pair] = currentPair;
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Store first feedback from " << pair << commit;
         return false;
     }
 
-    const PairState previous = inMemoryStore[pair];
+    // Read out previous 
+    const PairState previous = memoryPairStateMap[pair];
 
     // Calculate new Exponential Moving Average
-    current.ema = exponentialMovingAverage(current.throughput, emaAlpha, previous.ema);
+    currentPair.ema = exponentialMovingAverage(currentPair.throughput, emaAlpha, previous.ema);
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        setOptimizerDecision(pair, range.min, current, 0, "Range fixed", timer.elapsed());
+        setOptimizerDecision(pair, range.min, currentPair, 0, "Range fixed", timer.elapsed());
         return true;
     }
 
-    // Apply bandwidth limits
-    if (limits.throughputSource > 0) {
-        double throughput = dataSource->getThroughputAsSource(pair.source);
-        if (throughput > limits.throughputSource) {
-            decision = previousValue - decreaseStepSize;
-            rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
+
+
+    // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
+    // se_limit = limits.throughputSource
+    double se_limit = currentSEStateMap[pair.source].outbound_max_throughput;
+    if (se_limit > 0) {
+        if (currentSEStateMap[pair.source].asSourceThroughput > se_limit) {
+            decision = std::max(previousValue - decreaseStepSize, range.min);
+            rationale << "Source throughput limitation reached (" << se_limit << ")";
+            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            return true;
+        }
+        if (currentSEStateMap[pair.source].asSourceThroughputInst > se_limit) {
+            decision = std::max(previousValue - decreaseStepSize, range.min);
+            rationale << "Source (instantaneous) throughput limitation reached (" << se_limit << ")";
+            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
     }
+
+    // Apply bandwidth limits (destination)
     if (limits.throughputDestination > 0) {
-        double throughput = dataSource->getThroughputAsDestination(pair.destination);
-        if (throughput > limits.throughputDestination) {
-            decision = previousValue - decreaseStepSize;
+        if (currentSEStateMap[pair.destination].asDestThroughput > limits.throughputDestination) {
+            decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
             return true;
         }
+        if (currentSEStateMap[pair.destination].asDestThroughputInst > limits.throughputDestination) {
+            decision = std::max(previousValue - decreaseStepSize, range.min);
+            rationale << "Destination (instantaneous) throughput limitation reached (" << limits.throughputDestination << ")";
+            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            return true;
+        }        
     }
 
     // Run only when it makes sense
-    time_t timeSinceLastUpdate = current.timestamp - previous.timestamp;
+    time_t timeSinceLastUpdate = currentPair.timestamp - previous.timestamp;
 
-    if (current.successRate == previous.successRate &&
-        current.ema == previous.ema &&
+    if (currentPair.successRate == previous.successRate &&
+        currentPair.ema == previous.ema &&
         timeSinceLastUpdate < optimizerSteadyInterval.total_seconds()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
             << "Optimizer for " << pair
@@ -262,14 +368,16 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         << "Optimizer max possible number of actives for " << pair << ": " << range.max << commit;
 
     // For low success rates, do not even care about throughput
-    if (current.successRate < lowSuccessRate) {
-        decision = optimizeLowSuccessRate(current, previous, previousValue,
+    if (currentPair.successRate < lowSuccessRate) {
+        // optimizeLowSuccessRate decreases decision (unless success rate is currently increasing)
+        decision = optimizeLowSuccessRate(currentPair, previous, previousValue,
             baseSuccessRate, decreaseStepSize,
             rationale);
     }
     // No throughput info
-    else if (current.ema == 0) {
-        decision = optimizeNotEnoughInformation(current, previous, previousValue, rationale);
+    else if (currentPair.ema == 0) {
+        // Does nothing
+        decision = optimizeNotEnoughInformation(currentPair, previous, previousValue, rationale);
     }
     // Good success rate, or not enough information to take any decision
     else {
@@ -277,7 +385,9 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (optMode >= kOptimizerNormal) {
             localIncreaseStep = increaseAggressiveStepSize;
         }
-        decision = optimizeGoodSuccessRate(current, previous, previousValue,
+        // optimizeGoodSuccessRate increases decision if filesize is decreasing or
+        // throughput is increasing.
+        decision = optimizeGoodSuccessRate(currentPair, previous, previousValue,
             decreaseStepSize, localIncreaseStep,
             rationale);
     }
@@ -305,14 +415,14 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // go into streams.
     // Otherwise, stop pushing.
     if (optMode == kOptimizerConservative) {
-        if (decision > previousValue && current.queueSize < decision) {
+        if (decision > previousValue && currentPair.queueSize < decision) {
             decision = previousValue;
             rationale << ". Not enough files in the queue";
         }
     }
     // Do not go too far with the number of connections
     if (optMode >= kOptimizerNormal) {
-        if (decision > current.queueSize * maxNumberOfStreams) {
+        if (decision > currentPair.queueSize * maxNumberOfStreams) {
             decision = previousValue;
             rationale << ". Too many streams";
         }
@@ -321,11 +431,15 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
+    setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
     return true;
 }
 
 
+
+// setOptimizerDecision does two things
+//   - Update Optimizer struct variable (memoryPairStateMap)
+//   - Update SQL database (t_optimizer and t_optimizer_evolution)
 void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
     int diff, const std::string &rationale, boost::timer::cpu_times elapsed)
 {
@@ -335,8 +449,8 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << rationale << commit;
 
-    inMemoryStore[pair] = current;
-    inMemoryStore[pair].connections = decision;
+    memoryPairStateMap[pair] = current;
+    memoryPairStateMap[pair].connections = decision;
     dataSource->storeOptimizerDecision(pair, decision, current, diff, rationale);
 
     if (callbacks) {

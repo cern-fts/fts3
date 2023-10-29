@@ -66,10 +66,13 @@ protected:
     std::map<Pair, OptimizerRegister> registry;
     std::map<Pair, int> streamsRegistry;
     std::map<Pair, TransferList> transferStore;
+    std::map<std::string, StorageState> mockStorageStore;
+
     OptimizerMode mockOptimizerMode;
 
     void populateTransfers(const Pair &pair, const std::string &state, int count,
         bool recoverable = false, double thr = 10, uint64_t filesize = 1024) {
+
         auto &transfers = transferStore[pair];
 
         for (int i = 0; i < count; i++) {
@@ -120,6 +123,10 @@ public:
         return pairs;
     }
 
+    void dumpStorageStates(std::map<std::string, StorageState> *result) {
+
+    }
+
     OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
         return mockOptimizerMode;
     }
@@ -128,10 +135,13 @@ public:
         return false;
     }
 
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
-        range->min = range->max = 0;
+    void getStorageLimits(const Pair&, StorageLimits *limits) {
         limits->destination = limits->source = 200;
         limits->throughputDestination = limits->throughputSource = 0;
+    }
+
+    void getPairLimits(const Pair&, Range *range) {
+        range->min = range->max = 0;
     }
 
     int getOptimizerValue(const Pair &pair) {
@@ -141,6 +151,27 @@ public:
         }
         return i->second.back().activeDecision;
     }
+
+    // double getInstThroughputPerConn(const Pair &pair) {
+    //     auto tsi = transferStore.find(pair);
+    //     if (tsi == transferStore.end()) {
+    //         return 0;
+    //     }
+    //     auto &transfers = tsi->second;
+
+    //     // Each entry i in transfers is equivalent to a row in t_file.
+    //     int numNonZero = 0;
+    //     double totalTput;
+    //     for (auto i = transfers.begin(); i != transfers.end(); ++i) {
+    //         if (i->state == "ACTIVE") {
+    //             totalTput += i->throughput;
+    //             if (i->throughput > 0) {
+    //                 ++numNonZero;
+    //             }
+    //         }
+    //     }
+    //     return totalTput/numNonZero;
+    // }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
         double *throughput, double *filesizeAvg, double *filesizeStdDev)
@@ -265,9 +296,17 @@ public:
         return counter;
     }
 
-    double getThroughputAsSource(const std::string &storage) {
-        double acc = 0;
+    double getThroughputAsSource(const std::string &storage, const boost::posix_time::time_duration &interval) {
+        return getThroughputAsSourceInst(storage);
+    }
 
+    // In the test environment, throughput=transferred/duration
+    // and the two methods are the same.
+    double getThroughputAsSourceInst(const std::string &storage) {
+        // transferStore is a map from Pair to TransferList
+        // TransferList is a list of MockTransfers
+        // MockTransfer is a struct with most of the t_file values.
+        double acc = 0;
         for (auto i = transferStore.begin(); i != transferStore.end(); ++i) {
             if (i->first.source == storage) {
                 auto &transfers = i->second;
@@ -282,7 +321,11 @@ public:
         return acc;
     }
 
-    double getThroughputAsDestination(const std::string &storage) {
+    double getThroughputAsDestination(const std::string &storage, const boost::posix_time::time_duration &interval) {
+        return getThroughputAsDestinationInst(storage);
+    }
+
+    double getThroughputAsDestinationInst(const std::string &storage) {
         double acc = 0;
 
         for (auto i = transferStore.begin(); i != transferStore.end(); ++i) {
@@ -297,7 +340,7 @@ public:
             }
         }
         return acc;
-    }
+    }    
 
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {
@@ -307,6 +350,10 @@ public:
     void storeOptimizerStreams(const Pair &pair, int streams) {
         streamsRegistry[pair] = streams;
     }
+
+    // void updateOptimizerState(const Pair &pair, const PairState &newState) {
+    //     return;
+    // }
 };
 
 
@@ -317,7 +364,9 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getStorageLimits(pair, &limits);
+
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
@@ -329,11 +378,14 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
 // Working range for a pair where both storages are configured
 class OptimizerRangeSeFixture: public BaseOptimizerFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
-        range->min = range->max = 0;
+    void getStorageLimits(const Pair&, StorageLimits *limits) {
         limits->destination = 60;
         limits->source = 60;
         limits->throughputDestination = limits->throughputSource = 0;
+    }
+
+    void getPairLimits(const Pair &pair, Range *range) {
+        range->min = range->max = 0;
     }
 };
 
@@ -343,7 +395,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getStorageLimits(pair, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK(!range.specific);
     BOOST_CHECK_NE(range.max, 0);
@@ -355,12 +408,15 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
 // Working range is configured
 class OptimizerRangeSetFixture: public OptimizerRangeSeFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
+    void getStorageLimits(const Pair&, StorageLimits *limits) {
+        limits->destination = 40;
+        limits->source = 20;
+    }
+
+    void getPairLimits(const Pair&, Range *range) {
         range->min = 150;
         range->max = 200;
         range->specific = true;
-        limits->destination = 40;
-        limits->source = 20;
     }
 };
 
@@ -370,7 +426,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getStorageLimits(pair, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK(range.specific);
     BOOST_CHECK_EQUAL(range.max, 200);
@@ -392,7 +449,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
 
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getStorageLimits(pair, &limits);
+    getOptimizerWorkingRange(pair, limits, &range);
 
     BOOST_CHECK_LE(lastEntry->activeDecision, range.max);
     BOOST_CHECK_GE(lastEntry->activeDecision, range.min);
