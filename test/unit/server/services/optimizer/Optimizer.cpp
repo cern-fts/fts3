@@ -67,6 +67,8 @@ protected:
     std::map<Pair, int> streamsRegistry;
     std::map<Pair, TransferList> transferStore;
     std::map<std::string, StorageState> mockStorageStore;
+    //std::map<Pair, PairState> currentPairStateMap;
+    //std::map<std::string, StorageState> currentSEStateMap;
 
     OptimizerMode mockOptimizerMode;
 
@@ -123,9 +125,51 @@ public:
         return pairs;
     }
 
+    // Function reads in all values from the t_se table, which specify
+    //   - inbound and outbound throughput from every SE
+    //   - inbound and outbound maximum number of connections from every SE.
+    // Additionally, the instantaneous throughput is also computed. 
+    // Returns: A map from SE name (string) --> StorageState (both limits and actual throughput values).
     void dumpStorageStates(std::map<std::string, StorageState> *result) {
+        StorageState SEState;
+        StorageLimits limits;
+        const Pair pair = getActivePairs().front();
+        std::string se;
+        
+        //source
+        se = pair.source;
+        getStorageLimits(pair, &limits);
+        SEState.outbound_max_active = limits.source;
+        SEState.outbound_max_throughput = limits.throughputSource;
+        SEState.inbound_max_active = limits.source;
+        SEState.inbound_max_throughput = limits.source;
 
-    }
+        // Queries database to get current instantaneous throughput value.
+        if(SEState.outbound_max_throughput > 0) {
+            SEState.asSourceThroughputInst = getThroughputAsSourceInst(se);
+        }
+        if(SEState.inbound_max_throughput > 0) { 
+            SEState.asDestThroughputInst = getThroughputAsDestinationInst(se);                
+        }
+
+        (*result)[se] = SEState;
+        
+        se = pair.destination;
+        SEState.outbound_max_active = limits.destination;
+        SEState.outbound_max_throughput = limits.throughputDestination;
+        SEState.inbound_max_active = limits.destination;
+        SEState.inbound_max_throughput = limits.throughputDestination;
+
+        // Queries database to get current instantaneous throughput value.
+        if(SEState.outbound_max_throughput > 0) {
+            SEState.asSourceThroughputInst = getThroughputAsSourceInst(se);
+        }
+        if(SEState.inbound_max_throughput > 0) { 
+            SEState.asDestThroughputInst = getThroughputAsDestinationInst(se);                
+        }
+
+        (*result)[se] = SEState;
+    }   
 
     OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
         return mockOptimizerMode;
@@ -151,6 +195,61 @@ public:
         }
         return i->second.back().activeDecision;
     }
+
+//     // Purpose: Gets and saves current performance on all pairs in 
+//     // memory stores in currentPairStateMap and currentSEStateMap
+//     // Input: List of active pairs, as well as SQL database data.
+//     void getCurrentIntervalInputState(const Pair &pair) {
+//         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.0" << commit;
+//         // Initializes currentSEStateMap with limit information from
+//         // t_se table in the SQL database.
+//         //dumpStorageStates(result); --> need to fix
+//         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.1" << commit;
+
+       
+//             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3." << *i << commit;
+//             // ===============================================        
+//             // STEP 1: DERIVING PAIR STATE
+//             // ===============================================        
+        
+//             // Initialize the PairState object we will store information in
+//             Pair pair = *pair;
+//             PairState current;
+
+//             // Compute the values that will be saved in PairState
+//             current.timestamp = time(NULL);
+//             current.avgDuration = getAverageDuration(pair, boost::posix_time::minutes(30));
+//             boost::posix_time::time_duration timeFrame = fts3::optimizer::calculateTimeFrame(current.avgDuration);
+
+//             current.activeCount = getActive(pair);
+//             current.successRate = getSuccessRateForPair(pair, timeFrame, &current.retryCount);
+//             current.queueSize = getSubmitted(pair);
+
+//             // Compute throughput values (used in Step 2)      
+//             getThroughputInfo(pair, timeFrame,
+//             &(current.throughput), &(current.filesizeAvg), &(current.filesizeStdDev));
+            
+//             // Save to map
+//             currentPairStateMap[pair] = current;
+            
+//             // ===============================================        
+//             // STEP 2: DERIVING SE STATE FROM PAIR STATE
+//             // ===============================================   
+
+//             // Increments SE throughput value by the pair's throughput value.
+//             // Because the default and current majority state is no throughput limitation,
+//             // the if condition is added.
+//             if(currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
+//             && currentSEStateMap[pair.source].outbound_max_throughput > 0) {
+//                 currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
+//             }
+
+//             if(currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
+//             && currentSEStateMap[pair.destination].inbound_max_throughput > 0) {
+//                 currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
+//             }
+        
+// }
 
     // double getInstThroughputPerConn(const Pair &pair) {
     //     auto tsi = transferStore.find(pair);
@@ -438,11 +537,14 @@ BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed successful and actives
     populateTransfers(pair, "FINISHED", 100);
     populateTransfers(pair, "ACTIVE", 20);
 
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
@@ -461,6 +563,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed successful and actives
     populateTransfers(pair, "FINISHED", 100);
@@ -468,6 +572,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 100);
 
     // Run once (first time)
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision
@@ -478,6 +583,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "FAILED", 10, true);
 
     // Run again
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Should back off
@@ -491,6 +597,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed successful and actives
     populateTransfers(pair, "FINISHED", 96, false, 100);
@@ -499,6 +607,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 100);
 
     // Run once (first time)
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision
@@ -510,6 +619,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 20, false, 150);
 
     // Run again
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
@@ -526,6 +636,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
     mockOptimizerMode = kOptimizerConservative;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed successful and actives
     populateTransfers(pair, "FINISHED", 96, false, 100);
@@ -534,6 +646,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 10);
 
     // Run once (first time)
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision
@@ -545,6 +658,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 20, false, 150);
 
     // Run again
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
@@ -560,6 +674,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
     mockOptimizerMode = kOptimizerAggressive;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed successful and actives
     populateTransfers(pair, "FINISHED", 96, false, 100);
@@ -568,6 +684,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
     populateTransfers(pair, "SUBMITTED", 30);
 
     // Run once (first time)
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision
@@ -579,6 +696,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 20, false, 150);
 
     // Run again
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
@@ -591,12 +709,15 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerEmptyingWorseThr, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed a bunch of successful with a big filesize
     populateTransfers(pair, "SUBMITTED", 10);
     populateTransfers(pair, "FINISHED", 2, false, 100, 1024*1024);
 
     // Run once
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision
@@ -606,6 +727,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptyingWorseThr, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 100, false, 10, 1024*1024);
 
     // Run again
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
@@ -619,11 +741,14 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptyingWorseThr, BaseOptimizerFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
 
     // Feed a bunch of successful with a big filesize
     populateTransfers(pair, "FINISHED", 2, false, 100, 1024*1024*1024);
 
     // Run once
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision
@@ -634,6 +759,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
     populateTransfers(pair, "FINISHED", 100, false, 10, 1024);
 
     // Run again
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
@@ -646,6 +772,8 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
 {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
+    std::list<Pair> pairs;
+    pairs.push_back(pair);
     maxNumberOfStreams = 4;
 
     // Feed just a few of successes
@@ -653,6 +781,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
     populateTransfers(pair, "FAILED", 5, false, 0, 1024*1024);
 
     // Run once
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     // Patch decision, so there would be multiple streams
@@ -664,6 +793,7 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
 
     setMaxNumberOfStreams(4);
     mockOptimizerMode = kOptimizerAggressive;
+    getCurrentIntervalInputState(pairs);
     runOptimizerForPair(pair);
 
     BOOST_CHECK_LE(streamsRegistry[pair], maxNumberOfStreams);
