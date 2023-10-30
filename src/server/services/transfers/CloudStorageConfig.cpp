@@ -126,7 +126,15 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
 }
 
 
-std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const TransferFile& tf)
+static void writeOAuthToken(FILE *f, const std::string& token)
+{
+    fprintf(f, "[BEARER]\n");
+    fprintf(f, "TOKEN=%s\n", token.c_str());
+}
+
+
+std::string
+fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, const std::string &authMethod)
 {
     char errDescr[128];
 
@@ -135,7 +143,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
         return "";
     }
 
-    char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
+    char oauth_path[] = "/tmp/fts-cloud-config-XXXXXX";
 
     int fd = mkstemp(oauth_path);
     if (fd < 0) {
@@ -148,6 +156,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     if (f == NULL) {
         close(fd);
         strerror_r(errno, errDescr, sizeof(errDescr));
+        remove(oauth_path);
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
@@ -155,6 +164,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     auto cred = db->findCredential(tf.credId, tf.userDn);
     if (!cred) {
         fclose(f);
+        remove(oauth_path);
         return "";
     }
 
@@ -184,55 +194,58 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
         }
     }
 
+    if (authMethod == "oauth2") {
+        // Only set the access token and not the refresh token
+        writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
+    }
+
     fclose(f);
     return oauth_path;
 }
 
-static void writeOAuthToken(FILE *f, const std::string& token)
+
+static void writeTokensFile(FILE *f, const std::string& srcToken, const std::string& dstToken)
 {
-    fprintf(f, "[BEARER]\n");
-    fprintf(f, "TOKEN=%s\n", token.c_str());
+    fprintf(f, "%s\n", srcToken.c_str());
+    fprintf(f, "%s\n", dstToken.c_str());
 }
 
-std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf, const std::string& filename)
+
+std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
     char errDescr[128];
-    FILE *f = NULL;
-    int fd = -1;
+    FILE *f = nullptr;
 
-    if (filename.empty()) {
-        fd = mkstemp(oauth_path);
+    int fd = mkstemp(oauth_path);
 
-        if (fd < 0) {
-            strerror_r(errno, errDescr, sizeof(errDescr));
-            throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
-        }
-        fchmod(fd, 0660);
-
-        f = fdopen(fd, "w");
-    } else {
-        f = fopen(filename.c_str(), "a");
-    }
-
-    if (f == NULL) {
-        if (fd != -1) {
-            close(fd);
-        }
-
+    if (fd < 0) {
         strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
+    }
+    fchmod(fd, 0660);
+
+    f = fdopen(fd, "w");
+
+    if (f == nullptr) {
+        close(fd);
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        remove(oauth_path);
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
-    auto cred = db->findCredential(tf.credId, tf.userDn);
-    if (!cred) {
+    auto src_token = db->findToken(tf.sourceTokenId);
+    auto dst_token = db->findToken(tf.destinationTokenId);
+    // There should be a token for the source and destination endpoints
+    if (src_token.empty() || dst_token.empty()) {
     	fclose(f);
+        remove(oauth_path);
         return "";
     }
 
-    // Only set the access token and not the refresh token
-    writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
+    // Write both tokens in the authorization file
+    writeTokensFile(f, src_token, dst_token);
 
     fclose(f);
-    return filename.empty() ? oauth_path : filename;
+    return oauth_path;
 }

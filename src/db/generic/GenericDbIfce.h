@@ -131,6 +131,11 @@ public:
     /// @note                   If jobId is empty, the pid will be used to decide which job to update
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState) = 0;
 
+    /// Get the token associated with the given token ID
+    /// @param tokenId          The token ID
+    /// @return                 The token with tokenId, if any
+    virtual std::string findToken(const std::string& tokenId) = 0;
+
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
     /// @param userDn           The user's DN

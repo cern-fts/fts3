@@ -52,6 +52,7 @@ public:
     std::string userDn;
     std::string proxy;
     std::string oauthFile;
+    std::string cloudStorageConfig;
 
     std::string infosys;
     std::string alias;

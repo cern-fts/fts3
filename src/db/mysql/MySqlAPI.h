@@ -88,6 +88,11 @@ public:
     /// @param jobState         The job state
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState);
 
+    /// Get the token associated with the given token ID
+    /// @param tokenId          The token ID
+    /// @return                 The token with tokenId, if any
+    virtual std::string findToken(const std::string& tokenId);
+
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
     /// @param userDn           The user's DN

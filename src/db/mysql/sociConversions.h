@@ -170,6 +170,8 @@ struct type_conversion<TransferFile>
         file.archiveTimeout  = v.get<int>("archive_timeout",-1);
         file.userDn          = v.get<std::string>("user_dn");
         file.credId     = v.get<std::string>("cred_id");
+        file.sourceTokenId  = v.get<std::string>("src_token_id", "");
+        file.destinationTokenId = v.get<std::string>("dst_token_id", "");
         file.checksum    = v.get<std::string>("checksum","");
         file.checksumMode    = v.get<std::string>("checksum_method","");
         file.sourceSpaceToken = v.get<std::string>("source_space_token","");

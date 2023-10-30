@@ -66,6 +66,7 @@ const option UrlCopyOpts::long_options[] =
     {"copy-mode",         required_argument, 0, 507},
     {"disable-fallback",  no_argument,       0, 508},
     {"retrieve-se-token", no_argument,       0, 509},
+    {"cloud-config",      required_argument, 0, 510},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -350,6 +351,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 509:
                     retrieveSEToken = true;
+                    break;
+                case 510:
+                    cloudStorageConfig = optarg;
                     break;
 
                 case 600:
