@@ -84,7 +84,6 @@ struct PairState {
 };
 
 struct StorageState {
-    // time_t timestamp;
     double asSourceThroughput;
     double asSourceThroughputInst;
     double asDestThroughput;
@@ -94,9 +93,6 @@ struct StorageState {
     double inbound_max_throughput;
     int outbound_max_active;
     double outbound_max_throughput;
-    
-    // int totalDecision;
-    // int totalActive;
 
     StorageState(): asSourceThroughput(0), asSourceThroughputInst(0),
                     asDestThroughput(0), asDestThroughputInst(0),
@@ -108,21 +104,6 @@ struct StorageState {
         outbound_max_active(oa), outbound_max_throughput(ot),
         asSourceThroughput(0), asSourceThroughputInst(0),
         asDestThroughput(0), asDestThroughputInst(0) {}
-    
-    /* StorageState(time_t ts, double st, double sti, double dt, double dti, int td, int ta):
-        timestamp(ts), asSourceThroughput(st), asSourceThroughputInst(sti),
-        asDestThroughput(dt), asDestThroughputInst(dti),
-        totalDecision(td), totalActive(ta) {}
-    */    
-
-    /*friend std::ostream& operator<<(std::ostream& os, const StorageLimits& limits) {
-        os << "Source: " << limits.source << "\n"
-           << "Destination: " << limits.destination << "\n"
-           << "ThroughputSource: " << limits.throughputSource << "\n"
-           << "ThroughputDestination: " << limits.throughputDestination;
-        return os;
-    }
-    */
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -134,6 +115,7 @@ public:
     // Return a list of pairs with active or submitted transfers
     virtual std::list<Pair> getActivePairs(void) = 0;
 
+    // Get active throughput and connection limits for every SE  
     virtual void dumpStorageStates(std::map<std::string, StorageState> *currentSEStateMap) = 0;
 
     // Return the optimizer configuration value
@@ -144,9 +126,6 @@ public:
 
     // Get the stored optimizer value (current value)
     virtual int getOptimizerValue(const Pair&) = 0;
-
-    // // Get the average instantaneous throughput of all active files
-    // virtual double getInstThroughputPerConn(const Pair&) = 0;
 
     // Get the weighted throughput for the pair
     virtual void getThroughputInfo(const Pair &, const boost::posix_time::time_duration &,
@@ -173,9 +152,6 @@ public:
 
     // Permanently register the number of streams per active
     virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
-
-    // // Save information in database
-    // virtual void updateOptimizerState(const Pair &pair, const PairState &newState) = 0;
 };
 
 // Used by the optimizer to notify decisions
@@ -241,6 +217,8 @@ protected:
     void setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
         int diff, const std::string &rationale, boost::timer::cpu_times elapsed);
 
+    // Gets and saves current performance on all pairs and storage elements 
+    // in currentPairStateMap and currentSEStateMap
     void getCurrentIntervalInputState(const std::list<Pair> &);
 public:
     Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks);

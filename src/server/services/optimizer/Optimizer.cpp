@@ -96,25 +96,17 @@ void Optimizer::run(void)
 {
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt1" << commit;
-
         std::list<Pair> pairs = dataSource->getActivePairs();
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt2" << commit;
         // Make sure the order is always the same
         // See FTS-1094
         pairs.sort();
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3" << commit;
-
 
         // Part 1 of Optimizer: Updating global information about performance on all pairs.
         Optimizer::getCurrentIntervalInputState(pairs);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt4" << commit;
 
         // Part 2 of Optimizer: Using state to compute "decisions" for number of concurrent connections
         // on each pair.
         Optimizer::updateDecisions(pairs);
-
-
     }
     catch (std::exception &e) {
         throw SystemError(std::string(__func__) + ": Caught exception " + e.what());
