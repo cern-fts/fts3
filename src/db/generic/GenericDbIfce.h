@@ -375,6 +375,10 @@ public:
     /// Store a list of refresh tokens identified by token ID
     virtual void storeRefreshTokens(const std::set< std::pair<std::string, std::string> >& refreshTokens) = 0;
 
+    /// Fail transfers without refresh token due to failed token exchange
+    virtual void failTransfersWithFailedTokenExchange(
+            const std::set<std::pair<std::string, std::string> >& failedExchanges) = 0;
+
     /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
     virtual void updateTokenPrepFiles() = 0;
 

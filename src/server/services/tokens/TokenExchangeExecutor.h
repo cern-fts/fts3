@@ -24,7 +24,6 @@
 #include "TokenExchangeService.h"
 #include "db/generic/Token.h"
 #include "db/generic/TokenProvider.h"
-#include "db/generic/TokenProvider.h"
 
 namespace fts3 {
 namespace server {
@@ -67,7 +66,7 @@ private:
 
     /** Finds the token exchange endpoint.
     *
-    * @return string containing token exchange url
+    * @return string containing token exchange URL
     */
     std::string getTokenEndpoint();
 
@@ -79,7 +78,7 @@ private:
 
     /** Generates the payload to be sent to the authorization server during the token exchange workflow.
     *
-    * @return string containing authorization
+    * @return string containing token-exchange data
     */
     std::string getExchangeData() const;
 
@@ -131,7 +130,7 @@ private:
 
     /** Checks that a Davix Uri is valid
     *
-    * @return
+    * @throws DavixException on invalid Uri
     */
     static void validateUri(const Davix::Uri& uri)
     {

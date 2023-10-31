@@ -79,9 +79,9 @@ void TokenExchangeService::getRefreshTokens() {
         execPool.join();
 
         {
-            boost::unique_lock<boost::shared_mutex> lock(mx);
+            boost::unique_lock<boost::shared_mutex> lock(mxRefresh);
 
-            for (const auto &it: refreshTokens) {
+            for (const auto& it: refreshTokens) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Storing refresh token: "
                                                 << "token_id=" << it.first << " "
                                                 << "refresh_token=" << it.second
@@ -100,6 +100,22 @@ void TokenExchangeService::getRefreshTokens() {
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService! " << commit;
     }
+}
+
+void TokenExchangeService::handleFailedTokenExchange()
+{
+    auto db = db::DBSingleton::instance().getDBObjectInstance();
+    boost::unique_lock<boost::shared_mutex> lock(mxFailed);
+
+    for (const auto& it: failedExchanges) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Handling failed token exchange: "
+                                        << "token_id=" << it.first << " "
+                                        << "message=" << it.second
+                                        << commit;
+    }
+
+    db->failTransfersWithFailedTokenExchange(failedExchanges);
+    failedExchanges.clear();
 }
 
 void TokenExchangeService::runService() {
@@ -125,6 +141,8 @@ void TokenExchangeService::runService() {
             // This service intentionally runs only on the first node
             if (beat->isLeadNode(true)) {
                 getRefreshTokens();
+                handleFailedTokenExchange();
+                // The below function does not require any state from the service
                 db->updateTokenPrepFiles();
             }
         } catch (std::exception &e) {
@@ -137,8 +155,14 @@ void TokenExchangeService::runService() {
 
 void TokenExchangeService::registerRefreshToken(const std::string& token_id, const std::string& refreshToken)
 {
-    boost::unique_lock<boost::shared_mutex> lock(mx);
+    boost::unique_lock<boost::shared_mutex> lock(mxRefresh);
     refreshTokens.emplace(token_id, refreshToken);
+}
+
+void TokenExchangeService::registerFailedTokenExchange(const std::string& token_id, const std::string& message)
+{
+    boost::unique_lock<boost::shared_mutex> lock(mxFailed);
+    failedExchanges.emplace(token_id, message);
 }
 
 } // end namespace server
