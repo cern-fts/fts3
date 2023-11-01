@@ -160,7 +160,7 @@ public:
             "outbound_max_active, outbound_max_throughput "
             "FROM t_se WHERE storage != '*'"
         );
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.0.1" << commit;
+
 
         soci::indicator ind;
         for (auto i = rs.begin(); i != rs.end(); ++i) {
@@ -253,22 +253,6 @@ public:
         }
         return currentActive;
     }
-
-    // double getInstThroughputPerConn(const Pair &pair) {
-    //     double avgTput = 0;
-    //     soci::indicator isAvgNull;
-    //     sql << 
-    //         "SELECT SUM(throughput) from t_file WHERE throughput>0 "
-    //         "AND file_state = 'ACTIVE' "
-    //         "AND source_se= :sourceSe AND dest_se= :destSe",
-    //         soci::use(pair.source), soci::use(pair.destination),
-    //         soci::into(avgTput, isAvgNull);
-    //     if(isAvgNull == soci::i_null) {
-    //         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "No active files with performance markers yet." << commit;
-    //         avgTput = 0;
-    //     }
-    //     return avgTput;
-    // }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
         double *throughput, double *filesizeAvg, double *filesizeStdDev)

@@ -89,6 +89,7 @@ struct StorageState {
     double asDestThroughput;
     double asDestThroughputInst;
 
+    // is this style of naming acceptable? 
     int inbound_max_active;
     double inbound_max_throughput;
     int outbound_max_active;

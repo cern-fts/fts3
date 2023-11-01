@@ -57,14 +57,11 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 // memory stores in currentPairStateMap and currentSEStateMap
 // Input: List of active pairs, as well as SQL database data.
 void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.0" << commit;
     // Initializes currentSEStateMap with limit information from
     // t_se table in the SQL database.
     dataSource->dumpStorageStates(&currentSEStateMap);
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.1" << commit;
 
     for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3." << *i << commit;
         // ===============================================        
         // STEP 1: DERIVING PAIR STATE
         // ===============================================        
@@ -96,12 +93,13 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         // Increments SE throughput value by the pair's throughput value.
         // Because the default and current majority state is no throughput limitation,
         // the if condition is added.
-        if(currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
+        // Potential difference in list of SEs compared to list of pairs, does not get handled
+        if (currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
            && currentSEStateMap[pair.source].outbound_max_throughput > 0) {
             currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
         }
 
-        if(currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
+        if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
            && currentSEStateMap[pair.destination].inbound_max_throughput > 0) {
             currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
         }
@@ -314,8 +312,6 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         setOptimizerDecision(pair, range.min, currentPair, 0, "Range fixed", timer.elapsed());
         return true;
     }
-
-
 
     // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
     // se_limit = limits.throughputSource
