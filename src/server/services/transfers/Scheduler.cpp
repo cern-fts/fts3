@@ -24,12 +24,9 @@ Scheduler::SchedulerFunction Scheduler::getSchedulingFunction(string algorithm) 
     return function;
 }
 
-/**
- * @param queues All pending queues.
-*/
 std::map<std::string, std::list<TransferFile>> Scheduler::doRandomizedSchedule(
-    std::vector<int> slotsPerLink, 
-    std::vector<QueueId> queues, 
+    std::vector<int> &slotsPerLink, 
+    std::vector<QueueId> &queues, 
     int availableUrlCopySlots)
 {
     std::map<std::string, std::list<TransferFile> > scheduledFiles;
@@ -62,8 +59,8 @@ std::map<std::string, std::list<TransferFile>> Scheduler::doRandomizedSchedule(
 }
 
 std::map<std::string, std::list<TransferFile>> Scheduler::doDeficitSchedule(
-    std::vector<int> slotsPerLink, 
-    std::vector<QueueId> queues, 
+    std::vector<int> &slotsPerLink, 
+    std::vector<QueueId> &queues, 
     int availableUrlCopySlots)
 {
     std::map<std::string, std::list<TransferFile> > scheduledFiles;
@@ -76,12 +73,38 @@ std::map<std::string, std::list<TransferFile>> Scheduler::doDeficitSchedule(
     return scheduledFiles;
 }
 
+// Helper functions for deficit-based priority-queueing scheduling:
+
+void compute_deficits()
+{
+    compute_should_be_slots();
+
+    compute_active_slots();
+}
+
+/**
+ * Compute the should-be-allocated number of slots
+*/
+void compute_should_be_slots()
+{
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scheduler: computing should-be-allocated slots" << commit;
+    
+
+
+    return;
+}
+
+void compute_active_slots()
+{
+    return;
+}
+
 // Helper functions:
 
 /**
  * Transfers in uneschedulable queues must be set to fail
  */
-static void failUnschedulable(const std::vector<QueueId> &unschedulable)
+void failUnschedulable(const std::vector<QueueId> &unschedulable)
 {
     Producer producer(config::ServerConfig::instance().get<std::string>("MessagingDirectory"));
 

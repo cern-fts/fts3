@@ -108,7 +108,10 @@ void TransfersService::runService()
 
 /**
  * Execute the file transfer.
- * (This was originally in getFiles)
+ * (This was originally in getFiles.)
+ * This is also where we consider the slots left for dest and src nodes.
+ * TODO: do we need to move the slots left for dest/src to Scheduler.cpp?
+ *     => problem with moving this: the scheduling below depends on the slots computation
 */
 void TransfersService::executeFileTransfers(
     std::map<std::string, std::list<TransferFile>> scheduledFiles, 

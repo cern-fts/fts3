@@ -1,6 +1,8 @@
 #include "db/generic/QueueId.h"
 #include "db/generic/TransferFile.h"
 
+#include "VoShares.h"
+
 namespace fts3 {
 namespace server {
 
@@ -12,17 +14,31 @@ public:
     static const std::string DEFICIT_ALGORITHM = "deficit";
 
     // Function pointer to the scheduler algorithm
-    typedef std::map<std::string, std::list<TransferFile>> (*SchedulerFunction)(std::vector<int> slotsPerLink, std::vector<QueueId> queues, int availableUrlCopySlots);
+    typedef std::map<std::string, std::list<TransferFile>> (*SchedulerFunction)(std::vector<int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 
     // Returns function pointer to the scheduler algorithm
     static SchedulerFunction getSchedulingFunction(std::string algorithm);
 
 private:
-    // Run randomized scheduling
-    static std::map<std::string, std::list<TransferFile>> doRandomizedSchedule(std::vector<int> slotsPerLink, std::vector<QueueId> queues, int availableUrlCopySlots);
+    // The scheduling functions below should execute the corresponding
+    // scheduling algorithm, and they should return a mapping from
+    // VOs to the list of TransferFiles to be scheduled by TransferService.
+    //
+    // Note that the list of TransferFiles returned here has not yet accounted
+    // for the number of slots available for src/dest nodes. This will happen
+    // in TransferService.
+
+    /**
+     * Run scheduling using weighted randomization.
+     * @param slotsPerLink number of slots assigned to each link, as determined by allocator
+     * @param queues All current pending transfers
+     * @param availableUrlCopySlots Max number of slots available in the system
+     * @return Mapping from each VO to the list of transfers to be scheduled.
+     */
+    static std::map<std::string, std::list<TransferFile>> doRandomizedSchedule(std::vector<int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 
     // Run deficit-based priority-queueing scheduling
-    static std::map<std::string, std::list<TransferFile>> doDeficitSchedule(std::vector<int> slotsPerLink, std::vector<QueueId> queues, int availableUrlCopySlots);
+    static std::map<std::string, std::list<TransferFile>> doDeficitSchedule(std::vector<int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 };
 
 } // end namespace server
