@@ -46,6 +46,9 @@ using namespace fts3::config;
 #define FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT 98
 #define FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT 97
 #define FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT 96
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_ALGORITHM "GREEDY"
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_SCHEDULING_ALGORITHM "RANDOMIZED"
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_LAMBDA 10
 /* ---------------------------------------------------------------------- */
 
 po::options_description ServerConfigReader::_defineGenericOptions()
@@ -508,6 +511,21 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["ExperimentalTapeRESTAPI"]) )->default_value("false"),
         "Enable or disable experimental features of the TAPE REST API"
     )
+    (
+        "TransfersServiceAllocatorAlgorithm",
+        po::value<std::string>( &(_vars["TransfersServiceAllocatorAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_ALGORITHM),
+        "Specify transfer service's slot allocation algorithm as MAXIMUM_FLOW or GREEDY (default)"
+    )
+    (
+        "TransfersServiceSchedulingAlgorithm",
+        po::value<std::string>( &(_vars["TransfersServiceSchedulingAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_SCHEDULING_ALGORITHM),
+        "Specify transfer service's task scheduling algorithm as DEFICIT or RANDOMIZED (default)"
+    )
+    (
+        "TransfersServiceAllocatorLambda",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_LAMBDA),
+        "Specify transfer's service slot allocation lambda for starvation calculation for transfers service allocation algorithm"
+    )
     ;
 
     return config;
@@ -632,6 +650,7 @@ void ServerConfigReader::storeAsString(const std::string& aName)
 void ServerConfigReader::storeValuesAsStrings ()
 {
     storeAsString("Port");
+    storeAsString("TransfersServiceAllocatorLambda");
     storeAsString("ThreadNum");
     storeAsString("OptimizerMaxSuccessRate");
     storeAsString("OptimizerMedSuccessRate");
