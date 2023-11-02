@@ -352,6 +352,8 @@ private:
     std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src,
         std::string dst, std::string vo);
 
+    std::map<std::string, double> getActivityShareConf(std::string vo);
+
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 
     void updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &archivingOpsStatus);

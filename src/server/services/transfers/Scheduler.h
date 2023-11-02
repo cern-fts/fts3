@@ -13,8 +13,11 @@ public:
     static const std::string RANDOMIZED_ALGORITHM = "randomized";
     static const std::string DEFICIT_ALGORITHM = "deficit";
 
+    // Define LinkVoActivityKey, which is (src, dest, vo, activity)
+    using LinkVoActivityKey = std::tuple<std::string, std::string, std::string, std::string>;
+
     // Function pointer to the scheduler algorithm
-    typedef std::map<std::string, std::list<TransferFile>> (*SchedulerFunction)(std::vector<int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
+    using SchedulerFunction = std::map<std::string, std::list<TransferFile>> (*)(std::map<Pair, int>&, std::vector<QueueId>&, int);
 
     // Returns function pointer to the scheduler algorithm
     static SchedulerFunction getSchedulingFunction(std::string algorithm);
@@ -35,10 +38,10 @@ private:
      * @param availableUrlCopySlots Max number of slots available in the system
      * @return Mapping from each VO to the list of transfers to be scheduled.
      */
-    static std::map<std::string, std::list<TransferFile>> doRandomizedSchedule(std::vector<int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
+    static std::map<std::string, std::list<TransferFile>> doRandomizedSchedule(std::map<Pair, int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 
     // Run deficit-based priority-queueing scheduling
-    static std::map<std::string, std::list<TransferFile>> doDeficitSchedule(std::vector<int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
+    static std::map<std::string, std::list<TransferFile>> doDeficitSchedule(std::map<Pair, int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 };
 
 } // end namespace server

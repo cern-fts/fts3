@@ -25,10 +25,10 @@ Scheduler::SchedulerFunction Scheduler::getSchedulingFunction(string algorithm) 
 }
 
 std::map<std::string, std::list<TransferFile>> Scheduler::doRandomizedSchedule(
-    std::vector<int> &slotsPerLink, 
+    std::map<Pair, int> &slotsPerLink, 
     std::vector<QueueId> &queues, 
-    int availableUrlCopySlots)
-{
+    int availableUrlCopySlots
+){
     std::map<std::string, std::list<TransferFile> > scheduledFiles;
     std::vector<QueueId> unschedulable;
 
@@ -59,43 +59,114 @@ std::map<std::string, std::list<TransferFile>> Scheduler::doRandomizedSchedule(
 }
 
 std::map<std::string, std::list<TransferFile>> Scheduler::doDeficitSchedule(
-    std::vector<int> &slotsPerLink, 
+    std::map<Pair, int> &slotsPerLink, 
     std::vector<QueueId> &queues, 
-    int availableUrlCopySlots)
-{
+    int availableUrlCopySlots
+){
     std::map<std::string, std::list<TransferFile> > scheduledFiles;
 
     if (queues.empty())
         return scheduledFiles;
 
-    // TODO
+    // TODO: need to compute the number of active+pending transfers for each activity in each vo
+    std::map<std::string, std::map<std::string, int>> voActivityActiveSlots = computeActivePendingCount(std::vector<QueueId> &queues);
+    
+    // Compute the number of should-be-allocated slots
+    std::map<Scheduler::LinkVoActivityKey, int> shouldBeAllocated;
+    shouldBeAllocated = computeShouldBeSlots(slotsPerLink, queues);
+
+    // Compute number of active slots for each LinkVoActivityKey
+
+    // Compute deficit for each LinkVoActivityKey
+
+    // Priority queue using deficit
 
     return scheduledFiles;
 }
 
-// Helper functions for deficit-based priority-queueing scheduling:
-
-void compute_deficits()
-{
-    compute_should_be_slots();
-
-    compute_active_slots();
-}
-
 /**
- * Compute the should-be-allocated number of slots
+ * Compute the number of should-be-allocated slots.
 */
-void compute_should_be_slots()
+std::map<LinkVoActivityKey, int> computeShouldBeSlots(std::map<Pair, int> &slotsPerLink, std::vector<QueueId> &queues)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scheduler: computing should-be-allocated slots" << commit;
-    
 
+    std::map<LinkVoActivityKey, int> result;
+
+    // For each VO, fetch activity share;
+    // we do this first because activity share is independent of link
+    std::map<std::string, std::map<std::string, double>> voActivityShare;
+    for (auto i = queues.begin(); i != queues.end(); i++) {
+        if (voActivityShare.count(i->voName) > 0) {
+            // VO already exists in voActivityShare; don't need to fetch again
+            continue;
+        }
+        // Fetch activity share for that VO
+        std::map<std::string, double> activityShare = getActivityShareConf(i->voName);
+        voActivityShare[i->voName] = activityShare;
+    }
+
+    for (auto i = slotsPerLink.begin(); j != slotsPerLink.end(); j++) {
+        const Pair &p = i->first;
+        const int maxSlots = i->second;
+
+        // (1) Fetch weights of all vo's in that pair
+        std::vector<ShareConfig> shares = DBSingleton::instance().getDBObjectInstance()->getShareConfig(p.source, p.destination);
+        std::map<std::string, double> voWeights;
+        for (auto j = shares.begin(); j != shares.end(); j++) {
+            voWeights[j->vo] = j->weight;
+        }
+
+        // (2) Assign slots to vo's
+        // TODO: this needs to know the number of active + pending transfers for each VO
+        std::map<std::string, int> voShouldBeSlots = assignShouldBeSlotsToVos(voWeights, maxSlots);
+
+        // (3) Assign slots of each vo to its activities
+        for (auto j = voShouldBeSlots.begin(); j != voShouldBeSlots.end(); j++) {
+            std::string voName = j->first;
+            int voMaxSlots = j->second;
+
+            std::map<std::string, double> activityWeights = voActivityShare[voName];
+            std::map<std::string, int> activityShouldBeSlots = assignShouldBeSlotsToActivities(activityWeights, voMaxSlots);
+
+            // Add to result
+            for (auto k = activityShouldBeSlots.begin(); k != activityShouldBeSlots.end(); k++) {
+                std::string activityName = k->first;
+                int activitySlots = k->second;
+                LinkVoActivityKey key = std::make_tuple(p.source, p.destination, voName, activityName);
+                result[key] = activitySlots;
+            }
+        }
+    }
+
+    return result;
+}
+
+std::map<LinkVoActivityKey, int> computeDeficits(
+    std::map<Pair, int> &slotsPerLink, 
+    std::vector<QueueId> &queues, 
+    int availableUrlCopySlots
+){
+
+    // Fetch the number of active slots for each (src, dest, vo, activity)
+    auto db = DBSingleton::instance().getDBObjectInstance();
+    int activeCount = getActiveCount(sql, it->sourceSe, it->destSe, );
+
+    // need to map each queue to deficit
+
+    // TODO
 
     return;
 }
 
-void compute_active_slots()
+/**
+ * Compute the number of active and pending transfers for each activity in each vo.
+*/
+std::map<std::string, std::map<std::string, int>> computeActivePendingCount(std::vector<QueueId> &queues)
 {
+    // For each (src, dest, vo, activity), compute active + pending count
+    // TODO
+
     return;
 }
 
