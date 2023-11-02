@@ -294,8 +294,10 @@ void TransfersService::executeUrlcopy()
             return;
         }
 
-        // DUMMY: allocator stuff
-        std::map<Pair, int> slotsPerLink;
+        /**
+         * DUMMY: allocator stuff
+        */
+        std::map<Pair, int> slotsPerLink = allocatorStuff();
 
         // Execute scheduling algorithm
         std::map<std::string, std::list<TransferFile>> scheduledFiles;

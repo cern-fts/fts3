@@ -219,6 +219,143 @@ std::map<std::string, std::map<std::string, int>> computeShouldBeSlots(
     return result;
 }
 
+std::map<std::string, int> assignShouldBeSlotsToVos(
+    std::map<std::string, double> &voWeights,
+    int maxPairSlots,
+    std::map<std::string, std::map<std::string, int>> &queueActiveCounts,
+    std::map<std::string, std::map<std::string, int>> &queueSubmittedCounts
+){
+    // Compute total number of active and pending transfers for each vo
+    std::map<std::string, int> activeAndPendingCounts;
+
+    for (auto i = voWeights.begin(); i != voWeights.end(); i++) {
+        std::string voName = i->first;
+        double voWeight = i->second;
+
+        activeAndPendingCounts[voName] = 0;
+
+        if (queueActiveCounts.count(voName) > 0) {
+            std::map<std::string, int>> activityActiveCounts = queueActiveCounts[voName];
+            for (auto j = activityActiveCounts.begin(); j != activityActiveCounts.end(); j++) {
+                activeAndPendingCounts[voName] += j->second;
+            }
+        }
+        if (queueSubmittedCounts.count(voName) > 0) {
+            std::map<std::string, int>> activitySubmittedCounts = queueSubmittedCounts[voName];
+            for (auto j = activitySubmittedCounts.begin(); j != activitySubmittedCounts.end(); j++) {
+                activeAndPendingCounts[voName] += j->second;
+            }
+        }
+    }
+
+    return huntingtonHill(voWeights, maxPairSlots, activeAndPendingCounts);
+}
+
+std::map<std::string, int> assignShouldBeSlotsToActivities(
+    std::map<std::string, double> &activityWeights,
+    int voMaxSlots,
+    std::map<std::string, int> &activityActiveCounts,
+    std::map<std::string, int> &activitySubmittedCounts
+){
+    // Compute total number of active and pending transfers for each activity
+    std::map<std::string, int> activeAndPendingCounts;
+
+    for (auto i = activityWeights.begin(); i != activityWeights.end(); i++) {
+        std::string activityName = i->first;
+        double activityWeight = i->second;
+
+        activeAndPendingCounts[activityName] = 0;
+
+        if (activityActiveCounts.count(activityName) > 0) {
+            activeAndPendingCounts[activityName] += activityActiveCounts[activityName];
+        }
+        if (activitySubmittedCounts.count(activityName) > 0) {
+            activeAndPendingCounts[activityName] += activitySubmittedCounts[activityName];
+        }
+    }
+
+    return huntingtonHill(activityWeights, voMaxSlots, activeAndPendingCounts);
+}
+
+/**
+ * Assign slots to the VOs/activities.
+ * (Both VO and activity will be referred to as queue here, because this function will be used for both).
+ * @param weights Maps each queue name to the respective weight.
+ * @param maxSlots Max number of slots to be allocated.
+ * @param activeAndPendingCounts Number of active or pending transfers for each queue.
+*/
+std::map<std::string, int> huntingtonHill(
+    std::map<std::string, double> &weights,
+    int maxSlots,
+    std::map<std::string, int> &activeAndPendingCounts
+){
+    std::map<std::string, int> allocation;
+
+    // Default all queues to 0 in allocation
+    for (auto i = weights.begin(); i != weights.end(); i++) {
+        std::string queueName = i->first;
+        allocation[queueName] = 0;
+    }
+
+    if (maxSlots == 0) {
+        return allocation;
+    }
+
+    // Compute qualification threshold;
+    // this step only includes non-empty queues (with either active or pending transfers).
+    double weightSum = 0
+    for (auto i = activeAndPendingCounts.begin(); i != activeAndPendingCounts.end(); i++) {
+        std::string queueName = i->first;
+        double count = i->second;
+        if (count > 0) {
+            weightSum += weights[queueName];
+        }
+    }
+    double threshold = weightSum / maxSlots;
+
+    // Assign one slot to every queue that meets the threshold; compute A_{1}
+    std::priority_queue<std::tuple<double, string>> pq;
+
+    for (auto i = weights.begin(); i != weights.end(); i++) {
+        std::string queueName = i->first;
+        double weight = i->second;
+
+        if (activeAndPendingCounts[queueName] > 0 && weight >= threshold) {
+            allocation[queueName] = 1
+            maxSlots -= 1
+
+            // Compute priority
+            priority = pow(weight, 2) / 2.0
+            pq.push(std::make_tuple(priority, queueName));
+        }
+    }
+
+    // Assign remaining slots:
+    // only assign slot to a queue if the queue has active or pending transfers.
+    for (int i = 0; i < maxSlots; i++) {
+        if (pq.empty()) {
+            break;
+        }
+
+        std::tuple<double, string> p = pq.top();
+        pq.pop();
+        double priority = std::get<0>(p);
+        std::string queueName = std::get<1>(p);
+
+        allocation[queueName] += 1
+        activeAndPendingCounts[queueName] -= 1
+
+        if (activeAndPendingCounts[queueName] > 0) {
+            // Recompute priority and push back to pq
+            double n = (double) allocation[queueName];
+            priority *= (n-1) / (n+1);
+            pq.push(std::make_tuple(priority, queueName));
+        }
+    }
+
+    return allocation;
+}
+
 /**
  * Compute the deficit for each queue in a pair.
  * @param queueActiveCounts Number of active slots for each activity in each VO.
