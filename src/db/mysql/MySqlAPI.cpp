@@ -566,6 +566,31 @@ static int getActiveCount(soci::session& sql, const std::string &source, const s
     return activeCount;
 }
 
+/// Count how many transfers are running for the given (pair, vo, activity)
+/// @param source Source storage
+/// @param dest Destination storage
+/// @param vo VO name
+/// @param activity Activity name
+/// @return Number of running (or scheduled) transfers
+static int getActiveCount(
+    soci::session& sql,
+    const std::string &source,
+    const std::string &dest,
+    const std::string &vo,
+    const std::string &activity)
+{
+    int activeCount = 0;
+
+    //Running Transefers (R+N+Y+H job type)
+    sql << "SELECT COUNT(*) FROM t_file f JOIN t_job j ON j.job_id = f.job_id "
+        " WHERE f.source_se = :source_se AND f.dest_se = :dest_se AND f.vo_name = :vo_name AND f.activity = :activity"
+        " AND f.file_state = 'ACTIVE'",
+        soci::use(source), soci::use(dest), soci::use(vo), soci::use(activity),
+        soci::into(activeCount);
+
+    return activeCount;
+}
+
 
 void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::list<TransferFile> >& files)
