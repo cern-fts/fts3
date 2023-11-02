@@ -171,3 +171,9 @@ LogLevel=INFO
 # New naming convention: /tmp/x509up_h<hash>_<delegation_id>
 # Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
 #BackwardsCompatibleProxyNames = False
+
+# Specify the transfer service's slot allocation algorithm as MAXIMUM_FLOW or GREEDY (default GREEDY)
+TransferServiceAllocatorAlgorithm = GREEDY
+
+# Specify transfer service's task scheduling algorithm as RANDOMIZED, DEFICIT
+TransferServiceSchedulingAlgorithm = RANDOMIZED

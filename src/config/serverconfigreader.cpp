@@ -46,6 +46,8 @@ using namespace fts3::config;
 #define FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT 98
 #define FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT 97
 #define FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT 96
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_ALLOCATOR_ALGORITHM "GREEDY"
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_SCHEDULING_ALGORITHM "RANDOMIZED"
 /* ---------------------------------------------------------------------- */
 
 po::options_description ServerConfigReader::_defineGenericOptions()
@@ -508,6 +510,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["ExperimentalTapeRESTAPI"]) )->default_value("false"),
         "Enable or disable experimental features of the TAPE REST API"
     )
+    (
+        "TransferServiceAllocatorAlgorithm",
+        po::value<std::string>( &(_vars["TransferServiceAllocatorAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_ALLOCATOR_ALGORITHM),
+        "Specify transfer service's slot allocation algorithm as MAXIMUM_FLOW or GREEDY"
+    )
+    (
+        "TransferServiceSchedulingAlgorithm",
+        po::value<std::string>( &(_vars["TransferServiceSchedulingAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_SCHEDULING_ALGORITHM),
+        "Specify transfer service's task scheduling algorithm as RANDOMIZED or DEFICIT"
+    )
     ;
 
     return config;
@@ -584,6 +596,8 @@ struct ReadConfigFile_SystemTraits
         reader.storeValuesAsStrings();
         reader.storeRoles ();
         reader.validateRequired ("SiteName");
+        reader.validateRequired("TransferServiceAllocatorAlgorithm");
+        reader.validateRequired("TransferServiceSchedulingAlgorithm");
     }
 };
 
