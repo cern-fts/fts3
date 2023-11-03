@@ -136,8 +136,7 @@ public:
     //   - inbound and outbound maximum number of connections from every SE.
     // Additionally, the instantaneous throughput is also computed. 
     // Returns: A map from SE name (string) --> StorageState (both limits and actual throughput values).
-    void dumpStorageStates(std::map<std::string, StorageState> *result) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.0.0" << commit;
+    void getStorageStates(std::map<std::string, StorageState> *result) {
 
         // First read in global default values:
         int outActiveGlobal = 0, inActiveGlobal = 0;
@@ -161,58 +160,56 @@ public:
             "FROM t_se WHERE storage != '*'"
         );
 
-
         soci::indicator ind;
-        for (auto i = rs.begin(); i != rs.end(); ++i) {
-            std::string se = i->get<std::string>("storage");
+        for (auto i = rs.begin(); i != rs.end(); ++i) { //For each row in the table, load all values into an SEState object and store in the map "result"
+            std::string se = i->get<std::string>("storage"); //indexed with the name of the storage element
 
             StorageState SEState;
 
-            SEState.outbound_max_active = i->get<int>("outbound_max_active", ind);
+            SEState.outboundMaxActive = i->get<int>("outbound_max_active", ind);
             if (ind == soci::i_null) {
-                SEState.outbound_max_active = 0;
+                SEState.outboundMaxActive = 0;
                 if (nullOutActive != soci::i_null) {
-                    SEState.outbound_max_active = outActiveGlobal;
+                    SEState.outboundMaxActive = outActiveGlobal;
                 }
             }
 
-            SEState.outbound_max_throughput = i->get<double>("outbound_max_throughput", ind);
+            SEState.outboundMaxThroughput = i->get<double>("outbound_max_throughput", ind);
             if (ind == soci::i_null) {
-                SEState.outbound_max_throughput = 0;
+                SEState.outboundMaxThroughput = 0;
                 if (nullOutTput != soci::i_null) {
-                    SEState.outbound_max_throughput = outTputGlobal;
+                    SEState.outboundMaxThroughput = outTputGlobal;
                 }
             }
 
-            SEState.inbound_max_active = i->get<int>("inbound_max_active");
+            SEState.inboundMaxActive = i->get<int>("inbound_max_active");
             if (ind == soci::i_null) {
-                SEState.inbound_max_active = 0;
+                SEState.inboundMaxActive = 0;
                 if (nullInActive != soci::i_null) {
-                    SEState.inbound_max_active = inActiveGlobal;
+                    SEState.inboundMaxActive = inActiveGlobal;
                 }
             }
 
-            SEState.inbound_max_throughput = i->get<double>("inbound_max_throughput");
+            SEState.inboundMaxThroughput = i->get<double>("inbound_max_throughput");
             if (ind == soci::i_null) {
-                SEState.inbound_max_throughput = 0;
+                SEState.inboundMaxThroughput = 0;
                 if (nullInTput != soci::i_null) {
-                    SEState.inbound_max_throughput = inTputGlobal;
+                    SEState.inboundMaxThroughput = inTputGlobal;
                 }
             }            
 
             // Queries database to get current instantaneous throughput value.
-            if(SEState.outbound_max_throughput > 0) {
+            if(SEState.outboundMaxThroughput > 0) {
                 SEState.asSourceThroughputInst = getThroughputAsSourceInst(se);
             }
-            if(SEState.inbound_max_throughput > 0) { 
+            if(SEState.inboundMaxThroughput > 0) { 
                 SEState.asDestThroughputInst = getThroughputAsDestinationInst(se);                
             }
 
             (*result)[se] = SEState;
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << se 
-                                             << ": " << SEState.inbound_max_throughput << commit;
+                                             << ": " << SEState.inboundMaxThroughput << commit;
         }
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "RYAN Opt3.0.2: " << result->size() << commit;
     }    
 
     OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) {
@@ -222,6 +219,7 @@ public:
 
     // Writes to range object for a specific pair.
     void getPairLimits(const Pair &pair, Range *range) {
+        
         // Link working range
         soci::indicator isNullMin, isNullMax;
         sql <<
@@ -408,30 +406,8 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
-    // [FTS-1782] & [FTS-1944]: We now use two estimates
-    // 1. asSource. This is window-based and comes from getThroughputInfo's values
-    // 2. asSourceInst. This is the old method, and uses inst. throughput values from t_file.
-
-    double getThroughputAsSource(const std::string &se, const boost::posix_time::time_duration &optimizerInterval) {
-        // Estimation of total outbound throughput (throughput).
-        soci::indicator isThroughputNull;
-        double throughput = 0;
-
-        int timeout = optimizerInterval.total_seconds() - 5;
-
-        sql <<
-            "SELECT SUM(throughput) from t_optimizer "
-            "WHERE source_se= :name AND datetime >= UTC_TIMESTAMP() - INTERVAL :optimizerInterval SECOND",
-            soci::use(se, "name"), soci::use(timeout, "optimizerInterval"),
-            soci::into(throughput, isThroughputNull);
-        if (isThroughputNull == soci::i_null) {
-            throughput = 0;
-        } 
-        return throughput/(1024*1024); //Returns value in MB/s
-    }
-
     double getThroughputAsSourceInst(const std::string &se) {
-        // Estimation of total outbound throughput (throughput).
+        // Estimation of total outbound throughput.
         double throughput = 0;
         soci::indicator isNull;
 
@@ -443,24 +419,8 @@ public:
         return throughput; //Returns value in MB/s
     }    
 
-    double getThroughputAsDestination(const std::string &se, const boost::posix_time::time_duration &optimizerInterval) {
-        soci::indicator isThroughputNull;
-        double throughput = 0;
-
-        int timeout = optimizerInterval.total_seconds() - 5;
-
-        sql <<
-            "SELECT SUM(throughput) from t_optimizer "
-            "WHERE dest_se= :name AND datetime >= UTC_TIMESTAMP() - INTERVAL :optimizerInterval SECOND",
-            soci::use(se, "name"), soci::use(timeout, "optimizerInterval"),
-            soci::into(throughput, isThroughputNull);
-        if (isThroughputNull == soci::i_null) {
-            throughput = 0;
-        }
-        return throughput/(1024*1024);
-    } 
-
     double getThroughputAsDestinationInst(const std::string &se) {
+        // Estimation of total inbound throughput.
         double throughput = 0;
         soci::indicator isNull;
 
@@ -489,22 +449,6 @@ public:
 
         sql.commit();
     }
-
-    // // Update the database with pairstate values
-    // void updateOptimizerState(const Pair &pair, const PairState &newState)
-    // {
-    //     sql.begin();
-    //     sql <<
-    //         "INSERT INTO t_optimizer (source_se, dest_se, actual_active, throughput, queue_size) "
-    //         "VALUES (:source, :dest, :actualActive, :throughput, :queueSize) "
-    //         "ON DUPLICATE KEY UPDATE "
-    //         "   actual_active = :actualActive, throughput= :throughput, queue_size = :queueSize",
-    //         soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
-    //         soci::use(newState.activeCount, "actualActive"),
-    //         soci::use(newState.throughput, "throughput"), 
-    //         soci::use(newState.queueSize, "queueSize");    
-    //     sql.commit();
-    // }
 };
 
 

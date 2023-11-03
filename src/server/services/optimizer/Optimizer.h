@@ -84,27 +84,37 @@ struct PairState {
 };
 
 struct StorageState {
-    double asSourceThroughput;
+    
+    //The following two variables store instantaneous inbound (asDest) and outbound (asSource) throughput for a given Storage element.
+    //The "Inst" throughput values are calculated by the getThroughputAsSourceInst and getThroughputAsDestinationInst methods (in OptimizerDataSource.cpp)
+    //The "Inst" values store throughput based on the number of active transfers at the time the "Inst" methods are called 
     double asSourceThroughputInst;
-    double asDestThroughput;
     double asDestThroughputInst;
 
-    // is this style of naming acceptable? 
-    int inbound_max_active;
-    double inbound_max_throughput;
-    int outbound_max_active;
-    double outbound_max_throughput;
+    //The following two variables store the window based inbound (asDest) and outbound (asSource) throughput for a given Storage element.
+    //These throughput values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    //all the active pairs and summing the corresponding throughput values returned by getThroughputInfo (OptimizerDataSource.cpp) 
+    //for a source-destination pair that involves a given storage element
+    double asSourceThroughput;
+    double asDestThroughput;
 
-    StorageState(): asSourceThroughput(0), asSourceThroughputInst(0),
-                    asDestThroughput(0), asDestThroughputInst(0),
-                    inbound_max_active(0), inbound_max_throughput(0),
-                    outbound_max_active(0), outbound_max_throughput(0) {}
+    //These values are storage the limits for the given storage element
+    //They are populated in getStorageStates (OptimizerDataSource.cpp) via querying t_se
+    int inboundMaxActive;
+    int outboundMaxActive;
+    double inboundMaxThroughput;
+    double outboundMaxThroughput;
+
+    StorageState(): asSourceThroughputInst(0), asDestThroughputInst(0),
+                    asSourceThroughput(0), asDestThroughput(0), 
+                    inboundMaxActive(0), outboundMaxActive(0),
+                    inboundMaxThroughput(0),outboundMaxThroughput(0) {}
     
     StorageState(int ia, double it, int oa, double ot):
-        inbound_max_active(ia), inbound_max_throughput(it),
-        outbound_max_active(oa), outbound_max_throughput(ot),
-        asSourceThroughput(0), asSourceThroughputInst(0),
-        asDestThroughput(0), asDestThroughputInst(0) {}
+                asSourceThroughputInst(0),asDestThroughputInst(0),
+                asSourceThroughput(0), asDestThroughput(0),
+                inboundMaxActive(ia), outboundMaxActive(oa),
+                inboundMaxThroughput(it), outboundMaxThroughput(ot) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -117,7 +127,7 @@ public:
     virtual std::list<Pair> getActivePairs(void) = 0;
 
     // Get active throughput and connection limits for every SE  
-    virtual void dumpStorageStates(std::map<std::string, StorageState> *currentSEStateMap) = 0;
+    virtual void getStorageStates(std::map<std::string, StorageState> *currentSEStateMap) = 0;
 
     // Return the optimizer configuration value
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
@@ -142,9 +152,7 @@ public:
     virtual int getSubmitted(const Pair&) = 0;
 
     // Get current throughput
-    virtual double getThroughputAsSource(const std::string&, const boost::posix_time::time_duration&) = 0;
     virtual double getThroughputAsSourceInst(const std::string&) = 0;
-    virtual double getThroughputAsDestination(const std::string&, const boost::posix_time::time_duration&) = 0;
     virtual double getThroughputAsDestinationInst(const std::string&) = 0;
 
     // Permanently register the optimizer decision
@@ -178,14 +186,14 @@ public:
  *     y(n) = f( x1(n), x2(n), x3(n), y(n-1))
  * 
  * But for sake of clarity, we save the entire vectors:
- *     x_{1,2}(n-1) in memoryPairStateMap
+ *     x_{1,2}(n-1) in previousPairStateMap
  *     x_{1,2}(n) in currentPairStateMap
  *     x_{3}(n) in currentSEStateMap
 */
 // Optimizer implementation
 class Optimizer: public boost::noncopyable {
 protected:
-    std::map<Pair, PairState> memoryPairStateMap;
+    std::map<Pair, PairState> previousPairStateMap;
     std::map<Pair, PairState> currentPairStateMap;
     std::map<std::string, StorageState> currentSEStateMap;
 
