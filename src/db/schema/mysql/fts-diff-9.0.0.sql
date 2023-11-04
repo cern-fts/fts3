@@ -3,6 +3,14 @@
 -- [FTS-1928] REST API should accept and validate FTS submission token
 --
 
+CREATE TABLE `t_token_provider` (
+  `name` varchar(255) NOT NULL,
+  `issuer` varchar(1024) NOT NULL,
+  `client_id` varchar(255) NOT NULL,
+  `client_secret` varchar(255) NOT NULL,
+  PRIMARY KEY (`issuer`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 CREATE TABLE `t_token` (
   `token_id` char(16) NOT NULL,
   `access_token` longtext NOT NULL,
@@ -10,15 +18,8 @@ CREATE TABLE `t_token` (
   `issuer` varchar(1024) NOT NULL,
   `scope` varchar(1024) NOT NULL,
   `audience` varchar(1024) NOT NULL,
-  PRIMARY KEY (`token_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-CREATE TABLE `t_token_provider` (
-    `name` varchar(255) NOT NULL,
-    `issuer` varchar(1024) NOT NULL,
-    `client_id` varchar(255) NOT NULL,
-    `client_secret` varchar(255) NOT NULL,
-    PRIMARY KEY (`issuer`)
+  PRIMARY KEY (`token_id`),
+  CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ALTER TABLE `t_file`

@@ -756,6 +756,21 @@ CREATE TABLE `t_stage_req` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `t_token_provider`
+--
+
+DROP TABLE IF EXISTS `t_token_provider`;
+CREATE TABLE `t_token_provider` (
+  `name` varchar(255) NOT NULL,
+  `issuer` varchar(1024) NOT NULL,
+  `client_id` varchar(255) NOT NULL,
+  `client_secret` varchar(255) NOT NULL,
+  PRIMARY KEY (`issuer`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+--
 -- Table structure for table `t_token`
 --
 
@@ -767,7 +782,8 @@ CREATE TABLE `t_token` (
   `access_token` longtext NOT NULL,
   `refresh_token` longtext,
   `issuer` varchar(1024) NOT NULL,
-  PRIMARY KEY (`token_id`)
+  PRIMARY KEY (`token_id`),
+  CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
