@@ -114,6 +114,7 @@ void TokenExchangeService::runService() {
                 boost::this_thread::sleep(pollInterval);
             } else {
                 boost::this_thread::sleep(boost::posix_time::seconds(5));
+                impatientDebugger = false;
             }
 
             if (DrainMode::instance()) {
