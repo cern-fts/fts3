@@ -79,7 +79,7 @@ void FetchStaging::fetch()
 
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
-                std::string storage = Uri::parse(it_f->surl).host;
+                std::string storage = Uri::parse(it_f->surl).getSeName();
                 GroupByType key(it_f->credId, storage, it_f->spaceToken);
                 auto it_t = tasks.find(key);
                 if (it_t == tasks.end()) {

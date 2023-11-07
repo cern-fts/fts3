@@ -62,7 +62,7 @@ void FetchArchiving::fetch()
 
             for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
             {
-                std::string storage = Uri::parse(it_f->surl).host;
+                std::string storage = Uri::parse(it_f->surl).getSeName();
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "storage: " << storage << commit;
                 GroupByType key(it_f->credId, storage);
                 auto it_t = tasks.find(key);
@@ -141,7 +141,7 @@ void FetchArchiving::recoverStartedTasks()
 
     for (auto it_f = startedArchivingOps.begin(); it_f != startedArchivingOps.end(); ++it_f) {
         // Apply grouping by credential ID and storage endpoint
-        std::string storage = Uri::parse(it_f->surl).host;
+        std::string storage = Uri::parse(it_f->surl).getSeName();
         GroupByType key(it_f->credId, storage);
         auto it_t = tasks.find(key);
         if (it_t == tasks.end()) {
