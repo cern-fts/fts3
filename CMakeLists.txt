@@ -28,8 +28,8 @@ set(CMAKE_MODULE_PATH
 )
 
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 12)
-set(VERSION_PATCH 11)
+set(VERSION_MINOR 14)
+set(VERSION_PATCH 0)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Generate include header with the version string

@@ -6,7 +6,7 @@
 %define __python python3
 
 Name:       fts
-Version:    3.12.11
+Version:    3.14.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
