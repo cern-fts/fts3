@@ -29,11 +29,11 @@
 #include "../BaseService.h"
 #include "Allocator.h"
 #include "Scheduler.h"
+#include "Allocator.h"
 
 
 namespace fts3 {
 namespace server {
-
 
 class TransfersService: public BaseService
 {
@@ -55,6 +55,7 @@ protected:
     std::string logDir;
     std::string msgDir;
     boost::posix_time::time_duration schedulingInterval;
+    Allocator::AllocatorFunction allocatorFunction;
 
     // Function pointer for the scheduler function, depending on config
     Scheduler::SchedulerFunction schedulerFunction;
