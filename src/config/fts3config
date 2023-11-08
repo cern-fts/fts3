@@ -171,3 +171,6 @@ LogLevel=INFO
 # New naming convention: /tmp/x509up_h<hash>_<delegation_id>
 # Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
 #BackwardsCompatibleProxyNames = False
+
+# In seconds, how often to check for access tokens which don't have an associated refresh token
+TokenExchangeCheckInterval = 30

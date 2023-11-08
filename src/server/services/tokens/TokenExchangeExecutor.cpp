@@ -25,7 +25,7 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-void TokenExchangeExecutor::run(boost::any & ctx)
+void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting token-exchange: "
                                     << "token_id=" << token.tokenId << " "
@@ -46,12 +46,14 @@ void TokenExchangeExecutor::run(boost::any & ctx)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
                                        << "token_id=" << token.tokenId << " "
                                        << e.what() << commit;
+
+        tokenExchangeService.registerFailedTokenExchange(token.tokenId, std::string(e.what()));
     }
 }
 
 std::string TokenExchangeExecutor::performTokenExchange()
 {
-    // GET token exchange endpoint url
+    // GET token exchange endpoint URL
     std::string token_endpoint = getTokenEndpoint();
     Davix::Uri uri(token_endpoint);
     validateUri(uri);
@@ -70,10 +72,8 @@ std::string TokenExchangeExecutor::performTokenExchange()
     // Execute the request
     std::string exchange_result = executeHttpRequest(req);
 
-    // Extract refresh_token field from the JSON response
-    std::string refresh_token = parseJson(exchange_result, "refresh_token");
-
-    return refresh_token;
+    // Extract "refresh_token" field from the JSON response
+    return parseJson(exchange_result, "refresh_token");
 }
 
 std::string TokenExchangeExecutor::getTokenEndpoint()
@@ -90,10 +90,8 @@ std::string TokenExchangeExecutor::getTokenEndpoint()
     // Execute the request
     std::string response = executeHttpRequest(req);
 
-    // Extract token_endpoint field from the JSON response
-    std::string token_endpoint = parseJson(response, "token_endpoint");
-
-    return token_endpoint;
+    // Extract "token_endpoint" field from the JSON response
+    return parseJson(response, "token_endpoint");
 }
 
 std::string TokenExchangeExecutor::getAuthorizationHeader() const
