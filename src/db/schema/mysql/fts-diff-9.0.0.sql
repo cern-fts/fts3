@@ -10,6 +10,9 @@ CREATE TABLE `t_token` (
   `issuer` varchar(1024) NOT NULL,
   `scope` varchar(1024) NOT NULL,
   `audience` varchar(1024) NOT NULL,
+  `retry_timestamp` timestamp NULL DEFAULT NULL,
+  `retry_delay_m` int unsigned NULL DEFAULT 0,
+  `attempts` int unsigned NULL DEFAULT 0,
   PRIMARY KEY (`token_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
