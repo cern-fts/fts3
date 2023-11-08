@@ -566,6 +566,68 @@ static int getActiveCount(soci::session& sql, const std::string &source, const s
     return activeCount;
 }
 
+/// Determines if the link has a defined upper bound in the 
+// database and returns the number of files allowed for transfer on the specified link
+/// @param source Source storage
+/// @param dest Destination storage
+/// @return bool indicating if there is an upper bound capacity on link
+/// @return int representing upper bound on link
+boost::tuple<bool, int> linkUpperBound(soci::session& sql, std::string sourceSe, std::string destSe) {
+    int maxActive = 0;
+    soci::indicator maxActiveNull = soci::i_ok;
+    int activeCount = getActiveCount(sql, sourceSe, destSe);
+    int filesNum = 10;
+
+    sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
+        soci::use(sourceSe),
+        soci::use(destSe),
+        soci::into(maxActive, maxActiveNull);
+
+    if (maxActiveNull != soci::i_null && maxActive > 0) {
+        filesNum = maxActive - activeCount;
+        return boost::make_tuple(true, filesNum);
+    }
+    return boost::make_tuple(false, filesNum);
+}
+
+std::map<Pair, int> MySqlAPI::getLinkCapacities(const std::vector<QueueId>& queues,
+        std::map<std::string, std::list<TransferFile> >& files)
+{
+    std::map<Pair, int> linkCapacities;
+    soci::session sql(*connectionPool);
+    time_t now = time(NULL);
+    try
+    {
+        // Iterate through queues, setting link capacities as VO credits
+        for (auto it = queues.begin(); it != queues.end(); ++it)
+        {
+            boost::tuple<bool, int> linkInfo = linkUpperBound(sql, it->sourceSe, it->destSe);
+            int filesNum = boost::get<1>(linkInfo);
+            if(boost::get<0>(linkInfo)) {
+                if(filesNum <= 0 ) {
+                    linkCapacities[Pair(it->sourceSe, it->destSe)] = 0;
+                }
+                else {
+                    linkCapacities[Pair(it->sourceSe, it->destSe)] = filesNum;
+                }
+            }
+            else{ 
+                linkCapacities[Pair(it->sourceSe, it->destSe)] = filesNum;
+            }
+        }
+        return linkCapacities;
+    }
+    catch (std::exception& e)
+    {
+        files.clear();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        files.clear();
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
 
 void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::list<TransferFile> >& files)
@@ -579,27 +641,13 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         // AND there are pending file transfers within the job
         for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            int maxActive = 0;
-            soci::indicator maxActiveNull = soci::i_ok;
-            int filesNum = 10;
-
-            int activeCount = getActiveCount(sql, it->sourceSe, it->destSe);
-
-            // How many can we run
-            sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
-                   soci::use(it->sourceSe),
-                   soci::use(it->destSe),
-                   soci::into(maxActive, maxActiveNull);
-
-            // Calculate how many tops we should pick
-            if (maxActiveNull != soci::i_null && maxActive > 0)
-            {
-                filesNum = (maxActive - activeCount);
+            boost::tuple<bool, int> linkInfo = linkUpperBound(sql, it->sourceSe, it->destSe);
+            int filesNum = boost::get<1>(linkInfo);
+            if(boost::get<0>(linkInfo)) {
                 if(filesNum <= 0 ) {
                     continue;
                 }
             }
-
             int fixedPriority =  ServerConfig::instance().get<int> ("UseFixedJobPriority");
             soci::indicator isMaxPriorityNull = soci::i_ok;
             int maxPriority = 3;

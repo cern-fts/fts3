@@ -335,6 +335,12 @@ public:
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage);
 
+    /// Get link capacities for the given queues
+    /// @param queues       Queues for which to check (see getQueuesWithPending)
+    /// @param[out] files   A map where the key is the VO. The value is a list of transfers belonging to that VO
+    virtual std::map<Pair, int> getLinkCapacities(const std::vector<QueueId>& queues,
+        std::map< std::string, std::list<TransferFile>>& files);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
