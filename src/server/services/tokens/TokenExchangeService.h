@@ -70,8 +70,6 @@ private:
     /// The set is populated by the worker threads
     /// and will be collected at the end of a cycle
     std::set<std::pair<std::string, std::string>> failedExchanges;
-
-    bool impatientDebugger;
 };
 
 } // end namespace server

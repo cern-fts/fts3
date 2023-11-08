@@ -36,7 +36,7 @@ extern time_t tokenExchangeRecords;
 
 
 TokenExchangeService::TokenExchangeService(HeartBeat *beat) :
-    BaseService("TokenExchangeService"), beat(beat), impatientDebugger(true)
+    BaseService("TokenExchangeService"), beat(beat)
 {
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
     pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
@@ -136,11 +136,7 @@ void TokenExchangeService::runService() {
         tokenExchangeRecords = time(nullptr);
 
         try {
-            if (!impatientDebugger) {
-                boost::this_thread::sleep(pollInterval);
-            } else {
-                boost::this_thread::sleep(boost::posix_time::seconds(5));
-            }
+            boost::this_thread::sleep(pollInterval);
 
             if (DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more token-exchange for this instance!" << commit;
