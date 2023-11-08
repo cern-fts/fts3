@@ -88,8 +88,10 @@ void TokenExchangeService::getRefreshTokens() {
                                                 << commit;
             }
 
-            db->storeRefreshTokens(refreshTokens);
-            refreshTokens.clear();
+            if (!refreshTokens.empty()) {
+                db->storeRefreshTokens(refreshTokens);
+                refreshTokens.clear();
+            }
         }
     } catch (const boost::thread_interrupted &) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TokenExchangeService:getRefreshTokens" << commit;
@@ -114,8 +116,16 @@ void TokenExchangeService::handleFailedTokenExchange()
                                         << commit;
     }
 
-    db->failTransfersWithFailedTokenExchange(failedExchanges);
-    failedExchanges.clear();
+    if (!failedExchanges.empty()) {
+        std::list<std::string> token_ids;
+        for (const auto& it: failedExchanges) {
+            token_ids.emplace_back(it.first);
+        }
+
+        db->markFailedTokenExchange(token_ids);
+        db->failTransfersWithFailedTokenExchange(failedExchanges);
+        failedExchanges.clear();
+    }
 }
 
 void TokenExchangeService::runService() {
