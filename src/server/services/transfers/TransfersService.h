@@ -27,11 +27,11 @@
 
 #include "db/generic/QueueId.h"
 #include "../BaseService.h"
+#include "Allocator.h"
 
 
 namespace fts3 {
 namespace server {
-
 
 class TransfersService: public BaseService
 {
@@ -53,6 +53,7 @@ protected:
     std::string logDir;
     std::string msgDir;
     boost::posix_time::time_duration schedulingInterval;
+    Allocator::AllocatorFunction allocatorAlgorithm;
 
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
     void executeUrlcopy();
