@@ -35,6 +35,7 @@
 #include "FileTransferExecutor.h"
 
 #include <msg-bus/producer.h>
+#include "MaximumFlow.h"
 
 #include <ctime>
 
@@ -102,6 +103,25 @@ void TransfersService::runService()
     }
 }
 
+void getSourceDestinationCapacities(std::map<std::string, int>& slotsLeftForSource, std::map<std::string, int>& slotsLeftForDestination, const std::vector<QueueId>& queues) {
+    auto db = DBSingleton::instance().getDBObjectInstance();
+    for (const auto& i : queues) {
+        // To reduce queries, fill in one go limits as source and as destination
+        if (slotsLeftForDestination.count(i.destSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i.destSe);
+            slotsLeftForDestination[i.destSe] = seConfig.inboundMaxActive > 0 ? seConfig.inboundMaxActive : 60;
+            slotsLeftForSource[i.destSe] = seConfig.outboundMaxActive > 0 ? seConfig.outboundMaxActive : 60;
+        }
+        if (slotsLeftForSource.count(i.sourceSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i.sourceSe);
+            slotsLeftForDestination[i.sourceSe] = seConfig.inboundMaxActive > 0 ? seConfig.inboundMaxActive : 60;
+            slotsLeftForSource[i.sourceSe] = seConfig.outboundMaxActive > 0 ? seConfig.outboundMaxActive : 60;
+        }
+        // Once it is filled, decrement
+        slotsLeftForDestination[i.destSe] -= i.activeCount;
+        slotsLeftForSource[i.sourceSe] -= i.activeCount;
+    }
+}
 
 void TransfersService::getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots)
 {
@@ -109,23 +129,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
     ThreadPool<FileTransferExecutor> execPool(execPoolSize);
     std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
-    for (auto i = queues.begin(); i != queues.end(); ++i) {
-        // To reduce queries, fill in one go limits as source and as destination
-        if (slotsLeftForDestination.count(i->destSe) == 0) {
-            StorageConfig seConfig = db->getStorageConfig(i->destSe);
-            slotsLeftForDestination[i->destSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
-            slotsLeftForSource[i->destSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
-        }
-        if (slotsLeftForSource.count(i->sourceSe) == 0) {
-            StorageConfig seConfig = db->getStorageConfig(i->sourceSe);
-            slotsLeftForDestination[i->sourceSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
-            slotsLeftForSource[i->sourceSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
-        }
-        // Once it is filled, decrement
-        slotsLeftForDestination[i->destSe] -= i->activeCount;
-        slotsLeftForSource[i->sourceSe] -= i->activeCount;
-    }
-
+    getSourceDestinationCapacities(slotsLeftForSource, slotsLeftForDestination, queues);
     try
     {
         if (queues.empty())
@@ -295,12 +299,30 @@ static void failUnschedulable(const std::vector<QueueId> &unschedulable)
     }
 }
 
+enum AllocatorAlgorithm {
+    MAXIMUM_FLOW,
+    GREEDY,
+    INVALID_ALLOCATOR_ALGORITHM,
+};
+
+AllocatorAlgorithm getAllocatorAlgorithm() {
+    std::string allocatorConfig = config::ServerConfig::instance().get<std::string>("TransferServiceAllocatorAlgorithm");
+    if (allocatorConfig == "MAXIMUM_FLOW") {
+        return MAXIMUM_FLOW;
+    }
+    else if(allocatorConfig == "GREEDY") {
+        return GREEDY;
+    }
+    else {
+        return INVALID_ALLOCATOR_ALGORITHM;
+    }
+}
 
 void TransfersService::executeUrlcopy()
 {
     std::vector<QueueId> queues, unschedulable;
     boost::thread_group g;
-
+    auto db = DBSingleton::instance().getDBObjectInstance();
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     int urlCopyCount = countProcessesWithName("fts_url_copy");
@@ -314,26 +336,79 @@ void TransfersService::executeUrlcopy()
     }
 
     try {
-      time_t start = time(0); //std::chrono::system_clock::now();
+        time_t start = time(0); //std::chrono::system_clock::now();
+        time_t end;
+        // Retrieve queues
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
-        // Breaking determinism. See FTS-704 for an explanation.
-        std::random_shuffle(queues.begin(), queues.end());
-        // Apply VO shares at this level. Basically, if more than one VO is used the same link,
-        // pick one each time according to their respective weights
-        queues = applyVoShares(queues, unschedulable);
-        // Fail all that are unschedulable
-        failUnschedulable(unschedulable);
+        std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
+        getSourceDestinationCapacities(slotsLeftForSource, slotsLeftForDestination, queues);
+        // Retrieve link capacities
+        std::map<std::string, std::list<TransferFile> > voQueues;
+        std::map<std::pair<std::string, std::string>, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
+        std::map<std::string, int> seToInt;
+        std::map<int, std::string> intToSe;
+        int nodeCount;
+        MaximumFlow::Dinics solver;
+        std::map<std::pair<std::string, std::string>, int> allocatorMap;
+        std::map<std::pair<int, int>, int> maximumFlow;
+        switch(getAllocatorAlgorithm()) {
+            case (MAXIMUM_FLOW):
+                nodeCount = 0;
+                // We initialize seToInt and intToSe since our maximum flow class utilizes array indexing for optimization
+                for (const auto& i : queues) {
+                    if (seToInt.find(i.sourceSe) == seToInt.end()) {
+                        seToInt[i.sourceSe] = nodeCount;
+                        intToSe[nodeCount] = i.sourceSe;
+                        nodeCount++;
+                    }
+                    if (seToInt.find(i.destSe) == seToInt.end()) {
+                        seToInt[i.destSe] = nodeCount;
+                        intToSe[nodeCount] = i.destSe;
+                        nodeCount++;
+                    }
+                }
+                // node count is incremented after each node so virtual source is nodeCount, dest is nodeCount + 1
+                solver.setSource(nodeCount);
+                solver.setSink(nodeCount + 1);
+                solver.setNodes(nodeCount + 2);
+                // Introduce capacities for virtual source to each source
+                for (const auto& i : queues) {
+                    solver.addEdge(nodeCount, seToInt[i.sourceSe], slotsLeftForSource[i.sourceSe]);
+                    solver.addEdge(seToInt[i.destSe], nodeCount + 1, slotsLeftForDestination[i.destSe]);
+                    solver.addEdge(seToInt[i.sourceSe], seToInt[i.destSe], linkCapacities[std::make_pair(i.sourceSe, i.destSe)]);
+                }
+                
+                maximumFlow = solver.computeMaximumFlow();
+                
+                for (const auto& entry : maximumFlow) {
+                    allocatorMap[std::make_pair(intToSe[entry.first.first], intToSe[entry.first.second])] = entry.second;
+                }
+                break;
+                
+            case (GREEDY):
+                // Breaking determinism. See FTS-704 for an explanation.
+                std::random_shuffle(queues.begin(), queues.end());
+                // Apply VO shares at this level. Basically, if more than one VO is used the same link,
+                // pick one each time according to their respective weights
+                queues = applyVoShares(queues, unschedulable);
+                // Fail all that are unschedulable
+                failUnschedulable(unschedulable);
 
-        if (queues.empty()) {
-            return;
+                if (queues.empty()) {
+                    return;
+                }
+                getFiles(queues, availableUrlCopySlots);
+                end = time(0); //std::chrono::system_clock::now();
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
+                                                << "func=\"executeUrlcopy\" "
+                                                << "DBcall=\"getQueuesWithPending\" " 
+                                                << "time=\"" << end - start << "\"" 
+                                                << commit;
+                break;
+            default:
+                throw std::runtime_error("Invalid Allocator Algorithm");
         }
-        getFiles(queues, availableUrlCopySlots);
-        time_t end = time(0); //std::chrono::system_clock::now();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
-                                        << "func=\"executeUrlcopy\" "
-                                        << "DBcall=\"getQueuesWithPending\" " 
-                                        << "time=\"" << end - start << "\"" 
-                                        << commit;
+        
     }
     catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;
