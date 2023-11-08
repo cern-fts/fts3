@@ -382,6 +382,10 @@ public:
 
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage) = 0;
+
+    /// Get link capacities for the given queues
+    virtual std::map<std::pair<std::string, std::string>, int> getLinkCapacities(const std::vector<QueueId>& queues,
+        std::map< std::string, std::list<TransferFile>>& files);
 };
 
 #endif // GENERICDBIFCE_H_

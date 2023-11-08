@@ -566,6 +566,55 @@ static int getActiveCount(soci::session& sql, const std::string &source, const s
     return activeCount;
 }
 
+std::map<std::pair<std::string, std::string>, int> MySqlAPI::getLinkCapacities(const std::vector<QueueId>& queues,
+        std::map<std::string, std::list<TransferFile> >& files)
+{
+    std::map<std::pair<std::string, std::string>, int> linkCapacities;
+    soci::session sql(*connectionPool);
+    time_t now = time(NULL);
+    try
+    {
+        // Iterate through queues, getting jobs IF the VO has not run out of credits
+        // AND there are pending file transfers within the job
+        for (auto it = queues.begin(); it != queues.end(); ++it)
+        {
+            int maxActive = 0;
+            soci::indicator maxActiveNull = soci::i_ok;
+            int filesNum = 10;
+
+            int activeCount = getActiveCount(sql, it->sourceSe, it->destSe);
+
+            // How many can we run
+            sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
+                   soci::use(it->sourceSe),
+                   soci::use(it->destSe),
+                   soci::into(maxActive, maxActiveNull);
+
+            // Calculate how many tops we should pick
+            if (maxActiveNull != soci::i_null && maxActive > 0)
+            {
+                filesNum = (maxActive - activeCount);
+                if(filesNum <= 0 ) {
+                    linkCapacities[std::make_pair(it->sourceSe, it->destSe)] = 0;
+                }
+                else {
+                    linkCapacities[std::make_pair(it->sourceSe, it->destSe)] = filesNum;
+                }
+            }
+        }
+        return linkCapacities;
+    }
+    catch (std::exception& e)
+    {
+        files.clear();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        files.clear();
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
 
 void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         std::map<std::string, std::list<TransferFile> >& files)
