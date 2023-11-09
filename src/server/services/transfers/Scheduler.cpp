@@ -120,7 +120,7 @@ std::map<std::string, std::list<TransferFile>> Scheduler::doDeficitSchedule(
     }
 
     // (6) Schedule using priority queue on deficits.
-    // TODO
+    scheduledFiles = scheduleUsingDeficit(allDefits);
 
     return scheduledFiles;
 }
@@ -219,6 +219,13 @@ std::map<std::string, std::map<std::string, int>> computeShouldBeSlots(
     return result;
 }
 
+/**
+ * Assign should-be-allocated slots to each VO, using Huntington-Hill algorithm.
+ * @param voWeights Weight of each VO.
+ * @param maxPairSlots Max number of slots to be allocated to the VOs.
+ * @param queueActiveCounts Number of active transfers associated with each VO and each activity in the VO.
+ * @param queueSubmittedCounts Number of submitted transfers associated with each VO and each activity in the VO.
+*/
 std::map<std::string, int> assignShouldBeSlotsToVos(
     std::map<std::string, double> &voWeights,
     int maxPairSlots,
@@ -251,6 +258,13 @@ std::map<std::string, int> assignShouldBeSlotsToVos(
     return huntingtonHill(voWeights, maxPairSlots, activeAndPendingCounts);
 }
 
+/**
+ * Assign should-be-allocated slots to each activity, using Huntington-Hill algorithm.
+ * @param activityWeights Weight of each activity.
+ * @param voMaxSlots Max number of slots to be allocated to the activities.
+ * @param activityActiveCounts Number of active transfers associated with each activity.
+ * @param activitySubmittedCounts Number of submitted transfers associated with each activity.
+*/
 std::map<std::string, int> assignShouldBeSlotsToActivities(
     std::map<std::string, double> &activityWeights,
     int voMaxSlots,
@@ -278,7 +292,7 @@ std::map<std::string, int> assignShouldBeSlotsToActivities(
 }
 
 /**
- * Assign slots to the VOs/activities.
+ * Assign slots to the VOs/activities via the Huntington-Hill algorithm.
  * (Both VO and activity will be referred to as queue here, because this function will be used for both).
  * @param weights Maps each queue name to the respective weight.
  * @param maxSlots Max number of slots to be allocated.
