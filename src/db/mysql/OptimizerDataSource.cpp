@@ -212,6 +212,66 @@ public:
         }
     }    
 
+
+    // Function reads in all values from the t_netlink_stat table, which specify
+    //   - throughput of every link (IN PROGRESS)
+    //   - maximum number of connections of every link (IN PROGRESS)
+    // Additionally, the instantaneous throughput is also computed. 
+    // Returns: A map from SE name (string) --> LinkState (both limits and actual throughput values).
+    void getLinkStates(std::map<std::string, LinkState> *result) {
+
+        // First read in global default values:
+        int ActiveGlobal = 0; 
+        double TputGlobal = 0.0;
+        soci::indicator nullActive;
+        soci::indicator nullTput;
+
+        sql <<
+            "SELECT max_active, max_throughput "
+            "FROM t_netlink_stat WHERE netlink_id = '*' ",
+            soci::into(ActiveGlobal, nullActive), soci::into(TputGlobal, nullTput);
+
+        (*result)["*"] = LinkState(ActiveGlobal, TputGlobal);
+
+        // We then fill in the table for every SE
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT DISTINCT netlink_d, max_active, max_throughput, "
+            "FROM t_netlink_stat WHERE netlink_id != '*'"
+        );
+
+        soci::indicator ind;
+        for (auto i = rs.begin(); i != rs.end(); ++i) { //For each row in the table, load all values into a linkState object and store in the map "result"
+            std::string link = i->get<std::string>("netlink_id"); //indexed with the name of the link
+
+            LinkState linkState;
+
+            linkState.MaxActive = i->get<int>("max_active", ind);
+            if (ind == soci::i_null) {
+                linkState.MaxActive = 0;
+                if (nullActive != soci::i_null) {
+                    linkState.MaxActive = ActiveGlobal;
+                }
+            }
+
+            linkState.MaxThroughput = i->get<double>("max_throughput", ind);
+            if (ind == soci::i_null) {
+                linkState.MaxThroughput = 0;
+                if (nullTput != soci::i_null) {
+                    linkState.MaxThroughput = TputGlobal;
+                }
+            }
+
+            // Queries database to get current instantaneous throughput value.
+            if(linkState.MaxThroughput > 0) {
+                linkState.ThroughputInst = getThroughputOverNetlinkInst(se);
+            }
+    
+            (*result)[link] = linkState;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << se 
+                                             << ": " << SEState.MaxThroughput << commit;
+        }
+    }  
+
     OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) {
         return getOptimizerModeInner(sql, source, dest);
     }
@@ -406,6 +466,33 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
+    int getMinTputLink(const Pair &pair) {
+        std::string minTputLink;
+        int minTput = std::numeric_limits<int>::max(); // Initialize with a large value
+
+        soci::rowset<soci::row> rs = (sql.prepare <<
+            "SELECT netlink, max_throughput " // IN PROGRESS : t_netlink is not updated yet to include max tput 
+            "FROM t_netlink_trace "
+            "WHERE source_se = :source AND dest_se = :dest",
+            soci::use(pair.source), soci::use(pair.dest)
+        );
+
+        for (auto const& row : rs) {
+            std::string netlink;
+            int maxTput;
+
+            row.get<std::string>(0, netlink);
+            row.get<int>(1, maxTput);
+
+            if (maxTput < minTput) {
+                minTput = maxTput;
+                minTputLink = netlink;
+            }
+        }
+
+        return minTputLink;
+    }
+
     double getThroughputAsSourceInst(const std::string &se) {
         // Estimation of total outbound throughput.
         double throughput = 0;
@@ -427,6 +514,18 @@ public:
         sql << "SELECT SUM(throughput) FROM t_file "
                "WHERE dest_se= :name AND file_state='ACTIVE' AND throughput IS NOT NULL",
             soci::use(se), soci::into(throughput, isNull);
+
+        return throughput;
+    }
+
+    double getThroughputOverNetlinkInst(const std::string &netlink) {
+        double throughput = 0;
+        soci::indicator isNull;
+
+        sql << "SELECT SUM(f.throughput) FROM t_file f, t_netlink_trace nt "
+               "WHERE f.source_se = nt.source_se AND f.dest_se = nt.dest_se AND nt.netlink = :netlink "
+               " AND f.file_state = 'ACTIVE' AND f.throughput IS NOT NULL ",
+            soci::use(netlink), soci::into(throughput, isNull);
 
         return throughput;
     }

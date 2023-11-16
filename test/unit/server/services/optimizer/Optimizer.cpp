@@ -176,6 +176,11 @@ public:
         return;
     }   
 
+    void populateNetlinkTraces(const Pair &pair, const std::string &netlink) {
+        auto &pairs = reversedNetlinkTraceStore[netlink];
+        pairs.emplace_back(pair);
+    }
+
     OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
         return mockOptimizerMode;
     }
@@ -361,6 +366,30 @@ public:
         }
         return acc;
     }    
+
+    double getThroughputOverNetlinkInst(const std::string &netlink) {
+
+        double acc = 0;
+
+        auto pairs = reversedNetlinkTraceStore[netlink];
+
+        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+            auto pair = *i;
+            auto tsi = transferStore.find(pair);
+            if (tsi == transferStore.end()) {
+                continue;
+            }
+
+            auto &transfers = tsi->second;
+
+            for (auto j = transfers.begin(); j != transfers.end(); ++j) {
+                if (j->state == "ACTIVE") {
+                    acc += j->throughput;
+                }
+            }
+        }
+        return acc;
+    }
 
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
         const PairState &newState, int diff, const std::string &rationale) {

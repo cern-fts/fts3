@@ -58,6 +58,13 @@ struct StorageLimits {
               throughputSource(0), throughputDestination(0) {}
 };
 
+struct LinkLimits {
+    int link; 
+    double throughput; 
+
+    LinkLimits(): link(0), throughput(0) {}
+};
+
 struct PairState {
     time_t timestamp;
     double throughput;
@@ -73,14 +80,15 @@ struct PairState {
     // Optimizer last decision
     int connections;
     double avgTput;
+    std::string minTputLink; 
     
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0) {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), minTputLink("") {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
         activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn),
-        avgTput(0) {}
+        avgTput(0), minTputLink("") {}
 };
 
 struct StorageState {
@@ -117,6 +125,32 @@ struct StorageState {
                 inboundMaxThroughput(it), outboundMaxThroughput(ot) {}
 };
 
+struct LinkState {
+
+    // Stores instantaneous throughput for a given Link element 
+    // The "Inst" throughput values are calculated by the getThroughputAsLinkInst (in OptimizerDataSource.cpp)
+    // The "Inst" values store throughput based on the number of active transfers at the time the "Inst" methods are called 
+    double ThroughputInst;
+
+    // Stores the window based throughput for a given Link element 
+    // This throughput value is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    // all the active pairs and summing the corresponding throughput values returned by getThroughputInfo (OptimizerDataSource.cpp) 
+    // for a source-destination pair that involves a given link element
+    double Throughput;
+
+    // These values are storage the limits for the given Link element 
+    // They are populated in getLinkStates (OptimizerDataSource.cpp) via querying t_netlink_stat (TENTATIVELY)
+    int MaxActive;
+    double MaxThroughput;
+
+    LinkState(): ThroughputInst(0), Throughput(0),
+                    MaxActive(0), MaxThroughput(0) {}
+    
+    LinkState(int a, double t):
+                ThroughputInst(0), Throughput(0),
+                    MaxActive(a), MaxThroughput(t) {}
+};
+
 // To decouple the optimizer core logic from the data storage/representation
 class OptimizerDataSource {
 public:
@@ -128,6 +162,9 @@ public:
 
     // Get active throughput and connection limits for every SE  
     virtual void getStorageStates(std::map<std::string, StorageState> *currentSEStateMap) = 0;
+
+    // Get active throughput and connection limits for every link  
+    virtual void getLinkStates(std::map<std::string, LinkState> *currentLinkStateMap) = 0;
 
     // Return the optimizer configuration value
     virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
@@ -154,6 +191,7 @@ public:
     // Get current throughput
     virtual double getThroughputAsSourceInst(const std::string&) = 0;
     virtual double getThroughputAsDestinationInst(const std::string&) = 0;
+    virtual double getThroughputOverNetlinkInst(const std::string&) = 0;
 
     // Permanently register the optimizer decision
     virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,
@@ -196,6 +234,7 @@ protected:
     std::map<Pair, PairState> previousPairStateMap;
     std::map<Pair, PairState> currentPairStateMap;
     std::map<std::string, StorageState> currentSEStateMap;
+    std::map<std::string, LinkState> currentLinkStateMap; 
 
     OptimizerDataSource *dataSource;
     OptimizerCallbacks *callbacks;
@@ -211,6 +250,9 @@ protected:
 
     // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
     void getStorageLimits(const Pair &pair, StorageLimits *limits);
+
+    // Read currentLinkStateMap values into a LinkLimits object for the purposes of a single pair.
+    void getLinkLimits(const Pair &pair, LinkLimits *limits);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
