@@ -60,6 +60,7 @@ struct MockTransfer {
     }
 };
 typedef std::list<MockTransfer> TransferList;
+typedef std::list<Pair> reversedNetlinkTraces;
 
 class BaseOptimizerFixture: public OptimizerDataSource, public Optimizer {
 protected:
@@ -67,6 +68,7 @@ protected:
     std::map<Pair, int> streamsRegistry;
     std::map<Pair, TransferList> transferStore;
     std::map<std::string, StorageState> mockStorageStore;
+    std::map<std::string, reversedNetlinkTraces> reversedNetlinkTraceStore;
 
     OptimizerMode mockOptimizerMode;
 
@@ -176,6 +178,40 @@ public:
         return;
     }   
 
+
+
+    // Test environment implementation of getLinkStates
+    // Gets the storage states from the getStorage limit function 
+    // Gets Instant throughput from the getThroughputAsSourceInst and getThroughputAsDestinationInst
+    // Returns: A map from SE name (string) --> StorageState (both limits and actual throughput values).
+    void getLinkStates(std::map<std::string, LinkState> *result) {
+        LinkState linkState;
+        LinkLimits limits;
+        const Pair pair = getActivePairs().front(); //there is only every 1 pair in the unit tests
+        std::string link;
+        
+        //There is only ever one pair in the unit tests, so the only two elements in the currentSEStateMap are
+        //the source and destination of the given pair
+
+        //Creating the SE state for the source
+        link = currentPairStateMap[pair].minLink;
+        getLinkLimits(pair, &limits);
+        linkState.MaxActive = limits.active;
+        linkState.MaxThroughput = limits.throughput;
+    
+
+        // Queries test environment to get current instantaneous throughput value.
+        if(linkState.MaxThroughput > 0) {
+            linkState.ThroughputInst = getThroughputOverNetlinkInst(link);
+        }
+
+        //Stores SEState the map
+        (*result)[link] = linkState;
+
+        return;
+    }   
+
+
     void populateNetlinkTraces(const Pair &pair, const std::string &netlink) {
         auto &pairs = reversedNetlinkTraceStore[netlink];
         pairs.emplace_back(pair);
@@ -192,6 +228,11 @@ public:
     void getStorageLimits(const Pair&, StorageLimits *limits) {
         limits->destination = limits->source = 200;
         limits->throughputDestination = limits->throughputSource = 0;
+    }
+
+    void getLinkLimits(const Pair&, LinkLimits *limits) {
+        limits->active = 200; // to change 
+        limits->throughput = 0;
     }
 
     void getPairLimits(const Pair&, Range *range) {
@@ -327,6 +368,13 @@ public:
             }
         }
         return counter;
+    }
+
+    std::string getMinTputLink(const Pair &pair) {
+        auto tsi = transferStore.find(pair);
+        // todo: create links and select the minimum throughput cap link 
+
+        return "link1";
     }
 
     // In the test environment, throughput=transferred/duration

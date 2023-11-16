@@ -796,4 +796,23 @@ CREATE TABLE `t_netlink_trace` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Table structure for table `t_netlink_config`
+--
+
+DROP TABLE IF EXISTS `t_link_config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `t_netlink_config` (
+  `head_ip` varchar(150) NOT NULL,
+  `tail_ip` varchar(150) NOT NULL,
+  `netlink_name` varchar(150) NOT NULL,
+  `min_active` int(11) DEFAULT NULL,
+  `max_active` int(11) DEFAULT NULL,
+  `max_throughput` float DEFAULT NULL
+  PRIMARY KEY (`head_ip`,`tail_ip`),
+  UNIQUE KEY `netlink_name` (`netlink_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 -- Dump completed on 2023-10-19 15:11:09
