@@ -263,12 +263,12 @@ public:
 
             // Queries database to get current instantaneous throughput value.
             if(linkState.MaxThroughput > 0) {
-                linkState.ThroughputInst = getThroughputOverNetlinkInst(se);
+                linkState.ThroughputInst = getThroughputOverNetlinkInst(link);
             }
     
             (*result)[link] = linkState;
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << se 
-                                             << ": " << SEState.MaxThroughput << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << link
+                                             << ": " << linkState.MaxThroughput << commit;
         }
     }  
 
@@ -466,7 +466,7 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
-    int getMinTputLink(const Pair &pair) {
+    std::string getMinTputLink(const Pair &pair) {
         std::string minTputLink;
         int minTput = std::numeric_limits<int>::max(); // Initialize with a large value
 
@@ -474,7 +474,7 @@ public:
             "SELECT netlink, max_throughput " // IN PROGRESS : t_netlink is not updated yet to include max tput 
             "FROM t_netlink_trace "
             "WHERE source_se = :source AND dest_se = :dest",
-            soci::use(pair.source), soci::use(pair.dest)
+            soci::use(pair.source), soci::use(pair.destination)
         );
 
         for (auto const& row : rs) {

@@ -59,10 +59,10 @@ struct StorageLimits {
 };
 
 struct LinkLimits {
-    int link; 
+    int active; 
     double throughput; 
 
-    LinkLimits(): link(0), throughput(0) {}
+    LinkLimits(): active(0), throughput(0) {}
 };
 
 struct PairState {
@@ -80,15 +80,16 @@ struct PairState {
     // Optimizer last decision
     int connections;
     double avgTput;
-    std::string minTputLink; 
+    // Bottleneck link 
+    std::string minLink; 
     
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), minTputLink("") {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), minLink("") {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
         activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn),
-        avgTput(0), minTputLink("") {}
+        avgTput(0), minLink("") {}
 };
 
 struct StorageState {
@@ -187,6 +188,9 @@ public:
     // Get the number of transfers in the given state
     virtual int getActive(const Pair&) = 0;
     virtual int getSubmitted(const Pair&) = 0;
+
+    // Get the bottleneck link (smallest throughput capacity)
+    virtual std::string getMinTputLink(const Pair&) = 0;
 
     // Get current throughput
     virtual double getThroughputAsSourceInst(const std::string&) = 0;

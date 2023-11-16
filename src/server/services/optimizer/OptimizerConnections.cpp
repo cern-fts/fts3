@@ -111,11 +111,12 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         // ===============================================        
         // STEP 3: DERIVING LINK STATE FROM PAIR STATE
         // ===============================================
-
-        // Increments link throughput value by the pair's throughput value 
-        if (currentLinkStateMap.find(pair.minLink) != currentLinkStateMap.end() 
-            && currentLinkStateMap[pair.minLink].MaxThroughput > 0) {
-                currentLinkStateMap[pair.minLink].Throughput += current.throughput; 
+        
+        
+        // Increments bottleneck link throughput value by the pair's throughput value 
+        if (currentLinkStateMap.find(currentPairStateMap[pair].minLink) != currentLinkStateMap.end() 
+            && currentLinkStateMap[currentPairStateMap[pair].minLink].MaxThroughput > 0) {
+                currentLinkStateMap[currentPairStateMap[pair].minLink].Throughput += current.throughput; 
         }
     }
 }
@@ -261,9 +262,9 @@ void Optimizer::getLinkLimits(const Pair &pair, LinkLimits *limits) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << pair.second.MaxActive << commit;
     }
 
-    if (currentLinkStateMap.find(pair.minLink) != currentLinkStateMap.end()) {
-        limits->throughput = currentLinkStateMap[pair.minLink].MaxThroughput;
-        limits->active = currentLinkStateMap[pair.minLink].MaxActive;
+    if (currentLinkStateMap.find(currentPairStateMap[pair].minLink) != currentLinkStateMap.end()) {
+        limits->throughput = currentLinkStateMap[currentPairStateMap[pair].minLink].MaxThroughput;
+        limits->active = currentLinkStateMap[currentPairStateMap[pair].minLink].MaxActive;
     }
     else {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "Min throughput link not in t_netlink_stat." << commit;
@@ -302,7 +303,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
                                     << "/" << storageLimits.destination << commit;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Link limits for " << pair << ": " << linkLimits.throughput
-                                    << ", " << storageLimits.active << commit;
+                                    << ", " << linkLimits.active << commit;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
 
@@ -385,13 +386,13 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // Apply bandwidth limits (bottleneck link) for both window based approximation and instantaneous throughput.
     if (linkLimits.throughput > 0) {
-        if (currentLinkStateMap[pair.minLink].Throughput > linkLimits.throughput) {
+        if (currentLinkStateMap[currentPairStateMap[pair].minLink].Throughput > linkLimits.throughput) {
             decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Bottleneck link throughput limitation reached (" << linkLimits.throughput << ")";
             setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
             return  true; 
         }
-        if (currentLinkStateMap[pair.minLink].ThroughputInst > linkLimits.throughput) {
+        if (currentLinkStateMap[currentPairStateMap[pair].minLink].ThroughputInst > linkLimits.throughput) {
             decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Bottleneck link (instantaneous) throughput limitation reached (" << linkLimits.throughput << ")";
             setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
