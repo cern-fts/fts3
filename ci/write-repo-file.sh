@@ -38,3 +38,16 @@ cat <<- EOF > "/etc/yum.repos.d/dmc-${BUILD}-${DISTNAME}.repo"
 	EOF
 
 echo "dmc-${BUILD}-${DISTNAME}.repo"
+
+# Write FTS dependencies repository file
+
+cat <<- EOF > "/etc/yum.repos.d/fts-depend-${DISTNAME}.repo"
+	[fts-depend-${DISTNAME}]
+	name=FTS3 Dependencies
+	baseurl=https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/${DISTNAME}/\$basearch
+  gpgcheck=0
+  enabled=1
+  protect=0
+	EOF
+
+echo "fts-depend-${DISTNAME}.repo"
