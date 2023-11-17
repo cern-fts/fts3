@@ -223,6 +223,21 @@ public:
         // Netlink limits
         soci::indicator nullCapacity;
 
+        // First read in global default values:
+        int ActiveGlobal = 0;
+        double TputGlobal = 0.0;
+        soci::indicator nullActive;
+        soci::indicator nullTput;
+
+        sql <<
+            "SELECT DISTINCT nc.max_active, nc.max_throughput, ns.capacity "
+            "FROM t_netlink_stat ns "
+            "JOIN t_netlink_config nc ON ns.head_ip = nc.head_ip AND ns.tail_ip = nc.tail_ip "
+            "WHERE ns.netlink_id != '*'", 
+            soci::into(ActiveGlobal, nullActive), soci::into(TputGlobal, nullTput);
+
+        (*result)["*"] = LinkState(ActiveGlobal, TputGlobal);
+
         // We then fill in the table for every link
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT DISTINCT ns.netlink_id, nc.min_active, nc.max_active, nc.max_throughput, ns.capacity "
@@ -244,7 +259,7 @@ public:
 
             linkState.maxActive = i->get<int>("max_active", ind);
             if (ind == soci::i_null) {
-                linkState.maxActive = 0; // todo 
+                linkState.maxActive = ActiveGlobal; // todo 
             }
 
             linkState.maxThroughput = i->get<double>("max_throughput", ind);
@@ -253,7 +268,7 @@ public:
                 linkState.maxThroughput = i->get<double>("capacity", nullCapacity);
                 if (nullCapacity == soci::i_null) {
                     // if capacity is null, set to 0  
-                    linkState.maxThroughput = 0; //todo 
+                    linkState.maxThroughput = TputGlobal; //todo 
                 }
             }
 
@@ -462,20 +477,23 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
-    std::string getMinTputLink(const Pair &pair) {
-        std::string minTputLink;
+    std::list<std::string> getLinks(const Pair &pair) {
+        std::list<std::string> links;
 
-        sql <<  "SELECT ns.netlink_id "
-                "FROM t_netlink_config nc "
-                "JOIN t_netlink_stat ns ON nc.head_ip = ns.head_ip AND nc.tail_ip = ns.tail_ip "
-                "JOIN t_netlink_trace nt ON nt.netlink = ns.netlink_id "
-                "WHERE nt.source_se = :source AND nt.dest_se = :dest "
-                "ORDER BY nc.max_throughput ASC "
-                "LIMIT 1",
-            soci::into(minTputLink),
-            soci::use(pair.source), soci::use(pair.destination);
+        soci::rowset<std::string> rs = (sql.prepare <<
+            "SELECT ns.netlink_id "
+            "FROM t_netlink_config nc "
+            "JOIN t_netlink_stat ns ON nc.head_ip = ns.head_ip AND nc.tail_ip = ns.tail_ip "
+            "JOIN t_netlink_trace nt ON nt.netlink = ns.netlink_id "
+            "WHERE nt.source_se = :source AND nt.dest_se = :dest",
+            soci::use(pair.source), soci::use(pair.destination)
+        );
 
-        return minTputLink;
+        for (const std::string &link : rs) {
+            links.push_back(link);
+        }
+
+        return links;
     }
 
     double getThroughputAsSourceInst(const std::string &se) {

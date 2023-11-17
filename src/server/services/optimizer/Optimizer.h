@@ -59,7 +59,7 @@ struct StorageLimits {
 };
 
 struct LinkLimits {
-    int active; 
+    int active; // rename to connections
     double throughput; 
 
     LinkLimits(): active(0), throughput(0) {}
@@ -80,16 +80,16 @@ struct PairState {
     // Optimizer last decision
     int connections;
     double avgTput;
-    // Bottleneck link 
-    std::string minLink; 
+    // Links in src-dest pair 
+    std::list<std::string> links; 
     
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), minLink("") {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), links(0) {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
         activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn),
-        avgTput(0), minLink("") {}
+        avgTput(0), links(0) {}
 };
 
 struct StorageState {
@@ -140,7 +140,7 @@ struct LinkState {
     double throughput;
 
     // These values are storage the limits for the given Link element 
-    // They are populated in getLinkStates (OptimizerDataSource.cpp) via querying t_netlink_stat (TENTATIVELY)
+    // They are populated in getLinkStates (OptimizerDataSource.cpp) via querying t_netlink_stat
     int minActive, maxActive;
     double maxThroughput;
 
@@ -190,7 +190,7 @@ public:
     virtual int getSubmitted(const Pair&) = 0;
 
     // Get the bottleneck link (smallest throughput capacity)
-    virtual std::string getMinTputLink(const Pair&) = 0;
+    virtual std::list<std::string> getLinks(const Pair&) = 0;
 
     // Get current throughput
     virtual double getThroughputAsSourceInst(const std::string&) = 0;
@@ -259,7 +259,7 @@ protected:
     void getStorageLimits(const Pair &pair, StorageLimits *limits);
 
     // Read currentLinkStateMap values into a LinkLimits object for the purposes of a single pair.
-    void getLinkLimits(const Pair &pair, LinkLimits *limits);
+    void getLinkLimits(const Pair &pair, std::map<std::string, LinkLimits> *limits);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored

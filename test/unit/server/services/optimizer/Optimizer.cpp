@@ -180,24 +180,24 @@ public:
 
 
 
-    // Test environment implementation of getLinkStates
+    // Test environment implementation of -tates
     // Gets the storage states from the getStorage limit function 
     // Gets Instant throughput from the getThroughputAsSourceInst and getThroughputAsDestinationInst
     // Returns: A map from SE name (string) --> StorageState (both limits and actual throughput values).
     void getLinkStates(std::map<std::string, LinkState> *result) {
         LinkState linkState;
-        LinkLimits limits;
+        std::map<std::string, LinkLimits> limits;
         const Pair pair = getActivePairs().front(); //there is only every 1 pair in the unit tests
         std::string link;
         
         //There is only ever one pair in the unit tests, so the only two elements in the currentSEStateMap are
         //the source and destination of the given pair
 
-        //Creating the SE state for the source
-        link = currentPairStateMap[pair].minLink;
+        //Creating the Link state for the source
+        link = "link1";
         getLinkLimits(pair, &limits);
-        linkState.maxActive = limits.active;
-        linkState.maxThroughput = limits.throughput;
+        linkState.maxActive = limits[link].active;
+        linkState.maxThroughput = limits[link].throughput;
     
 
         // Queries test environment to get current instantaneous throughput value.
@@ -230,9 +230,10 @@ public:
         limits->throughputDestination = limits->throughputSource = 0;
     }
 
-    void getLinkLimits(const Pair&, LinkLimits *limits) {
-        limits->active = 200; // to change 
-        limits->throughput = 0;
+    void getLinkLimits(const Pair& pair, std::map<std::string, LinkLimits> *limits) {
+        std::string link = "link1"; 
+        (*limits)[link].active = 200; // to change 
+        (*limits)[link].throughput = 0;
     }
 
     void getPairLimits(const Pair&, Range *range) {
@@ -370,11 +371,11 @@ public:
         return counter;
     }
 
-    std::string getMinTputLink(const Pair &pair) {
+    std::list<std::string> getLinks(const Pair &pair) {
         auto tsi = transferStore.find(pair);
         // todo: create links and select the minimum throughput cap link 
 
-        return "link1";
+        return {"link1"};
     }
 
     // In the test environment, throughput=transferred/duration
