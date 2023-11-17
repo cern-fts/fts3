@@ -131,25 +131,25 @@ struct LinkState {
     // Stores instantaneous throughput for a given Link element 
     // The "Inst" throughput values are calculated by the getThroughputAsLinkInst (in OptimizerDataSource.cpp)
     // The "Inst" values store throughput based on the number of active transfers at the time the "Inst" methods are called 
-    double ThroughputInst;
+    double throughputInst;
 
     // Stores the window based throughput for a given Link element 
     // This throughput value is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
     // all the active pairs and summing the corresponding throughput values returned by getThroughputInfo (OptimizerDataSource.cpp) 
     // for a source-destination pair that involves a given link element
-    double Throughput;
+    double throughput;
 
     // These values are storage the limits for the given Link element 
     // They are populated in getLinkStates (OptimizerDataSource.cpp) via querying t_netlink_stat (TENTATIVELY)
-    int MaxActive;
-    double MaxThroughput;
+    int minActive, maxActive;
+    double maxThroughput;
 
-    LinkState(): ThroughputInst(0), Throughput(0),
-                    MaxActive(0), MaxThroughput(0) {}
+    LinkState(): throughputInst(0), throughput(0),
+                    minActive(0), maxActive(0), maxThroughput(0) {}
     
     LinkState(int a, double t):
-                ThroughputInst(0), Throughput(0),
-                    MaxActive(a), MaxThroughput(t) {}
+                throughputInst(0), throughput(0),
+                    minActive(0), maxActive(a), maxThroughput(t) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -251,6 +251,9 @@ protected:
     int decreaseStepSize;
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
+
+    double defaultNetlinkMaxThroughput;
+    int defaultNetlinkMaxActive;
 
     // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
     void getStorageLimits(const Pair &pair, StorageLimits *limits);

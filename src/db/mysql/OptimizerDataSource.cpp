@@ -213,30 +213,22 @@ public:
     }    
 
 
-    // Function reads in all values from the t_netlink_stat table, which specify
-    //   - throughput of every link (IN PROGRESS)
+    // Function reads in all values from the t_netlink_config and t_netlink_stat table which specify
+    //   - throughput of every link 
     //   - maximum number of connections of every link (IN PROGRESS)
     // Additionally, the instantaneous throughput is also computed. 
     // Returns: A map from SE name (string) --> LinkState (both limits and actual throughput values).
     void getLinkStates(std::map<std::string, LinkState> *result) {
 
-        // First read in global default values:
-        int ActiveGlobal = 0; 
-        double TputGlobal = 0.0;
-        soci::indicator nullActive;
-        soci::indicator nullTput;
+        // Netlink limits
+        soci::indicator nullCapacity;
 
-        sql <<
-            "SELECT max_active, max_throughput "
-            "FROM t_netlink_stat WHERE netlink_id = '*' ",
-            soci::into(ActiveGlobal, nullActive), soci::into(TputGlobal, nullTput);
-
-        (*result)["*"] = LinkState(ActiveGlobal, TputGlobal);
-
-        // We then fill in the table for every SE
+        // We then fill in the table for every link
         soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT DISTINCT netlink_d, max_active, max_throughput, "
-            "FROM t_netlink_stat WHERE netlink_id != '*'"
+            "SELECT DISTINCT ns.netlink_id, nc.min_active, nc.max_active, nc.max_throughput, ns.capacity "
+            "FROM t_netlink_stat ns "
+            "JOIN t_netlink_config nc ON ns.head_ip = nc.head_ip AND ns.tail_ip = nc.tail_ip "
+            "WHERE ns.netlink_id != '*'"
         );
 
         soci::indicator ind;
@@ -245,30 +237,34 @@ public:
 
             LinkState linkState;
 
-            linkState.MaxActive = i->get<int>("max_active", ind);
+            linkState.minActive = i->get<int>("min_active", ind);
             if (ind == soci::i_null) {
-                linkState.MaxActive = 0;
-                if (nullActive != soci::i_null) {
-                    linkState.MaxActive = ActiveGlobal;
-                }
+                linkState.minActive = 0;
             }
 
-            linkState.MaxThroughput = i->get<double>("max_throughput", ind);
+            linkState.maxActive = i->get<int>("max_active", ind);
             if (ind == soci::i_null) {
-                linkState.MaxThroughput = 0;
-                if (nullTput != soci::i_null) {
-                    linkState.MaxThroughput = TputGlobal;
+                linkState.maxActive = 0; // todo 
+            }
+
+            linkState.maxThroughput = i->get<double>("max_throughput", ind);
+            if (ind == soci::i_null) {
+                // if t_netlink_config 'max_throughput' is not set, try t_netlink_stat 'capacity' which is observed by ALTO
+                linkState.maxThroughput = i->get<double>("capacity", nullCapacity);
+                if (nullCapacity == soci::i_null) {
+                    // if capacity is null, set to 0  
+                    linkState.maxThroughput = 0; //todo 
                 }
             }
 
             // Queries database to get current instantaneous throughput value.
-            if(linkState.MaxThroughput > 0) {
-                linkState.ThroughputInst = getThroughputOverNetlinkInst(link);
+            if(linkState.maxThroughput > 0) {
+                linkState.throughputInst = getThroughputOverNetlinkInst(link);
             }
-    
+
             (*result)[link] = linkState;
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << link
-                                             << ": " << linkState.MaxThroughput << commit;
+                                            << ": " << linkState.maxThroughput << commit;
         }
     }  
 
@@ -468,27 +464,16 @@ public:
 
     std::string getMinTputLink(const Pair &pair) {
         std::string minTputLink;
-        int minTput = std::numeric_limits<int>::max(); // Initialize with a large value
 
-        soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT netlink, max_throughput " // IN PROGRESS : t_netlink is not updated yet to include max tput 
-            "FROM t_netlink_trace "
-            "WHERE source_se = :source AND dest_se = :dest",
-            soci::use(pair.source), soci::use(pair.destination)
-        );
-
-        for (auto const& row : rs) {
-            std::string netlink;
-            int maxTput;
-
-            row.get<std::string>(0, netlink);
-            row.get<int>(1, maxTput);
-
-            if (maxTput < minTput) {
-                minTput = maxTput;
-                minTputLink = netlink;
-            }
-        }
+        sql <<  "SELECT ns.netlink_id "
+                "FROM t_netlink_config nc "
+                "JOIN t_netlink_stat ns ON nc.head_ip = ns.head_ip AND nc.tail_ip = ns.tail_ip "
+                "JOIN t_netlink_trace nt ON nt.netlink = ns.netlink_id "
+                "WHERE nt.source_se = :source AND nt.dest_se = :dest "
+                "ORDER BY nc.max_throughput ASC "
+                "LIMIT 1",
+            soci::into(minTputLink),
+            soci::use(pair.source), soci::use(pair.destination);
 
         return minTputLink;
     }

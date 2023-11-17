@@ -772,6 +772,7 @@ CREATE TABLE `t_netlink_stat` (
   `tail_asn` int(32) DEFAULT '0',
   `head_rdns` varchar(253) DEFAULT NULL,
   `tail_rdns` varchar(253) DEFAULT NULL,
+  `capacity` float DEFAULT NULL,
   PRIMARY KEY (`netlink_id`),
   CONSTRAINT `idx_ports` UNIQUE (`head_ip`, `tail_ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -809,7 +810,7 @@ CREATE TABLE `t_netlink_config` (
   `netlink_name` varchar(150) NOT NULL,
   `min_active` int(11) DEFAULT NULL,
   `max_active` int(11) DEFAULT NULL,
-  `max_throughput` float DEFAULT NULL
+  `max_throughput` float DEFAULT NULL,
   PRIMARY KEY (`head_ip`,`tail_ip`),
   UNIQUE KEY `netlink_name` (`netlink_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

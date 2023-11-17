@@ -196,13 +196,13 @@ public:
         //Creating the SE state for the source
         link = currentPairStateMap[pair].minLink;
         getLinkLimits(pair, &limits);
-        linkState.MaxActive = limits.active;
-        linkState.MaxThroughput = limits.throughput;
+        linkState.maxActive = limits.active;
+        linkState.maxThroughput = limits.throughput;
     
 
         // Queries test environment to get current instantaneous throughput value.
-        if(linkState.MaxThroughput > 0) {
-            linkState.ThroughputInst = getThroughputOverNetlinkInst(link);
+        if(linkState.maxThroughput > 0) {
+            linkState.throughputInst = getThroughputOverNetlinkInst(link);
         }
 
         //Stores SEState the map

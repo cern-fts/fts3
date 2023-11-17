@@ -122,6 +122,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
         "Database account password"
     )
+    (
+        "DefaultNetlinkMaxActive",
+        po::value<int>()->default_value(200),
+        "Default maximum number of active transfers over a given netlink"
+    )
+    (
+        "DefaultNetlinkMaxThroughput",
+        po::value<double>()->default_value(1000000),
+        "Default througput limit for transfers over a given netlink"
+    )
 	(
 	 	"AuthorizationProvider,w",
 	    po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
