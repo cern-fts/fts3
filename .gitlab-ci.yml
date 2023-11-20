@@ -30,6 +30,10 @@ cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   <<: *build-template_definition
 
+alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *build-template_definition
+
 #--------------------------
 # Docker build templates
 #--------------------------
