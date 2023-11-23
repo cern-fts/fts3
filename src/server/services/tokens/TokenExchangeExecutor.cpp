@@ -17,6 +17,7 @@
 #include "common/Logger.h"
 #include "common/Exceptions.h"
 #include "TokenExchangeExecutor.h"
+#include "IAMExchangeError.h"
 
 #include <cryptopp/base64.h>
 
@@ -42,12 +43,19 @@ void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
                                         << commit;
 
         tokenExchangeService.registerRefreshToken(token.tokenId, refresh_token);
+    } catch (const IAMExchangeError& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
+                                       << "token_id=" << token.tokenId << " "
+                                       << e.what() << commit;
+
+        auto message = extractErrorDescription(e);
+        tokenExchangeService.registerFailedTokenExchange(token.tokenId, message);
     } catch (const std::exception& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
                                        << "token_id=" << token.tokenId << " "
                                        << e.what() << commit;
 
-        tokenExchangeService.registerFailedTokenExchange(token.tokenId, std::string(e.what()));
+        tokenExchangeService.registerFailedTokenExchange(token.tokenId, e.what());
     }
 }
 
@@ -122,6 +130,70 @@ std::string TokenExchangeExecutor::getExchangeData() const
     }
 
     return ss.str();
+}
+
+std::string TokenExchangeExecutor::executeHttpRequest(Davix::HttpRequest& request) {
+    Davix::DavixError* req_error = nullptr;
+    Davix::DavixError* response_error = nullptr;
+    std::vector<char> buffer(DAVIX_BLOCK_SIZE);
+    std::ostringstream response;
+
+    // Perform a Davix request and manually read the response content
+    // sent by the server
+    //
+    // Explanation: The standard Davix "executeRequest()"
+    // won't read the body content in case of a non-successful reply.
+    // To circumvent this, we emulate the "executeRequest()" steps
+    // and read the response ourselves, in a read loop
+
+    request.beginRequest(&req_error);
+
+    while (request.readBlock(&buffer[0], DAVIX_BLOCK_SIZE, &response_error) > 0) {
+        Davix::checkDavixError(&response_error);
+        response << buffer.data();
+        buffer.clear();
+    }
+
+    request.endRequest(nullptr);
+
+    if (request.getRequestCode() != 200) {
+        // Throw an IAM Exception containing the response body
+        // The response message will later be parsed for relevant info.
+        // In case no relevant info is found, the initial request error is returned
+        throw IAMExchangeError(request.getRequestCode(), response.str(), req_error);
+    }
+
+    return response.str();
+}
+
+std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeError& e) {
+    // Attempt to extract meaningful message from the Token Provider response.
+    // We do this by searching for the "error" and "error_description" JSON fields.
+    // (IAM returns a JSON response describing the error)
+
+    try {
+        auto type = parseJson(e.what(), "error");
+        auto description = parseJson(e.what(), "error_description");
+
+        auto _replace = [&description](const std::string& search, const std::string& replace) {
+            auto pos = description.find(search);
+
+            if (pos != std::string::npos) {
+                description.replace(pos, search.size(), replace);
+            }
+        };
+
+        // Replace secrets, such as token value or FTS client ID
+        // The parsed output will be the transfer failure message
+        _replace(token.accessToken, token.accessTokenToString());
+        _replace(tokenProvider.clientId, "<FTS client ID");
+        return "[" + type + "]: " + description;
+    } catch (const std::exception& tmp) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to extract \"error_description\" field from server response: "
+                                         << "token_id=" << token.tokenId << " response=" << e.what() << " "
+                                         << "exception=" << tmp.what() << commit;
+        return e.davix_error();
+    }
 }
 
 } // end namespace server
