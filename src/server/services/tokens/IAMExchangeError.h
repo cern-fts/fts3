@@ -29,7 +29,20 @@ private:
 public:
 
     IAMExchangeError(int code, const std::string& message, Davix::DavixError* dav_error) :
-            _code(code), _message(message), _dav_error(dav_error) {}
+            _code(code), _message(message), _dav_error(dav_error) {
+        // Sanitize server response for newlines:
+        // - remove trailing newlines
+        // - replace inline newlines with space
+
+        while (!_message.empty() && _message.back() == '\n') {
+            _message.pop_back();
+        }
+
+        size_t pos;
+        while ((pos = _message.find('\n')) != std::string::npos) {
+            _message.replace(pos, 1, " ");
+        }
+    }
 
     ~IAMExchangeError() = default;
 
