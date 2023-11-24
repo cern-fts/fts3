@@ -46,14 +46,14 @@ void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
     } catch (const IAMExchangeError& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
                                        << "token_id=" << token.tokenId << " "
-                                       << e.what() << commit;
+                                       << "response: '" << e.what() << "'" << commit;
 
         auto message = extractErrorDescription(e);
         tokenExchangeService.registerFailedTokenExchange(token.tokenId, message);
     } catch (const std::exception& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
                                        << "token_id=" << token.tokenId << " "
-                                       << e.what() << commit;
+                                       << "error: '" << e.what() << "'" << commit;
 
         tokenExchangeService.registerFailedTokenExchange(token.tokenId, e.what());
     }
@@ -190,8 +190,8 @@ std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeErro
         return "[" + type + "]: " + description;
     } catch (const std::exception& tmp) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to extract \"error_description\" field from server response: "
-                                         << "token_id=" << token.tokenId << " response=" << e.what() << " "
-                                         << "exception=" << tmp.what() << commit;
+                                         << "token_id=" << token.tokenId << " exception=\"" << tmp.what() << "\" "
+                                         << "response: '" << e.what() << "'" << commit;
         return e.davix_error();
     }
 }
