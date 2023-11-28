@@ -801,7 +801,7 @@ CREATE TABLE `t_netlink_trace` (
 -- Table structure for table `t_netlink_config`
 --
 
-DROP TABLE IF EXISTS `t_link_config`;
+DROP TABLE IF EXISTS `t_netlink_config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_netlink_config` (

@@ -218,7 +218,7 @@ public:
     //   - maximum number of connections of every link (IN PROGRESS)
     // Additionally, the instantaneous throughput is also computed. 
     // Returns: A map from SE name (string) --> LinkState (both limits and actual throughput values).
-    void getLinkStates(std::map<std::string, LinkState> *result) {
+    void getNetLinkStates(std::map<std::string, NetLinkState> *result) {
 
         // Netlink limits
         soci::indicator nullCapacity;
@@ -236,7 +236,7 @@ public:
             "WHERE ns.netlink_id != '*'", 
             soci::into(ActiveGlobal, nullActive), soci::into(TputGlobal, nullTput);
 
-        (*result)["*"] = LinkState(ActiveGlobal, TputGlobal);
+        (*result)["*"] = NetLinkState(ActiveGlobal, TputGlobal);
 
         // We then fill in the table for every link
         soci::rowset<soci::row> rs = (sql.prepare <<
@@ -250,36 +250,36 @@ public:
         for (auto i = rs.begin(); i != rs.end(); ++i) { //For each row in the table, load all values into a linkState object and store in the map "result"
             std::string link = i->get<std::string>("netlink_id"); //indexed with the name of the link
 
-            LinkState linkState;
+            NetLinkState netLinkState;
 
-            linkState.minActive = i->get<int>("min_active", ind);
+            netLinkState.minActive = i->get<int>("min_active", ind);
             if (ind == soci::i_null) {
-                linkState.minActive = 0;
+                netLinkState.minActive = 0;
             }
 
-            linkState.maxActive = i->get<int>("max_active", ind);
+            netLinkState.maxActive = i->get<int>("max_active", ind);
             if (ind == soci::i_null) {
-                linkState.maxActive = ActiveGlobal; // todo 
+                netLinkState.maxActive = ActiveGlobal; // todo 
             }
 
-            linkState.maxThroughput = i->get<double>("max_throughput", ind);
+            netLinkState.maxThroughput = i->get<double>("max_throughput", ind);
             if (ind == soci::i_null) {
                 // if t_netlink_config 'max_throughput' is not set, try t_netlink_stat 'capacity' which is observed by ALTO
-                linkState.maxThroughput = i->get<double>("capacity", nullCapacity);
+                netLinkState.maxThroughput = i->get<double>("capacity", nullCapacity);
                 if (nullCapacity == soci::i_null) {
                     // if capacity is null, set to 0  
-                    linkState.maxThroughput = TputGlobal; //todo 
+                    netLinkState.maxThroughput = TputGlobal; //todo 
                 }
             }
 
             // Queries database to get current instantaneous throughput value.
-            if(linkState.maxThroughput > 0) {
-                linkState.throughputInst = getThroughputOverNetlinkInst(link);
+            if(netLinkState.maxThroughput > 0) {
+                netLinkState.throughputInst = getThroughputOverNetlinkInst(link);
             }
 
-            (*result)[link] = linkState;
+            (*result)[link] = netLinkState;
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << link
-                                            << ": " << linkState.maxThroughput << commit;
+                                            << ": " << netLinkState.maxThroughput << commit;
         }
     }  
 
