@@ -98,12 +98,26 @@ struct StorageState {
     double asSourceThroughput;
     double asDestThroughput;
 
-    //These values are storage the limits for the given storage element
+    //The following two variables store the total inbound (asDest) and outbound (asSource) connections for a given Storage elemnt 
+    //These values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    //all the active pairs and summing the corresponding connections based on the pair's current optimizer decision  
+    //for a source-destination pair that involves a given storage element
+    int asSourceConnections; 
+    int asDestConnections;
+
+    //The following two variables store the total inbound (asDest) and outbound (asSource) pairs for a given Storage elemnt 
+    //These values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    //all the active pairs for a source-destination pair that involves a given storage element
+    int asSourcePairNum;
+    int asDestPairNum; 
+
+    //These values are storage limits for the given storage element
     //They are populated in getStorageStates (OptimizerDataSource.cpp) via querying t_se
     int inboundMaxActive;
     int outboundMaxActive;
     double inboundMaxThroughput;
     double outboundMaxThroughput;
+ 
 
     StorageState(): asSourceThroughputInst(0), asDestThroughputInst(0),
                     asSourceThroughput(0), asDestThroughput(0), 

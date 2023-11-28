@@ -19,6 +19,7 @@
  */
 
 #include <monitoring/msg-ifce.h>
+#include <limits>
 #include "Optimizer.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
@@ -90,18 +91,22 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         // STEP 2: DERIVING SE STATE FROM PAIR STATE
         // ===============================================   
 
-        // Increments SE throughput value by the pair's throughput value.
+        // Increments SE throughput and total connections value by the pair's throughput and previous optimizer decision value.
         // Because the default and current majority state is no throughput limitation,
         // the if condition is added.
         // Potential difference in list of SEs compared to list of pairs, does not get handled
         if (currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
            && currentSEStateMap[pair.source].outboundMaxThroughput > 0) {
             currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
+            currentSEStateMap[pair.source].asSourceConnections += current.connections;
+            currentSEStateMap[pair.source].asSourcePairNum += 1;
         }
 
         if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
            && currentSEStateMap[pair.destination].inboundMaxThroughput > 0) {
             currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
+            currentSEStateMap[pair.destination].asDestConnections += current.connections;
+            currentSEStateMap[pair.destination].asDestPairNum += 1;
         }
     }
 }
@@ -248,6 +253,10 @@ void Optimizer::getStorageLimits(const Pair &pair, StorageLimits *limits) {
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
     int decision = 0;
+    int minDecision = std::numeric_limits<int>::max();  
+    float reduceRatio = 0.0; 
+    bool enforceLimit = false; 
+    
     std::stringstream rationale;
 
     // Start ticking!
@@ -315,33 +324,65 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
     if (limits.throughputSource > 0) {
         if (currentSEStateMap[pair.source].asSourceThroughput > limits.throughputSource) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
+            enforceLimit = true; 
+            // find the total number of connections and allocate so that every pair on this source gets 1/n before reducing by a ratio to enforce throughput limits 
+            reduceRatio = limits.throughputSource / currentSEStateMap[pair.source].asSourceThroughput; 
+            decision = static_cast<int>(reduceRatio * (currentSEStateMap[pair.source].asSourceConnections / currentSEStateMap[pair.source].asSourcePairNum)); 
+            decision = std::max(decision, range.min); 
+
+            // decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
+            //setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            //return true;
+            minDecision = std::min(decision, minDecision); 
         }
         if (currentSEStateMap[pair.source].asSourceThroughputInst > limits.throughputSource) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
+            enforceLimit = true; 
+            reduceRatio = limits.throughputSource / currentSEStateMap[pair.source].asSourceThroughputInst; 
+            decision = static_cast<int>(reduceRatio * (currentSEStateMap[pair.source].asSourceConnections / currentSEStateMap[pair.source].asSourcePairNum)); 
+            decision = std::max(decision, range.min); 
+
+            //decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Source (instantaneous) throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
+            //setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            //return true;
+            minDecision = std::min(decision, minDecision); 
         }
     }
 
     // Apply bandwidth limits (destination) for both window based approximation and instantaneous throughput.
     if (limits.throughputDestination > 0) {
         if (currentSEStateMap[pair.destination].asDestThroughput > limits.throughputDestination) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
+            enforceLimit = true; 
+            reduceRatio = limits.throughputDestination / currentSEStateMap[pair.destination].asDestThroughput; 
+            decision = static_cast<int>(reduceRatio * (currentSEStateMap[pair.destination].asDestConnections / currentSEStateMap[pair.destination].asDestPairNum)); 
+            decision = std::max(decision, range.min); 
+
+            //decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
+            //setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            //return true;
+            minDecision = std::min(decision, minDecision); 
         }
         if (currentSEStateMap[pair.destination].asDestThroughputInst > limits.throughputDestination) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
+            enforceLimit = true; 
+            reduceRatio = limits.throughputDestination / currentSEStateMap[pair.destination].asDestThroughputInst; 
+            decision = static_cast<int>(reduceRatio * (currentSEStateMap[pair.destination].asDestConnections / currentSEStateMap[pair.destination].asDestPairNum)); 
+            decision = std::max(decision, range.min); 
+
+            //decision = std::max(previousValue - decreaseStepSize, range.min);
             rationale << "Destination (instantaneous) throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
+            //setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            //return true;
+            minDecision = std::min(decision, minDecision); 
         }        
+    }
+
+    // if we need to reduce the limits to respect throuhgput limits and a reduced decision has been proposed 
+    if (enforceLimit && minDecision != std::numeric_limits<int>::max()) {
+        rationale << "Resource throughput limitation reached";
+        setOptimizerDecision(pair, minDecision, currentPair, minDecision - previousValue, rationale.str(), timer.elapsed());
+        return true;
     }
 
     // Run only when it makes sense
