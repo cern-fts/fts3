@@ -295,10 +295,10 @@ public:
         soci::indicator isNullMin, isNullMax;
         sql <<
             "SELECT configured, min_active, max_active FROM ("
-            "   SELECT 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
-            "   SELECT 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
-            "   SELECT 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
-            "   SELECT 0 AS configured, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = '*' "
+            "   SELECT 1 AS configured, min_active, max_active FROM t_netlink_config WHERE source_se = :source AND dest_se = :dest UNION "
+            "   SELECT 1 AS configured, min_active, max_active FROM t_netlink_config WHERE source_se = :source AND dest_se = '*' UNION "
+            "   SELECT 1 AS configured, min_active, max_active FROM t_netlink_config WHERE source_se = '*' AND dest_se = :dest UNION "
+            "   SELECT 0 AS configured, min_active, max_active FROM t_netlink_config WHERE source_se = '*' AND dest_se = '*' "
             ") AS lc LIMIT 1",
             soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
             soci::into(range->specific), soci::into(range->min, isNullMin), soci::into(range->max, isNullMax);
