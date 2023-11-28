@@ -393,7 +393,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     decision = enforceThroughputLimits(pair, limits, range); 
     if (decision) {
         rationale << "Resource throughput limitation reached";
-        setOptimizerDecision(pair, minDecision, currentPair, minDecision - previousValue, rationale.str(), timer.elapsed());
+        setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
         return true;
     }
 
