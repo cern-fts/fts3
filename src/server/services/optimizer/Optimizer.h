@@ -118,17 +118,30 @@ struct StorageState {
     double inboundMaxThroughput;
     double outboundMaxThroughput;
  
+    //These variables store the Optimizer decision if the throughput limits are being exceeded for a given Storage Element 
+    //They are calculated in enforceThroughputLimits called in optimizeConnectionsForPair (OptimizerConnections.cpp) by
+    //redistributing the connections between all the pairs sharing the SE and reducing by a ratio of ThroughputLimit/ActualThroughput. 
+    int sourceLimitDecision; 
+    int sourceLimitDecisionInst;
+    int destLimitDecision; 
+    int destLimitDecisionInst;
 
     StorageState(): asSourceThroughputInst(0), asDestThroughputInst(0),
                     asSourceThroughput(0), asDestThroughput(0), 
+                    asSourceConnections(0), asDestConnections(0),
+                    asSourcePairNum(0), asDestPairNum(0), 
                     inboundMaxActive(0), outboundMaxActive(0),
-                    inboundMaxThroughput(0),outboundMaxThroughput(0) {}
+                    inboundMaxThroughput(0),outboundMaxThroughput(0), 
+                    sourceLimitDecision(0), destLimitDecision(0) {}
     
     StorageState(int ia, double it, int oa, double ot):
                 asSourceThroughputInst(0),asDestThroughputInst(0),
                 asSourceThroughput(0), asDestThroughput(0),
+                asSourceConnections(0), asDestConnections(0),
+                asSourcePairNum(0), asDestPairNum(0), 
                 inboundMaxActive(ia), outboundMaxActive(oa),
-                inboundMaxThroughput(it), outboundMaxThroughput(ot) {}
+                inboundMaxThroughput(it), outboundMaxThroughput(ot),
+                sourceLimitDecision(0), destLimitDecision(0) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -225,6 +238,10 @@ protected:
 
     // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
     void getStorageLimits(const Pair &pair, StorageLimits *limits);
+
+    int enforceThroughputLimits(const Pair &pair, StorageLimits limits, Range range);
+
+    int getReducedDecision(float tputLimit, float tput, int connections, int numPairs, Range range);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
