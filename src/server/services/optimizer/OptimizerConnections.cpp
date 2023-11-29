@@ -24,6 +24,7 @@
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "config/ServerConfig.h"
 
 using namespace fts3::common;
 
@@ -109,6 +110,29 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
             currentSEStateMap[pair.destination].asDestPairNum += 1;
         }
     }
+
+    //update config params
+    try {
+        windowBasedThroughputLimitEnforcement = fts3::config::ServerConfig::instance().get<bool>("windowBasedThroughputLimitEnforcement");
+    }
+    catch (...) {
+        windowBasedThroughputLimitEnforcement = true;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                << "No config entry for windowBasedThroughputLimitEnforcement, defaulting to on" << commit;
+    }
+
+    try {
+        proportionalDecreaseThroughputLimitEnforcement = fts3::config::ServerConfig::instance().get<bool>("proportionalDecreaseThroughputLimitEnforcement");
+    }
+    catch (...) {
+        proportionalDecreaseThroughputLimitEnforcement = true;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO)
+                << "No config entry for proportionalDecreaseThroughputLimitEnforcement, defaulting to on" << commit;
+
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
+                << "window: " << windowBasedThroughputLimitEnforcement << " prop:" << proportionalDecreaseThroughputLimitEnforcement << commit;
 }
 
 // Reads limits into Range object for a pair.
@@ -243,7 +267,7 @@ void Optimizer::getStorageLimits(const Pair &pair, StorageLimits *limits) {
            
 }
 
-int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits limits, Range range)
+int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits limits, Range range, int previousValue)
 {
     int decision = 0; 
     int minDecision = std::numeric_limits<int>::max();  
@@ -256,17 +280,32 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits limits, R
         se = currentSEStateMap[pair.source];
         if (se.asSourceThroughput > limits.throughputSource) {
             // Check if this has been previously calculated for another pair sharing this resource
-            if (!se.sourceLimitDecision) { 
-                se.sourceLimitDecision = getReducedDecision(limits.throughputSource, se.asSourceThroughput, 
-                                            se.asSourceConnections, se.asSourcePairNum, range);
+            if(proportionalDecreaseThroughputLimitEnforcement)
+            {
+                if (!se.sourceLimitDecision) { 
+                    
+                    se.sourceLimitDecision = getReducedDecision(limits.throughputSource, se.asSourceThroughput, 
+                                                se.asSourceConnections, se.asSourcePairNum, range);
+                }
+            }
+            else
+            {
+                se.sourceLimitDecision = previousValue - decreaseStepSize;
             }
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
             minDecision = std::min(se.sourceLimitDecision, minDecision); 
         }
         if (se.asSourceThroughputInst > limits.throughputSource) {
-            if (!se.sourceLimitDecisionInst) { 
-                se.sourceLimitDecisionInst = getReducedDecision(limits.throughputSource, se.asSourceThroughputInst, 
-                                            se.asSourceConnections, se.asSourcePairNum, range);
+            if(proportionalDecreaseThroughputLimitEnforcement)
+            {
+                if (!se.sourceLimitDecisionInst) { 
+                    se.sourceLimitDecisionInst = getReducedDecision(limits.throughputSource, se.asSourceThroughputInst, 
+                                                se.asSourceConnections, se.asSourcePairNum, range);
+                }
+            }
+            else
+            {
+                se.sourceLimitDecision = previousValue - decreaseStepSize;
             }
             rationale << "Source (instantaneous) throughput limitation reached (" << limits.throughputSource << ")";
             minDecision = std::min(se.sourceLimitDecisionInst, minDecision); 
@@ -277,17 +316,31 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits limits, R
     if (limits.throughputDestination > 0) {
         se = currentSEStateMap[pair.destination];
         if (se.asDestThroughput > limits.throughputDestination) {
-            if (!se.destLimitDecision) { 
-                se.destLimitDecision = getReducedDecision(limits.throughputDestination, se.asDestThroughput, 
-                                            se.asDestConnections, se.asDestPairNum, range);
+            if(proportionalDecreaseThroughputLimitEnforcement)
+            {
+                if (!se.destLimitDecision) { 
+                    se.destLimitDecision = getReducedDecision(limits.throughputDestination, se.asDestThroughput, 
+                                                se.asDestConnections, se.asDestPairNum, range);
+                }
+            }
+            else
+            {
+                se.sourceLimitDecision = previousValue - decreaseStepSize;
             }
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
             minDecision = std::min(decision, minDecision); 
         }
         if (se.asDestThroughputInst > limits.throughputDestination) {
-            if (!se.destLimitDecision) { 
-                se.destLimitDecision = getReducedDecision(limits.throughputDestination, se.asDestThroughputInst, 
-                                            se.asDestConnections, se.asDestPairNum, range);
+            if(proportionalDecreaseThroughputLimitEnforcement)
+            {
+                if (!se.destLimitDecision) { 
+                    se.destLimitDecision = getReducedDecision(limits.throughputDestination, se.asDestThroughputInst, 
+                                                se.asDestConnections, se.asDestPairNum, range);
+                }
+            }
+            else
+            {
+                se.sourceLimitDecision = previousValue - decreaseStepSize;
             }
             rationale << "Destination (instantaneous) throughput limitation reached (" << limits.throughputDestination << ")";
             minDecision = std::min(decision, minDecision); 
@@ -387,14 +440,39 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         setOptimizerDecision(pair, range.min, currentPair, 0, "Range fixed", timer.elapsed());
         return true;
     }
-
-    // Check if throughput limits on storage elements are being enforced 
-    // If not, redistribute the connections and reduce the total connections on the bottlenecked storage element 
-    decision = enforceThroughputLimits(pair, limits, range); 
-    if (decision) {
-        rationale << "Resource throughput limitation reached";
-        setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-        return true;
+    
+    if(Optimizer::windowBasedThroughputLimitEnforcement)
+    {
+        // Check if throughput limits on storage elements are being enforced 
+        // If not, redistribute the connections and reduce the total connections on the bottlenecked storage element 
+        decision = enforceThroughputLimits(pair, limits, range, previousValue); 
+        if (decision) {
+            rationale << "Resource throughput limitation reached";
+            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+            return true;
+        }
+    }
+    else
+    {
+        // Apply bandwidth limits
+        if (limits.throughputSource > 0) {
+            double throughput = dataSource->getThroughputAsSourceInst(pair.source);
+            if (throughput > limits.throughputSource) {
+                decision = previousValue - decreaseStepSize;
+                rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
+                setOptimizerDecision(pair, decision, currentPair, 0, rationale.str(), timer.elapsed());
+                return true;
+            }
+        }
+        if (limits.throughputDestination > 0) {
+            double throughput = dataSource->getThroughputAsDestinationInst(pair.destination);
+            if (throughput > limits.throughputDestination) {
+                decision = previousValue - decreaseStepSize;
+                rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
+                setOptimizerDecision(pair, decision, currentPair, 0, rationale.str(), timer.elapsed());
+                return true;
+            }
+        }
     }
 
     // Run only when it makes sense

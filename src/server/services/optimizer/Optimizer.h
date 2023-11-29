@@ -236,10 +236,14 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
+    //config params
+    bool windowBasedThroughputLimitEnforcement;
+    bool proportionalDecreaseThroughputLimitEnforcement;
+
     // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
     void getStorageLimits(const Pair &pair, StorageLimits *limits);
 
-    int enforceThroughputLimits(const Pair &pair, StorageLimits limits, Range range);
+    int enforceThroughputLimits(const Pair &pair, StorageLimits limits, Range range, int previousValue);
 
     int getReducedDecision(float tputLimit, float tput, int connections, int numPairs, Range range);
 
