@@ -274,7 +274,7 @@ public:
 
             // Queries database to get current instantaneous throughput value.
             if(netLinkState.maxThroughput > 0) {
-                netLinkState.throughputInst = getThroughputOverNetlinkInst(link);
+                netLinkState.throughputInst = getThroughputOverNetLinkInst(link);
             }
 
             (*result)[link] = netLinkState;
@@ -477,8 +477,8 @@ public:
         return getCountInState(sql, pair, "SUBMITTED");
     }
 
-    std::list<std::string> getLinks(const Pair &pair) {
-        std::list<std::string> links;
+    std::list<std::string> getNetLinks(const Pair &pair) {
+        std::list<std::string> netLinks;
 
         soci::rowset<std::string> rs = (sql.prepare <<
             "SELECT ns.netlink_id "
@@ -489,11 +489,11 @@ public:
             soci::use(pair.source), soci::use(pair.destination)
         );
 
-        for (const std::string &link : rs) {
-            links.push_back(link);
+        for (const std::string &netLink : rs) {
+            netLinks.push_back(netLink);
         }
 
-        return links;
+        return netLinks;
     }
 
     double getThroughputAsSourceInst(const std::string &se) {
@@ -521,14 +521,14 @@ public:
         return throughput;
     }
 
-    double getThroughputOverNetlinkInst(const std::string &netlink) {
+    double getThroughputOverNetLinkInst(const std::string &netLink) {
         double throughput = 0;
         soci::indicator isNull;
 
         sql << "SELECT SUM(f.throughput) FROM t_file f, t_netlink_trace nt "
                "WHERE f.source_se = nt.source_se AND f.dest_se = nt.dest_se AND nt.netlink = :netlink "
                " AND f.file_state = 'ACTIVE' AND f.throughput IS NOT NULL ",
-            soci::use(netlink), soci::into(throughput, isNull);
+            soci::use(netLink), soci::into(throughput, isNull);
 
         return throughput;
     }

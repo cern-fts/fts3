@@ -81,7 +81,7 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         current.queueSize = dataSource->getSubmitted(pair);
 
         // Compute the links associated with the source-destination pair 
-        current.netlinks = dataSource->getNetLinks(pair); 
+        current.netLinks = dataSource->getNetLinks(pair); 
 
         // Compute throughput values (used in Step 2)      
         dataSource->getThroughputInfo(pair, timeFrame,
@@ -101,23 +101,28 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         if (currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
            && currentSEStateMap[pair.source].outboundMaxThroughput > 0) {
             currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
+            currentSEStateMap[pair.source].asSourceConnections += current.connections;
+            currentSEStateMap[pair.source].asSourcePairNum += 1;
         }
 
         if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
            && currentSEStateMap[pair.destination].inboundMaxThroughput > 0) {
             currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
+            currentSEStateMap[pair.destination].asDestConnections += current.connections;
+            currentSEStateMap[pair.destination].asDestPairNum += 1; //todo: change to asDestNumPairs
         }
 
         // ===============================================        
         // STEP 3: DERIVING LINK STATE FROM PAIR STATE
         // ===============================================
-        std::list<std::string> netlinks = currentPairStateMap[pair].netlinks;
-
-        for (const std::string &netlink : netlinks) {
+        std::list<std::string> netLinks = currentPairStateMap[pair].netLinks;
+        for (const std::string &netLink : netLinks) {
             // Increments link total throughput value by the pair's throughput value 
-            if (currentNetLinkStateMap.find(netlink) != currentNetLinkStateMap.end() 
-                && currentNetLinkStateMap[netlink].maxThroughput > 0) {
-                    currentNetLinkStateMap[netlink].throughput += current.throughput; 
+            if (currentNetLinkStateMap.find(netLink) != currentNetLinkStateMap.end() 
+                && currentNetLinkStateMap[netLink].maxThroughput > 0) {
+                    currentNetLinkStateMap[netLink].throughput += current.throughput; 
+                    currentNetLinkStateMap[netLink].connections += current.connections;
+                    currentNetLinkStateMap[netLink].numPairs += 1;
             }
         }         
     }
@@ -258,26 +263,122 @@ void Optimizer::getStorageLimits(const Pair &pair, StorageLimits *limits) {
 // Extracts only the limits from currentLinkStateMap
 void Optimizer::getNetLinkLimits(const Pair &pair, std::map<std::string, NetLinkLimits> *limits) {
 
-    std::list<std::string> netlinks = currentPairStateMap[pair].netlinks;
+    std::list<std::string> netLinks = currentPairStateMap[pair].netLinks;
 
-    for (const std::string &netlink : netlinks) {
-        if (currentNetLinkStateMap.find(netlink) != currentNetLinkStateMap.end()) {
-            (*limits)[netlink].throughput = currentNetLinkStateMap[netlink].maxThroughput;
-            (*limits)[netlink].active = currentNetLinkStateMap[netlink].maxActive;
+    for (const std::string &netLink : netLinks) {
+        if (currentNetLinkStateMap.find(netLink) != currentNetLinkStateMap.end()) {
+            (*limits)[netLink].throughput = currentNetLinkStateMap[netLink].maxThroughput;
+            (*limits)[netLink].active = currentNetLinkStateMap[netLink].maxActive;
         }
         else {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "Min throughput link not in t_netlink_stat." << commit;
-            (*limits)[netlink].throughput = defaultNetLinkMaxThroughput;
-            (*limits)[netlink].active = defaultNetLinkMaxActive;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "Min throughput link not in t_netLink_stat." << commit;
+            (*limits)[netLink].throughput = defaultNetLinkMaxThroughput;
+            (*limits)[netLink].active = defaultNetLinkMaxActive;
         }
 
-        if ((*limits)[netlink].throughput == 0) {
-            (*limits)[netlink].throughput = defaultNetLinkMaxThroughput;
+        if ((*limits)[netLink].throughput == 0) {
+            (*limits)[netLink].throughput = defaultNetLinkMaxThroughput;
         } 
-        if ((*limits)[netlink].active == 0) {
-            (*limits)[netlink].active = defaultNetLinkMaxActive;
+        if ((*limits)[netLink].active == 0) {
+            (*limits)[netLink].active = defaultNetLinkMaxActive;
         }
     }
+}
+
+// Returns the optimizer decision for a given pair if the throughput limits on its storage elements or netlinks are being exceeded 
+// If multiple resource limits are being exceeded, returns the minimum optimizer decision to ensure fairness at the pair's bottleneck resource 
+int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range)
+{
+    int decision = 0; 
+    int minDecision = std::numeric_limits<int>::max();  
+    float reduceRatio = 0.0; 
+    std::stringstream rationale;
+    StorageState se; 
+    NetLinkState netLinkState; 
+
+    // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
+    if (storageLimits.throughputSource > 0) {
+        se = currentSEStateMap[pair.source];
+        if (se.asSourceThroughput > storageLimits.throughputSource) {
+            // Check if this has been previously calculated for another pair sharing this resource
+            if (!se.sourceLimitDecision) { 
+                se.sourceLimitDecision = getReducedDecision(storageLimits.throughputSource, se.asSourceThroughput, 
+                                            se.asSourceConnections, se.asSourcePairNum, range);
+            }
+            rationale << "Source throughput limitation reached (" << storageLimits.throughputSource << ")";
+            minDecision = std::min(se.sourceLimitDecision, minDecision); 
+        }
+        if (se.asSourceThroughputInst > storageLimits.throughputSource) {
+            if (!se.sourceLimitDecisionInst) { 
+                se.sourceLimitDecisionInst = getReducedDecision(storageLimits.throughputSource, se.asSourceThroughputInst, 
+                                            se.asSourceConnections, se.asSourcePairNum, range);
+            }
+            rationale << "Source (instantaneous) throughput limitation reached (" << storageLimits.throughputSource << ")";
+            minDecision = std::min(se.sourceLimitDecisionInst, minDecision); 
+        }
+    }
+
+    // Apply bandwidth limits (destination) for both window based approximation and instantaneous throughput.
+    if (storageLimits.throughputDestination > 0) {
+        se = currentSEStateMap[pair.destination];
+        if (se.asDestThroughput > storageLimits.throughputDestination) {
+            if (!se.destLimitDecision) { 
+                se.destLimitDecision = getReducedDecision(storageLimits.throughputDestination, se.asDestThroughput, 
+                                            se.asDestConnections, se.asDestPairNum, range);
+            }
+            rationale << "Destination throughput limitation reached (" << storageLimits.throughputDestination << ")";
+            minDecision = std::min(se.destLimitDecision, minDecision); 
+        }
+        if (se.asDestThroughputInst > storageLimits.throughputDestination) {
+            if (!se.destLimitDecisionInst) { 
+                se.destLimitDecisionInst = getReducedDecision(storageLimits.throughputDestination, se.asDestThroughputInst, 
+                                            se.asDestConnections, se.asDestPairNum, range);
+            }
+            rationale << "Destination (instantaneous) throughput limitation reached (" << storageLimits.throughputDestination << ")";
+            minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+        }        
+    }
+
+    // Apply bandwidth limits (netLinks) for both window based approximation and instantaneous throughput. 
+    std::list<std::string> netLinks = currentPairStateMap[pair].netLinks;
+    for (const std::string &netLink : netLinks) {
+        if (netLinkLimits[netLink].throughput > 0) {
+            netLinkState = currentNetLinkStateMap[netLink]; 
+            if (netLinkState.throughput > netLinkLimits[netLink].throughput) {
+                if (!netLinkState.limitDecision) {
+                    netLinkState.limitDecision = getReducedDecision(netLinkLimits[netLink].throughput, netLinkState.throughput, 
+                                                    netLinkState.connections, netLinkState.numPairs, range);
+                }
+                rationale << "Link throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
+                minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+            }
+            if (netLinkState.throughputInst > netLinkLimits[netLink].throughput) {
+                if (!netLinkState.limitDecisionInst) {
+                    netLinkState.limitDecisionInst = getReducedDecision(netLinkLimits[netLink].throughput, netLinkState.throughputInst, 
+                                                    netLinkState.connections, netLinkState.numPairs, range);
+                }
+                rationale << "Bottleneck link (instantaneous) throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
+                minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+            }
+        }
+    }
+
+    // if minDecision has not been modified, the throughput limits are not being exceeded 
+    // return -1, and proceed with the optimizer algorithm in optimizeConnectionsForPair to find decision 
+    if (minDecision == std::numeric_limits<int>::max()) {
+        minDecision = -1; 
+    }
+
+    return minDecision; 
+}
+
+// Returns reduced decision if the throughput limit on the given storage element or netlink is being exceeded 
+int Optimizer::getReducedDecision(float tputLimit, float tput, int connections, int numPairs, Range range)
+{
+    float reduceRatio = tputLimit / tput; 
+    int decision = static_cast<int>(reduceRatio * (connections / numPairs));
+    decision = std::max(decision, range.min); 
+    return decision; 
 }
 
 // This algorithm idea is similar to the TCP congestion window.
@@ -300,7 +401,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     StorageLimits storageLimits;
     std::map<std::string, NetLinkLimits> netLinkLimits; 
     
-    getNetLinkLimits(pair, &linkLimits); 
+    getNetLinkLimits(pair, &netLinkLimits); 
     getStorageLimits(pair, &storageLimits);
     getOptimizerWorkingRange(pair, storageLimits, &range);
     
@@ -355,58 +456,15 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         setOptimizerDecision(pair, range.min, currentPair, 0, "Range fixed", timer.elapsed());
         return true;
     }
-
-    // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
-    if (storageLimits.throughputSource > 0) {
-        if (currentSEStateMap[pair.source].asSourceThroughput > storageLimits.throughputSource) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
-            rationale << "Source throughput limitation reached (" << storageLimits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
-        }
-        if (currentSEStateMap[pair.source].asSourceThroughputInst > storageLimits.throughputSource) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
-            rationale << "Source (instantaneous) throughput limitation reached (" << storageLimits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
-        }
+      
+    // Check if throughput limits on storage elements on Storage Elements and Netlinks are being respected
+    // If not, redistribute the connections and reduce the total connections on the bottlenecked storage element  
+    decision = enforceThroughputLimits(pair, storageLimits, netLinkLimits, range); 
+    if (decision) {
+        rationale << "Resource throughput limitation reached";
+        setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
+        return true; 
     }
-
-    // Apply bandwidth limits (destination) for both window based approximation and instantaneous throughput.
-    if (storageLimits.throughputDestination > 0) {
-        if (currentSEStateMap[pair.destination].asDestThroughput > storageLimits.throughputDestination) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
-            rationale << "Destination throughput limitation reached (" << storageLimits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
-        }
-        if (currentSEStateMap[pair.destination].asDestThroughputInst > storageLimits.throughputDestination) {
-            decision = std::max(previousValue - decreaseStepSize, range.min);
-            rationale << "Destination (instantaneous) throughput limitation reached (" << storageLimits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-            return true;
-        }        
-    }
-
-    // Apply bandwidth limits (bottleneck link) for both window based approximation and instantaneous throughput.
-    std::list<std::string> netlinks = currentPairStateMap[pair].netlinks;
-    for (const std::string &netlink : netlinks) {
-        if (linkLimits[netlink].throughput > 0) {
-            if (currentNetLinkStateMap[netlink].throughput > netLinkLimits[netlink].throughput) {
-                decision = std::max(previousValue - decreaseStepSize, range.min);
-                rationale << "Link throughput limitation reached (" << netLinkLimits[netlink].throughput << ")";
-                setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-                return true; 
-            }
-            if (currentNetLinkStateMap[netlink].throughputInst > netLinkLimits[netlink].throughput) {
-                decision = std::max(previousValue - decreaseStepSize, range.min);
-                rationale << "Bottleneck link (instantaneous) throughput limitation reached (" << netLinkLimits[netlink].throughput << ")";
-                setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
-                return true; 
-            }
-        }
-    }
-
 
     // Run only when it makes sense
     time_t timeSinceLastUpdate = currentPair.timestamp - previous.timestamp;

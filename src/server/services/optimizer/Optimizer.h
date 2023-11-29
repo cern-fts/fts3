@@ -81,19 +81,20 @@ struct PairState {
     int connections;
     double avgTput;
     // Links in src-dest pair 
-    std::list<std::string> netlinks; 
+    std::list<std::string> netLinks; 
     
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), netlinks(0) {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), netLinks(0) {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
         activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn),
-        avgTput(0), netlinks(0) {}
+        avgTput(0), netLinks(0) {}
 };
 
+
 struct StorageState {
-    
+
     //The following two variables store instantaneous inbound (asDest) and outbound (asSource) throughput for a given Storage element.
     //The "Inst" throughput values are calculated by the getThroughputAsSourceInst and getThroughputAsDestinationInst methods (in OptimizerDataSource.cpp)
     //The "Inst" values store throughput based on the number of active transfers at the time the "Inst" methods are called 
@@ -107,49 +108,96 @@ struct StorageState {
     double asSourceThroughput;
     double asDestThroughput;
 
-    //These values are storage the limits for the given storage element
+    //The following two variables store the total inbound (asDest) and outbound (asSource) connections for a given Storage elemnt 
+    //These values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    //all the active pairs and summing the corresponding connections based on the pair's current optimizer decision  
+    //for a source-destination pair that involves a given storage element
+    int asSourceConnections; 
+    int asDestConnections;
+
+    //The following two variables store the total inbound (asDest) and outbound (asSource) pairs for a given Storage elemnt 
+    //These values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    //all the active pairs that involves a given storage element
+    int asSourcePairNum;
+    int asDestPairNum; 
+
+    //These values are storage limits for the given storage element
     //They are populated in getStorageStates (OptimizerDataSource.cpp) via querying t_se
     int inboundMaxActive;
     int outboundMaxActive;
     double inboundMaxThroughput;
     double outboundMaxThroughput;
 
+    //These variables store the Optimizer decision if the throughput limits are being exceeded for a given Storage Element 
+    //They are calculated in enforceThroughputLimits called in optimizeConnectionsForPair (OptimizerConnections.cpp) by
+    //redistributing the connections between all the pairs sharing the SE and reducing by a ratio of ThroughputLimit/ActualThroughput. 
+    int sourceLimitDecision; 
+    int sourceLimitDecisionInst;
+    int destLimitDecision; 
+    int destLimitDecisionInst;
+
     StorageState(): asSourceThroughputInst(0), asDestThroughputInst(0),
                     asSourceThroughput(0), asDestThroughput(0), 
+                    asSourceConnections(0), asDestConnections(0),
+                    asSourcePairNum(0), asDestPairNum(0), 
                     inboundMaxActive(0), outboundMaxActive(0),
-                    inboundMaxThroughput(0),outboundMaxThroughput(0) {}
-    
+                    inboundMaxThroughput(0),outboundMaxThroughput(0), 
+                    sourceLimitDecision(0), destLimitDecision(0) {}
+
     StorageState(int ia, double it, int oa, double ot):
                 asSourceThroughputInst(0),asDestThroughputInst(0),
                 asSourceThroughput(0), asDestThroughput(0),
+                asSourceConnections(0), asDestConnections(0),
+                asSourcePairNum(0), asDestPairNum(0), 
                 inboundMaxActive(ia), outboundMaxActive(oa),
-                inboundMaxThroughput(it), outboundMaxThroughput(ot) {}
-};
+                inboundMaxThroughput(it), outboundMaxThroughput(ot),
+                sourceLimitDecision(0), destLimitDecision(0) {}
+};	
+
 
 struct NetLinkState {
 
-    // Stores instantaneous throughput for a given Link element 
+    // Stores instantaneous throughput for a given Netlink element 
     // The "Inst" throughput values are calculated by the getThroughputAsLinkInst (in OptimizerDataSource.cpp)
     // The "Inst" values store throughput based on the number of active transfers at the time the "Inst" methods are called 
     double throughputInst;
 
-    // Stores the window based throughput for a given Link element 
+    // Stores the window based throughput for a given Netlink element 
     // This throughput value is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
     // all the active pairs and summing the corresponding throughput values returned by getThroughputInfo (OptimizerDataSource.cpp) 
     // for a source-destination pair that involves a given link element
     double throughput;
+
+    // Stores the total connections for a given Netlink element 
+    // This is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    // all the active pairs and summing the corresponding connections based on the pair's current optimizer decision  
+    // for a source-destination pair that involves a given NetLink element 
+    int connections; 
+
+    // Stores the total pairs for a given NetLink element
+    // This is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
+    // all the active pairs that involve a given Netlink element
+    int numPairs; 
 
     // These values are storage the limits for the given Link element 
     // They are populated in getNetLinkStates (OptimizerDataSource.cpp) via querying t_netlink_stat
     int minActive, maxActive;
     double maxThroughput;
 
-    NetLinkState(): throughputInst(0), throughput(0),
-                    minActive(0), maxActive(0), maxThroughput(0) {}
+    //These variables store the Optimizer decision if the throughput limits are being exceeded for a given NetLink element 
+    //They are calculated in enforceThroughputLimits called in optimizeConnectionsForPair (OptimizerConnections.cpp) by
+    //redistributing the connections between all the pairs sharing the Netlink and reducing by a ratio of (ThroughputLimit/ActualThroughput). 
+    int limitDecision; 
+    int limitDecisionInst;
+
+    NetLinkState(): throughputInst(0), throughput(0), connections(0), numPairs(0),
+                    minActive(0), maxActive(0), maxThroughput(0), limitDecision(0), 
+                    limitDecisionInst(0) {}
     
     NetLinkState(int a, double t):
-                throughputInst(0), throughput(0),
-                    minActive(0), maxActive(a), maxThroughput(t) {}
+                throughputInst(0), throughput(0), connections(0), 
+                numPairs(0), minActive(0), maxActive(a), maxThroughput(t),
+                limitDecision(0), limitDecisionInst(0) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -195,7 +243,7 @@ public:
     // Get current throughput
     virtual double getThroughputAsSourceInst(const std::string&) = 0;
     virtual double getThroughputAsDestinationInst(const std::string&) = 0;
-    virtual double getThroughputOverNetlinkInst(const std::string&) = 0;
+    virtual double getThroughputOverNetLinkInst(const std::string&) = 0;
 
     // Permanently register the optimizer decision
     virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,
@@ -260,6 +308,13 @@ protected:
 
     // Read currentLinkStateMap values into a NetLinkLimits object for the purposes of a single pair.
     void getNetLinkLimits(const Pair &pair, std::map<std::string, NetLinkLimits> *limits);
+
+    // Enforce throughput limits on storage elements and netlinks used by a given pair. 
+    // Returns reduced optimizer decision for given pair if throughput limit is exceeded. 
+    int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range);
+
+    // Calculates the reduced optimizer decision if throughput limits on storage element or netlinks are exceeded 
+    int getReducedDecision(float tputLimit, float tput, int connections, int numPairs, Range range);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
