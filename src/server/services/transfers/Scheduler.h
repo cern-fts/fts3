@@ -10,8 +10,8 @@ class Scheduler
 {
 public:
     // TODO: fix after deciding config format
-    static const std::string RANDOMIZED_ALGORITHM = "randomized";
-    static const std::string DEFICIT_ALGORITHM = "deficit";
+    static const std::string RANDOMIZED_ALGORITHM;
+    static const std::string DEFICIT_ALGORITHM;
 
     // Define LinkVoActivityKey, which is (src, dest, vo, activity)
     using LinkVoActivityKey = std::tuple<std::string, std::string, std::string, std::string>;
@@ -43,6 +43,9 @@ private:
     // Run deficit-based priority-queueing scheduling
     static std::map<std::string, std::list<TransferFile>> doDeficitSchedule(std::map<Pair, int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 };
+
+const std::string Scheduler::RANDOMIZED_ALGORITHM = "RANDOMIZED";
+const std::string Scheduler::DEFICIT_ALGORITHM = "DEFICIT";
 
 } // end namespace server
 } // end namespace fts3

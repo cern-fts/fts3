@@ -61,8 +61,8 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
 
     // Determine which scheduling algorithm to use
-    Scheduler::SchedulingAlgorithm schedulingAlg = config::ServerConfig::instance().get<std::string>("SchedulingAlgorithm");
-    schedulerFunction = Scheduler::getSchedulingFunction();
+    std::string schedulingAlg = config::ServerConfig::instance().get<std::string>("TransfersServiceSchedulingAlgorithm");
+    schedulerFunction = Scheduler::getSchedulingFunction(schedulingAlg);
 }
 
 
