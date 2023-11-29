@@ -115,7 +115,8 @@ void TransfersService::runService()
 */
 void TransfersService::executeFileTransfers(
     std::map<std::string, std::list<TransferFile>> scheduledFiles, 
-    int availableUrlCopySlots
+    int availableUrlCopySlots,
+    std::vector<QueueId> queues,
 ){
     auto db = DBSingleton::instance().getDBObjectInstance();
 
@@ -304,7 +305,7 @@ void TransfersService::executeUrlcopy()
         scheduledFiles = schedulerFunction(slotsPerLink, queues, availableUrlCopySlots);
 
         // Execute file transfers
-        executeFileTransfers(scheduledFiles, availableUrlCopySlots);
+        executeFileTransfers(scheduledFiles, availableUrlCopySlots, queues);
         
         time_t end = time(0); //std::chrono::system_clock::now();
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
