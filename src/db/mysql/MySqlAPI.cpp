@@ -663,7 +663,8 @@ static int getActiveCountForQueue(
 
 
 void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
-        std::map<std::string, std::list<TransferFile> >& files)
+        std::map<std::string, std::list<TransferFile> >& files,
+        std::map<Pair, int> &slotsPerLink)
 {
     soci::session sql(*connectionPool);
     time_t now = time(NULL);
@@ -681,19 +682,27 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             int activeCount = getActiveCount(sql, it->sourceSe, it->destSe);
 
             // How many can we run
-            sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
-                   soci::use(it->sourceSe),
-                   soci::use(it->destSe),
-                   soci::into(maxActive, maxActiveNull);
-
+            // sql << "SELECT active FROM t_optimizer WHERE source_se = :source_se AND dest_se = :dest_se",
+            //        soci::use(it->sourceSe),
+            //        soci::use(it->destSe),
+            //        soci::into(maxActive, maxActiveNull);
+            
             // Calculate how many tops we should pick
-            if (maxActiveNull != soci::i_null && maxActive > 0)
-            {
-                filesNum = (maxActive - activeCount);
-                if(filesNum <= 0 ) {
-                    continue;
-                }
+            // if (maxActiveNull != soci::i_null && maxActive > 0)
+            // {
+            //     filesNum = (maxActive - activeCount);
+            //     if(filesNum <= 0 ) {
+            //         continue;
+            //     }
+            // }
+
+            // How many can we run
+            Pair pair(it->sourceSe, it->destSe);
+            if (slotsPerLink.find(pair) == 0 || slotsPerLink[pair] == 0) {
+                // Pair does not exist in slotsPerLink
+                continue;
             }
+            filesNum = slotsPerLink[pair];
 
             int fixedPriority =  ServerConfig::instance().get<int> ("UseFixedJobPriority");
             soci::indicator isMaxPriorityNull = soci::i_ok;

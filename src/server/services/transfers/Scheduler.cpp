@@ -44,7 +44,7 @@ std::map<std::string, std::list<TransferFile>> Scheduler::doRandomizedSchedule(
     auto db = DBSingleton::instance().getDBObjectInstance();
 
     time_t start = time(0);
-    db->getReadyTransfers(queues, scheduledFiles); // TODO: move this out of db?
+    db->getReadyTransfers(queues, scheduledFiles, slotsPerLink); // TODO: move this out of db?
     time_t end =time(0);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
                                     << "func=\"doRandomizedSchedule\" "
