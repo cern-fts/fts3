@@ -62,7 +62,13 @@ private:
      */
     static std::map<std::string, std::list<TransferFile>> doRandomizedSchedule(std::map<Pair, int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 
-    // Run deficit-based priority-queueing scheduling
+    /**
+     * Run deficit-based priority queueing scheduling.
+     * @param slotsPerLink number of slots assigned to each link, as determined by allocator
+     * @param queues All current pending transfers
+     * @param availableUrlCopySlots Max number of slots available in the system
+     * @return Mapping from each VO to the list of transfers to be scheduled.
+     */
     static std::map<std::string, std::list<TransferFile>> doDeficitSchedule(std::map<Pair, int> &slotsPerLink, std::vector<QueueId> &queues, int availableUrlCopySlots);
 };
 

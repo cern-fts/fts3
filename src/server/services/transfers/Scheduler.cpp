@@ -69,7 +69,7 @@ Scheduler::SchedulerAlgorithm getSchedulerAlgorithm() {
         return Scheduler::SchedulerAlgorithm::DEFICIT;
     }
     else {
-        return Scheduler::SchedulerAlgorithm::DEFICIT;
+        return Scheduler::SchedulerAlgorithm::RANDOMIZED;
     }
 }
 
