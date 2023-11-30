@@ -28,7 +28,6 @@
 
 using namespace fts3::common;
 
-
 std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql, std::string vo)
 {
 

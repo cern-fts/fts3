@@ -631,7 +631,8 @@ std::map<Pair, int> MySqlAPI::getLinkCapacities(const std::vector<QueueId>& queu
 }
 
 void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
-        std::map<std::string, std::list<TransferFile> >& files)
+        std::map<std::string, std::list<TransferFile> >& files,
+        std::map<Pair, int> &slotsPerLink)
 {
     soci::session sql(*connectionPool);
     time_t now = time(NULL);
@@ -642,13 +643,14 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
         // AND there are pending file transfers within the job
         for (auto it = queues.begin(); it != queues.end(); ++it)
         {
-            boost::tuple<bool, int> linkInfo = linkUpperBound(sql, it->sourceSe, it->destSe);
-            int filesNum = boost::get<1>(linkInfo);
-            if(boost::get<0>(linkInfo)) {
-                if(filesNum <= 0 ) {
-                    continue;
-                }
+            // How many can we run
+            Pair pair(it->sourceSe, it->destSe);
+            if (slotsPerLink.find(pair) == slotsPerLink.end() || slotsPerLink[pair] == 0) {
+                // Pair does not exist in slotsPerLink
+                continue;
             }
+            int filesNum = slotsPerLink[pair];
+
             int fixedPriority =  ServerConfig::instance().get<int> ("UseFixedJobPriority");
             soci::indicator isMaxPriorityNull = soci::i_ok;
             int maxPriority = 3;

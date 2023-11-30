@@ -28,6 +28,7 @@
 #include "db/generic/QueueId.h"
 #include "../BaseService.h"
 #include "Allocator.h"
+#include "Scheduler.h"
 
 
 namespace fts3 {
@@ -55,6 +56,10 @@ protected:
     boost::posix_time::time_duration schedulingInterval;
     Allocator::AllocatorFunction allocatorAlgorithm;
 
+    // Function pointer for the scheduler function, depending on config
+    Scheduler::SchedulerFunction schedulerFunction;
+
+    void executeFileTransfers(std::map<std::string, std::list<TransferFile>> scheduledFiles, int availableUrlCopySlots, std::vector<QueueId> queues);
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
     void executeUrlcopy();
 };
