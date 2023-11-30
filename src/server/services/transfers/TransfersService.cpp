@@ -35,22 +35,20 @@
 #include "FileTransferExecutor.h"
 
 #include <msg-bus/producer.h>
+#include "MaximumFlow.h"
 
 #include <ctime>
 
 using namespace fts3::common;
-
 
 namespace fts3 {
 namespace server {
 
 extern time_t retrieveRecords;
 
-
 TransfersService::TransfersService(): BaseService("TransfersService")
 {
     cmd = "fts_url_copy";
-
     logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
@@ -58,13 +56,11 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-    schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
+    schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval"); 
 
-    // Determine which scheduling algorithm to use
-    std::string schedulingAlg = config::ServerConfig::instance().get<std::string>("TransfersServiceSchedulingAlgorithm");
-    schedulerFunction = Scheduler::getSchedulingFunction(schedulingAlg);
+    schedulerFunction = Scheduler::getSchedulerFunction();
+    allocatorAlgorithm = Allocator::getAllocatorFunction();
 }
-
 
 TransfersService::~TransfersService()
 {
@@ -110,18 +106,16 @@ void TransfersService::runService()
  * Execute the file transfer.
  * (This was originally in getFiles.)
  * This is also where we consider the slots left for dest and src nodes.
- * TODO: do we need to move the slots left for dest/src to Scheduler.cpp?
- *     => problem with moving this: the scheduling below depends on the slots computation
+ * TODO: The Allocator already takes into consideration slotsLeftForDestination and slotsLeftForSource.
+ *       The code here will be modified in the future to remove redundancy.
+ *       For now this function will keep the same code as the original getFiles() to ensure correctness.
 */
 void TransfersService::executeFileTransfers(
     std::map<std::string, std::list<TransferFile>> scheduledFiles, 
     int availableUrlCopySlots,
-    std::vector<QueueId> queues,
+    std::vector<QueueId> queues
 ){
-    auto db = DBSingleton::instance().getDBObjectInstance();
-
     ThreadPool<FileTransferExecutor> execPool(execPoolSize);
-    std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
     for (auto i = queues.begin(); i != queues.end(); ++i) {
         // To reduce queries, fill in one go limits as source and as destination
         if (slotsLeftForDestination.count(i->destSe) == 0) {
@@ -264,7 +258,7 @@ void TransfersService::executeUrlcopy()
 {
     std::vector<QueueId> queues;
     boost::thread_group g;
-
+    auto db = DBSingleton::instance().getDBObjectInstance();
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     int urlCopyCount = countProcessesWithName("fts_url_copy");
@@ -295,13 +289,9 @@ void TransfersService::executeUrlcopy()
             return;
         }
 
-        /**
-         * DUMMY: allocator stuff
-        */
-        std::map<Pair, int> slotsPerLink = allocatorStuff();
-
-        // Execute scheduling algorithm
         std::map<std::string, std::list<TransferFile>> scheduledFiles;
+
+        std::map<Pair, int> slotsPerLink = allocatorAlgorithm(queues); 
         scheduledFiles = schedulerFunction(slotsPerLink, queues, availableUrlCopySlots);
 
         // Execute file transfers
