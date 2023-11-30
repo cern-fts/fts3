@@ -60,6 +60,7 @@ TransfersService::TransfersService(): BaseService("TransfersService")
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
+    dummyLambda = 0; 
 }
 
 
@@ -351,6 +352,7 @@ void TransfersService::executeUrlcopy()
         MaximumFlow::Dinics solver;
         std::map<std::pair<std::string, std::string>, int> allocatorMap;
         std::map<std::pair<int, int>, int> maximumFlow;
+        std::map<std::pair<int, int>, int> starvedLinks; 
         switch(getAllocatorAlgorithm()) {
             case (MAXIMUM_FLOW):
                 nodeCount = 0;
@@ -366,6 +368,31 @@ void TransfersService::executeUrlcopy()
                         intToSe[nodeCount] = i.destSe;
                         nodeCount++;
                     }
+                    // determine if the link is starved
+                    std::pair<int, int> currLink = std::make_pair(seToInt[i.sourceSe], seToInt[i.destSe]); 
+                    if (linkDeficitTracker[currLink] >= dummyLamda) {
+                        // keep track of which links are starved, and allocate maximum capacity (at first, to be updated below)
+                        starvedLinks[currLink] = linkCapacities[currLink]; 
+                    }
+                }
+                // create a vector of starved links from the map
+                std::vector<std::pair<std::pair<int, int>, int>> sortedStarvedLinks(starvedLinks.begin(), starvedLinks.end()); 
+                auto compareLinks = [](const std::pair<std::pair<int, int>, int>& a, std::pair<std::pair<int, int>, int>& b) {
+                    return a.second > b.second; 
+                }
+                // sort the starved links in decreasing order 
+                std::sort(sortedStarvedLinks.begin(), sortedStarvedLinks.end(), compareLinks); 
+                // allocate slots for the starved links 
+                for (const auto& elem : sortedStarvedLinks) {
+                    // allocate slots to given link 
+                    int minCapacityStorageElements = min(slotsLeftForSource[elem.first.first], slotsLeftForDestination[elem.first.second]);
+                    int allocated = min(minCapacityStorageElements, elem.second);
+                    allocatorMap[elem.first] = allocated; 
+                    // update storage elements' slots 
+                    slotsLeftForSource[elem.first.first] -= allocated;
+                    slotsLeftForDestination[elem.first.second] -= allocated; 
+                    // update deficit tracker 
+                    linkDeficitTracker[elem.first] = linkCapacities[elem.first] - allocated; 
                 }
                 // node count is incremented after each node so virtual source is nodeCount, dest is nodeCount + 1
                 solver.setSource(nodeCount);
@@ -373,9 +400,12 @@ void TransfersService::executeUrlcopy()
                 solver.setNodes(nodeCount + 2);
                 // Introduce capacities for virtual source to each source
                 for (const auto& i : queues) {
-                    solver.addEdge(nodeCount, seToInt[i.sourceSe], slotsLeftForSource[i.sourceSe]);
-                    solver.addEdge(seToInt[i.destSe], nodeCount + 1, slotsLeftForDestination[i.destSe]);
-                    solver.addEdge(seToInt[i.sourceSe], seToInt[i.destSe], linkCapacities[std::make_pair(i.sourceSe, i.destSe)]);
+                    // if the link isn't starved, add it to the graph
+                    if (starvedLinks.find(std::make_pair(i.sourceSe, i.destSe)) == starvedLinks.end()) {
+                        solver.addEdge(nodeCount, seToInt[i.sourceSe], slotsLeftForSource[i.sourceSe]);
+                        solver.addEdge(seToInt[i.destSe], nodeCount + 1, slotsLeftForDestination[i.destSe]);
+                        solver.addEdge(seToInt[i.sourceSe], seToInt[i.destSe], linkCapacities[std::make_pair(i.sourceSe, i.destSe)]);
+                    }
                 }
                 
                 maximumFlow = solver.computeMaximumFlow();

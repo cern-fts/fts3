@@ -53,6 +53,8 @@ protected:
     std::string logDir;
     std::string msgDir;
     boost::posix_time::time_duration schedulingInterval;
+    std::map<std::pair<int, int>, int> linkDeficitTracker;
+    int dummyLambda; 
 
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
     void executeUrlcopy();
