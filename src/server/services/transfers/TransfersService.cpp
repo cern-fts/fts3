@@ -56,7 +56,7 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-    schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
+    schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval"); 
 
     allocatorFunction = Allocator::getAllocatorFunction();
 
