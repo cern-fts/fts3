@@ -50,6 +50,9 @@ public:
     /// Recover from the DB transfers marked as ACTIVE for the host 'host'
     virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host);
 
+    /// Get the number of submitted files in each activity within a (src, dst, vo)
+    virtual std::map<std::string, long long> MySqlAPI::getSubmittedCountInActivity(std::string src, std::string dst, std::string vo);
+
     /// Get a list of transfers ready to go for the given queues
     /// When session reuse is enabled for a job, all the files belonging to that job should run at once
     /// @param queues       Queues for which to check (see getQueuesWithSessionReusePending)
