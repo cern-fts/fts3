@@ -111,7 +111,7 @@ std::map<std::string, std::list<TransferFile>> Scheduler::doDeficitSchedule(
             continue;
         }
         // Fetch activity share for that VO
-        std::map<std::string, double> activityShare = getActivityShareConf(i->voName);
+        std::map<std::string, double> activityShare = DBSingleton::instance().getDBObjectInstance()->getActivityShareForVo(i->voName);
         voActivityShare[i->voName] = activityShare;
     }
     
@@ -173,7 +173,7 @@ std::map<std::string, std::map<std::string, long long>> computeActiveCounts(
 
     for (auto i = voActivityShare.begin(); i != voActivityShare.end(); i++) {
         std::string voName = i->first;
-        result[voName] = db->getActiveCountInActivity(src, dest, vo);
+        result[voName] = db->getActiveCountForEachActivity(src, dest, vo);
     }
 
     return result;
