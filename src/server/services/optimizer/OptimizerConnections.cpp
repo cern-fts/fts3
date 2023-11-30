@@ -102,14 +102,14 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
            && currentSEStateMap[pair.source].outboundMaxThroughput > 0) {
             currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
             currentSEStateMap[pair.source].asSourceConnections += current.connections;
-            currentSEStateMap[pair.source].asSourcePairNum += 1;
+            currentSEStateMap[pair.source].asSourceNumPairs += 1;
         }
 
         if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
            && currentSEStateMap[pair.destination].inboundMaxThroughput > 0) {
             currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
             currentSEStateMap[pair.destination].asDestConnections += current.connections;
-            currentSEStateMap[pair.destination].asDestPairNum += 1; //todo: change to asDestNumPairs
+            currentSEStateMap[pair.destination].asDestNumPairs += 1; 
         }
 
         // ===============================================        
@@ -301,20 +301,16 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
         se = currentSEStateMap[pair.source];
         if (se.asSourceThroughput > storageLimits.throughputSource) {
             // Check if this has been previously calculated for another pair sharing this resource
-            if (!se.sourceLimitDecision) { 
-                se.sourceLimitDecision = getReducedDecision(storageLimits.throughputSource, se.asSourceThroughput, 
-                                            se.asSourceConnections, se.asSourcePairNum, range);
-            }
+                decision = getReducedDecision(pair, storageLimits.throughputSource, se.asSourceThroughput, 
+                                            se.asSourceConnections, se.asSourceNumPairs, range);
             rationale << "Source throughput limitation reached (" << storageLimits.throughputSource << ")";
-            minDecision = std::min(se.sourceLimitDecision, minDecision); 
+            minDecision = std::min(decision, minDecision); 
         }
         if (se.asSourceThroughputInst > storageLimits.throughputSource) {
-            if (!se.sourceLimitDecisionInst) { 
-                se.sourceLimitDecisionInst = getReducedDecision(storageLimits.throughputSource, se.asSourceThroughputInst, 
-                                            se.asSourceConnections, se.asSourcePairNum, range);
-            }
+            decision = getReducedDecision(pair, storageLimits.throughputSource, se.asSourceThroughputInst, 
+                                            se.asSourceConnections, se.asSourceNumPairs, range);
             rationale << "Source (instantaneous) throughput limitation reached (" << storageLimits.throughputSource << ")";
-            minDecision = std::min(se.sourceLimitDecisionInst, minDecision); 
+            minDecision = std::min(decision, minDecision); 
         }
     }
 
@@ -322,20 +318,16 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
     if (storageLimits.throughputDestination > 0) {
         se = currentSEStateMap[pair.destination];
         if (se.asDestThroughput > storageLimits.throughputDestination) {
-            if (!se.destLimitDecision) { 
-                se.destLimitDecision = getReducedDecision(storageLimits.throughputDestination, se.asDestThroughput, 
-                                            se.asDestConnections, se.asDestPairNum, range);
-            }
+            decision = getReducedDecision(pair, storageLimits.throughputDestination, se.asDestThroughput, 
+                                            se.asDestConnections, se.asDestNumPairs, range);
             rationale << "Destination throughput limitation reached (" << storageLimits.throughputDestination << ")";
-            minDecision = std::min(se.destLimitDecision, minDecision); 
+            minDecision = std::min(decision, minDecision); 
         }
         if (se.asDestThroughputInst > storageLimits.throughputDestination) {
-            if (!se.destLimitDecisionInst) { 
-                se.destLimitDecisionInst = getReducedDecision(storageLimits.throughputDestination, se.asDestThroughputInst, 
-                                            se.asDestConnections, se.asDestPairNum, range);
-            }
+            decision = getReducedDecision(pair, storageLimits.throughputDestination, se.asDestThroughputInst, 
+                                            se.asDestConnections, se.asDestNumPairs, range);
             rationale << "Destination (instantaneous) throughput limitation reached (" << storageLimits.throughputDestination << ")";
-            minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+            minDecision = std::min(decision, minDecision); 
         }        
     }
 
@@ -345,20 +337,16 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
         if (netLinkLimits[netLink].throughput > 0) {
             netLinkState = currentNetLinkStateMap[netLink]; 
             if (netLinkState.throughput > netLinkLimits[netLink].throughput) {
-                if (!netLinkState.limitDecision) {
-                    netLinkState.limitDecision = getReducedDecision(netLinkLimits[netLink].throughput, netLinkState.throughput, 
+                decision = getReducedDecision(pair, netLinkLimits[netLink].throughput, netLinkState.throughput, 
                                                     netLinkState.connections, netLinkState.numPairs, range);
-                }
                 rationale << "Link throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
-                minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+                minDecision = std::min(decision, minDecision); 
             }
             if (netLinkState.throughputInst > netLinkLimits[netLink].throughput) {
-                if (!netLinkState.limitDecisionInst) {
-                    netLinkState.limitDecisionInst = getReducedDecision(netLinkLimits[netLink].throughput, netLinkState.throughputInst, 
+                    decision = getReducedDecision(pair, netLinkLimits[netLink].throughput, netLinkState.throughputInst, 
                                                     netLinkState.connections, netLinkState.numPairs, range);
-                }
                 rationale << "Bottleneck link (instantaneous) throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
-                minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+                minDecision = std::min(decision, minDecision); 
             }
         }
     }
@@ -373,10 +361,18 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
 }
 
 // Returns reduced decision if the throughput limit on the given storage element or netlink is being exceeded 
-int Optimizer::getReducedDecision(float tputLimit, float tput, int connections, int numPairs, Range range)
+int Optimizer::getReducedDecision(const Pair &pair, float tputLimit, float tput, int connections, int numPairs, Range range)
 {
-    float reduceRatio = tputLimit / tput; 
-    int decision = static_cast<int>(reduceRatio * (connections / numPairs));
+    // To ensure fairness among the competing pairs using the bottlenecked resource, 
+    // we want to give each pair an equal amount of throughput 
+    float tputPerPair = tputLimit / numPairs; 
+
+    // Calculate each pair's current throughput per connection ratio to account for TCP congestion control 
+    // We want to distribute throughput evenly among all pairs competing for the resource 
+    // This may result in a different number of connections for each pair, since each pair could have a different (throughput/connections) ratio 
+    float pairTputPerConnection = currentPairStateMap[pair].avgTput/currentPairStateMap[pair].connections; 
+    
+    int decision = static_cast<int>(tputPerPair/pairTputPerConnection); 
     decision = std::max(decision, range.min); 
     return decision; 
 }
