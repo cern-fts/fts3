@@ -158,10 +158,36 @@ void TransfersService::executeUrlcopy()
 
     try {
         time_t start = time(0); //std::chrono::system_clock::now();
-        time_t end;
-        // Retrieve queues
-        std::map<std::pair<std::string, std::string>, int> slotsLeftPerLink = allocatorAlgorithm(queues); 
+        DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
+        // Breaking determinism. See FTS-704 for an explanation.
+        std::random_shuffle(queues.begin(), queues.end());
         
+        // Bail out as soon as possible if there are too many url-copy processes
+        int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+        int urlCopyCount = countProcessesWithName("fts_url_copy");
+        int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
+
+        if (availableUrlCopySlots <= 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Reached limitation of MaxUrlCopyProcesses"
+                << commit;
+            return;
+        }
+
+        std::map<std::string, std::list<TransferFile>> scheduledFiles;
+
+        std::map<Pair, int> slotsPerLink = allocatorAlgorithm(queues); 
+        scheduledFiles = schedulerFunction(slotsPerLink, queues, availableUrlCopySlots);
+
+        // Execute file transfers
+        executeFileTransfers(scheduledFiles, availableUrlCopySlots, queues);
+        
+        time_t end = time(0); //std::chrono::system_clock::now();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
+                                        << "func=\"executeUrlcopy\" "
+                                        << "DBcall=\"getQueuesWithPending\" " 
+                                        << "time=\"" << end - start << "\"" 
+                                        << commit;
     }
     catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;

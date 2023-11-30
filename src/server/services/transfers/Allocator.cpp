@@ -38,7 +38,7 @@ Allocator::AllocatorAlgorithm getAllocatorAlgorithm() {
         return Allocator::AllocatorAlgorithm::GREEDY;
     }
     else {
-        return Allocator::AllocatorAlgorithm::INVALID_ALLOCATOR_ALGORITHM;
+        return Allocator::AllocatorAlgorithm::MAXIMUM_FLOW;
     }
 }
 
@@ -79,7 +79,7 @@ void getSourceDestinationCapacities(std::map<std::string, int>& slotsLeftForSour
     }
 }
 
-std::map<std::pair<std::string, std::string>, int> Allocator::GreedyAllocator(
+std::map<Pair, int> Allocator::GreedyAllocator(
     std::vector<QueueId> &queues
 ){
     auto db = DBSingleton::instance().getDBObjectInstance();
@@ -87,17 +87,17 @@ std::map<std::pair<std::string, std::string>, int> Allocator::GreedyAllocator(
 
     // Retrieve link capacities
     std::map<std::string, std::list<TransferFile> > voQueues;
-    std::map<std::pair<std::string, std::string>, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
-    std::map<std::pair<std::string, std::string>, int> allocatorMap;
+    std::map<Pair, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
+    std::map<Pair, int> allocatorMap;
     // Introduce capacities for virtual source to each source
     for (const auto& i : queues) {
-        std::pair<std::string, std::string> vo = std::make_pair(i.sourceSe, i.destSe);
+        Pair vo = Pair(i.sourceSe, i.destSe);
         allocatorMap[vo] = linkCapacities[vo];
     }
     return allocatorMap;
 }
 
-std::map<std::pair<std::string, std::string>, int> Allocator::MaximumFlowAllocator(
+std::map<Pair, int> Allocator::MaximumFlowAllocator(
     std::vector<QueueId> &queues
 ){
     auto db = DBSingleton::instance().getDBObjectInstance();
@@ -107,7 +107,7 @@ std::map<std::pair<std::string, std::string>, int> Allocator::MaximumFlowAllocat
     
     // Retrieve link capacities
     std::map<std::string, std::list<TransferFile> > voQueues;
-    std::map<std::pair<std::string, std::string>, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
+    std::map<Pair, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
     
     // Declare graph variables
     std::map<std::string, int> seToInt;
@@ -115,7 +115,7 @@ std::map<std::pair<std::string, std::string>, int> Allocator::MaximumFlowAllocat
     int nodeCount = 0;
 
     MaximumFlow::MaximumFlowSolver solver;
-    std::map<std::pair<std::string, std::string>, int> allocatorMap;
+    std::map<Pair, int> allocatorMap;
     std::map<std::pair<int, int>, int> maximumFlow;
 
     // We initialize seToInt and intToSe since our maximum flow class utilizes array indexing for optimization
@@ -139,13 +139,13 @@ std::map<std::pair<std::string, std::string>, int> Allocator::MaximumFlowAllocat
     for (const auto& i : queues) {
         solver.addEdge(nodeCount, seToInt[i.sourceSe], slotsLeftForSource[i.sourceSe]);
         solver.addEdge(seToInt[i.destSe], nodeCount + 1, slotsLeftForDestination[i.destSe]);
-        solver.addEdge(seToInt[i.sourceSe], seToInt[i.destSe], linkCapacities[std::make_pair(i.sourceSe, i.destSe)]);
+        solver.addEdge(seToInt[i.sourceSe], seToInt[i.destSe], linkCapacities[Pair(i.sourceSe, i.destSe)]);
     }
     
     maximumFlow = solver.computeMaximumFlow();
     
     for (const auto& entry : maximumFlow) {
-        allocatorMap[std::make_pair(intToSe[entry.first.first], intToSe[entry.first.second])] = entry.second;
+        allocatorMap[Pair(intToSe[entry.first.first], intToSe[entry.first.second])] = entry.second;
     }
     return allocatorMap;
 }

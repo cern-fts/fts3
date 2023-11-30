@@ -34,13 +34,12 @@ public:
     enum AllocatorAlgorithm {
         MAXIMUM_FLOW,
         GREEDY,
-        INVALID_ALLOCATOR_ALGORITHM,
     };
 
-    // Function pointer to the scheduler algorithm
-    using AllocatorFunction = std::map<std::pair<std::string, std::string>, int> (*)(std::vector<QueueId>&);
+    // Function pointer to the allocator algorithm
+    using AllocatorFunction = std::map<Pair, int> (*)(std::vector<QueueId>&);
 
-    // Returns function pointer to the scheduler algorithm
+    // Returns function pointer to the allocator algorithm
     static AllocatorFunction getAllocatorFunction();
 
 private:
@@ -50,15 +49,13 @@ private:
 
     /**
      * Run greedy allocator algorithm
-     * @param slotsPerLink number of slots assigned to each link, as determined by allocator
      * @param queues All current pending transfers
-     * @param availableUrlCopySlots Max number of slots available in the system
      * @return Number of slots assigned to each link
      */
-    static std::map<std::pair<std::string, std::string>, int> GreedyAllocator(std::vector<QueueId> &queues);
+    static std::map<Pair, int> GreedyAllocator(std::vector<QueueId> &queues);
 
     // Run maximum flow based allocator algorithm
-    static std::map<std::pair<std::string, std::string>, int> MaximumFlowAllocator(std::vector<QueueId> &queues);
+    static std::map<Pair, int> MaximumFlowAllocator(std::vector<QueueId> &queues);
 };
 
 } // end namespace server
