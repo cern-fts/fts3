@@ -326,7 +326,8 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
     float reduceRatio = 0.0; 
     std::stringstream rationale;
     StorageState se; 
-    NetLinkState netLinkState; 
+    NetLinkState netLinkState;
+    int decision; 
 
     if(windowBasedThroughputLimitEnforcement)
     {
@@ -337,32 +338,28 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 // Check if this has been previously calculated for another pair sharing this resource
                 if(proportionalDecreaseThroughputLimitEnforcement)
                 {
-                    if (!se.sourceLimitDecision) { 
-                        se.sourceLimitDecision = getReducedDecision(storageLimits.throughputSource, se.asSourceThroughput, 
-                                                    se.asSourceConnections, se.asSourcePairNum, range);
-                    }
+                    decision = getReducedDecision(pair, storageLimits.throughputSource, se.asSourceThroughput, 
+                                                    se.asSourceConnections, se.asSourceNumPairs, range);
                 }
                 else
                 {
-                    se.sourceLimitDecision = std::max(previousValue - decreaseStepSize, range.min);
+                    decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
                 rationale << "Source throughput limitation reached (" << storageLimits.throughputSource << ")";
-                minDecision = std::min(se.sourceLimitDecision, minDecision); 
+                minDecision = std::min(decision, minDecision); 
             }
             if (se.asSourceThroughputInst > storageLimits.throughputSource) {
                 if(proportionalDecreaseThroughputLimitEnforcement)
                 {
-                    if (!se.sourceLimitDecisionInst) { 
-                        se.sourceLimitDecisionInst = getReducedDecision(storageLimits.throughputSource, se.asSourceThroughputInst, 
-                                                    se.asSourceConnections, se.asSourcePairNum, range);
-                    }
+                    decision = getReducedDecision(pair, storageLimits.throughputSource, se.asSourceThroughputInst, 
+                                                    se.asSourceConnections, se.asSourceNumPairs, range);
                 }
                 else
                 {
-                    se.sourceLimitDecision = std::max(previousValue - decreaseStepSize, range.min);
+                    decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
                 rationale << "Source (instantaneous) throughput limitation reached (" << storageLimits.throughputSource << ")";
-                minDecision = std::min(se.sourceLimitDecisionInst, minDecision); 
+                minDecision = std::min(decision, minDecision); 
             }
         }
 
@@ -371,33 +368,29 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
             se = currentSEStateMap[pair.destination];
             if (se.asDestThroughput > storageLimits.throughputDestination) {
                 if(proportionalDecreaseThroughputLimitEnforcement)
-                {    
-                    if (!se.destLimitDecision) { 
-                        se.destLimitDecision = getReducedDecision(storageLimits.throughputDestination, se.asDestThroughput, 
-                                                    se.asDestConnections, se.asDestPairNum, range);
-                    }
+                {
+                    decision = getReducedDecision(pair,storageLimits.throughputDestination, se.asDestThroughput, 
+                                                    se.asDestConnections, se.asDestNumPairs, range);
                 }
                 else
                 {
-                    se.sourceLimitDecision = std::max(previousValue - decreaseStepSize, range.min);
+                    decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
                 rationale << "Destination throughput limitation reached (" << storageLimits.throughputDestination << ")";
-                minDecision = std::min(se.destLimitDecision, minDecision); 
+                minDecision = std::min(decision, minDecision); 
             }
             if (se.asDestThroughputInst > storageLimits.throughputDestination) {
                 if(proportionalDecreaseThroughputLimitEnforcement)
                 {   
-                    if (!se.destLimitDecisionInst) { 
-                        se.destLimitDecisionInst = getReducedDecision(storageLimits.throughputDestination, se.asDestThroughputInst, 
-                                                    se.asDestConnections, se.asDestPairNum, range);
-                    }
+                    decision = getReducedDecision(pair, storageLimits.throughputDestination, se.asDestThroughputInst, 
+                                                    se.asDestConnections, se.asDestNumPairs, range);
                 }
                 else
                 {
-                    se.sourceLimitDecision = std::max(previousValue - decreaseStepSize, range.min);
+                    decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
                 rationale << "Destination (instantaneous) throughput limitation reached (" << storageLimits.throughputDestination << ")";
-                minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+                minDecision = std::min(decision, minDecision); 
             }        
         }
     }
@@ -412,32 +405,28 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 if (netLinkState.throughput > netLinkLimits[netLink].throughput) {
                     if(proportionalDecreaseThroughputLimitEnforcement)
                     {
-                        if (!netLinkState.limitDecision) {
-                            netLinkState.limitDecision = getReducedDecision(netLinkLimits[netLink].throughput, netLinkState.throughput, 
+                        decision = getReducedDecision(pair, netLinkLimits[netLink].throughput, netLinkState.throughput, 
                                                             netLinkState.connections, netLinkState.numPairs, range);
-                        }
                     }
                     else
                     {
-                        se.sourceLimitDecision = std::max(previousValue - decreaseStepSize, range.min);
+                        decision = std::max(previousValue - decreaseStepSize, range.min);
                     }
                     rationale << "Link throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
-                    minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+                    minDecision = std::min(decision, minDecision); 
                 }
                 if (netLinkState.throughputInst > netLinkLimits[netLink].throughput) {
                     if(proportionalDecreaseThroughputLimitEnforcement)
                     {
-                        if (!netLinkState.limitDecisionInst) {
-                            netLinkState.limitDecisionInst = getReducedDecision(netLinkLimits[netLink].throughput, netLinkState.throughputInst, 
+                        decision = getReducedDecision(pair, netLinkLimits[netLink].throughput, netLinkState.throughputInst, 
                                                             netLinkState.connections, netLinkState.numPairs, range);
-                        }
                     }
                     else
                     {
-                        se.sourceLimitDecision = std::max(previousValue - decreaseStepSize, range.min);
+                        decision = std::max(previousValue - decreaseStepSize, range.min);
                     }
                     rationale << "Bottleneck link (instantaneous) throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
-                    minDecision = std::min(se.destLimitDecisionInst, minDecision); 
+                    minDecision = std::min(decision, minDecision); 
                 }
             }
         }
