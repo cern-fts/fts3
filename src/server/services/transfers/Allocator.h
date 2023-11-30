@@ -56,6 +56,8 @@ private:
 
     // Run maximum flow based allocator algorithm
     static std::map<Pair, int> MaximumFlowAllocator(std::vector<QueueId> &queues);
+    std::map<std::pair<int, int>, int> linkDeficitTracker;
+    int dummyLambda;
 };
 
 } // end namespace server
