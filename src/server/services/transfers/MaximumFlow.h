@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef FTS3_DINICSMAXIMUMFLOW_H
-#define FTS3_DINICSMAXIMUMFLOW_H
+#ifndef FTS3_MAXIMUMFLOW_H
+#define FTS3_MAXIMUMFLOW_H
 
 #include <iostream>
 #include <vector>
@@ -53,7 +53,7 @@ private:
         // For debugging purposes. Prints the capacity and flow of an edge as well as if it is residual.
         std::string edgeToString(int s, int t);
     };
-
+public:
     class MaximumFlowSolver {
     public:
         static const int INF;
@@ -63,32 +63,22 @@ private:
         int maximumFlow;
         std::vector<std::vector<Edge*>> graph;
 
-        // Initializes MaximumFlowSolver with nodes, source, sink
-        MaximumFlowSolver(int nodes, int source, int sink);
+        // Initializes MaximumFlowSolver
+        MaximumFlowSolver();
 
         // addEdge adds a forward and reverse edge to the graph. The forward edge is initialized with the specified capacity and the
         void addEdge(int from, int to, int capacity);
+
+        void setSource(int s);
+        void setSink(int s);
+        void setNodes(int n);
         std::map<std::pair<int, int>, int> computeMaximumFlow();
         int getMaximumFlow();
         void initializeEmptyFlowGraph();
 
     private:
-        void run();
-        virtual void solve() = 0;
-    };
-
-public:
-    class Dinics : public MaximumFlowSolver {
-    private:
         std::vector<int> level;
-    public:
-        Dinics();
-        void addEdge(int from, int to, int capacity);
-        void setSource(int s);
-        void setSink(int s);
-        void setNodes(int n);
-    private:
-        void solve() override;
+        void run();
         // bfs constructs the current level graph
         bool bfs();
         // dfs uses the level graph and invokes depth first search until a blocking flow is found
@@ -97,4 +87,4 @@ public:
 };
 } /* namespace server */
 } /* namespace fts3 */
-#endif //FTS3_DINICSMAXIMUMFLOW_H
+#endif //FTS3_MAXIMUMFLOW_H

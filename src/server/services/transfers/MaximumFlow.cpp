@@ -48,12 +48,12 @@ std::string MaximumFlow::Edge::edgeToString(int s, int t) {
 
 const int MaximumFlow::MaximumFlowSolver::INF = (unsigned)!((int)0);
 
-MaximumFlow::MaximumFlowSolver::MaximumFlowSolver(int nodes, int source, int sink)
-        : nodes(nodes), source(source), sink(sink), solved(false), maximumFlow(0) {
+MaximumFlow::MaximumFlowSolver::MaximumFlowSolver()
+        : nodes(0), source(0), sink(0), solved(false), maximumFlow(0) {
     initializeEmptyFlowGraph();
 }
 
-void MaximumFlow::Dinics::addEdge(int from, int to, int capacity) {
+void MaximumFlow::MaximumFlowSolver::addEdge(int from, int to, int capacity) {
     if (capacity <= 0) {
         throw std::invalid_argument("Forward edge capacity <= 0");
     }
@@ -93,31 +93,6 @@ void MaximumFlow::MaximumFlowSolver::initializeEmptyFlowGraph() {
 
 void MaximumFlow::MaximumFlowSolver::run() {
     if (solved) return;
-    solve();
-    solved = true;
-}
-
-MaximumFlow::Dinics::Dinics() : MaximumFlowSolver(0, 0, 0) {
-    // The graph and level vector will be initialized when setNodes is called
-}
-
-// Setters implementation
-void MaximumFlow::Dinics::setSource(int s) {
-    source = s;
-}
-
-void MaximumFlow::Dinics::setSink(int s) {
-    sink = s;
-}
-
-void MaximumFlow::Dinics::setNodes(int n) {
-    nodes = n;
-    level = std::vector<int>(n, 0); // Initialize level vector with size n
-    initializeEmptyFlowGraph(); // Initialize the flow graph
-}
-
-
-void MaximumFlow::Dinics::solve() {
     std::vector<int> next(nodes);
         while (bfs()) {
             std::fill(next.begin(), next.end(), 0);
@@ -129,9 +104,25 @@ void MaximumFlow::Dinics::solve() {
             maximumFlow += flow;
         }
     }
+    solved = true;
 }
 
-bool MaximumFlow::Dinics::bfs() {
+// Setters implementation
+void MaximumFlow::MaximumFlowSolver::setSource(int s) {
+    source = s;
+}
+
+void MaximumFlow::MaximumFlowSolver::setSink(int s) {
+    sink = s;
+}
+
+void MaximumFlow::MaximumFlowSolver::setNodes(int n) {
+    nodes = n;
+    level = std::vector<int>(n, 0); // Initialize level vector with size n
+    initializeEmptyFlowGraph(); // Initialize the flow graph
+}
+
+bool MaximumFlow::MaximumFlowSolver::bfs() {
     // Initialize all levels to -1
     std::fill(level.begin(), level.end(), -1);
     std::queue<int> queue;
@@ -152,7 +143,7 @@ bool MaximumFlow::Dinics::bfs() {
     return level[sink] != -1;
 }
 
-int  MaximumFlow::Dinics::dfs(int curr, std::vector<int>& next, int flow) {
+int  MaximumFlow::MaximumFlowSolver::dfs(int curr, std::vector<int>& next, int flow) {
     if (curr == sink) return flow;
     int numEdges = graph[curr].size();
     for (; next[curr] < numEdges; next[curr]++) {

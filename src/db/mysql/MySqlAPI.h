@@ -60,8 +60,10 @@ public:
     /// Get a list of transfers ready to go for the given queues
     /// @param queues       Queues for which to check (see getQueuesWithPending)
     /// @param[out] files   A map where the key is the VO. The value is a list of transfers belonging to that VO
+    /// @param slotsPerLink Max number of available slots for each link, as computed by the allocator
     virtual void getReadyTransfers(const std::vector<QueueId>& queues,
-        std::map< std::string, std::list<TransferFile>>& files);
+        std::map< std::string, std::list<TransferFile>>& files,
+        std::map<Pair, int> &slotsPerLink);
 
     /// Update the status of a transfer
     /// @param jobId            The job ID
@@ -338,7 +340,7 @@ public:
     /// Get link capacities for the given queues
     /// @param queues       Queues for which to check (see getQueuesWithPending)
     /// @param[out] files   A map where the key is the VO. The value is a list of transfers belonging to that VO
-    virtual std::map<std::pair<std::string, std::string>, int> getLinkCapacities(const std::vector<QueueId>& queues,
+    virtual std::map<Pair, int> getLinkCapacities(const std::vector<QueueId>& queues,
         std::map< std::string, std::list<TransferFile>>& files);
 
 private:

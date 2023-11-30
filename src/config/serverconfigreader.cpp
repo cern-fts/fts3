@@ -511,14 +511,14 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Enable or disable experimental features of the TAPE REST API"
     )
     (
-        "TransferServiceAllocatorAlgorithm",
-        po::value<std::string>( &(_vars["TransferServiceAllocatorAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_ALLOCATOR_ALGORITHM),
-        "Specify transfer service's slot allocation algorithm as MAXIMUM_FLOW or GREEDY"
+        "TransfersServiceAllocatorAlgorithm",
+        po::value<std::string>( &(_vars["TransfersServiceAllocatorAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_ALLOCATOR_ALGORITHM),
+        "Specify transfer service's slot allocation algorithm as MAXIMUM_FLOW or GREEDY (default)"
     )
     (
-        "TransferServiceSchedulingAlgorithm",
-        po::value<std::string>( &(_vars["TransferServiceSchedulingAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_SCHEDULING_ALGORITHM),
-        "Specify transfer service's task scheduling algorithm as RANDOMIZED or DEFICIT"
+        "TransfersServiceSchedulingAlgorithm",
+        po::value<std::string>( &(_vars["TransfersServiceSchedulingAlgorithm"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFER_SERVICE_SCHEDULING_ALGORITHM),
+        "Specify transfer service's task scheduling algorithm as DEFICIT or RANDOMIZED (default)"
     )
     ;
 
