@@ -18,3 +18,4 @@ cmake_minimum_required(VERSION 2.8)
 
 define_test (VoShares fts_server_lib)
 define_test (UrlCopyCmd fts_server_lib)
+define_test (MaximumFlow fts_server_lib)
