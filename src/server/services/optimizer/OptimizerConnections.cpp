@@ -486,9 +486,6 @@ int Optimizer::getReducedDecision(const Pair &pair, float tputLimit, float tput,
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
     int decision = 0;
-    int minDecision = std::numeric_limits<int>::max();  
-    float reduceRatio = 0.0; 
-    bool enforceLimit = false; 
     std::stringstream rationale;
 
     // Start ticking!
