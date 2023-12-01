@@ -199,10 +199,10 @@ public:
             }            
 
             // Queries database to get current instantaneous throughput value.
-            if(SEState.outboundMaxThroughput > 0) {
+            if (SEState.outboundMaxThroughput > 0) {
                 SEState.asSourceThroughputInst = getThroughputAsSourceInst(se);
             }
-            if(SEState.inboundMaxThroughput > 0) { 
+            if (SEState.inboundMaxThroughput > 0) { 
                 SEState.asDestThroughputInst = getThroughputAsDestinationInst(se);                
             }
 
@@ -273,7 +273,7 @@ public:
             }
 
             // Queries database to get current instantaneous throughput value.
-            if(netLinkState.maxThroughput > 0) {
+            if (netLinkState.maxThroughput > 0) {
                 netLinkState.throughputInst = getThroughputOverNetLinkInst(link);
             }
 
