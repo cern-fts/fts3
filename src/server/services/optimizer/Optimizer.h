@@ -75,7 +75,7 @@ struct PairState {
     // Average number of concurrent connections in the past time interval 
     // Note: This is based off of the average file count (activeCount) 
     // it is only accurate if there are no streams (one connection = one file)
-    int avgActiveConnections; 
+    float avgActiveConnections; 
     int queueSize;
     // Exponential Moving Average
     double ema;
@@ -83,7 +83,7 @@ struct PairState {
     double filesizeAvg, filesizeStdDev;
     // Optimizer last decision
     int optimizerDecision;
-    double avgTput;
+    float avgTput;
     // Links in src-dest pair 
     std::list<std::string> netLinks; 
     
@@ -107,7 +107,7 @@ struct StorageState {
 
     //The following two variables store the window based inbound (asDest) and outbound (asSource) throughput for a given Storage element.
     //These throughput values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    //all the active pairs and summing the corresponding throughput values returned by getThroughputInfo (OptimizerDataSource.cpp) 
+    //all the active pairs and summing the corresponding throughput values returned by getFileStatisticsInfo (OptimizerDataSource.cpp) 
     //for a source-destination pair that involves a given storage element
     double asSourceThroughput;
     double asDestThroughput;
@@ -158,7 +158,7 @@ struct NetLinkState {
 
     // Stores the window based throughput for a given Netlink element 
     // This throughput value is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    // all the active pairs and summing the corresponding throughput and connection values returned by getThroughputInfo (OptimizerDataSource.cpp) 
+    // all the active pairs and summing the corresponding throughput and connection values returned by getFileStatisticsInfo (OptimizerDataSource.cpp) 
     // for a source-destination pair that involves a given link element
     double throughput;
 
@@ -207,8 +207,8 @@ public:
     virtual int getOptimizerValue(const Pair&) = 0;
 
     // Get the weighted throughput for the pair
-    virtual void getThroughputInfo(const Pair &, const boost::posix_time::time_duration &,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev) = 0;
+    virtual void getFileStatisticsInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
+        double *throughput, double *filesizeAvg, double *filesizeStdDev, float *avgConnections) = 0;
 
     virtual time_t getAverageDuration(const Pair&, const boost::posix_time::time_duration&) = 0;
 
@@ -300,7 +300,7 @@ protected:
     int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range, int previousValue);
 
     // Calculates the reduced optimizer decision if throughput limits on storage element or netlinks are exceeded 
-    int getReducedDecision(const Pair &pair, float tputLimit, float tput, int connections, int numPairs, Range range);
+    int getFairShareDecision(const Pair &pair, float tputLimit, float tput, int connections, int numPairs, Range range, int previousDecision);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored

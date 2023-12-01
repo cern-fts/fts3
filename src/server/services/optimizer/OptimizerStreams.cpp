@@ -44,7 +44,7 @@ void Optimizer::optimizeStreamsForPair(OptimizerMode optMode, const Pair &pair)
     // Read in PairState
     auto state = currentPairStateMap[pair];
 
-    int connectionsAvailable = state.connections;
+    int connectionsAvailable = state.optimizerDecision;
     int availableTransfers = state.activeCount + state.queueSize;
     int streamsDecision = 1;
 

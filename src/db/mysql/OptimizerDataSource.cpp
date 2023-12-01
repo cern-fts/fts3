@@ -323,8 +323,8 @@ public:
         return currentActive;
     }
 
-    void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev)
+    void getFileStatisticsInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
+        double *throughput, double *filesizeAvg, double *filesizeStdDev, float *avgConnections)
     {
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -349,6 +349,9 @@ public:
 
         int64_t totalBytes = 0;
         std::vector<int64_t> filesizes;
+
+        //variables for calculating average connections
+        double totalConnectionChanges = 0;
 
         for (auto j = transfers.begin(); j != transfers.end(); ++j) {
             auto transferred = j->get<long long>("transferred", 0.0);
@@ -385,10 +388,26 @@ public:
             if (filesize > 0) {
                 filesizes.push_back(filesize);
             }
+
+            //calculating changes in actual connections
+            if(start < now && start > windowStart)
+            {
+                totalConnectionChanges += difftime(now, start); //total time with the new connection
+            }
+            
+            if(end < now && end > windowStart)
+            {
+                totalConnectionChanges -= difftime(now, end); //total time without the old connection
+            }
         }
 
         *throughput = totalBytes / interval.total_seconds();
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Throughput for " << pair << ": " << *throughput << commit;
+
+        //calculating the average connections over the time interval 
+        //currentActiveConnections * interval.total_seconds() + totalConnectionChanges is the integral of the connections over the previous time interval
+        *avgConnections = (currentActiveConnections * interval.total_seconds() + totalConnectionChanges) / interval.total_seconds();
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Average active connections over last time interval" << pair << ": " << *avgConnections << commit;
 
         // Statistics on the file size
         if (!filesizes.empty()) {
