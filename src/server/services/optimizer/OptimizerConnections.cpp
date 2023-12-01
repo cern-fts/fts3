@@ -327,7 +327,6 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
     std::stringstream rationale;
     StorageState se; 
     NetLinkState netLinkState;
-    int decision; 
 
     if(windowBasedThroughputLimitEnforcement)
     {
