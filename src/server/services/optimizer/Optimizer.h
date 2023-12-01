@@ -72,23 +72,27 @@ struct PairState {
     double successRate;
     int retryCount;
     int activeCount;
+    // Average number of concurrent connections in the past time interval 
+    // Note: This is based off of the average file count (activeCount) 
+    // it is only accurate if there are no streams (one connection = one file)
+    int avgActiveConnections; 
     int queueSize;
     // Exponential Moving Average
     double ema;
     // Filesize statistics
     double filesizeAvg, filesizeStdDev;
     // Optimizer last decision
-    int connections;
+    int optimizerDecision;
     double avgTput;
     // Links in src-dest pair 
     std::list<std::string> netLinks; 
     
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), connections(1), avgTput(0), netLinks(0) {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), optimizerDecision(1), avgTput(0), netLinks(0) {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
-        activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), connections(conn),
+        activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), optimizerDecision(conn),
         avgTput(0), netLinks(0) {}
 };
 
@@ -154,19 +158,15 @@ struct NetLinkState {
 
     // Stores the window based throughput for a given Netlink element 
     // This throughput value is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    // all the active pairs and summing the corresponding throughput values returned by getThroughputInfo (OptimizerDataSource.cpp) 
+    // all the active pairs and summing the corresponding throughput and connection values returned by getThroughputInfo (OptimizerDataSource.cpp) 
     // for a source-destination pair that involves a given link element
     double throughput;
 
-    // Stores the total connections for a given Netlink element 
+    // Stores the total connections and total pairs, respectively, for a given Netlink element 
     // This is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    // all the active pairs and summing the corresponding connections based on the pair's current optimizer decision  
-    // for a source-destination pair that involves a given NetLink element 
-    int connections; 
-
-    // Stores the total pairs for a given NetLink element
-    // This is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    // all the active pairs that involve a given Netlink element
+    // all the active pairs and summing the corresponding connections based on the pair's estimated average
+    // actual connections for a source-destination pair that involves a given NetLink element 
+    int connections;
     int numPairs; 
 
     // These values are storage the limits for the given Link element 
@@ -314,7 +314,12 @@ protected:
 
     // Gets and saves current performance on all pairs and storage elements 
     // in currentPairStateMap and currentSEStateMap
+    int getAvgActiveConnections(const Pair &pair);
+
+    // Gets and saves current performance on all pairs and storage elements 
+    // in currentPairStateMap and currentSEStateMap
     void getCurrentIntervalInputState(const std::list<Pair> &);
+
 public:
     Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks);
     ~Optimizer();

@@ -42,15 +42,45 @@ static inline double exponentialMovingAverage(double sample, double alpha, doubl
 
 static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 {
-    if(avgDuration > 0 && avgDuration < 30) {
+    if (avgDuration > 0 && avgDuration < 30) {
         return boost::posix_time::minutes(5);
     }
-    else if(avgDuration > 30 && avgDuration < 900) {
+    else if (avgDuration > 30 && avgDuration < 900) {
         return boost::posix_time::minutes(15);
     }
     else {
         return boost::posix_time::minutes(30);
     }
+}
+
+// Calculate an estimate of the average active number of connections 
+// in the past time interval using drain rate, current activeCount, 
+// and previous activeCount 
+int Optimizer::getAvgActiveConnections(const Pair &pair) {
+    int avgActiveConnections; 
+    PairState currentPair = currentPairStateMap[pair];
+    PairState prevPair = previousPairStateMap[pair];
+
+    // Case 1: activeCount is not equal to the optimizer decision 
+    // Take the average between previous activeCount and current activeCount 
+    // This estimation assumes linear drain rate, which may not be fully accurate 
+    // but it is more accurate than basing it off of the optimizer decision 
+    if (currentPair.activeCount != currentPair.optimizerDecision) {
+        avgActiveConnections = (prevPair.activeCount + currentPair.activeCount) / 2; // take the absolute value 
+    }
+
+    // Case 2: activeCount is equal to the optimizer decision 
+    // Use drain rate to calculate at the time at which the number of connections 
+    // reduces to the target optimizer decision for a more accurate estimation 
+    else {
+        // Check if the current decision is less than the previous decision 
+        if (currentPair.activeCount < prevPair.activeCount) {
+            avgActiveConnections = std::pow((prevPair.activeCount - currentPair.activeCount), 2) 
+        }
+
+        avgActiveConnections = 
+    }
+    return 0;
 }
 
 // Purpose: Gets and saves current performance on all pairs in 
@@ -86,6 +116,9 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         // Compute throughput values (used in Step 2)      
         dataSource->getThroughputInfo(pair, timeFrame,
           &(current.throughput), &(current.filesizeAvg), &(current.filesizeStdDev));
+
+        // Compute an estimate of the actual number of connections since it can deviate from optimizer decision 
+        current.avgActiveConnections = getAvgActiveConnections(pair); 
         
         // Save to map
         currentPairStateMap[pair] = current;
@@ -101,14 +134,14 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         if (currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
            && currentSEStateMap[pair.source].outboundMaxThroughput > 0) {
             currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
-            currentSEStateMap[pair.source].asSourceConnections += current.connections;
+            currentSEStateMap[pair.source].asSourceConnections += current.optimizerDecision;
             currentSEStateMap[pair.source].asSourceNumPairs += 1;
         }
 
         if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
            && currentSEStateMap[pair.destination].inboundMaxThroughput > 0) {
             currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
-            currentSEStateMap[pair.destination].asDestConnections += current.connections;
+            currentSEStateMap[pair.destination].asDestConnections += current.optimizerDecision;
             currentSEStateMap[pair.destination].asDestNumPairs += 1; 
         }
 
@@ -121,7 +154,7 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
             if (currentNetLinkStateMap.find(netLink) != currentNetLinkStateMap.end() 
                 && currentNetLinkStateMap[netLink].maxThroughput > 0) {
                     currentNetLinkStateMap[netLink].throughput += current.throughput; 
-                    currentNetLinkStateMap[netLink].connections += current.connections;
+                    currentNetLinkStateMap[netLink].connections += current.optimizerDecision;
                     currentNetLinkStateMap[netLink].numPairs += 1;
             }
         }         
@@ -370,7 +403,7 @@ int Optimizer::getReducedDecision(const Pair &pair, float tputLimit, float tput,
     // Calculate each pair's current throughput per connection ratio to account for TCP congestion control 
     // We want to distribute throughput evenly among all pairs competing for the resource 
     // This may result in a different number of connections for each pair, since each pair could have a different (throughput/connections) ratio 
-    float pairTputPerConnection = currentPairStateMap[pair].avgTput/currentPairStateMap[pair].connections; 
+    float pairTputPerConnection = currentPairStateMap[pair].avgTput/currentPairStateMap[pair].optimizerDecision; 
     
     int decision = static_cast<int>(tputPerPair/pairTputPerConnection); 
     decision = std::max(decision, range.min); 
@@ -562,7 +595,7 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
 
     //Stores current PairState (including the optimizer decision) in the previousPairStateMap
     previousPairStateMap[pair] = current;
-    previousPairStateMap[pair].connections = decision;
+    previousPairStateMap[pair].optimizerDecision = decision;
     
     dataSource->storeOptimizerDecision(pair, decision, current, diff, rationale);
 

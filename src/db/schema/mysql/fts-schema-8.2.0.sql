@@ -509,13 +509,13 @@ CREATE TABLE `t_job_backup` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `t_netlink_config`
+-- Table structure for table `t_link_config`
 --
 
-DROP TABLE IF EXISTS `t_netlink_config`;
+DROP TABLE IF EXISTS `t_link_config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `t_netlink_config` (
+CREATE TABLE `t_link_config` (
   `source_se` varchar(150) NOT NULL,
   `dest_se` varchar(150) NOT NULL,
   `symbolic_name` varchar(150) NOT NULL,
@@ -531,7 +531,7 @@ CREATE TABLE `t_netlink_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO t_netlink_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
+INSERT INTO t_link_config (source_se, dest_se, symbolic_name, min_active, max_active, optimizer_mode, nostreams, no_delegation)
 VALUES ('*', '*', '*', 2, 130, 2, 0, 'off');
 
 --
@@ -727,7 +727,7 @@ CREATE TABLE `t_share_config` (
   `vo` varchar(100) NOT NULL,
   `active` int NOT NULL,
   PRIMARY KEY (`source`,`destination`,`vo`),
-  CONSTRAINT `t_share_config_fk` FOREIGN KEY (`source`, `destination`) REFERENCES `t_netlink_config` (`source_se`, `dest_se`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  CONSTRAINT `t_share_config_fk` FOREIGN KEY (`source`, `destination`) REFERENCES `t_link_config` (`source_se`, `dest_se`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
