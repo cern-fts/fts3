@@ -19,10 +19,12 @@
  */
 #include "config/ServerConfig.h"
 #include <monitoring/msg-ifce.h>
+#include <limits>
 #include "Optimizer.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "config/ServerConfig.h"
 
 using namespace fts3::common;
 
@@ -127,7 +129,7 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         // STEP 2: DERIVING SE STATE FROM PAIR STATE
         // ===============================================   
 
-        // Increments SE throughput value by the pair's throughput value.
+        // Increments SE throughput and total connections value by the pair's throughput and previous optimizer decision value.
         // Because the default and current majority state is no throughput limitation,
         // the if condition is added.
         // Potential difference in list of SEs compared to list of pairs, does not get handled
@@ -484,6 +486,9 @@ int Optimizer::getReducedDecision(const Pair &pair, float tputLimit, float tput,
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
     int decision = 0;
+    int minDecision = std::numeric_limits<int>::max();  
+    float reduceRatio = 0.0; 
+    bool enforceLimit = false; 
     std::stringstream rationale;
 
     // Start ticking!

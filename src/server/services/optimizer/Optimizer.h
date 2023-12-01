@@ -131,6 +131,14 @@ struct StorageState {
     int outboundMaxActive;
     double inboundMaxThroughput;
     double outboundMaxThroughput;
+ 
+    //These variables store the Optimizer decision if the throughput limits are being exceeded for a given Storage Element 
+    //They are calculated in enforceThroughputLimits called in optimizeConnectionsForPair (OptimizerConnections.cpp) by
+    //redistributing the connections between all the pairs sharing the SE and reducing by a ratio of ThroughputLimit/ActualThroughput. 
+    int sourceLimitDecision; 
+    int sourceLimitDecisionInst;
+    int destLimitDecision; 
+    int destLimitDecisionInst;
 
     StorageState(): asSourceThroughputInst(0), asDestThroughputInst(0),
                     asSourceThroughput(0), asDestThroughput(0), 
