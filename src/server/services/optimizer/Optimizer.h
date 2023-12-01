@@ -285,6 +285,10 @@ protected:
     double defaultNetLinkMaxThroughput;
     int defaultNetLinkMaxActive;
 
+    bool windowBasedThroughputLimitEnforcement;
+    bool netLinkThroughputLimitEnforcement;
+    bool proportionalDecreaseThroughputLimitEnforcement;
+
     // Read currentSEStateMap values into a StorageLimits object for the purposes of a single pair.
     void getStorageLimits(const Pair &pair, StorageLimits *limits);
 
@@ -293,7 +297,7 @@ protected:
 
     // Enforce throughput limits on storage elements and netlinks used by a given pair. 
     // Returns reduced optimizer decision for given pair if throughput limit is exceeded. 
-    int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range);
+    int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range, int previousValue);
 
     // Calculates the reduced optimizer decision if throughput limits on storage element or netlinks are exceeded 
     int getReducedDecision(const Pair &pair, float tputLimit, float tput, int connections, int numPairs, Range range);
