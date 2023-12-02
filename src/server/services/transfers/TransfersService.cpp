@@ -59,6 +59,11 @@ TransfersService::TransfersService(): BaseService("TransfersService")
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
+
+
+    schedulerFunction = Scheduler::getSchedulerFunction();
+
+    allocatorFunction = Allocator::getAllocatorFunction();
 }
 
 
@@ -265,40 +270,164 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
 
 /**
- * Transfers in uneschedulable queues must be set to fail
- */
-static void failUnschedulable(const std::vector<QueueId> &unschedulable)
-{
-    Producer producer(config::ServerConfig::instance().get<std::string>("MessagingDirectory"));
+ * Execute the file transfer.
+ * (This was originally in getFiles.)
+ * This is also where we consider the slots left for dest and src nodes.
+ * TODO: The Allocator already takes into consideration slotsLeftForDestination and slotsLeftForSource.
+ *       The code here will be modified in the future to remove redundancy.
+ *       For now this function will keep the same code as the original getFiles() to ensure correctness.
+*/
+void TransfersService::executeFileTransfers(
+    std::map<std::string, std::list<TransferFile>> scheduledFiles, 
+    int availableUrlCopySlots,
+    std::vector<QueueId> queues
+){
+    auto db = DBSingleton::instance().getDBObjectInstance();
 
-    std::map<std::string, std::list<TransferFile> > voQueues;
-    DBSingleton::instance().getDBObjectInstance()->getReadyTransfers(unschedulable, voQueues);
-
-    for (auto iterList = voQueues.begin(); iterList != voQueues.end(); ++iterList) {
-        const std::list<TransferFile> &transferList = iterList->second;
-        for (auto iterTransfer = transferList.begin(); iterTransfer != transferList.end(); ++iterTransfer) {
-            events::Message status;
-
-            status.set_transfer_status("FAILED");
-            status.set_timestamp(millisecondsSinceEpoch());
-            status.set_process_id(0);
-            status.set_job_id(iterTransfer->jobId);
-            status.set_file_id(iterTransfer->fileId);
-            status.set_source_se(iterTransfer->sourceSe);
-            status.set_dest_se(iterTransfer->destSe);
-            status.set_transfer_message("No share configured for this VO");
-            status.set_retry(false);
-            status.set_errcode(EPERM);
-
-            producer.runProducerStatus(status);
+    ThreadPool<FileTransferExecutor> execPool(execPoolSize);
+    std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
+    for (auto i = queues.begin(); i != queues.end(); ++i) {
+        // To reduce queries, fill in one go limits as source and as destination
+        if (slotsLeftForDestination.count(i->destSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i->destSe);
+            slotsLeftForDestination[i->destSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
+            slotsLeftForSource[i->destSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
         }
+        if (slotsLeftForSource.count(i->sourceSe) == 0) {
+            StorageConfig seConfig = db->getStorageConfig(i->sourceSe);
+            slotsLeftForDestination[i->sourceSe] = seConfig.inboundMaxActive>0?seConfig.inboundMaxActive:60;
+            slotsLeftForSource[i->sourceSe] = seConfig.outboundMaxActive>0?seConfig.outboundMaxActive:60;
+        }
+        // Once it is filled, decrement
+        slotsLeftForDestination[i->destSe] -= i->activeCount;
+        slotsLeftForSource[i->sourceSe] -= i->activeCount;
+    }
+
+    try 
+    {
+        if (scheduledFiles.empty())
+            return;
+
+        // Count of scheduled transfers for activity
+        std::map<std::string, int> scheduledByActivity;
+
+        // create transfer-file handler
+        TransferFileHandler tfh(scheduledFiles);
+
+        std::map<std::pair<std::string, std::string>, std::string> proxies;
+
+        // loop until all files have been served
+        int initial_size = tfh.size();
+
+        std::set<std::string> warningPrintedSrc, warningPrintedDst;
+        while (!tfh.empty() && availableUrlCopySlots > 0)
+        {
+            // iterate over all VOs
+            for (auto it_vo = tfh.begin(); it_vo != tfh.end() && availableUrlCopySlots > 0; it_vo++)
+            {
+                if (boost::this_thread::interruption_requested())
+                {
+                    execPool.interrupt();
+                    return;
+                }
+
+                boost::optional<TransferFile> opt_tf = tfh.get(*it_vo);
+                // if this VO has no more files to process just continue
+                if (!opt_tf)
+                    continue;
+
+                TransferFile & tf = *opt_tf;
+
+                // just to be sure
+                if (tf.fileId == 0 || tf.userDn.empty() || tf.credId.empty())
+                    continue;
+
+                if (!scheduledByActivity.count(tf.activity)) {
+                    scheduledByActivity[tf.activity] = 0;
+                }
+
+                std::pair<std::string, std::string> proxy_key(tf.credId, tf.userDn);
+
+                if (proxies.find(proxy_key) == proxies.end())
+                {
+                    proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
+                }
+
+                if (slotsLeftForDestination[tf.destSe] <= 0) {
+                    if (warningPrintedDst.count(tf.destSe) == 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                            << "Reached limitation for destination " << tf.destSe
+                            << commit;
+                        warningPrintedDst.insert(tf.destSe);
+                    }
+                }
+                else if (slotsLeftForSource[tf.sourceSe] <= 0) {
+                    if (warningPrintedSrc.count(tf.sourceSe) == 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                            << "Reached limitation for source " << tf.sourceSe
+                            << commit;
+                        warningPrintedSrc.insert(tf.sourceSe);
+                    }
+                } else {
+                    // Increment scheduled transfers by activity
+                    scheduledByActivity[tf.activity]++;
+
+                    FileTransferExecutor *exec = new FileTransferExecutor(tf,
+                        monitoringMessages, infosys, ftsHostName,
+                        proxies[proxy_key], logDir, msgDir);
+
+                    execPool.start(exec);
+                    --availableUrlCopySlots;
+                    --slotsLeftForDestination[tf.destSe];
+                    --slotsLeftForSource[tf.sourceSe];
+                }
+            }
+        }
+
+        if (availableUrlCopySlots <= 0 && !tfh.empty()) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Reached limitation of MaxUrlCopyProcesses"
+                << commit;
+        }
+
+        // wait for all the workers to finish
+        execPool.join();
+        int scheduled = execPool.reduce(std::plus<int>());
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<"Threadpool processed: " << initial_size
+                << " files (" << scheduled << " have been scheduled)" << commit;
+
+        if (scheduled > 0) {
+            std::ostringstream out;
+
+            for (auto it_activity = scheduledByActivity.begin();
+                 it_activity != scheduledByActivity.end(); ++it_activity) {
+                std::string activity_name = it_activity->first;
+                std::replace(activity_name.begin(), activity_name.end(), ' ', '_');
+                out << " " << activity_name << "=" << it_activity->second;
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scheduled by activity:" << out.str() << commit;
+        }
+    }
+    catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:scheduleFiles" << commit;
+        execPool.interrupt();
+        execPool.join();
+    }
+    catch (std::exception& e)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:scheduleFiles " << e.what() << commit;
+    }
+    catch (...)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
     }
 }
 
 
 void TransfersService::executeUrlcopy()
 {
-    std::vector<QueueId> queues, unschedulable;
+    std::vector<QueueId> queues;
     boost::thread_group g;
 
     // Bail out as soon as possible if there are too many url-copy processes
