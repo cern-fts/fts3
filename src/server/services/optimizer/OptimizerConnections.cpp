@@ -390,7 +390,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                     decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
 
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \ 
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
                     << "S&J: Destination throughput limit reached " << pair << ": " << storageLimits.throughputDestination \
                     << ", Actual instantaneous throughput on destination: " << se.asDestThroughputInst \
                     << ", Fair share decision: " << decision << commit;
@@ -418,7 +418,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
 
                     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
                         << "S&J: Netlink throughput limit reached on " << netLink << " used by pair " \
-                        << pair << ": " << netLinkLimits[netLink].throughput \ 
+                        << pair << ": " << netLinkLimits[netLink].throughput \
                         << ", Actual window-based throughput on netlink: " << netLinkState.throughput \
                         << ", Fair share decision: " << decision << commit;
 
@@ -436,8 +436,8 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
 
                     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
                         << "S&J: Netlink throughput limit reached on " << netLink << " used by pair " \
-                        << pair << ": " << netLinkLimits[netLink].throughput \ 
-                        << ", Actual instantaneous throughput on netlink: " << netLinkState.throughputInst \ 
+                        << pair << ": " << netLinkLimits[netLink].throughput \
+                        << ", Actual instantaneous throughput on netlink: " << netLinkState.throughputInst \
                         << ", Fair share decision: " << decision << commit;
 
                     rationale << "Netlink (instantaneous) throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
@@ -455,7 +455,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
     }
     else {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
-            << "S&J: Resource limits are exceeded for pair " << pair \ 
+            << "S&J: Resource limits are exceeded for pair " << pair \
             << ", Actual min decision =  " << minDecision << commit;
     }
     return minDecision; 
@@ -489,7 +489,7 @@ int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tpu
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
         << "S&J: Proposed fair share target for " << pair << ": " << target \
-        << ", Proposed decision (overshoot): " << decision \ 
+        << ", Proposed decision (overshoot): " << decision \
         << ", Previous decision: " << previousDecision \
         << ", Throughput per connection: " << pairTputPerConnection \
         << commit;
