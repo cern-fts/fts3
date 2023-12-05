@@ -55,38 +55,6 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
     }
 }
 
-/*
-// Calculate an estimate of the average active number of connections 
-// in the past time interval using drain rate, current activeCount, 
-// and previous activeCount 
-int Optimizer::getAvgActiveConnections(const Pair &pair) {
-    int avgActiveConnections; 
-    PairState currentPair = currentPairStateMap[pair];
-    PairState prevPair = previousPairStateMap[pair];
-
-    // Case 1: activeCount is not equal to the optimizer decision 
-    // Take the average between previous activeCount and current activeCount 
-    // This estimation assumes linear drain rate, which may not be fully accurate 
-    // but it is more accurate than basing it off of the optimizer decision 
-    if (currentPair.activeCount != currentPair.optimizerDecision) {
-        avgActiveConnections = (prevPair.activeCount + currentPair.activeCount) / 2; // take the absolute value 
-    }
-
-    // Case 2: activeCount is equal to the optimizer decision 
-    // Use drain rate to calculate at the time at which the number of connections 
-    // reduces to the target optimizer decision for a more accurate estimation 
-    else {
-        // Check if the current decision is less than the previous decision 
-        if (currentPair.activeCount < prevPair.activeCount) {
-            avgActiveConnections = std::pow((prevPair.activeCount - currentPair.activeCount), 2) 
-        }
-
-        avgActiveConnections = 
-    }
-    return 0;
-}
-*/
-
 // Purpose: Gets and saves current performance on all pairs in 
 // memory stores in currentPairStateMap and currentSEStateMap
 // Input: List of active pairs, as well as SQL database data.
@@ -343,11 +311,11 @@ void Optimizer::getNetLinkLimits(const Pair &pair, std::map<std::string, NetLink
 
 // Returns the optimizer decision for a given pair if the throughput limits on its storage elements or netlinks are being exceeded 
 // If multiple resource limits are being exceeded, returns the minimum optimizer decision to ensure fairness at the pair's bottleneck resource 
-int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range, int previousValue)
+int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, 
+                                        NetLinkLimits> netLinkLimits, Range range, int previousValue)
 {
     int decision = 0; 
     int minDecision = std::numeric_limits<int>::max();  
-    float reduceRatio = 0.0; 
     std::stringstream rationale;
     StorageState se; 
     NetLinkState netLinkState;
@@ -365,6 +333,12 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
+
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                    << "S&J: Source throughput limit reached " << pair << ": " << storageLimits.throughputSource \
+                    << ", Actual window-based throughput on source: " << se.asSourceThroughput \
+                    << ", Fair share decision: " << decision << commit;
+
                 rationale << "Source throughput limitation reached (" << storageLimits.throughputSource << ")";
                 minDecision = std::min(decision, minDecision); 
             }
@@ -376,6 +350,12 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
+
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                    << "S&J: Source throughput limit reached " << pair << ": " << storageLimits.throughputSource \
+                    << ", Actual window-based throughput on source: " << se.asSourceThroughput \
+                    << ", Fair share decision: " << decision << commit;
+                        
                 rationale << "Source (instantaneous) throughput limitation reached (" << storageLimits.throughputSource << ")";
                 minDecision = std::min(decision, minDecision); 
             }
@@ -392,6 +372,12 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
+
+              FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                    << "S&J: Source throughput limit reached " << pair << ": " << storageLimits.throughputSource \
+                    << ", Actual window-based throughput on source: " << se.asSourceThroughput \
+                    << ", Fair share decision: " << decision << commit;
+
                 rationale << "Destination throughput limitation reached (" << storageLimits.throughputDestination << ")";
                 minDecision = std::min(decision, minDecision); 
             }
@@ -403,6 +389,12 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
                 }
+
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \ 
+                    << "S&J: Destination throughput limit reached " << pair << ": " << storageLimits.throughputDestination \
+                    << ", Actual instantaneous throughput on destination: " << se.asDestThroughputInst \
+                    << ", Fair share decision: " << decision << commit;
+
                 rationale << "Destination (instantaneous) throughput limitation reached (" << storageLimits.throughputDestination << ")";
                 minDecision = std::min(decision, minDecision); 
             }        
@@ -423,7 +415,14 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                     else {
                         decision = std::max(previousValue - decreaseStepSize, range.min);
                     }
-                    rationale << "Link throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
+
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                        << "S&J: Netlink throughput limit reached on " << netLink << " used by pair " \
+                        << pair << ": " << netLinkLimits[netLink].throughput \ 
+                        << ", Actual window-based throughput on netlink: " << netLinkState.throughput \
+                        << ", Fair share decision: " << decision << commit;
+
+                    rationale << "Netlink throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
                     minDecision = std::min(decision, minDecision); 
                 }
                 if (netLinkState.throughputInst > netLinkLimits[netLink].throughput) {
@@ -434,16 +433,30 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                     else {
                         decision = std::max(previousValue - decreaseStepSize, range.min);
                     }
-                    rationale << "Bottleneck link (instantaneous) throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
+
+                    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                        << "S&J: Netlink throughput limit reached on " << netLink << " used by pair " \
+                        << pair << ": " << netLinkLimits[netLink].throughput \ 
+                        << ", Actual instantaneous throughput on netlink: " << netLinkState.throughputInst \ 
+                        << ", Fair share decision: " << decision << commit;
+
+                    rationale << "Netlink (instantaneous) throughput limitation reached (" << netLinkLimits[netLink].throughput << ")";
                     minDecision = std::min(decision, minDecision); 
                 }
             }
         }
     }
     // if minDecision has not been modified, the throughput limits are not being exceeded 
-    // return -1, and proceed with the optimizer algorithm in optimizeConnectionsForPair to find decision 
+    // return 0, and proceed with the optimizer algorithm in optimizeConnectionsForPair to find decision 
     if (minDecision == std::numeric_limits<int>::max()) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+            << "S%J: No resource limits are exceeded for pair " << pair << commit;
         minDecision = 0; 
+    }
+    else {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+            << "S&J: Resource limits are exceeded for pair " << pair \ 
+            << ", Actual min decision =  " << minDecision << commit;
     }
     return minDecision; 
 }
@@ -465,6 +478,12 @@ int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tpu
     if(decision > previousDecision){
         decision = previousDecision + 1; //if the allocation of the fair share of throughput causes the decision to increase above the previous value, treat it as an optimizer increase
     }                                   // this is to promote fairness while also making sure we don't inadvertently cause an increase in connections since the scheduler can theoretically start connections faster than it can stop them
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+        << "S&J: Proposed fair share for " << pair << ": " << decision \
+        << ", Previous decision: " << previousDecision \
+        << ", Throughput per connection: " << pairTputPerConnection \
+        << commit;
 
     decision = std::max(decision, range.min);
     return decision; 
@@ -673,6 +692,21 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << "Optimizer: Active for " << pair << " set to " << decision << ", running " << current.activeCount
         << " (" << elapsed.wall << "ns)" << commit;
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+        << "S&J: Optimizer Decision Info: Pair: " << pair \
+        << ", Final Decision: " << decision \
+        << ", Running: " << current.activeCount \
+        << ", Avg active connections: " << current.avgActiveConnections \
+        << ", Queue: " << current.queueSize \
+        << ", EMA: " << current.ema \
+        << ", Avg filesize: " << current.filesizeAvg \
+        << ", Filesize std dev: " << current.filesizeStdDev \
+        << ", Success Rate: " << current.successRate \
+        << ", diff: " << diff \
+        << " (" << elapsed.wall << "ns)" \
+        << ", rationale: " << rationale << commit;
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << rationale << commit;
 
