@@ -98,9 +98,6 @@ void OptimizerService::runService()
     auto increaseAggressiveStep = config::ServerConfig::instance().get<int>("OptimizerAggressiveIncreaseStep");
     auto decreaseStep = config::ServerConfig::instance().get<int>("OptimizerDecreaseStep");
 
-    auto defaultNetlinkMaxActive = config::ServerConfig::instance().get<int>("DefaultNetlinkMaxActive");
-    auto defaultNetlinkMaxThroughput = config::ServerConfig::instance().get<double>("DefaultNetlinkMaxThrouput");
-
     OptimizerNotifier optimizerCallbacks(
         config::ServerConfig::instance().get<bool>("MonitoringMessaging"),
         config::ServerConfig::instance().get<std::string>("MessagingDirectory")

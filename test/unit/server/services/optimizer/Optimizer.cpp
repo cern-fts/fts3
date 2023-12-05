@@ -248,7 +248,7 @@ public:
         return i->second.back().activeDecision;
     }
 
-    void getFileStatisticsInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
+    void getCurrentIntervalTransferInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
         double *throughput, double *filesizeAvg, double *filesizeStdDev, float *avgConnections)
     {
         *throughput = *filesizeAvg = *filesizeStdDev = 0;

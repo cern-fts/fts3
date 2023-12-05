@@ -223,22 +223,7 @@ public:
         // Netlink limits
         soci::indicator nullCapacity;
 
-        // First read in global default values:
-        int ActiveGlobal = 0;
-        double TputGlobal = 0.0;
-        soci::indicator nullActive;
-        soci::indicator nullTput;
-
-        sql <<
-            "SELECT DISTINCT nc.max_active, nc.max_throughput, ns.capacity "
-            "FROM t_netlink_stat ns "
-            "JOIN t_netlink_config nc ON ns.head_ip = nc.head_ip AND ns.tail_ip = nc.tail_ip "
-            "WHERE ns.netlink_id != '*'", 
-            soci::into(ActiveGlobal, nullActive), soci::into(TputGlobal, nullTput);
-
-        (*result)["*"] = NetLinkState(ActiveGlobal, TputGlobal);
-
-        // We then fill in the table for every link
+        // We then fill in the table for every netlink with limits set 
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT DISTINCT ns.netlink_id, nc.min_active, nc.max_active, nc.max_throughput, ns.capacity "
             "FROM t_netlink_stat ns "
@@ -259,7 +244,7 @@ public:
 
             netLinkState.maxActive = i->get<int>("max_active", ind);
             if (ind == soci::i_null) {
-                netLinkState.maxActive = ActiveGlobal; // todo 
+                netLinkState.maxActive = 0; // it will only be called if maxActive > 0  
             }
 
             netLinkState.maxThroughput = i->get<double>("max_throughput", ind);
@@ -267,8 +252,8 @@ public:
                 // if t_netlink_config 'max_throughput' is not set, try t_netlink_stat 'capacity' which is observed by ALTO
                 netLinkState.maxThroughput = i->get<double>("capacity", nullCapacity);
                 if (nullCapacity == soci::i_null) {
-                    // if capacity is null, set to 0  
-                    netLinkState.maxThroughput = TputGlobal; //todo 
+                    // if tput capacity is null, then set to 0 
+                    netLinkState.maxThroughput = 0; // in OptimizerConnections.cpp, check if maxThroughput > 0 to see if limits are configured
                 }
             }
 
@@ -290,7 +275,6 @@ public:
 
     // Writes to range object for a specific pair.
     void getPairLimits(const Pair &pair, Range *range) {
-        
         // Link working range
         soci::indicator isNullMin, isNullMax;
         sql <<
@@ -323,7 +307,10 @@ public:
         return currentActive;
     }
 
-    void getFileStatisticsInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
+
+    // Calculates transfer info for a given pair and time interval
+    // Transfer info includes avg actual connections, avg throughput, avg file size, and file size stdev 
+    void getCurrentIntervalTransferInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
         double *throughput, double *filesizeAvg, double *filesizeStdDev, float *avgConnections)
     {
         static struct tm nulltm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};

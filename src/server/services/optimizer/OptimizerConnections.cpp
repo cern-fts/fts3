@@ -118,7 +118,7 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         current.netLinks = dataSource->getNetLinks(pair); 
 
         // Compute throughput values and an estimate of the actual number of connections (since it can deviate from optimizer decision) (used in Step 2)      
-        dataSource->getFileStatisticsInfo(pair, timeFrame, current.activeCount,
+        dataSource->getCurrentIntervalTransferInfo(pair, timeFrame, current.activeCount,
           &(current.throughput), &(current.filesizeAvg), &(current.filesizeStdDev), &(current.avgActiveConnections));
 
         // Save to map
@@ -135,14 +135,12 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
         if (currentSEStateMap.find(pair.source) != currentSEStateMap.end() 
            && currentSEStateMap[pair.source].outboundMaxThroughput > 0) {
             currentSEStateMap[pair.source].asSourceThroughput += current.throughput;
-            currentSEStateMap[pair.source].asSourceConnections += current.optimizerDecision;
             currentSEStateMap[pair.source].asSourceNumPairs += 1;
         }
 
         if (currentSEStateMap.find(pair.destination) != currentSEStateMap.end()
            && currentSEStateMap[pair.destination].inboundMaxThroughput > 0) {
             currentSEStateMap[pair.destination].asDestThroughput += current.throughput;
-            currentSEStateMap[pair.destination].asDestConnections += current.optimizerDecision;
             currentSEStateMap[pair.destination].asDestNumPairs += 1; 
         }
 
@@ -155,7 +153,6 @@ void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
             if (currentNetLinkStateMap.find(netLink) != currentNetLinkStateMap.end() 
                 && currentNetLinkStateMap[netLink].maxThroughput > 0) {
                     currentNetLinkStateMap[netLink].throughput += current.throughput; 
-                    currentNetLinkStateMap[netLink].connections += current.optimizerDecision;
                     currentNetLinkStateMap[netLink].numPairs += 1;
             }
         }         
@@ -337,16 +334,9 @@ void Optimizer::getNetLinkLimits(const Pair &pair, std::map<std::string, NetLink
             (*limits)[netLink].active = currentNetLinkStateMap[netLink].maxActive;
         }
         else {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "Min throughput link not in t_netLink_stat." << commit;
-            (*limits)[netLink].throughput = defaultNetLinkMaxThroughput;
-            (*limits)[netLink].active = defaultNetLinkMaxActive;
-        }
-
-        if ((*limits)[netLink].throughput == 0) {
-            (*limits)[netLink].throughput = defaultNetLinkMaxThroughput;
-        } 
-        if ((*limits)[netLink].active == 0) {
-            (*limits)[netLink].active = defaultNetLinkMaxActive;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG ) << "NetLink is not in t_netLink_stat." << commit;
+            (*limits)[netLink].throughput = 0;
+            (*limits)[netLink].active = 0; 
         }
     }
 }
@@ -370,7 +360,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 // Check if this has been previously calculated for another pair sharing this resource
                 if(proportionalDecreaseThroughputLimitEnforcement) {
                     decision = getFairShareDecision(pair, storageLimits.throughputSource, se.asSourceThroughput, 
-                                                    se.asSourceConnections, se.asSourceNumPairs, range, previousValue);
+                                                    se.asSourceNumPairs, range, previousValue);
                 }
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
@@ -381,7 +371,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
             if (se.asSourceThroughputInst > storageLimits.throughputSource) {
                 if(proportionalDecreaseThroughputLimitEnforcement) {
                     decision = getFairShareDecision(pair, storageLimits.throughputSource, se.asSourceThroughputInst, 
-                                                    se.asSourceConnections, se.asSourceNumPairs, range, previousValue);
+                                                    se.asSourceNumPairs, range, previousValue);
                 }
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
@@ -397,7 +387,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
             if (se.asDestThroughput > storageLimits.throughputDestination) {
                 if(proportionalDecreaseThroughputLimitEnforcement) {
                     decision = getFairShareDecision(pair,storageLimits.throughputDestination, se.asDestThroughput, 
-                                                    se.asDestConnections, se.asDestNumPairs, range, previousValue);
+                                                    se.asDestNumPairs, range, previousValue);
                 }
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
@@ -408,7 +398,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
             if (se.asDestThroughputInst > storageLimits.throughputDestination) {
                 if(proportionalDecreaseThroughputLimitEnforcement) {   
                     decision = getFairShareDecision(pair, storageLimits.throughputDestination, se.asDestThroughputInst, 
-                                                    se.asDestConnections, se.asDestNumPairs, range, previousValue);
+                                                    se.asDestNumPairs, range, previousValue);
                 }
                 else {
                     decision = std::max(previousValue - decreaseStepSize, range.min);
@@ -428,7 +418,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 if (netLinkState.throughput > netLinkLimits[netLink].throughput) {
                     if(proportionalDecreaseThroughputLimitEnforcement) {
                         decision = getFairShareDecision(pair, netLinkLimits[netLink].throughput, netLinkState.throughput, 
-                                                            netLinkState.connections, netLinkState.numPairs, range, previousValue);
+                                                            netLinkState.numPairs, range, previousValue);
                     }
                     else {
                         decision = std::max(previousValue - decreaseStepSize, range.min);
@@ -439,7 +429,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
                 if (netLinkState.throughputInst > netLinkLimits[netLink].throughput) {
                     if(proportionalDecreaseThroughputLimitEnforcement) {
                         decision = getFairShareDecision(pair, netLinkLimits[netLink].throughput, netLinkState.throughputInst, 
-                                                            netLinkState.connections, netLinkState.numPairs, range, previousValue);
+                                                            netLinkState.numPairs, range, previousValue);
                     }
                     else {
                         decision = std::max(previousValue - decreaseStepSize, range.min);
@@ -459,7 +449,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
 }
 
 // Returns reduced decision if the throughput limit on the given storage element or netlink is being exceeded 
-int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tput, int connections, int numPairs, Range range, int previousDecision)
+int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tput, int numPairs, Range range, int previousDecision)
 {
     // To ensure fairness among the competing pairs using the bottlenecked resource, 
     // we want to give each pair an equal amount of throughput 

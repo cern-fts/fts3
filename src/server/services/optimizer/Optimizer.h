@@ -107,17 +107,10 @@ struct StorageState {
 
     //The following two variables store the window based inbound (asDest) and outbound (asSource) throughput for a given Storage element.
     //These throughput values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    //all the active pairs and summing the corresponding throughput values returned by getFileStatisticsInfo (OptimizerDataSource.cpp) 
+    //all the active pairs and summing the corresponding throughput values returned by getCurrentIntervalTransferInfo (OptimizerDataSource.cpp) 
     //for a source-destination pair that involves a given storage element
     double asSourceThroughput;
     double asDestThroughput;
-
-    //The following two variables store the total inbound (asDest) and outbound (asSource) connections for a given Storage elemnt 
-    //These values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    //all the active pairs and summing the corresponding connections based on the pair's current optimizer decision  
-    //for a source-destination pair that involves a given storage element
-    int asSourceConnections; 
-    int asDestConnections;
 
     //The following two variables store the total inbound (asDest) and outbound (asSource) pairs for a given Storage elemnt 
     //These values are calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
@@ -134,7 +127,6 @@ struct StorageState {
 
     StorageState(): asSourceThroughputInst(0), asDestThroughputInst(0),
                     asSourceThroughput(0), asDestThroughput(0), 
-                    asSourceConnections(0), asDestConnections(0),
                     asSourceNumPairs(0), asDestNumPairs(0), 
                     inboundMaxActive(0), outboundMaxActive(0),
                     inboundMaxThroughput(0),outboundMaxThroughput(0) {}
@@ -142,7 +134,6 @@ struct StorageState {
     StorageState(int ia, double it, int oa, double ot):
                 asSourceThroughputInst(0),asDestThroughputInst(0),
                 asSourceThroughput(0), asDestThroughput(0),
-                asSourceConnections(0), asDestConnections(0),
                 asSourceNumPairs(0), asDestNumPairs(0), 
                 inboundMaxActive(ia), outboundMaxActive(oa),
                 inboundMaxThroughput(it), outboundMaxThroughput(ot) {}
@@ -158,28 +149,27 @@ struct NetLinkState {
 
     // Stores the window based throughput for a given Netlink element 
     // This throughput value is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
-    // all the active pairs and summing the corresponding throughput and connection values returned by getFileStatisticsInfo (OptimizerDataSource.cpp) 
+    // all the active pairs and summing the corresponding throughput and connection values returned by getCurrentIntervalTransferInfo (OptimizerDataSource.cpp) 
     // for a source-destination pair that involves a given link element
     double throughput;
 
-    // Stores the total connections and total pairs, respectively, for a given Netlink element 
+    // Stores the total connections for a given Netlink element 
     // This is calculated in getCurrentIntervalInputState (OptimizerConnections.cpp) by iterating through 
     // all the active pairs and summing the corresponding connections based on the pair's estimated average
     // actual connections for a source-destination pair that involves a given NetLink element 
-    int connections;
     int numPairs; 
 
-    // These values are storage the limits for the given Link element 
+    // These values are storage the limits for the given NetLink element 
     // They are populated in getNetLinkStates (OptimizerDataSource.cpp) via querying t_netlink_stat
     int minActive, maxActive;
     double maxThroughput;
 
-    NetLinkState(): throughputInst(0), throughput(0), connections(0), numPairs(0),
+    NetLinkState(): throughputInst(0), throughput(0), numPairs(0),
                     minActive(0), maxActive(0), maxThroughput(0) {}
     
     NetLinkState(int a, double t):
-                throughputInst(0), throughput(0), connections(0), 
-                numPairs(0), minActive(0), maxActive(a), maxThroughput(t) {}
+                throughputInst(0), throughput(0), numPairs(0), 
+                minActive(0), maxActive(a), maxThroughput(t) {}
 };
 
 // To decouple the optimizer core logic from the data storage/representation
@@ -207,7 +197,7 @@ public:
     virtual int getOptimizerValue(const Pair&) = 0;
 
     // Get the weighted throughput for the pair
-    virtual void getFileStatisticsInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
+    virtual void getCurrentIntervalTransferInfo(const Pair &pair, const boost::posix_time::time_duration &interval, int currentActiveConnections,
         double *throughput, double *filesizeAvg, double *filesizeStdDev, float *avgConnections) = 0;
 
     virtual time_t getAverageDuration(const Pair&, const boost::posix_time::time_duration&) = 0;
@@ -282,9 +272,6 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
-    double defaultNetLinkMaxThroughput;
-    int defaultNetLinkMaxActive;
-
     bool windowBasedThroughputLimitEnforcement;
     bool netLinkThroughputLimitEnforcement;
     bool proportionalDecreaseThroughputLimitEnforcement;
@@ -300,7 +287,7 @@ protected:
     int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range, int previousValue);
 
     // Calculates the reduced optimizer decision if throughput limits on storage element or netlinks are exceeded 
-    int getFairShareDecision(const Pair &pair, float tputLimit, float tput, int connections, int numPairs, Range range, int previousDecision);
+    int getFairShareDecision(const Pair &pair, float tputLimit, float tput, int numPairs, Range range, int previousDecision);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
