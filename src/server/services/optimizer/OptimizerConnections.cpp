@@ -443,7 +443,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
     // if minDecision has not been modified, the throughput limits are not being exceeded 
     // return -1, and proceed with the optimizer algorithm in optimizeConnectionsForPair to find decision 
     if (minDecision == std::numeric_limits<int>::max()) {
-        minDecision = -1; 
+        minDecision = 0; 
     }
     return minDecision; 
 }

@@ -198,7 +198,8 @@ public:
         getNetLinkLimits(pair, &limits);
         netLinkState.maxActive = limits[netLink].active;
         netLinkState.maxThroughput = limits[netLink].throughput;
-    
+
+        populateNetlinkTraces(pair, netLink);
 
         // Queries test environment to get current instantaneous throughput value.
         if(netLinkState.maxThroughput > 0) {
@@ -373,8 +374,6 @@ public:
 
     std::list<std::string> getNetLinks(const Pair &pair) {
         auto tsi = transferStore.find(pair);
-        // todo: create links and select the minimum throughput cap link 
-
         return {"link1"};
     }
 
