@@ -464,6 +464,8 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
 // Returns reduced decision if the throughput limit on the given storage element or netlink is being exceeded 
 int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tput, int numPairs, Range range, int previousDecision)
 {
+    int decision = 0; 
+
     // To ensure fairness among the competing pairs using the bottlenecked resource, 
     // we want to give each pair an equal amount of throughput 
     float tputPerPair = tputLimit / numPairs; 
@@ -473,14 +475,21 @@ int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tpu
     // This may result in a different number of connections for each pair, since each pair could have a different (throughput/connections) ratio 
     float pairTputPerConnection = currentPairStateMap[pair].avgTput/currentPairStateMap[pair].avgActiveConnections; 
     
-    int decision = static_cast<int>(tputPerPair/pairTputPerConnection); 
+    int target = static_cast<int>(tputPerPair/pairTputPerConnection);
     
-    if(decision > previousDecision){
-        decision = previousDecision + 1; //if the allocation of the fair share of throughput causes the decision to increase above the previous value, treat it as an optimizer increase
+    if(target > previousDecision){
+        decision = previousDecision + 1; // If the allocation of the fair share of throughput causes the decision to increase above the previous value, treat it as an optimizer increase
     }                                   // this is to promote fairness while also making sure we don't inadvertently cause an increase in connections since the scheduler can theoretically start connections faster than it can stop them
+    else {
+        // Overshoot policy: if decreasing the optimizer decision, we want to overshoot the decrease so that the average 
+        // number of connections over the next time interval will be equal to the target decision 
+        // since the number of connections will not immediately drop down to the optimizer decision 
+        decision = currentPairStateMap[pair].activeCount - 2 * (currentPairStateMap[pair].activeCount - target); 
+    }
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
-        << "S&J: Proposed fair share for " << pair << ": " << decision \
+        << "S&J: Proposed fair share target for " << pair << ": " << target \
+        << ", Proposed decision (overshoot): " << decision \ 
         << ", Previous decision: " << previousDecision \
         << ", Throughput per connection: " << pairTputPerConnection \
         << commit;
