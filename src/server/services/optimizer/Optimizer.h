@@ -83,17 +83,17 @@ struct PairState {
     double filesizeAvg, filesizeStdDev;
     // Optimizer last decision
     int optimizerDecision;
-    float avgTput;
+
     // Links in src-dest pair 
     std::list<std::string> netLinks; 
     
     PairState(): timestamp(0), throughput(0), avgDuration(0), successRate(0), retryCount(0), activeCount(0),
-                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), optimizerDecision(1), avgTput(0), netLinks(0) {}
+                 queueSize(0), ema(0), filesizeAvg(0), filesizeStdDev(0), optimizerDecision(1), netLinks(0) {}
 
     PairState(time_t ts, double thr, time_t ad, double sr, int rc, int ac, int qs, double ema, int conn):
         timestamp(ts), throughput(thr), avgDuration(ad), successRate(sr), retryCount(rc),
         activeCount(ac), queueSize(qs), ema(ema), filesizeAvg(0), filesizeStdDev(0), optimizerDecision(conn),
-        avgTput(0), netLinks(0) {}
+        netLinks(0) {}
 };
 
 
@@ -284,10 +284,10 @@ protected:
 
     // Enforce throughput limits on storage elements and netlinks used by a given pair. 
     // Returns reduced optimizer decision for given pair if throughput limit is exceeded. 
-    int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range, int previousValue);
+    int enforceThroughputLimits(const Pair &pair, StorageLimits storageLimits, std::map<std::string, NetLinkLimits> netLinkLimits, Range range, int previousValue, int increaseStepSize);
 
     // Calculates the reduced optimizer decision if throughput limits on storage element or netlinks are exceeded 
-    int getFairShareDecision(const Pair &pair, float tputLimit, float tput, int numPairs, Range range, int previousDecision);
+    int getFairShareDecision(const Pair &pair, float tputLimit, float tput, int numPairs, Range range, int previousDecision, int increaseStepSize);
 
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
