@@ -628,7 +628,11 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         }
     }
     if (decision) {
-        rationale << "Resource throughput limitation reached";
+        rationale << "Resource throughput limitation reached.";
+        if(decision > previous.optimizerDecision)
+        {
+            rationale << " Pair throughput fair share is larger than previous optimizer decision, increasing by 1";
+        }
         setOptimizerDecision(pair, decision, currentPair, decision - previousValue, rationale.str(), timer.elapsed());
         return true; 
     }
