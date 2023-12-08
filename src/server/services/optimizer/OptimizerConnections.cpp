@@ -324,6 +324,11 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
         // Apply bandwidth limits (source) for both window based approximation and instantaneous throughput.
         if (storageLimits.throughputSource > 0) {
             se = currentSEStateMap[pair.source];
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                    << "S&J: Source SE: " << pair.source \
+                    << ", windowBasedThrouput: " << se.asSourceThroughput \
+                    << ", inst Throughput:" << se.asSourceThroughputInst << commit;
+
             if (se.asSourceThroughput > storageLimits.throughputSource) {
                 // Check if this has been previously calculated for another pair sharing this resource
                 if(proportionalDecreaseThroughputLimitEnforcement) {
@@ -363,7 +368,13 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
 
         // Apply bandwidth limits (destination) for both window based approximation and instantaneous throughput.
         if (storageLimits.throughputDestination > 0) {
+
             se = currentSEStateMap[pair.destination];
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
+                    << "S&J: Dest SE: " << pair.destination \
+                    << ", windowBasedThrouput: " << se.asDestThroughput \
+                    << ", inst Throughput:" << se.asDestThroughputInst << commit;
+                
             if (se.asDestThroughput > storageLimits.throughputDestination) {
                 if(proportionalDecreaseThroughputLimitEnforcement) {
                     decision = getFairShareDecision(pair,storageLimits.throughputDestination, se.asDestThroughput, 
@@ -450,7 +461,7 @@ int Optimizer::enforceThroughputLimits(const Pair &pair, StorageLimits storageLi
     // return 0, and proceed with the optimizer algorithm in optimizeConnectionsForPair to find decision 
     if (minDecision == std::numeric_limits<int>::max()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) \
-            << "S%J: No resource limits are exceeded for pair " << pair << commit;
+            << "S&J: No resource limits are exceeded for pair " << pair << commit;
         minDecision = 0; 
     }
     else {
@@ -475,7 +486,7 @@ int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tpu
     // This may result in a different number of connections for each pair, since each pair could have a different (throughput/connections) ratio 
     float pairTputPerConnection;
 
-    if (currentPairStateMap[pair].avgActiveConnections <= 0){ //div by 0 check
+    if (currentPairStateMap[pair].avgActiveConnections > 0){ //div by 0 check
         pairTputPerConnection = currentPairStateMap[pair].throughput/currentPairStateMap[pair].avgActiveConnections;
     }
     else
@@ -507,7 +518,6 @@ int Optimizer::getFairShareDecision(const Pair &pair, float tputLimit, float tpu
         << "S&J: Proposed fair share target for " << pair << ": " << target \
         << ", Proposed decision (overshoot): " << decision \
         << ", Previous decision: " << previousDecision \
-        << ", Throughput per connection: " << pairTputPerConnection \
         << ", Throughput per connection: " << pairTputPerConnection \
         << commit;
 
@@ -726,6 +736,7 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
         << ", Avg active connections: " << current.avgActiveConnections \
         << ", Queue: " << current.queueSize \
         << ", EMA: " << current.ema \
+        << ", Throughput: " << current.throughput \
         << ", Avg filesize: " << current.filesizeAvg \
         << ", Filesize std dev: " << current.filesizeStdDev \
         << ", Success Rate: " << current.successRate \
