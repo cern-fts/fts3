@@ -3,14 +3,16 @@
 -- [FTS-1782] Netlink Throughput Limitation
 --
 
+ALTER TABLE `t_optimizer`
+    ADD COLUMN `actual_active` int(11) DEFAULT NULL,
+    ADD COLUMN `throughput` double DEFAULT '0',
+    ADD COLUMN `queue_size` int(11) DEFAULT NULL;
+
 --
 -- Table structure for table `t_netlink_stat`
 --
 
-DROP TABLE IF EXISTS `t_netlink_stat`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `t_netlink_stat` (
+CREATE TABLE IF NOT EXISTS `t_netlink_stat` (
   `netlink_id` char(36) NOT NULL,
   `head_ip` varchar(150) DEFAULT '*',
   `tail_ip` varchar(150) DEFAULT '*',
@@ -21,17 +23,13 @@ CREATE TABLE `t_netlink_stat` (
   `capacity` float DEFAULT NULL,
   PRIMARY KEY (`netlink_id`),
   CONSTRAINT `idx_ports` UNIQUE (`head_ip`, `tail_ip`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
 
 --
 -- Table structure for table `t_netlink_trace`
 --
 
-DROP TABLE IF EXISTS `t_netlink_trace`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `t_netlink_trace` (
+CREATE TABLE IF NOT EXISTS `t_netlink_trace` (
   `trace_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `source_se` varchar(255) NOT NULL,
   `dest_se` varchar(255) NOT NULL,
@@ -40,17 +38,13 @@ CREATE TABLE `t_netlink_trace` (
   PRIMARY KEY (`trace_id`),
   CONSTRAINT `idx_pair_hop` UNIQUE (`source_se`, `dest_se`, `hop_idx`),
   CONSTRAINT `fk_netlink` FOREIGN KEY (`netlink`) REFERENCES `t_netlink_stat` (`netlink_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
 
 --
 -- Table structure for table `t_netlink_config`
 --
 
-DROP TABLE IF EXISTS `t_netlink_config`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `t_netlink_config` (
+CREATE TABLE IF NOT EXISTS `t_netlink_config` (
   `head_ip` varchar(150) NOT NULL,
   `tail_ip` varchar(150) NOT NULL,
   `netlink_name` varchar(150) NOT NULL,
@@ -59,5 +53,7 @@ CREATE TABLE `t_netlink_config` (
   `max_throughput` float DEFAULT NULL,
   PRIMARY KEY (`head_ip`,`tail_ip`),
   UNIQUE KEY `netlink_name` (`netlink_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
+
+INSERT INTO t_schema_vers (major, minor, patch, message)
+VALUES (10, 0, 0, 'FTS-1782: SE Throughput Limitation');
