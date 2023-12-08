@@ -58,11 +58,7 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval"); 
 
-    allocatorFunction = Allocator::getAllocatorFunction();
-
-
     schedulerFunction = Scheduler::getSchedulerFunction();
-
     allocatorFunction = Allocator::getAllocatorFunction();
 }
 
@@ -299,7 +295,11 @@ void TransfersService::executeUrlcopy()
 
         std::map<std::string, std::list<TransferFile>> scheduledFiles;
 
-        std::map<Pair, int> slotsPerLink = allocatorFunction(queues); 
+        std::map<Pair, int> slotsPerLink = allocatorFunction(queues);
+        scheduledFiles = schedulerFunction(slotsPerLink, queues, availableUrlCopySlots);
+
+        // execute file transfers
+        executeFileTransfers(scheduledFiles, availableUrlCopySlots, queues);  
         
         time_t end = time(0); //std::chrono::system_clock::now();
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "

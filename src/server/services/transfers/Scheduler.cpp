@@ -63,12 +63,19 @@ void failUnschedulable(const std::vector<QueueId> &unschedulable, std::map<Pair,
 Scheduler::SchedulerAlgorithm getSchedulerAlgorithm() {
     std::string schedulerConfig = config::ServerConfig::instance().get<std::string>("TransfersServiceSchedulingAlgorithm");
     if (schedulerConfig == "RANDOMIZED") {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                        << "Scheduler algorithm: RANDOMIZED"
+                                        << commit; 
         return Scheduler::SchedulerAlgorithm::RANDOMIZED;
     }
-    else if(schedulerConfig == "GREEDY") {
+    else if(schedulerConfig == "DEFICIT") {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                        << "Scheduler algorithm: DEFICIT"
+                                        << commit;
         return Scheduler::SchedulerAlgorithm::DEFICIT;
     }
     else {
+        // WARNING log? 
         return Scheduler::SchedulerAlgorithm::RANDOMIZED;
     }
 }

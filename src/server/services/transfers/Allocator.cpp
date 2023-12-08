@@ -22,6 +22,7 @@
 #include "MaximumFlow.h"
 #include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
+#include "common/Logger.h"
 
 using namespace fts3::common;
 using namespace db;
@@ -37,13 +38,24 @@ static int lambda = config::ServerConfig::instance().get<int>("TransfersServiceA
 Allocator::AllocatorAlgorithm getAllocatorAlgorithm() {
     std::string allocatorConfig = config::ServerConfig::instance().get<std::string>("TransfersServiceAllocatorAlgorithm");
     if (allocatorConfig == "MAXIMUM_FLOW") {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                        << "Allocator algorithm: MAXIMUM_FLOW"
+                                        << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                        << "Value of lambda (max flow algorithm): "
+                                        << lambda
+                                        << commit; 
         return Allocator::AllocatorAlgorithm::MAXIMUM_FLOW;
     }
     else if(allocatorConfig == "GREEDY") {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                        << "Allocator algorithm: GREEDY"
+                                        << commit;
         return Allocator::AllocatorAlgorithm::GREEDY;
     }
     else {
-        return Allocator::AllocatorAlgorithm::GREEDY;
+        // WARNING log? 
+        return Allocator::AllocatorAlgorithm::MAXIMUM_FLOW;
     }
 }
 
@@ -160,7 +172,19 @@ std::map<Pair, int> Allocator::MaximumFlowAllocator(
         // reset this link's deficit to 0
         // note that deficit will later be incremented if link was not fully allocated (linkCapacities[link] < numSlotsToAllocate)
         linkDeficits[link] = linkCapacities[link] - numSlotsToAllocate;
+
+        // log the starved link
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                        << "Starved link: "
+                                        << "source=" << link.source << " dest=" << link.destination
+                                        << commit; 
     }
+
+    // log the total number of starved links 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                    << "Total number of starved links="
+                                    << sortedStarvedLinks.size()
+                                    << commit; 
 
     /*
     *   Max flow: run maximum flow algorithm on non-starved links to maximize throughput of allocation
@@ -221,6 +245,12 @@ std::map<Pair, int> Allocator::MaximumFlowAllocator(
         Pair link = entry.first;
         int numSlotsToAllocate = entry.second;
         linkDeficits[link] += (linkCapacities[link] - numSlotsToAllocate);
+        // log the total number of slots allocated to this activity by max flow
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
+                                << "Number of slots allocated (by max flow) for link "
+                                << "source=" << link.source << " dest=" << link.destination << ": "
+                                << numSlotsToAllocate
+                                << commit;
     }
 
     return allocatorMap;
