@@ -173,10 +173,10 @@ LogLevel=INFO
 #BackwardsCompatibleProxyNames = False
 
 # Specify the transfers service's slot allocation algorithm as MAXIMUM_FLOW or GREEDY (default GREEDY)
-TransfersServiceAllocatorAlgorithm = GREEDY
+TransfersServiceAllocatorAlgorithm=GREEDY
 
 # Specify transfers service's task scheduling algorithm as RANDOMIZED, DEFICIT
-TransfersServiceSchedulingAlgorithm = RANDOMIZED
+TransfersServiceSchedulingAlgorithm=RANDOMIZED
 
 # Specify transfer's service slot allocation lambda for starvation calculation for transfers service allocation algorithm
-TransfersServiceAllocatorLambda = 10
+TransfersServiceAllocatorLambda=10

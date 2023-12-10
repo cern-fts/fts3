@@ -55,10 +55,6 @@ protected:
     std::string logDir;
     std::string msgDir;
     boost::posix_time::time_duration schedulingInterval;
-    Allocator::AllocatorFunction allocatorFunction;
-
-    // Function pointer for the scheduler function, depending on config
-    Scheduler::SchedulerFunction schedulerFunction;
 
     void executeFileTransfers(std::map<std::string, std::list<TransferFile>> scheduledFiles, int availableUrlCopySlots, std::vector<QueueId> queues);
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);

@@ -30,25 +30,25 @@ namespace fts3
 {
 namespace server
 {
-
+template<typename T>
 // MaximumFlow uses Dinic's algorithm to compute the maximum flow of a network in O(V^2E)
 class MaximumFlow {
 private:
     struct Edge {
         int from, to; // From and to nodes;
         Edge *residual; // Each edge has a corresponding residual edge.
-        // TODO: Consider type for flows and capacities
-        int flow; // f(e) initialized to 0.
-        const int capacity; // c(e) initialized based upon resource constraints.
+
+        T flow; // f(e) initialized to 0.
+        const T capacity; // c(e) initialized based upon resource constraints.
 
         // Edge constructor
-        Edge(int from, int to, int capacity);
+        Edge(int from, int to, T capacity);
 
         //  isResidual returns true if the given edges capacity is 0 else false
         bool isResidual();
-        int remainingCapacity();
+        T remainingCapacity();
         // Augments the flow of an edge as well as the flow of the reverse edge
-        void augment(int bottleNeck);
+        void augment(T bottleNeck);
 
         // For debugging purposes. Prints the capacity and flow of an edge as well as if it is residual.
         std::string edgeToString(int s, int t);
@@ -61,19 +61,19 @@ public:
         int source, sink;
         bool solved;
         int maximumFlow;
-        std::vector<std::vector<Edge*>> graph;
+        std::map<int, std::map<int, Edge*>> graph;
 
         // Initializes MaximumFlowSolver
-        MaximumFlowSolver();
+        MaximumFlowSolver(int nodes, int source, int sink);
 
         // addEdge adds a forward and reverse edge to the graph. The forward edge is initialized with the specified capacity and the
-        void addEdge(int from, int to, int capacity);
+        void addEdge(int from, int to, T capacity);
 
         void setSource(int s);
         void setSink(int s);
         void setNodes(int n);
-        std::map<std::pair<int, int>, int> computeMaximumFlow();
-        int getMaximumFlow();
+        std::map<std::pair<int, int>, T> computeMaximumFlow();
+        T getMaximumFlow();
         void initializeEmptyFlowGraph();
 
     private:
@@ -82,7 +82,7 @@ public:
         // bfs constructs the current level graph
         bool bfs();
         // dfs uses the level graph and invokes depth first search until a blocking flow is found
-        int dfs(int curr, std::vector<int>& next, int flow);
+        T dfs(int curr, std::vector<int>& next, T flow);
     };
 };
 } /* namespace server */

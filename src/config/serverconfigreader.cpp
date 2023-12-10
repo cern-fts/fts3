@@ -48,7 +48,7 @@ using namespace fts3::config;
 #define FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT 96
 #define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_ALGORITHM "GREEDY"
 #define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_SCHEDULING_ALGORITHM "RANDOMIZED"
-#define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_LAMBDA 10
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_LAMBDA "10"
 /* ---------------------------------------------------------------------- */
 
 po::options_description ServerConfigReader::_defineGenericOptions()
@@ -523,7 +523,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "TransfersServiceAllocatorLambda",
-        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_LAMBDA),
+        po::value<std::string>( &(_vars["TransfersServiceAllocatorLambda"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERS_SERVICE_ALLOCATOR_LAMBDA),
         "Specify transfer's service slot allocation lambda for starvation calculation for transfers service allocation algorithm"
     )
     ;
@@ -650,7 +650,6 @@ void ServerConfigReader::storeAsString(const std::string& aName)
 void ServerConfigReader::storeValuesAsStrings ()
 {
     storeAsString("Port");
-    storeAsString("TransfersServiceAllocatorLambda");
     storeAsString("ThreadNum");
     storeAsString("OptimizerMaxSuccessRate");
     storeAsString("OptimizerMedSuccessRate");

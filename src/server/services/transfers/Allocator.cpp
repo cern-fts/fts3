@@ -33,7 +33,6 @@ namespace server {
     
 // Tracks deficit on each link; incremented as links become starved of transfers
 static std::map<Pair, int> linkDeficits = std::map<Pair, int>();
-static int lambda = config::ServerConfig::instance().get<int>("TransfersServiceAllocatorLambda");
 
 Allocator::AllocatorAlgorithm getAllocatorAlgorithm() {
     std::string allocatorConfig = config::ServerConfig::instance().get<std::string>("TransfersServiceAllocatorAlgorithm");
@@ -41,13 +40,9 @@ Allocator::AllocatorAlgorithm getAllocatorAlgorithm() {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
                                         << "Allocator algorithm: MAXIMUM_FLOW"
                                         << commit;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
-                                        << "Value of lambda (max flow algorithm): "
-                                        << lambda
-                                        << commit; 
         return Allocator::AllocatorAlgorithm::MAXIMUM_FLOW;
     }
-    else if(allocatorConfig == "GREEDY") {
+    else if (allocatorConfig == "GREEDY") {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "J&P&C: "
                                         << "Allocator algorithm: GREEDY"
                                         << commit;
@@ -114,30 +109,14 @@ std::map<Pair, int> Allocator::GreedyAllocator(
     return allocatorMap;
 }
 
-std::map<Pair, int> Allocator::MaximumFlowAllocator(
-    std::vector<QueueId> &queues
-){
-    auto db = DBSingleton::instance().getDBObjectInstance();
-    DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
-    std::map<std::string, std::list<TransferFile> > voQueues;
 
-    // Retrieve se outbound (slotsLeftForSource) and inbound (slotsLeftForDestination) capacities
-    std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
-    getSourceDestinationCapacities(slotsLeftForSource, slotsLeftForDestination, queues);
-    
-    // Retrieve link capacities
-    std::map<Pair, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
-
-    // Return value, to be filled as allocation proceeds
-    std::map<Pair, int> allocatorMap;
-
-    /*
-    *   Starvation avoidance: allocate all starved links before running max flow
-    */ 
-
+/*
+*   Starvation avoidance: allocate all starved links before running max flow
+*/ 
+void allocateDeficitLinks(std::map<std::string, int>& slotsLeftForSource, std::map<std::string, int>& slotsLeftForDestination, std::map<Pair, int> linkCapacities, std::map<Pair, int> allocatorMap, std::vector<QueueId> &queues) {
     // Map of starved links to their capacities
     std::map<Pair, int> starvedLinkCapacities; 
-
+    int lambda = config::ServerConfig::instance().get<int>("TransfersServiceAllocatorLambda");
     for (const auto& i : queues) {
         // determine if link is starved 
         Pair currLink = Pair(i.sourceSe, i.destSe);
@@ -185,6 +164,27 @@ std::map<Pair, int> Allocator::MaximumFlowAllocator(
                                     << "Total number of starved links="
                                     << sortedStarvedLinks.size()
                                     << commit; 
+}
+
+
+std::map<Pair, int> Allocator::MaximumFlowAllocator(
+    std::vector<QueueId> &queues
+){
+    auto db = DBSingleton::instance().getDBObjectInstance();
+    DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
+    std::map<std::string, std::list<TransferFile> > voQueues;
+
+    // Retrieve se outbound (slotsLeftForSource) and inbound (slotsLeftForDestination) capacities
+    std::map<std::string, int> slotsLeftForSource, slotsLeftForDestination;
+    getSourceDestinationCapacities(slotsLeftForSource, slotsLeftForDestination, queues);
+    
+    // Retrieve link capacities
+    std::map<Pair, int> linkCapacities = db->getLinkCapacities(queues, voQueues);
+
+    // Return value, to be filled as allocation proceeds
+    std::map<Pair, int> allocatorMap;
+
+    allocateDeficitLinks(slotsLeftForSource, slotsLeftForDestination, linkCapacities, allocatorMap, queues);
 
     /*
     *   Max flow: run maximum flow algorithm on non-starved links to maximize throughput of allocation
@@ -195,7 +195,6 @@ std::map<Pair, int> Allocator::MaximumFlowAllocator(
     std::map<int, std::string> intToSe;
     int nodeCount = 0;
 
-    MaximumFlow::MaximumFlowSolver solver;
     std::map<std::pair<int, int>, int> maximumFlow;
 
     // Initialize seToInt and intToSe since our maximum flow class utilizes array indexing for optimization
@@ -211,12 +210,8 @@ std::map<Pair, int> Allocator::MaximumFlowAllocator(
             nodeCount++;
         }
     }
-
-    // node count is incremented after each node is added so virtual source is nodeCount, dest is nodeCount + 1
-    solver.setSource(nodeCount);
-    solver.setSink(nodeCount + 1);
-    solver.setNodes(nodeCount + 2);
-
+    
+    MaximumFlow<int>::MaximumFlowSolver solver = MaximumFlow<int>::MaximumFlowSolver(nodeCount, nodeCount + 1, nodeCount + 2);
     // Introduce capacities for virtual source to each source
     for (const auto& i : queues) {
         int sourceSlots = slotsLeftForSource[i.sourceSe];
