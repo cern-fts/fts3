@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 add_definitions ("-DBOOST_TEST_DYN_LINK")
 
 set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
@@ -43,7 +41,6 @@ function (define_test name link)
 endfunction(define_test)
 
 # Build individual unit tests
-add_subdirectory (cli)
 add_subdirectory (common)
 add_subdirectory (config)
 add_subdirectory (cred)

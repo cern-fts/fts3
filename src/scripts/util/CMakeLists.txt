@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 install(FILES fts_db_rotate
     DESTINATION ${SBIN_INSTALL_DIR}
 )

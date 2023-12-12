@@ -26,7 +26,7 @@ ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN yum clean metadata
 
 # Install FTS packages
-RUN yum install -y fts-server fts-client fts-mysql fts-server-selinux fts-msg fts-infosys cronie crontabs
+RUN yum install -y fts-server fts-mysql fts-server-selinux fts-msg cronie crontabs
 
 # Install Gfal2 packages
 RUN yum install -y gfal2-all gfal2-plugin-mock

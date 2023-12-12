@@ -18,9 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
-
 file(GLOB fts_config "*.cpp")
 add_library(fts_config SHARED ${fts_config})
 find_package(Boost COMPONENTS program_options regex thread)

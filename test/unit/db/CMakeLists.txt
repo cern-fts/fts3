@@ -14,6 +14,4 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 define_test (SeConfig fts_db_generic)
