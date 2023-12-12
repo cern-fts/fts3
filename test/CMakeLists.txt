@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 find_package (Boost COMPONENTS unit_test_framework chrono)
 find_package (GLIB2)
 

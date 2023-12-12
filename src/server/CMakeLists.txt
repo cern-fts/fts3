@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(GLIB2)
@@ -67,7 +65,6 @@ target_link_libraries(fts_server
     fts_server_lib
     fts_config
     fts_common
-    fts_infosys
 	fts_msg_ifce
     ${Boost_LIBRARIES}
 )
@@ -75,13 +72,10 @@ target_link_libraries(fts_server
 # Man pages
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
 install(FILES "${MAN_INPUT_DIR}/fts_server.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_bdii_cache_updater.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_db_cleaner.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_msg_bulk.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_url_copy.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_bringonline.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_qos.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_info_publisher.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 
 # Artifacts
 install(TARGETS fts_server_lib

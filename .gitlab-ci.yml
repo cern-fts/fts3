@@ -30,6 +30,10 @@ cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   <<: *build-template_definition
 
+alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *build-template_definition
+
 #--------------------------
 # Docker build templates
 #--------------------------
@@ -107,10 +111,14 @@ cc7-test:
   image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
     - cc7
+    - alma9
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
+    - |
+      for platform in cc7 alma9; do
+        packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages ${platform}/RPMS/*/*.rpm ${platform}/SRPMS/*
+      done
   tags:
     - docker-privileged-xl
   retry: 2
