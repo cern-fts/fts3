@@ -35,7 +35,8 @@ namespace fs = boost::filesystem;
 
 void handler(int)
 {
-    if (!signalReceived) {
+    if (!signalReceived)
+    {
         signalReceived = true;
         stopThreads = true;
         sleep(5);
@@ -43,11 +44,9 @@ void handler(int)
     }
 }
 
-
-MsgPipe::MsgPipe(const std::string &baseDir):
-    consumer(baseDir), producer(baseDir)
+MsgPipe::MsgPipe(const std::string &baseDir) : consumer(baseDir), producer(baseDir)
 {
-    //register sig handler to cleanup resources upon exiting
+    // register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
     signal(SIGILL, handler);
     signal(SIGSEGV, handler);
@@ -58,35 +57,39 @@ MsgPipe::MsgPipe(const std::string &baseDir):
     signal(SIGQUIT, handler);
 }
 
-
 MsgPipe::~MsgPipe()
 {
 }
-
 
 void MsgPipe::run()
 {
     std::vector<std::string> messages;
 
-    while (stopThreads == false) {
-        try {
+    while (stopThreads == false)
+    {
+        try
+        {
             int returnValue = consumer.runConsumerMonitoring(messages);
-            if (returnValue != 0) {
+            if (returnValue != 0)
+            {
                 std::ostringstream errorMessage;
                 errorMessage << "runConsumerMonitoring returned " << returnValue;
                 FTS3_COMMON_LOGGER_LOG(ERR, errorMessage.str());
             }
 
-            for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
+            for (auto iter = messages.begin(); iter != messages.end(); ++iter)
+            {
                 ConcurrentQueue::getInstance()->push(*iter);
             }
             messages.clear();
         }
-        catch (const fs::filesystem_error &ex) {
+        catch (const fs::filesystem_error &ex)
+        {
             FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
             cleanup();
         }
-        catch (...) {
+        catch (...)
+        {
             FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
             cleanup();
         }
@@ -94,11 +97,11 @@ void MsgPipe::run()
     }
 }
 
-
 void MsgPipe::cleanup()
 {
     std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-    while (!myQueue.empty()) {
+    while (!myQueue.empty())
+    {
         std::string msg = myQueue.front();
         myQueue.pop();
         producer.runProducerMonitoring(msg);

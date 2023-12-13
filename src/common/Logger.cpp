@@ -27,218 +27,218 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
-
-namespace fts3 {
-namespace common {
-
-
-Logger& theLogger()
+namespace fts3
 {
-    static Logger *logger = new Logger();
-    return *logger;
-}
+    namespace common
+    {
 
-LoggerEntry::LoggerEntry(bool writeable): writeable(writeable)
-{
-}
-
-
-LoggerEntry::LoggerEntry(const LoggerEntry& le): stream(le.stream.str()), writeable(le.writeable)
-{
-}
-
-
-LoggerEntry::~LoggerEntry()
-{
-}
-
-
-LoggerEntry& LoggerEntry::operator << (LoggerEntry& (*aFunc)(LoggerEntry &aLogger))
-{
-    return aFunc(*this);
-}
-
-
-Logger::LogLevel Logger::getLogLevel(const std::string& repr)
-{
-    struct LevelRepr {
-        const char *repr;
-        LogLevel level;
-    } ;
-    static const LevelRepr LEVEL_REPR[] = {
-        {"trace", TRACE},
-        {"debug", DEBUG},
-        {"info",  INFO},
-        {"notice", NOTICE},
-        {"prof", PROF}, {"profiling", PROF},
-        {"warn", WARNING}, {"warning", WARNING},
-        {"err", ERR}, {"error", ERR},
-        {"crit", CRIT}, {"critical", CRIT}
-    };
-    static const int N_REPR = sizeof(LEVEL_REPR) / sizeof(LevelRepr);
-
-    for (int i = 0; i < N_REPR; ++i) {
-        if (boost::iequals(repr, LEVEL_REPR[i].repr)) {
-            return LEVEL_REPR[i].level;
+        Logger &theLogger()
+        {
+            static Logger *logger = new Logger();
+            return *logger;
         }
-    }
 
-    throw SystemError(std::string("Unknown logging level ") + repr);
-}
+        LoggerEntry::LoggerEntry(bool writeable) : writeable(writeable)
+        {
+        }
 
+        LoggerEntry::LoggerEntry(const LoggerEntry &le) : stream(le.stream.str()), writeable(le.writeable)
+        {
+        }
 
-Logger::Logger(): _logLevel(DEBUG), _profiling(false), _separator("; "), _nCommits(0)
-{
-    ostream = &std::cout;
-    newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
-}
+        LoggerEntry::~LoggerEntry()
+        {
+        }
 
+        LoggerEntry &LoggerEntry::operator<<(LoggerEntry &(*aFunc)(LoggerEntry &aLogger))
+        {
+            return aFunc(*this);
+        }
 
-Logger::~Logger ()
-{
-    newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger about to be destroyed" << commit;
-}
+        Logger::LogLevel Logger::getLogLevel(const std::string &repr)
+        {
+            struct LevelRepr
+            {
+                const char *repr;
+                LogLevel level;
+            };
+            static const LevelRepr LEVEL_REPR[] = {
+                {"trace", TRACE},
+                {"debug", DEBUG},
+                {"info", INFO},
+                {"notice", NOTICE},
+                {"prof", PROF},
+                {"profiling", PROF},
+                {"warn", WARNING},
+                {"warning", WARNING},
+                {"err", ERR},
+                {"error", ERR},
+                {"crit", CRIT},
+                {"critical", CRIT}};
+            static const int N_REPR = sizeof(LEVEL_REPR) / sizeof(LevelRepr);
 
+            for (int i = 0; i < N_REPR; ++i)
+            {
+                if (boost::iequals(repr, LEVEL_REPR[i].repr))
+                {
+                    return LEVEL_REPR[i].level;
+                }
+            }
 
-Logger & Logger::setLogLevel(LogLevel level)
-{
-    newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
-        << "Setting debug level to " << logLevelStringRepresentation(level)
-        << commit;
-    _logLevel = level;
-    return *this;
-}
+            throw SystemError(std::string("Unknown logging level ") + repr);
+        }
 
-Logger & Logger::setProfiling(bool value)
-{
-    newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
-            << "Setting profiling to " << value
-            << commit;
-    _profiling = value;
-    return *this;
-}
+        Logger::Logger() : _logLevel(DEBUG), _profiling(false), _separator("; "), _nCommits(0)
+        {
+            ostream = &std::cout;
+            newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
+        }
 
+        Logger::~Logger()
+        {
+            newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger about to be destroyed" << commit;
+        }
 
-void Logger::flush(const std::string &line)
-{
-    boost::mutex::scoped_lock lock(outMutex);
-    _nCommits++;
-    if (_nCommits >= NB_COMMITS_BEFORE_CHECK) {
-        _nCommits = 0;
-        checkFd();
-    }
-    *ostream << line << std::endl;
-}
+        Logger &Logger::setLogLevel(LogLevel level)
+        {
+            newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
+                << "EGG: Setting debug level to " << logLevelStringRepresentation(level)
+                << commit;
+            _logLevel = level;
+            return *this;
+        }
 
+        Logger &Logger::setProfiling(bool value)
+        {
+            newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
+                << "Setting profiling to " << value
+                << commit;
+            _profiling = value;
+            return *this;
+        }
 
-/// This method has to be thread safe!
-void LoggerEntry::_commit()
-{
-    if (writeable) {
-        std::string line = stream.str();
-        theLogger().flush(line);
-    }
-}
+        void Logger::flush(const std::string &line)
+        {
+            boost::mutex::scoped_lock lock(outMutex);
+            _nCommits++;
+            if (_nCommits >= NB_COMMITS_BEFORE_CHECK)
+            {
+                _nCommits = 0;
+                checkFd();
+            }
+            *ostream << line << std::endl;
+        }
 
+        /// This method has to be thread safe!
+        void LoggerEntry::_commit()
+        {
+            if (writeable)
+            {
+                std::string line = stream.str();
+                theLogger().flush(line);
+            }
+        }
 
-LoggerEntry Logger::newLog(LogLevel level, const char* aFile,
-        const char* aFunc, const int aLineNo)
-{
-    bool can_write;
-    if (level == PROF) {
-        can_write = this->_profiling;
-    } else {
-        can_write = (level >= this->_logLevel);
-    }
-    LoggerEntry entry(can_write);
-    entry << logLevelStringRepresentation(level) << timestamp() << _separator;
-    if (level >= ERR && this->_logLevel <= DEBUG) {
-        entry << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
-    }
-    return entry;
-}
+        LoggerEntry Logger::newLog(LogLevel level, const char *aFile,
+                                   const char *aFunc, const int aLineNo)
+        {
+            bool can_write;
+            if (level == PROF)
+            {
+                can_write = this->_profiling;
+            }
+            else
+            {
+                can_write = (level >= this->_logLevel);
+            }
+            LoggerEntry entry(can_write);
+            entry << logLevelStringRepresentation(level) << timestamp() << _separator;
+            if (level >= ERR && this->_logLevel <= DEBUG)
+            {
+                entry << aFile << _separator << aFunc << _separator << std::dec << aLineNo << _separator;
+            }
+            return entry;
+        }
 
+        static int createAndReopen(const std::string &path, FILE *stream)
+        {
+            int fd = ::open(path.c_str(), O_APPEND | O_CREAT, 0644);
+            if (fd < 0)
+                return -1;
+            close(fd);
+            stream = freopen(path.c_str(), "a", stream);
+            if (!stream)
+                return -1;
+            return 0;
+        }
 
-static int createAndReopen(const std::string& path, FILE* stream)
-{
-    int fd = ::open(path.c_str(), O_APPEND | O_CREAT, 0644);
-    if (fd < 0)
-        return -1;
-    close(fd);
-    stream = freopen(path.c_str(), "a", stream);
-    if (!stream)
-        return -1;
-    return 0;
-}
+        int Logger::redirect(const std::string &outPath, const std::string &errPath) throw()
+        {
+            if (ostream != &std::cout)
+            {
+                delete ostream;
+            }
+            ostream = new std::ofstream(outPath, std::ios_base::app);
 
+            if (!errPath.empty())
+            {
+                if (createAndReopen(errPath, stderr) < 0)
+                    return -1;
+            }
+            return 0;
+        }
 
-int Logger::redirect(const std::string& outPath, const std::string& errPath) throw()
-{
-    if (ostream != &std::cout) {
-        delete ostream;
-    }
-    ostream = new std::ofstream(outPath, std::ios_base::app);
+        void Logger::checkFd(void)
+        {
+            if (ostream->fail())
+            {
+                ostream->clear();
+            }
+        }
 
-    if (!errPath.empty()) {
-        if (createAndReopen(errPath, stderr) < 0)
-            return -1;
-    }
-    return 0;
-}
+        std::string Logger::timestamp()
+        {
+            char timebuf[128] = "";
+            // Get Current Time
+            time_t current;
+            time(&current);
+            struct tm local_tm;
+            localtime_r(&current, &local_tm);
+            // asctime format
+            strftime(timebuf, sizeof(timebuf), "%a, %d %b %Y %H:%M:%S %z", &local_tm);
+            return timebuf;
+        }
 
+        std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
+        {
+            switch (loglevel)
+            {
+            case TRACE:
+                return std::string("TRACE   ");
+            case DEBUG:
+                return std::string("DEBUG   ");
+            case WARNING:
+                return std::string("WARNING ");
+            case INFO:
+                return std::string("INFO    ");
+            case CRIT:
+                return std::string("CRIT    ");
+            case ERR:
+                return std::string("ERR     ");
+            case NOTICE:
+                return std::string("NOTICE  ");
+            case PROF:
+                return std::string("PROF    ");
+            default:
+                return std::string("INFO    ");
+            }
+        }
 
-void Logger::checkFd(void)
-{
-    if (ostream->fail()) {
-        ostream->clear();
-    }
-}
+        LoggerEntry &commit(LoggerEntry &entry)
+        {
+            entry._commit();
+            return entry;
+        }
 
-
-std::string Logger::timestamp()
-{
-    char timebuf[128] = "";
-    // Get Current Time
-    time_t current;
-    time(&current);
-    struct tm local_tm;
-    localtime_r(&current, &local_tm);
-    // asctime format
-    strftime(timebuf, sizeof(timebuf), "%a, %d %b %Y %H:%M:%S %z", &local_tm);
-    return timebuf;
-}
-
-
-std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
-{
-    switch (loglevel) {
-        case TRACE:
-            return std::string("TRACE   ");
-        case DEBUG:
-            return std::string("DEBUG   ");
-        case WARNING:
-            return std::string("WARNING ");
-        case INFO:
-            return std::string("INFO    ");
-        case CRIT:
-            return std::string("CRIT    ");
-        case ERR:
-            return std::string("ERR     ");
-        case NOTICE:
-            return std::string("NOTICE  ");
-        case PROF:
-            return std::string("PROF    ");
-        default:
-            return std::string("INFO    ");
-    }
-}
-
-
-LoggerEntry& commit(LoggerEntry& entry)
-{
-    entry._commit();
-    return entry;
-}
-
-} // namespace common
+    } // namespace common
 } // namespace fts3

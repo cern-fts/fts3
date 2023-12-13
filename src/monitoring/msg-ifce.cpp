@@ -29,77 +29,77 @@
 bool MsgIfce::instanceFlag = false;
 MsgIfce *MsgIfce::single = NULL;
 
-
 static uint64_t getTimestampMillisecs()
 {
     std::chrono::milliseconds timestamp =
         std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now().time_since_epoch()
-        );
+            std::chrono::high_resolution_clock::now().time_since_epoch());
 
     return timestamp.count();
 }
 
-
 static std::string ReplaceNonPrintableCharacters(const std::string &s)
 {
     std::string result;
-    for (size_t i = 0; i < s.length(); i++) {
+    for (size_t i = 0; i < s.length(); i++)
+    {
         char c = s[i];
-        int AsciiValue = static_cast<int> (c);
-        if (AsciiValue < 32 || AsciiValue > 127) {
+        int AsciiValue = static_cast<int>(c);
+        if (AsciiValue < 32 || AsciiValue > 127)
+        {
             result.append(" ");
         }
-        else {
+        else
+        {
             result += s.at(i);
         }
     }
     return result;
 }
 
-
 MsgIfce *MsgIfce::getInstance()
 {
-    if (!instanceFlag) {
+    if (!instanceFlag)
+    {
         single = new MsgIfce();
         instanceFlag = true;
         return single;
     }
-    else {
+    else
+    {
         return single;
     }
 }
 
-
 MsgIfce::MsgIfce()
 {
 }
-
 
 MsgIfce::~MsgIfce()
 {
     instanceFlag = false;
 }
 
-
 static void set_metadata(json::Object &json, const std::string &key, const std::string &value)
 {
-    if (!value.empty()) {
-        try {
+    if (!value.empty())
+    {
+        try
+        {
             std::istringstream valueStream(value);
             json::UnknownElement metadata;
             json::Reader::Read(metadata, valueStream);
             json[key] = metadata;
             return;
         }
-        catch (...) {
+        catch (...)
+        {
             // continue
         }
     }
 
     json[key] = json::String(value);
 }
-
 
 std::string MsgIfce::SendTransferStartMessage(Producer &producer, const TransferCompleted &tr_started)
 {
@@ -124,10 +124,12 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
     message["srm_space_token_dst"] = json::String(tr_started.srm_space_token_dest);
     message["user_dn"] = json::String(tr_started.user_dn);
 
-    if (tr_started.file_metadata != "x") {
+    if (tr_started.file_metadata != "x")
+    {
         set_metadata(message, "file_metadata", tr_started.file_metadata);
     }
-    else {
+    else
+    {
         message["file_metadata"] = json::String();
     }
 
@@ -140,15 +142,16 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
 
     std::string msgStr = stream.str();
     int errCode = producer.runProducerMonitoring(msgStr);
-    if (errCode == 0) {
+    if (errCode == 0)
+    {
         return msgStr;
     }
-    else {
+    else
+    {
         char buffer[512];
         return strerror_r(errCode, buffer, sizeof(buffer));
     }
 }
-
 
 std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const TransferCompleted &tr_completed)
 {
@@ -205,16 +208,20 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
     temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
     temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());
-    if (temp.size() > 1024) {
+    if (temp.size() > 1024)
+    {
         temp.erase(1024);
     }
 
     message["t__error_message"] = json::String(temp);
     message["tr_timestamp_start"] = json::Number(tr_completed.tr_timestamp_start);
 
-    if (tr_completed.tr_timestamp_complete) {
+    if (tr_completed.tr_timestamp_complete)
+    {
         message["tr_timestamp_complete"] = json::Number(tr_completed.tr_timestamp_complete);
-    } else {
+    }
+    else
+    {
         message["tr_timestamp_complete"] = json::Number(getTimestampMillisecs());
     }
 
@@ -233,10 +240,12 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["channel_type"] = json::String(tr_completed.channel_type);
     message["user_dn"] = json::String(tr_completed.user_dn);
 
-    if (tr_completed.file_metadata != "x") {
+    if (tr_completed.file_metadata != "x")
+    {
         set_metadata(message, "file_metadata", tr_completed.file_metadata);
     }
-    else {
+    else
+    {
         message["file_metadata"] = json::String("");
     }
 
@@ -264,15 +273,22 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
 
     std::string msgStr = stream.str();
     int errCode = producer.runProducerMonitoring(msgStr);
-    if (errCode == 0) {
+    if (errCode == 0)
+    {
         return msgStr;
     }
-    else {
+    else
+    {
         char buffer[512];
         return strerror_r(errCode, buffer, sizeof(buffer));
     }
+    // also send a notification to events
+    errCode = producer.runProducerEvents(msgStr);
+    if (errCode == 0)
+    {
+        return msgStr;
+    }
 }
-
 
 std::string MsgIfce::SendTransferStatusChange(Producer &producer, const TransferState &tr_state)
 {
@@ -311,15 +327,16 @@ std::string MsgIfce::SendTransferStatusChange(Producer &producer, const Transfer
 
     std::string msgStr = stream.str();
     int errCode = producer.runProducerMonitoring(msgStr);
-    if (errCode == 0) {
+    if (errCode == 0)
+    {
         return msgStr;
     }
-    else {
+    else
+    {
         char buffer[512];
         return strerror_r(errCode, buffer, sizeof(buffer));
     }
 }
-
 
 std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_info)
 {
@@ -353,10 +370,12 @@ std::string MsgIfce::SendOptimizer(Producer &producer, const OptimizerInfo &opt_
 
     std::string msgStr = stream.str();
     int errCode = producer.runProducerMonitoring(msgStr);
-    if (errCode == 0) {
+    if (errCode == 0)
+    {
         return msgStr;
     }
-    else {
+    else
+    {
         char buffer[512];
         return strerror_r(errCode, buffer, sizeof(buffer));
     }

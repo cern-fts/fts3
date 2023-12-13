@@ -28,111 +28,118 @@
 
 using fts3::common::commit;
 
-
 const option UrlCopyOpts::long_options[] =
-{
-    {"job-id",            required_argument, 0, 100},
-    {"file-id",           required_argument, 0, 101},
-    {"source",            required_argument, 0, 102},
-    {"destination",       required_argument, 0, 103},
-    {"user-filesize",     required_argument, 0, 104},
-    {"bulk-file",         required_argument, 0, 105},
+    {
+        {"job-id", required_argument, 0, 100},
+        {"file-id", required_argument, 0, 101},
+        {"source", required_argument, 0, 102},
+        {"destination", required_argument, 0, 103},
+        {"user-filesize", required_argument, 0, 104},
+        {"bulk-file", required_argument, 0, 105},
 
-    {"reuse",             no_argument,       0, 200},
-    {"job-m-replica",     no_argument,       0, 202},
-    {"last-replica",      no_argument,       0, 203},
-    {"job-multihop",      no_argument,       0, 204},
-    {"last-hop",          no_argument,       0, 205},
-    {"archiving",         no_argument,       0, 206},
+        {"reuse", no_argument, 0, 200},
+        {"job-m-replica", no_argument, 0, 202},
+        {"last-replica", no_argument, 0, 203},
+        {"job-multihop", no_argument, 0, 204},
+        {"last-hop", no_argument, 0, 205},
+        {"archiving", no_argument, 0, 206},
 
-    {"checksum",          required_argument, 0, 300},
-    {"checksum-mode",     required_argument, 0, 301},
-    {"strict-copy",       no_argument,       0, 302},
-    {"dst-file-report",   no_argument,       0, 303},
-    {"3rd-party-turl",    required_argument, 0, 304},
-    {"scitag",            required_argument, 0, 305},
+        {"checksum", required_argument, 0, 300},
+        {"checksum-mode", required_argument, 0, 301},
+        {"strict-copy", no_argument, 0, 302},
+        {"dst-file-report", no_argument, 0, 303},
+        {"3rd-party-turl", required_argument, 0, 304},
+        {"scitag", required_argument, 0, 305},
 
-    {"token-bringonline", required_argument, 0, 400},
-    {"dest-token-desc",   required_argument, 0, 401},
-    {"source-token-desc", required_argument, 0, 402},
+        {"token-bringonline", required_argument, 0, 400},
+        {"dest-token-desc", required_argument, 0, 401},
+        {"source-token-desc", required_argument, 0, 402},
 
-    {"vo",                required_argument, 0, 500},
-    {"user-dn",           required_argument, 0, 501},
-    {"proxy",             required_argument, 0, 502},
-    {"oauth",             required_argument, 0, 503},
-    {"source-issuer",     required_argument, 0, 504},
-    {"dest-issuer",       required_argument, 0, 505},
-    {"auth-method",       required_argument, 0, 506},
-    {"copy-mode",         required_argument, 0, 507},
-    {"disable-fallback",  no_argument,       0, 508},
-    {"retrieve-se-token", no_argument,       0, 509},
+        {"vo", required_argument, 0, 500},
+        {"user-dn", required_argument, 0, 501},
+        {"proxy", required_argument, 0, 502},
+        {"oauth", required_argument, 0, 503},
+        {"source-issuer", required_argument, 0, 504},
+        {"dest-issuer", required_argument, 0, 505},
+        {"auth-method", required_argument, 0, 506},
+        {"copy-mode", required_argument, 0, 507},
+        {"disable-fallback", no_argument, 0, 508},
+        {"retrieve-se-token", no_argument, 0, 509},
 
-    {"infosystem",        required_argument, 0, 600},
-    {"alias",             required_argument, 0, 601},
-    {"monitoring",        no_argument,       0, 602},
-    {"active",            required_argument, 0, 603},
-    {"ping-interval",     required_argument, 0, 604},
+        {"infosystem", required_argument, 0, 600},
+        {"alias", required_argument, 0, 601},
+        {"monitoring", no_argument, 0, 602},
+        {"active", required_argument, 0, 603},
+        {"ping-interval", required_argument, 0, 604},
 
-    {"file-metadata",     required_argument, 0, 700},
-    {"transfer-metadata", required_argument, 0, 701},
-    {"job-metadata",      required_argument, 0, 702},
+        {"file-metadata", required_argument, 0, 700},
+        {"transfer-metadata", required_argument, 0, 701},
+        {"job-metadata", required_argument, 0, 702},
 
-    {"level",             required_argument, 0, 801},
-    {"overwrite",         no_argument,       0, 802},
-    {"nstreams",          required_argument, 0, 803},
-    {"tcp-buffersize",    required_argument, 0, 804},
-    {"timeout",           required_argument, 0, 805},
-    {"udt",               no_argument,       0, 806},
-    {"ipv6",              no_argument,       0, 807},
-    {"sec-per-mb",        required_argument, 0, 808},
-    {"ipv4",              no_argument,       0, 809},
-    {"no-delegation",     no_argument,       0, 810},
-    {"no-streaming",      no_argument,       0, 811},
-    {"skip-evict",        no_argument,       0, 812},
+        {"level", required_argument, 0, 801},
+        {"overwrite", no_argument, 0, 802},
+        {"nstreams", required_argument, 0, 803},
+        {"tcp-buffersize", required_argument, 0, 804},
+        {"timeout", required_argument, 0, 805},
+        {"udt", no_argument, 0, 806},
+        {"ipv6", no_argument, 0, 807},
+        {"sec-per-mb", required_argument, 0, 808},
+        {"ipv4", no_argument, 0, 809},
+        {"no-delegation", no_argument, 0, 810},
+        {"no-streaming", no_argument, 0, 811},
+        {"skip-evict", no_argument, 0, 812},
 
-    {"retry",             required_argument, 0, 820},
-    {"retry_max-max",     required_argument, 0, 821},
+        {"retry", required_argument, 0, 820},
+        {"retry_max-max", required_argument, 0, 821},
 
-    {"logDir",            required_argument, 0, 900},
-    {"msgDir",            required_argument, 0, 901},
+        {"logDir", required_argument, 0, 900},
+        {"msgDir", required_argument, 0, 901},
 
-    {"help",              no_argument,       0, 0},
-    {"debug",             required_argument, 0, 1},
-    {"stderr",            no_argument,       0, 2},
-    {0, 0, 0, 0}
-};
+        {"help", no_argument, 0, 0},
+        {"debug", required_argument, 0, 1},
+        {"stderr", no_argument, 0, 2},
+        {0, 0, 0, 0}};
 
 const char UrlCopyOpts::short_options[] = "";
 
 static void setChecksum(Transfer &transfer, const std::string &checksum)
 {
-    if (checksum == "x") {
+    if (checksum == "x")
+    {
         return;
     }
 
     size_t colon = checksum.find(':');
-    if (colon == std::string::npos) {
+    if (colon == std::string::npos)
+    {
         transfer.checksumAlgorithm.assign(checksum);
         transfer.checksumValue.clear();
     }
-    else {
+    else
+    {
         transfer.checksumAlgorithm.assign(checksum.substr(0, colon));
         transfer.checksumValue.assign(checksum.substr(colon + 1));
     }
 }
 
-
 std::string translateCopyMode(const std::string &text)
 {
     std::string mode;
     // Translate the copy mode from the url-copy options to the Gfal2 defined types
-    if (text == "pull") {
+    if (text == "pull")
+    {
         mode = GFAL_TRANSFER_TYPE_PULL;
-    } else if (text == "push") {
+    }
+    else if (text == "push")
+    {
         mode = GFAL_TRANSFER_TYPE_PUSH;
-    } else if (text == "streamed") {
+    }
+    else if (text == "streamed")
+    {
         mode = GFAL_TRANSFER_TYPE_STREAMED;
-    } else {
+    }
+    else
+    {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Invalid copy-mode in the fts_url_copy options: " << text << commit;
     }
     return mode;
@@ -141,7 +148,7 @@ std::string translateCopyMode(const std::string &text)
 // Create a transfer out of a string
 static Transfer createFromString(const Transfer &reference, const std::string &line)
 {
-    typedef boost::tokenizer <boost::char_separator<char>> tokenizer;
+    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
     std::string strArray[9];
     tokenizer tokens(line, boost::char_separator<char>(" "));
@@ -170,7 +177,6 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     return t;
 }
 
-
 // Initialize a list from a file
 static Transfer::TransferList initListFromFile(const Transfer &reference, const std::string &path)
 {
@@ -178,277 +184,293 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
     std::ifstream infile(path.c_str(), std::ios_base::in);
 
     Transfer::TransferList list;
-    while (std::getline(infile, line, '\n')) {
-        if (!line.empty()) {
+    while (std::getline(infile, line, '\n'))
+    {
+        if (!line.empty())
+        {
             list.push_back(createFromString(reference, line));
         }
     }
 
     infile.close();
 
-    try {
+    try
+    {
         boost::filesystem::remove(path.c_str());
     }
-    catch (const boost::filesystem::filesystem_error &ex) {
+    catch (const boost::filesystem::filesystem_error &ex)
+    {
         std::cerr << "Failed to clean up the bulk file! " << ex.what() << std::endl;
     }
 
     return list;
 }
 
-
-UrlCopyOpts::UrlCopyOpts():
-        isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
-        optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
-        timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
-        skipEvict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
-        logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
-        debugLevel(0), logToStderr(false)
+// TODO remove the hardcoded True in enableMonitoring
+UrlCopyOpts::UrlCopyOpts() : isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
+                             optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+                             timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
+                             skipEvict(false), enableMonitoring(true), active(0), pingInterval(60), retry(0), retryMax(0),
+                             logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+                             debugLevel(0), logToStderr(false)
 {
 }
-
 
 void UrlCopyOpts::usage(const std::string &bin)
 {
     std::cout << "Usage: " << bin << " [options]" << std::endl
-    << "Options: " << std::endl;
-    for (int i = 0; long_options[i].name; ++i) {
+              << "Options: " << std::endl;
+    for (int i = 0; long_options[i].name; ++i)
+    {
         std::cout << "\t--" << long_options[i].name
-        << ",-" << static_cast<char>(long_options[i].val)
-        << std::endl;
+                  << ",-" << static_cast<char>(long_options[i].val)
+                  << std::endl;
     }
     exit(0);
 }
 
-
-void UrlCopyOpts::parse(int argc, char * const argv[])
+void UrlCopyOpts::parse(int argc, char *const argv[])
 {
     int opt;
     Transfer referenceTransfer;
 
-    try {
-        while ((opt = getopt_long_only(argc, argv, short_options, long_options, NULL)) > -1) {
-            switch (opt) {
-                case 0:
-                    usage(argv[0]);
-                    break;
-                case 1:
-                    if (optarg) {
-                        debugLevel = boost::lexical_cast<unsigned>(optarg);
-                    }
-                    else {
-                        debugLevel = 0;
-                    }
-                    break;
-                case 2:
-                    logToStderr = true;
-                    break;
+    try
+    {
+        while ((opt = getopt_long_only(argc, argv, short_options, long_options, NULL)) > -1)
+        {
+            switch (opt)
+            {
+            case 0:
+                usage(argv[0]);
+                break;
+            case 1:
+                if (optarg)
+                {
+                    debugLevel = boost::lexical_cast<unsigned>(optarg);
+                }
+                else
+                {
+                    debugLevel = 0;
+                }
+                break;
+            case 2:
+                logToStderr = true;
+                break;
 
-                case 100:
-                    referenceTransfer.jobId = optarg;
-                    break;
-                case 101:
-                    referenceTransfer.fileId = boost::lexical_cast<unsigned long long>(optarg);
-                    break;
-                case 102:
-                    referenceTransfer.source = Uri::parse(optarg);
-                    break;
-                case 103:
-                    referenceTransfer.destination = Uri::parse(optarg);
-                    break;
-                case 104:
-                    referenceTransfer.userFileSize = boost::lexical_cast<long long>(optarg);
-                    break;
-                case 105:
-                    bulkFile = boost::lexical_cast<std::string>(optarg);
-                    break;
+            case 100:
+                referenceTransfer.jobId = optarg;
+                break;
+            case 101:
+                referenceTransfer.fileId = boost::lexical_cast<unsigned long long>(optarg);
+                break;
+            case 102:
+                referenceTransfer.source = Uri::parse(optarg);
+                break;
+            case 103:
+                referenceTransfer.destination = Uri::parse(optarg);
+                break;
+            case 104:
+                referenceTransfer.userFileSize = boost::lexical_cast<long long>(optarg);
+                break;
+            case 105:
+                bulkFile = boost::lexical_cast<std::string>(optarg);
+                break;
 
-                case 200:
-                    isSessionReuse = true;
-                    break;
-                case 202:
-                    referenceTransfer.isMultipleReplicaJob = true;
-                    break;
-                case 203:
-                    referenceTransfer.isLastReplica = true;
-                    break;
-                case 204:
-                    referenceTransfer.isMultihopJob = true;
-                    break;
-                case 205:
-                    referenceTransfer.isLastHop = true;
-                    break;
-                case 206:
-                    referenceTransfer.isArchiving = true;
-                    break;
+            case 200:
+                isSessionReuse = true;
+                break;
+            case 202:
+                referenceTransfer.isMultipleReplicaJob = true;
+                break;
+            case 203:
+                referenceTransfer.isLastReplica = true;
+                break;
+            case 204:
+                referenceTransfer.isMultihopJob = true;
+                break;
+            case 205:
+                referenceTransfer.isLastHop = true;
+                break;
+            case 206:
+                referenceTransfer.isArchiving = true;
+                break;
 
-                case 300:
-                    setChecksum(referenceTransfer, optarg);
-                    break;
-                case 301:
-                    if (strncmp("target", optarg, strlen("target")) == 0 || strncmp("t", optarg, strlen("t")) == 0) {
-                        referenceTransfer.checksumMode = Transfer::CHECKSUM_TARGET;
-                    }
-                    else if (strncmp("source", optarg, strlen("source")) == 0 || strncmp("s", optarg, strlen("s")) == 0) {
-                        referenceTransfer.checksumMode = Transfer::CHECKSUM_SOURCE;
-                    }
-                    else if (strncmp("both", optarg, strlen("both")) == 0 || strncmp("b", optarg, strlen("b")) == 0) {
-                        referenceTransfer.checksumMode = Transfer::CHECKSUM_BOTH;
-                    }
-                    else {
-            			referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
-                    }
-                    break;
-                case 302:
-                    strictCopy = true;
-                    break;
-                case 303:
-                    dstFileReport = true;
-                    break;
-                case 304:
-                    thirdPartyTURL = boost::lexical_cast<std::string>(optarg);
-                    break;
-                case 305:
-                    referenceTransfer.scitag = boost::lexical_cast<unsigned>(optarg);
-                    break;
+            case 300:
+                setChecksum(referenceTransfer, optarg);
+                break;
+            case 301:
+                if (strncmp("target", optarg, strlen("target")) == 0 || strncmp("t", optarg, strlen("t")) == 0)
+                {
+                    referenceTransfer.checksumMode = Transfer::CHECKSUM_TARGET;
+                }
+                else if (strncmp("source", optarg, strlen("source")) == 0 || strncmp("s", optarg, strlen("s")) == 0)
+                {
+                    referenceTransfer.checksumMode = Transfer::CHECKSUM_SOURCE;
+                }
+                else if (strncmp("both", optarg, strlen("both")) == 0 || strncmp("b", optarg, strlen("b")) == 0)
+                {
+                    referenceTransfer.checksumMode = Transfer::CHECKSUM_BOTH;
+                }
+                else
+                {
+                    referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
+                }
+                break;
+            case 302:
+                strictCopy = true;
+                break;
+            case 303:
+                dstFileReport = true;
+                break;
+            case 304:
+                thirdPartyTURL = boost::lexical_cast<std::string>(optarg);
+                break;
+            case 305:
+                referenceTransfer.scitag = boost::lexical_cast<unsigned>(optarg);
+                break;
 
-                case 400:
-                    referenceTransfer.tokenBringOnline = optarg;
-                    break;
-                case 401:
-                    referenceTransfer.destTokenDescription = optarg;
-                    break;
-                case 402:
-                    referenceTransfer.sourceTokenDescription = optarg;
-                    break;
+            case 400:
+                referenceTransfer.tokenBringOnline = optarg;
+                break;
+            case 401:
+                referenceTransfer.destTokenDescription = optarg;
+                break;
+            case 402:
+                referenceTransfer.sourceTokenDescription = optarg;
+                break;
 
-                case 500:
-                    voName = optarg;
-                    break;
-                case 501:
-                    userDn = optarg;
-                    break;
-                case 502:
-                    proxy = optarg;
-                    break;
-                case 503:
-                    oauthFile = optarg;
-                    break;
-                case 504:
-                    referenceTransfer.sourceTokenIssuer = optarg;
-                    break;
-                case 505:
-                    referenceTransfer.destTokenIssuer = optarg;
-                    break;
-                case 506:
-                	authMethod = optarg;
-                    break;
-                case 507:
-                    copyMode = translateCopyMode(optarg);
-                    break;
-                case 508:
-                    disableCopyFallback = true;
-                    break;
-                case 509:
-                    retrieveSEToken = true;
-                    break;
+            case 500:
+                voName = optarg;
+                break;
+            case 501:
+                userDn = optarg;
+                break;
+            case 502:
+                proxy = optarg;
+                break;
+            case 503:
+                oauthFile = optarg;
+                break;
+            case 504:
+                referenceTransfer.sourceTokenIssuer = optarg;
+                break;
+            case 505:
+                referenceTransfer.destTokenIssuer = optarg;
+                break;
+            case 506:
+                authMethod = optarg;
+                break;
+            case 507:
+                copyMode = translateCopyMode(optarg);
+                break;
+            case 508:
+                disableCopyFallback = true;
+                break;
+            case 509:
+                retrieveSEToken = true;
+                break;
 
-                case 600:
-                    infosys = optarg;
-                    break;
-                case 601:
-                    alias = optarg;
-                    break;
-                case 602:
-                    enableMonitoring = true;
-                    break;
-                case 603:
-                    active = boost::lexical_cast<unsigned>(optarg);
-                    break;
-                case 604:
-                    pingInterval = boost::lexical_cast<unsigned>(optarg);
-                    break;
+            case 600:
+                infosys = optarg;
+                break;
+            case 601:
+                alias = optarg;
+                break;
+            case 602:
+                enableMonitoring = true;
+                break;
+            case 603:
+                active = boost::lexical_cast<unsigned>(optarg);
+                break;
+            case 604:
+                pingInterval = boost::lexical_cast<unsigned>(optarg);
+                break;
 
-                case 700:
-                    referenceTransfer.fileMetadata = optarg;
-                    break;
-                case 701:
-                    referenceTransfer.transferMetadata = replaceMetadataString(optarg);
-                    break;
-                case 702:
-                    jobMetadata = optarg;
-                    break;
+            case 700:
+                referenceTransfer.fileMetadata = optarg;
+                break;
+            case 701:
+                referenceTransfer.transferMetadata = replaceMetadataString(optarg);
+                break;
+            case 702:
+                jobMetadata = optarg;
+                break;
 
-                case 801:
-                    optimizerLevel = boost::lexical_cast<int>(optarg);
-                    break;
-                case 802:
-                    overwrite = true;
-                    break;
-                case 803:
-                    nStreams = boost::lexical_cast<int>(optarg);
-                    break;
-                case 804:
-                    tcpBuffersize = boost::lexical_cast<unsigned>(optarg);
-                    break;
-                case 805:
-                    timeout = boost::lexical_cast<unsigned>(optarg);
-                    break;
-                case 806:
-                    enableUdt = true;
-                    break;
-                case 807:
-                    enableIpv6 = true;
-                    break;
-                case 808:
-                    addSecPerMb = boost::lexical_cast<int>(optarg);
-                    break;
-                case 809:
-                    enableIpv6 = false;
-                    break;
-                case 810:
-                    noDelegation = true;
-                    break;
-                case 811:
-                    noStreaming = true;
-                    break;
-                case 812:
-                    skipEvict = true;
-                    break;
+            case 801:
+                optimizerLevel = boost::lexical_cast<int>(optarg);
+                break;
+            case 802:
+                overwrite = true;
+                break;
+            case 803:
+                nStreams = boost::lexical_cast<int>(optarg);
+                break;
+            case 804:
+                tcpBuffersize = boost::lexical_cast<unsigned>(optarg);
+                break;
+            case 805:
+                timeout = boost::lexical_cast<unsigned>(optarg);
+                break;
+            case 806:
+                enableUdt = true;
+                break;
+            case 807:
+                enableIpv6 = true;
+                break;
+            case 808:
+                addSecPerMb = boost::lexical_cast<int>(optarg);
+                break;
+            case 809:
+                enableIpv6 = false;
+                break;
+            case 810:
+                noDelegation = true;
+                break;
+            case 811:
+                noStreaming = true;
+                break;
+            case 812:
+                skipEvict = true;
+                break;
 
-                case 820:
-                    retry = boost::lexical_cast<int>(optarg);
-                    break;
-                case 821:
-                    retryMax = boost::lexical_cast<int>(optarg);
-                    break;
+            case 820:
+                retry = boost::lexical_cast<int>(optarg);
+                break;
+            case 821:
+                retryMax = boost::lexical_cast<int>(optarg);
+                break;
 
-                case 900:
-                    logDir = boost::lexical_cast<std::string>(optarg);
-                    break;
-                case 901:
-                    msgDir = boost::lexical_cast<std::string>(optarg);
-                    break;
+            case 900:
+                logDir = boost::lexical_cast<std::string>(optarg);
+                break;
+            case 901:
+                msgDir = boost::lexical_cast<std::string>(optarg);
+                break;
 
-                default:
-                    usage(argv[0]);
+            default:
+                usage(argv[0]);
             }
         }
     }
-    catch (boost::bad_lexical_cast &e) {
+    catch (boost::bad_lexical_cast &e)
+    {
         std::cerr << "Expected a numeric value for option -" << static_cast<char>(opt) << std::endl;
         exit(-1);
     }
 
     if (bulkFile.empty() &&
-        (!referenceTransfer.source.fullUri.empty() && !referenceTransfer.destination.fullUri.empty())) {
+        (!referenceTransfer.source.fullUri.empty() && !referenceTransfer.destination.fullUri.empty()))
+    {
         transfers.push_back(referenceTransfer);
     }
-    else {
-        try {
+    else
+    {
+        try
+        {
             transfers = initListFromFile(referenceTransfer, bulkFile);
         }
-        catch (const std::exception &ex) {
+        catch (const std::exception &ex)
+        {
             std::cerr << "Failed to parse the bulk file! " << ex.what() << std::endl;
             exit(-1);
         }
@@ -457,10 +479,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
     validateRequired();
 }
 
-
 void UrlCopyOpts::validateRequired()
 {
-    if (transfers.empty()) {
+    if (transfers.empty())
+    {
         std::cerr << "Specify --source and --destination, or --bulk-file" << std::endl;
         exit(-1);
     }

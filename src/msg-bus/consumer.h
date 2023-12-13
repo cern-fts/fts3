@@ -41,9 +41,9 @@ private:
     std::unique_ptr<DirQ> logQueue;
     std::unique_ptr<DirQ> stagingQueue;
     std::unique_ptr<DirQ> deletionQueue;
+    std::unique_ptr<DirQ> eventsQueue;
 
 public:
-
     Consumer(const std::string &baseDir, unsigned limit = 10000);
 
     ~Consumer();
@@ -60,8 +60,9 @@ public:
 
     int runConsumerMonitoring(std::vector<std::string> &messages);
 
+    int runConsumerEvents(std::vector<std::string> &messages);
+
     void purgeAll();
 };
-
 
 #endif // CONSUMER_H

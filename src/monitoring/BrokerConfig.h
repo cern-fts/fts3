@@ -56,6 +56,9 @@ public:
     /// Destination for completion messages
     std::string GetCompleteDestination() const;
 
+    /// Destination for event trigger messages
+    std::string GetEventTriggerDestination() const;
+
     /// Destination for queue state messages
     std::string GetStateDestination() const;
 

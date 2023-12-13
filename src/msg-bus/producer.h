@@ -28,7 +28,8 @@
 
 struct DirQ;
 
-class Producer {
+class Producer
+{
 private:
     std::string baseDir;
     std::unique_ptr<DirQ> monitoringQueue;
@@ -37,6 +38,7 @@ private:
     std::unique_ptr<DirQ> logQueue;
     std::unique_ptr<DirQ> deletionQueue;
     std::unique_ptr<DirQ> stagingQueue;
+    std::unique_ptr<DirQ> eventsQueue;
 
 public:
     Producer(const std::string &baseDir);
@@ -52,7 +54,8 @@ public:
     int runProducerStaging(const fts3::events::MessageBringonline &msg);
 
     int runProducerMonitoring(const std::string &serialized);
-};
 
+    int runProducerEvents(const std::string &serialized);
+};
 
 #endif // PRODUCER_H

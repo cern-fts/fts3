@@ -27,59 +27,66 @@
 
 #include "common/Logger.h"
 
-
-Producer::Producer(const std::string &baseDir): baseDir(baseDir),
-    monitoringQueue(new DirQ(baseDir + "/monitoring")), statusQueue(new DirQ(baseDir + "/status")),
-    stalledQueue(new DirQ(baseDir + "/stalled")), logQueue(new DirQ(baseDir + "/logs")),
-    deletionQueue(new DirQ(baseDir + "/deletion")), stagingQueue(new DirQ(baseDir + "/staging"))
+Producer::Producer(const std::string &baseDir) : baseDir(baseDir),
+                                                 monitoringQueue(new DirQ(baseDir + "/monitoring")), statusQueue(new DirQ(baseDir + "/status")),
+                                                 stalledQueue(new DirQ(baseDir + "/stalled")), logQueue(new DirQ(baseDir + "/logs")),
+                                                 deletionQueue(new DirQ(baseDir + "/deletion")), stagingQueue(new DirQ(baseDir + "/staging")),
+                                                 eventsQueue(new DirQ(baseDir + "/events"))
 {
 }
-
 
 Producer::~Producer()
 {
 }
 
-
 boost::thread_specific_ptr<std::istringstream> msgBuffer;
-
 
 static void populateBuffer(const std::string &msg)
 {
-    if (msgBuffer.get() == NULL) {
+    if (msgBuffer.get() == NULL)
+    {
         msgBuffer.reset(new std::istringstream());
     }
     msgBuffer->clear();
     msgBuffer->str(msg);
 }
 
-
 static int producerDirqW(dirq_t, char *buffer, size_t length)
 {
     return msgBuffer->readsome(buffer, length);
 }
 
-
 static int writeMessage(std::unique_ptr<DirQ> &dirqHandle, const google::protobuf::Message &msg)
 {
     populateBuffer(msg.SerializeAsString());
-    if (dirq_add(*dirqHandle, producerDirqW) == NULL) {
+    if (dirq_add(*dirqHandle, producerDirqW) == NULL)
+    {
         return dirq_get_errcode(*dirqHandle);
     }
 
     return 0;
 }
 
-
 int Producer::runProducerStatus(const fts3::events::Message &msg)
 {
     return writeMessage(statusQueue, msg);
 }
 
-
 int Producer::runProducerLog(const fts3::events::MessageLog &msg)
 {
     return writeMessage(logQueue, msg);
+}
+
+int Producer::runProducerEvents(const std::string &serialized)
+{
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "EGG: running runProducerEvents" << fts3::common::commit;
+    populateBuffer(serialized);
+    if (dirq_add(*eventsQueue, producerDirqW) == NULL)
+    {
+        return dirq_get_errcode(*eventsQueue);
+    }
+
+    return 0;
 }
 
 int Producer::runProducerDeletions(const fts3::events::MessageBringonline &msg)
@@ -87,17 +94,16 @@ int Producer::runProducerDeletions(const fts3::events::MessageBringonline &msg)
     return writeMessage(deletionQueue, msg);
 }
 
-
 int Producer::runProducerStaging(const fts3::events::MessageBringonline &msg)
 {
     return writeMessage(stagingQueue, msg);
 }
 
-
 int Producer::runProducerMonitoring(const std::string &serialized)
 {
     populateBuffer(serialized);
-    if (dirq_add(*monitoringQueue, producerDirqW) == NULL) {
+    if (dirq_add(*monitoringQueue, producerDirqW) == NULL)
+    {
         return dirq_get_errcode(*monitoringQueue);
     }
 
