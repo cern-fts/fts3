@@ -12,7 +12,7 @@ function print_info {
   printf "======================\n"
 }
 
-TIMESTAMP=`date +%y%m%d%H%M`
+TIMESTAMP=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%y%m%d%H%M)
 GITREF=`git rev-parse --short HEAD`
 RELEASE=r${TIMESTAMP}git${GITREF}
 BUILD="devel"
