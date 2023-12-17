@@ -96,16 +96,20 @@ void Optimizer::run(void)
 {
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before getActive Pairs" << commit;
         std::list<Pair> pairs = dataSource->getActivePairs();
         // Make sure the order is always the same
         // See FTS-1094
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before pairs.sort()" << commit;
         pairs.sort();
 
         // Part 1 of Optimizer: Updating global information about performance on all pairs.
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before getCurrentIntervalInputState" << commit;
         Optimizer::getCurrentIntervalInputState(pairs);
 
         // Part 2 of Optimizer: Using state to compute "decisions" for number of concurrent connections
         // on each pair.
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before updateDecision" << commit;
         Optimizer::updateDecisions(pairs);
     }
     catch (std::exception &e) {

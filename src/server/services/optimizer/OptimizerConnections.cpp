@@ -61,7 +61,9 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 void Optimizer::getCurrentIntervalInputState(const std::list<Pair> &pairs) {
     // Initializes currentSEStateMap with limit information from
     // t_se table in the SQL database.
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before getStorageStates" << commit;
     dataSource->getStorageStates(&currentSEStateMap);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before getStorageStates" << commit;
     dataSource->getNetLinkStates(&currentNetLinkStateMap); 
 
     for (auto i = pairs.begin(); i != pairs.end(); ++i) {
