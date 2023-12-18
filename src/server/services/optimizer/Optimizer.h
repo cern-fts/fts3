@@ -98,6 +98,7 @@ struct PairState {
 
 
 struct StorageState {
+    std::string storage;
 
     //The following two variables store instantaneous inbound (asDest) and outbound (asSource) throughput for a given Storage element.
     //The "Inst" throughput values are calculated by the getThroughputAsSourceInst and getThroughputAsDestinationInst methods (in OptimizerDataSource.cpp)
@@ -131,7 +132,8 @@ struct StorageState {
                     inboundMaxActive(0), outboundMaxActive(0),
                     inboundMaxThroughput(0),outboundMaxThroughput(0) {}
 
-    StorageState(int ia, double it, int oa, double ot):
+    StorageState(std::string storage, int ia, double it, int oa, double ot):
+                storage(std::move(storage)),
                 asSourceThroughputInst(0),asDestThroughputInst(0),
                 asSourceThroughput(0), asDestThroughput(0),
                 asSourceNumPairs(0), asDestNumPairs(0), 
