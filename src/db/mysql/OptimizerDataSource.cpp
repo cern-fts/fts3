@@ -151,7 +151,12 @@ public:
             soci::into(inActiveGlobal, nullInActive), soci::into(inTputGlobal, nullInTput),
             soci::into(outActiveGlobal, nullOutActive), soci::into(outTputGlobal, nullOutTput);
 
+       
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "After SQL query 1" << commit;
+
         (*result)["*"] = StorageState(inActiveGlobal, inTputGlobal, outActiveGlobal, outTputGlobal);
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "After saving *" << commit;
 
         // We then fill in the table for every SE
         soci::rowset<soci::row> rs = (sql.prepare <<
@@ -160,12 +165,15 @@ public:
             "FROM t_se WHERE storage != '*'"
         );
 
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "After SQL query 2" << commit;
+
         soci::indicator ind;
         for (auto i = rs.begin(); i != rs.end(); ++i) { //For each row in the table, load all values into an SEState object and store in the map "result"
             std::string se = i->get<std::string>("storage"); //indexed with the name of the storage element
 
             StorageState SEState;
 
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "after get storage" << commit;
             SEState.outboundMaxActive = i->get<int>("outbound_max_active", ind);
             if (ind == soci::i_null) {
                 SEState.outboundMaxActive = 0;
@@ -173,6 +181,7 @@ public:
                     SEState.outboundMaxActive = outActiveGlobal;
                 }
             }
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "after outbound_max_active" << commit;
 
             SEState.outboundMaxThroughput = i->get<double>("outbound_max_throughput", ind);
             if (ind == soci::i_null) {
@@ -182,6 +191,8 @@ public:
                 }
             }
 
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "after outbound_max_throughput" << commit;
+
             SEState.inboundMaxActive = i->get<int>("inbound_max_active");
             if (ind == soci::i_null) {
                 SEState.inboundMaxActive = 0;
@@ -189,6 +200,8 @@ public:
                     SEState.inboundMaxActive = inActiveGlobal;
                 }
             }
+
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "after inbound_max_active" << commit;
 
             SEState.inboundMaxThroughput = i->get<double>("inbound_max_throughput");
             if (ind == soci::i_null) {
@@ -198,6 +211,8 @@ public:
                 }
             }            
 
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "after inbound_max_throughput" << commit;
+
             // Queries database to get current instantaneous throughput value.
             if (SEState.outboundMaxThroughput > 0) {
                 SEState.asSourceThroughputInst = getThroughputAsSourceInst(se);
@@ -205,6 +220,8 @@ public:
             if (SEState.inboundMaxThroughput > 0) { 
                 SEState.asDestThroughputInst = getThroughputAsDestinationInst(se);                
             }
+
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "after inst" << commit;
 
             (*result)[se] = SEState;
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "inbound max throughput for " << se 
