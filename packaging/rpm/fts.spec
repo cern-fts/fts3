@@ -330,10 +330,10 @@ fi
 %dir %attr(0755,root,root) %{_datadir}/fts/
 %{_datadir}/fts/fts-database-upgrade.py*
 
-%attr(0644,root,root) %{_unitdir}/fts-server.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-server.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-qos.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %attr(0644,root,root) %{_unitdir}/fts-bringonline.service
-%attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
-%attr(0644,root,root) %{_unitdir}/fts-qos.service
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
