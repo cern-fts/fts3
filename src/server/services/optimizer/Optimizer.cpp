@@ -94,7 +94,7 @@ void Optimizer::setEmaAlpha(double alpha)
 
 void Optimizer::run(void)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "S&J: Optimizer run" << commit;
     try {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Before getActive Pairs" << commit;
         std::list<Pair> pairs = dataSource->getActivePairs();
