@@ -165,22 +165,22 @@ public:
             SEState.storage = row.get<std::string>("storage"); // indexed with the name of the storage element
 
             SEState.outboundMaxActive = row.get<int>("outbound_max_active", 0);
-            if (nullOutActive != soci::i_null) {
+            if (SEState.outboundMaxActive == 0 && nullOutActive != soci::i_null) {
                 SEState.outboundMaxActive = outActiveGlobal;
             }
 
             SEState.outboundMaxThroughput = row.get<double>("outbound_max_throughput", 0.0);
-            if (nullOutTput != soci::i_null) {
+            if (SEState.outboundMaxThroughput == 0 && nullOutTput != soci::i_null) {
                 SEState.outboundMaxThroughput = outTputGlobal;
             }
 
             SEState.inboundMaxActive = row.get<int>("inbound_max_active", 0);
-            if (nullInActive != soci::i_null) {
+            if (SEState.inboundMaxActive == 0 && nullInActive != soci::i_null) {
                 SEState.inboundMaxActive = inActiveGlobal;
             }
 
             SEState.inboundMaxThroughput = row.get<double>("inbound_max_throughput", 0.0);
-            if (nullInTput != soci::i_null) {
+            if (SEState.inboundMaxThroughput == 0 && nullInTput != soci::i_null) {
                 SEState.inboundMaxThroughput = inTputGlobal;
             }
 
