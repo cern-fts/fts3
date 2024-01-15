@@ -85,6 +85,7 @@ utilization and allows for configuring so called VO-shares.
 %package libs
 Summary:    File Transfer Service version 3 libraries
 
+Requires:   zeromq
 Obsoletes:  fts-mysql-debuginfo < %{version}
 
 %description libs
@@ -130,7 +131,6 @@ Group:      Development/Tools
 
 Requires:   fts-libs%{?_isa} = %{version}-%{release}
 Requires:   gfal2-plugin-mock
-Requires:   zeromq
 
 %description tests
 Testing binaries for the FTS Server and related components.
