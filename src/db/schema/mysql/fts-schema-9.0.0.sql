@@ -782,6 +782,11 @@ CREATE TABLE `t_token` (
   `access_token` longtext NOT NULL,
   `refresh_token` longtext,
   `issuer` varchar(1024) NOT NULL,
+  `scope` varchar(1024) NOT NULL,
+  `audience` varchar(1024) NOT NULL,
+  `retry_timestamp` timestamp NULL DEFAULT NULL,
+  `retry_delay_m` int unsigned NULL DEFAULT 0,
+  `attempts` int unsigned NULL DEFAULT 0,
   PRIMARY KEY (`token_id`),
   CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
