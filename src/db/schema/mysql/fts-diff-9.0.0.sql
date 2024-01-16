@@ -14,6 +14,7 @@ CREATE TABLE `t_token_provider` (
 CREATE TABLE `t_token` (
   `token_id` char(16) NOT NULL,
   `access_token` longtext NOT NULL,
+  `access_token_expiry` timestamp NOT NULL,
   `refresh_token` longtext,
   `issuer` varchar(1024) NOT NULL,
   `scope` varchar(1024) NOT NULL,
