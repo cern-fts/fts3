@@ -423,6 +423,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             po::value<std::string>( &(_vars["TokenExchangeCheckInterval"]) )->default_value("30"),
             "In seconds, how often to check for tokens eligible for token-exchange (empty refresh token)"
     )
+    (
+            "TokenRefreshCheckInterval",
+            po::value<std::string>( &(_vars["TokenRefreshCheckInterval"]) )->default_value("30"),
+            "In seconds, how often to check for access tokens that need refreshing"
+    )
 	(
 	    "OptimizerMaxSuccessRate",
 	     po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),

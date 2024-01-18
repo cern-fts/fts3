@@ -24,6 +24,7 @@
 #include "config/ServerConfig.h"
 #include "services/cleaner/CleanerService.h"
 #include "services/tokens/TokenExchangeService.h"
+#include "services/tokens/TokenRefreshService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/ReuseTransfersService.h"
 #include "services/transfers/ForceStartTransfersService.h"
@@ -96,6 +97,7 @@ void Server::start()
     addService(new SupervisorService);
     addService(new ForceStartTransfersService(heartBeatService));
     addService(new TokenExchangeService(heartBeatService));
+    addService(new TokenRefreshService(heartBeatService));
 }
 
 

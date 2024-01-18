@@ -33,6 +33,7 @@ extern time_t retrieveRecords;
 extern time_t updateRecords;
 extern time_t stallRecords;
 extern time_t tokenExchangeRecords;
+extern time_t tokenRefreshRecords;
 
 class HeartBeat: public BaseService
 {

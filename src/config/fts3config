@@ -174,3 +174,6 @@ LogLevel=INFO
 
 # In seconds, how often to check for access tokens which don't have an associated refresh token
 TokenExchangeCheckInterval = 30
+
+# In seconds, how often to check for access tokens close to their expiration time
+TokenRefreshCheckInterval = 30

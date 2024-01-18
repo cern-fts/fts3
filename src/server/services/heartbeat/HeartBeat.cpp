@@ -36,6 +36,7 @@ time_t retrieveRecords = time(0);
 time_t updateRecords = time(0);
 time_t stallRecords = time(0);
 time_t tokenExchangeRecords = time(0);
+time_t tokenRefreshRecords = time(0);
 
 HeartBeat::HeartBeat(): BaseService("HeartBeat"), index(0), count(0), start(0), end(0)
 {

@@ -104,16 +104,22 @@ struct type_conversion<Token>
 
     static void from_base(values const& v, indicator, Token& token)
     {
-        token.tokenId      = v.get<std::string>("token_id");
-        token.accessToken  = v.get<std::string>("access_token", "");
-        token.refreshToken = v.get<std::string>("refresh_token", "");
-        token.scope        = v.get<std::string>("scope");
-        token.audience     = v.get<std::string>("audience", "");
-        token.issuer       = v.get<std::string>("issuer");
+        token.tokenId        = v.get<std::string>("token_id");
+        token.accessToken    = v.get<std::string>("access_token", "");
+        token.refreshToken   = v.get<std::string>("refresh_token", "");
+        token.scope          = v.get<std::string>("scope");
+        token.audience       = v.get<std::string>("audience", "");
+        token.issuer         = v.get<std::string>("issuer");
+        token.expirationTime = 0;
 
         auto issuer_size = token.issuer.size();
         if (token.issuer[issuer_size - 1] != '/') {
             token.issuer += "/";
+        }
+
+        if (v.get_indicator("access_token_expiry") == soci::i_ok) {
+            auto aux_tm = v.get<struct tm>("access_token_expiry");
+            token.expirationTime = timegm(&aux_tm);
         }
     }
 };
