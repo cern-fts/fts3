@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2023
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,60 +16,60 @@
 
 #pragma once
 
+#include "db/generic/Token.h"
 #include "services/BaseService.h"
 #include "services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
 
-class TokenExchangeService: public BaseService
+class TokenRefreshService: public BaseService
 {
 public:
-    TokenExchangeService(HeartBeat *beat);
+    TokenRefreshService(HeartBeat *beat);
 
     virtual void runService();
 
     /**
-     * Used by the TokenExchangeExecutor workers to publish a successful
-     * (tokenId, refreshToken) pair into the results set.
+     * Used by the TokenRefreshExecutor workers to publish a successful
+     * refreshed access token into the results set.
      *
-     * @param token_id The token ID
-     * @param refreshToken The refresh token value
+     * @param refreshedToken The refreshed access token
      */
-    void registerRefreshToken(const std::string& token_id, const std::string& refreshToken);
+    void registerRefreshedAccessToken(const RefreshedToken& refreshToken);
 
     /**
-     * Used by the TokenExchangeExecutor workers to publish a failed token-exchange attempt.
+     * Used by the TokenRefreshExecutor workers to publish a failed token-refresh attempt.
      *
      * @param token_id The token ID
      * @param message The error message encountered
      */
-    void registerFailedTokenExchange(const std::string& token_id, const std::string& message);
+    void registerFailedTokenRefresh(const std::string& token_id, const std::string& message);
 
 protected:
     int execPoolSize;
     boost::posix_time::time_duration pollInterval;
     HeartBeat *beat;
 
-    void getRefreshTokens();
-    void handleFailedTokenExchange();
+    void refreshAccessTokens();
+    void handleFailedTokenRefresh();
 
 private:
-    /// Protect concurrent access to "refreshTokens" set
+    /// Protect concurrent access to "refreshedTokens" set
     boost::shared_mutex mxRefresh;
 
-    /// Set of <token_id, refresh_token> for refresh tokens
+    /// Set of <token_id, access_token, refresh_token> for refreshed access tokens
     /// The set is populated by the worker threads
     /// and will be collected at the end of a cycle
-    std::set<std::pair<std::string, std::string>> refreshTokens;
+    std::set<RefreshedToken> refreshedTokens;
 
-    /// Protect concurrent access to "failedExchanges" set
+    /// Protect concurrent access to "failedRefreshes" set
     boost::shared_mutex mxFailed;
 
-    /// Set of <token_id, message> for failed token-exchange attempts.
+    /// Set of <token_id, message> for failed token-refresh attempts.
     /// The set is populated by the worker threads
     /// and will be collected at the end of a cycle
-    std::set<std::pair<std::string, std::string>> failedExchanges;
+    std::set<std::pair<std::string, std::string>> failedRefreshes;
 };
 
 } // end namespace server

@@ -377,8 +377,14 @@ public:
     /// Returns list of access tokens without an associated refresh token
     virtual std::list<Token> getAccessTokensWithoutRefresh() = 0;
 
+    /// Returns list of access tokens that need refreshing
+    virtual std::list<Token> getAccessTokensForRefresh() = 0;
+
     /// Store a list of refresh tokens identified by token ID
     virtual void storeRefreshTokens(const std::set< std::pair<std::string, std::string> >& refreshTokens) = 0;
+
+    /// Store a list of refreshed access tokens
+    virtual void storeRefreshedAccessTokens(const std::set<RefreshedToken>& refreshedTokens) = 0;
 
     /// Mark token retry timestamp for failed token exchange
     virtual void markFailedTokenExchange(const std::list<std::string>& tokenIds) = 0;

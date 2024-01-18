@@ -42,6 +42,37 @@ TokenExchangeService::TokenExchangeService(HeartBeat *beat) :
     pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
 }
 
+void TokenExchangeService::runService() {
+
+    auto db = db::DBSingleton::instance().getDBObjectInstance();
+
+    while (!boost::this_thread::interruption_requested()) {
+        tokenExchangeRecords = time(nullptr);
+
+        try {
+            boost::this_thread::sleep(pollInterval);
+
+            if (DrainMode::instance()) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more token-exchange for this instance!" << commit;
+                boost::this_thread::sleep(boost::posix_time::seconds(15));
+                continue;
+            }
+
+            // This service intentionally runs only on the first node
+            if (beat->isLeadNode(true)) {
+                getRefreshTokens();
+                handleFailedTokenExchange();
+                // The below function does not require any state from the service
+                db->updateTokenPrepFiles();
+            }
+        } catch (std::exception &e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService!" << commit;
+        }
+    }
+}
+
 void TokenExchangeService::getRefreshTokens() {
     auto db = db::DBSingleton::instance().getDBObjectInstance();
     ThreadPool<TokenExchangeExecutor> execPool(execPoolSize);
@@ -125,37 +156,6 @@ void TokenExchangeService::handleFailedTokenExchange()
         db->markFailedTokenExchange(token_ids);
         db->failTransfersWithFailedTokenExchange(failedExchanges);
         failedExchanges.clear();
-    }
-}
-
-void TokenExchangeService::runService() {
-
-    auto db = db::DBSingleton::instance().getDBObjectInstance();
-
-    while (!boost::this_thread::interruption_requested()) {
-        tokenExchangeRecords = time(nullptr);
-
-        try {
-            boost::this_thread::sleep(pollInterval);
-
-            if (DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more token-exchange for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::seconds(15));
-                continue;
-            }
-
-            // This service intentionally runs only on the first node
-            if (beat->isLeadNode(true)) {
-                getRefreshTokens();
-                handleFailedTokenExchange();
-                // The below function does not require any state from the service
-                db->updateTokenPrepFiles();
-            }
-        } catch (std::exception &e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;
-        } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService!" << commit;
-        }
     }
 }
 

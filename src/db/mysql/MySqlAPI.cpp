@@ -4290,12 +4290,44 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
     try
     {
         const soci::rowset<Token> rs = (sql.prepare <<
-                                " SELECT token_id, access_token, refresh_token, issuer, scope, audience "
+                                " SELECT token_id, access_token, refresh_token, "
+                                "        issuer, scope, audience, access_token_expiry "
                                 " FROM t_token "
                                 " WHERE refresh_token IS NULL AND "
                                 "       (retry_timestamp IS NULL OR retry_timestamp < UTC_TIMESTAMP()) AND "
                                 "       attempts < 5"
                                 " ORDER BY NULL");
+
+        return {rs.begin(), rs.end()};
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+std::list<Token> MySqlAPI::getAccessTokensForRefresh()
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const soci::rowset<Token> rs = (sql.prepare <<
+                                " SELECT DISTINCT t.token_id, t.access_token, t.refresh_token, "
+                                "        t.issuer, t.scope, t.audience, t.access_token_expiry "
+                                " FROM t_token t "
+                                "     INNER JOIN t_file f ON (f.src_token_id = t.token_id OR f.dst_token_id = t.token_id)"
+                                " WHERE f.file_state = 'SUBMITTED' "
+                                "     AND t.refresh_token IS NOT NULL "
+                                "     AND (t.access_token_expiry - interval 20 minute) < UTC_TIMESTAMP() "
+                                "     AND UNIX_TIMESTAMP(t.access_token_expiry) > 0 "
+                                " ORDER BY NULL"
+                                );
 
         return {rs.begin(), rs.end()};
     }
@@ -4329,6 +4361,54 @@ void MySqlAPI::storeRefreshTokens(const std::set< std::pair<std::string, std::st
         for (const auto& pair: refreshTokens) {
             tokenId = pair.first;
             refreshToken = pair.second;
+            stmt.execute(true);
+        }
+        sql.commit();
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::storeRefreshedAccessTokens(const std::set<RefreshedToken>& refreshedTokens)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        // Prepare statement for storing refreshed access token
+        std::string tokenId;
+        std::string accessToken;
+        std::string refreshToken;
+        struct tm expirationTimestamp;
+        soci::statement stmt = (sql.prepare <<
+                                            " UPDATE t_token SET "
+                                            "   access_token = :accessToken, "
+                                            "   refresh_token = :refreshToken, "
+                                            "   access_token_expiry = :expirationTime "
+                                            " WHERE token_id = :tokenId",
+                                soci::use(accessToken),
+                                soci::use(refreshToken),
+                                soci::use(expirationTimestamp),
+                                soci::use(tokenId));
+
+        sql.begin();
+        for (const auto& it: refreshedTokens) {
+            tokenId = it.tokenId;
+            accessToken = it.accessToken;
+            refreshToken = it.refreshToken;
+            gmtime_r(&it.expirationTime, &expirationTimestamp);
+
+            if (refreshToken.empty()) {
+                refreshToken = it.previousRefreshToken;
+            }
+
             stmt.execute(true);
         }
         sql.commit();
