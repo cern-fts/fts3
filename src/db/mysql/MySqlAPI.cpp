@@ -4324,8 +4324,8 @@ std::list<Token> MySqlAPI::getAccessTokensForRefresh()
                                 "     INNER JOIN t_file f ON (f.src_token_id = t.token_id OR f.dst_token_id = t.token_id)"
                                 " WHERE f.file_state = 'SUBMITTED' "
                                 "     AND t.refresh_token IS NOT NULL "
-                                "     AND (t.access_token_expiry - interval 20 minute) < UTC_TIMESTAMP() "
                                 "     AND UNIX_TIMESTAMP(t.access_token_expiry) > 0 "
+                                "     AND (UNIX_TIMESTAMP(t.access_token_expiry) - 1200 < UNIX_TIMESTAMP()) "
                                 " ORDER BY NULL"
                                 );
 
