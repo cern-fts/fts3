@@ -98,8 +98,11 @@ int main(int argc, char *argv[])
         urlCopyProcess.run();
     }
     catch (const std::exception &e) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Exception while running copy process..." << commit;
         urlCopyProcess.panic(e.what());
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Finishing copy process..." << commit;
 
     return 0;
 }
