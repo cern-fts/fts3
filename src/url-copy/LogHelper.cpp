@@ -18,27 +18,55 @@
  * limitations under the License.
  */
 
-#include <gfal_api.h>
-#include <boost/filesystem/path.hpp>
-#include <iomanip>
-#include <sstream>
-#include <boost/filesystem/operations.hpp>
 #include "LogHelper.h"
 
+#include <gfal_api.h>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <iomanip>
+#include <sstream>
+#include <mutex>
+
+
+/// Ensure sequential logging for the callback function
+std::mutex loggingMx;
 
 static void gfal2LogCallback(const gchar *, GLogLevelFlags log_level, const gchar *message, gpointer)
 {
     if (message) {
+        // Lock needed to ensure messages are logged sequentially (triggered by FTS-1995)
+        std::unique_lock lk(loggingMx);
+
         const char* prefix = "Gfal2: ";
 
         if (strncmp(message, "Davix: ", 7) == 0) {
             prefix = "";
         }
 
+        // FTS-1995: Filter out anything that might be opaque data
+        // This is brute-force attempt in lack of sophisticated filtering
+        const std::string allowedOpaque = "abcdefghijklmnopqrstuvwxyz"
+                                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                          "0123456789~-_.+&=%#?";
+
+        std::string smessage(message);
+        auto pos = smessage.find('?');
+
+        while (pos != std::string::npos) {
+            auto endpos = smessage.find_first_not_of(allowedOpaque, pos + 1);
+
+            if (endpos == std::string::npos) {
+                endpos = smessage.size();
+            }
+
+            smessage.replace(pos + 1, endpos - pos - 1, "<redacted>");
+            pos = smessage.find('?', pos + 1);
+        }
+
         if (log_level == G_LOG_LEVEL_DEBUG) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << message << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << smessage << fts3::common::commit;
         } else {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << prefix << message << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << prefix << smessage << fts3::common::commit;
         }
     }
 }
