@@ -90,12 +90,11 @@ void eventCallback(const gfalt_event_t e, gpointer udata)
 
     Transfer *transfer = (Transfer*)(udata);
 
-
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << '[' << e->timestamp << "] "
         << sideStr[e->side] << ' '
         << g_quark_to_string(e->domain) << '\t'
         << g_quark_to_string(e->stage) << '\t'
-        << e->description
+        << sanitizeQueryString(e->description)
     << commit;
 
     std::string &source = transfer->source.fullUri;

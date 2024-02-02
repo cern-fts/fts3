@@ -165,3 +165,26 @@ std::string replaceMetadataString(const std::string &text)
     copy = boost::replace_all_copy(copy, "\\\"","\"");
     return copy;
 }
+
+std::string sanitizeQueryString(const std::string& text)
+{
+    const std::string allowedOpaque = "abcdefghijklmnopqrstuvwxyz"
+                                      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                      "0123456789~-_.+&=%#?";
+
+    std::string copy(text);
+    auto pos = copy.find('?');
+
+    while (pos != std::string::npos) {
+        auto endpos = copy.find_first_not_of(allowedOpaque, pos + 1);
+
+        if (endpos == std::string::npos) {
+            endpos = copy.size();
+        }
+
+        copy.replace(pos + 1, endpos - pos - 1, "<redacted>");
+        pos = copy.find('?', pos + 1);
+    }
+
+    return copy;
+}
