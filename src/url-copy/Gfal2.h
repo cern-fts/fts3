@@ -216,6 +216,14 @@ public:
         return val;
     }
 
+    inline std::string getSrcToken() const {
+        return src_token;
+    }
+
+    inline std::string getDstToken() const {
+        return dst_token;
+    }
+
     void setDelegationFlag(bool value)
     {
         GError *error = NULL;

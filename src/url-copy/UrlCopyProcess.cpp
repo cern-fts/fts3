@@ -323,8 +323,11 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 {
     if (!opts.proxy.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy: " << opts.proxy << commit;
+    } else if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token: " << accessTokenPayload(params.getSrcToken()) << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token: " << accessTokenPayload(params.getDstToken()) << commit;
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running without proxy" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Running without any authentication!" << commit;
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO: " << opts.voName << commit;

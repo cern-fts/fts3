@@ -45,4 +45,11 @@ std::string replaceMetadataString(const std::string &text);
  */
 std::string sanitizeQueryString(const std::string& text);
 
+/**
+ * Given a JWT access token, decode the payload
+ * and print a list of relevant fields:
+ * ["aud", "iss", "exp", "scope","wlcg.ver"]
+ */
+std::string accessTokenPayload(std::string token);
+
 #endif // HEURISTICS_H

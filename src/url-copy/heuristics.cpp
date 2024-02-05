@@ -18,10 +18,14 @@
  * limitations under the License.
  */
 
-#include <errno.h>
 #include "heuristics.h"
 #include "common/Logger.h"
+
+#include <json/json.h>
+#include <cryptopp/base64.h>
 #include <boost/algorithm/string.hpp>
+
+#include <errno.h>
 
 using namespace fts3::common;
 
@@ -166,6 +170,7 @@ std::string replaceMetadataString(const std::string &text)
     return copy;
 }
 
+
 std::string sanitizeQueryString(const std::string& text)
 {
     const std::string allowedOpaque = "abcdefghijklmnopqrstuvwxyz"
@@ -187,4 +192,50 @@ std::string sanitizeQueryString(const std::string& text)
     }
 
     return copy;
+}
+
+
+std::string accessTokenPayload(std::string token)
+{
+    std::ostringstream message;
+
+    try {
+        auto start = token.find('.');
+        auto end = token.rfind('.');
+
+        if ((start == std::string::npos) || (end == std::string::npos) || (start == end)) {
+            throw std::exception();
+        }
+
+        token = token.substr(start + 1, end - start - 1);
+
+        std::string decoded;
+        CryptoPP::StringSource ss(token, true,
+                                  new CryptoPP::Base64Decoder(
+                                          new CryptoPP::StringSink(decoded)));
+
+        Json::Value jsonDecoded, jsonFiltered;
+        std::istringstream(decoded) >> jsonDecoded;
+
+        auto tokenFields = { "aud", "exp", "iss", "scope", "wlcg.ver" };
+        for (const auto& key: tokenFields) {
+            if (jsonDecoded.isMember(key)) {
+                jsonFiltered[key] = jsonDecoded.get(key, "");
+            }
+        }
+
+        Json::StreamWriterBuilder builder;
+        builder["indentation"] = "";
+
+        std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+        writer->write(jsonFiltered, &message);
+    } catch (std::exception& e) {
+        message << "Failed to decode token!";
+
+        if (token.size() > 50) {
+            message << " (" << (token.substr(0, 5) + "..." + token.substr(token.size() - 5)) << ")";
+        }
+    }
+
+    return message.str();
 }

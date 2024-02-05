@@ -42,6 +42,7 @@ target_link_libraries(fts_url_copy_lib
     ${GLIB2_LIBRARIES}
     ${GFAL2_LIBRARIES}
     ${ZMQ_LIBRARIES}
+    ${CRYPTOPP_LIBRARIES}
     JSONCPP::JSONCPP
     fts_common
     fts_msg_bus
