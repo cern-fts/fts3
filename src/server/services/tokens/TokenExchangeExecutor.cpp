@@ -186,7 +186,7 @@ std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeErro
         // Replace secrets, such as token value or FTS client ID
         // The parsed output will be the transfer failure message
         _replace(token.accessToken, token.accessTokenToString());
-        _replace(tokenProvider.clientId, "<FTS client ID");
+        _replace(tokenProvider.clientId, "<FTS client ID>");
         return "[" + type + "]: " + description;
     } catch (const std::exception& tmp) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to extract \"error_description\" field from server response: "
