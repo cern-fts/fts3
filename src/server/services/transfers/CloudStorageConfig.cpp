@@ -160,43 +160,63 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
-    // For each different VO role, group, ...
-    auto cred = db->findCredential(tf.credId, tf.userDn);
-    if (!cred) {
-        fclose(f);
-        remove(oauth_path);
-        return "";
+    boost::optional<UserCredential> cred;
+
+    if (authMethod == "oauth2") {
+        cred.reset(UserCredential());
+    } else {
+        cred = db->findCredential(tf.credId, tf.userDn);
+
+        if (!cred) {
+            fclose(f);
+            remove(oauth_path);
+            return "";
+        }
     }
 
+    // For each different VO or VO attribute
     std::vector<std::string> vomsAttrs;
     vomsAttrs.push_back(tf.voName);
     boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
 
-    // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
+    // For each cloud storage credential (i.e. DROPBOX;S3:s3.cern.ch)
     std::vector<std::string> csVector;
     boost::split(csVector, csName, boost::is_any_of(";"), boost::token_compress_on);
 
-    for (auto i = csVector.begin(); i != csVector.end(); ++i) {
-        std::string upperCsName = *i;
+    for (auto upperCsName: csVector) {
         boost::to_upper(upperCsName);
 
-        for (auto voI = vomsAttrs.begin(); voI != vomsAttrs.end(); ++voI) {
+        for (const auto& voms_attr: vomsAttrs) {
             CloudStorageAuth auth;
-            if (db->getCloudStorageCredentials(tf.userDn, *voI, upperCsName, auth)) {
+
+            if (db->getCloudStorageCredentials(tf.userDn, voms_attr, upperCsName, auth)) {
                 if (boost::starts_with(upperCsName, "DROPBOX")) {
                     writeDropboxCreds(f, upperCsName, auth);
-                }
-                else {
+                } else {
                     writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);
                 }
+
                 break;
             }
         }
     }
 
     if (authMethod == "oauth2") {
-        // Only set the access token and not the refresh token
-        writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
+        std::string token;
+
+        if (isCloudStorage(Uri::parse(tf.sourceSe))) {
+            token = db->findToken(tf.sourceTokenId);
+        } else if (isCloudStorage(Uri::parse(tf.destSe))){
+            token = db->findToken(tf.destinationTokenId);
+        }
+
+        if (token.empty()) {
+            fclose(f);
+            remove(oauth_path);
+            return "";
+        }
+
+        writeOAuthToken(f, token);
     }
 
     fclose(f);

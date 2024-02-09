@@ -145,7 +145,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
         } catch (const std::exception &ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load cloud storage credentials file: " << ex.what() << commit;
         }
-        unlink(opts.oauthFile.c_str());
+        unlink(opts.cloudStorageConfig.c_str());
         return;
     }
 
