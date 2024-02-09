@@ -176,8 +176,8 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
 
     // For each different VO or VO attribute
     std::vector<std::string> vomsAttrs;
-    vomsAttrs.push_back(tf.voName);
     boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
+    vomsAttrs.push_back(tf.voName);
 
     // For each cloud storage credential (i.e. DROPBOX;S3:s3.cern.ch)
     std::vector<std::string> csVector;

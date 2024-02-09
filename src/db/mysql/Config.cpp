@@ -731,10 +731,10 @@ bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
             " FROM t_cloudStorage cs "
             " JOIN t_cloudStorageUser cu ON cs.cloudStorage_name = cu.cloudStorage_name "
             " WHERE"
-            "   cs.cloudStorage_name=:cs_name AND ("
-            "       (cu.user_dn=:user_dn AND cu.vo_name=:vo) OR "
-            "       (cu.user_dn='*' AND cu.vo_name=:vo) OR "
-            "       (cu.user_dn=:user_dn AND (cu.vo_name IN ('*', '') OR cu.vo_name IS NULL))"
+            "   cs.cloudStorage_name = :cs_name AND ("
+            "       (cu.user_dn = :user_dn AND cu.vo_name = :vo) OR "
+            "       ((cu.user_dn IN ('*', '') OR cu.user_dn IS NULL) AND cu.vo_name = :vo) OR "
+            "       (cu.user_dn = :user_dn AND (cu.vo_name IN ('*', '') OR cu.vo_name IS NULL))"
             "   )",
             soci::use(cloud_name, "cs_name"), soci::use(user_dn, "user_dn"), soci::use(vo, "vo"),
             soci::into(auth);
