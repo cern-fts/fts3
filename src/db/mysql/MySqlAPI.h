@@ -331,8 +331,8 @@ public:
     /// Store a list of refresh tokens identified by token ID
     virtual void storeRefreshTokens(const std::set< std::pair<std::string, std::string> >& refreshTokens);
 
-    /// Mark token retry timestamp for failed token exchange
-    virtual void markFailedTokenExchange(const std::list<std::string>& tokenIds);
+    /// Mark token-exchange retry timestamp and error message
+    virtual void markFailedTokenExchange(const std::set< std::pair<std::string, std::string> >& failedExchanges);
 
     /// Fail transfers without refresh token due to failed token exchange
     virtual void failTransfersWithFailedTokenExchange(

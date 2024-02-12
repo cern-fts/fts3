@@ -117,20 +117,13 @@ void TokenExchangeService::handleFailedTokenExchange()
     }
 
     if (!failedExchanges.empty()) {
-        std::list<std::string> token_ids;
-        for (const auto& it: failedExchanges) {
-            token_ids.emplace_back(it.first);
-        }
-
-        db->markFailedTokenExchange(token_ids);
-        db->failTransfersWithFailedTokenExchange(failedExchanges);
+        db->markFailedTokenExchange(failedExchanges);
+        //db->failTransfersWithFailedTokenExchange(failedExchanges);
         failedExchanges.clear();
     }
 }
 
 void TokenExchangeService::runService() {
-
-    auto db = db::DBSingleton::instance().getDBObjectInstance();
 
     while (!boost::this_thread::interruption_requested()) {
         tokenExchangeRecords = time(nullptr);
@@ -149,7 +142,16 @@ void TokenExchangeService::runService() {
                 getRefreshTokens();
                 handleFailedTokenExchange();
                 // The below function does not require any state from the service
-                db->updateTokenPrepFiles();
+
+                // Note: Move away from the "TOKEN_PREP" mechanism to manage token lifecycle
+                // Refresh tokens must be obtained for ALL access tokens that don't have one.
+                // The transfer file state is no longer involved in token lifecycle management.
+                // The token-exchange will have no more impact on transfers:
+                //   - no additional wait time, as transfers will start already in their initial state (instead of "TOKEN_PREP")
+                //   - no additional chance to fail in the token-exchange step
+
+                //auto db = db::DBSingleton::instance().getDBObjectInstance();
+                //db->updateTokenPrepFiles();
             }
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;

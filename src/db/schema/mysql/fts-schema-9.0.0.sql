@@ -789,6 +789,7 @@ CREATE TABLE `t_token` (
   `retry_timestamp` timestamp NULL DEFAULT NULL,
   `retry_delay_m` int unsigned NULL DEFAULT 0,
   `attempts` int unsigned NULL DEFAULT 0,
+  `exchange_message` varchar(2048) NULL DEFAULT NULL,
   PRIMARY KEY (`token_id`),
   CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

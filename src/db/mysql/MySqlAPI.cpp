@@ -4320,7 +4320,8 @@ void MySqlAPI::storeRefreshTokens(const std::set< std::pair<std::string, std::st
         std::string tokenId;
         std::string refreshToken;
         soci::statement stmt = (sql.prepare <<
-                                            " UPDATE t_token SET refresh_token = :refreshToken "
+                                            " UPDATE t_token SET "
+                                            "     refresh_token = :refreshToken, exchange_message = NULL "
                                             " WHERE token_id = :tokenId",
                                 soci::use(refreshToken),
                                 soci::use(tokenId));
@@ -4344,17 +4345,20 @@ void MySqlAPI::storeRefreshTokens(const std::set< std::pair<std::string, std::st
 }
 
 
-void MySqlAPI::markFailedTokenExchange(const std::list<std::string>& tokenIds)
+void MySqlAPI::markFailedTokenExchange(const std::set< std::pair<std::string, std::string> >& failedExchanges)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        for (const auto& tokenId: tokenIds) {
+        for (const auto& it: failedExchanges) {
             soci::indicator nullRetryTimestamp = soci::i_ok;
             struct tm retryTimestamp;
             int retryDelay;
             int attempts;
+
+            auto tokenId = it.first;
+            auto exchangeError = it.second;
 
             sql << " SELECT retry_timestamp, retry_delay_m, attempts FROM t_token "
                    " WHERE token_id = :tokenId",
@@ -4376,10 +4380,13 @@ void MySqlAPI::markFailedTokenExchange(const std::list<std::string>& tokenIds)
             attempts++;
 
             sql.begin();
-            sql << " UPDATE t_token SET retry_timestamp = :retryTimestamp, retry_delay_m = :retryDelay, attempts = :attempts "
+            sql << " UPDATE t_token SET "
+                   "     retry_timestamp = :retryTimestamp, retry_delay_m = :retryDelay, "
+                   "     attempts = :attempts, exchange_message = :exchangeError"
                    " WHERE token_id = :tokenId",
                    soci::use(retryTimestamp), soci::use(retryDelay),
-                   soci::use(attempts), soci::use(tokenId);
+                   soci::use(attempts), soci::use(exchangeError),
+                   soci::use(tokenId);
             sql.commit();
         }
     }
