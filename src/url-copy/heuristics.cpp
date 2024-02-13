@@ -217,7 +217,7 @@ std::string accessTokenPayload(std::string token)
         Json::Value jsonDecoded, jsonFiltered;
         std::istringstream(decoded) >> jsonDecoded;
 
-        auto tokenFields = { "aud", "exp", "iss", "scope", "wlcg.ver" };
+        auto tokenFields = { "aud", "iat", "nbf", "exp", "iss", "scope", "wlcg.ver" };
         for (const auto& key: tokenFields) {
             if (jsonDecoded.isMember(key)) {
                 jsonFiltered[key] = jsonDecoded.get(key, "");
