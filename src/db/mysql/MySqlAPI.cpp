@@ -4471,14 +4471,17 @@ void MySqlAPI::updateTokenPrepFiles()
     struct TokenPrepFile {
         TokenPrepFile(uint64_t file_id, const std::string& job_id,
                       const std::string& src_token_id,
-                      const std::string& dst_token_id) :
+                      const std::string& dst_token_id,
+                      const std::string& file_state) :
               file_id(file_id), job_id(job_id),
-              src_token_id(src_token_id), dst_token_id(dst_token_id) {}
+              src_token_id(src_token_id), dst_token_id(dst_token_id),
+              file_state(file_state) {}
 
         uint64_t file_id;
         std::string job_id;
         std::string src_token_id;
         std::string dst_token_id;
+        std::string file_state;
     };
 
     soci::session sql(*connectionPool);
@@ -4486,7 +4489,7 @@ void MySqlAPI::updateTokenPrepFiles()
     try
     {
         const soci::rowset<soci::row> rs = (sql.prepare <<
-                                    " SELECT f.job_id, f.file_id, f.src_token_id, f.dst_token_id "
+                                    " SELECT f.job_id, f.file_id, f.file_state_initial, f.src_token_id, f.dst_token_id "
                                     " FROM t_file f "
                                     "     INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id "
                                     "     INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id "
@@ -4504,24 +4507,38 @@ void MySqlAPI::updateTokenPrepFiles()
                     row.get<unsigned long long>("file_id", 0),
                     row.get<std::string>("job_id", ""),
                     row.get<std::string>("src_token_id", ""),
-                    row.get<std::string>("dst_token_id", "")
+                    row.get<std::string>("dst_token_id", ""),
+                    row.get<std::string>("file_state_initial", "")
             );
         }
 
-        // Prepare statement for "TOKEN_PREP" --> "SUBMITTED" update
+        // Prepare statement for "TOKEN_PREP" --> initial file state update
         uint64_t file_id;
+        std::string file_state;
         soci::statement stmt = (sql.prepare <<
-                                    " UPDATE t_file SET file_state = 'SUBMITTED' "
+                                    " UPDATE t_file SET file_state = :fileState "
                                     " WHERE file_id = :fileId AND file_state = 'TOKEN_PREP'",
+                                soci::use(file_state),
                                 soci::use(file_id));
 
         sql.begin();
-        for (const auto& file: tokenPrepFiles) {
+        for (auto& file: tokenPrepFiles) {
             file_id = file.file_id;
+            file_state = file.file_state;
+
+            // Sanity check as it should not happen (log error in case it does)
+            if (file.file_state.empty()) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Empty \"file_state_initial\" in updateTokenPrepFiles() function:"
+                                << " job_id=" << file.job_id << " file_id=" << file.file_id
+                                << commit;
+                file.file_state = "SUBMITTED";
+            }
+
             stmt.execute(true);
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Updated 'TOKEN PREP' file:"
-                            << " job_id = " << file.job_id << " file_id=" << file.file_id
+                            << " job_id=" << file.job_id << " file_id=" << file.file_id
+                            << " file_state=" << file.file_state
                             << " src_token_id=" << file.src_token_id
                             << " dst_token_id=" << file.dst_token_id
                             << commit;

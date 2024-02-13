@@ -118,12 +118,14 @@ void TokenExchangeService::handleFailedTokenExchange()
 
     if (!failedExchanges.empty()) {
         db->markFailedTokenExchange(failedExchanges);
-        //db->failTransfersWithFailedTokenExchange(failedExchanges);
+        db->failTransfersWithFailedTokenExchange(failedExchanges);
         failedExchanges.clear();
     }
 }
 
 void TokenExchangeService::runService() {
+
+    auto db = db::DBSingleton::instance().getDBObjectInstance();
 
     while (!boost::this_thread::interruption_requested()) {
         tokenExchangeRecords = time(nullptr);
@@ -142,16 +144,13 @@ void TokenExchangeService::runService() {
                 getRefreshTokens();
                 handleFailedTokenExchange();
                 // The below function does not require any state from the service
-
-                // Note: Move away from the "TOKEN_PREP" mechanism to manage token lifecycle
                 // Refresh tokens must be obtained for ALL access tokens that don't have one.
-                // The transfer file state is no longer involved in token lifecycle management.
-                // The token-exchange will have no more impact on transfers:
-                //   - no additional wait time, as transfers will start already in their initial state (instead of "TOKEN_PREP")
-                //   - no additional chance to fail in the token-exchange step
 
-                //auto db = db::DBSingleton::instance().getDBObjectInstance();
-                //db->updateTokenPrepFiles();
+                // Move the file state from "TOKEN_PREP" to its supposed initial state (stored in "t_token_file_state_initial")
+                // Note: The token-exchange can have the following impact on transfers:
+                //   - additional wait time, as transfers will start in "TOKEN_PREP" instead of their initial state
+                //   - additional chance to fail in the token-exchange step
+                db->updateTokenPrepFiles();
             }
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;
