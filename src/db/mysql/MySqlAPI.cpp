@@ -4523,9 +4523,6 @@ void MySqlAPI::updateTokenPrepFiles()
 
         sql.begin();
         for (auto& file: tokenPrepFiles) {
-            file_id = file.file_id;
-            file_state = file.file_state;
-
             // Sanity check as it should not happen (log error in case it does)
             if (file.file_state.empty()) {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Empty \"file_state_initial\" in updateTokenPrepFiles() function:"
@@ -4534,6 +4531,8 @@ void MySqlAPI::updateTokenPrepFiles()
                 file.file_state = "SUBMITTED";
             }
 
+            file_id = file.file_id;
+            file_state = file.file_state;
             stmt.execute(true);
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Updated 'TOKEN PREP' file:"
