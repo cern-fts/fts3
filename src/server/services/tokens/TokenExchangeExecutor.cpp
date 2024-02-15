@@ -70,22 +70,25 @@ ExchangedToken TokenExchangeExecutor::performTokenExchange()
     // Build the POST request
     Davix::DavixError* err = nullptr;
     Davix::PostRequest req(context, uri, &err);
+    auto exchangeData = getExchangeData();
 
     // Set request parameters
     Davix::RequestParams params;
     params.addHeader("Authorization", getAuthorizationHeader());
     params.addHeader("Content-Type", "application/x-www-form-urlencoded");
     req.setParameters(params);
-    req.setRequestBody(getExchangeData());
+    req.setRequestBody(exchangeData);
 
     // Execute the request
-    std::string exchange_result = executeHttpRequest(req);
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenExchange::" << token.tokenId << "]: > " << exchangeData << commit;
+    std::string response = executeHttpRequest(req);
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenExchange::" << token.tokenId << "]: < " << response << commit;
 
     // Construct exchanged access token from the JSON response
     return {
             token.tokenId,
-            parseJson(exchange_result, "access_token", false),
-            parseJson(exchange_result, "refresh_token"),
+            parseJson(response, "access_token", false),
+            parseJson(response, "refresh_token"),
             token.accessToken
     };
 }

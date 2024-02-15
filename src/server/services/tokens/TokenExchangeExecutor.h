@@ -102,7 +102,7 @@ private:
      * Executes a Davix HTTP request.
      *
      * @param request reference to a Davix HTTP request object
-     * @return string reply form the server
+     * @return string reply from the server
      */
     static std::string executeHttpRequest(Davix::HttpRequest& request);
 

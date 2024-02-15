@@ -68,9 +68,10 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
     static const LevelRepr LEVEL_REPR[] = {
         {"trace", TRACE},
         {"debug", DEBUG},
+        {"prof", PROF}, {"profiling", PROF},
+        {"token", TOKEN},
         {"info",  INFO},
         {"notice", NOTICE},
-        {"prof", PROF}, {"profiling", PROF},
         {"warn", WARNING}, {"warning", WARNING},
         {"err", ERR}, {"error", ERR},
         {"crit", CRIT}, {"critical", CRIT}
@@ -87,7 +88,8 @@ Logger::LogLevel Logger::getLogLevel(const std::string& repr)
 }
 
 
-Logger::Logger(): _logLevel(DEBUG), _profiling(false), _separator("; "), _nCommits(0)
+Logger::Logger(): _logLevel(DEBUG), _profiling(false), _tokenRequests(false),
+                  _separator("; "), _nCommits(0)
 {
     ostream = &std::cout;
     newLog(TRACE, __FILE__, __FUNCTION__, __LINE__) << "Logger created" << commit;
@@ -112,9 +114,18 @@ Logger & Logger::setLogLevel(LogLevel level)
 Logger & Logger::setProfiling(bool value)
 {
     newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
-            << "Setting profiling to " << value
+            << "Setting logging of profiling to " << value
             << commit;
     _profiling = value;
+    return *this;
+}
+
+Logger & Logger::setLogTokenRequests(bool value)
+{
+    newLog(INFO, __FILE__, __FUNCTION__, __LINE__)
+            << "Setting logging of token requests to " << value
+            << commit;
+    _tokenRequests = value;
     return *this;
 }
 
@@ -147,6 +158,8 @@ LoggerEntry Logger::newLog(LogLevel level, const char* aFile,
     bool can_write;
     if (level == PROF) {
         can_write = this->_profiling;
+    } else if (level == TOKEN) {
+        can_write = this->_tokenRequests;
     } else {
         can_write = (level >= this->_logLevel);
     }
@@ -228,6 +241,8 @@ std::string Logger::logLevelStringRepresentation(LogLevel loglevel)
             return std::string("NOTICE  ");
         case PROF:
             return std::string("PROF    ");
+        case TOKEN:
+            return std::string("TOKEN   ");
         default:
             return std::string("INFO    ");
     }

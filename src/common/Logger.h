@@ -80,6 +80,7 @@ public:
         TRACE,
         DEBUG,
         PROF,
+        TOKEN,
         INFO,
         NOTICE,
         WARNING,
@@ -101,8 +102,11 @@ public:
     /// Switch logging on. Log messages will be displayed.
     Logger& setLogLevel(LogLevel level);
 
-    /// Set Profiling Logs On/Off
+    /// Set flag for profiling logs
     Logger& setProfiling(bool value);
+
+    /// Set flag for token requests logs
+    Logger& setLogTokenRequests(bool value);
 
     /// Start a new log message. But this is not the recommended way,
     /// use FTS3_COMMON_LOGGER_NEWLOG. It calls this method, but adds
@@ -123,8 +127,11 @@ private:
     /// Log level
     LogLevel _logLevel;
 
-    /// Profiling On/Off
+    /// Log profiling
     bool _profiling;
+
+    /// Log token requests
+    bool _tokenRequests;
 
     /// Separator for the logging
     std::string _separator;

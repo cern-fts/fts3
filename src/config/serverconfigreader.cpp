@@ -239,11 +239,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Enable or disable monitoring using messaging for monitoring"
     )
     (
-        "Profiling",
-        po::value<std::string>( &(_vars["Profiling"]) )->default_value("false"),
-        "Enable or disable internal profiling logs"
-    )
-    (
         "UrlCopyProcessPingInterval",
         po::value<std::string>( &(_vars["UrlCopyProcessPingInterval"]) )->default_value("60"),
         "Set the UrlCopyProcess ping and transfer update interval"
@@ -297,6 +292,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "LogLevel",
         po::value<std::string>( &(_vars["LogLevel"]) )->default_value("INFO"),
         "Logging level"
+    )
+    (
+        "Profiling",
+        po::value<std::string>( &(_vars["Profiling"]) )->default_value("false"),
+        "Enable or disable internal profiling logs"
+    )
+    (
+        "LogTokenRequests",
+        po::value<std::string>( &(_vars["LogTokenRequests"]) )->default_value("false"),
+        "Log HTTP content of token requests"
     )
     (
         "WithoutSoap",

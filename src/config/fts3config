@@ -36,9 +36,6 @@ MonitoringMessaging=true
 # Directory where the internal FTS3 messages are written
 MessagingDirectory=/var/lib/fts3
 
-# Enable Profiling log messages
-Profiling=false
-
 # Set the UrlCopyProcess ping and transfer update interval.
 # For throughput monitoring (Profiling is enabled), a lower value is better.
 # Lowest recommended value should exceed the Gfal2 performance markers (as often as every 5 seconds)
@@ -55,6 +52,13 @@ ServerLogDirectory=/var/log/fts3
 #   CRIT (fatal errors, as segmentation fault)
 # It is recommended to use INFO or DEBUG
 LogLevel=INFO
+
+# Enable Profiling log messages
+Profiling=false
+
+# Log HTTP content of token requests
+# Note: this will write access tokens to the log file
+LogTokenRequests=false
 
 ## Scheduler and MessagingProcessing Service settings
 # Wait time between scheduler runs (measured in seconds)
