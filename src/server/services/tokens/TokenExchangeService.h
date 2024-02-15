@@ -51,7 +51,7 @@ protected:
     boost::posix_time::time_duration pollInterval;
     HeartBeat *beat;
 
-    void getRefreshTokens();
+    void exchangeTokens();
     void handleFailedTokenExchange();
 
 private:
