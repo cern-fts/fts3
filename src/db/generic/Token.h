@@ -28,9 +28,24 @@ public:
     ~Token() = default;
 
     std::string accessTokenToString() const {
+        if (accessToken.empty()) {
+            return "null";
+        }
+
         std::ostringstream out;
         out << accessToken.substr(0, 5) << "..."
             << accessToken.substr(accessToken.size() - 5);
+        return out.str();
+    }
+
+    std::string refreshTokenToString() const {
+        if (refreshToken.empty()) {
+            return "null";
+        }
+
+        std::ostringstream out;
+        out << refreshToken.substr(0, 5) << "..."
+            << refreshToken.substr(refreshToken.size() - 5);
         return out.str();
     }
 
@@ -40,4 +55,42 @@ public:
     std::string issuer;
     std::string scope;
     std::string audience;
+};
+
+/**
+* Object representation of an exchanged token.
+*/
+class ExchangedToken
+{
+public:
+    ExchangedToken() = default;
+
+    ExchangedToken(const std::string& id, const std::string& access,
+                   const std::string& refresh, const std::string& prevAccess) :
+           tokenId(id), accessToken(access), refreshToken(refresh), previousAccessToken(prevAccess)
+    {}
+
+    ~ExchangedToken() = default;
+
+    std::string accessTokenToString() const {
+        if (accessToken.empty()) {
+            return "null";
+        }
+
+        std::ostringstream out;
+        out << accessToken.substr(0, 5) << "..."
+            << accessToken.substr(accessToken.size() - 5);
+        return out.str();
+    }
+
+    std::string tokenId;
+    std::string accessToken;
+    std::string refreshToken;
+    std::string previousAccessToken;
+
+    /// Needed for STL container operations
+    inline bool operator < (const ExchangedToken& other) const
+    {
+        return tokenId < other.tokenId;
+    }
 };

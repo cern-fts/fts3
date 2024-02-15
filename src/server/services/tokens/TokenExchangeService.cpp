@@ -79,18 +79,19 @@ void TokenExchangeService::getRefreshTokens() {
         execPool.join();
 
         {
-            boost::unique_lock<boost::shared_mutex> lock(mxRefresh);
+            boost::unique_lock<boost::shared_mutex> lock(mxExchanged);
 
-            for (const auto& it: refreshTokens) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Storing refresh token: "
-                                                << "token_id=" << it.first << " "
-                                                << "refresh_token=" << it.second
+            for (const auto& it: exchangedTokens) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Storing exchanged token: "
+                                                << "token_id=" << it.tokenId << " "
+                                                << "access_token=" << it.accessTokenToString() << " "
+                                                << "refresh_token=" << it.refreshToken
                                                 << commit;
             }
 
-            if (!refreshTokens.empty()) {
-                db->storeRefreshTokens(refreshTokens);
-                refreshTokens.clear();
+            if (!exchangedTokens.empty()) {
+                db->storeExchangedTokens(exchangedTokens);
+                exchangedTokens.clear();
             }
         }
     } catch (const boost::thread_interrupted &) {
@@ -160,10 +161,10 @@ void TokenExchangeService::runService() {
     }
 }
 
-void TokenExchangeService::registerRefreshToken(const std::string& token_id, const std::string& refreshToken)
+void TokenExchangeService::registerExchangedToken(const ExchangedToken& exchangedToken)
 {
-    boost::unique_lock<boost::shared_mutex> lock(mxRefresh);
-    refreshTokens.emplace(token_id, refreshToken);
+    boost::unique_lock<boost::shared_mutex> lock(mxExchanged);
+    exchangedTokens.emplace(exchangedToken);
 }
 
 void TokenExchangeService::registerFailedTokenExchange(const std::string& token_id, const std::string& message)

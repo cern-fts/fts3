@@ -4310,26 +4310,36 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
 }
 
 
-void MySqlAPI::storeRefreshTokens(const std::set< std::pair<std::string, std::string> >& refreshTokens)
+void MySqlAPI::storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens)
 {
     soci::session sql(*connectionPool);
 
     try
     {
-        // Prepare statement for storing refresh token
+        // Prepare statement for storing exchanged token
         std::string tokenId;
+        std::string accessToken;
         std::string refreshToken;
         soci::statement stmt = (sql.prepare <<
                                             " UPDATE t_token SET "
-                                            "     refresh_token = :refreshToken, exchange_message = NULL "
+                                            "   access_token = :accessToken, "
+                                            "   refresh_token = :refreshToken, "
+                                            "   exchange_message = NULL "
                                             " WHERE token_id = :tokenId",
+                                soci::use(accessToken),
                                 soci::use(refreshToken),
                                 soci::use(tokenId));
 
         sql.begin();
-        for (const auto& pair: refreshTokens) {
-            tokenId = pair.first;
-            refreshToken = pair.second;
+        for (const auto& it: exchangedTokens) {
+            tokenId = it.tokenId;
+            accessToken = it.accessToken;
+            refreshToken = it.refreshToken;
+
+            if (accessToken.empty()) {
+                accessToken = it.previousAccessToken;
+            }
+
             stmt.execute(true);
         }
         sql.commit();

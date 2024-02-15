@@ -62,9 +62,9 @@ private:
     /**
      * Perform token exchange workflow.
      *
-     * @return string containing refresh token
+     * @return exchanged access token object
      */
-    std::string performTokenExchange();
+    ExchangedToken performTokenExchange();
 
     /**
      * Finds the token exchange endpoint.
@@ -111,9 +111,10 @@ private:
      *
      * @param msg a message in JSON format
      * @param key the key to find in the JSON
+     * @param strict throw a Json LogicError if key not found
      * @return string value associated with key
      */
-    static std::string parseJson(const std::string& msg, const::std::string& key)
+    static std::string parseJson(const std::string& msg, const::std::string& key, bool strict = true)
     {
         // Parse the JSON
         Json::Value obj;
@@ -121,7 +122,7 @@ private:
 
         std::string res = obj.get(key, "").asString();
 
-        if (res.empty()) {
+        if (res.empty() && strict) {
             std::stringstream error;
             error << "Response JSON did not contain " << key << " key";
             Json::throwLogicError(error.str());

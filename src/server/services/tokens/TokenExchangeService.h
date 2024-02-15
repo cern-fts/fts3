@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "db/generic/Token.h"
 #include "services/BaseService.h"
 #include "services/heartbeat/HeartBeat.h"
 
@@ -30,13 +31,12 @@ public:
     virtual void runService();
 
     /**
-     * Used by the TokenExchangeExecutor workers to publish a successful
-     * (tokenId, refreshToken) pair into the results set.
+     * Used by the TokenExchangeExecutor workers to publish a successful token-exchange
+     * token into the results set.
      *
-     * @param token_id The token ID
-     * @param refreshToken The refresh token value
+     * @param exchangedToken The exchanged token
      */
-    void registerRefreshToken(const std::string& token_id, const std::string& refreshToken);
+    void registerExchangedToken(const ExchangedToken& exchangedToken);
 
     /**
      * Used by the TokenExchangeExecutor workers to publish a failed token-exchange attempt.
@@ -55,13 +55,13 @@ protected:
     void handleFailedTokenExchange();
 
 private:
-    /// Protect concurrent access to "refreshTokens" set
-    boost::shared_mutex mxRefresh;
+    /// Protect concurrent access to "exchangedTokens" set
+    boost::shared_mutex mxExchanged;
 
-    /// Set of <token_id, refresh_token> for refresh tokens
+    /// Set of exchanged tokens obtained via token-exchange requests
     /// The set is populated by the worker threads
     /// and will be collected at the end of a cycle
-    std::set<std::pair<std::string, std::string>> refreshTokens;
+    std::set<ExchangedToken> exchangedTokens;
 
     /// Protect concurrent access to "refreshTokens" set
     boost::shared_mutex mxFailed;

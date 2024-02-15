@@ -35,14 +35,15 @@ void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
                                     << commit;
 
     try {
-        auto refresh_token = performTokenExchange();
+        auto exchanged_token = performTokenExchange();
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtained refresh token: "
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtained exchanged token: "
                                         << "token_id=" << token.tokenId << " "
-                                        << "refresh_token=" << refresh_token
+                                        << "access_token=" << exchanged_token.accessTokenToString() << " "
+                                        << "refresh_token=" << exchanged_token.refreshToken
                                         << commit;
 
-        tokenExchangeService.registerRefreshToken(token.tokenId, refresh_token);
+        tokenExchangeService.registerExchangedToken(exchanged_token);
     } catch (const IAMExchangeError& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
                                        << "token_id=" << token.tokenId << " "
@@ -59,7 +60,7 @@ void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
     }
 }
 
-std::string TokenExchangeExecutor::performTokenExchange()
+ExchangedToken TokenExchangeExecutor::performTokenExchange()
 {
     // GET token exchange endpoint URL
     std::string token_endpoint = getTokenEndpoint();
@@ -80,8 +81,13 @@ std::string TokenExchangeExecutor::performTokenExchange()
     // Execute the request
     std::string exchange_result = executeHttpRequest(req);
 
-    // Extract "refresh_token" field from the JSON response
-    return parseJson(exchange_result, "refresh_token");
+    // Construct exchanged access token from the JSON response
+    return {
+            token.tokenId,
+            parseJson(exchange_result, "access_token", false),
+            parseJson(exchange_result, "refresh_token"),
+            token.accessToken
+    };
 }
 
 std::string TokenExchangeExecutor::getTokenEndpoint()
