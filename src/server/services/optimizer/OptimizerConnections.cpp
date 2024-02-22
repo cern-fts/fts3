@@ -334,7 +334,7 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << "Optimizer: Active for " << pair << " set to " << decision << ", running " << current.activeCount
-        << " rationale= " << rationale << " (" << elapsed.wall << "ns)" << commit;
+        << " rationale=\"" << rationale << "\" (" << elapsed.wall << "ns)" << commit;
 
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
