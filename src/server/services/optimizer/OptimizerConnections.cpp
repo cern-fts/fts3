@@ -170,7 +170,8 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << " [" << range << "] "
+                                     << "pair #" << ++pairIdx << "/" << pairsSize << commit;
 
     // Previous decision
     int previousValue = dataSource->getOptimizerValue(pair);

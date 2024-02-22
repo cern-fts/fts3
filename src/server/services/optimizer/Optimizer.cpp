@@ -36,7 +36,7 @@ Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
     optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
     maxSuccessRate(100), lowSuccessRate(97), baseSuccessRate(96),
     decreaseStepSize(1), increaseStepSize(1), increaseAggressiveStepSize(2),
-    emaAlpha(EMA_ALPHA)
+    emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0)
 {
 }
 
@@ -98,6 +98,11 @@ void Optimizer::run(void)
         // Make sure the order is always the same
         // See FTS-1094
         pairs.sort();
+
+        pairsSize = pairs.size();
+        pairIdx = 0;
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: found " << pairsSize << " pairs" << commit;
 
         for (auto i = pairs.begin(); i != pairs.end(); ++i) {
             runOptimizerForPair(*i);

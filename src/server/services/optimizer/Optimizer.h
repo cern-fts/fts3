@@ -148,6 +148,9 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
+    int pairsSize; /// Number of pairs on Optimizer run
+    int pairIdx; /// Current pair index
+
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
     bool optimizeConnectionsForPair(OptimizerMode optMode, const Pair &);
