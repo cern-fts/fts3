@@ -79,6 +79,7 @@ void CancelerService::markAsStalled()
         for (const auto& message: messages) {
             // Make sure we don't kill ourselves
             if (message.process_id()) {
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Sending sigkill to process: " << message.process_id() << commit;
                 kill(message.process_id(), SIGKILL);
             }
 
