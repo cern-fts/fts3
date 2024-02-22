@@ -116,13 +116,16 @@ void ForceStartTransfersService::forceRunJobs() {
 
 void ForceStartTransfersService::runService() {
     while (!boost::this_thread::interruption_requested()) {
+        boost::this_thread::sleep(pollInterval);
         try {
-            boost::this_thread::sleep(pollInterval);
 
             // This service intentionally does not follow the drain mechanism
             if (beat->isLeadNode(true)) {
                 forceRunJobs();
             }
+        } catch (boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            break;
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << fts3::common::commit;
         } catch (...) {

@@ -48,10 +48,9 @@ void TokenExchangeService::runService() {
 
     while (!boost::this_thread::interruption_requested()) {
         tokenExchangeRecords = time(nullptr);
+        boost::this_thread::sleep(pollInterval);
 
         try {
-            boost::this_thread::sleep(pollInterval);
-
             if (DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more token-exchange for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
@@ -71,6 +70,9 @@ void TokenExchangeService::runService() {
                 //   - additional chance to fail in the token-exchange step
                 db->updateTokenPrepFiles();
             }
+        } catch (boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            break;
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;
         } catch (...) {
