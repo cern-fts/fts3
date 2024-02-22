@@ -148,7 +148,7 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
-    int pairsSize; /// Number of pairs on Optimizer run
+    size_t pairsSize; /// Number of pairs on Optimizer run
     int pairIdx; /// Current pair index
 
     // Run the optimization algorithm for the number of connections.
@@ -182,7 +182,7 @@ public:
 
 
 inline std::ostream& operator << (std::ostream &os, const Range &range) {
-    return (os << range.min << "/" << range.max);
+    return (os << "[" << range.min << ", " << range.max << "]");
 }
 
 }
