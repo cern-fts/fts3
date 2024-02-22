@@ -151,6 +151,8 @@ protected:
     size_t pairsSize; /// Number of pairs on Optimizer run
     int pairIdx; /// Current pair index
 
+    std::string traversalMode; /// Optimizer traversal mode ("sorted" or "random")
+
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
     bool optimizeConnectionsForPair(OptimizerMode optMode, const Pair &);

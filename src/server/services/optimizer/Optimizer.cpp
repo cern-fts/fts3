@@ -24,6 +24,9 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 
+#include <chrono>
+#include <random>
+
 using namespace fts3::common;
 using namespace fts3::config;
 
@@ -38,6 +41,12 @@ Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
     decreaseStepSize(1), increaseStepSize(1), increaseAggressiveStepSize(2),
     emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0)
 {
+    traversalMode = "sorted";
+    auto traversalModeConfig = config::ServerConfig::instance().get<std::string>("OptimizerTraversalMode");
+
+    if (traversalModeConfig == "random") {
+        traversalMode = "random";
+    }
 }
 
 
@@ -95,17 +104,26 @@ void Optimizer::run(void)
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
         std::list<Pair> pairs = dataSource->getActivePairs();
-        // Make sure the order is always the same
-        // See FTS-1094
-        pairs.sort();
+        // Make sure the order is always the same (FTS-1094)
+
+        if (traversalMode == "random") {
+            std::vector<Pair> vPairs{ std::begin(pairs), std::end(pairs) };
+            auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+            auto random_engine = std::default_random_engine{seed};
+            std::shuffle(vPairs.begin(), vPairs.end(), random_engine);
+            pairs.assign(vPairs.begin(), vPairs.end());
+        } else {
+            pairs.sort();
+        }
 
         pairsSize = pairs.size();
         pairIdx = 0;
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: found " << pairsSize << " pairs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: found " << pairsSize << " pairs "
+                                        << "(traversal: " << traversalMode << ")" << commit;
 
-        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-            runOptimizerForPair(*i);
+        for (const auto& pair: pairs) {
+            runOptimizerForPair(pair);
         }
     }
     catch (std::exception &e) {

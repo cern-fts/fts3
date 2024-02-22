@@ -128,6 +128,8 @@ LogTokenRequests=false
 # OptimizerAggressiveIncreaseStep = 2
 # Decrease step size when the optimizer considers the performance is bad
 # OptimizerDecreaseStep = 1
+# The Optimizer traversal mode through the list of storage pairs: "sorted" or "random" (default "sorted")
+# OptimizerTraversalMode = sorted
 
 ## Cleaner Service settings
 # Set the cleaning bulk size when purging old records (number of jobs)

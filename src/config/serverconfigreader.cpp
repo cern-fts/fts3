@@ -469,6 +469,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Decrease step size when the optimizer considers the performance is bad"
     )
     (
+        "OptimizerTraversalMode",
+        po::value<std::string>( &(_vars["OptimizerTraversalMode"]) )->default_value("sorted"),
+        "The Optimizer traversal mode through the list of storage pairs (sorted or random)"
+    )
+    (
         "SigKillDelay",
         po::value<std::string>( &(_vars["SigKillDelay"]) )->default_value("500"),
         "In milliseconds, delay between graceful SIGTERM and SIGKILL"
