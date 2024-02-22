@@ -390,7 +390,7 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
             // a random number from (0, 1)
             double r = ((double) thread_random() / (double)RAND_MAX);
 
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << __func__ << ": Dice result: " << r << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(TRACE) << __func__ << ": Dice result: " << r << commit;
 
             // interval corresponding to given activity
             double interval = 0;
