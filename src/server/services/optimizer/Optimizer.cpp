@@ -39,14 +39,8 @@ Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
     optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
     maxSuccessRate(100), lowSuccessRate(97), baseSuccessRate(96),
     decreaseStepSize(1), increaseStepSize(1), increaseAggressiveStepSize(2),
-    emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0)
+    emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0), traversalMode("sorted")
 {
-    traversalMode = "sorted";
-    auto traversalModeConfig = config::ServerConfig::instance().get<std::string>("OptimizerTraversalMode");
-
-    if (traversalModeConfig == "random") {
-        traversalMode = "random";
-    }
 }
 
 
@@ -92,6 +86,13 @@ void Optimizer::setStepSize(int increase, int increaseAggressive, int decrease)
     decreaseStepSize = decrease;
 }
 
+
+void Optimizer::setTraversalMode(const std::string& traversal)
+{
+    if (traversal == "sorted" || traversal == "random") {
+        traversalMode = traversal;
+    }
+}
 
 void Optimizer::setEmaAlpha(double alpha)
 {

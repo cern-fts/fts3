@@ -178,6 +178,7 @@ public:
     void setBaseSuccessRate(int);
     void setStepSize(int increase, int increaseAggressive, int decrease);
     void setEmaAlpha(double);
+    void setTraversalMode(const std::string&);
     void run(void);
     void runOptimizerForPair(const Pair&);
 };
