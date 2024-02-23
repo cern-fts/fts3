@@ -71,7 +71,7 @@ void TokenExchangeService::runService() {
                 db->updateTokenPrepFiles();
             }
         } catch (boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenExchangeService!" << commit;
             break;
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;

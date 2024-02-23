@@ -124,7 +124,7 @@ void ForceStartTransfersService::runService() {
                 forceRunJobs();
             }
         } catch (boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in ForceStartTransfersService!" << commit;
             break;
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << fts3::common::commit;

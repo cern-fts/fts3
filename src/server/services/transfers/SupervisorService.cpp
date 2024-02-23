@@ -84,7 +84,7 @@ void SupervisorService::runService()
             }
         }
         catch (const boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in SupervisorService!" << commit;
             break;
         }
         catch (const std::exception &error) {

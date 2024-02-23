@@ -88,7 +88,7 @@ void TransfersService::runService()
         }
         catch (boost::thread_interrupted&)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TransfersService!" << commit;
             break;
         }
         catch (std::exception& e)
