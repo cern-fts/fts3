@@ -159,6 +159,13 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         int initial_size = tfh.size();
 
         std::set<std::string> warningPrintedSrc, warningPrintedDst;
+
+        // Count available url-copy slots right before start to fork new url-copy processes
+        int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+        int urlCopyCount = countProcessesWithName("fts_url_copy");
+        availableUrlCopySlots = maxUrlCopy - urlCopyCount;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Number of fts_url_copy process: " << urlCopyCount << commit;
+
         while (!tfh.empty() && availableUrlCopySlots > 0)
         {
             // iterate over all VOs
