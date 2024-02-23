@@ -252,14 +252,17 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;
         execPool.interrupt();
         execPool.join();
+        throw;
     }
     catch (std::exception& e)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
+        throw;
     }
     catch (...)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+        throw;
     }
 }
 
