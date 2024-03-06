@@ -27,6 +27,7 @@
 #include "db/generic/LinkConfig.h"
 #include "db/generic/ShareConfig.h"
 #include "db/generic/CloudStorageAuth.h"
+#include "db/generic/TokenProvider.h"
 #include <soci.h>
 #include <time.h>
 #include "../generic/Job.h"
@@ -96,6 +97,27 @@ struct type_conversion<UserCredentialCache>
     }
 };
 
+template<>
+struct type_conversion<Token>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, Token& token)
+    {
+        token.tokenId      = v.get<std::string>("token_id");
+        token.accessToken  = v.get<std::string>("access_token", "");
+        token.refreshToken = v.get<std::string>("refresh_token", "");
+        token.scope        = v.get<std::string>("scope");
+        token.audience     = v.get<std::string>("audience", "");
+        token.issuer       = v.get<std::string>("issuer");
+
+        auto issuer_size = token.issuer.size();
+        if (token.issuer[issuer_size - 1] != '/') {
+            token.issuer += "/";
+        }
+    }
+};
+
 template <>
 struct type_conversion<Job>
 {
@@ -148,6 +170,8 @@ struct type_conversion<TransferFile>
         file.archiveTimeout  = v.get<int>("archive_timeout",-1);
         file.userDn          = v.get<std::string>("user_dn");
         file.credId     = v.get<std::string>("cred_id");
+        file.sourceTokenId  = v.get<std::string>("src_token_id", "");
+        file.destinationTokenId = v.get<std::string>("dst_token_id", "");
         file.checksum    = v.get<std::string>("checksum","");
         file.checksumMode    = v.get<std::string>("checksum_method","");
         file.sourceSpaceToken = v.get<std::string>("source_space_token","");
@@ -406,7 +430,7 @@ struct type_conversion<OptimizerMode>
     }
 };
 
-template <>
+template<>
 struct type_conversion<StorageConfig>
 {
     typedef values base_type;
@@ -423,6 +447,25 @@ struct type_conversion<StorageConfig>
         seConfig.outboundMaxActive = v.get<int>("outbound_max_active", 0);
         seConfig.inboundMaxThroughput = v.get<double>("inbound_max_throughput", 0.0);
         seConfig.outboundMaxThroughput = v.get<double>("outbound_max_throughput", 0.0);
+    }
+};
+
+template<>
+struct type_conversion<TokenProvider>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, TokenProvider& tokenProvider)
+    {
+        tokenProvider.name = v.get<std::string>("name");
+        tokenProvider.issuer = v.get<std::string>("issuer");
+        tokenProvider.clientId = v.get<std::string>("client_id");
+        tokenProvider.clientSecret = v.get<std::string>("client_secret");
+
+        auto issuer_size = tokenProvider.issuer.size();
+        if (tokenProvider.issuer[issuer_size - 1] != '/') {
+            tokenProvider.issuer += "/";
+        }
     }
 };
 

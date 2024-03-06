@@ -23,11 +23,15 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(GLIB2)
 find_package(ZMQ)
 find_package(JSONCPP)
+find_package(Davix)
+find_package(Cryptopp)
 
 include_directories(
 	${GLIB2_INCLUDE_DIRS}
 	${ZMQ_INCLUDE_DIRS}
 	${JSONCPP_INCLUDE_DIRS}
+	${DAVIX_INCLUDE_DIR}
+	${CRYPTOPP_INCLUDE_DIRS}
 )
 
 # Server lib
@@ -49,6 +53,8 @@ target_link_libraries(fts_server_lib
 	${GLIB2_LIBRARIES}
 	${Boost_LIBRARIES}
     ${ZMQ_LIBRARIES}
+	${DAVIX_LIBRARIES}
+	${CRYPTOPP_LIBRARIES}
 	JSONCPP::JSONCPP
 )
 set_target_properties(fts_server_lib PROPERTIES

@@ -33,7 +33,6 @@
 
 // ERROR PHASE
 #define TRANSFER_PREPARATION "TRANSFER_PREPARATION"
-//#define TRANSFER "TRANSFER"
 #define TRANSFER_FINALIZATION "TRANSFER_FINALIZATION"
 #define TRANSFER_SERVICE "TRANSFER_SERVICE"
 
@@ -48,11 +47,13 @@ private:
 
 public:
     UrlCopyError(const std::string &scope, const std::string &phase, int code, const std::string &msg):
-        scope_(scope), phase_(phase), code_(code), msg_(msg) {
+        scope_(scope), phase_(phase), code_(code) {
+        msg_ = sanitizeQueryString(msg);
     }
 
     UrlCopyError(const std::string &scope, const std::string &phase, const Gfal2Exception &ex):
-        scope_(scope), phase_(phase), code_(ex.code()), msg_(ex.what()) {
+        scope_(scope), phase_(phase), code_(ex.code()) {
+        msg_ = sanitizeQueryString(ex.what());
     }
 
     ~UrlCopyError() throw () {

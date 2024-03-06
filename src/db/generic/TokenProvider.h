@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2014-2015
+ * Copyright (c) CERN 2023
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,17 @@
 
 #pragma once
 
-#include <db/generic/GenericDbIfce.h>
-
-namespace fts3
+/**
+* Object representation of a Token Provider from the database.
+*/
+class TokenProvider
 {
+public:
+    TokenProvider() = default;
+    ~TokenProvider() = default;
 
-std::string generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, const std::string &authMethod="");
-
-std::string generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf);
-
-}
+    std::string name;
+    std::string issuer;
+    std::string clientId;
+    std::string clientSecret;
+};

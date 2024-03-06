@@ -135,7 +135,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(soci::connection_pool *connectionPool)
 {
-    static const unsigned expect[] = {8, 2};
+    static const unsigned expect[] = {9, 0};
     unsigned major, minor;
 
     soci::session sql(*connectionPool);
@@ -390,7 +390,7 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql,
             // a random number from (0, 1)
             double r = ((double) thread_random() / (double)RAND_MAX);
 
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << __func__ << ": Dice result: " << r << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(TRACE) << __func__ << ": Dice result: " << r << commit;
 
             // interval corresponding to given activity
             double interval = 0;
@@ -642,7 +642,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 soci::rowset<TransferFile> rs = (sql.prepare <<
                       " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                       "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
-                      "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
+                      "       j.user_dn, j.cred_id, f.src_token_id, f.dst_token_id, "
+                      "       f.checksum, j.checksum_method, j.source_space_token, "
                       "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                       "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata,"
                       "       f.file_index, f.bringonline_token, f.scitag, "
@@ -732,7 +733,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                     std::string select = " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                          "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
-                                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
+                                         "       j.user_dn, j.cred_id, f.src_token_id, f.dst_token_id, "
+                                         "       f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, "
                                          "       f.file_index, f.bringonline_token, f.scitag, "
@@ -1124,7 +1126,8 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         " SELECT SQL_NO_CACHE "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
-                        "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
+                        "       j.user_dn, j.cred_id, f.src_token_id, f.dest_token_id, "
+                        "       f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, f.file_index, "
                         "       f.bringonline_token, f.scitag, f.source_se, f.dest_se, f.selection_strategy, "
@@ -1772,7 +1775,8 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
         const soci::rowset<TransferFile> rs = (sql.prepare <<
                                          " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                          "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
-                                         "       j.user_dn, j.cred_id, f.checksum, j.checksum_method, j.source_space_token, "
+                                         "       j.user_dn, j.cred_id, f.src_token_id, f.dst_token_id, "
+                                         "       f.checksum, j.checksum_method, j.source_space_token, "
                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                          "       f.user_filesize, f.file_metadata, f.archive_metadata, j.job_metadata, "
                                          "       f.file_index, f.bringonline_token, f.scitag, "
@@ -4275,6 +4279,299 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
     {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+}
+
+
+std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const soci::rowset<Token> rs = (sql.prepare <<
+                                " SELECT token_id, access_token, refresh_token, issuer, scope, audience "
+                                " FROM t_token "
+                                " WHERE refresh_token IS NULL AND "
+                                "       (retry_timestamp IS NULL OR retry_timestamp < UTC_TIMESTAMP()) AND "
+                                "       attempts < 5"
+                                " ORDER BY NULL");
+
+        return {rs.begin(), rs.end()};
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        // Prepare statement for storing exchanged token
+        std::string tokenId;
+        std::string accessToken;
+        std::string refreshToken;
+        soci::statement stmt = (sql.prepare <<
+                                            " UPDATE t_token SET "
+                                            "   access_token = :accessToken, "
+                                            "   refresh_token = :refreshToken, "
+                                            "   exchange_message = NULL "
+                                            " WHERE token_id = :tokenId",
+                                soci::use(accessToken),
+                                soci::use(refreshToken),
+                                soci::use(tokenId));
+
+        sql.begin();
+        for (const auto& it: exchangedTokens) {
+            tokenId = it.tokenId;
+            accessToken = it.accessToken;
+            refreshToken = it.refreshToken;
+
+            if (accessToken.empty()) {
+                accessToken = it.previousAccessToken;
+            }
+
+            stmt.execute(true);
+        }
+        sql.commit();
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::markFailedTokenExchange(const std::set< std::pair<std::string, std::string> >& failedExchanges)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        for (const auto& it: failedExchanges) {
+            soci::indicator nullRetryTimestamp = soci::i_ok;
+            struct tm retryTimestamp;
+            int retryDelay;
+            int attempts;
+
+            auto tokenId = it.first;
+            auto exchangeError = it.second;
+
+            sql << " SELECT retry_timestamp, retry_delay_m, attempts FROM t_token "
+                   " WHERE token_id = :tokenId",
+                   soci::use(tokenId),
+                   soci::into(retryTimestamp, nullRetryTimestamp),
+                   soci::into(retryDelay),
+                   soci::into(attempts);
+
+            // This is the first token-exchange failed attempt
+            if (nullRetryTimestamp == soci::i_null) {
+                retryDelay = 10;
+                attempts = 0;
+            } else {
+                retryDelay = std::min(retryDelay * 6, 1440); // don't exceed one day
+            }
+
+            time_t retryAt = getUTC(retryDelay * 60);
+            gmtime_r(&retryAt, &retryTimestamp);
+            attempts++;
+
+            sql.begin();
+            sql << " UPDATE t_token SET "
+                   "     retry_timestamp = :retryTimestamp, retry_delay_m = :retryDelay, "
+                   "     attempts = :attempts, exchange_message = :exchangeError"
+                   " WHERE token_id = :tokenId",
+                   soci::use(retryTimestamp), soci::use(retryDelay),
+                   soci::use(attempts), soci::use(exchangeError),
+                   soci::use(tokenId);
+            sql.commit();
+        }
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::failTransfersWithFailedTokenExchange(
+        const std::set<std::pair<std::string, std::string> >& failedExchanges)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        for (const auto& it: failedExchanges) {
+            std::string tokenId = it.first;
+
+            const soci::rowset<soci::row> rs = (sql.prepare <<
+                                        " SELECT f.job_id, f.file_id, f.src_token_id, f.dst_token_id "
+                                        " FROM t_file f "
+                                        " WHERE f.file_state = 'TOKEN_PREP' AND "
+                                        "       (f.src_token_id = :tokenId OR f.dst_token_id = :tokenId) "
+                                        " ORDER BY NULL",
+                                        soci::use(tokenId),
+                                        soci::use(tokenId));
+
+            for (const auto& row: rs) {
+                auto job_id = row.get<std::string>("job_id", "");
+                auto file_id = row.get<unsigned long long>("file_id", 0);
+                auto src_token_id = row.get<std::string>("src_token_id", "");
+                auto dst_token_id = row.get<std::string>("dst_token_id", "");
+
+                std::string reason = "Failed to get refresh token for ";
+
+                if (!src_token_id.empty()) {
+                    reason += "source token: " + it.second;
+                } else {
+                    reason += "destination token: " + it.second;
+                }
+
+                updateFileTransferStatusInternal(sql, job_id, file_id, 0, "FAILED", reason, 0, 0, 0.0, false, "");
+                updateJobTransferStatusInternal(sql, job_id, "FAILED");
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed 'TOKEN PREP' file:"
+                                                << " job_id= " << job_id << " file_id=" << file_id
+                                                << " src_token_id=" << src_token_id
+                                                << " dst_token_id=" << dst_token_id
+                                                << " reason=\"" << reason << "\""
+                                                << commit;
+
+                // Send Monitoring Transfer State messages
+                Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+                auto transferStates = getStateOfTransferInternal(sql, job_id, file_id);
+
+                for (const auto &state: transferStates) {
+                    MsgIfce::getInstance()->SendTransferStatusChange(producer, state);
+                }
+            }
+        }
+
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::updateTokenPrepFiles()
+{
+    struct TokenPrepFile {
+        TokenPrepFile(uint64_t file_id, const std::string& job_id,
+                      const std::string& src_token_id,
+                      const std::string& dst_token_id,
+                      const std::string& file_state) :
+              file_id(file_id), job_id(job_id),
+              src_token_id(src_token_id), dst_token_id(dst_token_id),
+              file_state(file_state) {}
+
+        uint64_t file_id;
+        std::string job_id;
+        std::string src_token_id;
+        std::string dst_token_id;
+        std::string file_state;
+    };
+
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const soci::rowset<soci::row> rs = (sql.prepare <<
+                                    " SELECT f.job_id, f.file_id, f.file_state_initial, f.src_token_id, f.dst_token_id "
+                                    " FROM t_file f "
+                                    "     INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id "
+                                    "     INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id "
+                                    " WHERE f.file_state = 'TOKEN_PREP' "
+                                    "     AND t_src.refresh_token IS NOT NULL "
+                                    "     AND t_dst.refresh_token IS NOT NULL "
+                                    " ORDER BY NULL");
+
+        // Store all data into memory structure in order to reiterate
+        // (there might be a way to reset the rowset iterator
+        std::list<TokenPrepFile> tokenPrepFiles;
+
+        for (const auto& row: rs) {
+            tokenPrepFiles.emplace_back(
+                    row.get<unsigned long long>("file_id", 0),
+                    row.get<std::string>("job_id", ""),
+                    row.get<std::string>("src_token_id", ""),
+                    row.get<std::string>("dst_token_id", ""),
+                    row.get<std::string>("file_state_initial", "")
+            );
+        }
+
+        // Prepare statement for "TOKEN_PREP" --> initial file state update
+        uint64_t file_id;
+        std::string file_state;
+        soci::statement stmt = (sql.prepare <<
+                                    " UPDATE t_file SET file_state = :fileState "
+                                    " WHERE file_id = :fileId AND file_state = 'TOKEN_PREP'",
+                                soci::use(file_state),
+                                soci::use(file_id));
+
+        sql.begin();
+        for (auto& file: tokenPrepFiles) {
+            // Sanity check as it should not happen (log error in case it does)
+            if (file.file_state.empty()) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Empty \"file_state_initial\" in updateTokenPrepFiles() function:"
+                                << " job_id=" << file.job_id << " file_id=" << file.file_id
+                                << commit;
+                file.file_state = "SUBMITTED";
+            }
+
+            file_id = file.file_id;
+            file_state = file.file_state;
+            stmt.execute(true);
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Updated 'TOKEN PREP' file:"
+                            << " job_id=" << file.job_id << " file_id=" << file.file_id
+                            << " file_state=" << file.file_state
+                            << " src_token_id=" << file.src_token_id
+                            << " dst_token_id=" << file.dst_token_id
+                            << commit;
+        }
+        sql.commit();
+
+        // Send Monitoring Transfer State messages
+        Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+
+        for (const auto& file: tokenPrepFiles) {
+            auto transferStates = getStateOfTransferInternal(sql, file.job_id, file.file_id);
+
+            for (const auto &state: transferStates) {
+                MsgIfce::getInstance()->SendTransferStatusChange(producer, state);
+            }
+        }
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
     }
 }
 

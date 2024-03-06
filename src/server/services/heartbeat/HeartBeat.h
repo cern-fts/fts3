@@ -32,6 +32,7 @@ namespace server {
 extern time_t retrieveRecords;
 extern time_t updateRecords;
 extern time_t stallRecords;
+extern time_t tokenExchangeRecords;
 
 class HeartBeat: public BaseService
 {

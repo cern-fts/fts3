@@ -27,7 +27,7 @@ namespace fts3 {
 namespace server {
 
 /// Base class for all services
-/// Intented to be able to treat all of them with the same API
+/// Intended to be able to treat all of them with the same API
 class BaseService: public boost::noncopyable {
 private:
     std::string serviceName;

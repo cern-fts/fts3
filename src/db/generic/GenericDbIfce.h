@@ -47,6 +47,8 @@
 #include "StagingOperation.h"
 #include "ArchivingOperation.h"
 #include "QosTransitionOperation.h"
+#include "Token.h"
+#include "TokenProvider.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -128,6 +130,11 @@ public:
     /// @param jobState         The job state
     /// @note                   If jobId is empty, the pid will be used to decide which job to update
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState) = 0;
+
+    /// Get the token associated with the given token ID
+    /// @param tokenId          The token ID
+    /// @return                 The token with tokenId, if any
+    virtual std::string findToken(const std::string& tokenId) = 0;
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -367,6 +374,22 @@ public:
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
+    /// Returns list of access tokens without an associated refresh token
+    virtual std::list<Token> getAccessTokensWithoutRefresh() = 0;
+
+    /// Store a list of exchanged tokens
+    virtual void storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens) = 0;
+
+    /// Mark token-exchange retry timestamp and error message
+    virtual void markFailedTokenExchange(const std::set< std::pair<std::string, std::string> >& failedExchanges) = 0;
+
+    /// Fail transfers without refresh token due to failed token exchange
+    virtual void failTransfersWithFailedTokenExchange(
+            const std::set<std::pair<std::string, std::string> >& failedExchanges) = 0;
+
+    /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
+    virtual void updateTokenPrepFiles() = 0;
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,
@@ -378,6 +401,9 @@ public:
 
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage) = 0;
+
+    /// Get the list of Token Providers
+    virtual std::map<std::string, TokenProvider> getTokenProviders() = 0;
 };
 
 #endif // GENERICDBIFCE_H_

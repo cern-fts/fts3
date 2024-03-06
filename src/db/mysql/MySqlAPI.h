@@ -88,6 +88,11 @@ public:
     /// @param jobState         The job state
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState);
 
+    /// Get the token associated with the given token ID
+    /// @param tokenId          The token ID
+    /// @return                 The token with tokenId, if any
+    virtual std::string findToken(const std::string& tokenId);
+
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
     /// @param userDn           The user's DN
@@ -320,6 +325,22 @@ public:
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
+    /// Returns list of access tokens without an associated refresh token
+    virtual std::list<Token> getAccessTokensWithoutRefresh();
+
+    /// Store a list of exchanged tokens
+    virtual void storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens);
+
+    /// Mark token-exchange retry timestamp and error message
+    virtual void markFailedTokenExchange(const std::set< std::pair<std::string, std::string> >& failedExchanges);
+
+    /// Fail transfers without refresh token due to failed token exchange
+    virtual void failTransfersWithFailedTokenExchange(
+            const std::set<std::pair<std::string, std::string> >& failedExchanges);
+
+    /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
+    virtual void updateTokenPrepFiles();
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
         const std::string& voName,
@@ -331,6 +352,9 @@ public:
 
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage);
+
+    /// Get the list of Token Providers
+    virtual std::map<std::string, TokenProvider> getTokenProviders();
 
 private:
     size_t                poolSize;

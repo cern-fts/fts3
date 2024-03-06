@@ -127,19 +127,22 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Update from the transfer
             cmdBuilder.setFromTransfer(tf, false, db->publishUserDn(tf.voName), msgDir);
 
-            // OAuth credentials
-            std::string cloudConfigFile;
+            // Set Auth method in the command line options
             std::string authMethod = FileTransferExecutor::getAuthMethod(tf.jobMetadata);
-
             cmdBuilder.setAuthMethod(authMethod);
-            cloudConfigFile = generateCloudStorageConfigFile(db, tf);
 
-            if ("oauth2" == authMethod) {
-                cloudConfigFile = generateOAuthConfigFile(db, tf, cloudConfigFile);
+            // Cloud storage credentials
+            std::string cloudStorageConfig = generateCloudStorageConfigFile(db, tf, authMethod);
+            if (!cloudStorageConfig.empty()) {
+                cmdBuilder.setCloudConfig(cloudStorageConfig);
             }
 
-            if (!cloudConfigFile.empty()) {
-                cmdBuilder.setOAuthFile(cloudConfigFile);
+            // Not a cloud storage transfer but still using oauth2 method
+            if (cloudStorageConfig.empty() && "oauth2" == authMethod) {
+                std::string oauthCredentials = generateOAuthConfigFile(db, tf);
+                if (!oauthCredentials.empty()) {
+                    cmdBuilder.setOAuthFile(oauthCredentials);
+                }
             }
 
             // Retrieve SE-issued tokens flag
@@ -166,8 +169,8 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Set UrlCopyProcess ping interval (in seconds)
             cmdBuilder.setPingInterval(fts3::config::ServerConfig::instance().get<int>("UrlCopyProcessPingInterval"));
 
-            // Proxy
-            if (!proxy.empty()) {
+            // Set proxy path if authentication method is not OAuth2
+            if (!proxy.empty() && authMethod != "oauth2") {
                 cmdBuilder.setProxy(proxy);
             }
 

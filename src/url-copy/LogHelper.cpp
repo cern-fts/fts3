@@ -18,27 +18,39 @@
  * limitations under the License.
  */
 
+#include "LogHelper.h"
+#include "heuristics.h"
+
 #include <gfal_api.h>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+
 #include <iomanip>
 #include <sstream>
-#include <boost/filesystem/operations.hpp>
-#include "LogHelper.h"
+#include <mutex>
 
+
+/// Ensure sequential logging for the callback function
+std::mutex loggingMx;
 
 static void gfal2LogCallback(const gchar *, GLogLevelFlags log_level, const gchar *message, gpointer)
 {
     if (message) {
+        // Lock needed to ensure messages are logged sequentially (triggered by FTS-1995)
+        std::unique_lock lk(loggingMx);
+
         const char* prefix = "Gfal2: ";
 
         if (strncmp(message, "Davix: ", 7) == 0) {
             prefix = "";
         }
 
+        std::string smessage = sanitizeQueryString(message);
+
         if (log_level == G_LOG_LEVEL_DEBUG) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << message << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << smessage << fts3::common::commit;
         } else {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << prefix << message << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << prefix << smessage << fts3::common::commit;
         }
     }
 }
