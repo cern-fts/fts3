@@ -44,6 +44,7 @@ const option UrlCopyOpts::long_options[] =
     {"job-multihop",      no_argument,       0, 204},
     {"last-hop",          no_argument,       0, 205},
     {"archiving",         no_argument,       0, 206},
+    {"activity",          required_argument, 0, 207},
 
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
@@ -281,6 +282,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 206:
                     referenceTransfer.isArchiving = true;
                     break;
+		case 207:
+                    referenceTransfer.activity = boost::lexical_cast<std::string>(optarg);
+                    break;
 
                 case 300:
                     setChecksum(referenceTransfer, optarg);
@@ -296,7 +300,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                         referenceTransfer.checksumMode = Transfer::CHECKSUM_BOTH;
                     }
                     else {
-            			referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
+                        referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
                     }
                     break;
                 case 302:
@@ -341,7 +345,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.destTokenIssuer = optarg;
                     break;
                 case 506:
-                	authMethod = optarg;
+                    authMethod = optarg;
                     break;
                 case 507:
                     copyMode = translateCopyMode(optarg);
