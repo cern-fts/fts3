@@ -282,7 +282,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 206:
                     referenceTransfer.isArchiving = true;
                     break;
-		case 207:
+                case 207:
                     referenceTransfer.activity = boost::lexical_cast<std::string>(optarg);
                     break;
 
