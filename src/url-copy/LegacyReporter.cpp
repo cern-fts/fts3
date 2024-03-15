@@ -244,6 +244,7 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.user_dn = replaceMetadataString(opts.userDn);
     completed.file_metadata = replaceMetadataString(transfer.fileMetadata);
     completed.job_metadata = replaceMetadataString(opts.jobMetadata);
+    completed.activity = transfer.activity;
     completed.job_m_replica = transfer.isMultipleReplicaJob;
     completed.job_multihop = transfer.isMultihopJob;
     completed.is_lasthop = transfer.isLastHop;

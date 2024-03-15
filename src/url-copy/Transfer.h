@@ -109,6 +109,7 @@ public:
     std::string checksumAlgorithm;
     std::string checksumValue;
     uint64_t    userFileSize;
+    std::string activity;
     std::string fileMetadata;
     std::string transferMetadata;
     std::string tokenBringOnline;

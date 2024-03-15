@@ -115,6 +115,7 @@ public:
     std::string user_dn;
     std::string file_metadata;
     std::string job_metadata;
+    std::string activity;
     unsigned    retry;
     unsigned    retry_max;
     bool        job_m_replica;

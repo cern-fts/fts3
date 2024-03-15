@@ -181,6 +181,7 @@ struct type_conversion<TransferFile>
         file.fileMetadata = v.get<std::string>("file_metadata", "");
         file.transferMetadata = v.get<std::string>("archive_metadata", "");
         file.jobMetadata  = v.get<std::string>("job_metadata", "");
+        file.activity     = v.get<std::string>("activity", "");
         file.userFilesize = v.get<long long>("user_filesize", 0);
         file.fileIndex    = v.get<int>("file_index", 0);
         file.bringOnlineToken = v.get<std::string>("bringonline_token", "");
