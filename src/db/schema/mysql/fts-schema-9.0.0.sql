@@ -784,7 +784,7 @@ CREATE TABLE `t_token` (
   `access_token` longtext NOT NULL,
   `access_token_not_before` timestamp NOT NULL,
   `access_token_expiry` timestamp NOT NULL,
-  `access_token_refresh_timestamp` timestamp NOT NULL,
+  `access_token_refresh_after` timestamp NOT NULL,
   `refresh_token` longtext,
   `issuer` varchar(1024) NOT NULL,
   `scope` varchar(1024) NOT NULL,
