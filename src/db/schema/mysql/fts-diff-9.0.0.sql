@@ -27,6 +27,7 @@ CREATE TABLE `t_token` (
   `exchange_message` varchar(2048) NULL DEFAULT NULL,
   `retired` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`token_id`),
+  KEY `idx_retired_access_token_refresh_after` (`retired`,`access_token_refresh_after`),
   CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
