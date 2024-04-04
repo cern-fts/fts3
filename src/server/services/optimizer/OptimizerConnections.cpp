@@ -315,7 +315,8 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     }
     // Do not go too far with the number of connections
     if (optMode >= kOptimizerNormal) {
-        if (decision > current.queueSize * maxNumberOfStreams) {
+        const bool want_to_increase = decision > previousValue;
+        if (want_to_increase && decision > current.queueSize * maxNumberOfStreams) {
             decision = previousValue;
             rationale << ". Too many streams";
         }
