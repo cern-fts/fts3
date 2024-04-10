@@ -237,6 +237,7 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     }
 
     set_metadata(message, "job_metadata", tr_completed.job_metadata);
+    message["activity"] = tr_completed.activity;
     message["retry"] = (Json::Value::UInt) tr_completed.retry;
     message["retry_max"] = (Json::Value::UInt) tr_completed.retry_max;
     message["job_m_replica"] = tr_completed.job_m_replica;

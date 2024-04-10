@@ -262,9 +262,6 @@ void MsgProducer::run()
         try {
             if (!connected) {
                 cleanup();
-                //https://issues.apache.org/jira/browse/AMQCPP-524
-                activemq::library::ActiveMQCPP::shutdownLibrary();
-                activemq::library::ActiveMQCPP::initializeLibrary();
                 getConnection();
 
                 if (!connected) {

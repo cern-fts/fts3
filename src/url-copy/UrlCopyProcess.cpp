@@ -606,6 +606,7 @@ void UrlCopyProcess::timeout(void)
 
 void UrlCopyProcess::panic(const std::string &msg)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "UrlCopyProcess panic... " << msg << commit;
     boost::lock_guard<boost::mutex> lock(transfersMutex);
     for (auto transfer = todoTransfers.begin(); transfer != todoTransfers.end(); ++transfer) {
         Gfal2TransferParams params;
