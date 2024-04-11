@@ -157,10 +157,13 @@ std::string TokenExchangeExecutor::executeHttpRequest(Davix::HttpRequest& reques
 
     request.beginRequest(&req_error);
 
-    while (request.readBlock(&buffer[0], DAVIX_BLOCK_SIZE, &response_error) > 0) {
+    while (true) {
+        auto bytesRead = request.readBlock(&buffer[0], DAVIX_BLOCK_SIZE, &response_error);
+        if (bytesRead <= 0) {
+            break;
+        }
         Davix::checkDavixError(&response_error);
-        response << buffer.data();
-        buffer.clear();
+        response.write(buffer.data(), bytesRead); // Write the actual data read
     }
 
     request.endRequest(nullptr);
