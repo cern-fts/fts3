@@ -1128,7 +1128,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                         " SELECT SQL_NO_CACHE "
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
-                        "       j.user_dn, j.cred_id, f.src_token_id, f.dest_token_id, "
+                        "       j.user_dn, j.cred_id, f.src_token_id, f.dst_token_id, "
                         "       f.checksum, j.checksum_method, j.source_space_token, "
                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                         "       f.file_metadata, f.archive_metadata, j.job_metadata, "
