@@ -62,7 +62,6 @@ Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2%{?_isa} >= 2.22.0
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.22.0
 Requires: gfal2-plugin-http%{?_isa} >= 2.22.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.22.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
