@@ -321,7 +321,7 @@ public:
 
     /// Destructor
     ~Gfal2() {
-        gfal2_context_free(context);
+        // gfal2_context_free(context); //FTS-1996: Intentional memory leak; Do not free gfal2 context to prevent crash
     }
 
     /// Can not copy
