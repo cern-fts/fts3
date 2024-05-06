@@ -1,6 +1,7 @@
 --
 -- FTS3 Schema 9.0.0
 -- [FTS-1928] REST API should accept and validate FTS submission token
+-- [FTS-2007] Tape Endpoint flag in SE config for "overwrite-when-only-on-disk" feature
 --
 
 CREATE TABLE `t_token_provider` (
@@ -41,6 +42,9 @@ ALTER TABLE `t_file_backup`
   ADD COLUMN `dst_token_id` char(16) DEFAULT NULL,
   ADD COLUMN `file_state_initial` char(32) DEFAULT NULL,
   MODIFY COLUMN `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START','TOKEN_PREP') NOT NULL;
+
+ALTER TABLE `t_se`
+  ADD COLUMN `tape_endpoint` char(1) DEFAULT NULL;
 
 INSERT INTO t_schema_vers (major, minor, patch, message)
 VALUES (9, 0, 0, 'FTS-1925: Full OAuth2 capabilities in FTS for submission, transfers and tape operations');
