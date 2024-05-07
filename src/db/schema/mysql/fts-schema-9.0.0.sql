@@ -784,6 +784,7 @@ CREATE TABLE `t_token` (
   `access_token` longtext NOT NULL,
   `access_token_not_before` timestamp NOT NULL,
   `access_token_expiry` timestamp NOT NULL,
+  `access_token_refresh_after` timestamp NOT NULL,
   `refresh_token` longtext,
   `issuer` varchar(1024) NOT NULL,
   `scope` varchar(1024) NOT NULL,
@@ -792,7 +793,9 @@ CREATE TABLE `t_token` (
   `retry_delay_m` int unsigned NULL DEFAULT 0,
   `attempts` int unsigned NULL DEFAULT 0,
   `exchange_message` varchar(2048) NULL DEFAULT NULL,
+  `retired` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`token_id`),
+  KEY `idx_retired_access_token_refresh_after` (`retired`,`access_token_refresh_after`),
   CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
