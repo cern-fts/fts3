@@ -67,6 +67,8 @@ Requires: gfal2-plugin-srm%{?_isa} >= 2.22.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 Requires: jsoncpp
+Requires: python3-requests
+Requires: python3-PyMySQL
 
 Requires(post):   systemd
 Requires(preun):  systemd
@@ -277,6 +279,8 @@ fi
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_rotate
+%{_sbindir}/ftstokenrefresherd
+%{_sbindir}/ftstokenhousekeeperd
 
 %dir %attr(0755,root,root) %{_datadir}/fts/
 %{_datadir}/fts/fts-database-upgrade.py*
@@ -284,9 +288,13 @@ fi
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-server.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-qos.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenrefresherd.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenhousekeeperd.service
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/ftstokenrefresherd.ini
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/ftstokenhousekeeperd.ini
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-server
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
