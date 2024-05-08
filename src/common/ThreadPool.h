@@ -24,7 +24,7 @@
 #include <boost/thread.hpp>
 #include <boost/ptr_container/ptr_deque.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/any.hpp>
 #include <boost/optional.hpp>
 
