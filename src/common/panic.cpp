@@ -60,7 +60,7 @@ void signal_number_to_string(int signum, char* buffer, size_t size) {
     } else {
         int num = signum;
         while (num != 0 && len < (int)size - 1) {
-            buffer[len++] = '0' + num % 10;
+            buffer[len++] = '0' + (char) num % 10;
             num /= 10;
         }
     }
@@ -86,9 +86,9 @@ void get_backtrace(int signum)
     signal_number_to_string(signum, buffer, sizeof(buffer));
 
     // print out all the frames to stderr
-    write(STDERR_FILENO, "Caught signal: ", strlen("Caught signal: "));
-    write(STDERR_FILENO, buffer, strlen(buffer));
-    write(STDERR_FILENO, "\nStack trace: \n", strlen("\nStack trace: \n"));
+    if(write(STDERR_FILENO, "Caught signal: ", strlen("Caught signal: ")) < 0) return;
+    if(write(STDERR_FILENO, buffer, strlen(buffer)) < 0) return;
+    if(write(STDERR_FILENO, "\nStack trace: \n", strlen("\nStack trace: \n")) < 0) return;
     backtrace_symbols_fd(stack_backtrace, stack_backtrace_size, STDERR_FILENO);
 }
 
