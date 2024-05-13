@@ -86,5 +86,5 @@ endif()
 # all listed variables are TRUE
 # -----------------------------------------------------
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(DAVIX DEFAULT_MSG DAVIX_LIBRARIES DAVIX_INCLUDE_DIR)
+find_package_handle_standard_args(Davix DEFAULT_MSG DAVIX_LIBRARIES DAVIX_INCLUDE_DIR)
 mark_as_advanced(DAVIX_LIBRARIES DAVIX_INCLUDE_DIR DAVIX_CFLAGS)

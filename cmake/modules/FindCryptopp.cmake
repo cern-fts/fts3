@@ -45,6 +45,6 @@ find_path(CRYPTOPP_INCLUDE_DIRS
 # and set CRYPTOPP to TRUE if all listed variables are TRUE
 # -------------------------------------------------------------------
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(cryptopp DEFAULT_MSG
+find_package_handle_standard_args(Cryptopp DEFAULT_MSG
         CRYPTOPP_LIBRARIES CRYPTOPP_INCLUDE_DIRS)
 mark_as_advanced(CRYPTOPP_LIBRARIES CRYPTOPP_INCLUDE_DIRS)
