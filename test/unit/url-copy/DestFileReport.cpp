@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2023
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
+
 #include <json/json.h>
 #include <cstdint>
 
 #include "UrlCopyFixture.h"
 
-BOOST_AUTO_TEST_SUITE(dest_file_report)
 
-
-BOOST_FIXTURE_TEST_CASE (simpleDestFileReport, UrlCopyFixture)
-{
+TEST_F(UrlCopyFixture, SimpleDestFileReport) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2"
@@ -38,34 +35,32 @@ BOOST_FIXTURE_TEST_CASE (simpleDestFileReport, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
-    BOOST_CHECK_EQUAL(dst_file["file_size"].asUInt64(), 10);
-    BOOST_CHECK_EQUAL(dst_file["checksum_type"], "ADLER32");
-    BOOST_CHECK_EQUAL(dst_file["checksum_value"], "abc123ab");
-    BOOST_CHECK_EQUAL(dst_file["file_on_disk"], false);
-    BOOST_CHECK_EQUAL(dst_file["file_on_tape"], true);
-
+    EXPECT_EQ(dst_file["file_size"].asUInt64(), 10);
+    EXPECT_EQ(dst_file["checksum_type"], "ADLER32");
+    EXPECT_EQ(dst_file["checksum_value"], "abc123ab");
+    EXPECT_EQ(dst_file["file_on_disk"], false);
+    EXPECT_EQ(dst_file["file_on_tape"], true);
 }
 
-
-BOOST_FIXTURE_TEST_CASE (overwriteEnabled, UrlCopyFixture) {
+TEST_F (UrlCopyFixture, overwriteEnabled) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2"
@@ -79,22 +74,21 @@ BOOST_FIXTURE_TEST_CASE (overwriteEnabled, UrlCopyFixture) {
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(protoMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
+    EXPECT_EQ(protoMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
     // No error received because overwrite is enabled
-    BOOST_CHECK_EQUAL(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.fileSize, 10);
+    EXPECT_EQ(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.fileSize, 10);
 
     // File metadata should continue empty as dest file report is not created
-    BOOST_CHECK_EQUAL(c.fileMetadata, "");
+    EXPECT_EQ(c.fileMetadata, "");
 }
 
 
-BOOST_FIXTURE_TEST_CASE (fileOnlineAndNearline, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, fileOnlineAndNearline) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=ONLINE_AND_NEARLINE");
@@ -106,31 +100,30 @@ BOOST_FIXTURE_TEST_CASE (fileOnlineAndNearline, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
-    BOOST_CHECK_EQUAL(dst_file["file_on_disk"], true);
-    BOOST_CHECK_EQUAL(dst_file["file_on_tape"], true);
+    EXPECT_EQ(dst_file["file_on_disk"], true);
+    EXPECT_EQ(dst_file["file_on_tape"], true);
 }
 
 
-BOOST_FIXTURE_TEST_CASE (fileOnline, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, FileOnline) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=ONLINE");
@@ -142,31 +135,30 @@ BOOST_FIXTURE_TEST_CASE (fileOnline, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
-    BOOST_CHECK_EQUAL(dst_file["file_on_disk"], true);
-    BOOST_CHECK_EQUAL(dst_file["file_on_tape"], false);
+    EXPECT_EQ(dst_file["file_on_disk"], true);
+    EXPECT_EQ(dst_file["file_on_tape"], false);
 }
 
 
-BOOST_FIXTURE_TEST_CASE (fileNearline, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, FileNearline) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=NEARLINE");
@@ -178,31 +170,30 @@ BOOST_FIXTURE_TEST_CASE (fileNearline, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
-    BOOST_CHECK_EQUAL(dst_file["file_on_disk"], false);
-    BOOST_CHECK_EQUAL(dst_file["file_on_tape"], true);
+    EXPECT_EQ(dst_file["file_on_disk"], false);
+    EXPECT_EQ(dst_file["file_on_tape"], true);
 }
 
 
-BOOST_FIXTURE_TEST_CASE (invalidStatus, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, InvalidStatus) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=INVALID");
@@ -214,31 +205,30 @@ BOOST_FIXTURE_TEST_CASE (invalidStatus, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
-    BOOST_CHECK_EQUAL(dst_file["file_on_disk"], false);
-    BOOST_CHECK_EQUAL(dst_file["file_on_tape"], false);
+    EXPECT_EQ(dst_file["file_on_disk"], false);
+    EXPECT_EQ(dst_file["file_on_tape"], false);
 }
 
 
-BOOST_FIXTURE_TEST_CASE (md5Checksum, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, Md5Checksum) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=ONLINE&checksum=abc123ab");
@@ -251,31 +241,30 @@ BOOST_FIXTURE_TEST_CASE (md5Checksum, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
-    BOOST_CHECK_EQUAL(dst_file["checksum_type"], "MD5");
-    BOOST_CHECK_EQUAL(dst_file["checksum_value"], "abc123ab");
+    EXPECT_EQ(dst_file["checksum_type"], "MD5");
+    EXPECT_EQ(dst_file["checksum_value"], "abc123ab");
 }
 
 
-BOOST_FIXTURE_TEST_CASE (maxFileSize, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, MaxFileSize) {
     Transfer original;
     uint64_t max_file_size = UINT64_MAX;
 
@@ -283,7 +272,8 @@ BOOST_FIXTURE_TEST_CASE (maxFileSize, UrlCopyFixture)
     source_url << "mock://host/path?size=" << max_file_size;
 
     std::stringstream dest_url;
-    dest_url << "mock://host/path?time=2&user.status=ONLINE&checksum=abc123ab&size_pre=" << max_file_size << "&size_post=" << max_file_size;
+    dest_url << "mock://host/path?time=2&user.status=ONLINE&checksum=abc123ab&size_pre=" << max_file_size
+             << "&size_post=" << max_file_size;
 
     original.source = Uri::parse(source_url.str());
     original.destination = Uri::parse(dest_url.str());
@@ -296,31 +286,30 @@ BOOST_FIXTURE_TEST_CASE (maxFileSize, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
 
     Json::Value dst_file = metadata["dst_file"];
 
     // Make sure that writing/reading from/to the JSON does not corrupt the value of file_size
-    BOOST_CHECK_EQUAL(dst_file["file_size"].asUInt64(), max_file_size);
+    EXPECT_EQ(dst_file["file_size"].asUInt64(), max_file_size);
 }
 
 
-BOOST_FIXTURE_TEST_CASE (fileMetadataExists, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, FileMetadataExists) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2&user.status=NEARLINE");
@@ -335,29 +324,28 @@ BOOST_FIXTURE_TEST_CASE (fileMetadataExists, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
-    BOOST_CHECK_EQUAL(metadata.isMember("file_metadata"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("file_metadata"), true);
 
-    BOOST_CHECK_EQUAL(metadata["file_metadata"], test_metadata);
+    EXPECT_EQ(metadata["file_metadata"], test_metadata);
 }
 
 
-BOOST_FIXTURE_TEST_CASE (fileMetadataExistsAsJSON, UrlCopyFixture)
-{
+TEST_F (UrlCopyFixture, FileMetadataExistsAsJSON) {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
     original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2&user.status=NEARLINE");
@@ -382,27 +370,25 @@ BOOST_FIXTURE_TEST_CASE (fileMetadataExistsAsJSON, UrlCopyFixture)
     UrlCopyProcess proc(opts, *this);
     proc.run();
 
-    BOOST_CHECK_EQUAL(startMsgs.size(), 1);
-    BOOST_CHECK_EQUAL(completedMsgs.size(), 1);
+    EXPECT_EQ(startMsgs.size(), 1);
+    EXPECT_EQ(completedMsgs.size(), 1);
 
     Transfer &c = completedMsgs.front();
-    BOOST_CHECK_NE(c.error.get(), (void*)NULL);
-    BOOST_CHECK_EQUAL(c.error->code(), EEXIST);
+    EXPECT_NE(c.error.get(), (void *) NULL);
+    EXPECT_EQ(c.error->code(), EEXIST);
 
-    BOOST_CHECK_NE(c.fileMetadata, "");
+    EXPECT_NE(c.fileMetadata, "");
 
     // Parse metadata containing the destination file report
     Json::Value metadata;
     std::istringstream valueStream(c.fileMetadata);
     valueStream >> metadata;
 
-    BOOST_CHECK_EQUAL(metadata.isMember("dst_file"), true);
-    BOOST_CHECK_EQUAL(metadata.isMember("activity"), true);
-    BOOST_CHECK_EQUAL(metadata.isMember("priority"), true);
+    EXPECT_EQ(metadata.isMember("dst_file"), true);
+    EXPECT_EQ(metadata.isMember("activity"), true);
+    EXPECT_EQ(metadata.isMember("priority"), true);
 
-    BOOST_CHECK_EQUAL(metadata["activity"], "Test");
-    BOOST_CHECK_EQUAL(metadata["priority"].asUInt(), 5);
+    EXPECT_EQ(metadata["activity"], "Test");
+    EXPECT_EQ(metadata["priority"].asUInt(), 5);
 }
 
-
-BOOST_AUTO_TEST_SUITE_END()

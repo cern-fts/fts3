@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2016-2017
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,5 +14,24 @@
 # limitations under the License.
 #
 
-define_test (VoShares fts_server_lib)
-define_test (UrlCopyCmd fts_server_lib)
+add_executable(url_copy_cmd_test "UrlCopyCmd.cpp")
+
+target_link_libraries(url_copy_cmd_test
+        fts_server_lib
+        fts_msg_ifce
+        ${GTEST_LIBRARIES}
+        ${GTEST_MAIN_LIBRARIES}
+)
+
+add_test(url_copy_cmd_test url_copy_cmd_test)
+
+add_executable(vo_shares_test "VoShares.cpp")
+
+target_link_libraries(vo_shares_test
+        fts_server_lib
+        fts_msg_ifce
+        ${GTEST_LIBRARIES}
+        ${GTEST_MAIN_LIBRARIES}
+)
+
+add_test(vo_shares_test vo_shares_test)

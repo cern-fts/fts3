@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <boost/function.hpp>
 
@@ -26,28 +25,14 @@
 
 using namespace fts3::events;
 
-
-namespace boost {
-    bool operator==(const google::protobuf::Message &a, const google::protobuf::Message &b)
-    {
-        return a.SerializeAsString() == b.SerializeAsString();
-    }
-}
-
-
 namespace std {
-    std::ostream &operator<<(std::ostream &os, const google::protobuf::Message &msg)
-    {
+    std::ostream &operator<<(std::ostream &os, const google::protobuf::Message &msg) {
         os << msg.DebugString();
         return os;
     }
 }
 
-
-BOOST_AUTO_TEST_SUITE(MsgBusTest)
-
-
-class MsgBusFixture {
+class MsgBusFixture : public testing::Test {
 protected:
     static const std::string TEST_PATH;
 
@@ -63,18 +48,14 @@ public:
 
 const std::string MsgBusFixture::TEST_PATH("/tmp/MsgBusTest");
 
-
-template <typename MSG_CONTAINER>
-static void expectZeroMessages(boost::function<int (Consumer*, MSG_CONTAINER&)> func, Consumer &consumer)
-{
+template<typename MSG_CONTAINER>
+static void expectZeroMessages(boost::function<int(Consumer *, MSG_CONTAINER &)> func, Consumer &consumer) {
     MSG_CONTAINER container;
-    BOOST_CHECK_EQUAL(0, func(&consumer, container));
-    BOOST_CHECK_EQUAL(0, container.size());
+    EXPECT_EQ(0, func(&consumer, container));
+    EXPECT_EQ(0, container.size());
 }
 
-
-BOOST_FIXTURE_TEST_CASE (simpleStatus, MsgBusFixture)
-{
+TEST_F(MsgBusFixture, SimpleStatus) {
     Producer producer(TEST_PATH);
     Consumer consumer(TEST_PATH);
 
@@ -96,7 +77,7 @@ BOOST_FIXTURE_TEST_CASE (simpleStatus, MsgBusFixture)
     original.set_timestamp(15689);
     original.set_throughput(0.88);
 
-    BOOST_CHECK_EQUAL(0, producer.runProducerStatus(original));
+    EXPECT_EQ(0, producer.runProducerStatus(original));
 
     // Make sure the messages don't get messed up
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerDeletions, consumer);
@@ -107,25 +88,23 @@ BOOST_FIXTURE_TEST_CASE (simpleStatus, MsgBusFixture)
 
     // First attempt must return the single message
     std::vector<Message> statuses;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerStatus(statuses));
-    BOOST_CHECK_EQUAL(1, statuses.size());
-    BOOST_CHECK_EQUAL(statuses[0], original);
+    EXPECT_EQ(0, consumer.runConsumerStatus(statuses));
+    EXPECT_EQ(1, statuses.size());
+    EXPECT_EQ(statuses[0].SerializeAsString(), original.SerializeAsString());
 
     // Second attempt must return empty (already consumed)
     statuses.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerStatus(statuses));
-    BOOST_CHECK_EQUAL(0, statuses.size());
+    EXPECT_EQ(0, consumer.runConsumerStatus(statuses));
+    EXPECT_EQ(0, statuses.size());
 }
 
-
-BOOST_FIXTURE_TEST_CASE (simpleMonitoring, MsgBusFixture)
-{
+TEST_F(MsgBusFixture, SimpleMonitoring) {
     Producer producer(TEST_PATH);
     Consumer consumer(TEST_PATH);
 
     std::string original = "blah bleh blih bloh cluh";
 
-    BOOST_CHECK_EQUAL(0, producer.runProducerMonitoring(original));
+    EXPECT_EQ(0, producer.runProducerMonitoring(original));
 
     // Make sure the messages don't get messed up
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
@@ -136,19 +115,17 @@ BOOST_FIXTURE_TEST_CASE (simpleMonitoring, MsgBusFixture)
 
     // First attempt must return the single message
     std::vector<std::string> monitoring;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerMonitoring(monitoring));
-    BOOST_CHECK_EQUAL(1, monitoring.size());
-    BOOST_CHECK_EQUAL(monitoring[0], original);
+    EXPECT_EQ(0, consumer.runConsumerMonitoring(monitoring));
+    EXPECT_EQ(1, monitoring.size());
+    EXPECT_EQ(monitoring[0], original);
 
     // Second attempt must return empty (already consumed)
     monitoring.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerMonitoring(monitoring));
-    BOOST_CHECK_EQUAL(0, monitoring.size());
+    EXPECT_EQ(0, consumer.runConsumerMonitoring(monitoring));
+    EXPECT_EQ(0, monitoring.size());
 }
 
-
-BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
-{
+TEST_F(MsgBusFixture, SimpleLog) {
     Producer producer(TEST_PATH);
     Consumer consumer(TEST_PATH);
 
@@ -161,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
     original.set_has_debug_file(true);
     original.set_timestamp(time(NULL));
 
-    BOOST_CHECK_EQUAL(0, producer.runProducerLog(original));
+    EXPECT_EQ(0, producer.runProducerLog(original));
 
     // Make sure the messages don't get messed up
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
@@ -172,20 +149,18 @@ BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
 
     // First attempt must return the single message
     std::map<int, MessageLog> logs;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerLog(logs));
-    BOOST_CHECK_EQUAL(1, logs.size());
-    BOOST_CHECK_NO_THROW(logs.at(original.file_id()));
-    BOOST_CHECK_EQUAL(logs.at(original.file_id()), original);
+    EXPECT_EQ(0, consumer.runConsumerLog(logs));
+    EXPECT_EQ(1, logs.size());
+    EXPECT_NO_THROW(logs.at((int) original.file_id()));
+    EXPECT_EQ(logs.at((int) original.file_id()).SerializeAsString(), original.SerializeAsString());
 
     // Second attempt must return empty (already consumed)
     logs.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerLog(logs));
-    BOOST_CHECK_EQUAL(0, logs.size());
+    EXPECT_EQ(0, consumer.runConsumerLog(logs));
+    EXPECT_EQ(0, logs.size());
 }
 
-
-BOOST_FIXTURE_TEST_CASE (simpleDeletion, MsgBusFixture)
-{
+TEST_F(MsgBusFixture, SimpleDeletion) {
     Producer producer(TEST_PATH);
     Consumer consumer(TEST_PATH);
 
@@ -196,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE (simpleDeletion, MsgBusFixture)
     original.set_transfer_status("FAILED");
     original.set_transfer_message("Could not open because of reasons");
 
-    BOOST_CHECK_EQUAL(0, producer.runProducerDeletions(original));
+    EXPECT_EQ(0, producer.runProducerDeletions(original));
 
     // Make sure the messages don't get messed up
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
@@ -207,19 +182,17 @@ BOOST_FIXTURE_TEST_CASE (simpleDeletion, MsgBusFixture)
 
     // First attempt must return the single message
     std::vector<MessageBringonline> statuses;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerDeletions(statuses));
-    BOOST_CHECK_EQUAL(1, statuses.size());
-    BOOST_CHECK_EQUAL(statuses[0], original);
+    EXPECT_EQ(0, consumer.runConsumerDeletions(statuses));
+    EXPECT_EQ(1, statuses.size());
+    EXPECT_EQ(statuses[0].SerializeAsString(), original.SerializeAsString());
 
     // Second attempt must return empty (already consumed)
     statuses.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerDeletions(statuses));
-    BOOST_CHECK_EQUAL(0, statuses.size());
+    EXPECT_EQ(0, consumer.runConsumerDeletions(statuses));
+    EXPECT_EQ(0, statuses.size());
 }
 
-
-BOOST_FIXTURE_TEST_CASE (simpleStaging, MsgBusFixture)
-{
+TEST_F(MsgBusFixture, SimpleStaging) {
     Producer producer(TEST_PATH);
     Consumer consumer(TEST_PATH);
 
@@ -230,7 +203,7 @@ BOOST_FIXTURE_TEST_CASE (simpleStaging, MsgBusFixture)
     original.set_transfer_status("FAILED");
     original.set_transfer_message("Could not open because of reasons");
 
-    BOOST_CHECK_EQUAL(0, producer.runProducerStaging(original));
+    EXPECT_EQ(0, producer.runProducerStaging(original));
 
     // Make sure the messages don't get messed up
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
@@ -241,15 +214,12 @@ BOOST_FIXTURE_TEST_CASE (simpleStaging, MsgBusFixture)
 
     // First attempt must return the single message
     std::vector<MessageBringonline> statuses;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerStaging(statuses));
-    BOOST_CHECK_EQUAL(1, statuses.size());
-    BOOST_CHECK_EQUAL(statuses[0], original);
+    EXPECT_EQ(0, consumer.runConsumerStaging(statuses));
+    EXPECT_EQ(1, statuses.size());
+    EXPECT_EQ(statuses[0].SerializeAsString(), original.SerializeAsString());
 
     // Second attempt must return empty (already consumed)
     statuses.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerStaging(statuses));
-    BOOST_CHECK_EQUAL(0, statuses.size());
+    EXPECT_EQ(0, consumer.runConsumerStaging(statuses));
+    EXPECT_EQ(0, statuses.size());
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
+
 #include "url-copy/AutoInterruptThread.h"
 
-
-BOOST_AUTO_TEST_SUITE(url_copy)
-
-void func(bool *flag)
-{
+void func(bool *flag) {
     try {
         while (!boost::this_thread::interruption_requested()) {
             boost::this_thread::sleep(boost::posix_time::millisec(100));
         }
         *flag = true;
     }
-    catch (const boost::thread_interrupted&) {
+    catch (const boost::thread_interrupted &) {
         *flag = true;
     }
     catch (...) {
@@ -38,15 +34,11 @@ void func(bool *flag)
 }
 
 
-BOOST_AUTO_TEST_CASE(simple)
-{
+TEST(AutoInterruptThread, Simple) {
     bool interruptCalled = false;
     AutoInterruptThread *thread = new AutoInterruptThread(boost::bind(func, &interruptCalled));
     boost::this_thread::sleep(boost::posix_time::millisec(500));
     delete thread;
     boost::this_thread::sleep(boost::posix_time::millisec(500));
-    BOOST_CHECK(interruptCalled);
+    EXPECT_TRUE(interruptCalled);
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()

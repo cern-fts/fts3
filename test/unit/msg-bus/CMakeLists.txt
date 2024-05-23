@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2016
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,13 @@
 # limitations under the License.
 #
 
-define_test (MsgBus fts_msg_bus)
+add_executable(msg_bus_test "MsgBus.cpp")
+
+target_link_libraries(msg_bus_test
+        fts_msg_bus
+        fts_common
+        ${GTEST_LIBRARIES}
+        ${GTEST_MAIN_LIBRARIES}
+)
+
+add_test(msg_bus_test msg_bus_test)

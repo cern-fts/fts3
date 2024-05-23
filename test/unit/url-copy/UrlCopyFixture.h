@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2023
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include "url-copy/UrlCopyProcess.h"
 
-class UrlCopyFixture: public Reporter {
+class UrlCopyFixture : public Reporter, public testing::Test {
 protected:
     UrlCopyOpts opts;
     std::list<Transfer> completedMsgs, startMsgs, pingMsgs, protoMsgs;
@@ -29,15 +29,15 @@ public:
         opts.logDir = "/tmp/fts3-tests";
     }
 
-    void sendTransferStart(const Transfer &t, Gfal2TransferParams&) {
+    void sendTransferStart(const Transfer &t, Gfal2TransferParams &) {
         startMsgs.push_back(t);
     }
 
-    void sendProtocol(const Transfer &t, Gfal2TransferParams&) {
+    void sendProtocol(const Transfer &t, Gfal2TransferParams &) {
         protoMsgs.push_back(t);
     }
 
-    void sendTransferCompleted(const Transfer &t, Gfal2TransferParams&) {
+    void sendTransferCompleted(const Transfer &t, Gfal2TransferParams &) {
         completedMsgs.push_back(t);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2017
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
+
 #include "db/generic/StorageConfig.h"
 
-BOOST_AUTO_TEST_SUITE(db)
-
-BOOST_AUTO_TEST_CASE (SeConfigMerge)
-{
+TEST(DbTest, SeConfigMerge) {
     StorageConfig target;
     target.inboundMaxActive = 60;
 
@@ -32,11 +29,8 @@ BOOST_AUTO_TEST_CASE (SeConfigMerge)
 
     target.merge(src);
 
-    BOOST_CHECK_EQUAL(60, target.inboundMaxActive);
-    BOOST_CHECK_EQUAL(100, target.outboundMaxActive);
-    BOOST_CHECK_EQUAL(true, target.udt.value);
-    BOOST_CHECK(boost::indeterminate(target.ipv6));
-
+    EXPECT_EQ(60, target.inboundMaxActive);
+    EXPECT_EQ(100, target.outboundMaxActive);
+    EXPECT_EQ(true, target.udt.value);
+    EXPECT_TRUE(boost::indeterminate(target.ipv6));
 }
-
-BOOST_AUTO_TEST_SUITE_END()

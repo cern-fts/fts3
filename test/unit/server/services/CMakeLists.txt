@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2016
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,5 +14,5 @@
 # limitations under the License.
 #
 
-add_subdirectory (optimizer)
-add_subdirectory (transfers)
+add_subdirectory(optimizer)
+add_subdirectory(transfers)

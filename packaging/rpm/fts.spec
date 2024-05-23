@@ -42,6 +42,8 @@ BuildRequires:  jsoncpp-devel
 BuildRequires:  davix-devel >= 0.8.4
 BuildRequires:  cryptopp-devel >= 5.6.2
 Requires(pre):  shadow-utils
+#tests dependencies
+BuildRequires:  gtest-devel
 
 %description
 The File Transfer Service V3 is the successor of File Transfer Service V2.
@@ -333,7 +335,6 @@ fi
 
 %files tests
 %{_bindir}/fts-unit-tests
-%{_libdir}/fts-tests
 
 %changelog
 * Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.11

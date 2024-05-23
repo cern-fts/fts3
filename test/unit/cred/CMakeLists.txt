@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2022
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,12 @@
 # limitations under the License.
 #
 
-define_test (Cred fts_proxy)
+add_executable(cred_test "Cred.cpp")
+
+target_link_libraries(cred_test
+        fts_proxy
+        ${GTEST_LIBRARIES}
+        ${GTEST_MAIN_LIBRARIES}
+)
+
+add_test(cred_test cred_test)

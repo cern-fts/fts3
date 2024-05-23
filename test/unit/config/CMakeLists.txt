@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2015
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,5 +14,12 @@
 # limitations under the License.
 #
 
-define_test (ServerConfig fts_config)
-define_test (ServerConfigReader fts_config)
+add_executable(config_test "ServerConfig.cpp")
+
+target_link_libraries(config_test
+        fts_config
+        ${GTEST_LIBRARIES}
+        ${GTEST_MAIN_LIBRARIES}
+)
+
+add_test(config_test config_test)

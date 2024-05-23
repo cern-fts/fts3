@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2015
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
 # limitations under the License.
 #
 
-find_package (Boost COMPONENTS unit_test_framework chrono)
-find_package (GLIB2)
+find_package(GTEST)
+find_package(GFAL2)
+find_package(GLIB2)
 
-include_directories (${Boost_INCLUDE_DIRS})
-include_directories (${GLIB2_INCLUDE_DIRS})
-include_directories (${CMAKE_SOURCE_DIR}/src)
-include_directories (${CMAKE_BINARY_DIR}/src)
-include_directories (${CURL_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_BINARY_DIR}/src)
+include_directories(${GFAL2_INCLUDE_DIRS})
+include_directories(${GLIB2_INCLUDE_DIRS})
+
 # Tests
-add_subdirectory (unit)
+add_subdirectory(unit)

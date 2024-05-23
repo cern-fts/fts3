@@ -1,5 +1,9 @@
 /*
- * Copyright (c) CERN 2015
+ * Copyright (c) CERN 2024
+ *
+ * Copyright (c) Members of the EMI Collaboration. 2010-2013
+ *  See  http://www.eu-emi.eu/partners for details on the copyright
+ *  holders.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +18,8 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include <signal.h>
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
 #include <boost/thread.hpp>
 
 #include "common/panic.h"
@@ -32,39 +35,27 @@ namespace fts3 {
 
 using namespace fts3::common::panic;
 
-
-BOOST_AUTO_TEST_SUITE(common)
-BOOST_AUTO_TEST_SUITE(panicTest)
-
-
-void shutdown_callback(int, void *udata)
-{
-    int *counter = (int*)udata;
+void shutdown_callback(int, void *udata) {
+    int *counter = (int *) udata;
     ++(*counter);
 }
 
 
-BOOST_AUTO_TEST_CASE(basic)
-{
+TEST(PanicTest, Basic) {
     int counter = 0;
     setup_signal_handlers(shutdown_callback, &counter);
 
     raise(SIGUSR1);
     boost::this_thread::sleep(boost::posix_time::seconds(1));
 
-    BOOST_CHECK_EQUAL(counter, 1);
+    EXPECT_EQ(counter, 1);
 }
 
 
-BOOST_AUTO_TEST_CASE(backtraceTest)
-{
+TEST(PanicTest, BacktraceTest) {
     /// This will print the backtrace into stderr
     get_backtrace(SIGSEGV);
     std::string trace = stack_dump(stack_backtrace, stack_backtrace_size);
 
-    BOOST_CHECK_NE(trace.find("backtraceTest"), std::string::npos);
+    EXPECT_NE(trace.find("BacktraceTest"), std::string::npos);
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()

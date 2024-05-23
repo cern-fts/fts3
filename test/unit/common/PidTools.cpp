@@ -1,5 +1,9 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2024
+ *
+ * Copyright (c) Members of the EMI Collaboration. 2010-2013
+ *  See  http://www.eu-emi.eu/partners for details on the copyright
+ *  holders.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,39 +18,28 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
+
 #include <fstream>
 #include "common/PidTools.h"
 
 using namespace fts3::common;
 
+TEST(PidTools, Basic) {
+    auto selfStartTime = (time_t) getPidStartime(getpid());
 
-BOOST_AUTO_TEST_SUITE(common)
-BOOST_AUTO_TEST_SUITE(PidTools)
-
-
-BOOST_AUTO_TEST_CASE(basic)
-{
-    uint64_t selfStartTime = getPidStartime(getpid());
-
-    BOOST_CHECK_GT(selfStartTime, (time(NULL) - 120) * 1000);
-    BOOST_CHECK_LT(selfStartTime, (time(NULL) + 1) * 1000);
+    EXPECT_GT(selfStartTime, (time(NULL) - 120) * 1000);
+    EXPECT_LT(selfStartTime, (time(NULL) + 1) * 1000);
 }
 
 
-BOOST_AUTO_TEST_CASE(pidfile)
-{
+TEST(PidTools, PidFile) {
     std::string path = createPidFile("/tmp/", "test.pid");
 
     std::ifstream fd(path.c_str());
     pid_t pid;
     fd >> pid;
 
-    BOOST_CHECK_EQUAL(getpid(), pid);
+    EXPECT_EQ(getpid(), pid);
 
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2016
+ * Copyright (c) CERN 2024
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,19 +18,14 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm/copy.hpp>
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include "server/services/optimizer/Optimizer.h"
 #include "server/services/optimizer/OptimizerConstants.h"
 
 using namespace fts3::optimizer;
-
-BOOST_AUTO_TEST_SUITE(server)
-BOOST_AUTO_TEST_SUITE(OptimizerTestSuite)
-
 
 struct OptimizerEntry {
     int activeDecision;
@@ -38,12 +33,12 @@ struct OptimizerEntry {
     int diff;
     std::string rationale;
 
-    OptimizerEntry(int ad, const PairState &ps, int diff, const std::string &r):
-        activeDecision(ad), state(ps), diff(diff), rationale(r) {
+    OptimizerEntry(int ad, const PairState &ps, int diff, const std::string &r) :
+            activeDecision(ad), state(ps), diff(diff), rationale(r) {
     }
 };
-typedef std::list<OptimizerEntry> OptimizerRegister;
 
+typedef std::list<OptimizerEntry> OptimizerRegister;
 
 struct MockTransfer {
     time_t start, end;
@@ -54,14 +49,15 @@ struct MockTransfer {
     int numRetries;
 
     MockTransfer(time_t start, time_t end, const std::string &state,
-        uint64_t filesize, double throughput, bool recoverable):
-        start(start), end(end), state(state), filesize(filesize), throughput(throughput), recoverable(recoverable),
-        numRetries(0) {
+                 uint64_t filesize, double throughput, bool recoverable) :
+            start(start), end(end), state(state), filesize(filesize), throughput(throughput), recoverable(recoverable),
+            numRetries(0) {
     }
 };
+
 typedef std::list<MockTransfer> TransferList;
 
-class BaseOptimizerFixture: public OptimizerDataSource, public Optimizer {
+class BaseOptimizerFixture : public OptimizerDataSource, public Optimizer, public testing::Test {
 protected:
     std::map<Pair, OptimizerRegister> registry;
     std::map<Pair, int> streamsRegistry;
@@ -69,7 +65,7 @@ protected:
     OptimizerMode mockOptimizerMode;
 
     void populateTransfers(const Pair &pair, const std::string &state, int count,
-        bool recoverable = false, double thr = 10, uint64_t filesize = 1024) {
+                           bool recoverable = false, double thr = 10, uint64_t filesize = 1024) {
         auto &transfers = transferStore[pair];
 
         for (int i = 0; i < count; i++) {
@@ -91,14 +87,13 @@ protected:
             if (i->state == state && count > 0) {
                 i = transfers.erase(i);
                 --count;
-            }
-            else {
+            } else {
                 ++i;
             }
         }
     }
 
-    OptimizerEntry* getLastEntry(const Pair &pair) {
+    OptimizerEntry *getLastEntry(const Pair &pair) {
         if (registry[pair].size()) {
             return &registry[pair].back();
         }
@@ -110,7 +105,7 @@ protected:
     }
 
 public:
-    BaseOptimizerFixture(): Optimizer(this, NULL) {
+    BaseOptimizerFixture() : Optimizer(this, NULL) {
         mockOptimizerMode = kOptimizerDisabled;
     }
 
@@ -120,7 +115,7 @@ public:
         return pairs;
     }
 
-    OptimizerMode getOptimizerMode(const std::string&, const std::string&) {
+    OptimizerMode getOptimizerMode(const std::string &, const std::string &) {
         return mockOptimizerMode;
     }
 
@@ -128,7 +123,7 @@ public:
         return false;
     }
 
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
+    void getPairLimits(const Pair &, Range *range, StorageLimits *limits) {
         range->min = range->max = 0;
         limits->destination = limits->source = 200;
         limits->throughputDestination = limits->throughputSource = 0;
@@ -143,8 +138,7 @@ public:
     }
 
     void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
-        double *throughput, double *filesizeAvg, double *filesizeStdDev)
-    {
+                           double *throughput, double *filesizeAvg, double *filesizeStdDev) {
         *throughput = *filesizeAvg = *filesizeStdDev = 0;
 
         auto tsi = transferStore.find(pair);
@@ -160,14 +154,14 @@ public:
 
         for (auto i = transfers.begin(); i != transfers.end(); ++i) {
             if (i->state == "ACTIVE" || (i->state == "FINISHED" && i->end >= notBefore)) {
-                totalSize += i->filesize;
-                acc += i->throughput * i->filesize;
+                totalSize += (double) i->filesize;
+                acc += i->throughput * (double) i->filesize;
             }
         }
 
         if (totalSize > 0 && transfers.size() > 0) {
             *throughput = acc / totalSize;
-            *filesizeAvg = totalSize / transfers.size();
+            *filesizeAvg = totalSize / (double) transfers.size();
         }
 
         return;
@@ -215,8 +209,7 @@ public:
             if (i->end >= notBefore) {
                 if (i->state == "FAILED" && i->recoverable) {
                     ++nFailedLastHour;
-                }
-                else if (i->state == "FINISHED") {
+                } else if (i->state == "FINISHED") {
                     ++nFinishedLastHour;
                 }
                 *retryCount += i->numRetries;
@@ -225,8 +218,7 @@ public:
 
         if (nFinishedLastHour > 0) {
             return ceil((nFinishedLastHour * 100.0) / (nFinishedLastHour + nFailedLastHour));
-        }
-        else {
+        } else {
             return 0.0;
         }
     }
@@ -300,7 +292,7 @@ public:
     }
 
     void storeOptimizerDecision(const Pair &pair, int activeDecision,
-        const PairState &newState, int diff, const std::string &rationale) {
+                                const PairState &newState, int diff, const std::string &rationale) {
         registry[pair].push_back(OptimizerEntry(activeDecision, newState, diff, rationale));
     }
 
@@ -309,27 +301,25 @@ public:
     }
 };
 
-
 // Working range for a non configured storage
-BOOST_FIXTURE_TEST_CASE (optimizerRangeAllDefaults, BaseOptimizerFixture)
-{
+TEST_F(BaseOptimizerFixture, optimizerRangeAllDefaults) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     Range range;
     StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK(!range.specific);
-    BOOST_CHECK_NE(range.max, 0);
-    BOOST_CHECK_NE(range.min, 0);
-    BOOST_CHECK_EQUAL(range.max, std::min({limits.destination, limits.source}));
-    BOOST_CHECK_EQUAL(range.min, DEFAULT_MIN_ACTIVE);
+    EXPECT_TRUE(!range.specific);
+    EXPECT_NE(range.max, 0);
+    EXPECT_NE(range.min, 0);
+    EXPECT_EQ(range.max, std::min({limits.destination, limits.source}));
+    EXPECT_EQ(range.min, DEFAULT_MIN_ACTIVE);
 }
 
 // Working range for a pair where both storages are configured
-class OptimizerRangeSeFixture: public BaseOptimizerFixture {
+class OptimizerRangeSeFixture : public BaseOptimizerFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
+    void getPairLimits(const Pair &, Range *range, StorageLimits *limits) {
         range->min = range->max = 0;
         limits->destination = 60;
         limits->source = 60;
@@ -337,25 +327,24 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE (optimizerRangeSeConfig, OptimizerRangeSeFixture)
-{
+TEST_F(BaseOptimizerFixture, OptimizerRangeSeConfig) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     Range range;
     StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK(!range.specific);
-    BOOST_CHECK_NE(range.max, 0);
-    BOOST_CHECK_NE(range.min, 0);
-    BOOST_CHECK_EQUAL(range.max, limits.source);
-    BOOST_CHECK_EQUAL(range.min, DEFAULT_MIN_ACTIVE);
+    EXPECT_TRUE(!range.specific);
+    EXPECT_NE(range.max, 0);
+    EXPECT_NE(range.min, 0);
+    EXPECT_EQ(range.max, limits.source);
+    EXPECT_EQ(range.min, DEFAULT_MIN_ACTIVE);
 }
 
 // Working range is configured
-class OptimizerRangeSetFixture: public OptimizerRangeSeFixture {
+class OptimizerRangeSetFixture : public OptimizerRangeSeFixture {
 public:
-    void getPairLimits(const Pair&, Range *range, StorageLimits *limits) {
+    void getPairLimits(const Pair &, Range *range, StorageLimits *limits) {
         range->min = 150;
         range->max = 200;
         range->specific = true;
@@ -364,22 +353,21 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE (optimizerRangeSetFixture, OptimizerRangeSetFixture)
-{
+TEST_F(OptimizerRangeSetFixture, OptimizerRangeSet) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     Range range;
     StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK(range.specific);
-    BOOST_CHECK_EQUAL(range.max, 200);
-    BOOST_CHECK_EQUAL(range.min, 150);
+    EXPECT_TRUE(range.specific);
+    EXPECT_EQ(range.max, 200);
+    EXPECT_EQ(range.min, 150);
 }
 
+
 // No prior information
-BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
-{
+TEST_F(BaseOptimizerFixture, OptimizerFirstRun) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed successful and actives
@@ -394,14 +382,13 @@ BOOST_FIXTURE_TEST_CASE (optimizerFirstRun, BaseOptimizerFixture)
     StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
-    BOOST_CHECK_LE(lastEntry->activeDecision, range.max);
-    BOOST_CHECK_GE(lastEntry->activeDecision, range.min);
-    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
+    EXPECT_LE(lastEntry->activeDecision, range.max);
+    EXPECT_GE(lastEntry->activeDecision, range.min);
+    EXPECT_EQ(streamsRegistry[pair], 1);
 }
 
 // Success rate gets worse, so the number should be reduced
-BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
-{
+TEST_F (BaseOptimizerFixture, OptimizerWorseSuccess) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed successful and actives
@@ -425,13 +412,12 @@ BOOST_FIXTURE_TEST_CASE (optimizerWorseSuccess, BaseOptimizerFixture)
     // Should back off
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_CHECK_LT(lastEntry->activeDecision, 20);
-    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
+    EXPECT_LT(lastEntry->activeDecision, 20);
+    EXPECT_EQ(streamsRegistry[pair], 1);
 }
 
 // Success rate gets better, so the number should be increased
-BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
-{
+TEST_F (BaseOptimizerFixture, OtimizerBetterSuccess) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed successful and actives
@@ -456,15 +442,14 @@ BOOST_FIXTURE_TEST_CASE (optimizerBetterSuccess, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_TEST_MESSAGE(lastEntry->rationale);
-    BOOST_CHECK_GT(lastEntry->activeDecision, 20);
-    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
+    // testing::Test::RecordProperty(lastEntry->rationale);
+    EXPECT_GT(lastEntry->activeDecision, 20);
+    EXPECT_EQ(streamsRegistry[pair], 1);
 }
 
 // Success rate gets better, so the number should be increased, but there aren't
 // enough queued. Optimizer mode is 1, so should stay stable.
-BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
-{
+TEST_F(BaseOptimizerFixture, OptimizerStreamsMode1) {
     mockOptimizerMode = kOptimizerConservative;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
@@ -491,14 +476,13 @@ BOOST_FIXTURE_TEST_CASE (optimizerStreamsMode1, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_TEST_MESSAGE(lastEntry->rationale);
-    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
-    BOOST_CHECK_EQUAL(streamsRegistry[pair], 1);
+    std::cout << lastEntry->rationale << std::endl;
+    EXPECT_EQ(lastEntry->activeDecision, 40);
+    EXPECT_EQ(streamsRegistry[pair], 1);
 }
 
 // Success rate gets better, but the queue is emptying
-BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
-{
+TEST_F(BaseOptimizerFixture, OptimizerEmptying) {
     mockOptimizerMode = kOptimizerAggressive;
 
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
@@ -525,18 +509,17 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptying, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_TEST_MESSAGE(lastEntry->rationale);
-    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
+    std::cout << lastEntry->rationale << std::endl;
+    EXPECT_EQ(lastEntry->activeDecision, 40);
 }
 
 // Throughput gets worse, but the queue is emptying
-BOOST_FIXTURE_TEST_CASE (optimizerEmptyingWorseThr, BaseOptimizerFixture)
-{
+TEST_F(BaseOptimizerFixture, OptimizerEmptyingWorseThr) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed a bunch of successful with a big filesize
     populateTransfers(pair, "SUBMITTED", 10);
-    populateTransfers(pair, "FINISHED", 2, false, 100, 1024*1024);
+    populateTransfers(pair, "FINISHED", 2, false, 100, 1024 * 1024);
 
     // Run once
     runOptimizerForPair(pair);
@@ -545,25 +528,24 @@ BOOST_FIXTURE_TEST_CASE (optimizerEmptyingWorseThr, BaseOptimizerFixture)
     setOptimizerValue(pair, 40);
 
     // Another bunch, with smaller filesizes and less throughput
-    populateTransfers(pair, "FINISHED", 100, false, 10, 1024*1024);
+    populateTransfers(pair, "FINISHED", 100, false, 10, 1024 * 1024);
 
     // Run again
     runOptimizerForPair(pair);
 
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_TEST_MESSAGE(lastEntry->rationale);
-    BOOST_CHECK_EQUAL(lastEntry->activeDecision, 40);
+    std::cout << lastEntry->rationale << std::endl;
+    EXPECT_EQ(lastEntry->activeDecision, 40);
 }
 
 // Success rate is good, throughput worsens, but so does avg. filesize.
 // The value should increase.
-BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
-{
+TEST_F(BaseOptimizerFixture, OptimizerAvgFilesizeDecreases) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
 
     // Feed a bunch of successful with a big filesize
-    populateTransfers(pair, "FINISHED", 2, false, 100, 1024*1024*1024);
+    populateTransfers(pair, "FINISHED", 2, false, 100, 1024 * 1024 * 1024);
 
     // Run once
     runOptimizerForPair(pair);
@@ -580,19 +562,18 @@ BOOST_FIXTURE_TEST_CASE (optimizerAvgFilesizeDecreases, BaseOptimizerFixture)
 
     auto lastEntry = getLastEntry(pair);
 
-    BOOST_TEST_MESSAGE(lastEntry->rationale);
-    BOOST_CHECK_GT(lastEntry->activeDecision, 40);
+    std::cout << lastEntry->rationale << std::endl;
+    EXPECT_GT(lastEntry->activeDecision, 40);
 }
 
 // Success rate is good, better throughput, keep streams sane
-BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
-{
+TEST_F (BaseOptimizerFixture, OptimizerMaxStreams) {
     const Pair pair("mock://dpm.cern.ch", "mock://dcache.desy.de");
     maxNumberOfStreams = 4;
 
     // Feed just a few of successes
-    populateTransfers(pair, "FINISHED", 5, false, 100, 1024*1024);
-    populateTransfers(pair, "FAILED", 5, false, 0, 1024*1024);
+    populateTransfers(pair, "FINISHED", 5, false, 100, 1024 * 1024);
+    populateTransfers(pair, "FAILED", 5, false, 0, 1024 * 1024);
 
     // Run once
     runOptimizerForPair(pair);
@@ -601,14 +582,14 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
     setOptimizerValue(pair, 40);
 
     // Add queued, and more successes with better throughput
-    populateTransfers(pair, "FINISHED", 5, false, 200, 1024*1024);
+    populateTransfers(pair, "FINISHED", 5, false, 200, 1024 * 1024);
     populateTransfers(pair, "SUBMITTED", 2);
 
     setMaxNumberOfStreams(4);
     mockOptimizerMode = kOptimizerAggressive;
     runOptimizerForPair(pair);
 
-    BOOST_CHECK_LE(streamsRegistry[pair], maxNumberOfStreams);
+    EXPECT_LE(streamsRegistry[pair], maxNumberOfStreams);
 }
 
 // NOTE: I am not sure it is worth to add more tests. At the end, we will basically be
@@ -616,6 +597,3 @@ BOOST_FIXTURE_TEST_CASE (optimizerMaxStreams, BaseOptimizerFixture)
 //       They do not prove that the optimizer optimizes.
 //       Still useful to have something that, at the very least, checks it doesn't crash!
 
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()

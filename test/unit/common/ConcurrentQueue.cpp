@@ -1,5 +1,9 @@
 /*
- * Copyright (c) CERN 2015
+ * Copyright (c) CERN 2024
+ *
+ * Copyright (c) Members of the EMI Collaboration. 2010-2013
+ *  See  http://www.eu-emi.eu/partners for details on the copyright
+ *  holders.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +18,31 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
 #include <boost/chrono.hpp>
 
 #include "common/ConcurrentQueue.h"
 
 using fts3::common::ConcurrentQueue;
 
-BOOST_AUTO_TEST_SUITE(common)
-BOOST_AUTO_TEST_SUITE(ConcurrentQueueTest)
 
-
-BOOST_AUTO_TEST_CASE (simple)
-{
+TEST(ConcurrentQueueTEST, Simple) {
     ConcurrentQueue *queue = ConcurrentQueue::getInstance();
-    BOOST_CHECK_EQUAL(queue->empty(), true);
+    EXPECT_EQ(queue->empty(), true);
     queue->push("abcde");
     queue->push("cdefg");
-    BOOST_CHECK_EQUAL(queue->size(), 2);
+    EXPECT_EQ(queue->size(), 2);
     std::string str = queue->pop();
-    BOOST_CHECK_EQUAL(str, "abcde");
-    BOOST_CHECK_EQUAL(queue->size(), 1);
-    BOOST_CHECK_EQUAL(queue->empty(), false);
+    EXPECT_EQ(str, "abcde");
+    EXPECT_EQ(queue->size(), 1);
+    EXPECT_EQ(queue->empty(), false);
     queue->pop();
-    BOOST_CHECK_EQUAL(queue->empty(), true);
-    BOOST_CHECK_EQUAL(queue->size(), 0);
+    EXPECT_EQ(queue->empty(), true);
+    EXPECT_EQ(queue->size(), 0);
 }
 
 
-BOOST_AUTO_TEST_CASE (blocking)
-{
+TEST(ConcurrentQueueTEST, Blocking) {
     boost::chrono::steady_clock::time_point start, end;
 
     ConcurrentQueue *queue = ConcurrentQueue::getInstance();
@@ -53,18 +51,14 @@ BOOST_AUTO_TEST_CASE (blocking)
     start = boost::chrono::steady_clock::now();
     std::string str = queue->pop(5);
     end = boost::chrono::steady_clock::now();
-    BOOST_CHECK_LT((end - start), boost::chrono::seconds(2));
-    BOOST_CHECK_EQUAL(str, "abcde");
+    EXPECT_LT((end - start), boost::chrono::seconds(2));
+    EXPECT_EQ(str, "abcde");
 
     start = boost::chrono::steady_clock::now();
     str = queue->pop(5);
     end = boost::chrono::steady_clock::now();
 
     // Boost CV implementation does not use a monotonic clock, so be generous
-    BOOST_CHECK_GE((end - start), boost::chrono::seconds(3));
-    BOOST_CHECK_EQUAL(str, "");
+    EXPECT_GE((end - start), boost::chrono::seconds(3));
+    EXPECT_EQ(str, "");
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()

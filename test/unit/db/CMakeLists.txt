@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2016
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,12 @@
 # limitations under the License.
 #
 
-define_test (SeConfig fts_db_generic)
+add_executable(db_test "SeConfig.cpp")
+
+target_link_libraries(db_test
+        fts_db_generic
+        ${GTEST_LIBRARIES}
+        ${GTEST_MAIN_LIBRARIES}
+)
+
+add_test(db_test db_test)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2024
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,68 +18,51 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
 
 #include "common/Exceptions.h"
 #include "config/ServerConfig.h"
 
-
-BOOST_AUTO_TEST_SUITE(config)
-BOOST_AUTO_TEST_SUITE(ServerConfigTestSuite)
-
-
-bool checkException(const fts3::common::UserError&)
-{
+bool checkException(const fts3::common::UserError &) {
     return true;
 }
 
+class ServerConfigFixture : public fts3::config::ServerConfig, public testing::Test {
+};
 
-BOOST_FIXTURE_TEST_CASE(getStr, fts3::config::ServerConfig)
-{
+TEST_F(ServerConfigFixture, GetStr) {
+
     const std::string f_key = "key";
     const std::string f_val = "value";
     _vars[f_key] =
-    f_val;
+            f_val;
 
     std::string val = get<std::string>(f_key);
-    BOOST_CHECK_EQUAL (val, f_val);
-    BOOST_CHECK_THROW(val = get<std::string>("notkey"), fts3::common::UserError);
+    EXPECT_EQ(val, f_val);
+    EXPECT_THROW(val = get<std::string>("notkey"), fts3::common::UserError);
 }
-
 
 struct MockReader {
     typedef std::map<std::string, std::string> type_vars;
 
-    type_vars operator()(int, char **)
-    {
+    type_vars operator()(int, char **) {
         type_vars ret;
         ret["key"] = "val";
         return ret;
     }
 };
 
-
-BOOST_FIXTURE_TEST_CASE (read, fts3::config::ServerConfig)
-{
-    _read<MockReader> (0, NULL);
-    BOOST_CHECK_EQUAL (get<std::string>("key"), "val");
+TEST_F(ServerConfigFixture, Read) {
+    _read<MockReader>(0, NULL);
+    EXPECT_EQ(get<std::string>("key"), "val");
 }
 
-
-BOOST_FIXTURE_TEST_CASE (getInt, fts3::config::ServerConfig)
-{
+TEST_F(ServerConfigFixture, getInt) {
     _vars["key"] = "10";
-    BOOST_CHECK_EQUAL (get<int>("key"), 10);
+    EXPECT_EQ(get<int>("key"), 10);
 }
 
-
-BOOST_FIXTURE_TEST_CASE (getDouble, fts3::config::ServerConfig)
-{
+TEST_F(ServerConfigFixture, getDouble) {
     _vars["key"] = "10.05";
-    BOOST_CHECK_EQUAL (get<double>("key"), 10.05);
+    EXPECT_EQ(get<double>("key"), 10.05);
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()

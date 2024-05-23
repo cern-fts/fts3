@@ -1,5 +1,9 @@
 /*
- * Copyright (c) CERN 2015
+ * Copyright (c) CERN 2024
+ *
+ * Copyright (c) Members of the EMI Collaboration. 2010-2013
+ *  See  http://www.eu-emi.eu/partners for details on the copyright
+ *  holders.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,59 +18,50 @@
  * limitations under the License.
  */
 
-#include <boost/test/unit_test_suite.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <fstream>
 
 #include "common/Logger.h"
 
-
-BOOST_AUTO_TEST_SUITE(common)
-BOOST_AUTO_TEST_SUITE(LoggerTest)
-
-
-struct LoggerTestHelper
-{
+struct LoggerTestHelper {
     mutable int counter;
-    LoggerTestHelper(): counter(0) {}
+
+    LoggerTestHelper() : counter(0) {}
 };
 
 
-std::ostream& operator << (std::ostream &os, const LoggerTestHelper &helper)
-{
+std::ostream &operator<<(std::ostream &os, const LoggerTestHelper &helper) {
     ++helper.counter;
     os << "TEST";
     return os;
 }
 
 
-BOOST_AUTO_TEST_CASE(logLevel)
-{
+TEST(LogTest, LogLevel) {
     fts3::common::Logger &logger = fts3::common::theLogger();
     logger.setLogLevel(fts3::common::Logger::WARNING);
 
     LoggerTestHelper helper;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << helper << fts3::common::commit;
-    BOOST_CHECK_EQUAL(helper.counter, 1);
+    EXPECT_EQ(helper.counter, 1);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << helper << fts3::common::commit;
-    BOOST_CHECK_EQUAL(helper.counter, 1);
+    EXPECT_EQ(helper.counter, 1);
 
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << helper << fts3::common::commit;
-    BOOST_CHECK_EQUAL(helper.counter, 2);
+    EXPECT_EQ(helper.counter, 2);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << helper << fts3::common::commit;
-    BOOST_CHECK_EQUAL(helper.counter, 2);
+    EXPECT_EQ(helper.counter, 2);
 
     logger.setLogLevel(fts3::common::Logger::DEBUG);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << helper << fts3::common::commit;
-    BOOST_CHECK_EQUAL(helper.counter, 3);
+    EXPECT_EQ(helper.counter, 3);
 }
 
 
-BOOST_AUTO_TEST_CASE(redirect)
-{
+TEST(LogTest, Redirect) {
     const std::string logPath("/tmp/fts3tests.log");
 
     try {
@@ -79,12 +74,12 @@ BOOST_AUTO_TEST_CASE(redirect)
     // Save current stdout and stderr
     int oldOut = dup(STDOUT_FILENO);
     int oldErr = dup(STDERR_FILENO);
-    BOOST_CHECK_GT(oldOut, -1);
-    BOOST_CHECK_GT(oldErr, -1);
+    EXPECT_GT(oldOut, -1);
+    EXPECT_GT(oldErr, -1);
 
     // Do the test
     fts3::common::Logger &logger = fts3::common::theLogger();
-    BOOST_CHECK_EQUAL(logger.redirect(logPath, logPath), 0);
+    EXPECT_EQ(logger.redirect(logPath, logPath), 0);
 
     logger.setLogLevel(fts3::common::Logger::WARNING);
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "APPEAR" << fts3::common::commit;
@@ -106,8 +101,8 @@ BOOST_AUTO_TEST_CASE(redirect)
         }
     }
 
-    BOOST_CHECK(appear);
-    BOOST_CHECK(!doesNot);
+    EXPECT_TRUE(appear);
+    EXPECT_TRUE(!doesNot);
 
     // Recover stdout and stderr
     close(STDOUT_FILENO);
@@ -119,9 +114,5 @@ BOOST_AUTO_TEST_CASE(redirect)
     close(oldErr);
 
     // Clean
-    BOOST_CHECK_NO_THROW(boost::filesystem::remove(logPath));
+    EXPECT_NO_THROW(boost::filesystem::remove(logPath));
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
