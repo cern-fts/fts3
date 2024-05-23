@@ -1,6 +1,6 @@
 --
 -- FTS3 Schema 9.0.0
--- [FTS-1928] REST API should accept and validate FTS submission token
+-- [FTS-1925] Full OAuth2 capabilities in FTS for submission, transfers and tape operations
 -- [FTS-2007] Tape Endpoint flag in SE config for "overwrite-when-only-on-disk" feature
 --
 

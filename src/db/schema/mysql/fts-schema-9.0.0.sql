@@ -1,8 +1,8 @@
 -- MySQL dump 10.14  Distrib 5.5.68-MariaDB, for Linux (x86_64)
 --
--- Host: dbod-fts3-plt.cern.ch    Database: fts_schema_9_0_0
+-- Host: dbod-fts-dev.cern.ch    Database: fts_schema_9_0_0
 -- ------------------------------------------------------
--- Server version	8.0.28
+-- Server version	8.0.35
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -186,7 +186,7 @@ CREATE TABLE `t_dm` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -231,7 +231,7 @@ CREATE TABLE `t_dm_backup` (
   `dest_se` varchar(150) DEFAULT NULL,
   `error_scope` varchar(32) DEFAULT NULL,
   `error_phase` varchar(32) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
   `finish_time` timestamp NULL DEFAULT NULL,
   `start_time` timestamp NULL DEFAULT NULL,
@@ -268,14 +268,13 @@ CREATE TABLE `t_file` (
   `file_index` int DEFAULT NULL,
   `job_id` char(36) NOT NULL,
   `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START','TOKEN_PREP') NOT NULL,
-  `file_state_initial` char(32) DEFAULT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
   `source_se` varchar(255) DEFAULT NULL,
   `dest_se` varchar(255) DEFAULT NULL,
   `staging_host` varchar(1024) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `current_failures` int DEFAULT NULL,
   `filesize` bigint DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
@@ -308,6 +307,7 @@ CREATE TABLE `t_file` (
   `scitag` int DEFAULT NULL,
   `src_token_id` char(16) DEFAULT NULL,
   `dst_token_id` char(16) DEFAULT NULL,
+  `file_state_initial` char(32) DEFAULT NULL,
   PRIMARY KEY (`file_id`),
   UNIQUE KEY `dest_surl_uuid` (`dest_surl_uuid`),
   KEY `idx_job_id` (`job_id`),
@@ -339,14 +339,13 @@ CREATE TABLE `t_file_backup` (
   `file_index` int DEFAULT NULL,
   `job_id` char(36) NOT NULL,
   `file_state` enum('STAGING','ARCHIVING','QOS_TRANSITION','QOS_REQUEST_SUBMITTED','STARTED','SUBMITTED','READY','ACTIVE','FINISHED','FAILED','CANCELED','NOT_USED','ON_HOLD','ON_HOLD_STAGING','FORCE_START','TOKEN_PREP') NOT NULL,
-  `file_state_initial` char(32) DEFAULT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `source_surl` varchar(1100) DEFAULT NULL,
   `dest_surl` varchar(1100) DEFAULT NULL,
   `source_se` varchar(255) DEFAULT NULL,
   `dest_se` varchar(255) DEFAULT NULL,
   `staging_host` varchar(1024) DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `current_failures` int DEFAULT NULL,
   `filesize` bigint DEFAULT NULL,
   `checksum` varchar(100) DEFAULT NULL,
@@ -378,7 +377,8 @@ CREATE TABLE `t_file_backup` (
   `archive_metadata` text,
   `scitag` int DEFAULT NULL,
   `src_token_id` char(16) DEFAULT NULL,
-  `dst_token_id` char(16) DEFAULT NULL
+  `dst_token_id` char(16) DEFAULT NULL,
+  `file_state_initial` char(32) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -393,7 +393,7 @@ CREATE TABLE `t_file_retry_errors` (
   `file_id` bigint unsigned NOT NULL,
   `attempt` int NOT NULL,
   `datetime` timestamp NULL DEFAULT NULL,
-  `reason` varchar(2048) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `reason` varchar(2048) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `transfer_host` varchar(255) DEFAULT NULL,
   `log_file` varchar(2048) DEFAULT NULL,
   PRIMARY KEY (`file_id`,`attempt`),
@@ -696,6 +696,7 @@ CREATE TABLE `t_se` (
   `eviction` char(1) DEFAULT NULL,
   `tpc_support` varchar(10) DEFAULT NULL,
   `skip_eviction` char(1) DEFAULT NULL,
+  `tape_endpoint` char(1) DEFAULT NULL,
   PRIMARY KEY (`storage`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -770,15 +771,12 @@ CREATE TABLE `t_token_provider` (
   PRIMARY KEY (`issuer`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 --
 -- Table structure for table `t_token`
 --
 
 DROP TABLE IF EXISTS `t_token`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `t_token` (
   `token_id` char(16) NOT NULL,
   `access_token` longtext NOT NULL,
@@ -790,12 +788,13 @@ CREATE TABLE `t_token` (
   `scope` varchar(1024) NOT NULL,
   `audience` varchar(1024) NOT NULL,
   `retry_timestamp` timestamp NULL DEFAULT NULL,
-  `retry_delay_m` int unsigned NULL DEFAULT 0,
-  `attempts` int unsigned NULL DEFAULT 0,
-  `exchange_message` varchar(2048) NULL DEFAULT NULL,
-  `retired` tinyint(1) NOT NULL DEFAULT 0,
+  `retry_delay_m` int unsigned DEFAULT '0',
+  `attempts` int unsigned DEFAULT '0',
+  `exchange_message` varchar(2048) DEFAULT NULL,
+  `retired` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`token_id`),
   KEY `idx_retired_access_token_refresh_after` (`retired`,`access_token_refresh_after`),
+  KEY `fk_token_issuer` (`issuer`),
   CONSTRAINT `fk_token_issuer` FOREIGN KEY (`issuer`) REFERENCES `t_token_provider` (`issuer`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -809,4 +808,4 @@ CREATE TABLE `t_token` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-23 14:11:15
+-- Dump completed on 2024-05-23 16:00:00
