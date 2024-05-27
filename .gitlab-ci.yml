@@ -106,11 +106,12 @@ docker_tag_alma9:
 .test-template: &test-template_definition
   stage: test
   script:
-    - yum install -y git createrepo
+    - dnf install -y git createrepo epel-release
     - ci/write-repo-file.sh
-    - mkdir -p /repo/fts ; cp -v cc7/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
+    - ARTIFACTS="${CI_JOB_NAME%%-test}"
+    - mkdir -p /repo/fts ; cp -v ${ARTIFACTS}/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
     - echo -e "[fts]\nname=FTS\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
-    - yum install -y fts-tests
+    - dnf install -y fts-tests
     - fts-unit-tests --log_level=all --report_level=detailed
 
 #--------------------------
@@ -118,9 +119,17 @@ docker_tag_alma9:
 #--------------------------
 
 cc7-test:
+  before_script:
+    - yum install -y dnf
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   needs:
     - job: cc7
+  <<: *test-template_definition
+
+alma9-test:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  needs:
+    - job: alma9
   <<: *test-template_definition
 
 #--------------------------
