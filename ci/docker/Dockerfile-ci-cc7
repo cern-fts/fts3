@@ -1,9 +1,9 @@
 #
-# FTS Docker file for the CI environment
+# FTS Docker file for the CI environment (CC7 platform)
 #
 
 FROM centos:7
-LABEL maintainer="FTS Team, fts-support@cern.ch, CERN 2021"
+LABEL maintainer="FTS Team, fts-support@cern.ch, CERN 2024"
 
 # Add EPEL repos
 ADD https://linuxsoft.cern.ch/epel/epel-release-latest-7.noarch.rpm /tmp/epel-release-7.noarch.rpm
@@ -15,14 +15,14 @@ RUN yum localinstall /tmp/epel-release-7.noarch.rpm -y \
 # Build repo prerequisites
 RUN yum install -y createrepo
 
+# Add DMC repo
+ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
+ADD $dmcrepo /etc/yum.repos.d/dmc.repo
+
 # Add FTS repo from build artifacts
 ADD cc7 /repo/fts
 RUN createrepo /repo/fts
 RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
-
-# Add DMC repo
-ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
-ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN yum clean metadata
 
 # Install FTS packages

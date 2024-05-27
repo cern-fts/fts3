@@ -1,0 +1,42 @@
+#
+# FTS Docker file for the CI environment (Alma9 environment)
+#
+
+FROM almalinux:9
+LABEL maintainer="FTS Team, fts-support@cern.ch, CERN 2024"
+
+# Add EPEL repos
+RUN dnf install -y epel-release
+RUN dnf clean metadata
+
+# Build repo prerequisites
+RUN dnf install -y createrepo
+
+# Add DMC repo
+ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
+ADD $dmcrepo /etc/yum.repos.d/dmc.repo
+
+# Add FTS repo from build artifacts stored in the "alma9" directory
+ADD alma9 /repo/fts
+RUN createrepo /repo/fts
+RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
+RUN dnf clean metadata
+
+# Install FTS packages
+RUN dnf install -y fts-server fts-mysql fts-server-selinux fts-msg cronie crontabs --enablerepo=crb
+
+# Install Gfal2 packages
+RUN dnf install -y gfal2 gfal2-plugin-http gfal2-plugin-xrootd gfal2-plugin-srm gfal2-plugin-mock
+
+# Install supervisor
+RUN dnf install -y supervisor
+COPY "packaging/docker/supervisord" "/etc/supervisor/conf.d/supervisord.conf"
+
+# Log folder
+RUN mkdir -p /var/log/fts3 && chown fts3:fts3 /var/log/fts3
+
+# Expose ports
+EXPOSE 2170
+
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
