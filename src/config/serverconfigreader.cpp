@@ -637,6 +637,17 @@ void ServerConfigReader::storeAsString(const std::string& aName)
     }
 }
 
+template <>
+void ServerConfigReader::storeAsString<int>(const std::string& aName)
+{
+    bool isFound = _vm.count(aName);
+    assert(isFound);
+
+    if (isFound) {
+        _vars[aName] = boost::lexical_cast<std::string>(_vm[aName].as<int>());
+    }
+}
+
 /* ---------------------------------------------------------------------- */
 
 void ServerConfigReader::storeValuesAsStrings ()
