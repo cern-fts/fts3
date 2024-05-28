@@ -131,7 +131,6 @@ alma9-test:
   needs:
     - job: alma9
   <<: *test-template_definition
-  allow_failure: true
 
 #--------------------------
 # Publish templates
