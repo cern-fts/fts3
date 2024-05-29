@@ -95,7 +95,7 @@ ExchangedToken TokenExchangeExecutor::performTokenExchange()
 
 std::string TokenExchangeExecutor::getTokenEndpoint()
 {
-    std::string endpoint = token.issuer + "/.well-known/openid-configuration";
+    std::string endpoint = token.issuer + ".well-known/openid-configuration";
 
     Davix::Uri uri(endpoint);
     validateUri(uri);
