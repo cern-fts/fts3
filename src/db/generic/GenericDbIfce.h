@@ -47,6 +47,8 @@
 #include "StagingOperation.h"
 #include "ArchivingOperation.h"
 #include "QosTransitionOperation.h"
+#include "Token.h"
+#include "TokenProvider.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
@@ -106,27 +108,33 @@ public:
     /// Update the status of a transfer
     /// @param jobId            The job ID
     /// @param fileId           The file ID
-    /// @param throughput       Transfer throughput
+    /// @param processId        fts_url_copy process ID running the transfer
     /// @param transferState    Transfer statue
     /// @param errorReason      For failed states, the error message
-    /// @param processId        fts_url_copy process ID running the transfer
     /// @param filesize         Actual filesize reported by the storage
     /// @param duration         How long (in seconds) took to transfer the file
+    /// @param throughput       Transfer throughput
     /// @param retry            If the error is considered recoverable by fts_url_copy
     /// @param fileMetadata     The new file metadata in case it needs to be updated
     /// @return                 (true, newState) if an updated was done into the DB, (false, oldState) otherwise
     ///                         (i.e. trying to set ACTIVE an already ACTIVE transfer)
     /// @note                   If jobId is empty, or if fileId is 0, then processId will be used to decide
     ///                         which transfers to update
-    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, double throughput,
-            const std::string& transferState, const std::string& errorReason,
-            int processId, double filesize, double duration, bool retry, std::string fileMetadata = "") = 0;
+    virtual boost::tuple<bool, std::string> updateTransferStatus(const std::string& jobId, uint64_t fileId, int processId,
+                                                                 const std::string& transferState, const std::string& errorReason,
+                                                                 uint64_t filesize, double duration, double throughput,
+                                                                 bool retry, const std::string& fileMetadata) = 0;
 
     /// Update the status of a job
     /// @param jobId            The job ID
     /// @param jobState         The job state
     /// @note                   If jobId is empty, the pid will be used to decide which job to update
     virtual bool updateJobStatus(const std::string& jobId, const std::string& jobState) = 0;
+
+    /// Get the token associated with the given token ID
+    /// @param tokenId          The token ID
+    /// @return                 The token with tokenId, if any
+    virtual std::string findToken(const std::string& tokenId) = 0;
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -152,8 +160,7 @@ public:
     /// Checks if there are available slots to run transfers for the given pair
     /// @param sourceStorage        The source storage  (as protocol://host)
     /// @param destStorage          The destination storage  (as protocol://host)
-    /// @param[out] currentActive   The current number of running transfers is put here
-    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage, int &currentActive) = 0;
+    virtual bool isTrAllowed(const std::string& sourceStorage, const std::string& destStorage) = 0;
 
     /// Mark a reuse job (and its files) as failed
     /// @param jobId    The job id
@@ -162,12 +169,11 @@ public:
     /// @param force    Force termination regardless of job_type
     /// @note           If jobId is empty, the implementation may look for the job bound to the pid.
     ///                 Note that I am not completely sure you can get an empty jobId.
-    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message, bool force = false) = 0;
+    virtual bool terminateReuseProcess(const std::string& jobId, int pid, const std::string& message, bool force) = 0;
 
     /// Goes through transfers marked as 'ACTIVE' and make sure the timeout didn't expire
     /// @param[out] transfers   An array with the expired transfers. Only jobId, fileId and pid are filled
     virtual void reapStalledTransfers(std::vector<TransferFile>& transfers) = 0;
-
 
     /// Set the PID for a transfer
     /// @param jobId    The job id for which the files will be updated
@@ -207,9 +213,6 @@ public:
 
     /// Update the protocol parameters used for each transfer
     virtual void updateProtocol(const std::vector<fts3::events::Message>& messages) = 0;
-
-    /// Update the protocol parameters for this particular transfer
-    virtual void updateProtocol(const fts3::events::Message& message) = 0;
 
     /// Get the state the transfer identified by jobId/fileId
     virtual std::vector<TransferState> getStateOfTransfer(const std::string& jobId, uint64_t fileId) = 0;
@@ -338,12 +341,12 @@ public:
     virtual void getFilesForStaging(std::vector<StagingOperation> &stagingOps) = 0;
 
     /// Get archiving operations ready to be started
-    /// @params[out] archivingops The list of archiving operations will be put here
+    /// @params[out] archivingOps The list of archiving operations will be put here
     virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps) = 0;
 
     /// Get qosTransition operations ready to be started
-    /// @params[out] qosTranstionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTranstionOps, const std::string &qosOp,
+    /// @params[out] qosTransitionOps The list of QoS Transition operations will be put here
+    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string &qosOp,
                                           bool matchHost = false) = 0;
 
     /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
@@ -371,6 +374,22 @@ public:
     /// @param files    Each entry in the set if a pair of jobid / surl
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
+    /// Returns list of access tokens without an associated refresh token
+    virtual std::list<Token> getAccessTokensWithoutRefresh() = 0;
+
+    /// Store a list of exchanged tokens
+    virtual void storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens) = 0;
+
+    /// Mark token-exchange retry timestamp and error message
+    virtual void markFailedTokenExchange(const std::set< std::pair<std::string, std::string> >& failedExchanges) = 0;
+
+    /// Fail transfers without refresh token due to failed token exchange
+    virtual void failTransfersWithFailedTokenExchange(
+            const std::set<std::pair<std::string, std::string> >& failedExchanges) = 0;
+
+    /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
+    virtual void updateTokenPrepFiles() = 0;
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,
@@ -382,6 +401,9 @@ public:
 
     /// Get the configuration for a given storage
     virtual StorageConfig getStorageConfig(const std::string &storage) = 0;
+
+    /// Get the list of Token Providers
+    virtual std::map<std::string, TokenProvider> getTokenProviders() = 0;
 };
 
 #endif // GENERICDBIFCE_H_

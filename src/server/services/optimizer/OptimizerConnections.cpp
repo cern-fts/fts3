@@ -159,8 +159,9 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // of connections.
 bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
 {
-    int decision = 0;
     std::stringstream rationale;
+    bool firstRun = false;
+    int decision;
 
     // Start ticking!
     boost::timer::cpu_timer timer;
@@ -170,7 +171,8 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     StorageLimits limits;
     getOptimizerWorkingRange(pair, &range, &limits);
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << ": " << range  << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << " " << range
+                                     << " (pair #" << ++pairIdx << "/" << pairsSize << ")" << commit;
 
     // Previous decision
     int previousValue = dataSource->getOptimizerValue(pair);
@@ -211,7 +213,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Store first feedback from " << pair << commit;
-        return false;
+        firstRun = true;
     }
 
     const PairState previous = inMemoryStore[pair];
@@ -248,7 +250,8 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Run only when it makes sense
     time_t timeSinceLastUpdate = current.timestamp - previous.timestamp;
 
-    if (current.successRate == previous.successRate &&
+    if (!firstRun &&
+        current.successRate == previous.successRate &&
         current.ema == previous.ema &&
         timeSinceLastUpdate < optimizerSteadyInterval.total_seconds()) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
@@ -259,7 +262,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-        << "Optimizer max possible number of actives for " << pair << ": " << range.max << commit;
+        << "Optimizer max possible number of actives for " << pair << " " << range.max << commit;
 
     // For low success rates, do not even care about throughput
     if (current.successRate < lowSuccessRate) {
@@ -312,7 +315,8 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     }
     // Do not go too far with the number of connections
     if (optMode >= kOptimizerNormal) {
-        if (decision > current.queueSize * maxNumberOfStreams) {
+        const bool want_to_increase = decision > previousValue;
+        if (want_to_increase && decision > current.queueSize * maxNumberOfStreams) {
             decision = previousValue;
             rationale << ". Too many streams";
         }
@@ -331,9 +335,7 @@ void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairS
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << "Optimizer: Active for " << pair << " set to " << decision << ", running " << current.activeCount
-        << " (" << elapsed.wall << "ns)" << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)
-        << rationale << commit;
+        << " rationale=\"" << rationale << "\" (" << elapsed.wall << "ns)" << commit;
 
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;

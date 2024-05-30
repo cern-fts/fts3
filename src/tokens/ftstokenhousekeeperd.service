@@ -1,0 +1,13 @@
+[Unit]
+Description=FTS token housekeeper
+After=network.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/usr/bin/ftstokenhousekeeperd
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

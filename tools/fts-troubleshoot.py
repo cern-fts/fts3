@@ -128,7 +128,7 @@ class FTS3Troubleshooter(object):
         rpm_list = [
             "fts-libs", "fts-server", "fts-msg", "fts-mysql", "fts-infosys",
             "fts-rest", "python-fts",
-            "gfal2", "gfal2-plugin-gridftp", "gfal2-plugin-srm",
+            "gfal2", "gfal2-plugin-srm",
             "srm-ifce",
             "fetch-crl"
         ]

@@ -14,17 +14,12 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 add_definitions ("-DBOOST_TEST_DYN_LINK")
 
 set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
 
-# Use RPATH to link with individual FTS test libraries
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_INSTALL_RPATH "${LIB_INSTALL_DIR}/fts-tests/")
+# Disable "-Wconversion" warnings in unit tests
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 
 # Shortcut to compile and declare a test in one shot
 # Usage: define_test (mytest common) => add a test with the source mytest.cpp linking against the common library
@@ -40,7 +35,6 @@ function (define_test name link)
 endfunction(define_test)
 
 # Build individual unit tests
-add_subdirectory (cli)
 add_subdirectory (common)
 add_subdirectory (config)
 add_subdirectory (cred)
@@ -52,8 +46,15 @@ add_subdirectory (url-copy)
 # Build the test binary
 message(STATUS "Found tests: ${UNIT_TEST_LIST}")
 
+# Use RPATH to link with individual FTS test libraries
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "${LIB_INSTALL_DIR}/fts-tests/")
+
 add_executable(fts-unit-tests unit.cpp)
 target_link_libraries(fts-unit-tests
+    "-Wl,--no-as-needed"
     ${Boost_LIBRARIES}
     ${UNIT_TEST_LIST})
 

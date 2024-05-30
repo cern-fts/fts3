@@ -18,11 +18,11 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 find_package(GFAL2)
 find_package(GLIB2)
 find_package(ZMQ)
+find_package(JSONCPP)
+
 include_directories (
     ${GLIB2_INCLUDE_DIRS}
     ${GFAL2_INCLUDE_DIRS}
@@ -33,7 +33,7 @@ add_library(fts_url_copy_lib SHARED
     LogHelper.cpp
     heuristics.cpp
     LegacyReporter.cpp
-        Transfer.cpp
+    Transfer.cpp
     UrlCopyOpts.cpp
     UrlCopyProcess.cpp
     Callbacks.cpp
@@ -42,6 +42,8 @@ target_link_libraries(fts_url_copy_lib
     ${GLIB2_LIBRARIES}
     ${GFAL2_LIBRARIES}
     ${ZMQ_LIBRARIES}
+    ${CRYPTOPP_LIBRARIES}
+    JSONCPP::JSONCPP
     fts_common
     fts_msg_bus
     fts_msg_ifce

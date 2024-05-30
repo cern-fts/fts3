@@ -98,8 +98,14 @@ int main(int argc, char *argv[])
         urlCopyProcess.run();
     }
     catch (const std::exception &e) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Exception while running copy process..." << commit;
         urlCopyProcess.panic(e.what());
     }
+
+    // Re-set signal handler to not access urlCopyProcess data on tear-down when data might have already been freed
+    panic::setup_signal_handlers(signalCallback, NULL);
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Finishing copy process..." << commit;
 
     return 0;
 }

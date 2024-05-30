@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 install(FILES fts-records-cleaner
     DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily
     PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ

@@ -18,12 +18,14 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 # Dependencies
 find_package(GFAL2)
 find_package(GLIB2)
 find_package(Boost COMPONENTS thread system filesystem)
+
+# Disable "-Wconversion" warnings in the Bringonline daemon
+# The Bringonline daemon is deprecated and the code will soon disappear
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 
 include_directories (
     ${GFAL2_INCLUDE_DIRS}

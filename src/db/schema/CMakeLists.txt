@@ -11,9 +11,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS, 
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 # See the License for the specific language governing permissions and 
-# limitations under the License. 
-
-cmake_minimum_required(VERSION 2.8)
+# limitations under the License.
 
 if (MYSQLBUILD STREQUAL "ON")
 	file(GLOB mysql_scripts

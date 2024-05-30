@@ -15,6 +15,7 @@
  */
 
 #include <cstdlib>
+#include <fstream>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -104,22 +105,54 @@ UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
 }
 
 
+// Read source and destination bearer tokens form a configuration file and set them
+// in the Gfal2 transfer parameters object to be loaded in the credentials map.
+// The first line contains the bearer token for the source storage endpoint.
+// The second line  contains the bearer token for the destination storage endpoint.
+// The rest of the contents in the file are discarded.
+static void loadTokensFile(const std::string& path, Gfal2TransferParams &params) {
+    std::string line;
+    std::ifstream infile(path.c_str(), std::ios_base::in);
+
+    // First line contains source bearer token
+    if (std::getline(infile, line, '\n') && !line.empty()) {
+        params.setSourceBearerToken(line);
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load source bearer token form credentials file" << commit;
+    }
+
+    // Second line contains source bearer token
+    if (std::getline(infile, line, '\n') && !line.empty()) {
+        params.setDestBearerToken(line);
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load destination bearer token form credentials file" << commit;
+    }
+
+    // Close the file as we are only interested in the first two lines
+    infile.close();
+
+    unlink(path.c_str());
+}
+
+
 static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                              Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     // Load Cloud + OIDC credentials
-    if (!opts.oauthFile.empty()) {
+    if (!opts.cloudStorageConfig.empty()) {
         try {
-            gfal2.loadConfigFile(opts.oauthFile);
+            gfal2.loadConfigFile(opts.cloudStorageConfig);
         } catch (const std::exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth config file: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load cloud storage credentials file: " << ex.what() << commit;
         }
-        unlink(opts.oauthFile.c_str());
+        unlink(opts.cloudStorageConfig.c_str());
+        return;
     }
 
-    // OIDC token has been passed already in the OauthFile
-    // and loaded by Gfal2 as the default BEARER token credential
-    if ("oauth2" == opts.authMethod) {
+    if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
+        loadTokensFile(opts.oauthFile, params);
+        // OIDC tokens have been passed in the OauthFile
+        // to be loaded by Gfal2 in its credentials map
         return;
     }
 
@@ -290,8 +323,11 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 {
     if (!opts.proxy.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy: " << opts.proxy << commit;
+    } else if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token: " << accessTokenPayload(params.getSrcToken()) << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token: " << accessTokenPayload(params.getDstToken()) << commit;
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Running without proxy" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Running without any authentication!" << commit;
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO: " << opts.voName << commit;
@@ -570,6 +606,7 @@ void UrlCopyProcess::timeout(void)
 
 void UrlCopyProcess::panic(const std::string &msg)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "UrlCopyProcess panic... " << msg << commit;
     boost::lock_guard<boost::mutex> lock(transfersMutex);
     for (auto transfer = todoTransfers.begin(); transfer != todoTransfers.end(); ++transfer) {
         Gfal2TransferParams params;

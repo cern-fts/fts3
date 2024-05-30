@@ -27,6 +27,7 @@
 
 #include "common/Logger.h"
 
+boost::thread_specific_ptr<std::istringstream> msgBuffer;
 
 Producer::Producer(const std::string &baseDir): baseDir(baseDir),
     monitoringQueue(new DirQ(baseDir + "/monitoring")), statusQueue(new DirQ(baseDir + "/status")),
@@ -38,11 +39,8 @@ Producer::Producer(const std::string &baseDir): baseDir(baseDir),
 
 Producer::~Producer()
 {
+    msgBuffer.reset();
 }
-
-
-boost::thread_specific_ptr<std::istringstream> msgBuffer;
-
 
 static void populateBuffer(const std::string &msg)
 {

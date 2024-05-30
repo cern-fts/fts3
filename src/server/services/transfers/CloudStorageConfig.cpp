@@ -126,7 +126,15 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
 }
 
 
-std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const TransferFile& tf)
+static void writeOAuthToken(FILE *f, const std::string& token)
+{
+    fprintf(f, "[BEARER]\n");
+    fprintf(f, "TOKEN=%s\n", token.c_str());
+}
+
+
+std::string
+fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, const std::string &authMethod)
 {
     char errDescr[128];
 
@@ -135,7 +143,7 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
         return "";
     }
 
-    char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
+    char oauth_path[] = "/tmp/fts-cloud-config-XXXXXX";
 
     int fd = mkstemp(oauth_path);
     if (fd < 0) {
@@ -148,91 +156,116 @@ std::string fts3::generateCloudStorageConfigFile(GenericDbIfce* db, const Transf
     if (f == NULL) {
         close(fd);
         strerror_r(errno, errDescr, sizeof(errDescr));
+        remove(oauth_path);
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
-    // For each different VO role, group, ...
-    auto cred = db->findCredential(tf.credId, tf.userDn);
-    if (!cred) {
-        fclose(f);
-        return "";
+    boost::optional<UserCredential> cred;
+
+    if (authMethod == "oauth2") {
+        cred.reset(UserCredential());
+    } else {
+        cred = db->findCredential(tf.credId, tf.userDn);
+
+        if (!cred) {
+            fclose(f);
+            remove(oauth_path);
+            return "";
+        }
     }
 
+    // For each different VO or VO attribute
     std::vector<std::string> vomsAttrs;
-    vomsAttrs.push_back(tf.voName);
     boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
+    vomsAttrs.push_back(tf.voName);
 
-    // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
+    // For each cloud storage credential (i.e. DROPBOX;S3:s3.cern.ch)
     std::vector<std::string> csVector;
     boost::split(csVector, csName, boost::is_any_of(";"), boost::token_compress_on);
 
-    for (auto i = csVector.begin(); i != csVector.end(); ++i) {
-        std::string upperCsName = *i;
+    for (auto upperCsName: csVector) {
         boost::to_upper(upperCsName);
 
-        for (auto voI = vomsAttrs.begin(); voI != vomsAttrs.end(); ++voI) {
+        for (const auto& voms_attr: vomsAttrs) {
             CloudStorageAuth auth;
-            if (db->getCloudStorageCredentials(tf.userDn, *voI, upperCsName, auth)) {
+
+            if (db->getCloudStorageCredentials(tf.userDn, voms_attr, upperCsName, auth)) {
                 if (boost::starts_with(upperCsName, "DROPBOX")) {
                     writeDropboxCreds(f, upperCsName, auth);
-                }
-                else {
+                } else {
                     writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);
                 }
+
                 break;
             }
         }
+    }
+
+    if (authMethod == "oauth2") {
+        std::string token;
+
+        if (isCloudStorage(Uri::parse(tf.sourceSe))) {
+            token = db->findToken(tf.sourceTokenId);
+        } else if (isCloudStorage(Uri::parse(tf.destSe))){
+            token = db->findToken(tf.destinationTokenId);
+        }
+
+        if (token.empty()) {
+            fclose(f);
+            remove(oauth_path);
+            return "";
+        }
+
+        writeOAuthToken(f, token);
     }
 
     fclose(f);
     return oauth_path;
 }
 
-static void writeOAuthToken(FILE *f, const std::string& token)
+
+static void writeTokensFile(FILE *f, const std::string& srcToken, const std::string& dstToken)
 {
-    fprintf(f, "[BEARER]\n");
-    fprintf(f, "TOKEN=%s\n", token.c_str());
+    fprintf(f, "%s\n", srcToken.c_str());
+    fprintf(f, "%s\n", dstToken.c_str());
 }
 
-std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf, const std::string& filename)
+
+std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf)
 {
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
     char errDescr[128];
-    FILE *f = NULL;
-    int fd = -1;
+    FILE *f = nullptr;
 
-    if (filename.empty()) {
-        fd = mkstemp(oauth_path);
+    int fd = mkstemp(oauth_path);
 
-        if (fd < 0) {
-            strerror_r(errno, errDescr, sizeof(errDescr));
-            throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
-        }
-        fchmod(fd, 0660);
-
-        f = fdopen(fd, "w");
-    } else {
-        f = fopen(filename.c_str(), "a");
-    }
-
-    if (f == NULL) {
-        if (fd != -1) {
-            close(fd);
-        }
-
+    if (fd < 0) {
         strerror_r(errno, errDescr, sizeof(errDescr));
+        throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
+    }
+    fchmod(fd, 0660);
+
+    f = fdopen(fd, "w");
+
+    if (f == nullptr) {
+        close(fd);
+        strerror_r(errno, errDescr, sizeof(errDescr));
+        remove(oauth_path);
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
-    auto cred = db->findCredential(tf.credId, tf.userDn);
-    if (!cred) {
+    auto src_token = db->findToken(tf.sourceTokenId);
+    auto dst_token = db->findToken(tf.destinationTokenId);
+    // There should be a token for the source and destination endpoints
+    if (src_token.empty() || dst_token.empty()) {
     	fclose(f);
+        remove(oauth_path);
         return "";
     }
 
-    // Only set the access token and not the refresh token
-    writeOAuthToken(f, cred->proxy.substr(0, cred->proxy.find(":")));
+    // Write both tokens in the authorization file
+    writeTokensFile(f, src_token, dst_token);
 
     fclose(f);
-    return filename.empty() ? oauth_path : filename;
+    return oauth_path;
 }

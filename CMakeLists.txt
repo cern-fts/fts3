@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 project(fts3)
 
 
@@ -28,8 +28,8 @@ set(CMAKE_MODULE_PATH
 )
 
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 12)
-set(VERSION_PATCH 11)
+set(VERSION_MINOR 13)
+set(VERSION_PATCH 0)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Generate include header with the version string
@@ -44,19 +44,11 @@ option(ALLBUILD "Build fts all including db plug-ins" OFF)
 
 include(CMakeDependentOption REQUIRED)
 cmake_dependent_option(
-    ORACLEBUILD "Build oracle plug-in" OFF
-    "NOT ALLBUILD" ON
-)
-cmake_dependent_option(
     MYSQLBUILD "Build for EPEL" OFF
     "NOT ALLBUILD" ON
 )
 cmake_dependent_option(
     SERVERBUILD "Build fts" OFF
-    "NOT ALLBUILD" ON
-)
-cmake_dependent_option(
-    CLIENTBUILD "Build the client libraries, tools and bindings" OFF
     "NOT ALLBUILD" ON
 )
 cmake_dependent_option(
@@ -94,24 +86,6 @@ endif ()
 # Dependencies
 find_package(Threads)
 find_package(OpenSSL)
-
-set(CURL_DIR1 /tmp/curl/bogusinstall)
-find_file(Curl_local libcurl.a PATHS ${CURL_DIR1}/lib${LIB_SUFFIX}/ )
-
-if (NOT Curl_local)
-  message(STATUS "Building curl..")
-  execute_process(COMMAND ./src/cli/buildcurl.sh
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    RESULT_VARIABLE curl_ok
-    OUTPUT_VARIABLE curl_out)
-endif()
-message(STATUS "curl build ${curl_ok}")
-
-set(CURL_DIR /tmp/curl/bogusinstall)
-set(CURL_LIBRARIES ${CURL_DIR}/lib${LIB_SUFFIX}/ws2_32 ${CURL_DIR}/lib${LIB_SUFFIX}/iphlpapi ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl)
-set(CURL_INCLUDE_DIR ${CURL_DIR}/include/)
-set(CURL_LIBRARY ${CURL_DIR}/lib${LIB_SUFFIX}/libcurl.a CACHE filepath "path to libcurl.a")
-find_file(Curl_local libcurl.a PATHS ${CURL_DIR}/lib${LIB_SUFFIX}/ )
 
 # Find Boost
 set(Boost_ADDITIONAL_VERSIONS

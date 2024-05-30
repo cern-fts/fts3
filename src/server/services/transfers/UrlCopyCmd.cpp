@@ -22,10 +22,11 @@
  * See url-copy/args.cpp to see the list of supported arguments
  */
 
-#include "UrlCopyCmd.h"
-#include <cajun/json/elements.h>
-#include <cajun/json/reader.h>
 #include <boost/algorithm/string/replace.hpp>
+#include <json/json.h>
+
+#include "UrlCopyCmd.h"
+
 
 namespace fts3 {
 namespace server {
@@ -206,6 +207,11 @@ void UrlCopyCmd::setFTSName(const std::string &hostname)
     setOption("alias", hostname);
 }
 
+void UrlCopyCmd::setCloudConfig(const std::string &path)
+{
+    setOption("cloud-config", path);
+}
+
 
 void UrlCopyCmd::setOAuthFile(const std::string &path)
 {
@@ -240,6 +246,8 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         case Job::kTypeMultiHop:
             setFlag("job-multihop", true);
             break;
+        case Job::kTypeRegular:
+            break;
     }
 
     setOption("vo", transfer.voName);
@@ -257,25 +265,20 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     setOption("dest-token-desc", transfer.destinationSpaceToken);
     setOption("source-token-desc", transfer.sourceSpaceToken);
 
-    if (!transfer.fileMetadata.empty())
-    {
-        std::istringstream ss(transfer.fileMetadata);
-        json::Object obj;
+    if (!transfer.fileMetadata.empty()) {
         try {
-            json::Reader::Read(obj, ss);
-            json::Object::const_iterator it = obj.Find("source-issuer");
-            if (it != obj.End())
-            {
-                const json::String issuer = it->element;
-                setOption("source-issuer", issuer.Value());
+            Json::Value json;
+            std::istringstream ss(transfer.fileMetadata);
+            ss >> json;
+
+            for (const auto& issuerType: {"source-issuer", "dest-issuer"}) {
+                auto issuer = json.get(issuerType, "").asString();
+
+                if (!issuer.empty()) {
+                    setOption(issuerType, issuer);
+                }
             }
-            it = obj.Find("dest-issuer");
-            if (it != obj.End())
-            {
-                const json::String issuer = it->element;
-                setOption("dest-issuer", issuer.Value());
-            }
-        } catch (json::Exception) {
+        } catch (const Json::Exception&) {
             // Ignore for now.
         }
     }
@@ -302,6 +305,9 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setOption("token-bringonline", transfer.bringOnlineToken);
         setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
         setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
+        if (!transfer.activity.empty()) {
+            setOption("activity", transfer.activity);
+        }
     }
     else {
         setOption("bulk-file", msgDir + "/" + transfer.jobId);
@@ -337,12 +343,6 @@ void UrlCopyCmd::setFromProtocol(const TransferFile::ProtocolParameters &protoco
 void UrlCopyCmd::setSecondsPerMB(long value)
 {
     setOption("sec-per-mb", value);
-}
-
-
-void UrlCopyCmd::setNumberOfActive(int active)
-{
-    setOption("active", active);
 }
 
 

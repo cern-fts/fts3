@@ -12,8 +12,8 @@ function print_info {
   printf "======================\n"
 }
 
-TIMESTAMP=`date +%y%m%d%H%M`
-GITREF=`git rev-parse --short HEAD`
+TIMESTAMP=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%y%m%d%H%M)
+GITREF=`git rev-parse --short=7 HEAD`
 RELEASE=r${TIMESTAMP}git${GITREF}
 BUILD="devel"
 
@@ -23,7 +23,7 @@ else
   printf "Using environment set variable BRANCH=%s\n" "${BRANCH}"
 fi
 
-if [[ $BRANCH =~ ^(tags/)?(v)[.0-9]+(-(rc)?([0-9]+))?$ ]]; then
+if [[ $BRANCH =~ ^(tags/)?(v)[.0-9]+(-(rc)?([0-9]+))?(\^0)?$ ]]; then
   RELEASE="${BASH_REMATCH[4]}${BASH_REMATCH[5]}"
   BUILD="rc"
 fi

@@ -18,8 +18,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 install(FILES fts-server.sysconfig
@@ -31,12 +29,6 @@ install(FILES fts-server.sysconfig
 install(FILES fts-server.logrotate
     DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
     RENAME fts-server
-)
-
-install(FILES fts-bringonline.sysconfig
-    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    RENAME fts-bringonline
 )
 
 install(FILES fts-qos.sysconfig

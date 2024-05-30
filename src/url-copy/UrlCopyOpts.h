@@ -52,6 +52,7 @@ public:
     std::string userDn;
     std::string proxy;
     std::string oauthFile;
+    std::string cloudStorageConfig;
 
     std::string infosys;
     std::string alias;
@@ -74,8 +75,7 @@ public:
     unsigned addSecPerMb;
     bool     noStreaming;
     bool     skipEvict;
-    bool     enableMonitoring; // Legacy option
-    unsigned active; // Legacy option
+    bool     enableMonitoring;
     unsigned pingInterval;
 
     unsigned retry;

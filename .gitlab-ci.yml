@@ -30,6 +30,10 @@ cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   <<: *build-template_definition
 
+alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *build-template_definition
+
 #--------------------------
 # Docker build templates
 #--------------------------
@@ -40,37 +44,58 @@ cc7:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - if [[ -z "$CI_COMMIT_TAG" ]]; 
-      then CACHE="true"; REGISTRY="latest";
-      else CACHE="false"; REGISTRY="${CI_COMMIT_TAG}";
-      fi
-    - if [[ -z "$DMC_REPO" ]];
-      then DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo";
-      fi
-    - DESTINATION="gitlab-registry.cern.ch/fts/fts3:${REGISTRY}"
+    - if [[ -z "$CI_COMMIT_TAG" ]]; then CACHE="true"; else CACHE="false"; fi
     - printf "CACHE=${CACHE}\nDESTINATION=${DESTINATION}\nDMCREPO=${DMC_REPO}\n"
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --dockerfile ci/docker/Dockerfile-ci --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+    - /kaniko/executor --dockerfile ci/docker/${IMAGE} --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
   retry: 1
 
 #--------------------------
 # Docker build jobs
 #--------------------------
 
-docker_build:
+docker_build_cc7:
   <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts3:latest-cc7
+    IMAGE: Dockerfile-ci-cc7
   needs:
     - job: cc7
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
-docker_tag:
+docker_build_alma9:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts3:latest-alma9
+    IMAGE: Dockerfile-ci-alma9
+  needs:
+    - job: alma9
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+
+docker_tag_cc7:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts3:${CI_COMMIT_TAG}-cc7
+    IMAGE: Dockerfile-ci-cc7
   needs:
     - job: cc7
+  rules:
+    - if: $CI_COMMIT_TAG != null
+
+docker_tag_alma9:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el9.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts3:${CI_COMMIT_TAG}-alma9
+    IMAGE: Dockerfile-ci-alma9
+  needs:
+    - job: alma9
   rules:
     - if: $CI_COMMIT_TAG != null
 
@@ -81,11 +106,12 @@ docker_tag:
 .test-template: &test-template_definition
   stage: test
   script:
-    - yum install -y git createrepo
+    - dnf install -y git createrepo epel-release
     - ci/write-repo-file.sh
-    - mkdir -p /repo/fts ; cp -v cc7/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
+    - ARTIFACTS="${CI_JOB_NAME%%-test}"
+    - mkdir -p /repo/fts ; cp -v ${ARTIFACTS}/RPMS/*/*.rpm /repo/fts ; createrepo /repo/fts
     - echo -e "[fts]\nname=FTS\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
-    - yum install -y fts-tests
+    - dnf install -y fts-tests
     - fts-unit-tests --log_level=all --report_level=detailed
 
 #--------------------------
@@ -93,9 +119,17 @@ docker_tag:
 #--------------------------
 
 cc7-test:
+  before_script:
+    - yum install -y dnf
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   needs:
     - job: cc7
+  <<: *test-template_definition
+
+alma9-test:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  needs:
+    - job: alma9
   <<: *test-template_definition
 
 #--------------------------
@@ -107,10 +141,14 @@ cc7-test:
   image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
     - cc7
+    - alma9
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages cc7/RPMS/*/*.rpm cc7/SRPMS/*
+    - |
+      for platform in cc7 alma9; do
+        packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages ${platform}/RPMS/*/*.rpm ${platform}/SRPMS/*
+      done
   tags:
     - docker-privileged-xl
   retry: 2
@@ -127,5 +165,6 @@ rpms:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG != null'
+    - if: '$CI_COMMIT_REF_NAME == "FTS-1925_token_project" || $CI_COMMIT_TAG != null'
     - if: '$CI_COMMIT_REF_NAME != "develop" && $CI_COMMIT_TAG == null'
       when: manual

@@ -50,13 +50,45 @@ void *stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
 int stack_backtrace_size = 0;
 
 
+// Safely convert signal number into string
+void signal_number_to_string(int signum, char* buffer, size_t size) {
+    int len = 0;
+
+    // Convert signal number to string manually
+    if (signum == 0) {
+        buffer[len++] = '0';
+    } else {
+        int num = signum;
+        while (num != 0 && len < (int)size - 1) {
+            buffer[len++] = '0' + (char) num % 10;
+            num /= 10;
+        }
+    }
+
+    // Null-terminate the string
+    buffer[len] = '\0';
+
+    // Reverse the string
+    for (int i = 0, j = (int)len - 1; i < j; ++i, --j) {
+        char temp = buffer[i];
+        buffer[i] = buffer[j];
+        buffer[j] = temp;
+    }
+}
+
+
 void get_backtrace(int signum)
 {
     stack_backtrace_size = backtrace(stack_backtrace, STACK_BACKTRACE_SIZE);
 
+    char buffer[128];
+    // Safely convert signal number to a string to be printed to stderr
+    signal_number_to_string(signum, buffer, sizeof(buffer));
+
     // print out all the frames to stderr
-    fprintf(stderr, "Caught signal: %d\n", signum);
-    fprintf(stderr, "Stack trace: \n");
+    if(write(STDERR_FILENO, "Caught signal: ", strlen("Caught signal: ")) < 0) return;
+    if(write(STDERR_FILENO, buffer, strlen(buffer)) < 0) return;
+    if(write(STDERR_FILENO, "\nStack trace: \n", strlen("\nStack trace: \n")) < 0) return;
     backtrace_symbols_fd(stack_backtrace, stack_backtrace_size, STDERR_FILENO);
 }
 

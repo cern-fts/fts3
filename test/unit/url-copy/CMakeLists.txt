@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 2.8)
-
 find_package(GFAL2)
 find_package(GLIB2)
 include_directories (
@@ -26,3 +24,4 @@ include_directories (
 
 define_test (AutoInterruptThread fts_url_copy_lib)
 define_test (UrlCopyProcess fts_url_copy_lib)
+define_test (DestFileReport fts_url_copy_lib)

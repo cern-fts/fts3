@@ -122,6 +122,8 @@ public:
     std::string dstFileReport;
     std::string userDn;
     std::string credId;
+    std::string sourceTokenId;
+    std::string destinationTokenId;
     std::string checksumMode;
     std::string checksum;
     std::string sourceSpaceToken;

@@ -44,6 +44,7 @@ const option UrlCopyOpts::long_options[] =
     {"job-multihop",      no_argument,       0, 204},
     {"last-hop",          no_argument,       0, 205},
     {"archiving",         no_argument,       0, 206},
+    {"activity",          required_argument, 0, 207},
 
     {"checksum",          required_argument, 0, 300},
     {"checksum-mode",     required_argument, 0, 301},
@@ -66,12 +67,12 @@ const option UrlCopyOpts::long_options[] =
     {"copy-mode",         required_argument, 0, 507},
     {"disable-fallback",  no_argument,       0, 508},
     {"retrieve-se-token", no_argument,       0, 509},
+    {"cloud-config",      required_argument, 0, 510},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
     {"monitoring",        no_argument,       0, 602},
-    {"active",            required_argument, 0, 603},
-    {"ping-interval",     required_argument, 0, 604},
+    {"ping-interval",     required_argument, 0, 603},
 
     {"file-metadata",     required_argument, 0, 700},
     {"transfer-metadata", required_argument, 0, 701},
@@ -201,7 +202,7 @@ UrlCopyOpts::UrlCopyOpts():
         isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
         optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
         timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
-        skipEvict(false), enableMonitoring(false), active(0), pingInterval(60), retry(0), retryMax(0),
+        skipEvict(false), enableMonitoring(false), pingInterval(60), retry(0), retryMax(0),
         logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
         debugLevel(0), logToStderr(false)
 {
@@ -281,6 +282,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 206:
                     referenceTransfer.isArchiving = true;
                     break;
+                case 207:
+                    referenceTransfer.activity = boost::lexical_cast<std::string>(optarg);
+                    break;
 
                 case 300:
                     setChecksum(referenceTransfer, optarg);
@@ -296,7 +300,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                         referenceTransfer.checksumMode = Transfer::CHECKSUM_BOTH;
                     }
                     else {
-            			referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
+                        referenceTransfer.checksumMode = Transfer::CHECKSUM_NONE;
                     }
                     break;
                 case 302:
@@ -341,7 +345,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.destTokenIssuer = optarg;
                     break;
                 case 506:
-                	authMethod = optarg;
+                    authMethod = optarg;
                     break;
                 case 507:
                     copyMode = translateCopyMode(optarg);
@@ -351,6 +355,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 509:
                     retrieveSEToken = true;
+                    break;
+                case 510:
+                    cloudStorageConfig = optarg;
                     break;
 
                 case 600:
@@ -363,9 +370,6 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     enableMonitoring = true;
                     break;
                 case 603:
-                    active = boost::lexical_cast<unsigned>(optarg);
-                    break;
-                case 604:
                     pingInterval = boost::lexical_cast<unsigned>(optarg);
                     break;
 

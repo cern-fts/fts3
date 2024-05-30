@@ -178,10 +178,10 @@ public:
         }
     }
 
-    unsigned getNumberOfStreams(void)
+    uint32_t getNumberOfStreams(void)
     {
         GError *error = NULL;
-        unsigned val = gfalt_get_nbstreams(params, &error);
+        uint32_t val = gfalt_get_nbstreams(params, &error);
         if (error) {
             throw Gfal2Exception(error);
         }
@@ -196,24 +196,32 @@ public:
         }
     }
 
-    unsigned getTcpBuffersize(void)
+    uint64_t getTcpBuffersize(void)
     {
         GError *error = NULL;
-        unsigned val = gfalt_get_tcp_buffer_size(params, &error);
+        uint64_t val = gfalt_get_tcp_buffer_size(params, &error);
         if (error) {
             throw Gfal2Exception(error);
         }
         return val;
     }
 
-    unsigned getTimeout(void)
+    uint64_t getTimeout(void)
     {
         GError *error = NULL;
-        unsigned val = gfalt_get_timeout(params, &error);
+        uint64_t val = gfalt_get_timeout(params, &error);
         if (error) {
             throw Gfal2Exception(error);
         }
         return val;
+    }
+
+    inline std::string getSrcToken() const {
+        return src_token;
+    }
+
+    inline std::string getDstToken() const {
+        return dst_token;
     }
 
     void setDelegationFlag(bool value)
@@ -313,7 +321,7 @@ public:
 
     /// Destructor
     ~Gfal2() {
-        gfal2_context_free(context);
+        // gfal2_context_free(context); //FTS-1996: Intentional memory leak; Do not free gfal2 context to prevent crash
     }
 
     /// Can not copy

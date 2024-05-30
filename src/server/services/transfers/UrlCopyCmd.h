@@ -69,6 +69,7 @@ public:
     void setCopyMode(CopyMode);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
+    void setCloudConfig(const std::string&);
     void setOAuthFile(const std::string&);
     void setAuthMethod(const std::string&);
     void setRetrieveSEToken(bool);
@@ -78,7 +79,6 @@ public:
     void setFromProtocol(const TransferFile::ProtocolParameters& protocol);
     void setSecondsPerMB(long);
 
-    void setNumberOfActive(int);
     void setNumberOfRetries(int);
     void setMaxNumberOfRetries(int);
     void setDisableDelegation(bool);

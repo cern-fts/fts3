@@ -1,3 +1,5 @@
+syntax = "proto2";
+
 package fts3.events;
 
 message Message {
@@ -10,12 +12,12 @@ message Message {
     required string transfer_status = 5;
     optional string transfer_message = 6;
 
-    required uint64 process_id = 7;
+    required int32  process_id = 7;
     optional double time_in_secs = 8;
     optional uint64 filesize = 9;
     optional uint32 nostreams = 10;
-    optional uint32 timeout = 11;
-    optional uint32 buffersize = 12;
+    optional uint64 timeout = 11;
+    optional uint64 buffersize = 12;
     optional uint64 timestamp = 13;
     optional bool   retry = 14;
     optional double throughput = 15;

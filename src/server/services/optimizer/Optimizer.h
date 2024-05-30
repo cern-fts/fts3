@@ -69,7 +69,8 @@ struct PairState {
     // Exponential Moving Average
     double ema;
     // Filesize statistics
-    double filesizeAvg, filesizeStdDev;
+    double filesizeAvg;
+    double filesizeStdDev;
     // Optimizer last decision
     int connections;
 
@@ -147,6 +148,9 @@ protected:
     int increaseStepSize, increaseAggressiveStepSize;
     double emaAlpha;
 
+    size_t pairsSize; /// Number of pairs on Optimizer run
+    int pairIdx; /// Current pair index
+
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
     bool optimizeConnectionsForPair(OptimizerMode optMode, const Pair &);
@@ -178,7 +182,7 @@ public:
 
 
 inline std::ostream& operator << (std::ostream &os, const Range &range) {
-    return (os << range.min << "/" << range.max);
+    return (os << "[" << range.min << ", " << range.max << "]");
 }
 
 }

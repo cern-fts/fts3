@@ -100,8 +100,9 @@ static void doServer(void)
     }
     theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
     theLogger().setProfiling(ServerConfig::instance().get<bool>("Profiling"));
+    theLogger().setLogTokenRequests(ServerConfig::instance().get<bool>("LogTokenRequests"));
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting server..." << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting server... (process_id=" << getpid() << ")" << commit;
 
     intializeDatabase();
     Server::instance().start();
