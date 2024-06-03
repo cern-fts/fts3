@@ -111,7 +111,7 @@ public:
     uint64_t    userFileSize;
     std::string activity;
     std::string fileMetadata;
-    std::string transferMetadata;
+    std::string archiveMetadata;
     std::string tokenBringOnline;
     std::string sourceTokenDescription;
     std::string destTokenDescription;

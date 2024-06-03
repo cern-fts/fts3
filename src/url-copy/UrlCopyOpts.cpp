@@ -75,7 +75,7 @@ const option UrlCopyOpts::long_options[] =
     {"ping-interval",     required_argument, 0, 603},
 
     {"file-metadata",     required_argument, 0, 700},
-    {"transfer-metadata", required_argument, 0, 701},
+    {"archive-metadata",  required_argument, 0, 701},
     {"job-metadata",      required_argument, 0, 702},
 
     {"level",             required_argument, 0, 801},
@@ -159,7 +159,7 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.fileMetadata = strArray[5] == "x" ? "" : strArray[5];
     // Must deserialize metadata string here, as value will be used in Gfal copy
     // Other metadata fields deserialize in the LegacyReporter
-    t.transferMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
+    t.archiveMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
     t.tokenBringOnline = strArray[7] == "x" ? "" : strArray[7];
     t.scitag = boost::lexical_cast<unsigned>(strArray[8]);
     t.sourceTokenDescription = reference.sourceTokenDescription;
@@ -377,7 +377,7 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.fileMetadata = optarg;
                     break;
                 case 701:
-                    referenceTransfer.transferMetadata = replaceMetadataString(optarg);
+                    referenceTransfer.archiveMetadata = replaceMetadataString(optarg);
                     break;
                 case 702:
                     jobMetadata = optarg;

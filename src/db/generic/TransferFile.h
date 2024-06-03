@@ -136,7 +136,7 @@ public:
     int scitag;
     std::string fileMetadata;
     std::string jobMetadata;
-    std::string transferMetadata;
+    std::string archiveMetadata;
     std::string bringOnlineToken;
     Job::JobType jobType; // See Job constants
     int lastReplica;

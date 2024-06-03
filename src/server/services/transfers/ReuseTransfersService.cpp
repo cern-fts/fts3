@@ -125,7 +125,7 @@ std::map<uint64_t, std::string> ReuseTransfersService::generateJobFile(
             fileMetadata = "x";
 
         std::string archiveMetadata = UrlCopyCmd::prepareMetadataString(
-                it->transferMetadata);
+                it->archiveMetadata);
         if (archiveMetadata.empty())
             archiveMetadata = "x";
 

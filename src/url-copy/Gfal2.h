@@ -248,10 +248,10 @@ public:
         }
     }
 
-    void setTransferMetadata(const std::string &metadata)
+    void setArchiveMetadata(const std::string &metadata)
     {
         GError *error = NULL;
-        if (gfalt_set_transfer_metadata(params, metadata.c_str(), &error) < 0) {
+        if (gfalt_set_archive_metadata(params, metadata.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }
