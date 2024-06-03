@@ -304,7 +304,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         }
         setOption("token-bringonline", transfer.bringOnlineToken);
         setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
-        setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
+        setOption("archive-metadata", prepareMetadataString(transfer.archiveMetadata));
         if (!transfer.activity.empty()) {
             setOption("activity", transfer.activity);
         }

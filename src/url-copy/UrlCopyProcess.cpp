@@ -222,8 +222,8 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         params.setScitag(transfer.scitag);
     }
 
-    if (!transfer.transferMetadata.empty()) {
-        params.setTransferMetadata(transfer.transferMetadata);
+    if (!transfer.archiveMetadata.empty()) {
+        params.setArchiveMetadata(transfer.archiveMetadata);
     }
 
     // Set useful log verbosity for HTTP transfers
@@ -346,7 +346,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize: " << transfer.userFileSize << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scitag: " << transfer.scitag << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata: " << transfer.fileMetadata << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer metadata: " << transfer.transferMetadata << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Archive metadata: " << transfer.archiveMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata: " << opts.jobMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Bringonline token: " << transfer.tokenBringOnline << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enableUdt << commit;
