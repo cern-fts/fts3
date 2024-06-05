@@ -64,7 +64,6 @@ public:
     void setProxy(const std::string&);
     void setUDT(boost::tribool);
     void setIPv6(boost::tribool);
-    void setEvict(boost::tribool);
     void setSkipEvict(boost::tribool);
     void setCopyMode(CopyMode);
     bool isIPv6Explicit(void);

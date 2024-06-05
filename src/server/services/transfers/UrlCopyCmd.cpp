@@ -156,14 +156,14 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
 
 
 void UrlCopyCmd::setSkipEvict(boost::tribool set)
-    {
-        if (boost::indeterminate(set)) {
-            setFlag("skip-evict", false);
-        } else {
-            bool value = (set.value == true);
-            setFlag("skip-evict", value);
-        }
+{
+    if (boost::indeterminate(set)) {
+        setFlag("skip-evict", false);
+    } else {
+        bool value = (set.value == true);
+        setFlag("skip-evict", value);
     }
+}
 
 
 void UrlCopyCmd::setCopyMode(CopyMode copyMode)
@@ -225,9 +225,9 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
-void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_tokens)
+void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_token)
 {
-    setFlag("retrieve-se-token", retrieve_se_tokens);
+    setFlag("retrieve-se-token", retrieve_se_token);
 }
 
 
