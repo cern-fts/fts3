@@ -405,6 +405,17 @@ public:
         }
     }
 
+    /// Remove file
+    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source) {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_unlink(context, url.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     /// Release file
     void releaseFile(Gfal2TransferParams &params, const std::string &url, const std::string &token,
                      bool is_source)
