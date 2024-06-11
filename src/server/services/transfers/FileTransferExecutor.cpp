@@ -207,11 +207,19 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setOverwrite(true);
             }
 
-            // If it is archiving job and overwriteFlag is "D" => enable overwrite on disk
-            if (tf.archiveTimeout > 0 && tf.overwriteFlag == "D") {
-                cmdBuilder.setOverwriteOnDisk(true);
-                // Also send "tape endpoint" flag (decision delegated to the UrlCopyProcess)
-                cmdBuilder.setTapeEndpoint(db->getTapeEndpointFlag(tf.destSe));
+            // If archiving job and overwrite-when-only-on-disk requested => enable overwrite on disk
+            //   - overwriteFlag = "D"
+            //   - multihop job, last hop and overwriteFlag = "Q"
+            if (tf.archiveTimeout > 0) {
+                bool overwriteOnDiskRequested =
+                        (tf.overwriteFlag == "D") ||
+                        (tf.jobType == Job::kTypeMultiHop && tf.lastHop && tf.overwriteFlag == "Q");
+
+                if (overwriteOnDiskRequested) {
+                    cmdBuilder.setOverwriteOnDisk(true);
+                    // Also send "tape endpoint" flag (decision delegated to the UrlCopyProcess)
+                    cmdBuilder.setTapeEndpoint(db->getTapeEndpointFlag(tf.destSe));
+                }
             }
 
             int retry_max = db->getRetry(tf.jobId);
