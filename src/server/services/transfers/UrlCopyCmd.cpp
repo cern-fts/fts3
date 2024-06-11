@@ -166,6 +166,16 @@ void UrlCopyCmd::setSkipEvict(boost::tribool set)
 }
 
 
+void UrlCopyCmd::setTapeEndpoint(boost::tribool set)
+{
+    if (boost::indeterminate(set)) {
+        setFlag("tape-endpoint", false);
+    } else {
+        setFlag("tape-endpoint", (set.value == true));
+    }
+}
+
+
 void UrlCopyCmd::setCopyMode(CopyMode copyMode)
 {
     std::string mode;

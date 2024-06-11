@@ -68,6 +68,7 @@ const option UrlCopyOpts::long_options[] =
     {"disable-fallback",  no_argument,       0, 508},
     {"retrieve-se-token", no_argument,       0, 509},
     {"cloud-config",      required_argument, 0, 510},
+    {"tape-endpoint",     no_argument,       0, 511},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -200,7 +201,8 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts():
-        isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
+        isSessionReuse(false), strictCopy(false), dstFileReport(false),
+        disableCopyFallback(false), retrieveSEToken(false), tapeEndpoint(false),
         optimizerLevel(0), overwrite(false), overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
         timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
         skipEvict(false), enableMonitoring(false), pingInterval(60), retry(0), retryMax(0),
@@ -359,6 +361,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 510:
                     cloudStorageConfig = optarg;
+                    break;
+                case 511:
+                    tapeEndpoint = true;
                     break;
 
                 case 600:
