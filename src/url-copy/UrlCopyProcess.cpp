@@ -336,7 +336,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source url: " << transfer.source << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest url: " << transfer.destination << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite enabled: " << opts.overwrite << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite on disk: " << opts.overwriteOnDisk << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Overwrite when only on disk: " << opts.overwriteOnDisk << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable delegation: " << opts.noDelegation << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skip eviction of source file: " << opts.skipEvict << commit;
@@ -379,28 +379,55 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
                 // File exists
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file exists" << commit;
-                bool overwrite_on_disk = false;
+                bool overwrite_disk_performed = false;
 
                 if (opts.overwriteOnDisk) {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Entering \"overwrite-when-only-on-disk\" workflow" << commit;
+                    std::string xattrLocality;
+
+                    if (!opts.tapeEndpoint) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination endpoint not configured as \"tape-endpoint\". "
+                                                        << "Aborting transfer! (overwrite-when-only-on-disk requested)" << commit;
+                        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EINVAL,
+                                           "Destination endpoint not configured as tape (overwrite-when-only-on-disk requested)");
+                    }
+
                     try {
                         // Check file locality
-                        std::string userStatus = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
-                        // Overwrite if file is not on tape
-                        overwrite_on_disk = !(userStatus == GFAL_XATTR_STATUS_NEARLINE || userStatus == GFAL_XATTR_STATUS_NEARLINE_ONLINE);
-
-                        if (overwrite_on_disk) {
-                            // File is not on tape, set overwrite flag
-                            params.setReplaceExistingFile(overwrite_on_disk);
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file is not on tape. Enabling overwrite" << commit;
-                        } else {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file is on tape. Do not enable overwrite" << commit;
-                        }
+                        xattrLocality = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
                     } catch (const std::exception &ex) {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check locality of destination tape file " << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check destination file locality. Aborting transfer! "
+                                                       << "(overwrite-when-only-on-disk requested) (error= " << ex.what() << ")" << commit;
+                        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT,
+                                           "Could not check destination file locality (overwrite-when-only-on-disk requested)");
+                    }
+
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Identified destination file locality: " << xattrLocality << commit;
+
+                    bool file_on_tape = (xattrLocality == GFAL_XATTR_STATUS_NEARLINE ||
+                                         xattrLocality == GFAL_XATTR_STATUS_NEARLINE_ONLINE);
+
+                    if (file_on_tape) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file on tape. Aborting transfer! "
+                                                        << "(overwrite-when-only-on-disk requested)" << commit;
+                        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EROFS,
+                                           "Destination file exists and is on tape (overwrite-when-only-on-disk requested)");
+                    } else {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file not on tape. Removing file "
+                                                        << "(overwrite-when-only-on-disk requested)" << commit;
+                        try {
+                            gfal2.rm(params, transfer.destination, false);
+                            overwrite_disk_performed = true;
+                        } catch (const std::exception &ex) {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to delete destination file. Aborting transfer! "
+                                                           << "(overwrite-when-only-on-disk requested) (error= " << ex.what() << ")" << commit;
+                            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT,
+                                               "Failed to delete destination file (overwrite-when-only-on-disk requested)");
+                        }
                     }
                 }
 
-                if (opts.dstFileReport && !overwrite_on_disk) {
+                if (opts.dstFileReport && !overwrite_disk_performed) {
                     try {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: "
                                                         << transfer.destination << commit;
@@ -413,7 +440,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                     }
                 }
 
-                if (!overwrite_on_disk) {
+                if (!overwrite_disk_performed) {
                     throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
                                        "Destination file exists and overwrite is not enabled");
                 }
