@@ -454,6 +454,32 @@ boost::tribool MySqlAPI::getSkipEvictionFlag(const std::string &source)
 }
 
 
+boost::tribool MySqlAPI::getTapeEndpointFlag(const std::string &storage)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        boost::logic::tribool tapeEndpoint(boost::indeterminate);
+        soci::statement stmt = (sql.prepare << "SELECT tape_endpoint FROM t_se WHERE storage = :source",
+                                soci::use(storage), soci::into(tapeEndpoint));
+
+        stmt.execute(true);
+
+        if (boost::indeterminate(tapeEndpoint)) {
+            return false;
+        } else {
+            return tapeEndpoint;
+        }
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
 CopyMode MySqlAPI::getCopyMode(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);

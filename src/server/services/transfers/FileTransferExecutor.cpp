@@ -210,6 +210,8 @@ void FileTransferExecutor::run(boost::any & ctx)
             // If it is archiving job and overwriteFlag is "D" => enable overwrite on disk
             if (tf.archiveTimeout > 0 && tf.overwriteFlag == "D") {
                 cmdBuilder.setOverwriteOnDisk(true);
+                // Also send "tape endpoint" flag (decision delegated to the UrlCopyProcess)
+                cmdBuilder.setTapeEndpoint(db->getTapeEndpointFlag(tf.destSe));
             }
 
             int retry_max = db->getRetry(tf.jobId);

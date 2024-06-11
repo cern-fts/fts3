@@ -66,6 +66,7 @@ public:
     void setIPv6(boost::tribool);
     void setEvict(boost::tribool);
     void setSkipEvict(boost::tribool);
+    void setTapeEndpoint(boost::tribool);
     void setCopyMode(CopyMode);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
