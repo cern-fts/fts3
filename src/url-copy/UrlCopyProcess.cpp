@@ -406,25 +406,36 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
                     bool file_on_tape = (xattrLocality == GFAL_XATTR_STATUS_NEARLINE ||
                                          xattrLocality == GFAL_XATTR_STATUS_NEARLINE_ONLINE);
+                    bool file_only_on_disk = (xattrLocality == GFAL_XATTR_STATUS_ONLINE);
 
                     if (file_on_tape) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file on tape. Aborting transfer! "
                                                         << "(overwrite-when-only-on-disk requested)" << commit;
                         throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EROFS,
                                            "Destination file exists and is on tape (overwrite-when-only-on-disk requested)");
-                    } else {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file not on tape. Removing file "
-                                                        << "(overwrite-when-only-on-disk requested)" << commit;
-                        try {
-                            gfal2.rm(params, transfer.destination, false);
-                            overwrite_disk_performed = true;
-                        } catch (const std::exception &ex) {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to delete destination file. Aborting transfer! "
-                                                           << "(overwrite-when-only-on-disk requested) (error= " << ex.what() << ")" << commit;
-                            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT,
-                                               "Failed to delete destination file (overwrite-when-only-on-disk requested)");
-                        }
                     }
+
+                    if (!file_only_on_disk) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file location unknown: " << xattrLocality << ". Aborting transfer! "
+                                                        << "(overwrite-when-only-on-disk requested)" << commit;
+                        std::ostringstream errmsg;
+                        errmsg << "Destination file location unknown: " + xattrLocality
+                               << " (overwrite-when-only-on-disk requested)";
+                        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EROFS, errmsg.str());
+                    }
+
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file not on tape. Removing file "
+                                                    << "(overwrite-when-only-on-disk requested)" << commit;
+                    try {
+                        gfal2.rm(params, transfer.destination, false);
+                    } catch (const std::exception &ex) {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to delete destination file. Aborting transfer! "
+                                                       << "(overwrite-when-only-on-disk requested) (error= " << ex.what() << ")" << commit;
+                        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT,
+                                           "Failed to delete destination file (overwrite-when-only-on-disk requested)");
+                    }
+
+                    overwrite_disk_performed = true;
                 }
 
                 if (opts.dstFileReport && !overwrite_disk_performed) {
