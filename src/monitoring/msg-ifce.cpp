@@ -253,6 +253,8 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["final_destination"] = tr_completed.final_destination;
     message["transfer_type"] = tr_completed.transfer_type;
     message["auth_method"] = tr_completed.auth_method;
+    message["overwrite_on_disk_flag"] = tr_completed.overwrite_on_disk_flag;
+    message["overwrite_on_disk_deletion_code"] = (Json::Value::Int) tr_completed.overwrite_on_disk_deletion_code;
 
     std::ostringstream stream;
     stream << "CO " << message;
