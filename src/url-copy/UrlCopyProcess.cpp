@@ -97,7 +97,7 @@ static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfa
 }
 
 
-static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, const Transfer &transfer,
+static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, Transfer &transfer,
                                            Gfal2 &gfal2, Gfal2TransferParams &params)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Entering \"overwrite-when-only-on-disk\" workflow" << commit;
@@ -113,7 +113,7 @@ static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, const Transf
     try {
         // Check file locality
         xattrLocality = gfal2.getXattr(transfer.destination, GFAL_XATTR_STATUS);
-    } catch (const std::exception &ex) {
+    } catch (const Gfal2Exception &ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check destination file locality. Aborting transfer! "
                                        << "(overwrite-when-only-on-disk requested) (error= " << ex.what() << ")" << commit;
         throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT,
@@ -146,9 +146,11 @@ static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, const Transf
                                     << "(overwrite-when-only-on-disk requested)" << commit;
     try {
         gfal2.rm(params, transfer.destination, false);
-    } catch (const std::exception &ex) {
+        transfer.stats.overwriteOnDiskRetc = 0;
+    } catch (const Gfal2Exception &ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to delete destination file. Aborting transfer! "
                                        << "(overwrite-when-only-on-disk requested) (error= " << ex.what() << ")" << commit;
+        transfer.stats.overwriteOnDiskRetc = std::abs(ex.code());
         throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT,
                            "Failed to delete destination file (overwrite-when-only-on-disk requested)");
     }
