@@ -103,11 +103,11 @@ static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, Transfer &tr
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Entering \"overwrite-when-only-on-disk\" workflow" << commit;
     std::string xattrLocality;
 
-    if (!opts.tapeEndpoint) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination endpoint not configured as \"tape-endpoint\". "
+    if (!opts.overwriteDiskEnabled) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination endpoint not configured with \"overwrite-disk-enabled\". "
                                         << "Aborting transfer! (overwrite-when-only-on-disk requested)" << commit;
         throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EINVAL,
-                           "Destination endpoint not configured as tape (overwrite-when-only-on-disk requested)");
+                           "Destination endpoint not configured with \"overwrite-disk-enabled\" (overwrite-when-only-on-disk requested)");
     }
 
     try {
