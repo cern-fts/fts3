@@ -220,8 +220,8 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                 if (overwriteOnDiskRequested) {
                     cmdBuilder.setOverwriteOnDisk(true);
-                    // Also send "tape endpoint" flag (decision delegated to the UrlCopyProcess)
-                    cmdBuilder.setTapeEndpoint(db->getTapeEndpointFlag(tf.destSe));
+                    // Also send "overwrite-disk-enabled" flag (decision delegated to the UrlCopyProcess)
+                    cmdBuilder.setOverwriteDiskEnabled(db->getOverwriteDiskEnabledFlag(tf.destSe));
                 }
             }
 

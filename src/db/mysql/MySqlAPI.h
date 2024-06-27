@@ -232,8 +232,8 @@ public:
     /// Returns if for the given storage endpoint, skip eviction has been enabled
     virtual boost::tribool getSkipEvictionFlag(const std::string &source);
 
-    /// Returns whether the given storage endpoint is marked as tape endpoint or not
-    virtual boost::tribool getTapeEndpointFlag(const std::string &storage);
+    /// Returns whether the given storage endpoint is enabled for the "overwrite-when-only-on-disk" feature or not
+    virtual boost::tribool getOverwriteDiskEnabledFlag(const std::string &storage);
 
     /// Returns TPC mode for a pair of source/destination endpoints
     virtual CopyMode getCopyMode(const std::string &source, const std::string &destination);

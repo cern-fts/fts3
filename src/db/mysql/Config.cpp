@@ -454,21 +454,21 @@ boost::tribool MySqlAPI::getSkipEvictionFlag(const std::string &source)
 }
 
 
-boost::tribool MySqlAPI::getTapeEndpointFlag(const std::string &storage)
+boost::tribool MySqlAPI::getOverwriteDiskEnabledFlag(const std::string &storage)
 {
     soci::session sql(*connectionPool);
 
     try {
-        boost::logic::tribool tapeEndpoint(boost::indeterminate);
-        soci::statement stmt = (sql.prepare << "SELECT tape_endpoint FROM t_se WHERE storage = :source",
-                                soci::use(storage), soci::into(tapeEndpoint));
+        boost::logic::tribool overwriteDiskEnabled(boost::indeterminate);
+        soci::statement stmt = (sql.prepare << "SELECT overwrite_disk_enabled FROM t_se WHERE storage = :source",
+                                soci::use(storage), soci::into(overwriteDiskEnabled));
 
         stmt.execute(true);
 
-        if (boost::indeterminate(tapeEndpoint)) {
+        if (boost::indeterminate(overwriteDiskEnabled)) {
             return false;
         } else {
-            return tapeEndpoint;
+            return overwriteDiskEnabled;
         }
     }
     catch (std::exception &e) {

@@ -63,7 +63,7 @@ public:
     std::string copyMode;
     bool disableCopyFallback;
     bool retrieveSEToken;
-    bool tapeEndpoint;
+    bool overwriteDiskEnabled;
 
     unsigned optimizerLevel;
     bool     overwrite;

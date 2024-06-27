@@ -166,12 +166,12 @@ void UrlCopyCmd::setSkipEvict(boost::tribool set)
 }
 
 
-void UrlCopyCmd::setTapeEndpoint(boost::tribool set)
+void UrlCopyCmd::setOverwriteDiskEnabled(boost::tribool set)
 {
     if (boost::indeterminate(set)) {
-        setFlag("tape-endpoint", false);
+        setFlag("overwrite-disk-enabled", false);
     } else {
-        setFlag("tape-endpoint", (set.value == true));
+        setFlag("overwrite-disk-enabled", (set.value == true));
     }
 }
 

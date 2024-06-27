@@ -65,7 +65,7 @@ public:
     void setUDT(boost::tribool);
     void setIPv6(boost::tribool);
     void setSkipEvict(boost::tribool);
-    void setTapeEndpoint(boost::tribool);
+    void setOverwriteDiskEnabled(boost::tribool);
     void setCopyMode(CopyMode);
     bool isIPv6Explicit(void);
     void setFTSName(const std::string&);
