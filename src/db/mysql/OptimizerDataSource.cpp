@@ -34,12 +34,22 @@ using namespace fts3::optimizer;
 static void setNewOptimizerValue(soci::session &sql,
     const Pair &pair, int optimizerDecision, double ema)
 {
+    const std::string qry = sql.get_backend_name() == "mysql" ?
+            "INSERT INTO t_optimizer (source_se, dest_se, active, ema, datetime) "
+            "VALUES (:source, :dest, :active, :ema, UTC_TIMESTAMP()) "
+            "ON DUPLICATE KEY UPDATE "
+            "   active = :active, ema = :ema, datetime = UTC_TIMESTAMP()"
+        :
+            "INSERT INTO t_optimizer (source_se, dest_se, active, ema, datetime) "
+            "VALUES (:source, :dest, :active, :ema, NOW() AT TIME ZONE 'UTC') "
+            "ON CONFLICT (source_se, dest_se) DO"
+            "   UPDATE SET "
+            "       active = :active,"
+            "       ema = :ema,"
+            "       datetime = NOW() AT TIME ZONE 'UTC'";
     sql.begin();
     sql <<
-        "INSERT INTO t_optimizer (source_se, dest_se, active, ema, datetime) "
-        "VALUES (:source, :dest, :active, :ema, UTC_TIMESTAMP()) "
-        "ON DUPLICATE KEY UPDATE "
-        "   active = :active, ema = :ema, datetime = UTC_TIMESTAMP()",
+        qry,
         soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
         soci::use(optimizerDecision, "active"), soci::use(ema, "ema");
     sql.commit();
@@ -51,19 +61,38 @@ static void updateOptimizerEvolution(soci::session &sql,
     const Pair &pair, int active, int diff, const std::string &rationale, const PairState &newState)
 {
     try {
+        const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
         sql.begin();
-        sql << " INSERT INTO t_optimizer_evolution "
-            " (datetime, source_se, dest_se, "
-            "  ema, active, throughput, success, "
-            "  filesize_avg, filesize_stddev, "
-            "  actual_active, queue_size, "
-            "  rationale, diff) "
-            " VALUES "
-            " (UTC_TIMESTAMP(), :source, :dest, "
-            "  :ema, :active, :throughput, :success, "
-            "  :filesize_avg, :filesize_stddev, "
-            "  :actual_active, :queue_size, "
-            "  :rationale, :diff)",
+        sql <<
+            "INSERT INTO t_optimizer_evolution("
+            "    datetime,"
+            "    source_se,"
+            "    dest_se, "
+            "    ema,"
+            "    active,"
+            "    throughput,"
+            "    success,"
+            "    filesize_avg,"
+            "    filesize_stddev,"
+            "    actual_active,"
+            "    queue_size,"
+            "    rationale,"
+            "    diff"
+            ") VALUES ("
+            "    " << utc_timestamp << ","
+            "    :source,"
+            "    :dest,"
+            "    :ema,"
+            "    :active,"
+            "    :throughput,"
+            "    :success, "
+            "    :filesize_avg,"
+            "    :filesize_stddev,"
+            "    :actual_active,"
+            "    :queue_size,"
+            "    :rationale,"
+            "    :diff"
+            ")",
             soci::use(pair.source), soci::use(pair.destination),
             soci::use(newState.ema), soci::use(active), soci::use(newState.throughput), soci::use(newState.successRate),
             soci::use(newState.filesizeAvg), soci::use(newState.filesizeStdDev),
@@ -111,12 +140,13 @@ public:
     std::list<Pair> getActivePairs(void) {
         std::list<Pair> result;
 
+        const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null" : "";
         soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT DISTINCT source_se, dest_se "
             "FROM t_file "
             "WHERE file_state IN ('ACTIVE', 'SUBMITTED') "
-            "GROUP BY source_se, dest_se, file_state "
-            "ORDER BY NULL"
+            "GROUP BY source_se, dest_se, file_state " <<
+            order_by_null
         );
 
         for (auto i = rs.begin(); i != rs.end(); ++i) {
@@ -197,19 +227,35 @@ public:
         time_t now = time(NULL);
         time_t windowStart = now - interval.total_seconds();
 
-        soci::rowset<soci::row> transfers = (sql.prepare <<
-        "SELECT start_time, finish_time, transferred, filesize "
-        " FROM t_file "
-        " WHERE "
-        "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
-        "UNION ALL "
-        "SELECT start_time, finish_time, transferred, filesize "
-        " FROM t_file USE INDEX(idx_finish_time)"
-        " WHERE "
-        "   source_se = :sourceSe AND dest_se = :destSe "
-        "   AND file_state IN ('FINISHED', 'ARCHIVING') AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
-        soci::use(pair.source, "sourceSe"), soci::use(pair.destination, "destSe"),
-        soci::use(interval.total_seconds(), "interval"));
+        const std::string qry = sql.get_backend_name() == "mysql" ?
+                "SELECT start_time, finish_time, transferred, filesize "
+                " FROM t_file "
+                " WHERE "
+                "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
+                "UNION ALL "
+                "SELECT start_time, finish_time, transferred, filesize "
+                " FROM t_file USE INDEX(idx_finish_time)"
+                " WHERE "
+                "   source_se = :sourceSe AND dest_se = :destSe "
+                "   AND file_state IN ('FINISHED', 'ARCHIVING')"
+                "   AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)"
+            :
+                "SELECT start_time, finish_time, transferred, filesize "
+                " FROM t_file "
+                " WHERE "
+                "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
+                "UNION ALL "
+                "SELECT start_time, finish_time, transferred, filesize "
+                " FROM t_file" 
+                " WHERE "
+                "   source_se = :sourceSe AND dest_se = :destSe "
+                "   AND file_state IN ('FINISHED', 'ARCHIVING')"
+                "   AND finish_time >= (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(SECS => :interval))";
+        soci::rowset<soci::row> transfers = (
+            sql.prepare << qry,
+            soci::use(pair.source, "sourceSe"), soci::use(pair.destination, "destSe"),
+            soci::use(interval.total_seconds(), "interval")
+        );
 
         double totalBytes = 0;
         std::vector<int64_t> filesizes;
@@ -275,11 +321,34 @@ public:
         double avgDuration = 0.0;
         soci::indicator isNullAvg = soci::i_ok;
 
-        sql << "SELECT AVG(tx_duration) FROM t_file USE INDEX(idx_finish_time)"
-            " WHERE source_se = :source AND dest_se = :dest AND file_state IN ('FINISHED', 'ARCHIVING') AND "
-            "   tx_duration > 0 AND tx_duration IS NOT NULL AND "
-            "   finish_time > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) LIMIT 1",
-            soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds()),
+        const std::string qry = sql.get_backend_name() == "mysql" ?
+                "SELECT AVG(tx_duration) "
+                "FROM t_file USE INDEX(idx_finish_time) "
+                "WHERE"
+                "    source_se = :source AND"
+                "    dest_se = :dest AND"
+                "    file_state IN ('FINISHED', 'ARCHIVING') AND"
+                "    tx_duration > 0 AND"
+                "    tx_duration IS NOT NULL AND"
+                "    finish_time > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) "
+                "LIMIT 1"
+            :
+                "SELECT AVG(tx_duration) "
+                "FROM t_file "
+                "WHERE"
+                "    source_se = :source AND"
+                "    dest_se = :dest AND"
+                "    file_state IN ('FINISHED', 'ARCHIVING') AND"
+                "    tx_duration > 0 AND"
+                "    tx_duration IS NOT NULL AND"
+                "    finish_time > (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(SECS => :interval)) "
+                "LIMIT 1";
+
+        sql <<
+            qry,
+            soci::use(pair.source),
+            soci::use(pair.destination),
+            soci::use(interval.total_seconds()),
             soci::into(avgDuration, isNullAvg);
 
         return static_cast<time_t>(avgDuration);
@@ -287,14 +356,32 @@ public:
 
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
         int *retryCount) {
-        soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT file_state, retry, current_failures AS recoverable FROM t_file USE INDEX(idx_finish_time)"
-            " WHERE "
-            "      source_se = :source AND dest_se = :dst AND "
-            "      finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
-            "file_state <> 'NOT_USED' ",
-            soci::use(pair.source), soci::use(pair.destination), soci::use(interval.total_seconds())
-        );
+        const std::string qry = sql.get_backend_name() == "mysql" ?
+                "SELECT"
+                "    file_state,"
+                "    retry,"
+                "    current_failures AS recoverable "
+                "FROM t_file USE INDEX(idx_finish_time) "
+                "WHERE"
+                "    source_se = :source AND dest_se = :dst AND "
+                "    finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
+                "    file_state <> 'NOT_USED'"
+            :
+                "SELECT"
+                "    file_state::TEXT,"
+                "    retry,"
+                "    current_failures AS recoverable "
+                "FROM t_file " 
+                "WHERE"
+                "    source_se = :source AND dest_se = :dst AND "
+                "    finish_time > (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(SECS => :calculateTimeFrame)) AND "
+                "    file_state <> 'NOT_USED'";
+
+        soci::rowset<soci::row> rs = (
+            sql.prepare << qry,
+            soci::use(pair.source),
+            soci::use(pair.destination),
+            soci::use(interval.total_seconds()));
 
         int nFailedLastHour = 0;
         int nFinishedLastHour = 0;
@@ -373,12 +460,18 @@ public:
     }
 
     void storeOptimizerStreams(const Pair &pair, int streams) {
+        const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
         sql.begin();
 
         sql << "UPDATE t_optimizer "
-               "SET nostreams = :nostreams, datetime = UTC_TIMESTAMP() "
-               "WHERE source_se = :source AND dest_se = :dest",
-            soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
+               "SET"
+               "    nostreams = :nostreams,"
+               "    datetime = " << utc_timestamp << " "
+               "WHERE"
+               "    source_se = :source AND"
+               "    dest_se = :dest",
+            soci::use(pair.source, "source"),
+            soci::use(pair.destination, "dest"),
             soci::use(streams, "nostreams");
 
         sql.commit();

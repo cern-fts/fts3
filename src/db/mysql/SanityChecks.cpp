@@ -38,12 +38,14 @@ static void logInconsistency(const std::string &jobId, const std::string &messag
 
 void MySqlAPI::fixEmptyJob(soci::session &sql, const std::string &jobId)
 {
-    sql << "UPDATE t_job SET "
-    " job_finished = UTC_TIMESTAMP(), "
-    " job_state = 'CANCELED', "
-    " reason = 'The job was empty'"
-    " WHERE job_id = :jobId",
-    soci::use(jobId);
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
+    sql <<
+        "UPDATE t_job SET"
+        "    job_finished = " << utc_timestamp << ", "
+        "    job_state = 'CANCELED', "
+        "    reason = 'The job was empty' "
+        "WHERE job_id = :jobId",
+        soci::use(jobId);
     logInconsistency(jobId, "The job was empty");
 }
 
@@ -53,36 +55,56 @@ void MySqlAPI::fixNonTerminalJob(soci::session &sql, const std::string &jobId,
 {
     const std::string failed = "One or more files failed. Please have a look at the details for more information";
     const std::string canceledMessage = "Transfer canceled by the user";
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
 
     if (cancelCount > 0) {
-        sql << "UPDATE t_job SET "
-            "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+        sql <<
+            "UPDATE t_job SET "
+            "    job_state = 'CANCELED',"
+            "    job_finished = " << utc_timestamp << ", "
             "    reason = :canceledMessage "
-            "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ",
-            soci::use(canceledMessage), soci::use(jobId);
+            "WHERE"
+            "    job_id = :jobId AND"
+            "    job_state <> 'CANCELED'",
+            soci::use(canceledMessage),
+            soci::use(jobId);
     }
     else if (filesInJob == finishedCount)  // All files finished
     {
-        sql << "UPDATE t_job SET "
-            "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP() "
-            "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ",
+        sql <<
+            "UPDATE t_job SET "
+            "    job_state = 'FINISHED',"
+            "    job_finished = " << utc_timestamp << " "
+            "WHERE"
+            "    job_id = :jobId AND"
+            "    job_state <> 'FINISHED'",
             soci::use(jobId);
     }
     else if (filesInJob == failedCount)  // All files failed
     {
-        sql << "UPDATE t_job SET "
-            "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(),"
+        sql <<
+            "UPDATE t_job SET "
+            "    job_state = 'FAILED',"
+            "    job_finished = " << utc_timestamp << ","
             "    reason = :failed "
-            "    WHERE job_id = :jobId and  job_state <> 'FAILED' ",
-            soci::use(failed), soci::use(jobId);
+            "WHERE"
+            "    job_id = :jobId AND"
+            "    job_state <> 'FAILED'",
+            soci::use(failed),
+            soci::use(jobId);
     }
     else   // Otherwise it is FINISHEDDIRTY
     {
-        sql << "UPDATE t_job SET "
-            "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), "
+        sql <<
+            "UPDATE t_job SET "
+            "    job_state = 'FINISHEDDIRTY',"
+            "    job_finished = " << utc_timestamp << ","
             "    reason = :failed "
-            "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'",
-            soci::use(failed), soci::use(jobId);
+            "WHERE"
+            "    job_id = :jobId AND"
+            "    job_state <> 'FINISHEDDIRTY'",
+            soci::use(failed),
+            soci::use(jobId);
     }
 
     logInconsistency(jobId, "Non terminal job with all its files terminal");
@@ -94,13 +116,23 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check non terminal jobs with all transfers terminal" << commit;
 
+    const std::string sql_buffer_result = sql.get_backend_name() == "mysql" ? " SQL_BUFFER_RESULT" : "";
+    const std::string enum_to_text_cast = sql.get_backend_name() == "mysql" ? "" : "::TEXT";
+
     sql.begin();
 
     soci::rowset<soci::row> notFinishedJobIds = (
         sql.prepare <<
-            "SELECT SQL_BUFFER_RESULT job_id, job_type, job_state FROM t_job WHERE job_finished IS NULL"
+            "SELECT" << sql_buffer_result <<
+            "    job_id,"
+            "    job_type,"
+            "    job_state" << enum_to_text_cast << " "
+            "FROM t_job "
+            "WHERE job_finished IS NULL"
     );
 
+    const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null" : "";
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
     for (auto i = notFinishedJobIds.begin(); i != notFinishedJobIds.end(); ++i) {
         const std::string jobId = i->get<std::string>("job_id");
         const std::string jobState = i->get<std::string>("job_state");
@@ -114,10 +146,9 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
             "SELECT file_state, COUNT(file_state) AS cnt "
             "FROM t_file "
             "WHERE job_id = :job_id "
-            "GROUP BY file_state "
-            "ORDER BY NULL",
-            soci::use(jobId)
-        );
+            "GROUP BY file_state " <<
+            order_by_null,
+            soci::use(jobId));
 
         for (auto i = fileStates.begin(); i != fileStates.end(); ++i) {
             const std::string fileState = i->get<std::string>("file_state");
@@ -143,28 +174,43 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         // For multiple replica jobs, a job is terminal if there is one FINISHED, or if all are FAILED/CANCEL
         else {
             if (stateCount["FINISHED"] >= 1) {
-                sql << "UPDATE t_file SET "
-                    "    file_state = 'NOT_USED', finish_time = NULL, dest_surl_uuid = NULL, "
+                sql <<
+                    "UPDATE t_file SET "
+                    "    file_state = 'NOT_USED',"
+                    "    finish_time = NULL,"
+                    "    dest_surl_uuid = NULL,"
                     "    reason = '' "
-                    "    WHERE file_state in ('ACTIVE','SUBMITTED') AND job_id = :jobId",
+                    "WHERE"
+                    "    file_state in ('ACTIVE','SUBMITTED') AND"
+                    "    job_id = :jobId",
                     soci::use(jobId);
-                sql << "UPDATE t_job SET "
-                    "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP()"
-                    "    WHERE job_id = :jobId",
+                sql <<
+                    "UPDATE t_job SET "
+                    "    job_state = 'FINISHED',"
+                    "    job_finished = " << utc_timestamp << " "
+                    "WHERE"
+                    "    job_id = :jobId",
                     soci::use(jobId);
                 logInconsistency(jobId, "Multireplica job with a finished replica not marked as terminal");
             }
             else if (stateCount["FAILED"] + stateCount["CANCEL"] >= filesInJob) {
-                sql << "UPDATE t_job SET "
-                    "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Inconsistent state found'"
-                    "    WHERE job_id = :jobId",
+                sql <<
+                    "UPDATE t_job SET "
+                    "    job_state = 'FAILED',"
+                    "    job_finished = " << utc_timestamp << ","
+                    "    reason='Inconsistent state found' "
+                    "WHERE"
+                    "    job_id = :jobId",
                     soci::use(jobId);
                 logInconsistency(jobId, "Multireplica job with no available replicas not marked as terminal");
             }
             else if ((jobState == "ACTIVE" || jobState == "READY") && (stateCount["ACTIVE"] + stateCount["SUBMITTED"]) == 0) {
-                sql << "UPDATE t_job SET "
-                    "     job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), reason='Inconsistent state found' "
-                    "     WHERE job_id = :jobId",
+                sql <<
+                    "UPDATE t_job SET "
+                    "    job_state = 'FAILED',"
+                    "    job_finished = " << utc_timestamp << ","
+                    "    reason = 'Inconsistent state found' "
+                    "WHERE job_id = :jobId",
                     soci::use(jobId);
                 logInconsistency(jobId, "Multireplica job marked as active, but has no queued transfers");
             }
@@ -186,14 +232,20 @@ void MySqlAPI::fixJobTerminalFileNonTerminal(soci::session &sql)
             "AND f.file_state IN ('SUBMITTED','ACTIVE','STAGING','STARTED') "
     );
 
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
     sql.begin();
     for (auto i = rs.begin(); i != rs.end(); ++i) {
         const std::string jobId = i->get<std::string>("job_id");
 
-        sql << "UPDATE t_file SET "
-            "    file_state = 'FAILED', finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL, "
+        sql <<
+            "UPDATE t_file SET"
+            "    file_state = 'FAILED',"
+            "    finish_time = " << utc_timestamp << ","
+            "    dest_surl_uuid = NULL,"
             "    reason = 'Force failure due to file state inconsistency' "
-            "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ",
+            "WHERE"
+            "    file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') AND"
+            "    job_id = :jobId ",
             soci::use(jobId);
 
         logInconsistency(jobId, "The job is in terminal state, but there are transfers still in non terminal state");
@@ -206,20 +258,35 @@ void MySqlAPI::fixDeleteInconsistencies(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check delete jobs" << commit;
 
-    soci::rowset<std::string> rs = (
-        sql.prepare <<
-            "SELECT j.job_id FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
-            "WHERE j.job_finished >= (UTC_TIMESTAMP() - INTERVAL '24' HOUR ) "
-            "   AND f.file_state IN ('STARTED','DELETE')"
-    );
+    const std::string qry = sql.get_backend_name() == "mysql" ?
+            "SELECT j.job_id "
+            "FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
+            "WHERE"
+            "    j.job_finished >= (UTC_TIMESTAMP() - INTERVAL '24' HOUR) AND"
+            "    f.file_state IN ('STARTED','DELETE')"
+        :
+            "SELECT j.job_id "
+            "FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
+            "WHERE"
+            "    j.job_finished >= (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(HOURS => 24)) AND"
+            "    f.file_state IN ('STARTED','DELETE')";
 
+    soci::rowset<std::string> rs = (sql.prepare << qry);
+
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
     sql.begin();
     for (auto i = rs.begin(); i != rs.end(); ++i) {
         std::string jobId = (*i);
-        sql << "UPDATE t_dm SET "
-            "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+        sql <<
+            "UPDATE t_dm "
+            "SET"
+            "    file_state = 'FAILED',"
+            "    job_finished = " << utc_timestamp << ","
+            "    finish_time = " << utc_timestamp << ","
             "    reason = 'Force failure due to file state inconsistency' "
-            "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId",
+            "WHERE"
+            "    file_state in ('DELETE','STARTED') AND"
+            "    job_id = :jobId",
             soci::use(jobId);
 
         logInconsistency(jobId,
@@ -236,12 +303,20 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check from dead hosts" << commit;
     Producer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"));
 
-    soci::rowset<std::string> deadHosts = (
-        sql.prepare <<
-            " SELECT hostname "
-            " FROM t_hosts "
-            " WHERE beat < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 120 MINUTE) AND service_name = 'fts_server' "
-    );
+    const std::string qry = sql.get_backend_name() == "mysql" ?
+            "SELECT hostname "
+            "FROM t_hosts "
+            "WHERE"
+            "    beat < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 120 MINUTE) AND"
+            "    service_name = 'fts_server'"
+        :
+            "SELECT hostname "
+            "FROM t_hosts "
+            "WHERE"
+            "    beat < (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(MINS => 120) AND"
+            "    service_name = 'fts_server'"
+            ;
+    soci::rowset<std::string> deadHosts = (sql.prepare << qry);
 
     for (auto i = deadHosts.begin(); i != deadHosts.end(); ++i) {
         const std::string deadHost = (*i);
@@ -293,6 +368,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
             "WHERE file_state = 'STARTED'"
     );
 
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
     sql.begin();
     for (auto iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging) {
         uint64_t fileId = iStaging->get<unsigned long long>("file_id");
@@ -315,7 +391,13 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling staging operation " << jobId << " / " << fileId << commit;
 
-            sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP(), dest_surl_uuid = NULL where file_id=:file_id", soci::use(fileId);
+            sql <<
+                "UPDATE t_file SET"
+                "    staging_finished=" << utc_timestamp << ","
+                "    dest_surl_uuid = NULL "
+                "WHERE"
+                "    file_id=:file_id",
+                soci::use(fileId);
         }
     }
     sql.commit();
@@ -335,6 +417,7 @@ void MySqlAPI::recoverStalledArchiving(soci::session &sql)
             "WHERE f.file_state = 'ARCHIVING' AND f.archive_start_time IS NOT NULL"
     );
 
+    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
     sql.begin();
     for (auto itArchiving = rsArchivingStarted.begin(); itArchiving != rsArchivingStarted.end(); itArchiving++) {
         const std::string jobId = itArchiving->get<std::string>("job_id");
@@ -357,7 +440,13 @@ void MySqlAPI::recoverStalledArchiving(soci::session &sql)
 
             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Canceling archiving operation " << jobId << " / " << fileId << commit;
             FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "archiveTimeout=" << archiveTimeout << " archiveStartTime=" << startTimeT << " now=" << now << " diff=" << diff << " diffInt=" << diffInt;
-            sql << "UPDATE t_file SET archive_finish_time = UTC_TIMESTAMP(), dest_surl_uuid = NULL WHERE file_id = :file_id", soci::use(fileId);
+            sql <<
+                "UPDATE t_file SET"
+                "    archive_finish_time = " << utc_timestamp << ","
+                "    dest_surl_uuid = NULL "
+                "WHERE"
+                "    file_id = :file_id",
+                soci::use(fileId);
         }
     }
     sql.commit();

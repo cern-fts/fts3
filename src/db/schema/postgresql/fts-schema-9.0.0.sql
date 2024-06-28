@@ -49,7 +49,7 @@ CREATE TABLE t_token_provider (
 );
 
 CREATE TABLE t_token (
-    token_id                   CHAR(16)      NOT NULL,
+    token_id                   VARCHAR(16)   NOT NULL,
     access_token               TEXT          NOT NULL,
     access_token_not_before    TIMESTAMP     NOT NULL,
     access_token_expiry        TIMESTAMP     NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE t_gridmap (
 );
 
 CREATE TABLE t_credential (
-  dlg_id           CHAR(16)     NOT NULL,
+  dlg_id           VARCHAR(16)  NOT NULL,
   dn               VARCHAR(255) NOT NULL,
   proxy            TEXT             NULL,
   voms_attrs       TEXT             NULL,
@@ -86,7 +86,7 @@ CREATE TABLE t_credential (
 CREATE INDEX idx_credential_termination_time ON t_credential(termination_time);
 
 CREATE TABLE t_credential_cache (
-  dlg_id       CHAR(16)     NOT NULL,
+  dlg_id       VARCHAR(16)  NOT NULL,
   dn           VARCHAR(255) NOT NULL,
   cert_request TEXT             NULL,
   priv_key     TEXT             NULL,
@@ -109,14 +109,14 @@ CREATE TYPE job_state AS ENUM(
     'DELETE'
 );
 CREATE TABLE t_job (
-    job_id              CHAR(36)      NOT NULL,
+    job_id              VARCHAR(36)   NOT NULL,
     job_state           job_state     NOT NULL,
     job_type            VARCHAR(1)    NOT NULL,
     cancel_job          VARCHAR(1)        NULL,
     source_se           VARCHAR(255)      NULL,
     dest_se             VARCHAR(255)      NULL,
     user_dn             VARCHAR(1024)     NULL,
-    cred_id             CHAR(16)          NULL,
+    cred_id             VARCHAR(16)       NULL,
     vo_name             VARCHAR(50)       NULL,
     reason              VARCHAR(2048)     NULL,
     submit_time         TIMESTAMP         NULL,
@@ -147,14 +147,14 @@ CREATE INDEX idx_job_submission  ON t_job(submit_time, submit_host);
 CREATE INDEX idx_job_job_type    ON t_job(job_type);
 
 CREATE TABLE t_job_backup (
-  job_id                CHAR(36)      NOT NULL,
+  job_id                VARCHAR(36)   NOT NULL,
   job_state             job_state     NOT NULL,
   job_type              VARCHAR(1)        NULL,
   cancel_job            VARCHAR(1)        NULL,
   source_se             VARCHAR(255)      NULL,
   dest_se               VARCHAR(255)      NULL,
   user_dn               VARCHAR(1024)     NULL,
-  cred_id               CHAR(16)          NULL,
+  cred_id               VARCHAR(16)       NULL,
   vo_name               VARCHAR(50)       NULL,
   reason                VARCHAR(2048)     NULL,
   submit_time           TIMESTAMP         NULL,
@@ -200,9 +200,9 @@ CREATE TABLE t_file (
     log_file_debug       SMALLINT             NULL,
     file_id              BIGSERIAL        NOT NULL,
     file_index           INTEGER          NOT NULL,
-    job_id               CHAR(36)         NOT NULL,
+    job_id               VARCHAR(36)      NOT NULL,
     file_state           file_state       NOT NULL,
-    file_state_initial   CHAR(32)             NULL,
+    file_state_initial   VARCHAR(32)          NULL,
     transfer_host        VARCHAR(255)         NULL,
     source_surl          VARCHAR(1100)    NOT NULL,
     dest_surl            VARCHAR(1100)    NOT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE t_file (
     retry                INTEGER              NULL DEFAULT 0,
     user_filesize        BIGINT               NULL,
     file_metadata        TEXT                 NULL,
-    selection_strategy   CHAR(32)             NULL,
+    selection_strategy   VARCHAR(32)          NULL,
     staging_start        TIMESTAMP            NULL,
     staging_finished     TIMESTAMP            NULL,
     bringonline_token    VARCHAR(255)         NULL,
@@ -234,14 +234,14 @@ CREATE TABLE t_file (
     activity             VARCHAR(255)         NULL DEFAULT 'default',
     transferred          BIGINT           NOT NULL DEFAULT 0,
     priority             INTEGER          NOT NULL DEFAULT 3,
-    dest_surl_uuid       CHAR(36)             NULL,
+    dest_surl_uuid       VARCHAR(36)          NULL,
     archive_start_time   TIMESTAMP            NULL,
     archive_finish_time  TIMESTAMP            NULL,
     staging_metadata     TEXT                 NULL,
     archive_metadata     TEXT                 NULL,
     scitag               INTEGER              NULL,
-    src_token_id         CHAR(16)             NULL,
-    dst_token_id         CHAR(16)             NULL,
+    src_token_id         VARCHAR(16)          NULL,
+    dst_token_id         VARCHAR(16)          NULL,
     PRIMARY KEY (file_id),
     UNIQUE (dest_surl_uuid),
     CONSTRAINT job_id
@@ -270,7 +270,7 @@ CREATE TABLE t_file_backup (
   log_file_debug         SMALLINT             NULL,
   file_id                BIGINT           NOT NULL DEFAULT 0,
   file_index             INTEGER              NULL,
-  job_id                 CHAR(36)         NOT NULL,
+  job_id                 VARCHAR(36)      NOT NULL,
   file_state             file_state       NOT NULL,
   transfer_host          VARCHAR(255)         NULL,
   source_surl            VARCHAR(1100)        NULL,
@@ -291,7 +291,7 @@ CREATE TABLE t_file_backup (
   retry                  INTEGER          NOT NULL DEFAULT 0,
   user_filesize          BIGINT               NULL,
   file_metadata          TEXT                 NULL,
-  selection_strategy     CHAR(32)             NULL,
+  selection_strategy     VARCHAR(32)          NULL,
   staging_start          TIMESTAMP            NULL,
   staging_finished       TIMESTAMP            NULL,
   bringonline_token      VARCHAR(255)         NULL,
@@ -303,15 +303,15 @@ CREATE TABLE t_file_backup (
   activity               VARCHAR(255)     NOT NULL DEFAULT 'default',
   transferred            BIGINT           NOT NULL DEFAULT 0,
   priority               INTEGER          NOT NULL DEFAULT 3,
-  dest_surl_uuid         CHAR(36)             NULL,
+  dest_surl_uuid         VARCHAR(36)          NULL,
   archive_start_time     TIMESTAMP            NULL,
   archive_finish_time    TIMESTAMP            NULL,
   staging_metadata       TEXT                 NULL,
   archive_metadata       TEXT                 NULL,
   scitag                 INTEGER              NULL,
-  src_token_id           CHAR(16)             NULL,
-  dst_token_id           CHAR(16)             NULL,
-  file_state_initial     CHAR(32)             NULL
+  src_token_id           VARCHAR(16)          NULL,
+  dst_token_id           VARCHAR(16)          NULL,
+  file_state_initial     VARCHAR(32)          NULL
 );
 
 CREATE TABLE t_optimizer (
@@ -352,7 +352,7 @@ CREATE INDEX dix_optimizer_evolution_datetime ON
 
 CREATE TABLE t_dm (
   file_id              BIGSERIAL        NOT NULL,
-  job_id               CHAR(36)         NOT NULL,
+  job_id               VARCHAR(36)      NOT NULL,
   file_state           VARCHAR(32)      NOT NULL,
   dmHost               VARCHAR(150)         NULL,
   source_surl          VARCHAR(900)         NULL,
@@ -392,7 +392,7 @@ CREATE INDEX idx_dm_job_id ON t_dm(job_id);
 
 CREATE TABLE t_dm_backup (
   file_id BIGINT                        NOT NULL DEFAULT 0,
-  job_id               CHAR(36)         NOT NULL,
+  job_id               VARCHAR(36)      NOT NULL,
   file_state           VARCHAR(32)      NOT NULL,
   dmHost               VARCHAR(150)         NULL,
   source_surl          VARCHAR(900)         NULL,

@@ -296,7 +296,7 @@ OptimizerMode getOptimizerModeInner(soci::session &sql, const std::string &sourc
             "   SELECT optimizer_mode FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
             "   SELECT optimizer_mode FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
             "   SELECT optimizer_mode FROM t_link_config WHERE source_se = '*' AND dest_se = '*' UNION "
-            "   SELECT 1 FROM dual "
+            "   SELECT 1"
             ") AS o LIMIT 1",
             soci::use(source, "source"), soci::use(dest, "dest"),
             soci::into(mode);
@@ -631,13 +631,22 @@ std::string MySqlAPI::getThirdPartyTURL(const std::string &sourceSe, const std::
         std::string thirdPartyTURL;
         soci::indicator ind = soci::i_ok;
 
+        const std::string qry = sql.get_backend_name() == "mysql" ?
+                "SELECT 3rd_party_turl FROM ("
+                "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND 3rd_party_turl IS NOT NULL UNION "
+                "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND 3rd_party_turl IS NOT NULL UNION "
+                "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND 3rd_party_turl IS NOT NULL"
+                ") AS 3rd_turl LIMIT 1"
+            :
+                "SELECT third_party_turl FROM ("
+                "   SELECT third_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND third_party_turl IS NOT NULL UNION "
+                "   SELECT third_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND third_party_turl IS NOT NULL UNION "
+                "   SELECT third_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND third_party_turl IS NOT NULL"
+                ") AS third_turl LIMIT 1";
         sql <<
-            "SELECT 3rd_party_turl FROM ("
-            "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND 3rd_party_turl IS NOT NULL UNION "
-            "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND 3rd_party_turl IS NOT NULL UNION "
-            "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND 3rd_party_turl IS NOT NULL"
-            ") AS 3rd_turl LIMIT 1",
-            soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
+            qry,
+            soci::use(sourceSe, "source"),
+            soci::use(destSe, "dest"),
             soci::into(thirdPartyTURL, ind);
 
         if (ind == soci::i_null) {
