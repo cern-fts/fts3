@@ -68,11 +68,12 @@ static void shutdownCallback(int signum, void*)
 /// Initialize the database backend
 static void initializeDatabase()
 {
+    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
     std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
     std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
     std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 8);
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, 8);
 }
 
 
