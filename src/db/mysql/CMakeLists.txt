@@ -29,6 +29,7 @@ set(fts_db_mysql_SOURCES
         Credentials.cpp
         Optimizer.cpp
         SanityChecks.cpp
+        sociConversions.cpp
         MultihopSanityCheck.cpp
 )
 add_library(fts_db_mysql SHARED ${fts_db_mysql_SOURCES})

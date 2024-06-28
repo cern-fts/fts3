@@ -40,6 +40,8 @@ inline time_t timeUTC()
     return timegm(utc);
 }
 
+unsigned long long get_file_id_from_values(const soci::values &values);
+
 namespace soci
 {
 
@@ -164,7 +166,7 @@ struct type_conversion<TransferFile>
         file.destSurl   = v.get<std::string>("dest_surl");
         file.jobId      = v.get<std::string>("job_id");
         file.voName     = v.get<std::string>("vo_name");
-        file.fileId     = v.get<unsigned long long>("file_id");
+        file.fileId     = get_file_id_from_values(v);
         file.overwriteFlag   = v.get<std::string>("overwrite_flag","");
         file.dstFileReport   = v.get<std::string>("dst_file_report","");
         file.archiveTimeout  = v.get<int>("archive_timeout",-1);
@@ -259,7 +261,7 @@ struct type_conversion<FileTransferStatus>
     static void from_base(values const& v, indicator, FileTransferStatus& transfer)
     {
         struct tm aux_tm;
-        transfer.fileId            = v.get<unsigned long long>("file_id");
+        transfer.fileId            = get_file_id_from_values(v);
         transfer.sourceSurl        = v.get<std::string>("source_surl");
         transfer.destSurl          = v.get<std::string>("dest_surl", "");
         transfer.fileState = v.get<std::string>("file_state");
@@ -352,7 +354,7 @@ struct type_conversion<FileRetry>
 
     static void from_base(values const& v, indicator, FileRetry& retry)
     {
-        retry.fileId   = v.get<unsigned long long>("file_id");
+        retry.fileId   = get_file_id_from_values(v);
         retry.attempt  = v.get<int>("attempt");
         retry.reason   = v.get<std::string>("reason");
 
