@@ -44,7 +44,7 @@ public:
 
     /// Initialize database connection by providing information from fts3config file
     /// @param nPooledConnections   The number connections to pool
-    virtual void init(const std::string& username, const std::string& password,
+    virtual void init(const std::string &dbtype, const std::string& username, const std::string& password,
         const std::string& connectString, int nPooledConnections);
 
     /// Recover from the DB transfers marked as ACTIVE for the host 'host'

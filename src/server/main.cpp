@@ -46,6 +46,7 @@ using namespace fts3::server;
 /// @param test If set to true, do not use full pool size
 static void intializeDatabase(bool test = false)
 {
+    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
     std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
     std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
     std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
@@ -53,7 +54,7 @@ static void intializeDatabase(bool test = false)
     if(test)
         pooledConn = 2;
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
 /// Called by the signal handler

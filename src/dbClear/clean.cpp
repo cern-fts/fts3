@@ -36,11 +36,12 @@ using namespace db;
 
 static void initializeDbBackend()
 {
+    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
     std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
     std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
     std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 1);
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, 1);
 }
 
 

@@ -151,7 +151,7 @@ static void validateSchemaVersion(soci::connection_pool *connectionPool)
 }
 
 
-void MySqlAPI::init(const std::string& username, const std::string& password,
+void MySqlAPI::init(const std::string& dbtype, const std::string& username, const std::string& password,
         const std::string& connectString, int pooledConn)
 {
     std::ostringstream connParams;
