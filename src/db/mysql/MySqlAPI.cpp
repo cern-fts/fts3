@@ -65,17 +65,6 @@ static unsigned getHashedId(void)
 }
 
 
-// There is a bug in SOCI where stmt.get_affected_rows
-// will return 0 even if there were updated record, so this is an ugly workaround
-// See https://github.com/SOCI/soci/pull/221
-// Apparently this only affects when soci::use is used
-static unsigned int get_affected_rows(soci::session& sql)
-{
-    soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-    return (unsigned int)mysql_affected_rows(static_cast<MYSQL*>(be->conn_));
-}
-
-
 MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname())
 {
     // Pass
@@ -1035,7 +1024,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std
         stmt.define_and_bind();
         stmt.execute(true);
 
-        updated = get_affected_rows(sql);
+        updated = stmt.get_affected_rows();
 
         if (updated > 0)
         {
@@ -1327,7 +1316,7 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
 
         stmt.execute(true);
 
-        if (get_affected_rows(sql) == 0) {
+        if (stmt.get_affected_rows() == 0) {
             sql.rollback();
             return boost::tuple<bool, std::string>(false, storedState);
         }
