@@ -24,6 +24,7 @@
 using namespace fts3::common;
 
 std::string Gfal2Task::infosys;
+bool Gfal2Task::http_log_content;
 
 
 void Gfal2Task::setProxy(const JobContext &ctx)

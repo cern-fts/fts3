@@ -55,11 +55,14 @@ public:
     /**
      * Creates a prototype for all gfal2 contexts that will be created
      *
-     * @infosys : name of the information system
+     * @param infosys: name of the information system
+     * @param debug: activate debug logging
      */
-    static void createPrototype(std::string const & infosys)
+    static void createPrototype(const std::string& infosys,
+                                bool debug = false)
     {
         Gfal2Task::infosys = infosys;
+        Gfal2Task::http_log_content = debug;
     }
 
     /**
@@ -111,6 +114,11 @@ protected:
                     (char *) infosys.c_str(), NULL);
             }
 
+            // Log HTTP content when debug mode enabled
+            if (http_log_content == true) {
+                gfal2_set_opt_boolean(gfal2_ctx, "HTTP PLUGIN", "LOG_CONTENT", true, NULL);
+            }
+
             // Make sure "TURL_PROTOCOLS" is configured. If empty, assign default values
             const char* default_turl_protocols[] = {"https", "gsiftp", "root"};
             gsize protocols_len = 0;
@@ -160,14 +168,17 @@ protected:
 
         /// the gfal2 context itself
         gfal2_context_t gfal2_ctx;
-        ///
+        /// the operation, e.g. 'BRINGONLINE', 'ARCHIVING', etc.
         std::string const operation;
     };
 
     /// the infosys used to create all gfal2 contexts
     static std::string infosys;
 
-    /// the operation, e.g. 'DELETION', 'BRINGONLINE', etc.
+    /// Setting to enable logging of HTTP content (when debug mode enabled)
+    static bool http_log_content;
+
+    /// the operation, e.g. 'BRINGONLINE', 'ARCHIVING', etc.
     Gfal2CtxWrapper gfal2_ctx;
 };
 

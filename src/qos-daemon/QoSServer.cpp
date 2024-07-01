@@ -111,7 +111,9 @@ void QoSServer::start(void)
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
     std::string infosys = ServerConfig::instance().get<std::string>("Infosys");
-    Gfal2Task::createPrototype (infosys);
+    auto logLevel = Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel"));
+    bool debugLogging = (logLevel <= Logger::LogLevel::DEBUG);
+    Gfal2Task::createPrototype(infosys, debugLogging);
 
     FetchStaging fs(threadpool);
     CDMIFetchQosTransition cdmifs(threadpool);
