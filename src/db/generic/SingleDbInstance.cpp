@@ -37,7 +37,7 @@ namespace db
 DBSingleton::DBSingleton(): dbBackend(NULL)
 {
 
-    std::string dbType = ServerConfig::instance().get<std::string>("DbType");
+    std::string dbType = "mysql";
     std::string versionFTS(VERSION);
 
     libraryFileName = "libfts_db_";
