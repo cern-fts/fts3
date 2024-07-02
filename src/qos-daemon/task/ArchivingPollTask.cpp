@@ -51,7 +51,7 @@ void ArchivingPollTask::run(const boost::any&)
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting"
         << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime()
-        << " / storage=" << ctx.getStorageEndpoint() << " ]"
+        << " / storage=" << ctx.getStorageEndpoint() << " / counter_id=" << counter << " ]"
         << commit;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ArchivingPollTask credentials"
@@ -62,7 +62,14 @@ void ArchivingPollTask::run(const boost::any&)
     ctx.refreshProxy();
 
 	std::vector<GError*> errors(urls.size(), NULL);
-	int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
+
+    // Avoid XRootd session clashes (FTS-2028)
+    int status = gfal2_callable_wrapper(
+            std::bind(gfal2_archive_poll_list,
+                      static_cast<gfal2_context_t>(gfal2_ctx),
+                      static_cast<int>(urls.size()),
+                      std::placeholders::_1, errors.data()),
+            urls);
 
 	// Status return code meaning:
 	//  0  - Not all files are in terminal state

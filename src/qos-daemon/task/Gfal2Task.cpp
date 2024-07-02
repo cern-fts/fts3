@@ -18,13 +18,19 @@
  * limitations under the License.
  */
 
+#include <vector>
+#include <iomanip>
+
 #include "Gfal2Task.h"
+#include "common/Uri.h"
+#include "common/Logger.h"
 #include "../context/JobContext.h"
 
 using namespace fts3::common;
 
 std::string Gfal2Task::infosys;
 bool Gfal2Task::http_log_content;
+int Gfal2Task::global_task_counter = 0;
 
 
 void Gfal2Task::setProxy(const JobContext &ctx)
@@ -88,17 +94,39 @@ void Gfal2Task::setSpaceToken(std::string const & spaceToken)
 
 void Gfal2Task::setToken(std::string const & token)
 {
-	// set up the gfal2 context
-	GError *error = NULL;
-	if (!token.empty()) {
-            int status = gfal2_set_opt_string(gfal2_ctx, "BEARER", "TOKEN", (char *) token.c_str(), &error);
-            if (status) {
-		std::stringstream ss;
-		ss << gfal2_ctx.operation << " could not set the token "
-		    		<< error->code << " " << error->message;
-		g_clear_error(&error);
-		throw UserError(ss.str());
-            }
-	}
+	// Set up the Gfal2 context
+    GError *error = NULL;
 
+    if (!token.empty()) {
+        int status = gfal2_set_opt_string(gfal2_ctx, "BEARER", "TOKEN", (char *) token.c_str(), &error);
+        if (status) {
+            std::stringstream ss;
+            ss << gfal2_ctx.operation << " could not set the token "
+               << error->code << " " << error->message;
+            g_clear_error(&error);
+            throw UserError(ss.str());
+        }
+    }
+}
+
+std::string Gfal2Task::prepare_endpoint(const std::string& url) const
+{
+    Uri uri = Uri::parse(url);
+    std::string prepared_endpoint = url;
+
+    if (uri.protocol == "root" || uri.protocol == "roots") {
+        std::ostringstream out;
+        out << uri.protocol << "://"
+            << "fts" << std::setfill('0') << std::setw(5) << counter << "@"
+            << uri.host;
+        if (uri.port) { out << ":" << uri.port; }
+        out << uri.path;
+        if (!uri.queryString.empty()) { out << "?" << uri.queryString; }
+
+        prepared_endpoint = out.str();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Added username to XRootd URL endpoint: "
+                                        << prepared_endpoint << commit;
+    }
+
+    return prepared_endpoint;
 }

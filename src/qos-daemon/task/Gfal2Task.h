@@ -20,9 +20,10 @@
 
 #pragma once
 #ifndef GFAL2TASK_H_
-#define DMTASK_H_
+#define GFAL2TASK_H_
 
 #include <sstream>
+#include <vector>
 #include <boost/any.hpp>
 #include <gfal_api.h>
 
@@ -36,13 +37,18 @@ class Gfal2Task
 public:
 
     /// Default constructor
-    Gfal2Task(std::string const & operation) : gfal2_ctx(operation) {}
+    Gfal2Task(std::string const & operation) :
+        gfal2_ctx(operation), counter(global_task_counter)
+    {
+        global_task_counter = ++global_task_counter % 100000;
+    }
 
     /// Copy constructor (deleted)
     Gfal2Task(Gfal2Task const & copy) = delete;
 
     /// Move constructor
-    Gfal2Task(Gfal2Task && copy) : gfal2_ctx(std::move(copy.gfal2_ctx)) {}
+    Gfal2Task(Gfal2Task && copy) :
+        gfal2_ctx(std::move(copy.gfal2_ctx)), counter(copy.counter) {}
 
     /**
      * The routine is executed by the thread pool
@@ -172,6 +178,25 @@ protected:
         std::string const operation;
     };
 
+    /**
+     * Calls the passed-in Gfal2 function with the provided arguments.
+     * For XRootd protocol, the first item of the URLs list is used to establish
+     * the connection. This one will be modified to include a username in the connection URL,
+     * in order to avoid reusing of existing sessions and credentials mismatch (FTS-2028)
+     *
+     * @param func: the Gfal2 callable function
+     * @param urls: the URLs vector
+     *
+     * @return the status code of the Gfal2 callable function
+     */
+    template<typename F>
+    int gfal2_callable_wrapper(F&& gfal2_callable, std::vector<const char*> urls)
+    {
+        std::string endpoint_url = prepare_endpoint(urls[0]);
+        urls[0] = endpoint_url.c_str();
+        return gfal2_callable(urls.data());
+    }
+
     /// the infosys used to create all gfal2 contexts
     static std::string infosys;
 
@@ -180,6 +205,19 @@ protected:
 
     /// the operation, e.g. 'BRINGONLINE', 'ARCHIVING', etc.
     Gfal2CtxWrapper gfal2_ctx;
+
+    /// Task counter ID (used by the Gfal2 callable wrapper to create the username)
+    int counter;
+
+private:
+    /**
+     * If involving an XRoot endpoint, prepare the endpoint URL with a counter-based username.
+     * This is done to avoid XRootd session caching clashes (FTS-2028).
+     */
+    std::string prepare_endpoint(const std::string& url) const;
+
+    /// Global task counter
+    static int global_task_counter;
 };
 
 #endif // GFAL2TASK_H_

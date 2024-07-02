@@ -49,7 +49,8 @@ void PollTask::run(const boost::any&)
         << " [ files=" << urls.size() << " / token=" << token
         << " / minStagingStartTime=" << ctx.getStartTime()
         << " / maxBringonlineTimeout=" << ctx.getBringonlineTimeout()
-        << " / storage=" << ctx.getStorageEndpoint() << " ]"
+        << " / storage=" << ctx.getStorageEndpoint()
+        << " / counter_id=" << counter << " ]"
         << commit;
 
     // Refresh the proxy, if needed
@@ -58,7 +59,15 @@ void PollTask::run(const boost::any&)
     std::vector<GError*> errors(urls.size(), NULL);
     std::vector<const char*> failedUrls;
 
-    int status = gfal2_bring_online_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
+    // Avoid XRootd session clashes (FTS-2028)
+    int status = gfal2_callable_wrapper(
+            std::bind(gfal2_bring_online_poll_list,
+                      static_cast<gfal2_context_t>(gfal2_ctx),
+                      static_cast<int>(urls.size()),
+                      std::placeholders::_1,
+                      token.c_str(),
+                      errors.data()),
+            urls);
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {

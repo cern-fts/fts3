@@ -49,19 +49,22 @@ void BringOnlineTask::run(const boost::any &)
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing bring-online for: " << urls.size() << " files"
                                     << " copy-pin-lifetime=" << ctx.getPinLifetime()
                                     << " bring-online-timeout=" << ctx.getBringonlineTimeout()
-                                    << " storage=" << ctx.getStorageEndpoint() << commit;
+                                    << " storage=" << ctx.getStorageEndpoint()
+                                    << " counter_id=" << counter << commit;
 
-    int status = gfal2_bring_online_list(
-                     gfal2_ctx,
-                     static_cast<int>(urls.size()),
-                     urls.data(),
-                     ctx.getPinLifetime(),
-                     ctx.getBringonlineTimeout(),
-                     token,
-                     sizeof(token),
-                     1,
-                     errors.data()
-                 );
+    // Avoid XRootd session clashes (FTS-2028)
+    int status = gfal2_callable_wrapper(
+            std::bind(gfal2_bring_online_list,
+                      static_cast<gfal2_context_t>(gfal2_ctx),
+                      static_cast<int>(urls.size()),
+                      std::placeholders::_1,
+                      ctx.getPinLifetime(),
+                      ctx.getBringonlineTimeout(),
+                      token,
+                      sizeof(token),
+                      1,
+                      errors.data()),
+            urls);
 
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
