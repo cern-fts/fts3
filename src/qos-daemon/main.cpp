@@ -76,6 +76,20 @@ static void initializeDatabase()
 }
 
 
+static void gfal2LogCallback(const gchar*, GLogLevelFlags, const gchar* message, gpointer)
+{
+    if (message) {
+        const char* prefix = "Gfal2: ";
+
+        if (strncmp(message, "Davix: ", 7) == 0) {
+            prefix = "";
+        }
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << message << fts3::common::commit;
+    }
+}
+
+
 /// Run the Bring Online server
 static void doServer()
 {
@@ -89,7 +103,15 @@ static void doServer()
             throw SystemError(msg.str());
         }
     }
-    theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+
+    auto logLevel = Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel"));
+    theLogger().setLogLevel(logLevel);
+
+    if (logLevel <= Logger::LogLevel::DEBUG) {
+        setenv("XRD_LOGLEVEL", "Debug", 1);
+        gfal2_log_set_level(G_LOG_LEVEL_DEBUG);
+        gfal2_log_set_handler((GLogFunc) gfal2LogCallback, NULL);
+    }
 
     initializeDatabase();
     QoSServer::instance().start();
