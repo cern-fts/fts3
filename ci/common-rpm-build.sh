@@ -40,12 +40,6 @@ SRPMS=${RPMBUILD}/SRPMS
 
 cd packaging/
 make srpm RELEASE=${RELEASE} RPMBUILD=${RPMBUILD} SRPMS=${SRPMS}
-
-if [[ -f /usr/bin/dnf ]]; then
-  dnf install -y epel-release || true
-  dnf builddep -y ${SRPMS}/*
-else
-  yum-builddep -y ${SRPMS}/*
-fi
+dnf builddep -y ${SRPMS}/*
 
 rpmbuild --rebuild --define="_topdir ${RPMBUILD}" ${SRPMS}/*
