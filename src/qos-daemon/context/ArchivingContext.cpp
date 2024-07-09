@@ -25,12 +25,32 @@
 
 void ArchivingContext::add(const ArchivingOperation &archiveOp)
 {
-    add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
-    expiryMap[archiveOp.fileId] = archiveOp.startTime + archiveOp.timeout;
-
     if (storageEndpoint.empty()) {
         storageEndpoint = Uri::parse(archiveOp.surl).getSeName();
     }
+
+    std::string surl = archiveOp.surl;
+
+    if (storageEndpoint == "root://eosctapublic.cern.ch") {
+        auto eosctapublicForceArchivePollHttp = fts3::config::ServerConfig::instance().get<bool>("EOSCTAPublicForceArchivePollHTTP");
+
+        if (eosctapublicForceArchivePollHttp) {
+            auto uri = Uri::parse(archiveOp.surl);
+            surl = "https://" + uri.host + uri.path;
+
+            if (!uri.queryString.empty()) {
+                surl = surl + "?" + uri.queryString;
+            }
+        }
+    }
+
+    add(surl, archiveOp.jobId, archiveOp.fileId);
+    //add(archiveOp.surl, archiveOp.jobId, archiveOp.fileId);
+    expiryMap[archiveOp.fileId] = archiveOp.startTime + archiveOp.timeout;
+
+//    if (storageEndpoint.empty()) {
+//        storageEndpoint = Uri::parse(archiveOp.surl).getSeName();
+//    }
 }
 
 

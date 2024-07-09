@@ -518,6 +518,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["ExperimentalTapeRESTAPI"]) )->default_value("false"),
         "Enable or disable experimental features of the TAPE REST API"
     )
+    (
+        "EOSCTAPublicForceArchivePollHTTP",
+        po::value<std::string>( &(_vars["EOSCTAPublicForceArchivePollHTTP"]) )->default_value("false"),
+        "When enabled, force EOSCTAPublic archive poll operations to be done only through HTTP"
+    )
     ;
 
     return config;
