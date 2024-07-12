@@ -160,6 +160,7 @@ void MySqlAPI::init(const std::string& dbtype, const std::string& username, cons
 
     try
     {
+        m_dbtype = dbtype;
         connectionPool = new soci::connection_pool(pooledConn);
 
         // From connectString, get host and db
@@ -224,6 +225,12 @@ void MySqlAPI::init(const std::string& dbtype, const std::string& username, cons
         }
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
+}
+
+
+std::string MySqlAPI::getDbtype() const
+{
+    return m_dbtype;
 }
 
 

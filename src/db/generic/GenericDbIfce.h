@@ -89,6 +89,10 @@ public:
     virtual void init(const std::string& dbtype, const std::string& username, const std::string& password,
             const std::string& connectString, int nPooledConnections) = 0;
 
+    /// Return the type of the database
+    /// @return The database type
+    virtual std::string getDbtype() const = 0;
+
     /// Recover from the DB transfers marked as ACTIVE for the host 'host'
     virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host) = 0;
 

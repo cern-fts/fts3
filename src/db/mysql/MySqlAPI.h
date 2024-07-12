@@ -47,6 +47,10 @@ public:
     virtual void init(const std::string &dbtype, const std::string& username, const std::string& password,
         const std::string& connectString, int nPooledConnections);
 
+    /// Return the type of the database
+    /// @return The database type
+    virtual std::string getDbtype() const;
+
     /// Recover from the DB transfers marked as ACTIVE for the host 'host'
     virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host);
 
@@ -362,6 +366,7 @@ private:
     std::string           hostname;
     std::string username_;
     std::map<std::string, boost::posix_time::ptime> queuedStagingFiles;
+    std::string m_dbtype;
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
                                  const std::string& serviceName);
