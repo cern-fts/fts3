@@ -40,6 +40,8 @@ inline time_t timeUTC()
     return timegm(utc);
 }
 
+unsigned long long get_file_id_from_row(const soci::row &row);
+
 unsigned long long get_file_id_from_values(const soci::values &values);
 
 namespace soci

@@ -17,6 +17,26 @@
 #include "MySqlAPI.h"
 #include "sociConversions.h"
 
+unsigned long long get_file_id_from_row(const soci::row &row)
+{
+    const auto file_id_props = row.get_properties("file_id");
+
+    if (soci::dt_unsigned_long_long == file_id_props.get_data_type()) {
+        return row.get<unsigned long long>("file_id");
+    } else if (soci::dt_long_long == file_id_props.get_data_type()) {
+        const long long tmp_file_id = row.get<long long>("file_id");
+        if (0 > tmp_file_id) {
+            std::ostringstream msg;
+            msg << "Invalid t_file.file_id value: Value is negative: file_id=" << tmp_file_id;
+            throw std::runtime_error(msg.str());
+        }
+        return (unsigned long long)tmp_file_id;
+    } else {
+        throw std::runtime_error(
+            "Invalid t_file.file_id value: Value has an unknown type"
+        );
+    }
+}
 
 unsigned long long get_file_id_from_values(const soci::values &values)
 {

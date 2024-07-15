@@ -529,12 +529,12 @@ int MySqlAPI::getStreamsOptimization(const std::string &sourceSe, const std::str
 
         sql <<
         "SELECT nostreams FROM ("
-        "   SELECT nostreams FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND nostreams IS NOT NULL UNION "
-        "   SELECT nostreams FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND nostreams IS NOT NULL UNION "
-        "   SELECT nostreams FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND nostreams IS NOT NULL UNION "
-        "   SELECT nostreams FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND nostreams IS NOT NULL UNION "
-        "   SELECT nostreams FROM t_optimizer WHERE source_se = :source AND dest_se = :dest"
-        ") AS cfg LIMIT 1",
+        "   SELECT 1 AS preference, nostreams FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND nostreams IS NOT NULL UNION "
+        "   SELECT 2 AS preference, nostreams FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND nostreams IS NOT NULL UNION "
+        "   SELECT 3 AS preference, nostreams FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND nostreams IS NOT NULL UNION "
+        "   SELECT 4 AS preference, nostreams FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND nostreams IS NOT NULL UNION "
+        "   SELECT 5 AS preference, nostreams FROM t_optimizer WHERE source_se = :source AND dest_se = :dest"
+        ") AS cfg ORDER BY preference LIMIT 1",
         soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
         soci::into(streams, ind);
 
@@ -568,11 +568,11 @@ bool MySqlAPI::getDisableDelegationFlag(const std::string &sourceSe, const std::
 
         sql <<
             "SELECT no_delegation FROM ("
-            "   SELECT no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
-            "   SELECT no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND no_delegation IS NOT NULL UNION "
-            "   SELECT no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
-            "   SELECT no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND no_delegation IS NOT NULL"
-            ") AS dlg LIMIT 1",
+            "   SELECT 1 AS preference, no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
+            "   SELECT 2 AS preference, no_delegation FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND no_delegation IS NOT NULL UNION "
+            "   SELECT 3 AS preference, no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND no_delegation IS NOT NULL UNION "
+            "   SELECT 4 AS preference, no_delegation FROM t_link_config WHERE source_se = '*' AND dest_se = '*' AND no_delegation IS NOT NULL"
+            ") AS dlg ORDER BY preference LIMIT 1",
             soci::use(sourceSe, "source"), soci::use(destSe, "dest"),
             soci::into(disable_delegation, ind);
 
@@ -606,16 +606,16 @@ std::string MySqlAPI::getThirdPartyTURL(const std::string &sourceSe, const std::
 
         const std::string qry = sql.get_backend_name() == "mysql" ?
                 "SELECT 3rd_party_turl FROM ("
-                "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND 3rd_party_turl IS NOT NULL UNION "
-                "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND 3rd_party_turl IS NOT NULL UNION "
-                "   SELECT 3rd_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND 3rd_party_turl IS NOT NULL"
-                ") AS 3rd_turl LIMIT 1"
+                "   SELECT 1 AS preference, 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND 3rd_party_turl IS NOT NULL UNION "
+                "   SELECT 2 AS preference, 3rd_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND 3rd_party_turl IS NOT NULL UNION "
+                "   SELECT 3 AS preference, 3rd_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND 3rd_party_turl IS NOT NULL"
+                ") AS 3rd_turl ORDER BY preference LIMIT 1"
             :
                 "SELECT third_party_turl FROM ("
-                "   SELECT third_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND third_party_turl IS NOT NULL UNION "
-                "   SELECT third_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND third_party_turl IS NOT NULL UNION "
-                "   SELECT third_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND third_party_turl IS NOT NULL"
-                ") AS third_turl LIMIT 1";
+                "   SELECT 1 AS preference, third_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = :dest AND third_party_turl IS NOT NULL UNION "
+                "   SELECT 2 AS preference, third_party_turl FROM t_link_config WHERE source_se = :source AND dest_se = '*' AND third_party_turl IS NOT NULL UNION "
+                "   SELECT 3 AS preference, third_party_turl FROM t_link_config WHERE source_se = '*' AND dest_se = :dest AND third_party_turl IS NOT NULL"
+                ") AS third_turl ORDER BY preference LIMIT 1";
         sql <<
             qry,
             soci::use(sourceSe, "source"),
