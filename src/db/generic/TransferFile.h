@@ -49,16 +49,17 @@ public:
         int timeout;
         int buffersize;
         bool strictCopy;
+        bool disableCleanup;
         boost::tribool ipv6;
         boost::tribool udt;
         // If true, gfal2/davix must generate the S3 signature with the bucket on the path
         bool s3Alternate;
 
         ProtocolParameters(): nostreams(1), timeout(0), buffersize(0),
-          strictCopy(false), s3Alternate(false) {}
+          strictCopy(false), disableCleanup(false), s3Alternate(false) {}
 
         ProtocolParameters(const std::string &serialized): nostreams(1), timeout(0), buffersize(0),
-            strictCopy(false), ipv6(boost::indeterminate), udt(boost::indeterminate), s3Alternate(false)
+            strictCopy(false), disableCleanup(false), ipv6(boost::indeterminate), udt(boost::indeterminate), s3Alternate(false)
         {
             std::vector<std::string> params;
             boost::split(params, serialized, boost::is_any_of(","));
@@ -75,6 +76,9 @@ public:
                 }
                 else if (*i == "strict") {
                     strictCopy = true;
+                }
+                else if (*i == "disable-cleanup") {
+                    disableCleanup = true;
                 }
                 else if (*i == "ipv4") {
                     ipv6 = false;

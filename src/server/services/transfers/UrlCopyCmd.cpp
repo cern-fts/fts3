@@ -211,7 +211,6 @@ bool UrlCopyCmd::isIPv6Explicit(void)
     return IPv6Explicit;
 }
 
-
 void UrlCopyCmd::setFTSName(const std::string &hostname)
 {
     setOption("alias", hostname);
@@ -347,6 +346,7 @@ void UrlCopyCmd::setFromProtocol(const TransferFile::ProtocolParameters &protoco
     }
 
     setFlag("strict-copy", protocol.strictCopy);
+    setFlag("disable-cleanup", protocol.disableCleanup);
 }
 
 
