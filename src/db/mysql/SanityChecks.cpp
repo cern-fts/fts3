@@ -332,7 +332,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
                 soci::use(deadHost)
         );
         for (auto active = transfersActiveInHost.begin(); active != transfersActiveInHost.end(); ++active) {
-            uint64_t fileId = active->get<unsigned long long>("file_id");
+            uint64_t fileId = get_file_id_from_row(*active);
             const std::string jobId = active->get<std::string>("job_id");
             const std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost +
                                              " is offline and the transfer is still assigned to it";
@@ -371,7 +371,7 @@ void MySqlAPI::recoverStalledStaging(soci::session &sql)
     const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
     sql.begin();
     for (auto iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging) {
-        uint64_t fileId = iStaging->get<unsigned long long>("file_id");
+        uint64_t fileId = get_file_id_from_row(*iStaging);
         const std::string jobId = iStaging->get<std::string>("job_id");
         int bringOnline = iStaging->get<int>("bring_online", 0);
 
@@ -421,7 +421,7 @@ void MySqlAPI::recoverStalledArchiving(soci::session &sql)
     sql.begin();
     for (auto itArchiving = rsArchivingStarted.begin(); itArchiving != rsArchivingStarted.end(); itArchiving++) {
         const std::string jobId = itArchiving->get<std::string>("job_id");
-        const uint64_t fileId = itArchiving->get<unsigned long long>("file_id");
+        const uint64_t fileId = get_file_id_from_row(*itArchiving);
         int archiveTimeout = itArchiving->get<int>("archive_timeout", 0);
 
         time_t startTimeT = 0;
