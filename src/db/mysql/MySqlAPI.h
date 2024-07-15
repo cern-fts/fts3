@@ -432,6 +432,10 @@ public:
     /// @param  streams The number of streams to be registerd for the pair
     virtual void storeOptimizerStreams(const Pair &pair, int streams);
 
+    /// Get the list of scheduled file-transfers
+    /// @param maxFiles The maximum number of file-transfers this method should return
+    virtual std::list<TransferFile> postgresGetScheduledFileTransfers(const int maxFiles);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

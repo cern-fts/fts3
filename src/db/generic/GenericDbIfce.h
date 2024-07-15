@@ -482,6 +482,10 @@ public:
     /// @param  streams The number of streams to be registerd for the pair
     virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
 
+    /// Get the list of scheduled file-transfers
+    /// @param maxFiles The maximum number of file-transfers this method should return
+    virtual std::list<TransferFile> postgresGetScheduledFileTransfers(const int maxFiles) = 0;
+
     };
 
 #endif // GENERICDBIFCE_H_

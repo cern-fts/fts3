@@ -53,6 +53,8 @@ protected:
 
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
     void executeUrlcopy();
+
+    void postgresExecuteUrlcopy();
 };
 
 } // end namespace server

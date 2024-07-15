@@ -1302,6 +1302,150 @@ MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, int pr
 }
 
 
+static std::int64_t postgresIncQueueCounter(
+    soci::session &sql,
+    const std::int64_t delta,
+    const std::string &vo_name,
+    const std::string &source_se,
+    const std::string &dest_se,
+    const std::string &activity,
+    const std::string &file_state
+) {
+    try {
+        const soci::rowset<soci::row> rs = (sql.prepare <<
+            "UPDATE\n"
+            "    t_queue\n"
+            "SET\n"
+            "    nb_files = nb_files + :delta\n"
+            "WHERE\n"
+            "    vo_name = :vo_name\n"
+            "AND\n"
+            "    source_se = :source_se\n"
+            "AND\n"
+            "    dest_se = :dest_se\n"
+            "AND\n"
+            "    activity = :activity\n"
+            "AND\n"
+            "    file_state = :file_state\n"
+            "RETURNING\n"
+            "    queue_id",
+            soci::use(delta, "delta"),
+            soci::use(vo_name, "vo_name"),
+            soci::use(source_se, "source_se"),
+            soci::use(dest_se, "dest_se"),
+            soci::use(activity, "activity"),
+            soci::use(file_state, "file_state")
+        );
+        auto row_itor = rs.begin();
+        if (row_itor != rs.end()) {
+            const auto queue_id = row_itor->get<long long>(0);
+            return queue_id;
+        }
+    } catch(std::exception &ex) {
+        std::ostringstream msg;
+        msg << "postgresIncQueueCounter: Failed to execute UPDATE: " << ex.what();
+        throw std::runtime_error(msg.str());
+    } catch(...) {
+        throw std::runtime_error(
+            "postgresIncQueueCounter: Failed to execute UPDATE: Caught an unknown exception"
+        );
+    }
+
+    try {
+        const soci::rowset<soci::row> rs = (sql.prepare <<
+            "INSERT INTO t_queue (\n"
+            "    vo_name,\n"
+            "    source_se,\n"
+            "    dest_se,\n"
+            "    activity,\n"
+            "    file_state,\n"
+            "    nb_files\n"
+            ") VALUES (\n"
+            "    :vo_name,\n"
+            "    :source_se,\n"
+            "    :dest_se,\n"
+            "    :activity,\n"
+            "    :file_state,\n"
+            "    :delta\n"
+            ")\n"
+            "ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO\n"
+            "    UPDATE SET nb_files =\n"
+            "        t_queue.nb_files + EXCLUDED.nb_files\n"
+            "RETURNING\n"
+            "    queue_id",
+            soci::use(vo_name, "vo_name"),
+            soci::use(source_se, "source_se"),
+            soci::use(dest_se, "dest_se"),
+            soci::use(activity, "activity"),
+            soci::use(file_state, "file_state"),
+            soci::use(delta, "delta")
+        );
+        auto row_itor = rs.begin();
+        if (row_itor == rs.end()) {
+            std::ostringstream msg;
+            msg <<
+                "Failed to increment t_queue counter: "
+                "vo_name=" << vo_name <<
+                "source_se=" << source_se <<
+                "dest_se=" << dest_se <<
+                "file_state=" << file_state <<
+                "delta=" << delta;
+            throw std::runtime_error(msg.str());
+        }
+        const auto queue_id = row_itor->get<long long>(0);
+        return queue_id;
+    } catch(std::exception &ex) {
+        std::ostringstream msg;
+        msg << "postgresIncQueueCounter: Failed to execute INSERT: " << ex.what();
+        throw std::runtime_error(msg.str());
+    } catch(...) {
+        throw std::runtime_error(
+            "postgresIncQueueCounter: Failed to execute INSERT: Caught an unknown exception"
+        );
+    }
+}
+
+
+static bool postgresUpdateFileQueueId(soci::session &sql, const std::uint64_t fileId,
+                                        const std::uint64_t &prevQueueId,
+                                        const std::uint64_t &nextQueueId) {
+    soci::statement stmt = (sql.prepare <<
+        "UPDATE\n"
+        "    t_file\n"
+        "SET\n"
+        "    queue_id = :next_queue_id\n"
+        "WHERE\n"
+        "    file_id = :file_id\n"
+        "AND\n"
+        "    queue_id = :prev_queue_id",
+        soci::use(nextQueueId, "next_queue_id"),
+        soci::use(fileId, "file_id"),
+        soci::use(prevQueueId, "prev_queue_id")
+    );
+    stmt.execute();
+    const bool updated = stmt.get_affected_rows() > 0;
+    return updated;
+}
+
+
+static bool postgresDecQueueCounter(soci::session &sql, const std::uint64_t queueId,
+                                    const std::int64_t delta) {
+    soci::statement stmt = (sql.prepare <<
+        "UPDATE\n"
+        "    t_queue\n"
+        "SET\n"
+        "    nb_files = nb_files - :delta\n"
+        "WHERE\n"
+        "    queue_id = :queue_id",
+        soci::use(delta, "delta"),
+        soci::use(queueId, "queue_id")
+    );
+    stmt.execute();
+    const bool updated = stmt.get_affected_rows() > 0;
+    return updated;
+}
+
+
 boost::tuple<bool, std::string>
 MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                                            std::string jobId, uint64_t fileId, int processId,
@@ -1318,6 +1462,8 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
         sql.begin();
         
         std::string storedState, jobState, archiveTimeoutStr;
+        std::string voName, sourceSe, destSe, activity;
+        std::optional<std::uint64_t> prevQueueId;
         soci::indicator archiveTimeoutInd = soci::i_ok;
         int archiveTimeout = -1;
         Job::JobType jobType;
@@ -1337,10 +1483,36 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
             soci::into(archiveTimeoutStr, archiveTimeoutInd);
 
         // query for the file state in DB
-        sql << "SELECT file_state, dest_surl_uuid FROM t_file WHERE file_id=:fileId",
-            soci::use(fileId),
-            soci::into(storedState),
-            soci::into(destSurlUuid, destSurlUuidInd);
+        if (sql.get_backend_name() == "postgresql") {
+            uint64_t tmpPrevQueueId = 0;
+            sql <<
+                "SELECT\n"
+                "    file_state,\n"
+                "    dest_surl_uuid,\n"
+                "    queue_id,\n"
+                "    vo_name,\n"
+                "    source_se,\n"
+                "    dest_se,\n"
+                "    activity\n"
+                "FROM\n"
+                "     t_file\n"
+                "WHERE\n"
+                "    file_id=:fileId",
+                soci::use(fileId),
+                soci::into(storedState),
+                soci::into(destSurlUuid, destSurlUuidInd),
+                soci::into(tmpPrevQueueId),
+                soci::into(voName),
+                soci::into(sourceSe),
+                soci::into(destSe),
+                soci::into(activity);
+            prevQueueId = tmpPrevQueueId;
+        } else {
+            sql << "SELECT file_state, dest_surl_uuid FROM t_file WHERE file_id=:fileId",
+                soci::use(fileId),
+                soci::into(storedState),
+                soci::into(destSurlUuid, destSurlUuidInd);
+        }
 
         if (archiveTimeoutInd == soci::i_ok) {
             archiveTimeout = std::atoi(archiveTimeoutStr.c_str());
@@ -1449,6 +1621,36 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
         if (stmt.get_affected_rows() == 0) {
             sql.rollback();
             return boost::tuple<bool, std::string>(false, storedState);
+        }
+
+        if (sql.get_backend_name() == "postgresql" && newFileState != storedState) {
+            if (!prevQueueId) {
+                std::ostringstream msg;
+                msg << "Failed to update file-transfer queues: The previous queue ID is missing: "
+                       "jobId=" << jobId << " fileId=" << fileId;
+                throw std::runtime_error(msg.str());
+            }
+            const std::int64_t nextQueueId = postgresIncQueueCounter(
+                sql,
+                1,
+                voName,
+                sourceSe,
+                destSe,
+                activity,
+                newFileState);
+
+            if (!postgresUpdateFileQueueId(sql, fileId, *prevQueueId, nextQueueId)) {
+                std::ostringstream msg;
+                msg << "Failed to update queue ID of file-transfer: jobId=" << jobId <<
+                       " fileId=" << fileId;
+                throw std::runtime_error(msg.str());
+            }
+            if (!postgresDecQueueCounter(sql, *prevQueueId, 1)) {
+                std::ostringstream msg;
+                msg << "Failed to decrement queue counter: jobId=" << jobId <<
+                       " fileId=" << fileId << " prevQueueId=" << *prevQueueId;
+                throw std::runtime_error(msg.str());
+            }
         }
 
         sql.commit();
@@ -5238,6 +5440,73 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, uint64_t fileId, const st
     }
 
     return willBeRetried;
+}
+
+
+std::list<TransferFile> MySqlAPI::postgresGetScheduledFileTransfers(const int maxFiles)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        const std::string enum_to_text_cast = sql.get_backend_name() == "mysql" ? "" : "::TEXT";
+        const soci::rowset<TransferFile> rs = (sql.prepare <<
+            "SELECT"
+            "    f.file_state" << enum_to_text_cast << ","
+            "    f.source_surl,"
+            "    f.dest_surl,"
+            "    f.job_id,"
+            "    j.vo_name,"
+            "    f.file_id,"
+            "    j.overwrite_flag,"
+            "    j.archive_timeout,"
+            "    j.dst_file_report,"
+            "    j.user_dn,"
+            "    j.cred_id,"
+            "    f.src_token_id,"
+            "    f.dst_token_id,"
+            "    f.checksum,"
+            "    j.checksum_method,"
+            "    j.source_space_token,"
+            "    j.space_token,"
+            "    j.copy_pin_lifetime,"
+            "    j.bring_online,"
+            "    f.file_metadata,"
+            "    f.archive_metadata,"
+            "    j.job_metadata,"
+            "    f.user_filesize,"
+            "    f.file_index,"
+            "    f.bringonline_token,"
+            "    f.scitag,"
+            "    f.activity,"
+            "    f.source_se,"
+            "    f.dest_se,"
+            "    f.selection_strategy,"
+            "    j.internal_job_params,"
+            "    j.job_type "
+            "FROM"
+            "    t_file f "
+            "INNER JOIN"
+            "    t_job j "
+            "ON"
+            "    f.job_id = j.job_id "
+            "WHERE"
+            "    f.file_state = 'SCHEDULED' "
+            "ORDER BY "
+            "    f.file_id "
+            "LIMIT :maxFiles",
+            soci::use(maxFiles, "maxFiles")
+        );
+        return {rs.begin(), rs.end()};
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
 }
 
 
