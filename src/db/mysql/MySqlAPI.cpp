@@ -1151,6 +1151,8 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
 
     gmtime_r(&now, &tTime);
 
+    const std::string sql_no_cache = sql.get_backend_name() == "mysql" ? " SQL_NO_CACHE" : "";
+
     try
     {
         // Iterate through queues, getting jobs IF the VO has not run out of credits
@@ -1196,7 +1198,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                 soci::rowset<TransferFile> rs =
                     (
                         sql.prepare <<
-                        " SELECT SQL_NO_CACHE "
+                        " SELECT" << sql_no_cache <<
                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                         "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
                         "       j.user_dn, j.cred_id, f.src_token_id, f.dst_token_id, "
