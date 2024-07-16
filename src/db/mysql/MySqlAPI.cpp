@@ -1152,6 +1152,7 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
     gmtime_r(&now, &tTime);
 
     const std::string sql_no_cache = sql.get_backend_name() == "mysql" ? " SQL_NO_CACHE" : "";
+    const std::string enum_to_text_cast = sql.get_backend_name() == "mysql" ? "" : "::TEXT";
 
     try
     {
@@ -1199,15 +1200,38 @@ void MySqlAPI::getReadySessionReuseTransfers(const std::vector<QueueId>& queues,
                     (
                         sql.prepare <<
                         " SELECT" << sql_no_cache <<
-                        "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                        "       f.file_id, j.overwrite_flag, j.archive_timeout, j.dst_file_report, "
-                        "       j.user_dn, j.cred_id, f.src_token_id, f.dst_token_id, "
-                        "       f.checksum, j.checksum_method, j.source_space_token, "
-                        "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                        "       f.file_metadata, f.archive_metadata, j.job_metadata, "
-                        "       f.user_filesize, f.file_index, f.bringonline_token, f.scitag, f.activity, "
-                        "       f.source_se, f.dest_se, f.selection_strategy, "
-                        "       j.internal_job_params, j.job_type "
+                        "       f.file_state" << enum_to_text_cast << ","
+                        "       f.source_surl,"
+                        "       f.dest_surl,"
+                        "       f.job_id,"
+                        "       j.vo_name,"
+                        "       f.file_id,"
+                        "       j.overwrite_flag,"
+                        "       j.archive_timeout,"
+                        "       j.dst_file_report,"
+                        "       j.user_dn,"
+                        "       j.cred_id,"
+                        "       f.src_token_id,"
+                        "       f.dst_token_id,"
+                        "       f.checksum,"
+                        "       j.checksum_method,"
+                        "       j.source_space_token,"
+                        "       j.space_token,"
+                        "       j.copy_pin_lifetime,"
+                        "       j.bring_online,"
+                        "       f.file_metadata,"
+                        "       f.archive_metadata,"
+                        "       j.job_metadata,"
+                        "       f.user_filesize,"
+                        "       f.file_index,"
+                        "       f.bringonline_token,"
+                        "       f.scitag,"
+                        "       f.activity,"
+                        "       f.source_se,"
+                        "       f.dest_se,"
+                        "       f.selection_strategy,"
+                        "       j.internal_job_params,"
+                        "       j.job_type "
                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
                         " WHERE j.job_id = :job_id AND "
                         "       f.file_state = 'SUBMITTED' AND "
