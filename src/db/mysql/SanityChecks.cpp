@@ -313,7 +313,7 @@ void MySqlAPI::recoverFromDeadHosts(soci::session &sql)
             "SELECT hostname "
             "FROM t_hosts "
             "WHERE"
-            "    beat < (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(MINS => 120) AND"
+            "    beat < (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(MINS => 120)) AND"
             "    service_name = 'fts_server'"
             ;
     soci::rowset<std::string> deadHosts = (sql.prepare << qry);
