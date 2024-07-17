@@ -143,7 +143,9 @@ void MySqlAPI::fixJobNonTerminallAllFilesTerminal(soci::session &sql)
         std::map<std::string, long long> stateCount;
 
         soci::rowset<soci::row> fileStates = (sql.prepare <<
-            "SELECT file_state, COUNT(file_state) AS cnt "
+            "SELECT"
+            "   file_state" << enum_to_text_cast << ", "
+            "   COUNT(file_state) AS cnt "
             "FROM t_file "
             "WHERE job_id = :job_id "
             "GROUP BY file_state " <<
