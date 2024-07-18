@@ -171,17 +171,17 @@ public:
         // Storage limits
         sql <<
             "SELECT outbound_max_throughput, outbound_max_active FROM ("
-            "   SELECT outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = :source UNION "
-            "   SELECT outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = '*' "
-            ") AS se LIMIT 1",
+            "   SELECT 1 AS preference, outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = :source UNION "
+            "   SELECT 2 AS preference, outbound_max_throughput, outbound_max_active FROM t_se WHERE storage = '*' "
+            ") AS se ORDER BY preference LIMIT 1",
             soci::use(pair.source),
             soci::into(limits->throughputSource, nullIndicator), soci::into(limits->source, nullIndicator);
 
         sql <<
             "SELECT inbound_max_throughput, inbound_max_active FROM ("
-            "   SELECT inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = :dest UNION "
-            "   SELECT inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = '*' "
-            ") AS se LIMIT 1",
+            "   SELECT 1 AS preference, inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = :dest UNION "
+            "   SELECT 2 AS preference, inbound_max_throughput, inbound_max_active FROM t_se WHERE storage = '*' "
+            ") AS se ORDER BY preference LIMIT 1",
         soci::use(pair.destination),
         soci::into(limits->throughputDestination, nullIndicator), soci::into(limits->destination, nullIndicator);
 
@@ -189,11 +189,11 @@ public:
         soci::indicator isNullMin, isNullMax;
         sql <<
             "SELECT configured, min_active, max_active FROM ("
-            "   SELECT 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
-            "   SELECT 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
-            "   SELECT 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
-            "   SELECT 0 AS configured, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = '*' "
-            ") AS lc LIMIT 1",
+            "   SELECT 1 AS preference, 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
+            "   SELECT 2 AS preference, 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
+            "   SELECT 3 AS preference, 1 AS configured, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
+            "   SELECT 4 AS preference, 0 AS configured, min_active, max_active FROM t_link_config WHERE source_se = '*' AND dest_se = '*' "
+            ") AS lc ORDER BY preference LIMIT 1",
             soci::use(pair.source, "source"), soci::use(pair.destination, "dest"),
             soci::into(range->specific), soci::into(range->min, isNullMin), soci::into(range->max, isNullMax);
 
