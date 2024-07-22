@@ -2,7 +2,6 @@ DROP TABLE IF EXISTS t_share_config;
 DROP TABLE IF EXISTS t_file_retry_errors;
 DROP TABLE IF EXISTS t_dm;
 DROP TABLE IF EXISTS t_dm_backup;
-DROP TABLE IF EXISTS t_link;
 DROP TABLE IF EXISTS t_file;
 DROP TABLE IF EXISTS t_file_backup;
 DROP TYPE  IF EXISTS file_state;
@@ -313,13 +312,6 @@ CREATE TABLE t_file_backup (
   src_token_id           CHAR(16)             NULL,
   dst_token_id           CHAR(16)             NULL,
   file_state_initial     CHAR(32)             NULL
-);
-
-CREATE TABLE t_link (
-    source_se    VARCHAR(255) NOT NULL,
-    dest_se      VARCHAR(255) NOT NULL,
-    nb_submitted BIGINT       NOT NULL DEFAULT 0,
-    PRIMARY KEY (source_se, dest_se)
 );
 
 CREATE TABLE t_optimizer (
