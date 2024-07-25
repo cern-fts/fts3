@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "Optimizer.h"
+#include "OptimizerExecutor.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
@@ -33,7 +33,7 @@ namespace optimizer {
 // This part of the algorithm will check how to split the number of connections
 // between the number of available transfers.
 // Basically, divide the number of connections between the number of queued+active
-void Optimizer::optimizeStreamsForPair(OptimizerMode optMode, const Pair &pair)
+void OptimizerExecutor::optimizeStreamsForPair(OptimizerMode optMode)
 {
     // No optimization for streams, so go for 1
     if (optMode <= kOptimizerConservative) {

@@ -285,33 +285,6 @@ int MySqlAPI::getMaxTimeInQueue(const std::string &voName)
 }
 
 
-OptimizerMode getOptimizerModeInner(soci::session &sql, const std::string &source, const std::string &dest)
-{
-    try {
-        OptimizerMode mode = kOptimizerDisabled;
-
-        sql <<
-            "SELECT optimizer_mode FROM ("
-            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = :source AND dest_se = :dest UNION "
-            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = :source AND dest_se = '*' UNION "
-            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = '*' AND dest_se = :dest UNION "
-            "   SELECT optimizer_mode FROM t_link_config WHERE source_se = '*' AND dest_se = '*' UNION "
-            "   SELECT 1 FROM dual "
-            ") AS o LIMIT 1",
-            soci::use(source, "source"), soci::use(dest, "dest"),
-            soci::into(mode);
-
-        return mode;
-    }
-    catch (std::exception &e) {
-        throw UserError(std::string(__func__) + ": Caught mode exception " + e.what());
-    }
-    catch (...) {
-        throw UserError(std::string(__func__) + ": Caught exception ");
-    }
-}
-
-
 bool MySqlAPI::getDrain()
 {
     soci::session sql(*connectionPool);

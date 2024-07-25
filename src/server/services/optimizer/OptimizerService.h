@@ -24,6 +24,7 @@
 
 #include "../BaseService.h"
 #include "../heartbeat/HeartBeat.h"
+#include "db/generic/SingleDbInstance.h"
 
 namespace fts3 {
 namespace server {
@@ -36,6 +37,7 @@ protected:
 
 public:
     OptimizerService(HeartBeat *beat);
+    void optimizeAllPairs();
     virtual void runService();
 };
 

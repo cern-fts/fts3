@@ -19,10 +19,11 @@
  */
 
 #include "config/ServerConfig.h"
-#include "Optimizer.h"
+#include "OptimizerExecutor.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
+#include "db/generic/SingleDbInstance.h"
 
 using namespace fts3::common;
 using namespace fts3::config;
@@ -31,52 +32,52 @@ namespace fts3 {
 namespace optimizer {
 
 
-Optimizer::Optimizer(OptimizerDataSource *ds, OptimizerCallbacks *callbacks):
-    dataSource(ds), callbacks(callbacks),
+OptimizerExecutor::OptimizerExecutor(std::unique_ptr<OptimizerDataSource> ds, std::unique_ptr<OptimizerCallbacks> callbacks, const Pair& pair):
+    dataSource(std::move(ds)), callbacks(std::move(callbacks)),
     optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
     maxSuccessRate(100), lowSuccessRate(97), baseSuccessRate(96),
     decreaseStepSize(1), increaseStepSize(1), increaseAggressiveStepSize(2),
-    emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0)
+    emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0), pair(pair)
 {
 }
 
 
-Optimizer::~Optimizer()
+OptimizerExecutor::~OptimizerExecutor()
 {
 }
 
 
-void Optimizer::setSteadyInterval(boost::posix_time::time_duration newValue)
+void OptimizerExecutor::setSteadyInterval(boost::posix_time::time_duration newValue)
 {
     optimizerSteadyInterval = newValue;
 }
 
 
-void Optimizer::setMaxNumberOfStreams(int newValue)
+void OptimizerExecutor::setMaxNumberOfStreams(int newValue)
 {
     maxNumberOfStreams = newValue;
 }
 
 
-void Optimizer::setMaxSuccessRate(int newValue)
+void OptimizerExecutor::setMaxSuccessRate(int newValue)
 {
     maxSuccessRate = newValue;
 }
 
 
-void Optimizer::setLowSuccessRate(int newValue)
+void OptimizerExecutor::setLowSuccessRate(int newValue)
 {
     lowSuccessRate = newValue;
 }
 
 
-void Optimizer::setBaseSuccessRate(int newValue)
+void OptimizerExecutor::setBaseSuccessRate(int newValue)
 {
     baseSuccessRate = newValue;
 }
 
 
-void Optimizer::setStepSize(int increase, int increaseAggressive, int decrease)
+void OptimizerExecutor::setStepSize(int increase, int increaseAggressive, int decrease)
 {
     increaseStepSize = increase;
     increaseAggressiveStepSize = increaseAggressive;
@@ -84,45 +85,41 @@ void Optimizer::setStepSize(int increase, int increaseAggressive, int decrease)
 }
 
 
-void Optimizer::setEmaAlpha(double alpha)
+void OptimizerExecutor::setEmaAlpha(double alpha)
 {
     emaAlpha = alpha;
 }
 
 
-void Optimizer::run(void)
+void OptimizerExecutor::run(boost::any &ctx)
 {
+    if (ctx.empty()) {
+        ctx = 0;
+    }
+
+    int &scheduled = boost::any_cast<int &>(ctx);
+
+    scheduled += 1;
+
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
-        std::list<Pair> pairs = dataSource->getActivePairs();
-        // Make sure the order is always the same
-        // See FTS-1094
-        pairs.sort();
-
-        pairsSize = pairs.size();
-        pairIdx = 0;
-
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: found " << pairsSize << " pairs" << commit;
-
-        for (auto i = pairs.begin(); i != pairs.end(); ++i) {
-            runOptimizerForPair(*i);
-        }
+        runOptimizerForPair();
     }
     catch (std::exception &e) {
-        throw SystemError(std::string(__func__) + ": Caught exception " + e.what());
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in optimizer thread: " << e.what() << commit;
     }
     catch (...) {
-        throw SystemError(std::string(__func__) + ": Caught exception ");
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in optimizer thread: " << commit;
     }
 }
 
 
-void Optimizer::runOptimizerForPair(const Pair &pair)
+void OptimizerExecutor::runOptimizerForPair()
 {
     OptimizerMode optMode = dataSource->getOptimizerMode(pair.source, pair.destination);
-    if(optimizeConnectionsForPair(optMode, pair)) {
+    if(optimizeConnectionsForPair(optMode)) {
         // Optimize streams only if optimizeConnectionsForPair did store something
-        optimizeStreamsForPair(optMode, pair);
+        optimizeStreamsForPair(optMode);
     }
 }
 

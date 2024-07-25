@@ -52,10 +52,9 @@
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
+#include "Pair.h"
 
 #include "msg-bus/events.h"
-
-#include "server/services/optimizer/Optimizer.h"
 
 
 /// Hold information about individual submitted transfers
@@ -157,9 +156,6 @@ public:
     /// @param destStorage      The destination storage as protocol://host
     /// @return                 An integer with the debug level configured for the pair. 0 = no debug.
     virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage) = 0;
-
-    /// Optimizer data source
-    virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource() = 0;
 
     /// Checks if there are available slots to run transfers for the given pair
     /// @param sourceStorage        The source storage  (as protocol://host)
@@ -411,6 +407,81 @@ public:
 
     /// Get the list of Token Providers
     virtual std::map<std::string, TokenProvider> getTokenProviders() = 0;
-};
+
+    /// Return a list of pairs with active or submitted transfers
+    /// @return A list containing all pairs with files in active state
+    virtual std::list<Pair> getActivePairs() = 0;
+
+    /// Return the optimizer configuration value
+    /// @param  source  The source storage as protocol://host
+    /// @param  dest    The destination storage as protocol://host
+    /// @return         The configured optimizer mode
+    virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
+
+    /// Get configured limits
+    /// @param      pair    A pair constituted of a source storage and a destination storage
+    /// @param[out] range   The configured range for the input pair
+    /// @param[out] limits  The configured storage limits for the input pair
+    virtual void getPairLimits(const Pair &pair, Range &range, StorageLimits &limits) = 0;
+
+    /// Get the stored optimizer value (current value)
+    /// @param  pair    A pair constituted of a source storage and a destination storage
+    /// @return         The optimizer value for the input pair
+    virtual int getOptimizerValue(const Pair &pair) = 0;
+
+    /// Get the weighted throughput for the pair
+    /// @param  pair                A pair constituted of a source storage and a destination storage
+    /// @param  interval            A time interval in seconds to compute the weighted throughput for the input pair
+    /// @param[out] throughput      The throughput for the input pair during the input time interval
+    /// @param[out] filesizeAvg     The average file size for the input pair during the input time interval
+    /// @param[out] filesizeStdDev  The standard deviation of the file size for the input pair during the input time interval
+    virtual void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
+                                   double *throughput, double *filesizeAvg, double *filesizeStdDev) = 0;
+
+    /// Get average transfer duration on a given time interval
+    /// @param  pair        A pair constituted of a source storage and a destination storage
+    /// @param  interval    A time interval in seconds to compute the weighted throughput for the input pair
+    /// return              The average transfer duration
+    virtual time_t getAverageDuration(const Pair &pair, const boost::posix_time::time_duration &interval) = 0;
+
+    /// Get the success rate for the pair
+    /// @param      pair        A pair constituted of a source storage and a destination storage
+    /// @param      interval    A time interval in seconds to compute the weighted throughput for the input pair
+    /// @param[out] retryCount  The number of file transfers retried for the input pair during the input time interval
+    /// @return                 The success rate for the input pair
+    virtual double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
+                                         int *retryCount) = 0;
+
+    /// Get the number of transfers in a given state
+    /// @param  pair    A pair constituted of a source storage and a destination storage
+    /// @param  state   The file state to be counted
+    /// @return         The count of files in the input state for the input pair
+    virtual int getCountInState(const Pair &pair, const std::string &state) = 0;
+
+    /// Get current inbound throughput
+    /// @param se   The storage endpoint as protocol://host
+    /// @return     The inbound throughput
+    virtual double getThroughputAsSource(const std::string &se) = 0;
+
+    /// Get current outbound throughput
+    /// @param se   The storage endpoint as protocol://host
+    /// @return     The outbound throughput
+    virtual double getThroughputAsDestination(const std::string &se) = 0;
+
+    /// Permanently register the optimizer decision
+    /// @param  pair            A pair constituted of a source storage and a destination storage
+    /// @param  activeDecision  The optimizer decision taken
+    /// @param  newState        The new optimizer state for the pair
+    /// @param  diff            The diff in the optimizer decision
+    /// @param  rationale       The rationale for the optimizer decision
+    virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,
+                                        const PairState &newState, int diff, const std::string &rationale) = 0;
+
+    /// Permanently register the number of streams per active
+    /// @param  pair    A pair constituted of a source storage and a destination storage
+    /// @param  streams The number of streams to be registerd for the pair
+    virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
+
+    };
 
 #endif // GENERICDBIFCE_H_
