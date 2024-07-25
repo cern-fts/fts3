@@ -27,7 +27,7 @@ set(fts_db_mysql_SOURCES
         MySqlAPI.cpp
         Config.cpp
         Credentials.cpp
-        OptimizerDataSource.cpp
+        Optimizer.cpp
         SanityChecks.cpp
         MultihopSanityCheck.cpp
 )

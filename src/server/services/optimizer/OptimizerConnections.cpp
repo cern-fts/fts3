@@ -18,8 +18,7 @@
  * limitations under the License.
  */
 
-#include <monitoring/msg-ifce.h>
-#include "Optimizer.h"
+#include "OptimizerExecutor.h"
 #include "OptimizerConstants.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
@@ -54,31 +53,31 @@ static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 }
 
 
-void Optimizer::getOptimizerWorkingRange(const Pair &pair, Range *range, StorageLimits *limits)
+void OptimizerExecutor::getOptimizerWorkingRange(Range& range, StorageLimits& limits)
 {
     // Query specific limits
     dataSource->getPairLimits(pair, range, limits);
 
     // If range not set, use defaults
-    if (range->min <= 0) {
+    if (range.min <= 0) {
         if (pair.isLanTransfer()) {
-            range->min = DEFAULT_LAN_ACTIVE;
+            range.min = DEFAULT_LAN_ACTIVE;
         }
         else {
-            range->min = DEFAULT_MIN_ACTIVE;
+            range.min = DEFAULT_MIN_ACTIVE;
         }
     }
 
-    bool isMaxConfigured = (range->max > 0);
+    bool isMaxConfigured = (range.max > 0);
     if (!isMaxConfigured) {
-        range->max = std::min({limits->source, limits->destination});
-        range->storageSpecific = true;
-        if (range->max < range->min) {
-            range->max = range->min;
+        range.max = std::min({limits.source, limits.destination});
+        range.storageSpecific = true;
+        if (range.max < range.min) {
+            range.max = range.min;
         }
     }
 
-    BOOST_ASSERT(range->min > 0 && range->max >= range->min);
+    BOOST_ASSERT(range.min > 0 && range.max >= range.min);
 }
 
 // To be called for low success rates (<= LOW_SUCCESS_RATE)
@@ -157,7 +156,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 // the total number of connections between storages.
 // If the success rate is good, and the throughput improves, it will increase the number
 // of connections.
-bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pair)
+bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
 {
     std::stringstream rationale;
     bool firstRun = false;
@@ -169,7 +168,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     // Optimizer working values
     Range range;
     StorageLimits limits;
-    getOptimizerWorkingRange(pair, &range, &limits);
+    getOptimizerWorkingRange(range, limits);
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << " " << range
                                      << " (pair #" << ++pairIdx << "/" << pairsSize << ")" << commit;
@@ -200,7 +199,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
             rationale << "No information. Start halfway.";
         }
 
-        setOptimizerDecision(pair, decision, current, decision, rationale.str(), timer.elapsed());
+        setOptimizerDecision(decision, current, decision, rationale.str(), timer.elapsed());
 
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
@@ -223,7 +222,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        setOptimizerDecision(pair, range.min, current, 0, "Range fixed", timer.elapsed());
+        setOptimizerDecision(range.min, current, 0, "Range fixed", timer.elapsed());
         return true;
     }
 
@@ -233,7 +232,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (throughput > limits.throughputSource) {
             decision = previousValue - decreaseStepSize;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(decision, current, 0, rationale.str(), timer.elapsed());
             return true;
         }
     }
@@ -242,7 +241,7 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
         if (throughput > limits.throughputDestination) {
             decision = previousValue - decreaseStepSize;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(pair, decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(decision, current, 0, rationale.str(), timer.elapsed());
             return true;
         }
     }
@@ -325,13 +324,13 @@ bool Optimizer::optimizeConnectionsForPair(OptimizerMode optMode, const Pair &pa
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    setOptimizerDecision(pair, decision, current, decision - previousValue, rationale.str(), timer.elapsed());
+    setOptimizerDecision(decision, current, decision - previousValue, rationale.str(), timer.elapsed());
     return true;
 }
 
 
-void Optimizer::setOptimizerDecision(const Pair &pair, int decision, const PairState &current,
-    int diff, const std::string &rationale, boost::timer::cpu_times elapsed)
+void OptimizerExecutor::setOptimizerDecision(int decision, const PairState &current,
+                                             int diff, const std::string &rationale, boost::timer::cpu_times elapsed)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << "Optimizer: Active for " << pair << " set to " << decision << ", running " << current.activeCount

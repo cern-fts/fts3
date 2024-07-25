@@ -14,5 +14,4 @@
 # limitations under the License.
 #
 
-add_subdirectory (optimizer)
 add_subdirectory (transfers)
