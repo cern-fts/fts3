@@ -246,7 +246,6 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["is_archiving"] = tr_completed.is_archiving;
     message["job_state"] = tr_completed.job_state;
     message["is_recoverable"] = tr_completed.is_recoverable;
-    message["ipv6"] = tr_completed.ipv6;
     message["ipver"] = tr_completed.ipver;
     message["eviction_code"] = (Json::Value::Int) tr_completed.eviction_code;
     message["cleanup_code"] = (Json::Value::Int) tr_completed.cleanup_code;
