@@ -1,7 +1,6 @@
 %global _hardened_build 1
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
-%define devtoolset devtoolset-8
 # Compile Python scripts using Python3
 %define __python python3
 
@@ -19,11 +18,6 @@ BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  activemq-cpp-devel
 BuildRequires:  boost-devel
-
-%if 0%{?rhel} == 7
-BuildRequires: %{devtoolset}
-%endif
-
 BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
@@ -150,10 +144,6 @@ if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
     exit 1
 fi
 
-%if 0%{?rhel} == 7
-source /opt/rh/%{devtoolset}/enable
-%endif
-
 %cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -172,12 +162,6 @@ done
 cd -
 
 %install
-
-# We have to activate devtoolset in install section as well
-# Generation of debuginfo happens here
-%if 0%{?rhel} == 7
-source /opt/rh/%{devtoolset}/enable
-%endif
 
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
