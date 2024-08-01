@@ -5,13 +5,13 @@
 %define __python python3
 
 Name:       fts
-Version:    3.13.0
+Version:    3.13.1
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.12.0 https://gitlab.cern.ch/fts/fts3.git fts-3.12.0
-# tar -vczf fts-3.12.0.tar.gz --exclude-vcs fts-3.12.0/
+# git clone --depth=1 --branch v3.13.1 https://gitlab.cern.ch/fts/fts3.git fts-3.13.1
+# tar -vczf fts-3.13.1.tar.gz --exclude-vcs fts-3.13.1/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -320,6 +320,10 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.1
+- "Overwrite-when-only-on-disk" feature
+- Drop CC7 build
+
 * Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
 - Alma9 release
 
