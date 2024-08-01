@@ -44,8 +44,12 @@ public:
 
     /// Initialize database connection by providing information from fts3config file
     /// @param nPooledConnections   The number connections to pool
-    virtual void init(const std::string& username, const std::string& password,
+    virtual void init(const std::string &dbtype, const std::string& username, const std::string& password,
         const std::string& connectString, int nPooledConnections);
+
+    /// Return the type of the database
+    /// @return The database type
+    virtual std::string getDbtype() const;
 
     /// Recover from the DB transfers marked as ACTIVE for the host 'host'
     virtual std::list<fts3::events::MessageUpdater> getActiveInHost(const std::string &host);
@@ -228,6 +232,9 @@ public:
     /// Returns if for the given storage endpoint, skip eviction has been enabled
     virtual boost::tribool getSkipEvictionFlag(const std::string &source);
 
+    /// Returns whether the given storage endpoint is enabled for the "overwrite-when-only-on-disk" feature or not
+    virtual boost::tribool getOverwriteDiskEnabledFlag(const std::string &storage);
+
     /// Returns TPC mode for a pair of source/destination endpoints
     virtual CopyMode getCopyMode(const std::string &source, const std::string &destination);
 
@@ -362,6 +369,7 @@ private:
     std::string           hostname;
     std::string username_;
     std::map<std::string, boost::posix_time::ptime> queuedStagingFiles;
+    std::string m_dbtype;
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end,
                                  const std::string& serviceName);

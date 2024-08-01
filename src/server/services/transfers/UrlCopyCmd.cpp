@@ -156,14 +156,24 @@ void UrlCopyCmd::setIPv6(boost::tribool set)
 
 
 void UrlCopyCmd::setSkipEvict(boost::tribool set)
-    {
-        if (boost::indeterminate(set)) {
-            setFlag("skip-evict", false);
-        } else {
-            bool value = (set.value == true);
-            setFlag("skip-evict", value);
-        }
+{
+    if (boost::indeterminate(set)) {
+        setFlag("skip-evict", false);
+    } else {
+        bool value = (set.value == true);
+        setFlag("skip-evict", value);
     }
+}
+
+
+void UrlCopyCmd::setOverwriteDiskEnabled(boost::tribool set)
+{
+    if (boost::indeterminate(set)) {
+        setFlag("overwrite-disk-enabled", false);
+    } else {
+        setFlag("overwrite-disk-enabled", (set.value == true));
+    }
+}
 
 
 void UrlCopyCmd::setCopyMode(CopyMode copyMode)
@@ -225,9 +235,9 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
-void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_tokens)
+void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_token)
 {
-    setFlag("retrieve-se-token", retrieve_se_tokens);
+    setFlag("retrieve-se-token", retrieve_se_token);
 }
 
 
@@ -304,7 +314,7 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         }
         setOption("token-bringonline", transfer.bringOnlineToken);
         setOption("file-metadata", prepareMetadataString(transfer.fileMetadata));
-        setOption("transfer-metadata", prepareMetadataString(transfer.transferMetadata));
+        setOption("archive-metadata", prepareMetadataString(transfer.archiveMetadata));
         if (!transfer.activity.empty()) {
             setOption("activity", transfer.activity);
         }
@@ -373,6 +383,12 @@ void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
 void UrlCopyCmd::setOverwrite(bool overwrite)
 {
     setFlag("overwrite", overwrite);
+}
+
+
+void UrlCopyCmd::setOverwriteOnDisk(bool overwrite)
+{
+    setFlag("overwrite-on-disk", overwrite);
 }
 
 

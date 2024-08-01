@@ -54,6 +54,10 @@ void ArchivingPollTask::run(const boost::any&)
         << " / storage=" << ctx.getStorageEndpoint() << " ]"
         << commit;
 
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ArchivingPollTask credentials"
+        << " [ dlg_id=" << ctx.delegationId << " / user_dn=" << ctx.userDn << " ]"
+        << commit;
+
     // Refresh the proxy, if needed
     ctx.refreshProxy();
 

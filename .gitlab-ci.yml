@@ -26,10 +26,6 @@ stages:
 # Build jobs
 #--------------------------
 
-cc7:
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  <<: *build-template_definition
-
 alma9:
   image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   <<: *build-template_definition
@@ -55,45 +51,23 @@ alma9:
 # Docker build jobs
 #--------------------------
 
-docker_build_cc7:
-  <<: *kaniko_build-template
-  variables:
-    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts3:latest-cc7
-    IMAGE: Dockerfile-ci-cc7
-  needs:
-    - job: cc7
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "develop"
-
-docker_build_alma9:
+docker_latest:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts3:latest-alma9
-    IMAGE: Dockerfile-ci-alma9
+    DESTINATION: gitlab-registry.cern.ch/fts/fts3:latest
+    IMAGE: Dockerfile-ci
   needs:
     - job: alma9
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
-docker_tag_cc7:
-  <<: *kaniko_build-template
-  variables:
-    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts3:${CI_COMMIT_TAG}-cc7
-    IMAGE: Dockerfile-ci-cc7
-  needs:
-    - job: cc7
-  rules:
-    - if: $CI_COMMIT_TAG != null
-
-docker_tag_alma9:
+docker_tag:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el9.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts3:${CI_COMMIT_TAG}-alma9
-    IMAGE: Dockerfile-ci-alma9
+    DESTINATION: gitlab-registry.cern.ch/fts/fts3:${CI_COMMIT_TAG}
+    IMAGE: Dockerfile-ci
   needs:
     - job: alma9
   rules:
@@ -118,14 +92,6 @@ docker_tag_alma9:
 # Testing jobs
 #--------------------------
 
-cc7-test:
-  before_script:
-    - yum install -y dnf
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  needs:
-    - job: cc7
-  <<: *test-template_definition
-
 alma9-test:
   image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   needs:
@@ -140,15 +106,11 @@ alma9-test:
   stage: publish
   image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
-    - cc7
     - alma9
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - |
-      for platform in cc7 alma9; do
-        packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages ${platform}/RPMS/*/*.rpm ${platform}/SRPMS/*
-      done
+    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --ref ${CI_COMMIT_REF_NAME} --packages alma9/RPMS/*/*.rpm alma9/SRPMS/*
   tags:
     - docker-privileged-xl
   retry: 2

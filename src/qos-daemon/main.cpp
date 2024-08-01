@@ -68,11 +68,26 @@ static void shutdownCallback(int signum, void*)
 /// Initialize the database backend
 static void initializeDatabase()
 {
+    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
     std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
     std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
     std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 8);
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, 8);
+}
+
+
+static void gfal2LogCallback(const gchar*, GLogLevelFlags, const gchar* message, gpointer)
+{
+    if (message) {
+        const char* prefix = "Gfal2: ";
+
+        if (strncmp(message, "Davix: ", 7) == 0) {
+            prefix = "";
+        }
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << prefix << message << fts3::common::commit;
+    }
 }
 
 
@@ -89,7 +104,15 @@ static void doServer()
             throw SystemError(msg.str());
         }
     }
-    theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+
+    auto logLevel = Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel"));
+    theLogger().setLogLevel(logLevel);
+
+    if (logLevel <= Logger::LogLevel::DEBUG) {
+        setenv("XRD_LOGLEVEL", "Debug", 1);
+        gfal2_log_set_level(G_LOG_LEVEL_DEBUG);
+        gfal2_log_set_handler((GLogFunc) gfal2LogCallback, NULL);
+    }
 
     initializeDatabase();
     QoSServer::instance().start();

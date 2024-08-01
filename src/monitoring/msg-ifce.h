@@ -51,7 +51,8 @@ public:
         checksum_source_time_ms(0), checksum_dest_time_ms(0),
         retry(0), retry_max(0),
         job_m_replica(false), job_multihop(false), is_lasthop(false), is_archiving(false),
-        is_recoverable(false), ipv6(false), eviction_code(-1), cleanup_code(-1)
+        is_recoverable(false), eviction_code(-1), cleanup_code(-1),
+        overwrite_on_disk_flag(false), overwrite_on_disk_deletion_code(-1)
     {}
 
     ~TransferCompleted() = default;
@@ -124,13 +125,14 @@ public:
     bool        is_archiving;
     std::string job_state;
     bool        is_recoverable;
-    bool        ipv6;
     int         eviction_code;
     int         cleanup_code;
     std::string ipver;
     std::string final_destination;
     std::string transfer_type;
     std::string auth_method;
+    bool        overwrite_on_disk_flag;
+    int         overwrite_on_disk_deletion_code;
 };
 
 

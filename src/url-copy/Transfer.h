@@ -76,11 +76,14 @@ public:
         int32_t evictionRetc;
         ///< Transfer cleanup return code: 0 = ok, > 0 error code, -1 = not set
         int32_t cleanupRetc;
+        ///< Overwrite-on-disk deletion return code: 0 = ok, > 0 error code, -1 = not set
+        int32_t overwriteOnDiskRetc;
 
         std::string finalDestination;
         std::string transferType;
 
-        Statistics(): elapsedAtPerf(0), ipver(IPver::UNKNOWN), evictionRetc(-1), cleanupRetc(-1) {};
+        Statistics(): elapsedAtPerf(0), ipver(IPver::UNKNOWN),
+                      evictionRetc(-1), cleanupRetc(-1), overwriteOnDiskRetc(-1) {};
     };
 
     /**
@@ -111,7 +114,7 @@ public:
     uint64_t    userFileSize;
     std::string activity;
     std::string fileMetadata;
-    std::string transferMetadata;
+    std::string archiveMetadata;
     std::string tokenBringOnline;
     std::string sourceTokenDescription;
     std::string destTokenDescription;

@@ -248,10 +248,10 @@ public:
         }
     }
 
-    void setTransferMetadata(const std::string &metadata)
+    void setArchiveMetadata(const std::string &metadata)
     {
         GError *error = NULL;
-        if (gfalt_set_transfer_metadata(params, metadata.c_str(), &error) < 0) {
+        if (gfalt_set_archive_metadata(params, metadata.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }
@@ -401,6 +401,17 @@ public:
 
         GError *error = NULL;
         if (gfalt_copy_file(context, params, source.c_str(), destination.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
+    /// Remove file
+    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source) {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_unlink(context, url.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }

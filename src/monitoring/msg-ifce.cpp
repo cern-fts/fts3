@@ -246,13 +246,14 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["is_archiving"] = tr_completed.is_archiving;
     message["job_state"] = tr_completed.job_state;
     message["is_recoverable"] = tr_completed.is_recoverable;
-    message["ipv6"] = tr_completed.ipv6;
     message["ipver"] = tr_completed.ipver;
     message["eviction_code"] = (Json::Value::Int) tr_completed.eviction_code;
     message["cleanup_code"] = (Json::Value::Int) tr_completed.cleanup_code;
     message["final_destination"] = tr_completed.final_destination;
     message["transfer_type"] = tr_completed.transfer_type;
     message["auth_method"] = tr_completed.auth_method;
+    message["overwrite_on_disk_flag"] = tr_completed.overwrite_on_disk_flag;
+    message["overwrite_on_disk_deletion_code"] = (Json::Value::Int) tr_completed.overwrite_on_disk_deletion_code;
 
     std::ostringstream stream;
     stream << "CO " << message;

@@ -1,34 +1,28 @@
 %global _hardened_build 1
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
-%define devtoolset devtoolset-8
 # Compile Python scripts using Python3
 %define __python python3
 
 Name:       fts
-Version:    3.13.0
+Version:    3.13.1
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.12.0 https://gitlab.cern.ch/fts/fts3.git fts-3.12.0
-# tar -vczf fts-3.12.0.tar.gz --exclude-vcs fts-3.12.0/
+# git clone --depth=1 --branch v3.13.1 https://gitlab.cern.ch/fts/fts3.git fts-3.13.1
+# tar -vczf fts-3.13.1.tar.gz --exclude-vcs fts-3.13.1/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  activemq-cpp-devel
 BuildRequires:  boost-devel
-
-%if 0%{?rhel} == 7
-BuildRequires: %{devtoolset}
-%endif
-
 BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.22.0
+BuildRequires:  gfal2-devel >= 2.23.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -61,9 +55,9 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.22.0
-Requires: gfal2-plugin-http%{?_isa} >= 2.22.0
-Requires: gfal2-plugin-srm%{?_isa} >= 2.22.0
+Requires: gfal2%{?_isa} >= 2.23.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.23.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.23.0
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 Requires: jsoncpp
@@ -150,10 +144,6 @@ if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
     exit 1
 fi
 
-%if 0%{?rhel} == 7
-source /opt/rh/%{devtoolset}/enable
-%endif
-
 %cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -172,12 +162,6 @@ done
 cd -
 
 %install
-
-# We have to activate devtoolset in install section as well
-# Generation of debuginfo happens here
-%if 0%{?rhel} == 7
-source /opt/rh/%{devtoolset}/enable
-%endif
 
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
@@ -336,6 +320,10 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.1
+- "Overwrite-when-only-on-disk" feature
+- Drop CC7 build
+
 * Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
 - Alma9 release
 

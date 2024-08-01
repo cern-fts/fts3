@@ -63,9 +63,11 @@ public:
     std::string copyMode;
     bool disableCopyFallback;
     bool retrieveSEToken;
+    bool overwriteDiskEnabled;
 
     unsigned optimizerLevel;
     bool     overwrite;
+    bool     overwriteOnDisk;
     bool     noDelegation;
     unsigned nStreams;
     unsigned tcpBuffersize;
