@@ -344,6 +344,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.final_destination = transfer.stats.finalDestination;
     completed.transfer_type = transfer.stats.transferType;
     completed.auth_method = opts.authMethod;
+    completed.overwrite_on_disk_flag = opts.overwriteOnDisk;
+    completed.overwrite_on_disk_deletion_code = transfer.stats.overwriteOnDiskRetc;
 
     if (opts.enableMonitoring) {
         auto msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);

@@ -112,8 +112,10 @@ bool retryTransfer(int errorNo, const std::string &category, const std::string &
             case EPERM:           // Operation not permitted
             case EACCES:          // Permission denied
             case EISDIR:          // Is a directory
-            case ENAMETOOLONG:    //  File name too long
-            case E2BIG:           //  Argument list too long
+            case E2BIG:           // Argument list too long
+            case EROFS:           // Read-only file system
+            case EFAULT:          // Bad address
+            case ENAMETOOLONG:    // File name too long
             case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
             case EEXIST:          // Destination file exists
                 return false;

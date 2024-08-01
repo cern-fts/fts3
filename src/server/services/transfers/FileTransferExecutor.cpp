@@ -202,9 +202,27 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setOverwrite(true);
             }
 
-            // If is multihop job, file is not the final destination and overwriteFlag is "M" => enable overwrite
-            if (tf.jobType == Job::kTypeMultiHop && !tf.lastHop && tf.overwriteFlag == "M") {
+            // If is multihop job, file is not the final destination and overwrite requested => enable overwrite
+            //   - overwriteFlag = "M" (overwrite-hop)
+            //   - overwriteFlag = "Q" (overwrite-hop + overwrite-when-only-on-disk)
+            if (tf.jobType == Job::kTypeMultiHop && !tf.lastHop &&
+                (tf.overwriteFlag == "M" || tf.overwriteFlag == "Q")) {
                 cmdBuilder.setOverwrite(true);
+            }
+
+            // If archiving job and overwrite-when-only-on-disk requested => enable overwrite on disk
+            //   - overwriteFlag = "D"
+            //   - multihop job, last hop and overwriteFlag = "Q"
+            if (tf.archiveTimeout > 0) {
+                bool overwriteOnDiskRequested =
+                        (tf.overwriteFlag == "D") ||
+                        (tf.jobType == Job::kTypeMultiHop && tf.lastHop && tf.overwriteFlag == "Q");
+
+                if (overwriteOnDiskRequested) {
+                    cmdBuilder.setOverwriteOnDisk(true);
+                    // Also send "overwrite-disk-enabled" flag (decision delegated to the UrlCopyProcess)
+                    cmdBuilder.setOverwriteDiskEnabled(db->getOverwriteDiskEnabledFlag(tf.destSe));
+                }
             }
 
             int retry_max = db->getRetry(tf.jobId);

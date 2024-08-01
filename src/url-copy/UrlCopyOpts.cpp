@@ -57,17 +57,18 @@ const option UrlCopyOpts::long_options[] =
     {"dest-token-desc",   required_argument, 0, 401},
     {"source-token-desc", required_argument, 0, 402},
 
-    {"vo",                required_argument, 0, 500},
-    {"user-dn",           required_argument, 0, 501},
-    {"proxy",             required_argument, 0, 502},
-    {"oauth",             required_argument, 0, 503},
-    {"source-issuer",     required_argument, 0, 504},
-    {"dest-issuer",       required_argument, 0, 505},
-    {"auth-method",       required_argument, 0, 506},
-    {"copy-mode",         required_argument, 0, 507},
-    {"disable-fallback",  no_argument,       0, 508},
-    {"retrieve-se-token", no_argument,       0, 509},
-    {"cloud-config",      required_argument, 0, 510},
+    {"vo",                     required_argument, 0, 500},
+    {"user-dn",                required_argument, 0, 501},
+    {"proxy",                  required_argument, 0, 502},
+    {"oauth",                  required_argument, 0, 503},
+    {"source-issuer",          required_argument, 0, 504},
+    {"dest-issuer",            required_argument, 0, 505},
+    {"auth-method",            required_argument, 0, 506},
+    {"copy-mode",              required_argument, 0, 507},
+    {"disable-fallback",       no_argument,       0, 508},
+    {"retrieve-se-token",      no_argument,       0, 509},
+    {"cloud-config",           required_argument, 0, 510},
+    {"overwrite-disk-enabled", no_argument,       0, 511},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -90,6 +91,7 @@ const option UrlCopyOpts::long_options[] =
     {"no-delegation",     no_argument,       0, 810},
     {"no-streaming",      no_argument,       0, 811},
     {"skip-evict",        no_argument,       0, 812},
+    {"overwrite-on-disk", no_argument,       0, 813},
 
     {"retry",             required_argument, 0, 820},
     {"retry_max-max",     required_argument, 0, 821},
@@ -199,8 +201,9 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts():
-        isSessionReuse(false), strictCopy(false), dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
-        optimizerLevel(0), overwrite(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+        isSessionReuse(false), strictCopy(false), dstFileReport(false),
+        disableCopyFallback(false), retrieveSEToken(false), overwriteDiskEnabled(false),
+        optimizerLevel(0), overwrite(false), overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
         timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
         skipEvict(false), enableMonitoring(false), pingInterval(60), retry(0), retryMax(0),
         logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
@@ -359,6 +362,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                 case 510:
                     cloudStorageConfig = optarg;
                     break;
+                case 511:
+                    overwriteDiskEnabled = true;
+                    break;
 
                 case 600:
                     infosys = optarg;
@@ -418,6 +424,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 812:
                     skipEvict = true;
+                    break;
+                case 813:
+                    overwriteOnDisk = true;
                     break;
 
                 case 820:

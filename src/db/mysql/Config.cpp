@@ -454,6 +454,32 @@ boost::tribool MySqlAPI::getSkipEvictionFlag(const std::string &source)
 }
 
 
+boost::tribool MySqlAPI::getOverwriteDiskEnabledFlag(const std::string &storage)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        boost::logic::tribool overwriteDiskEnabled(boost::indeterminate);
+        soci::statement stmt = (sql.prepare << "SELECT overwrite_disk_enabled FROM t_se WHERE storage = :source",
+                                soci::use(storage), soci::into(overwriteDiskEnabled));
+
+        stmt.execute(true);
+
+        if (boost::indeterminate(overwriteDiskEnabled)) {
+            return false;
+        } else {
+            return overwriteDiskEnabled;
+        }
+    }
+    catch (std::exception &e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception ");
+    }
+}
+
+
 CopyMode MySqlAPI::getCopyMode(const std::string &source, const std::string &destination)
 {
     soci::session sql(*connectionPool);

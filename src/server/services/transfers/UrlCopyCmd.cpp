@@ -166,6 +166,16 @@ void UrlCopyCmd::setSkipEvict(boost::tribool set)
 }
 
 
+void UrlCopyCmd::setOverwriteDiskEnabled(boost::tribool set)
+{
+    if (boost::indeterminate(set)) {
+        setFlag("overwrite-disk-enabled", false);
+    } else {
+        setFlag("overwrite-disk-enabled", (set.value == true));
+    }
+}
+
+
 void UrlCopyCmd::setCopyMode(CopyMode copyMode)
 {
     std::string mode;
@@ -373,6 +383,12 @@ void UrlCopyCmd::setDisableStreaming(bool disable_streaming)
 void UrlCopyCmd::setOverwrite(bool overwrite)
 {
     setFlag("overwrite", overwrite);
+}
+
+
+void UrlCopyCmd::setOverwriteOnDisk(bool overwrite)
+{
+    setFlag("overwrite-on-disk", overwrite);
 }
 
 
