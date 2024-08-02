@@ -113,6 +113,13 @@ public:
         }
     }
 
+    void setTransferCleanUp(bool value) {
+        GError *error = NULL;
+        if (gfalt_set_transfer_cleanup(params, value, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     void setSourceSpacetoken(const std::string &stoken)
     {
         GError *error = NULL;

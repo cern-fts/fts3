@@ -69,6 +69,7 @@ const option UrlCopyOpts::long_options[] =
     {"retrieve-se-token",      no_argument,       0, 509},
     {"cloud-config",           required_argument, 0, 510},
     {"overwrite-disk-enabled", no_argument,       0, 511},
+    {"disable-cleanup",        no_argument,       0, 512},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -200,14 +201,14 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 }
 
 
-UrlCopyOpts::UrlCopyOpts():
-        isSessionReuse(false), strictCopy(false), dstFileReport(false),
-        disableCopyFallback(false), retrieveSEToken(false), overwriteDiskEnabled(false),
-        optimizerLevel(0), overwrite(false), overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
-        timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
-        skipEvict(false), enableMonitoring(false), pingInterval(60), retry(0), retryMax(0),
-        logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
-        debugLevel(0), logToStderr(false)
+UrlCopyOpts::UrlCopyOpts(): isSessionReuse(false), strictCopy(false), disableCleanup(false),
+                            dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
+                            overwriteDiskEnabled(false), optimizerLevel(0), overwrite(false),
+                            overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+                            timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
+                            noStreaming(false), skipEvict(false), enableMonitoring(false), pingInterval(60),
+                            retry(0), retryMax(0), logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+                            debugLevel(0), logToStderr(false)
 {
 }
 
@@ -364,6 +365,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 511:
                     overwriteDiskEnabled = true;
+                    break;
+                case 512:
+                    disableCleanup = true;
                     break;
 
                 case 600:

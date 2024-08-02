@@ -276,6 +276,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
     params.setReplaceExistingFile(opts.overwrite);
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
+    params.setTransferCleanUp(!opts.disableCleanup);
 
     // SciTag value should always be in the [65, 65535] range
     if (transfer.scitag > 0) {
@@ -400,6 +401,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable delegation: " << opts.noDelegation << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skip eviction of source file: " << opts.skipEvict << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable cleanup: " << opts.disableCleanup << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceTokenDescription << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;

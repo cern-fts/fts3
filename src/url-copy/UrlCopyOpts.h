@@ -45,6 +45,7 @@ public:
     bool isSessionReuse;
 
     bool strictCopy;
+    bool disableCleanup;
     bool dstFileReport;
     std::string thirdPartyTURL;
 
