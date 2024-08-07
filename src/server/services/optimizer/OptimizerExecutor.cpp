@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2016
+ * Copyright (c) CERN 2013-2024
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -37,87 +37,28 @@ OptimizerExecutor::OptimizerExecutor(std::unique_ptr<OptimizerDataSource> ds, st
     optimizerSteadyInterval(boost::posix_time::seconds(60)), maxNumberOfStreams(10),
     maxSuccessRate(100), lowSuccessRate(97), baseSuccessRate(96),
     decreaseStepSize(1), increaseStepSize(1), increaseAggressiveStepSize(2),
-    emaAlpha(EMA_ALPHA), pairsSize(0), pairIdx(0), pair(pair)
+    emaAlpha(EMA_ALPHA), pair(pair) {}
+
+
+void OptimizerExecutor::run([[maybe_unused]] boost::any &ctx)
 {
-}
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run for pair: " << pair << commit;
 
-
-OptimizerExecutor::~OptimizerExecutor()
-{
-}
-
-
-void OptimizerExecutor::setSteadyInterval(boost::posix_time::time_duration newValue)
-{
-    optimizerSteadyInterval = newValue;
-}
-
-
-void OptimizerExecutor::setMaxNumberOfStreams(int newValue)
-{
-    maxNumberOfStreams = newValue;
-}
-
-
-void OptimizerExecutor::setMaxSuccessRate(int newValue)
-{
-    maxSuccessRate = newValue;
-}
-
-
-void OptimizerExecutor::setLowSuccessRate(int newValue)
-{
-    lowSuccessRate = newValue;
-}
-
-
-void OptimizerExecutor::setBaseSuccessRate(int newValue)
-{
-    baseSuccessRate = newValue;
-}
-
-
-void OptimizerExecutor::setStepSize(int increase, int increaseAggressive, int decrease)
-{
-    increaseStepSize = increase;
-    increaseAggressiveStepSize = increaseAggressive;
-    decreaseStepSize = decrease;
-}
-
-
-void OptimizerExecutor::setEmaAlpha(double alpha)
-{
-    emaAlpha = alpha;
-}
-
-
-void OptimizerExecutor::run(boost::any &ctx)
-{
-    if (ctx.empty()) {
-        ctx = 0;
-    }
-
-    int &scheduled = boost::any_cast<int &>(ctx);
-
-    scheduled += 1;
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer run" << commit;
     try {
         runOptimizerForPair();
-    }
-    catch (std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in optimizer thread: " << e.what() << commit;
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in optimizer thread: " << commit;
+    } catch (const std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in Optimizer thread: " << e.what() << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in Optimizer thread!" << commit;
     }
 }
 
 
 void OptimizerExecutor::runOptimizerForPair()
 {
-    OptimizerMode optMode = dataSource->getOptimizerMode(pair.source, pair.destination);
-    if(optimizeConnectionsForPair(optMode)) {
+    auto optMode = dataSource->getOptimizerMode(pair.source, pair.destination);
+
+    if (optimizeConnectionsForPair(optMode)) {
         // Optimize streams only if optimizeConnectionsForPair did store something
         optimizeStreamsForPair(optMode);
     }

@@ -31,25 +31,27 @@ namespace optimizer {
 
 
 // borrowed from http://oroboro.com/irregular-ema/
-static inline double exponentialMovingAverage(double sample, double alpha, double cur)
+static double exponentialMovingAverage(double sample, double alpha, double cur)
 {
-    if (sample > 0)
+    if (sample > 0) {
         cur = (sample * alpha) + ((1 - alpha) * cur);
+    }
+
     return cur;
 }
 
 
 static boost::posix_time::time_duration calculateTimeFrame(time_t avgDuration)
 {
-    if(avgDuration > 0 && avgDuration < 30) {
+    if (avgDuration > 0 && avgDuration < 30) {
         return boost::posix_time::minutes(5);
     }
-    else if(avgDuration > 30 && avgDuration < 900) {
+
+    if (avgDuration > 30 && avgDuration < 900) {
         return boost::posix_time::minutes(15);
     }
-    else {
-        return boost::posix_time::minutes(30);
-    }
+
+    return boost::posix_time::minutes(30);
 }
 
 
@@ -62,13 +64,13 @@ void OptimizerExecutor::getOptimizerWorkingRange(Range& range, StorageLimits& li
     if (range.min <= 0) {
         if (pair.isLanTransfer()) {
             range.min = DEFAULT_LAN_ACTIVE;
-        }
-        else {
+        } else {
             range.min = DEFAULT_MIN_ACTIVE;
         }
     }
 
     bool isMaxConfigured = (range.max > 0);
+
     if (!isMaxConfigured) {
         range.max = std::min({limits.source, limits.destination});
         range.storageSpecific = true;
@@ -94,8 +96,7 @@ static int optimizeLowSuccessRate(const PairState &current, const PairState &pre
     else if (current.successRate < previous.successRate) {
         decision = previousValue - decreaseStepSize;
         rationale << "Bad link efficiency";
-    }
-    else {
+    } else {
         decision = previousValue - decreaseStepSize;
         rationale << "Bad link efficiency, no changes";
     }
@@ -119,8 +120,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
 
     if (current.queueSize < previousValue) {
         rationale << "Queue emptying. Hold on.";
-    }
-    else if (current.ema < previous.ema) {
+    } else if (current.ema < previous.ema) {
         // If the throughput is worsening, we need to look at the file sizes.
         // If the file sizes are decreasing, then it could be that the throughput deterioration is due to
         // this. Thus, decreasing the number of actives will be a bad idea.
@@ -129,7 +129,7 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
             rationale << "Good link efficiency, throughput deterioration, avg. filesize decreasing";
         }
         // Compare on the logarithmic scale, to reduce sensitivity
-        else if(round(log10(current.ema)) < round(log10(previous.ema))) {
+        else if (round(log10(current.ema)) < round(log10(previous.ema))) {
             decision = previousValue - decreaseStepSize;
             rationale << "Good link efficiency, throughput deterioration";
         }
@@ -138,12 +138,10 @@ static int optimizeGoodSuccessRate(const PairState &current, const PairState &pr
             decision = previousValue;
             rationale << "Good link efficiency, small throughput deterioration";
         }
-    }
-    else if (current.ema > previous.ema) {
+    } else if (current.ema > previous.ema) {
         decision = previousValue + increaseStepSize;
         rationale << "Good link efficiency, current average throughput is larger than the preceding average";
-    }
-    else {
+    } else {
         decision = previousValue + increaseStepSize;
         rationale << "Good link efficiency. Increment";
     }
@@ -163,15 +161,12 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
     int decision;
 
     // Start ticking!
-    boost::timer::cpu_timer timer;
+    auto startTime = std::chrono::steady_clock::now();
 
     // Optimizer working values
     Range range;
     StorageLimits limits;
     getOptimizerWorkingRange(range, limits);
-
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer range for " << pair << " " << range
-                                     << " (pair #" << ++pairIdx << "/" << pairsSize << ")" << commit;
 
     // Previous decision
     int previousValue = dataSource->getOptimizerValue(pair);
@@ -199,7 +194,7 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
             rationale << "No information. Start halfway.";
         }
 
-        setOptimizerDecision(decision, current, decision, rationale.str(), timer.elapsed());
+        setOptimizerDecision(current, decision, decision, rationale.str(), startTime);
 
         current.ema = current.throughput;
         inMemoryStore[pair] = current;
@@ -222,26 +217,29 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
 
     // If we have no range, leave it here
     if (range.min == range.max) {
-        setOptimizerDecision(range.min, current, 0, "Range fixed", timer.elapsed());
+        setOptimizerDecision(current, range.min, 0, "Range fixed", startTime);
         return true;
     }
 
     // Apply bandwidth limits
     if (limits.throughputSource > 0) {
         double throughput = dataSource->getThroughputAsSource(pair.source);
+
         if (throughput > limits.throughputSource) {
             decision = previousValue - decreaseStepSize;
             rationale << "Source throughput limitation reached (" << limits.throughputSource << ")";
-            setOptimizerDecision(decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(current, decision, 0, rationale.str(), startTime);
             return true;
         }
     }
+
     if (limits.throughputDestination > 0) {
         double throughput = dataSource->getThroughputAsDestination(pair.destination);
+
         if (throughput > limits.throughputDestination) {
             decision = previousValue - decreaseStepSize;
             rationale << "Destination throughput limitation reached (" << limits.throughputDestination << ")";
-            setOptimizerDecision(decision, current, 0, rationale.str(), timer.elapsed());
+            setOptimizerDecision(current, decision, 0, rationale.str(), startTime);
             return true;
         }
     }
@@ -276,9 +274,11 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
     // Good success rate, or not enough information to take any decision
     else {
         int localIncreaseStep = increaseStepSize;
+
         if (optMode >= kOptimizerNormal) {
             localIncreaseStep = increaseAggressiveStepSize;
         }
+
         decision = optimizeGoodSuccessRate(current, previous, previousValue,
             decreaseStepSize, localIncreaseStep,
             rationale);
@@ -288,6 +288,7 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
     if (decision < range.min) {
         decision = range.min;
         rationale << ". Hit lower range limit";
+
         if (!range.specific) {
             rationale <<". Using *->* link configuration";
         }
@@ -295,6 +296,7 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
     else if (decision > range.max) {
         decision = range.max;
         rationale << ". Hit upper range limit";
+
         if (!range.specific) {
             rationale <<". Using *->* link configuration";
         } else if (range.storageSpecific) {
@@ -315,6 +317,7 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
     // Do not go too far with the number of connections
     if (optMode >= kOptimizerNormal) {
         const bool want_to_increase = decision > previousValue;
+
         if (want_to_increase && decision > current.queueSize * maxNumberOfStreams) {
             decision = previousValue;
             rationale << ". Too many streams";
@@ -324,17 +327,22 @@ bool OptimizerExecutor::optimizeConnectionsForPair(OptimizerMode optMode)
     BOOST_ASSERT(decision > 0);
     BOOST_ASSERT(!rationale.str().empty());
 
-    setOptimizerDecision(decision, current, decision - previousValue, rationale.str(), timer.elapsed());
+    setOptimizerDecision(current, decision, decision - previousValue, rationale.str(), startTime);
     return true;
 }
 
 
-void OptimizerExecutor::setOptimizerDecision(int decision, const PairState &current,
-                                             int diff, const std::string &rationale, boost::timer::cpu_times elapsed)
+void OptimizerExecutor::setOptimizerDecision(const PairState& current, const int decision, const int diff,
+                                             const std::string& rationale,
+                                             const std::chrono::steady_clock::time_point& start)
 {
+    const auto now = std::chrono::steady_clock::now();
+    const double duration = std::chrono::duration_cast<std::chrono::duration<double>>(now - start).count();
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
-        << "Optimizer: Active for " << pair << " set to " << decision << ", running " << current.activeCount
-        << " rationale=\"" << rationale << "\" (" << elapsed.wall << "ns)" << commit;
+        << "Optimizer decision: Pair " << pair
+        << " decision=" << decision << " running=" << current.activeCount << " diff=" << diff
+        << " rationale=\"" << rationale << "\"" << " (" << duration * 1000 << "s)" << commit;
 
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;

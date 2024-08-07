@@ -21,48 +21,62 @@
 #ifndef FTS3_OPTIMIZEREXECUTOR_H
 #define FTS3_OPTIMIZEREXECUTOR_H
 
-#include <list>
 #include <map>
 #include <string>
 #include <memory>
+#include <chrono>
 
-#include <boost/noncopyable.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/any.hpp>
 #include <db/generic/LinkConfig.h>
 #include <db/generic/Pair.h>
-#include "db/generic/SingleDbInstance.h"
-#include <msg-bus/producer.h>
 
-#include "common/Uri.h"
 #include "OptimizerDataSource.h"
 #include "OptimizerCallbacks.h"
 
 namespace fts3 {
 namespace optimizer {
 
-// Generic optimizer implementation
 class OptimizerExecutor {
+public:
+    OptimizerExecutor(std::unique_ptr<OptimizerDataSource> ds, std::unique_ptr<OptimizerCallbacks> callbacks, const Pair& pair);
+    ~OptimizerExecutor() = default;
+
+    void run(boost::any &);
+    void runOptimizerForPair();
+
+    void setSteadyInterval(const boost::posix_time::time_duration& steadyInterval) {
+        optimizerSteadyInterval = steadyInterval;
+    }
+
+    void setMaxNumberOfStreams(const int numberOfStreams) {
+        maxNumberOfStreams = numberOfStreams;
+    }
+
+    void setMaxSuccessRate(const int successRate) {
+        maxSuccessRate = successRate;
+    }
+
+    void setLowSuccessRate(const int successRate) {
+        lowSuccessRate = successRate;
+    }
+
+    void setBaseSuccessRate(const int successRate) {
+        baseSuccessRate = successRate;
+    }
+
+    void setStepSize(const int increase, const int increaseAggressive, const int decrease) {
+        increaseStepSize = increase;
+        increaseAggressiveStepSize = increaseAggressive;
+        decreaseStepSize = decrease;
+    }
+
+    void setEmaAlpha(const double alpha) {
+        emaAlpha = alpha;
+    }
+
 protected:
-    std::map<Pair, PairState> inMemoryStore;
-    // DB interface
-    std::unique_ptr<OptimizerDataSource> dataSource;
-    std::unique_ptr<OptimizerCallbacks> callbacks;
-    boost::posix_time::time_duration optimizerSteadyInterval;
-    int maxNumberOfStreams;
-    int maxSuccessRate;
-    int lowSuccessRate;
-    int baseSuccessRate;
-
-    int decreaseStepSize;
-    int increaseStepSize, increaseAggressiveStepSize;
-    double emaAlpha;
-
-    size_t pairsSize; /// Number of pairs on Optimizer run
-    int pairIdx; /// Current pair index
-    Pair pair; /// Current pair being optimized
-
     // Run the optimization algorithm for the number of connections.
     // Returns true if a decision is stored
     bool optimizeConnectionsForPair(OptimizerMode optMode);
@@ -74,22 +88,27 @@ protected:
     void getOptimizerWorkingRange(Range& range, StorageLimits& limits);
 
     // Updates decision
-    void setOptimizerDecision(int decision, const PairState &current, int diff,
-                              const std::string &rationale, boost::timer::cpu_times elapsed);
+    void setOptimizerDecision(const PairState& current, int decision, int diff,
+                              const std::string& rationale,
+                              const std::chrono::steady_clock::time_point& start);
 
-public:
-    OptimizerExecutor(std::unique_ptr<OptimizerDataSource> ds, std::unique_ptr<OptimizerCallbacks> callbacks, const Pair& pair);
-    ~OptimizerExecutor();
+    std::map<Pair, PairState> inMemoryStore;
+    // DB interface
+    std::unique_ptr<OptimizerDataSource> dataSource;
+    std::unique_ptr<OptimizerCallbacks> callbacks;
 
-    void setSteadyInterval(boost::posix_time::time_duration);
-    void setMaxNumberOfStreams(int);
-    void setMaxSuccessRate(int);
-    void setLowSuccessRate(int);
-    void setBaseSuccessRate(int);
-    void setStepSize(int increase, int increaseAggressive, int decrease);
-    void setEmaAlpha(double);
-    void run(boost::any &);
-    void runOptimizerForPair();
+    boost::posix_time::time_duration optimizerSteadyInterval;
+    int maxNumberOfStreams;
+    int maxSuccessRate;
+    int lowSuccessRate;
+    int baseSuccessRate;
+
+    int decreaseStepSize;
+    int increaseStepSize;
+    int increaseAggressiveStepSize;
+    double emaAlpha;
+
+    Pair pair; /// The pair being optimized
 };
 
 }

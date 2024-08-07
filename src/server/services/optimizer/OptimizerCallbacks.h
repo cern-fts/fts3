@@ -32,11 +32,10 @@ public:
 // Implementation of the virtual OptimizerCallbacks class defined above
 class OptimizerNotifier : public OptimizerCallbacks {
 protected:
-    bool enabled;
     Producer msgProducer;
 
 public:
-    OptimizerNotifier(bool enabled, const std::string &msgDir): enabled(enabled), msgProducer(msgDir)
+    OptimizerNotifier(const std::string &msgDir): msgProducer(msgDir)
     {}
 
     OptimizerNotifier(const OptimizerNotifier &) = delete;
@@ -44,10 +43,6 @@ public:
     void notifyDecision(const Pair& pair, int decision, const PairState& current,
                         int diff, const std::string& rationale)
     {
-        if (!enabled) {
-            return;
-        }
-
         // Broadcast the decision
         OptimizerInfo msg;
 
