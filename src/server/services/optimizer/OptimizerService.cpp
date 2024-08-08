@@ -18,76 +18,88 @@
  * limitations under the License.
  */
 
-#include <config/ServerConfig.h>
-#include <monitoring/msg-ifce.h>
-#include "OptimizerService.h"
-#include "Optimizer.h"
+#include <chrono>
+#include <sstream>
 
+#include "common/ThreadPool.h"
+#include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
 
+#include "OptimizerService.h"
+#include "OptimizerExecutor.h"
+#include "OptimizerDataSource.h"
+#include "DbOptimizerDataSource.h"
 
 namespace fts3 {
 namespace server {
 
-using optimizer::Optimizer;
-using optimizer::OptimizerCallbacks;
-using optimizer::PairState;
+using optimizer::OptimizerExecutor;
+using optimizer::OptimizerDataSource;
+using optimizer::DbOptimizerDataSource;
+using namespace fts3::common;
 
-
-class OptimizerNotifier : public OptimizerCallbacks {
-protected:
-    bool enabled;
-    Producer msgProducer;
-
+// At the moment DbOptimizerDataSource is the only implementation of OptimizerDataSource
+// In the future this factory can be extended to return different types of OptimizerDataSource implementations
+class OptimizerDataSourceFactory {
 public:
-    OptimizerNotifier(bool enabled, const std::string &msgDir): enabled(enabled), msgProducer(msgDir)
-    {}
+    static std::unique_ptr<OptimizerDataSource> getDataSource() {
+        return std::make_unique<DbOptimizerDataSource>();
+    }
+};
 
-    OptimizerNotifier(const OptimizerNotifier &) = delete;
+// At the moment OptimizerNotifier is the only implementation of OptimizerCallbacks
+// The factory is used to return an instance of OptimizerNotifier if monitoring messages are enabled in the config file
+class OptimizerCallbacksFactory {
+public:
+    static std::unique_ptr<OptimizerCallbacks> getOptimizerCallbacks() {
+        const auto enabled = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
+        const auto messageDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
 
-    void notifyDecision(const Pair& pair, int decision, const PairState& current,
-                        int diff, const std::string& rationale)
-    {
         if (!enabled) {
-            return;
+            return nullptr;
         }
 
-        // Broadcast the decision
-        OptimizerInfo msg;
-
-        msg.source_se = pair.source;
-        msg.dest_se = pair.destination;
-
-        msg.timestamp = millisecondsSinceEpoch();
-
-        msg.throughput = current.throughput;
-        msg.avgDuration = current.avgDuration;
-        msg.successRate = current.successRate;
-        msg.retryCount = current.retryCount;
-        msg.activeCount = current.activeCount;
-        msg.queueSize = current.queueSize;
-        msg.ema = current.ema;
-        msg.filesizeAvg = current.filesizeAvg;
-        msg.filesizeStdDev = current.filesizeStdDev;
-        msg.connections = decision;
-        msg.rationale = rationale;
-        msg.diff = diff;
-
-        MsgIfce::getInstance()->SendOptimizer(msgProducer, msg);
+        return std::make_unique<OptimizerNotifier>(messageDir);
     }
 };
 
 
 OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerService"), beat(beat)
 {
+    optimizerPoolSize = config::ServerConfig::instance().get<int>("OptimizerThreadPool");
 }
 
 
 void OptimizerService::runService()
 {
     typedef boost::posix_time::time_duration TDuration;
+    const auto optimizerInterval = config::ServerConfig::instance().get<TDuration>("OptimizerInterval");
 
-    auto optimizerInterval = config::ServerConfig::instance().get<TDuration>("OptimizerInterval");
+    while (!boost::this_thread::interruption_requested()) {
+        try {
+            if (beat->isLeadNode()) {
+                optimizeAllPairs();
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer: Not the leading node..." << commit;
+            }
+        } catch (std::exception &e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in main process OptimizerService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in main process OptimizerService!" << commit;
+        }
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer: Going to sleep for " << optimizerInterval.total_seconds() << "s" << commit;
+        boost::this_thread::sleep(optimizerInterval);
+    }
+}
+
+void OptimizerService::optimizeAllPairs() {
+
+    ThreadPool<OptimizerExecutor> execPool(optimizerPoolSize); // Run optimizer for each pair in a separate thread
+    auto db = db::DBSingleton::instance().getDBObjectInstance();
+
+    // Read all Optimizer configurations from the config file
+    typedef boost::posix_time::time_duration TDuration;
     auto optimizerSteadyInterval = config::ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
     auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
     auto maxSuccessRate = config::ServerConfig::instance().get<int>("OptimizerMaxSuccessRate");
@@ -99,40 +111,55 @@ void OptimizerService::runService()
     auto increaseAggressiveStep = config::ServerConfig::instance().get<int>("OptimizerAggressiveIncreaseStep");
     auto decreaseStep = config::ServerConfig::instance().get<int>("OptimizerDecreaseStep");
 
-    OptimizerNotifier optimizerCallbacks(
-        config::ServerConfig::instance().get<bool>("MonitoringMessaging"),
-        config::ServerConfig::instance().get<std::string>("MessagingDirectory")
-    );
+    try {
+        // Just get the all the active queues
+        std::list<Pair> pairs = db->getActivePairs();
+        // Make sure the order is always the same
+        // See FTS-1094
+        pairs.sort();
 
-    Optimizer optimizer(
-        db::DBSingleton::instance().getDBObjectInstance()->getOptimizerDataSource(),
-        &optimizerCallbacks
-    );
-    optimizer.setSteadyInterval(optimizerSteadyInterval);
-    optimizer.setMaxNumberOfStreams(maxNumberOfStreams);
-    optimizer.setMaxSuccessRate(maxSuccessRate);
-    optimizer.setLowSuccessRate(lowSuccessRate);
-    optimizer.setBaseSuccessRate(baseSuccessRate);
-    optimizer.setEmaAlpha(emaAlpha);
-    optimizer.setStepSize(increaseStep, increaseAggressiveStep, decreaseStep);
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run start: " << pairs.size() << " pairs to be optimized" << commit;
+        const auto start = std::chrono::steady_clock::now();
 
-    while (!boost::this_thread::interruption_requested()) {
-        try {
-            if (beat->isLeadNode()) {
-                optimizer.run();
-            }
+        // For each par create an optimizer task and run it in the thread pool
+        for (const auto& pair : pairs) {
+            auto *exec = new OptimizerExecutor(OptimizerDataSourceFactory::getDataSource(),
+                                               OptimizerCallbacksFactory::getOptimizerCallbacks(),
+                                               pair);
+
+            exec->setSteadyInterval(optimizerSteadyInterval);
+            exec->setMaxNumberOfStreams(maxNumberOfStreams);
+            exec->setMaxSuccessRate(maxSuccessRate);
+            exec->setLowSuccessRate(lowSuccessRate);
+            exec->setBaseSuccessRate(baseSuccessRate);
+            exec->setEmaAlpha(emaAlpha);
+            exec->setStepSize(increaseStep, increaseAggressiveStep, decreaseStep);
+
+            execPool.start(exec);
         }
-        catch (std::exception &e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService " << e.what() <<
-            fts3::common::commit;
-        }
-        catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService unknown" << fts3::common::commit;
-        }
-        boost::this_thread::sleep(optimizerInterval);
+
+        execPool.join();
+
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - start).count();
+        std::ostringstream elapsed_ss;
+        elapsed_ss << std::fixed << std::setprecision(6) << elapsed;
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run finish: optimized " << pairs.size() << " pairs"
+                                        << " elapsed=" << elapsed_ss.str() << "s" << commit;
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in OptimizerService::optimizeAllPairs" << commit;
+        execPool.interrupt();
+        execPool.join();
+        throw;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in OptimizerService::optimizeAllPairs: " << e.what() << commit;
+        throw;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in OptimizerService::optimizeAllPairs!" << commit;
+        throw;
     }
 }
-
 
 } // end namespace server
 } // end namespace fts3
