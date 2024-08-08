@@ -66,6 +66,7 @@ public:
 
 OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerService"), beat(beat)
 {
+    optimizerPoolSize = config::ServerConfig::instance().get<int>("OptimizerThreadPool");
 }
 
 
@@ -94,7 +95,7 @@ void OptimizerService::runService()
 
 void OptimizerService::optimizeAllPairs() {
 
-    ThreadPool<OptimizerExecutor> execPool(10); // Run optimizer for each link in a thread pool
+    ThreadPool<OptimizerExecutor> execPool(optimizerPoolSize); // Run optimizer for each pair in a separate thread
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 
     // Read all Optimizer configurations from the config file

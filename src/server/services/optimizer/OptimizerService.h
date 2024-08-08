@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2024
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -24,7 +24,6 @@
 
 #include "../BaseService.h"
 #include "../heartbeat/HeartBeat.h"
-#include "db/generic/SingleDbInstance.h"
 
 namespace fts3 {
 namespace server {
@@ -32,13 +31,14 @@ namespace server {
 
 class OptimizerService: public BaseService
 {
-protected:
-    HeartBeat *beat;
-
 public:
     OptimizerService(HeartBeat *beat);
     void optimizeAllPairs();
     virtual void runService();
+
+protected:
+    HeartBeat *beat;
+    int optimizerPoolSize;
 };
 
 } // end namespace server

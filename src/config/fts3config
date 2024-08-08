@@ -66,6 +66,8 @@ LogTokenRequests=false
 # How often to check for new inter-process messages (measured in seconds)
 # Note: should be less than CheckStalledTimeout / 2
 #MessagingConsumeInterval = 1
+# Transfers Service threadpool size
+#InternalThreadPool = 5
 
 # Minimum required free RAM (in MB) for FTS3 to work normally
 # If the amount of free RAM goes below the limit, FTS3 will enter auto-drain mode
@@ -113,6 +115,8 @@ LogTokenRequests=false
 # HeartBeatGraceInterval=120
 
 ## Optimizer Service settings
+# Optimizer Service threadpool size
+# OptimizerThreadPool = 10
 # Optimizer run time interval for active links (measured in seconds)
 # OptimizerInterval = 60
 # Force an Optimizer run after this time without updates (measured in seconds)

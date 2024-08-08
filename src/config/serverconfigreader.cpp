@@ -190,7 +190,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     (
         "Optimizer,o",
         po::value<std::string>( &(_vars["Optimizer"]) )->default_value("true"),
-        "Control auto-tunning activation"
+        "Control auto-tuning activation"
     )
     (
         "CleanRecordsHost,C",
@@ -359,6 +359,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "After this many seconds, a host is considered to be down"
     )
     (
+        "OptimizerThreadPool",
+        po::value<std::string>( &(_vars["OptimizerThreadPool"]) )->default_value("10"),
+        "Set the number of threads for the Optimizer threadpool"
+    )
+    (
         "OptimizerSteadyInterval",
         po::value<std::string>( &(_vars["OptimizerSteadyInterval"]) )->default_value("300"),
         "After this time without optimizer updates, force a run"
@@ -424,9 +429,9 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, how often to check for transfers to force start"
     )
     (
-            "TokenExchangeCheckInterval",
-            po::value<std::string>( &(_vars["TokenExchangeCheckInterval"]) )->default_value("30"),
-            "In seconds, how often to check for tokens eligible for token-exchange (empty refresh token)"
+        "TokenExchangeCheckInterval",
+        po::value<std::string>( &(_vars["TokenExchangeCheckInterval"]) )->default_value("30"),
+        "In seconds, how often to check for tokens eligible for token-exchange (empty refresh token)"
     )
 	(
 	    "OptimizerMaxSuccessRate",
