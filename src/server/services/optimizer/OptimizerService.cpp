@@ -53,7 +53,7 @@ class OptimizerCallbacksFactory {
 public:
     static std::unique_ptr<OptimizerCallbacks> getOptimizerCallbacks() {
         const auto enabled = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-        const auto messageDir = config::ServerConfig::instance().get<std::string>("MessageDirectory");
+        const auto messageDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
 
         if (!enabled) {
             return nullptr;
@@ -153,7 +153,7 @@ void OptimizerService::optimizeAllPairs() {
         execPool.join();
         throw;
     } catch (std::exception& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in OptimizerService::optimizeAllPairs " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in OptimizerService::optimizeAllPairs: " << e.what() << commit;
         throw;
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in OptimizerService::optimizeAllPairs!" << commit;
