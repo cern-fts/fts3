@@ -18,15 +18,17 @@
  * limitations under the License.
  */
 
-#include  <config/ServerConfig.h>
+#include <chrono>
+#include <sstream>
+
+#include "common/ThreadPool.h"
+#include "config/ServerConfig.h"
+#include "db/generic/SingleDbInstance.h"
+
 #include "OptimizerService.h"
 #include "OptimizerExecutor.h"
 #include "OptimizerDataSource.h"
 #include "DbOptimizerDataSource.h"
-#include "common/ThreadPool.h"
-
-#include "db/generic/SingleDbInstance.h"
-
 
 namespace fts3 {
 namespace server {
@@ -75,19 +77,17 @@ void OptimizerService::runService()
     while (!boost::this_thread::interruption_requested()) {
         try {
             if (beat->isLeadNode()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: Start optimizer cycle" << commit;
                 optimizeAllPairs();
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: Finished optimizer cycle" << commit;
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer: Not the leading node..." << commit;
             }
         } catch (std::exception &e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in main process OptimizerService: " << e.what() << commit;
         } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread OptimizerService unknown" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in main process OptimizerService!" << commit;
         }
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer: Going to sleep for " << optimizerInterval.seconds() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Optimizer: Going to sleep for " << optimizerInterval.total_seconds() << "s" << commit;
         boost::this_thread::sleep(optimizerInterval);
     }
 }
@@ -117,7 +117,8 @@ void OptimizerService::optimizeAllPairs() {
         // See FTS-1094
         pairs.sort();
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: found " << pairs.size() << " pairs to be optimized" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run start: " << pairs.size() << " pairs to be optimized" << commit;
+        const auto start = std::chrono::steady_clock::now();
 
         // For each par create an optimizer task and run it in the thread pool
         for (const auto& pair : pairs) {
@@ -137,20 +138,24 @@ void OptimizerService::optimizeAllPairs() {
         }
 
         execPool.join();
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<"Optimizer run: optimized " << pairs.size() << " pairs" << commit;
-    }
-    catch (const boost::thread_interrupted&) {
+
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - start).count();
+        std::ostringstream elapsed_ss;
+        elapsed_ss << std::fixed << std::setprecision(6) << elapsed;
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run finish: optimized " << pairs.size() << " pairs"
+                                        << " elapsed=" << elapsed_ss.str() << "s" << commit;
+    } catch (const boost::thread_interrupted&) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in OptimizerService::optimizeAllPairs" << commit;
         execPool.interrupt();
         execPool.join();
         throw;
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in OptimizerService::optimizeAllPairs " << e.what() << commit;
         throw;
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in OptimizerService!" << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in OptimizerService::optimizeAllPairs!" << commit;
         throw;
     }
 }

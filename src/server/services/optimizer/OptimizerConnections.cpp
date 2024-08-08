@@ -337,12 +337,12 @@ void OptimizerExecutor::setOptimizerDecision(const PairState& current, const int
                                              const std::chrono::steady_clock::time_point& start)
 {
     const auto now = std::chrono::steady_clock::now();
-    const double duration = std::chrono::duration_cast<std::chrono::duration<double>>(now - start).count();
+    const double duration = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(now - start).count();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO)
         << "Optimizer decision: Pair " << pair
         << " decision=" << decision << " running=" << current.activeCount << " diff=" << diff
-        << " rationale=\"" << rationale << "\"" << " (" << duration * 1000 << "s)" << commit;
+        << " rationale=\"" << rationale << "\"" << " (" << duration << "ms)" << commit;
 
     inMemoryStore[pair] = current;
     inMemoryStore[pair].connections = decision;
