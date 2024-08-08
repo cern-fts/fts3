@@ -286,7 +286,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     }
 
     // Set all to ready, special case for session reuse
-    int updatedFiles = db->updateFileStatusReuse(representative, "READY");
+    long updatedFiles = db->updateFileStatusReuse(representative, "READY");
     if (updatedFiles <= 0)
     {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transfer "

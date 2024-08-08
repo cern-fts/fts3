@@ -721,7 +721,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 }
 
                 auto seed = std::chrono::system_clock::now().time_since_epoch().count();
-                auto random_engine = std::default_random_engine{seed};
+                auto random_engine = std::default_random_engine{static_cast<unsigned>(seed)};
                 std::shuffle(vActivityFilesNum.begin(), vActivityFilesNum.end(), random_engine);
 
                 for (auto it_act = vActivityFilesNum.begin(); it_act != vActivityFilesNum.end(); ++it_act)
@@ -1009,11 +1009,11 @@ uint64_t MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & jo
     return bestFileId;
 }
 
-unsigned int MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std::string &status)
+long MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std::string &status)
 {
     soci::session sql(*connectionPool);
 
-    unsigned int updated = 0;
+    long updated = 0;
 
     try
     {
@@ -1030,7 +1030,6 @@ unsigned int MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std
                      "WHERE job_id = :jobId AND file_state = 'SUBMITTED'");
         stmt.define_and_bind();
         stmt.execute(true);
-
         updated = stmt.get_affected_rows();
 
         if (updated > 0)
@@ -1058,6 +1057,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(const TransferFile &file, const std
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
+
     return updated;
 }
 

@@ -257,7 +257,7 @@ public:
     }
 
     /// Update the state of a transfer inside a session reuse job
-    virtual unsigned int updateFileStatusReuse(const TransferFile &file, const std::string &status) = 0;
+    virtual long updateFileStatusReuse(const TransferFile &file, const std::string &status) = 0;
 
     /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;

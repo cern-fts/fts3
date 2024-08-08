@@ -295,7 +295,7 @@ void MySqlAPI::getThroughputInfo(const Pair &pair, const boost::posix_time::time
             }
         }
 
-        *throughput = totalBytes / interval.total_seconds();
+        *throughput = totalBytes / static_cast<double>(interval.total_seconds());
         // Statistics on the file size
         if (!filesizes.empty()) {
             for (auto &filesize: filesizes) {
