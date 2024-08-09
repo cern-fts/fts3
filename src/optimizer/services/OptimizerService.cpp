@@ -64,7 +64,9 @@ public:
 };
 
 
-OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerService"), beat(beat)
+OptimizerService::OptimizerService(const std::shared_ptr<HeartBeat>& beat):
+    BaseService("OptimizerService"),
+    beat(beat)
 {
     optimizerPoolSize = config::ServerConfig::instance().get<int>("OptimizerThreadPool");
 }

@@ -29,7 +29,6 @@
 #include "services/transfers/ForceStartTransfersService.h"
 #include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
-#include "services/optimizer/OptimizerService.h"
 #include "services/transfers/MessageProcessingService.h"
 #include "services/transfers/SupervisorService.h"
 
@@ -42,7 +41,7 @@ namespace server {
 
 Server::Server()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server created" << fts3::common::commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server created" << commit;
 }
 
 
@@ -56,12 +55,11 @@ Server::~Server()
         // pass
     }
     services.clear();
-    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server destroyed" << fts3::common::commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Server destroyed" << commit;
 }
 
 
-void serviceRunnerHelper(std::shared_ptr<BaseService> service)
-{
+void serviceRunnerHelper(const std::shared_ptr<BaseService>& service) {
     (*service)();
 }
 
@@ -92,7 +90,6 @@ void Server::start()
         boost::this_thread::sleep(boost::posix_time::seconds(12));
     }
 
-    addService(new OptimizerService(heartBeatService));
     addService(new TransfersService);
     addService(new ReuseTransfersService);
     addService(new SupervisorService);
@@ -109,7 +106,7 @@ void Server::wait()
 
 void Server::stop()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Request to stop the server" << fts3::common::commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Request to stop the server" << commit;
     systemThreads.interrupt_all();
 }
 

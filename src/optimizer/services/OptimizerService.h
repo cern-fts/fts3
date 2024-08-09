@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2024
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,41 +19,29 @@
  */
 
 #pragma once
-#ifndef SERVER_H_
-#define SERVER_H_
+#ifndef OPTIMIZERSERVICE_H_
+#define OPTIMIZERSERVICE_H_
 
-#include <boost/thread.hpp>
-
-#include "common/Singleton.h"
 #include "common/BaseService.h"
+#include "server/services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
 
-/// Class representing the FTS3 server logic
-class Server: public fts3::common::Singleton<Server>
+
+class OptimizerService: public fts3::common::BaseService
 {
 public:
-    Server();
-    ~Server();
+    OptimizerService(const std::shared_ptr<HeartBeat>& beat);
+    void optimizeAllPairs();
+    virtual void runService();
 
-    /// Start the services
-    void start();
-
-    /// Wait for all services to finish
-    void wait();
-
-    /// Stop the services
-    void stop();
-
-private:
-    boost::thread_group systemThreads;
-    std::vector<std::shared_ptr<fts3::common::BaseService>> services;
-
-    void addService(fts3::common::BaseService* service);
+protected:
+    std::shared_ptr<HeartBeat> beat;
+    int optimizerPoolSize;
 };
 
 } // end namespace server
 } // end namespace fts3
 
-#endif // SERVER_H_
+#endif // OPTIMIZERSERVICE_H_
