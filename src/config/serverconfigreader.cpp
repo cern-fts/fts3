@@ -523,6 +523,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["ExperimentalTapeRESTAPI"]) )->default_value("false"),
         "Enable or disable experimental features of the TAPE REST API"
     )
+    (
+        "ExperimentalPostgresSupport",
+        po::value<std::string>( &(_vars["ExperimentalPostgresSupport"]) )->default_value("false"),
+        "Enable or disable experimental features of using PostgreSQL"
+    )
     ;
 
     return config;
