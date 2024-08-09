@@ -21,6 +21,8 @@
 #ifndef TRANSFERHANDLER_H_
 #define TRANSFERHANDLER_H_
 
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+
 #include <boost/thread.hpp>
 #include <boost/any.hpp>
 
@@ -30,6 +32,7 @@
 
 #include <set>
 #include <string>
+
 
 namespace fts3
 {
