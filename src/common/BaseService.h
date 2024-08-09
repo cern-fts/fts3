@@ -15,16 +15,13 @@
  */
 
 #pragma once
-#ifndef BASESERVICE_H_
-#define BASESERVICE_H_
 
 #include <boost/noncopyable.hpp>
-#include <boost/thread.hpp>
+#include <boost/thread/exceptions.hpp>
 #include "common/Logger.h"
 
-
 namespace fts3 {
-namespace server {
+namespace common {
 
 /// Base class for all services
 /// Intended to be able to treat all of them with the same API
@@ -76,5 +73,3 @@ public:
 
 } // namespace server
 } // namespace fts3
-
-#endif // BASESERVICE_H_

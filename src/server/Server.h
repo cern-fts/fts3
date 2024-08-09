@@ -22,12 +22,10 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
-#include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
 #include "common/Singleton.h"
-#include "services/BaseService.h"
-
+#include "common/BaseService.h"
 
 namespace fts3 {
 namespace server {
@@ -51,9 +49,9 @@ public:
 
 private:
     boost::thread_group systemThreads;
-    std::vector<std::shared_ptr<BaseService>> services;
+    std::vector<std::shared_ptr<fts3::common::BaseService>> services;
 
-    void addService(BaseService *service);
+    void addService(fts3::common::BaseService* service);
 };
 
 } // end namespace server

@@ -26,13 +26,13 @@
 
 #include "msg-bus/consumer.h"
 #include "msg-bus/producer.h"
-#include "../BaseService.h"
+#include "common/BaseService.h"
 
 namespace fts3 {
 namespace server {
 
 
-class MessageProcessingService: public BaseService
+class MessageProcessingService: public fts3::common::BaseService
 {
 private:
     std::vector<fts3::events::Message> messages;

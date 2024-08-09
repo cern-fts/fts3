@@ -22,14 +22,14 @@
 #ifndef OPTIMIZERSERVICE_H_
 #define OPTIMIZERSERVICE_H_
 
-#include "../BaseService.h"
-#include "../heartbeat/HeartBeat.h"
+#include "common/BaseService.h"
+#include "server/services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
 
 
-class OptimizerService: public BaseService
+class OptimizerService: public fts3::common::BaseService
 {
 public:
     OptimizerService(HeartBeat *beat);

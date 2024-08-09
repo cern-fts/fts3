@@ -34,6 +34,8 @@
 #include "services/transfers/SupervisorService.h"
 
 
+using namespace fts3::common;
+
 namespace fts3 {
 namespace server {
 
@@ -64,7 +66,7 @@ void serviceRunnerHelper(std::shared_ptr<BaseService> service)
 }
 
 
-void Server::addService(BaseService *service)
+void Server::addService(BaseService* service)
 {
     services.emplace_back(service);
     systemThreads.add_thread(new boost::thread(serviceRunnerHelper, services.back()));

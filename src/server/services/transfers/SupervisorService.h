@@ -17,8 +17,8 @@
 #ifndef FTS3_SUPERVISORSERVICE_H
 #define FTS3_SUPERVISORSERVICE_H
 
-#include "../BaseService.h"
 #include <zmq.hpp>
+#include "common/BaseService.h"
 
 namespace fts3 {
 namespace server {
@@ -28,7 +28,7 @@ namespace server {
  * alive. After a given amount of time passes without signal of life, CancelerService will reap
  * those stalled processes
  */
-class SupervisorService: public BaseService {
+class SupervisorService: public fts3::common::BaseService {
 protected:
     zmq::context_t zmqContext;
     zmq::socket_t zmqPingSocket;
