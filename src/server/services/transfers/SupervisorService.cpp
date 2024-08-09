@@ -32,8 +32,7 @@ SupervisorService::SupervisorService(): BaseService("SupervisorService"),
 {
     std::string messagingDirectory = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     std::string address = std::string("ipc://") + messagingDirectory + "/url_copy-ping.ipc";
-    zmqPingSocket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-
+    zmqPingSocket.set(zmq::sockopt::subscribe, "");
     zmqPingSocket.bind(address.c_str());
 }
 
@@ -47,7 +46,7 @@ void SupervisorService::runService()
         try {
             boost::this_thread::sleep(boost::posix_time::seconds(1));
 
-            while (zmqPingSocket.recv(&message, ZMQ_NOBLOCK)) {
+            while (zmqPingSocket.recv(message, zmq::recv_flags::dontwait)) {
                 fts3::events::MessageUpdater event;
 
                 // Must cast value in order to silence conversion warning

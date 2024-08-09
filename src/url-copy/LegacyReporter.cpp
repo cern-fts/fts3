@@ -391,7 +391,7 @@ void LegacyReporter::sendPing(Transfer &transfer)
         std::string serialized = ping.SerializeAsString();
         zmq::message_t message(serialized.size());
         memcpy(message.data(), serialized.c_str(), serialized.size());
-        zmqPingSocket.send(message, 0);
+        zmqPingSocket.send(message, zmq::send_flags::none);
     }
     catch (const std::exception &error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;
