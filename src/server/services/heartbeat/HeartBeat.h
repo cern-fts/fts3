@@ -23,7 +23,7 @@
 #define HEARTBEAT_H_
 
 #include <ctime>
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 
 
 namespace fts3 {
@@ -34,7 +34,7 @@ extern time_t updateRecords;
 extern time_t stallRecords;
 extern time_t tokenExchangeRecords;
 
-class HeartBeat: public fts3::common::BaseService
+class HeartBeat: public BaseService
 {
 public:
     HeartBeat();

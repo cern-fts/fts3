@@ -22,26 +22,26 @@
 #ifndef OPTIMIZERSERVICE_H_
 #define OPTIMIZERSERVICE_H_
 
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 #include "server/services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
-namespace server {
+namespace optimizer {
 
 
-class OptimizerService: public fts3::common::BaseService
+class OptimizerService: public fts3::server::BaseService
 {
 public:
-    OptimizerService(const std::shared_ptr<HeartBeat>& beat);
+    OptimizerService(const std::shared_ptr<fts3::server::HeartBeat>& beat);
     void optimizeAllPairs();
     virtual void runService();
 
 protected:
-    std::shared_ptr<HeartBeat> beat;
+    std::shared_ptr<fts3::server::HeartBeat> beat;
     int optimizerPoolSize;
 };
 
-} // end namespace server
+} // end namespace optimizer
 } // end namespace fts3
 
 #endif // OPTIMIZERSERVICE_H_

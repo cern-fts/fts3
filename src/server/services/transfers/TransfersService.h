@@ -26,14 +26,14 @@
 #include <vector>
 
 #include "db/generic/QueueId.h"
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 
 
 namespace fts3 {
 namespace server {
 
 
-class TransfersService: public fts3::common::BaseService
+class TransfersService: public BaseService
 {
 public:
     /// Constructor

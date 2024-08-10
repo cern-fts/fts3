@@ -47,15 +47,15 @@ list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
 add_library(fts_server_lib SHARED ${fts_server_lib_sources})
 target_link_libraries(fts_server_lib
     fts_db_generic
-		fts_msg_bus
+    fts_msg_bus
     fts_proxy
     gridsite
-		${GLIB2_LIBRARIES}
-		${Boost_LIBRARIES}
+    ${GLIB2_LIBRARIES}
+    ${Boost_LIBRARIES}
     ${ZMQ_LIBRARIES}
-		${DAVIX_LIBRARIES}
-		${CRYPTOPP_LIBRARIES}
-		JSONCPP::JSONCPP
+    ${DAVIX_LIBRARIES}
+    ${CRYPTOPP_LIBRARIES}
+    JSONCPP::JSONCPP
 )
 set_target_properties(fts_server_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/server
@@ -71,7 +71,7 @@ target_link_libraries(fts_server
     fts_server_lib
     fts_config
     fts_common
-		fts_msg_ifce
+    fts_msg_ifce
     ${Boost_LIBRARIES}
 )
 

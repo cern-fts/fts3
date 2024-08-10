@@ -19,7 +19,7 @@
 #include "common/ThreadPool.h"
 
 #include "config/ServerConfig.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "TokenExchangeService.h"
 #include "TokenExchangeExecutor.h"
@@ -38,8 +38,8 @@ extern time_t tokenExchangeRecords;
 TokenExchangeService::TokenExchangeService(HeartBeat *beat) :
     BaseService("TokenExchangeService"), beat(beat)
 {
-    execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
-    pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
+    execPoolSize = ServerConfig::instance().get<int>("InternalThreadPool");
+    pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
 }
 
 void TokenExchangeService::runService() {

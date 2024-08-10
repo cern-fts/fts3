@@ -26,7 +26,7 @@
 
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "SingleTrStateInstance.h"
 #include "ThreadSafeList.h"
 

@@ -29,7 +29,7 @@
 
 #include "db/generic/TransferFile.h"
 
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"

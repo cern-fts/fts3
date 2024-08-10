@@ -23,12 +23,12 @@
 #define CLEANERSERVICE_H_
 
 #include <string>
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 
 namespace fts3 {
 namespace server {
 
-class CleanerService: public fts3::common::BaseService
+class CleanerService: public BaseService
 {
 private:
     void removeOldFiles(const std::string& path);

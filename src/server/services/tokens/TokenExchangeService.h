@@ -17,13 +17,13 @@
 #pragma once
 
 #include "db/generic/Token.h"
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 #include "services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
 
-class TokenExchangeService: public fts3::common::BaseService
+class TokenExchangeService: public BaseService
 {
 public:
     TokenExchangeService(HeartBeat *beat);

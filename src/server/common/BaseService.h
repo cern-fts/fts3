@@ -21,7 +21,7 @@
 #include "common/Logger.h"
 
 namespace fts3 {
-namespace common {
+namespace server {
 
 /// Base class for all services
 /// Intended to be able to treat all of them with the same API
@@ -30,11 +30,11 @@ private:
     std::string serviceName;
 
 protected:
-    BaseService(const std::string &serviceName): serviceName(serviceName)
+    BaseService(const std::string& serviceName): serviceName(serviceName)
     {
     }
 
-    void setServiceName(const std::string &newServiceName)
+    void setServiceName(const std::string& newServiceName)
     {
         serviceName = newServiceName;
     }
@@ -52,21 +52,20 @@ public:
 
     virtual void operator() () {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting " << getServiceName() << fts3::common::commit;
+
         try {
             runService();
-        }
-        catch (const boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Requested interruption of " << getServiceName()
                 << fts3::common::commit;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception for " << getServiceName()
                 << ": " << e.what() << fts3::common::commit;
-        }
-        catch (...) {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled unknown exception for "
                 << getServiceName() << fts3::common::commit;
         }
+
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting " << getServiceName() << fts3::common::commit;
     }
 };

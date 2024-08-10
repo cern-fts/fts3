@@ -24,7 +24,7 @@
 #include "config/ServerConfig.h"
 #include "common/Uri.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "FetchStaging.h"
 #include "qos-daemon/task/BringOnlineTask.h"

@@ -22,7 +22,7 @@
 #include "QoSServer.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "task/PollTask.h"
 #include "task/HttpPollTask.h"

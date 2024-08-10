@@ -19,7 +19,7 @@
 #include <boost/thread.hpp>
 
 #include "common/Singleton.h"
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 
 namespace fts3 {
 namespace optimizer {
@@ -39,9 +39,9 @@ public:
 
 private:
   boost::thread_group systemThreads;
-  std::vector<std::shared_ptr<fts3::common::BaseService>> services;
+  std::vector<std::shared_ptr<fts3::server::BaseService>> services;
 
-  void addService(const std::shared_ptr<fts3::common::BaseService>& service);
+  void addService(const std::shared_ptr<fts3::server::BaseService>& service);
 };
 
 } // end namespace optimizer

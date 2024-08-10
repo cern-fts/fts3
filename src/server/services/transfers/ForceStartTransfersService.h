@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 #include "services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
 namespace server {
 
-class ForceStartTransfersService: public fts3::common::BaseService
+class ForceStartTransfersService: public BaseService
 {
 public:
     ForceStartTransfersService(HeartBeat *beat);

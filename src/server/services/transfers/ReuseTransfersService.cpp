@@ -26,7 +26,7 @@
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
 #include "ExecuteProcess.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"

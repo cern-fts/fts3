@@ -23,7 +23,7 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "server/Server.h"
 
 using namespace fts3::common;

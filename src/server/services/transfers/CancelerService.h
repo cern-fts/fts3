@@ -24,13 +24,13 @@
 
 #include <vector>
 
-#include "common/BaseService.h"
+#include "server/common/BaseService.h"
 
 
 namespace fts3 {
 namespace server {
 
-class CancelerService: public fts3::common::BaseService
+class CancelerService: public BaseService
 {
 public:
 
