@@ -16,6 +16,7 @@
 
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
+#include "server/Server.h"
 #include "server/services/heartbeat/HeartBeat.h"
 #include "optimizer/services/OptimizerService.h"
 #include "OptimizerServer.h"
@@ -60,11 +61,16 @@ void OptimizerServer::addService(const std::shared_ptr<BaseService>& service)
 
 void OptimizerServer::start()
 {
+    Server::validateConfigRestraints({
+        {"OptimizerInterval", "OptimizerGraceTime", 3},
+    });
+
     auto heartBeatService = std::make_shared<HeartBeat>(processName);
     auto optimizerService = std::make_shared<OptimizerService>(heartBeatService);
 
     // Register te Optimizer service as "critical" to be watched by the HeartBeat service
-    heartBeatService->registerWatchedService(optimizerService, 3600, [this] { stop(); });
+    auto optimizerGraceTime = ServerConfig::instance().get<int>("OptimizerGraceTime");
+    heartBeatService->registerWatchedService(optimizerService, optimizerGraceTime, [this] { stop(); });
 
     addService(heartBeatService);
 

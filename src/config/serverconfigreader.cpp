@@ -433,23 +433,53 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["TokenExchangeCheckInterval"]) )->default_value("30"),
         "In seconds, how often to check for tokens eligible for token-exchange (empty refresh token)"
     )
+    (
+        "MessagingConsumeGraceTime",
+        po::value<std::string>( &(_vars["MessagingConsumeGraceTime"]) )->default_value("600"),
+        "In seconds, time window since last MessageProcessingService run to be considered inactive"
+    )
+    (
+        "CancelCheckGraceTime",
+        po::value<std::string>( &(_vars["CancelCheckGraceTime"]) )->default_value("1800"),
+        "In seconds, time window since last CancelerService run to be considered inactive"
+    )
+    (
+        "SchedulingGraceTime",
+        po::value<std::string>( &(_vars["SchedulingGraceTime"]) )->default_value("600"),
+        "In seconds, time window since last SchedulerService run to be considered inactive"
+    )
+    (
+        "SupervisorGraceTime",
+        po::value<std::string>( &(_vars["SupervisorGraceTime"]) )->default_value("600"),
+        "In seconds, time window for the SupervisorService since last run to be considered inactive"
+    )
+    (
+        "TokenExchangeCheckGraceTime",
+        po::value<std::string>( &(_vars["TokenExchangeCheckGraceTime"]) )->default_value("600"),
+        "In seconds, time window since last TokenExchangeService run to be considered inactive"
+    )
+    (
+        "OptimizerGraceTime",
+        po::value<std::string>( &(_vars["OptimizerGraceTime"]) )->default_value("3600"),
+        "In seconds, time window since last OptimizerService run to be considered inactive"
+    )
 	(
 	    "OptimizerMaxSuccessRate",
-	     po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
-	     "Percentage of the max success rate considered by the optimizer"
+	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
+	    "Percentage of the max success rate considered by the optimizer"
 	)
 	(
-	  "OptimizerMedSuccessRate",
-	   po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
-	   "Percentage of the med success rate considered by the optimizer"
+	    "OptimizerMedSuccessRate",
+	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
+	    "Percentage of the med success rate considered by the optimizer"
 	)
 	(
-	   "OptimizerLowSuccessRate",
+	    "OptimizerLowSuccessRate",
 	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT),
-	   "Percentage of the low success rate considered by the optimizer"
+	    "Percentage of the low success rate considered by the optimizer"
 	)
 	(
-	   "OptimizerBaseSuccessRate",
+	    "OptimizerBaseSuccessRate",
 	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT),
 	    "Percentage of the base success rate considered by the optimizer"
 	)
@@ -480,23 +510,27 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (   "AutoSessionReuse",
     	po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
-	"Enable or disable auto session reuse"
+	    "Enable or disable auto session reuse"
     )
-    (   "AutoSessionReuseMaxSmallFileSize",
+    (
+        "AutoSessionReuseMaxSmallFileSize",
     	po::value<int>()->default_value(104857600),
-	"Max small file size for session reuse in bytes"
+	    "Max small file size for session reuse in bytes"
     )
-    (   "AutoSessionReuseMaxBigFileSize",
-	 po::value<long long>()->default_value(1073741824),
-	 "Max big file size for session reuse in bytes"
+    (
+        "AutoSessionReuseMaxBigFileSize",
+	    po::value<long long>()->default_value(1073741824),
+	    "Max big file size for session reuse in bytes"
     )
-    (   "AutoSessionReuseMaxFiles",
-         po::value<int>()->default_value(1000),
-         "Max number of files per session reuse"
+    (
+        "AutoSessionReuseMaxFiles",
+        po::value<int>()->default_value(1000),
+        "Max number of files per session reuse"
     )
-    (   "AutoSessionReuseMaxBigFiles",
-	 po::value<int>()->default_value(2),
-	 "Max number of big files  per session reuse"
+    (
+        "AutoSessionReuseMaxBigFiles",
+	    po::value<int>()->default_value(2),
+	    "Max number of big files  per session reuse"
     )
     (
         "UseFixedJobPriority",
@@ -598,7 +632,7 @@ struct ReadConfigFile_SystemTraits
     {
         reader.storeValuesAsStrings();
         reader.storeRoles ();
-        reader.validateRequired ("SiteName");
+        reader.validateRequired("SiteName");
     }
 };
 
@@ -681,9 +715,8 @@ void ServerConfigReader::storeRoles ()
         }
 }
 
-void ServerConfigReader::validateRequired (std::string key)
+void ServerConfigReader::validateRequired(const std::string& key)
 {
-
     if (!_vm.count("SiteName"))
         throw UserError("The required configuration option: '" + key + "' has not been found!");
 }

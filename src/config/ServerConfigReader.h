@@ -61,7 +61,7 @@ public:
      */
     void storeRoles();
 
-    void validateRequired(std::string key);
+    void validateRequired(const std::string& key);
 
     /* ---------------------------------------------------------------------- */
 

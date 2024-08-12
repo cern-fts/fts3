@@ -34,6 +34,7 @@
 
 
 using namespace fts3::common;
+using namespace fts3::config;
 
 namespace fts3 {
 namespace server {
@@ -73,6 +74,13 @@ void Server::addService(const std::shared_ptr<BaseService>& service)
 
 void Server::start()
 {
+    validateConfigRestraints({
+        {"MessagingConsumeInterval", "MessagingConsumeGraceTime", 3},
+        {"CancelCheckInterval", "CancelCheckGraceTime", 3},
+        {"SchedulingInterval", "SchedulingGraceTime", 3},
+        {"TokenExchangeCheckInterval", "TokenExchangeCheckGraceTime", 3}
+    });
+
     auto heartBeatService = std::make_shared<HeartBeat>(processName);
 
     auto cleanerService = std::make_shared<CleanerService>();
@@ -85,25 +93,31 @@ void Server::start()
     auto tokenExchangeService = std::make_shared<TokenExchangeService>(heartBeatService);
 
     // Register "critical" services to be watched by the HeartBeat service
-    heartBeatService->registerWatchedService(messageProcessingService, 600, [this] { stop(); });
-    heartBeatService->registerWatchedService(cancelerService, 1800, [this] { stop(); });
-    heartBeatService->registerWatchedService(transfersService, 600, [this] { stop(); });
-    heartBeatService->registerWatchedService(reuseTransfersService, 600, [this] { stop(); });
-    heartBeatService->registerWatchedService(supervisorService, 600, [this] { stop(); });
-    heartBeatService->registerWatchedService(tokenExchangeService, 600, [this] { stop(); });
+    auto messageProcessingGraceTime = ServerConfig::instance().get<int>("MessagingConsumeGraceTime");
+    auto cancelerGraceTime = ServerConfig::instance().get<int>("CancelCheckGraceTime");
+    auto transfersGraceTime = ServerConfig::instance().get<int>("SchedulingGraceTime");
+    auto supervisorGraceTime = ServerConfig::instance().get<int>("SupervisorGraceTime");
+    auto tokenExchangeGraceTime = ServerConfig::instance().get<int>("TokenExchangeCheckGraceTime");
+
+    heartBeatService->registerWatchedService(messageProcessingService, messageProcessingGraceTime, [this] { stop(); });
+    heartBeatService->registerWatchedService(cancelerService, cancelerGraceTime, [this] { stop(); });
+    heartBeatService->registerWatchedService(transfersService, transfersGraceTime, [this] { stop(); });
+    heartBeatService->registerWatchedService(reuseTransfersService, transfersGraceTime, [this] { stop(); });
+    heartBeatService->registerWatchedService(supervisorService, supervisorGraceTime, [this] { stop(); });
+    heartBeatService->registerWatchedService(tokenExchangeService, tokenExchangeGraceTime, [this] { stop(); });
 
     addService(heartBeatService);
     addService(cleanerService);
 
     // Give cleaner and heartbeat some time ahead
-    if (!config::ServerConfig::instance().get<bool> ("rush")) {
+    if (!ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(7));
     }
 
     addService(messageProcessingService);
 
     // Wait for status updates to be processed
-    if (!config::ServerConfig::instance().get<bool> ("rush")) {
+    if (!ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(8));
     }
 
@@ -126,6 +140,24 @@ void Server::stop()
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Request to stop the server" << commit;
     systemThreads.interrupt_all();
+}
+
+
+void Server::validateConfigRestraints(const std::vector<ConfigConstraintTuple>& constraints)
+{
+    for (const auto& constraint: constraints) {
+        auto interval = ServerConfig::instance().get<int>(std::get<0>(constraint));
+        auto graceTime = ServerConfig::instance().get<int>(std::get<1>(constraint));
+        auto factor = std::get<2>(constraint);
+
+        if (graceTime < factor * interval) {
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Grace time config constraint failed: "
+                                            << std::get<1>(constraint) << "(" << graceTime << ")"
+                                            << " < " << factor << " * " << std::get<0>(constraint) << "(" << interval << ")."
+                                            << " Aborting process!" << commit;
+            exit(1);
+        }
+    }
 }
 
 } // end namespace server

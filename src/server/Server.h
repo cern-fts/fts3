@@ -46,6 +46,9 @@ public:
     /// Stop the services
     void stop();
 
+    using ConfigConstraintTuple = std::tuple<std::string, std::string, int>;
+    static void validateConfigRestraints(const std::vector<ConfigConstraintTuple>& constraints);
+
 private:
     void addService(const std::shared_ptr<BaseService>& service);
 
