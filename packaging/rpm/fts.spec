@@ -324,7 +324,7 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
-* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.1
+* Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.1
 - "Overwrite-when-only-on-disk" feature
 - Drop CC7 build
 
