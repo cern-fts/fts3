@@ -34,11 +34,8 @@ class CancelerService: public BaseService
 {
 public:
 
-    /// Constructor
-    CancelerService();
-
-    /// Destructor
-    virtual ~CancelerService();
+    CancelerService(): BaseService("CancelerService") {}
+    virtual ~CancelerService() = default;
 
     virtual void runService();
 

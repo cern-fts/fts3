@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <mutex>
+#include <chrono>
 #include <boost/noncopyable.hpp>
 #include <boost/thread/exceptions.hpp>
 #include "common/Logger.h"
@@ -26,16 +28,12 @@ namespace server {
 /// Base class for all services
 /// Intended to be able to treat all of them with the same API
 class BaseService: public boost::noncopyable {
-private:
-    std::string serviceName;
-
 protected:
-    BaseService(const std::string& serviceName): serviceName(serviceName)
-    {
+    BaseService(const std::string& serviceName): serviceName(serviceName) {
+        lastRun = std::chrono::steady_clock::now();
     }
 
-    void setServiceName(const std::string& newServiceName)
-    {
+    void setServiceName(const std::string& newServiceName) {
         serviceName = newServiceName;
     }
 
@@ -68,6 +66,21 @@ public:
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting " << getServiceName() << fts3::common::commit;
     }
+
+    void updateLastRunTimepoint() {
+        std::unique_lock lock(mutex);
+        lastRun = std::chrono::steady_clock::now();
+    }
+
+    std::chrono::steady_clock::time_point getLastRunTimepoint() {
+        std::unique_lock lock(mutex);
+        return lastRun;
+    }
+
+private:
+    std::string serviceName; ///< The service name
+    std::mutex mutex; ///< Mutex for lastRun timepoint
+    std::chrono::steady_clock::time_point lastRun; ///< Timepoint for the last "runService()" execution
 };
 
 } // namespace server

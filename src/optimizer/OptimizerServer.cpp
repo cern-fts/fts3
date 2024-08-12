@@ -60,15 +60,20 @@ void OptimizerServer::addService(const std::shared_ptr<BaseService>& service)
 
 void OptimizerServer::start()
 {
-    auto heartBeatService = std::make_shared<HeartBeat>();
+    auto heartBeatService = std::make_shared<HeartBeat>(processName);
+    auto optimizerService = std::make_shared<OptimizerService>(heartBeatService);
+
+    // Register te Optimizer service as "critical" to be watched by the HeartBeat service
+    heartBeatService->registerWatchedService(optimizerService, 3600, [this] { stop(); });
+
     addService(heartBeatService);
 
     // Give heartbeat some time ahead
     if (!ServerConfig::instance().get<bool> ("rush")) {
-        boost::this_thread::sleep(boost::posix_time::seconds(8));
+        boost::this_thread::sleep(boost::posix_time::seconds(7));
     }
 
-    addService(std::make_shared<OptimizerService>(heartBeatService));
+    addService(optimizerService);
 }
 
 void OptimizerServer::wait()

@@ -36,11 +36,8 @@ namespace server {
 class TransfersService: public BaseService
 {
 public:
-    /// Constructor
     TransfersService();
-
-    /// Destructor
-    virtual ~TransfersService();
+    virtual ~TransfersService() = default;
 
     virtual void runService();
 

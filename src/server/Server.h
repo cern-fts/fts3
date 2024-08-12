@@ -47,10 +47,11 @@ public:
     void stop();
 
 private:
+    void addService(const std::shared_ptr<BaseService>& service);
+
+    std::string processName{"fts_server"};
     boost::thread_group systemThreads;
     std::vector<std::shared_ptr<BaseService>> services;
-
-    void addService(BaseService* service);
 };
 
 } // end namespace server

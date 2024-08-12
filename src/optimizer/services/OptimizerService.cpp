@@ -67,9 +67,9 @@ public:
 };
 
 
-OptimizerService::OptimizerService(const std::shared_ptr<HeartBeat>& beat):
+OptimizerService::OptimizerService(const std::shared_ptr<HeartBeat>& heartBeat):
     BaseService("OptimizerService"),
-    beat(beat)
+    heartBeat(heartBeat)
 {
     optimizerPoolSize = ServerConfig::instance().get<int>("OptimizerThreadPool");
 }
@@ -82,7 +82,7 @@ void OptimizerService::runService()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            if (beat->isLeadNode()) {
+            if (heartBeat->isLeadNode()) {
                 optimizeAllPairs();
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer: Not the leading node..." << commit;

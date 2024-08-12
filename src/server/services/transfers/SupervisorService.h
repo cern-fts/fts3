@@ -29,16 +29,15 @@ namespace server {
  * those stalled processes
  */
 class SupervisorService: public BaseService {
+public:
+    SupervisorService();
+    virtual ~SupervisorService() = default;
+
+    void runService();
+
 protected:
     zmq::context_t zmqContext;
     zmq::socket_t zmqPingSocket;
-
-public:
-    /// Constructor
-    SupervisorService();
-
-    /// Service code
-    void runService();
 };
 
 }

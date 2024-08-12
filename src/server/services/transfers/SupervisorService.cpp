@@ -44,6 +44,7 @@ void SupervisorService::runService()
         zmq::message_t message;
 
         try {
+            updateLastRunTimepoint();
             boost::this_thread::sleep(boost::posix_time::seconds(1));
 
             while (zmqPingSocket.recv(message, zmq::recv_flags::dontwait)) {

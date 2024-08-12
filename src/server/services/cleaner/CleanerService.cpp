@@ -33,11 +33,6 @@ namespace fts3 {
 namespace server {
 
 
-CleanerService::CleanerService(): BaseService("CleanerService")
-{
-}
-
-
 void CleanerService::removeOldFiles(const std::string& path)
 {
     fs::recursive_directory_iterator end;

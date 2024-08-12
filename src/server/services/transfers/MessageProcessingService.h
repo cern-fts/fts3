@@ -34,21 +34,9 @@ namespace server {
 
 class MessageProcessingService: public BaseService
 {
-private:
-    std::vector<fts3::events::Message> messages;
-    std::map<int, fts3::events::MessageLog> messagesLog;
-    std::vector<fts3::events::MessageUpdater> messagesUpdater;
-
-    Consumer consumer;
-    Producer producer;
-
 public:
-
-    /// Constructor
     MessageProcessingService();
-
-    /// Destructor
-    virtual ~MessageProcessingService();
+    virtual ~MessageProcessingService() = default;
 
     virtual void runService();
 
@@ -71,6 +59,13 @@ private:
 
     /// Return whether an error message cannot be recovered from
     bool isUnrecoverableErrorMessage(const std::string& errmsg);
+
+    std::vector<fts3::events::Message> messages;
+    std::map<int, fts3::events::MessageLog> messagesLog;
+    std::vector<fts3::events::MessageUpdater> messagesUpdater;
+
+    Consumer consumer;
+    Producer producer;
 };
 
 } // end namespace server

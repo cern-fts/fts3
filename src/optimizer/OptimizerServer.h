@@ -38,10 +38,11 @@ public:
     void wait();
 
 private:
-  boost::thread_group systemThreads;
-  std::vector<std::shared_ptr<fts3::server::BaseService>> services;
+    void addService(const std::shared_ptr<fts3::server::BaseService>& service);
 
-  void addService(const std::shared_ptr<fts3::server::BaseService>& service);
+    std::string processName{"fts_optimizer"};
+    boost::thread_group systemThreads;
+    std::vector<std::shared_ptr<fts3::server::BaseService>> services;
 };
 
 } // end namespace optimizer

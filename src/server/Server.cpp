@@ -64,7 +64,7 @@ void serviceRunnerHelper(const std::shared_ptr<BaseService>& service) {
 }
 
 
-void Server::addService(BaseService* service)
+void Server::addService(const std::shared_ptr<BaseService>& service)
 {
     services.emplace_back(service);
     systemThreads.add_thread(new boost::thread(serviceRunnerHelper, services.back()));
@@ -73,28 +73,46 @@ void Server::addService(BaseService* service)
 
 void Server::start()
 {
-    auto heartBeatService = new HeartBeat;
-    addService(new CleanerService);
-    addService(new MessageProcessingService);
+    auto heartBeatService = std::make_shared<HeartBeat>(processName);
+
+    auto cleanerService = std::make_shared<CleanerService>();
+    auto messageProcessingService = std::make_shared<MessageProcessingService>();
+    auto cancelerService = std::make_shared<CancelerService>();
+    auto transfersService = std::make_shared<TransfersService>();
+    auto reuseTransfersService = std::make_shared<ReuseTransfersService>();
+    auto supervisorService = std::make_shared<SupervisorService>();
+    auto forceStartTransfersService = std::make_shared<ForceStartTransfersService>(heartBeatService);
+    auto tokenExchangeService = std::make_shared<TokenExchangeService>(heartBeatService);
+
+    // Register "critical" services to be watched by the HeartBeat service
+    heartBeatService->registerWatchedService(messageProcessingService, 600, [this] { stop(); });
+    heartBeatService->registerWatchedService(cancelerService, 1800, [this] { stop(); });
+    heartBeatService->registerWatchedService(transfersService, 600, [this] { stop(); });
+    heartBeatService->registerWatchedService(reuseTransfersService, 600, [this] { stop(); });
+    heartBeatService->registerWatchedService(supervisorService, 600, [this] { stop(); });
+    heartBeatService->registerWatchedService(tokenExchangeService, 600, [this] { stop(); });
+
     addService(heartBeatService);
+    addService(cleanerService);
 
     // Give cleaner and heartbeat some time ahead
+    if (!config::ServerConfig::instance().get<bool> ("rush")) {
+        boost::this_thread::sleep(boost::posix_time::seconds(7));
+    }
+
+    addService(messageProcessingService);
+
+    // Wait for status updates to be processed
     if (!config::ServerConfig::instance().get<bool> ("rush")) {
         boost::this_thread::sleep(boost::posix_time::seconds(8));
     }
 
-    addService(new CancelerService);
-
-    // Wait for status updates to be processed
-    if (!config::ServerConfig::instance().get<bool> ("rush")) {
-        boost::this_thread::sleep(boost::posix_time::seconds(12));
-    }
-
-    addService(new TransfersService);
-    addService(new ReuseTransfersService);
-    addService(new SupervisorService);
-    addService(new ForceStartTransfersService(heartBeatService));
-    addService(new TokenExchangeService(heartBeatService));
+    addService(cancelerService);
+    addService(transfersService);
+    addService(reuseTransfersService);
+    addService(supervisorService);
+    addService(forceStartTransfersService);
+    addService(tokenExchangeService);
 }
 
 

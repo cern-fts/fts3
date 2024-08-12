@@ -41,8 +41,6 @@ using fts3::config::ServerConfig;
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-
 
 ReuseTransfersService::ReuseTransfersService()
 {
@@ -54,7 +52,7 @@ void ReuseTransfersService::runService()
 {
     while (!boost::this_thread::interruption_requested())
     {
-        retrieveRecords = time(0);
+        updateLastRunTimepoint();
 
         try
         {

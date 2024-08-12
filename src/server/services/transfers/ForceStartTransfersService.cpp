@@ -24,8 +24,6 @@
 #include "db/generic/SingleDbInstance.h"
 #include "db/generic/TransferFile.h"
 
-#include "server/common/DrainMode.h"
-
 #include "ForceStartTransfersService.h"
 #include "FileTransferExecutor.h"
 
@@ -35,15 +33,17 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-ForceStartTransfersService::ForceStartTransfersService(HeartBeat *beat) : BaseService("ForceStartTransfersService"), beat(beat) {
-    logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
-    msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
-    execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
-    ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
-    infosys = config::ServerConfig::instance().get<std::string>("Infosys");
+ForceStartTransfersService::ForceStartTransfersService(const std::shared_ptr<HeartBeat>& heartBeat):
+    BaseService("ForceStartTransfersService"), heartBeat(heartBeat)
+{
+    logDir = ServerConfig::instance().get<std::string>("TransferLogDirectory");
+    msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+    execPoolSize = ServerConfig::instance().get<int>("InternalThreadPool");
+    ftsHostName = ServerConfig::instance().get<std::string>("Alias");
+    infosys = ServerConfig::instance().get<std::string>("Infosys");
 
-    monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-    pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransfersCheckInterval");
+    monitoringMessages = ServerConfig::instance().get<bool>("MonitoringMessaging");
+    pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransfersCheckInterval");
 }
 
 void ForceStartTransfersService::forceRunJobs() {
@@ -117,10 +117,10 @@ void ForceStartTransfersService::forceRunJobs() {
 void ForceStartTransfersService::runService() {
     while (!boost::this_thread::interruption_requested()) {
         boost::this_thread::sleep(pollInterval);
-        try {
 
+        try {
             // This service intentionally does not follow the drain mechanism
-            if (beat->isLeadNode(true)) {
+            if (heartBeat->isLeadNode(true)) {
                 forceRunJobs();
             }
         } catch (boost::thread_interrupted&) {

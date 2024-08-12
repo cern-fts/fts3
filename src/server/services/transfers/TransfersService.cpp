@@ -44,8 +44,6 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-
 
 TransfersService::TransfersService(): BaseService("TransfersService")
 {
@@ -62,16 +60,11 @@ TransfersService::TransfersService(): BaseService("TransfersService")
 }
 
 
-TransfersService::~TransfersService()
-{
-}
-
-
 void TransfersService::runService()
 {
     while (!boost::this_thread::interruption_requested())
     {
-        retrieveRecords = time(0);
+        updateLastRunTimepoint();
 
         try
         {

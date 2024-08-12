@@ -38,18 +38,6 @@ using fts3::config::ServerConfig;
 namespace fts3 {
 namespace server {
 
-extern time_t stallRecords;
-
-
-CancelerService::CancelerService(): BaseService("CancelerService")
-{
-}
-
-
-CancelerService::~CancelerService()
-{
-}
-
 
 void CancelerService::markAsStalled()
 {
@@ -202,7 +190,8 @@ void CancelerService::runService()
 
     while (!boost::this_thread::interruption_requested())
     {
-        stallRecords = time(0);
+        updateLastRunTimepoint();
+
         try
         {
             //if we drain a host, no need to check if url_copy are reporting being alive

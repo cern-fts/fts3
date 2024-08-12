@@ -38,19 +38,12 @@ using fts3::config::ServerConfig;
 namespace fts3 {
 namespace server {
 
-extern time_t updateRecords;
-
 
 MessageProcessingService::MessageProcessingService(): BaseService("MessageProcessingService"),
     consumer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
     producer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
     messages.reserve(600);
-}
-
-
-MessageProcessingService::~MessageProcessingService()
-{
 }
 
 
@@ -62,7 +55,7 @@ void MessageProcessingService::runService()
 
     while (!boost::this_thread::interruption_requested())
     {
-        updateRecords = time(0);
+        updateLastRunTimepoint();
 
         try
         {
@@ -110,7 +103,7 @@ void MessageProcessingService::runService()
                 messagesLog.clear();
             }
 
-            // update heartbeat and progress vector
+            // update progress vector
             if (consumer.runConsumerStall(messagesUpdater) != 0)
             {
                 char buffer[128] = { 0 };

@@ -32,12 +32,12 @@ namespace optimizer {
 class OptimizerService: public fts3::server::BaseService
 {
 public:
-    OptimizerService(const std::shared_ptr<fts3::server::HeartBeat>& beat);
+    OptimizerService(const std::shared_ptr<fts3::server::HeartBeat>& heartBeat);
     void optimizeAllPairs();
     virtual void runService();
 
 protected:
-    std::shared_ptr<fts3::server::HeartBeat> beat;
+    const std::shared_ptr<fts3::server::HeartBeat> heartBeat;
     int optimizerPoolSize;
 };
 

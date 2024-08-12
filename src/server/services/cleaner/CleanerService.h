@@ -30,12 +30,14 @@ namespace server {
 
 class CleanerService: public BaseService
 {
+public:
+    CleanerService(): BaseService("CleanerService") {}
+    virtual ~CleanerService() = default;
+
+    virtual void runService();
+
 private:
     void removeOldFiles(const std::string& path);
-
-public:
-    CleanerService();
-    virtual void runService();
 };
 
 } // end namespace server
