@@ -81,6 +81,8 @@ void OptimizerService::runService()
     const auto optimizerInterval = ServerConfig::instance().get<TDuration>("OptimizerInterval");
 
     while (!boost::this_thread::interruption_requested()) {
+        updateLastRunTimepoint();
+
         try {
             if (heartBeat->isLeadNode()) {
                 optimizeAllPairs();
