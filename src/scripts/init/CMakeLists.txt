@@ -18,20 +18,13 @@
 # limitations under the License.
 #
 
-# Sytemd services
+# Systemd services
 if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-server.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-
-    install(FILES fts-msg-bulk.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-
-    install(FILES fts-records-cleaner.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-    install(FILES fts-qos.service
+                  fts-msg-bulk.service
+                  fts-records-cleaner.service
+                  fts-qos.service
+                  fts-optimizer.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
 # Init scripts
@@ -59,6 +52,5 @@ else ()
         PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
         RENAME fts-qos
     )
-
 endif ()
 

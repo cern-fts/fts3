@@ -82,6 +82,7 @@ install(FILES "${MAN_INPUT_DIR}/fts_db_cleaner.8" DESTINATION ${MAN_INSTALL_DIR}
 install(FILES "${MAN_INPUT_DIR}/fts_msg_bulk.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_url_copy.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 install(FILES "${MAN_INPUT_DIR}/fts_qos.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_optimizer.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 
 # Artifacts
 install(TARGETS fts_server_lib
