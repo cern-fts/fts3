@@ -50,7 +50,7 @@ public:
 protected:
     int execPoolSize;
     boost::posix_time::time_duration pollInterval;
-    const std::shared_ptr<HeartBeat>& heartBeat;
+    const std::shared_ptr<HeartBeat> heartBeat;
 
     void exchangeTokens();
     void handleFailedTokenExchange();

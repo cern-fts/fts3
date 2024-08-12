@@ -39,7 +39,7 @@ protected:
     std::string msgDir;
     boost::posix_time::time_duration pollInterval;
 
-    const std::shared_ptr<HeartBeat>& heartBeat;
+    const std::shared_ptr<HeartBeat> heartBeat;
     void forceRunJobs();
 };
 

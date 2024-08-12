@@ -39,7 +39,7 @@ protected:
 
 public:
     virtual ~BaseService() {
-        FTS3_COMMON_LOGGER_NEWLOG(TRACE)  << getServiceName()  << " destroyed" << fts3::common::commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << getServiceName() << " destroyed" << fts3::common::commit;
     };
 
     std::string getServiceName() {
