@@ -115,6 +115,8 @@ void ForceStartTransfersService::forceRunJobs() {
 }
 
 void ForceStartTransfersService::runService() {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ForceStartTransfersService interval: " << pollInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
         boost::this_thread::sleep(pollInterval);
 

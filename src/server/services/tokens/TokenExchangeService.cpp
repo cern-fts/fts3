@@ -44,6 +44,8 @@ void TokenExchangeService::runService() {
 
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenExchangeService interval: " << pollInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
         updateLastRunTimepoint();
         boost::this_thread::sleep(pollInterval);

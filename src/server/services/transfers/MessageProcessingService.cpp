@@ -50,8 +50,8 @@ MessageProcessingService::MessageProcessingService(): BaseService("MessageProces
 void MessageProcessingService::runService()
 {
     namespace fs = boost::filesystem;
-
-    auto msgCheckInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("MessagingConsumeInterval");
+    auto msgCheckInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("MessagingConsumeInterval");
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "MessageProcessingService interval: " << msgCheckInterval.total_seconds() << "s" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {

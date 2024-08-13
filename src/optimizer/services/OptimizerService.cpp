@@ -80,6 +80,8 @@ void OptimizerService::runService()
     typedef boost::posix_time::time_duration TDuration;
     const auto optimizerInterval = ServerConfig::instance().get<TDuration>("OptimizerInterval");
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OptimizerService interval: " << optimizerInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
         updateLastRunTimepoint();
 

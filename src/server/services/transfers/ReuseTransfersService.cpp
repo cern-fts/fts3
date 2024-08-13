@@ -50,6 +50,8 @@ ReuseTransfersService::ReuseTransfersService()
 
 void ReuseTransfersService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ReuseTransfersService interval: " << schedulingInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
         updateLastRunTimepoint();

@@ -62,6 +62,8 @@ TransfersService::TransfersService(): BaseService("TransfersService")
 
 void TransfersService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TransfersService interval: " << schedulingInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
         updateLastRunTimepoint();
