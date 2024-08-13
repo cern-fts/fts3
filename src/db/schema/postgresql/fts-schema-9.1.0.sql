@@ -209,7 +209,12 @@ CREATE TABLE t_queue (
     file_state    file_state   NOT NULL,
     nb_files      BIGINT       NOT NULL DEFAULT 0,
     PRIMARY KEY (queue_id),
-    UNIQUE (vo_name, source_se, dest_se, activity, file_state)
+    UNIQUE (vo_name, source_se, dest_se, activity, file_state),
+    CHECK (vo_name   != ''),
+    CHECK (source_se != ''),
+    CHECK (dest_se   != ''),
+    CHECK (activity  != ''),
+    CHECK (nb_files  >=  0)
 );
 
 CREATE TABLE t_file (
