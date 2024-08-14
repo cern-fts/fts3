@@ -558,6 +558,9 @@ double MySqlAPI::getThroughputAsDestination(const std::string &se)
 void MySqlAPI::storeOptimizerDecision(const Pair &pair, int activeDecision, const PairState &newState,
                             int diff, const std::string &rationale)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OptimizerDataSource->storeOptimizerDecision(..) stub" << commit;
+    return;
+
     try {
         soci::session sql(*connectionPool);
         setNewOptimizerValue(sql, pair, activeDecision, newState.ema);
@@ -573,6 +576,9 @@ void MySqlAPI::storeOptimizerDecision(const Pair &pair, int activeDecision, cons
 
 void MySqlAPI::storeOptimizerStreams(const Pair &pair, int streams)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OptimizerDataSource->storeOptimizerStreams(..) stub" << commit;
+    return;
+
     soci::session sql(*connectionPool);
     try {
         const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";

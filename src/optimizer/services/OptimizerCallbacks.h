@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "common/Logger.h"
 #include <db/generic/Pair.h>
 #include <monitoring/msg-ifce.h>
 
@@ -43,6 +44,9 @@ public:
     void notifyDecision(const Pair& pair, int decision, const PairState& current,
                         int diff, const std::string& rationale)
     {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OptimizerNotifier->storeOptimizerDecision(..) stub" << fts3::common::commit;
+        return;
+
         // Broadcast the decision
         OptimizerInfo msg;
 
