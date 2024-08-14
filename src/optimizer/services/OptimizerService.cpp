@@ -81,6 +81,7 @@ void OptimizerService::runService()
     const auto optimizerInterval = ServerConfig::instance().get<TDuration>("OptimizerInterval");
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OptimizerService interval: " << optimizerInterval.total_seconds() << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer threadpool size: " << optimizerPoolSize << commit;
 
     while (!boost::this_thread::interruption_requested()) {
         updateLastRunTimepoint();
