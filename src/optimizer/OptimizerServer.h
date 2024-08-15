@@ -1,9 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
- *
- * Copyright (c) Members of the EMI Collaboration. 2010-2013
- *  See  http://www.eu-emi.eu/partners for details on the copyright
- *  holders.
+* Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,35 +15,35 @@
  */
 
 #pragma once
-#ifndef CANCELERSERVICE_H_
-#define CANCELERSERVICE_H_
 
-#include <vector>
+#include <boost/thread.hpp>
 
+#include "common/Singleton.h"
 #include "server/common/BaseService.h"
 
-
 namespace fts3 {
-namespace server {
+namespace optimizer {
 
-class CancelerService: public BaseService
+class OptimizerServer: public fts3::common::Singleton<OptimizerServer>
 {
 public:
+    OptimizerServer();
+    virtual ~OptimizerServer();
 
-    CancelerService(): BaseService("CancelerService") {}
-    virtual ~CancelerService() = default;
-
-    virtual void runService();
+    /// Start the services
+    void start();
+    /// Wait for all services to finish
+    void stop();
+    /// Stop the services
+    void wait();
 
 private:
-    void killRunningJob(const std::vector<int>& pids);
-    void markAsStalled();
-    void killCanceledByUser();
-    void applyQueueTimeouts();
-    void applyActiveTimeouts();
+    void addService(const std::shared_ptr<fts3::server::BaseService>& service);
+
+    std::string processName{"fts_optimizer"};
+    boost::thread_group systemThreads;
+    std::vector<std::shared_ptr<fts3::server::BaseService>> services;
 };
 
-} // end namespace server
+} // end namespace optimizer
 } // end namespace fts3
-
-#endif // CANCELERSERVICE_H_

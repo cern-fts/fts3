@@ -39,11 +39,14 @@ SupervisorService::SupervisorService(): BaseService("SupervisorService"),
 
 void SupervisorService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SupervisorService interval: 1s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
         std::vector<fts3::events::MessageUpdater> events;
         zmq::message_t message;
 
         try {
+            updateLastRunTimepoint();
             boost::this_thread::sleep(boost::posix_time::seconds(1));
 
             while (zmqPingSocket.recv(message, zmq::recv_flags::dontwait)) {

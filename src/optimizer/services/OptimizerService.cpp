@@ -31,12 +31,15 @@
 #include "DbOptimizerDataSource.h"
 
 namespace fts3 {
-namespace server {
+namespace optimizer {
 
 using optimizer::OptimizerExecutor;
 using optimizer::OptimizerDataSource;
 using optimizer::DbOptimizerDataSource;
+
+using namespace fts3::config;
 using namespace fts3::common;
+using namespace fts3::server;
 
 // At the moment DbOptimizerDataSource is the only implementation of OptimizerDataSource
 // In the future this factory can be extended to return different types of OptimizerDataSource implementations
@@ -52,8 +55,8 @@ public:
 class OptimizerCallbacksFactory {
 public:
     static std::unique_ptr<OptimizerCallbacks> getOptimizerCallbacks() {
-        const auto enabled = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-        const auto messageDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
+        const auto enabled = ServerConfig::instance().get<bool>("MonitoringMessaging");
+        const auto messageDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
 
         if (!enabled) {
             return nullptr;
@@ -64,20 +67,27 @@ public:
 };
 
 
-OptimizerService::OptimizerService(HeartBeat *beat): BaseService("OptimizerService"), beat(beat)
+OptimizerService::OptimizerService(const std::shared_ptr<HeartBeat>& heartBeat):
+    BaseService("OptimizerService"),
+    heartBeat(heartBeat)
 {
-    optimizerPoolSize = config::ServerConfig::instance().get<int>("OptimizerThreadPool");
+    optimizerPoolSize = ServerConfig::instance().get<int>("OptimizerThreadPool");
 }
 
 
 void OptimizerService::runService()
 {
     typedef boost::posix_time::time_duration TDuration;
-    const auto optimizerInterval = config::ServerConfig::instance().get<TDuration>("OptimizerInterval");
+    const auto optimizerInterval = ServerConfig::instance().get<TDuration>("OptimizerInterval");
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OptimizerService interval: " << optimizerInterval.total_seconds() << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer threadpool size: " << optimizerPoolSize << commit;
 
     while (!boost::this_thread::interruption_requested()) {
+        updateLastRunTimepoint();
+
         try {
-            if (beat->isLeadNode()) {
+            if (heartBeat->isLeadNode()) {
                 optimizeAllPairs();
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer: Not the leading node..." << commit;
@@ -100,16 +110,16 @@ void OptimizerService::optimizeAllPairs() {
 
     // Read all Optimizer configurations from the config file
     typedef boost::posix_time::time_duration TDuration;
-    auto optimizerSteadyInterval = config::ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
-    auto maxNumberOfStreams = config::ServerConfig::instance().get<int>("OptimizerMaxStreams");
-    auto maxSuccessRate = config::ServerConfig::instance().get<int>("OptimizerMaxSuccessRate");
-    auto lowSuccessRate = config::ServerConfig::instance().get<int>("OptimizerLowSuccessRate");
-    auto baseSuccessRate = config::ServerConfig::instance().get<int>("OptimizerBaseSuccessRate");
+    auto optimizerSteadyInterval = ServerConfig::instance().get<TDuration>("OptimizerSteadyInterval");
+    auto maxNumberOfStreams = ServerConfig::instance().get<int>("OptimizerMaxStreams");
+    auto maxSuccessRate = ServerConfig::instance().get<int>("OptimizerMaxSuccessRate");
+    auto lowSuccessRate = ServerConfig::instance().get<int>("OptimizerLowSuccessRate");
+    auto baseSuccessRate = ServerConfig::instance().get<int>("OptimizerBaseSuccessRate");
 
-    auto emaAlpha = config::ServerConfig::instance().get<double>("OptimizerEMAAlpha");
-    auto increaseStep = config::ServerConfig::instance().get<int>("OptimizerIncreaseStep");
-    auto increaseAggressiveStep = config::ServerConfig::instance().get<int>("OptimizerAggressiveIncreaseStep");
-    auto decreaseStep = config::ServerConfig::instance().get<int>("OptimizerDecreaseStep");
+    auto emaAlpha = ServerConfig::instance().get<double>("OptimizerEMAAlpha");
+    auto increaseStep = ServerConfig::instance().get<int>("OptimizerIncreaseStep");
+    auto increaseAggressiveStep = ServerConfig::instance().get<int>("OptimizerAggressiveIncreaseStep");
+    auto decreaseStep = ServerConfig::instance().get<int>("OptimizerDecreaseStep");
 
     try {
         // Just get the all the active queues
@@ -122,7 +132,7 @@ void OptimizerService::optimizeAllPairs() {
         const auto start = std::chrono::steady_clock::now();
 
         // For each par create an optimizer task and run it in the thread pool
-        for (const auto& pair : pairs) {
+        for (const auto& pair: pairs) {
             auto *exec = new OptimizerExecutor(OptimizerDataSourceFactory::getDataSource(),
                                                OptimizerCallbacksFactory::getOptimizerCallbacks(),
                                                pair);
@@ -161,5 +171,5 @@ void OptimizerService::optimizeAllPairs() {
     }
 }
 
-} // end namespace server
+} // end namespace optimizer
 } // end namespace fts3

@@ -26,7 +26,7 @@
 
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "SingleTrStateInstance.h"
 #include "ThreadSafeList.h"
 
@@ -37,18 +37,6 @@ using fts3::config::ServerConfig;
 
 namespace fts3 {
 namespace server {
-
-extern time_t stallRecords;
-
-
-CancelerService::CancelerService(): BaseService("CancelerService")
-{
-}
-
-
-CancelerService::~CancelerService()
-{
-}
 
 
 void CancelerService::markAsStalled()
@@ -200,9 +188,15 @@ void CancelerService::runService()
 
     recoverProcessesFromDb();
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService interval: 1s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CancelCheck) interval: " << cancelInterval << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(QueueTimeoutCheck) interval: " << queueTimeoutInterval << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(ActiveTimeoutCheck) interval: " << activeTimeoutInterval << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
-        stallRecords = time(0);
+        updateLastRunTimepoint();
+
         try
         {
             //if we drain a host, no need to check if url_copy are reporting being alive

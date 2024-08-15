@@ -26,7 +26,7 @@
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
 #include "ExecuteProcess.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
@@ -41,8 +41,6 @@ using fts3::config::ServerConfig;
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-
 
 ReuseTransfersService::ReuseTransfersService()
 {
@@ -52,9 +50,11 @@ ReuseTransfersService::ReuseTransfersService()
 
 void ReuseTransfersService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ReuseTransfersService interval: " << schedulingInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
-        retrieveRecords = time(0);
+        updateLastRunTimepoint();
 
         try
         {

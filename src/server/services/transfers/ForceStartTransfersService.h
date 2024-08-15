@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "services/BaseService.h"
+#include "server/common/BaseService.h"
 #include "services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
@@ -25,7 +25,9 @@ namespace server {
 class ForceStartTransfersService: public BaseService
 {
 public:
-    ForceStartTransfersService(HeartBeat *beat);
+    ForceStartTransfersService(const std::shared_ptr<HeartBeat>& heartBeat);
+    virtual ~ForceStartTransfersService() = default;
+
     virtual void runService();
 
 protected:
@@ -37,7 +39,7 @@ protected:
     std::string msgDir;
     boost::posix_time::time_duration pollInterval;
 
-    HeartBeat *beat;
+    const std::shared_ptr<HeartBeat> heartBeat;
     void forceRunJobs();
 };
 

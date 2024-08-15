@@ -26,7 +26,7 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "FetchCancelStaging.h"
 #include "../task/BringOnlineTask.h"

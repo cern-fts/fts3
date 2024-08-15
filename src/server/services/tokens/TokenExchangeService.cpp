@@ -19,7 +19,7 @@
 #include "common/ThreadPool.h"
 
 #include "config/ServerConfig.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "TokenExchangeService.h"
 #include "TokenExchangeExecutor.h"
@@ -32,22 +32,22 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-extern time_t tokenExchangeRecords;
 
-
-TokenExchangeService::TokenExchangeService(HeartBeat *beat) :
-    BaseService("TokenExchangeService"), beat(beat)
+TokenExchangeService::TokenExchangeService(const std::shared_ptr<HeartBeat>& heartBeat) :
+    BaseService("TokenExchangeService"), heartBeat(heartBeat)
 {
-    execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
-    pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
+    execPoolSize = ServerConfig::instance().get<int>("InternalThreadPool");
+    pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
 }
 
 void TokenExchangeService::runService() {
 
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenExchangeService interval: " << pollInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
-        tokenExchangeRecords = time(nullptr);
+        updateLastRunTimepoint();
         boost::this_thread::sleep(pollInterval);
 
         try {
@@ -58,7 +58,7 @@ void TokenExchangeService::runService() {
             }
 
             // This service intentionally runs only on the first node
-            if (beat->isLeadNode(true)) {
+            if (heartBeat->isLeadNode(true)) {
                 exchangeTokens();
                 handleFailedTokenExchange();
                 // The below function does not require any state from the service

@@ -17,7 +17,7 @@
 #pragma once
 
 #include "db/generic/Token.h"
-#include "services/BaseService.h"
+#include "server/common/BaseService.h"
 #include "services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
@@ -26,7 +26,8 @@ namespace server {
 class TokenExchangeService: public BaseService
 {
 public:
-    TokenExchangeService(HeartBeat *beat);
+    TokenExchangeService(const std::shared_ptr<HeartBeat>& heartBeat);
+    virtual ~TokenExchangeService() = default;
 
     virtual void runService();
 
@@ -49,7 +50,7 @@ public:
 protected:
     int execPoolSize;
     boost::posix_time::time_duration pollInterval;
-    HeartBeat *beat;
+    const std::shared_ptr<HeartBeat> heartBeat;
 
     void exchangeTokens();
     void handleFailedTokenExchange();

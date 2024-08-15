@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "db/generic/QueueId.h"
-#include "../BaseService.h"
+#include "server/common/BaseService.h"
 
 
 namespace fts3 {
@@ -36,11 +36,8 @@ namespace server {
 class TransfersService: public BaseService
 {
 public:
-    /// Constructor
     TransfersService();
-
-    /// Destructor
-    virtual ~TransfersService();
+    virtual ~TransfersService() = default;
 
     virtual void runService();
 

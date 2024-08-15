@@ -15,13 +15,12 @@
  */
 
 #pragma once
-#ifndef BASESERVICE_H_
-#define BASESERVICE_H_
 
+#include <mutex>
+#include <chrono>
 #include <boost/noncopyable.hpp>
-#include <boost/thread.hpp>
+#include <boost/thread/exceptions.hpp>
 #include "common/Logger.h"
-
 
 namespace fts3 {
 namespace server {
@@ -29,22 +28,18 @@ namespace server {
 /// Base class for all services
 /// Intended to be able to treat all of them with the same API
 class BaseService: public boost::noncopyable {
-private:
-    std::string serviceName;
-
 protected:
-    BaseService(const std::string &serviceName): serviceName(serviceName)
-    {
+    BaseService(const std::string& serviceName): serviceName(serviceName) {
+        lastRun = std::chrono::steady_clock::now();
     }
 
-    void setServiceName(const std::string &newServiceName)
-    {
+    void setServiceName(const std::string& newServiceName) {
         serviceName = newServiceName;
     }
 
 public:
     virtual ~BaseService() {
-        FTS3_COMMON_LOGGER_NEWLOG(TRACE)  << getServiceName()  << " destroyed" << fts3::common::commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << getServiceName() << " destroyed" << fts3::common::commit;
     };
 
     std::string getServiceName() {
@@ -55,26 +50,38 @@ public:
 
     virtual void operator() () {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting " << getServiceName() << fts3::common::commit;
+
         try {
             runService();
-        }
-        catch (const boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Requested interruption of " << getServiceName()
                 << fts3::common::commit;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception for " << getServiceName()
                 << ": " << e.what() << fts3::common::commit;
-        }
-        catch (...) {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled unknown exception for "
                 << getServiceName() << fts3::common::commit;
         }
+
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting " << getServiceName() << fts3::common::commit;
     }
+
+    void updateLastRunTimepoint() {
+        std::unique_lock lock(mutex);
+        lastRun = std::chrono::steady_clock::now();
+    }
+
+    std::chrono::steady_clock::time_point getLastRunTimepoint() {
+        std::unique_lock lock(mutex);
+        return lastRun;
+    }
+
+private:
+    std::string serviceName; ///< The service name
+    std::mutex mutex; ///< Mutex for lastRun timepoint
+    std::chrono::steady_clock::time_point lastRun; ///< Timepoint for the last "runService()" execution
 };
 
 } // namespace server
 } // namespace fts3
-
-#endif // BASESERVICE_H_

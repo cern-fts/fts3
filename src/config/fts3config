@@ -164,6 +164,26 @@ LogTokenRequests=false
 # In seconds, timeout for stalled "fts_url_copy" processes
 #CheckStalledTimeout = 900
 
+## Critical services supervision
+## Critical threads (e.g.: Scheduler) are supervised by the HeartBeat service.
+## When a critical thread has not run in longer than the given grace period,
+## the daemon process is running in an abnormal state and will be abruptly stopped
+## Note: Make sure the value is large enough to allow a full service run to complete!
+## Restriction: The service grace time must be at least 3x larger than the service interval
+
+# In seconds, time window since last MessageProcessingService run to be considered inactive (default 600)
+#MessagingConsumeGraceTime = 600
+# In seconds, time window since last CancelerService run to be considered inactive (default 1800)
+#CancelCheckGraceTime = 1800
+# In seconds, time window since last SchedulerService run to be considered inactive (default 600)
+#SchedulingGraceTime = 600
+# In seconds, time window since last SupervisorService run to be considered inactive (default 600)
+#SupervisorGraceTime = 600
+# In seconds, time window since last TokenExchangeService run to be considered inactive (default 600)
+#TokenExchangeCheckGraceTime = 600
+# In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
+#OptimizerGraceTime = 3600
+
 # Enable or disable job priorities (1 = fixed, 0 = follow job priorities)
 # By default (value = 0), it honors the user-specified priorities
 #UseFixedJobPriority = 0

@@ -29,7 +29,7 @@
 
 #include "db/generic/TransferFile.h"
 
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"
@@ -43,8 +43,6 @@ using namespace fts3::common;
 
 namespace fts3 {
 namespace server {
-
-extern time_t retrieveRecords;
 
 
 TransfersService::TransfersService(): BaseService("TransfersService")
@@ -62,16 +60,13 @@ TransfersService::TransfersService(): BaseService("TransfersService")
 }
 
 
-TransfersService::~TransfersService()
-{
-}
-
-
 void TransfersService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TransfersService interval: " << schedulingInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
-        retrieveRecords = time(0);
+        updateLastRunTimepoint();
 
         try
         {

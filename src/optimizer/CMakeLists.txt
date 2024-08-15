@@ -1,9 +1,5 @@
 #
-# Copyright (c) CERN 2013-2015
-#
-# Copyright (c) Members of the EMI Collaboration. 2010-2013
-#  See  http://www.eu-emi.eu/partners for details on the copyright
-#  holders.
+# Copyright (c) CERN 2024
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,36 +15,30 @@
 #
 
 # Dependencies
-find_package(GFAL2)
 find_package(GLIB2)
-find_package(Boost COMPONENTS thread system filesystem)
+find_package(Boost COMPONENTS thread system)
 
-include_directories(
-    ${GFAL2_INCLUDE_DIRS}
+ # Sources
+file(GLOB fts_optimizer_SOURCES "*.cpp" "services/*.cpp")
+
+add_executable(fts_optimizer ${fts_optimizer_SOURCES})
+
+target_include_directories(fts_optimizer PUBLIC
     ${GLIB2_INCLUDE_DIRS}
 )
 
-# Sources
-file(GLOB fts_qos_SOURCES "*.cpp" "task/*.cpp" "context/*.cpp" "fetch/*.cpp")
-
-add_executable(fts_qos ${fts_qos_SOURCES})
-
-target_link_libraries(fts_qos
+target_link_libraries(fts_optimizer
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${GFAL2_LIBRARIES}
     ${GLIB2_LIBRARIES}
     ${Boost_LIBRARIES}
     fts_db_generic
     fts_config
     fts_common
-	  fts_msg_bus
-    fts_proxy
     fts_msg_ifce
-	  fts_server_lib
+    fts_server_lib
 )
 
-# Install artifacts
-install(TARGETS fts_qos
-		RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
-)
+# Install
+install(TARGETS fts_optimizer RUNTIME
+    DESTINATION ${SBIN_INSTALL_DIR})

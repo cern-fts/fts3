@@ -72,8 +72,8 @@ public:
     WaitingRoom<ArchivingPollTask>& getArchivingWaitingRoom() {
         return archivingWaitingRoom;
     }
-
 private:
+    std::string processName{"fts_qosdaemon"};
     boost::thread_group systemThreads;
     fts3::common::ThreadPool<Gfal2Task> threadpool;
     WaitingRoom<PollTask> waitingRoom;

@@ -23,7 +23,7 @@
 #include "common/Uri.h"
 #include "cred/CredUtility.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "../task/DeletionTask.h"
 #include "../context/DeletionContext.h"

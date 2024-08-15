@@ -1,0 +1,7 @@
+##
+## FTS3 Optimizer daemon sysconfig
+##
+
+## Do not enable coredumps by default
+## Change it to 'unlimited' to get coredumps under /tmp
+ulimit -c 0

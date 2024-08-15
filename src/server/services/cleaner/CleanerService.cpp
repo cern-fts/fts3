@@ -27,15 +27,10 @@
 
 namespace fs = boost::filesystem;
 using fts3::config::ServerConfig;
-
+using fts3::common::commit;
 
 namespace fts3 {
 namespace server {
-
-
-CleanerService::CleanerService(): BaseService("CleanerService")
-{
-}
 
 
 void CleanerService::removeOldFiles(const std::string& path)
@@ -66,18 +61,21 @@ void CleanerService::removeOldFiles(const std::string& path)
 void CleanerService::runService()
 {
     int counter = 0;
-
-    std::string msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+    auto msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
     int purgeMsgDirs = ServerConfig::instance().get<int>("PurgeMessagingDirectoryInterval");
     int checkSanityState = ServerConfig::instance().get<int>("CheckSanityStateInterval");
     int multihopSanitySate = ServerConfig::instance().get<int>("MultihopSanityStateInterval");
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CleanerService interval: 1s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CleanerService(PurgeMessagingDirectory) interval: " << purgeMsgDirs << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CleanerService(CheckSanityState) interval: " << checkSanityState << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CleanerService(MultihopSanityState) interval: " << multihopSanitySate << "s" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
         ++counter;
 
-        try
-        {
+        try {
             // Every hour
             if (checkSanityState >0 && counter % checkSanityState == 0) {
                 db::DBSingleton::instance().getDBObjectInstance()->checkSanityState();
@@ -93,14 +91,10 @@ void CleanerService::runService()
             if (multihopSanitySate >0 && counter % multihopSanitySate == 0) {
                 db::DBSingleton::instance().getDBObjectInstance()->multihopSanitySate();
             }
-        }
-        catch(std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() <<  fts3::common::commit;
-        }
-        catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  fts3::common::commit;
+        } catch(std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files: " << e.what() << commit;
+        } catch(...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" << commit;
         }
 
         boost::this_thread::sleep(boost::posix_time::seconds(1));

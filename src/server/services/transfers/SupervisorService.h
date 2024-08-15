@@ -17,8 +17,8 @@
 #ifndef FTS3_SUPERVISORSERVICE_H
 #define FTS3_SUPERVISORSERVICE_H
 
-#include "../BaseService.h"
 #include <zmq.hpp>
+#include "server/common/BaseService.h"
 
 namespace fts3 {
 namespace server {
@@ -29,16 +29,15 @@ namespace server {
  * those stalled processes
  */
 class SupervisorService: public BaseService {
+public:
+    SupervisorService();
+    virtual ~SupervisorService() = default;
+
+    void runService();
+
 protected:
     zmq::context_t zmqContext;
     zmq::socket_t zmqPingSocket;
-
-public:
-    /// Constructor
-    SupervisorService();
-
-    /// Service code
-    void runService();
 };
 
 }
