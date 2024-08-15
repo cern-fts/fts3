@@ -5122,55 +5122,126 @@ void MySqlAPI::updateTokenPrepFiles()
         TokenPrepFile(uint64_t file_id, const std::string& job_id,
                       const std::string& src_token_id,
                       const std::string& dst_token_id,
-                      const std::string& file_state) :
+                      const std::string& file_state,
+                      const std::string& vo_name,
+                      const std::string& source_se,
+                      const std::string& dest_se,
+                      const std::string& activity,
+                      const uint64_t     queue_id) :
               file_id(file_id), job_id(job_id),
               src_token_id(src_token_id), dst_token_id(dst_token_id),
-              file_state(file_state) {}
+              file_state(file_state),
+              vo_name(vo_name),
+              source_se(source_se),
+              dest_se(dest_se),
+              activity(activity),
+              queue_id(queue_id) {}
 
         uint64_t file_id;
         std::string job_id;
         std::string src_token_id;
         std::string dst_token_id;
         std::string file_state;
+        std::string vo_name;
+        std::string source_se;
+        std::string dest_se;
+        std::string activity;
+        uint64_t queue_id;
     };
 
     soci::session sql(*connectionPool);
 
     try
     {
-        const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null" : "";
-        const soci::rowset<soci::row> rs = (sql.prepare <<
-                                    " SELECT f.job_id, f.file_id, f.file_state_initial, f.src_token_id, f.dst_token_id "
-                                    " FROM t_file f "
-                                    "     INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id "
-                                    "     INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id "
-                                    " WHERE f.file_state = 'TOKEN_PREP' "
-                                    "     AND t_src.refresh_token IS NOT NULL "
-                                    "     AND t_dst.refresh_token IS NOT NULL " <<
-                                    order_by_null);
 
         // Store all data into memory structure in order to reiterate
         // (there might be a way to reset the rowset iterator
         std::list<TokenPrepFile> tokenPrepFiles;
 
-        for (const auto& row: rs) {
-            tokenPrepFiles.emplace_back(
-                    get_file_id_from_row(row),
-                    row.get<std::string>("job_id", ""),
-                    row.get<std::string>("src_token_id", ""),
-                    row.get<std::string>("dst_token_id", ""),
-                    row.get<std::string>("file_state_initial", "")
-            );
+        if (sql.get_backend_name() == "mysql") {
+            const soci::rowset<soci::row> rs = (sql.prepare <<
+                                        " SELECT f.job_id, f.file_id, f.file_state_initial, f.src_token_id, f.dst_token_id "
+                                        " FROM t_file f "
+                                        "     INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id "
+                                        "     INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id "
+                                        " WHERE f.file_state = 'TOKEN_PREP' "
+                                        "     AND t_src.refresh_token IS NOT NULL "
+                                        "     AND t_dst.refresh_token IS NOT NULL "
+                                        " ORDER BY null");
+
+            for (const auto& row: rs) {
+                tokenPrepFiles.emplace_back(
+                        get_file_id_from_row(row),
+                        row.get<std::string>("job_id", ""),
+                        row.get<std::string>("src_token_id", ""),
+                        row.get<std::string>("dst_token_id", ""),
+                        row.get<std::string>("file_state_initial", ""),
+                        "", // vo_name
+                        "", // source_se
+                        "", // dest_se
+                        "", // activity
+                        0   // queue_id
+                );
+            }
+        } else {
+            const soci::rowset<soci::row> rs = (sql.prepare <<
+                                        "SELECT\n"
+                                        "    f.job_id,\n"
+                                        "    f.file_id,\n"
+                                        "    f.file_state_initial,\n"
+                                        "    f.src_token_id,\n"
+                                        "    f.dst_token_id,\n"
+                                        "    f.vo_name,\n"
+                                        "    f.source_se,\n"
+                                        "    f.dest_se,\n"
+                                        "    f.activity,\n"
+                                        "    f.queue_id\n"
+                                        "FROM t_file f\n"
+                                        "    INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id\n"
+                                        "    INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id\n"
+                                        "WHERE f.file_state = 'TOKEN_PREP'\n"
+                                        "    AND t_src.refresh_token IS NOT NULL\n"
+                                        "    AND t_dst.refresh_token IS NOT NULL");
+
+            for (const auto& row: rs) {
+                tokenPrepFiles.emplace_back(
+                        get_file_id_from_row(row),
+                        row.get<std::string>("job_id", ""),
+                        row.get<std::string>("src_token_id", ""),
+                        row.get<std::string>("dst_token_id", ""),
+                        row.get<std::string>("file_state_initial", ""),
+                        row.get<std::string>("vo_name", ""),
+                        row.get<std::string>("source_se", ""),
+                        row.get<std::string>("dest_se", ""),
+                        row.get<std::string>("activity", ""),
+                        row.get<long long>("queue_id", 0)
+                );
+            }
         }
 
         // Prepare statement for "TOKEN_PREP" --> initial file state update
         uint64_t file_id;
         std::string file_state;
-        soci::statement stmt = (sql.prepare <<
+        uint64_t nextQueueId = 0;
+        soci::statement mysqlStmt = (sql.prepare <<
                                     " UPDATE t_file SET file_state = :fileState "
                                     " WHERE file_id = :fileId AND file_state = 'TOKEN_PREP'",
                                 soci::use(file_state),
                                 soci::use(file_id));
+
+        soci::statement postgresStmt = (sql.prepare <<
+                "UPDATE\n"
+                "    t_file\n"
+                "SET\n"
+                "    file_state = :file_state,\n"
+                "    queue_id = :next_queue_id\n"
+                "WHERE\n"
+                "    file_id = :file_id\n"
+                "AND\n"
+                "    file_state = 'TOKEN_PREP'",
+                soci::use(file_state, "file_state"),
+                soci::use(nextQueueId, "next_queue_id"),
+                soci::use(file_id, "file_id"));
 
         sql.begin();
         for (auto& file: tokenPrepFiles) {
@@ -5184,7 +5255,28 @@ void MySqlAPI::updateTokenPrepFiles()
 
             file_id = file.file_id;
             file_state = file.file_state;
-            stmt.execute(true);
+
+            if (sql.get_backend_name() == "mysql") {
+                mysqlStmt.execute(true);
+            } else {
+                nextQueueId = postgresIncQueueCounter(
+                    sql,
+                    1,
+                    file.vo_name,
+                    file.source_se,
+                    file.dest_se,
+                    file.activity,
+                    file.file_state
+                );
+                if (!postgresDecQueueCounter(sql, file.queue_id, 1)) {
+                    std::ostringstream msg;
+                    msg << "Failed to update 'TOKEN_PREP' file: Failed to decement previous queue counter: "
+                           " job_id=" << file.job_id << " file_id=" << file.file_id << " prev_queue_id=" <<
+                           file.queue_id;
+                    throw std::runtime_error(msg.str());
+                }
+                postgresStmt.execute(true);
+            }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Updated 'TOKEN PREP' file:"
                             << " job_id=" << file.job_id << " file_id=" << file.file_id
