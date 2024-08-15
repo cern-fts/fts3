@@ -64,8 +64,8 @@ add_definitions(-DOPENSSL_THREADS)
 add_definitions(-DSOCKET_CLOSE_ON_EXIT)
 add_definitions(-D_REENTRANT)
 
-# Require C++17
-include(EnableCpp17 REQUIRED)
+# Require C++20
+include(EnableCpp20 REQUIRED)
 
 # Define where to install the generated artifacts
 include(DefineInstallationPaths REQUIRED)
