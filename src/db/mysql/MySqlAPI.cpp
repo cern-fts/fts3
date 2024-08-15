@@ -1299,11 +1299,7 @@ MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, int pr
 static std::int64_t postgresIncQueueCounter(
     soci::session &sql,
     const std::int64_t delta,
-    const std::string &vo_name,
-    const std::string &source_se,
-    const std::string &dest_se,
-    const std::string &activity,
-    const std::string &file_state
+    const QueueCompId &queueCompId
 ) {
     try {
         const soci::rowset<soci::row> rs = (sql.prepare <<
@@ -1324,11 +1320,11 @@ static std::int64_t postgresIncQueueCounter(
             "RETURNING\n"
             "    queue_id",
             soci::use(delta, "delta"),
-            soci::use(vo_name, "vo_name"),
-            soci::use(source_se, "source_se"),
-            soci::use(dest_se, "dest_se"),
-            soci::use(activity, "activity"),
-            soci::use(file_state, "file_state")
+            soci::use(queueCompId.vo_name, "vo_name"),
+            soci::use(queueCompId.source_se, "source_se"),
+            soci::use(queueCompId.dest_se, "dest_se"),
+            soci::use(queueCompId.activity, "activity"),
+            soci::use(queueCompId.file_state, "file_state")
         );
         auto row_itor = rs.begin();
         if (row_itor != rs.end()) {
@@ -1367,11 +1363,11 @@ static std::int64_t postgresIncQueueCounter(
             "        t_queue.nb_files + EXCLUDED.nb_files\n"
             "RETURNING\n"
             "    queue_id",
-            soci::use(vo_name, "vo_name"),
-            soci::use(source_se, "source_se"),
-            soci::use(dest_se, "dest_se"),
-            soci::use(activity, "activity"),
-            soci::use(file_state, "file_state"),
+            soci::use(queueCompId.vo_name, "vo_name"),
+            soci::use(queueCompId.source_se, "source_se"),
+            soci::use(queueCompId.dest_se, "dest_se"),
+            soci::use(queueCompId.activity, "activity"),
+            soci::use(queueCompId.file_state, "file_state"),
             soci::use(delta, "delta")
         );
         auto row_itor = rs.begin();
@@ -1379,10 +1375,10 @@ static std::int64_t postgresIncQueueCounter(
             std::ostringstream msg;
             msg <<
                 "Failed to increment t_queue counter: "
-                "vo_name=" << vo_name <<
-                "source_se=" << source_se <<
-                "dest_se=" << dest_se <<
-                "file_state=" << file_state <<
+                "vo_name=" << queueCompId.vo_name <<
+                "source_se=" << queueCompId.source_se <<
+                "dest_se=" << queueCompId.dest_se <<
+                "file_state=" << queueCompId.file_state <<
                 "delta=" << delta;
             throw std::runtime_error(msg.str());
         }
@@ -1624,14 +1620,15 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                        "jobId=" << jobId << " fileId=" << fileId;
                 throw std::runtime_error(msg.str());
             }
-            const std::int64_t nextQueueId = postgresIncQueueCounter(
-                sql,
-                1,
+
+            const QueueCompId queueCompId = {
                 voName,
                 sourceSe,
                 destSe,
                 activity,
-                newFileState);
+                newFileState
+            };
+            const std::int64_t nextQueueId = postgresIncQueueCounter(sql, 1, queueCompId);
 
             if (!postgresUpdateFileQueueId(sql, fileId, *prevQueueId, nextQueueId)) {
                 std::ostringstream msg;
@@ -5123,18 +5120,12 @@ void MySqlAPI::updateTokenPrepFiles()
                       const std::string& src_token_id,
                       const std::string& dst_token_id,
                       const std::string& file_state,
-                      const std::string& vo_name,
-                      const std::string& source_se,
-                      const std::string& dest_se,
-                      const std::string& activity,
+                      const QueueCompId& queue_comp_id,
                       const uint64_t     queue_id) :
               file_id(file_id), job_id(job_id),
               src_token_id(src_token_id), dst_token_id(dst_token_id),
               file_state(file_state),
-              vo_name(vo_name),
-              source_se(source_se),
-              dest_se(dest_se),
-              activity(activity),
+              queue_comp_id(queue_comp_id),
               queue_id(queue_id) {}
 
         uint64_t file_id;
@@ -5142,10 +5133,7 @@ void MySqlAPI::updateTokenPrepFiles()
         std::string src_token_id;
         std::string dst_token_id;
         std::string file_state;
-        std::string vo_name;
-        std::string source_se;
-        std::string dest_se;
-        std::string activity;
+        QueueCompId queue_comp_id;
         uint64_t queue_id;
     };
 
@@ -5176,10 +5164,7 @@ void MySqlAPI::updateTokenPrepFiles()
                         row.get<std::string>("src_token_id", ""),
                         row.get<std::string>("dst_token_id", ""),
                         row.get<std::string>("file_state_initial", ""),
-                        "", // vo_name
-                        "", // source_se
-                        "", // dest_se
-                        "", // activity
+                        QueueCompId(),
                         0   // queue_id
                 );
             }
@@ -5204,16 +5189,21 @@ void MySqlAPI::updateTokenPrepFiles()
                                         "    AND t_dst.refresh_token IS NOT NULL");
 
             for (const auto& row: rs) {
+                const QueueCompId queueCompId = {
+                    row.get<std::string>("vo_name", ""),
+                    row.get<std::string>("source_se", ""),
+                    row.get<std::string>("dest_se", ""),
+                    row.get<std::string>("activity", ""),
+                    row.get<std::string>("file_state_initial", ""),
+                };
+
                 tokenPrepFiles.emplace_back(
                         get_file_id_from_row(row),
                         row.get<std::string>("job_id", ""),
                         row.get<std::string>("src_token_id", ""),
                         row.get<std::string>("dst_token_id", ""),
                         row.get<std::string>("file_state_initial", ""),
-                        row.get<std::string>("vo_name", ""),
-                        row.get<std::string>("source_se", ""),
-                        row.get<std::string>("dest_se", ""),
-                        row.get<std::string>("activity", ""),
+                        queueCompId,
                         row.get<long long>("queue_id", 0)
                 );
             }
@@ -5251,6 +5241,7 @@ void MySqlAPI::updateTokenPrepFiles()
                                 << " job_id=" << file.job_id << " file_id=" << file.file_id
                                 << commit;
                 file.file_state = "SUBMITTED";
+                file.queue_comp_id.file_state = file.file_state;
             }
 
             file_id = file.file_id;
@@ -5259,15 +5250,7 @@ void MySqlAPI::updateTokenPrepFiles()
             if (sql.get_backend_name() == "mysql") {
                 mysqlStmt.execute(true);
             } else {
-                nextQueueId = postgresIncQueueCounter(
-                    sql,
-                    1,
-                    file.vo_name,
-                    file.source_se,
-                    file.dest_se,
-                    file.activity,
-                    file.file_state
-                );
+                nextQueueId = postgresIncQueueCounter(sql, 1, file.queue_comp_id);
                 if (!postgresDecQueueCounter(sql, file.queue_id, 1)) {
                     std::ostringstream msg;
                     msg << "Failed to update 'TOKEN_PREP' file: Failed to decement previous queue counter: "

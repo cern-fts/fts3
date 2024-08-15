@@ -32,6 +32,7 @@
 #include "JobStatus.h"
 #include "FileTransferStatus.h"
 #include "QueueId.h"
+#include "QueueCompId.h"
 #include "LinkConfig.h"
 #include "StorageConfig.h"
 #include "ShareConfig.h"
