@@ -61,9 +61,10 @@ static void initializeDatabase()
     auto dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
     auto dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
     auto dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    int pooledConn = ServerConfig::instance().get<int>("DbThreadsNum");
 
     db::DBSingleton::instance().getDBObjectInstance()->init(
-        dbType, dbUserName, dbPassword, dbConnectString, 8);
+        dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
 /// Run the Optimizer server

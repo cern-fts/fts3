@@ -43,19 +43,17 @@ using namespace fts3::server;
 
 
 /// Initialize the database backend
-/// @param test If set to true, do not use full pool size
-static void intializeDatabase(bool test = false)
+static void intializeDatabase()
 {
-    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
-    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
-    int pooledConn = ServerConfig::instance().get<int> ("DbThreadsNum");
-    if(test)
-        pooledConn = 2;
+    auto dbType = ServerConfig::instance().get<std::string>("DbType");
+    auto dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    auto dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    auto dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    int pooledConn = ServerConfig::instance().get<int>("DbThreadsNum");
 
-    const std::string experimentalPostgresSupport =
-        ServerConfig::instance().get<std::string> ("ExperimentalPostgresSupport");
+    auto experimentalPostgresSupport =
+        ServerConfig::instance().get<std::string>("ExperimentalPostgresSupport");
+
     if (dbType == "postgresql" && experimentalPostgresSupport != "true") {
         throw std::runtime_error(
             "Failed to initialize database: "
@@ -63,7 +61,8 @@ static void intializeDatabase(bool test = false)
         );
     }
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
+    db::DBSingleton::instance().getDBObjectInstance()->init(
+        dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
 /// Called by the signal handler

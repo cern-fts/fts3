@@ -68,13 +68,15 @@ static void shutdownCallback(int signum, void*)
 /// Initialize the database backend
 static void initializeDatabase()
 {
-    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
-    std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    auto dbType = ServerConfig::instance().get<std::string > ("DbType");
+    auto dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    auto dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    auto dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    int pooledConn = ServerConfig::instance().get<int>("DbThreadsNum");
 
-    const std::string experimentalPostgresSupport =
-        ServerConfig::instance().get<std::string> ("ExperimentalPostgresSupport");
+    auto experimentalPostgresSupport =
+        ServerConfig::instance().get<std::string>("ExperimentalPostgresSupport");
+
     if (dbType == "postgresql" && experimentalPostgresSupport != "true") {
         throw std::runtime_error(
             "Failed to initialize database: "
@@ -82,7 +84,8 @@ static void initializeDatabase()
         );
     }
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, 8);
+    db::DBSingleton::instance().getDBObjectInstance()->init(
+        dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
 
