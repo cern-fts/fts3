@@ -1622,11 +1622,11 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
             }
 
             const QueueCompId queueCompId = {
-                voName,
-                sourceSe,
-                destSe,
-                activity,
-                newFileState
+                .vo_name = voName,
+                .source_se = sourceSe,
+                .dest_se = destSe,
+                .activity = activity,
+                .file_state = newFileState
             };
             const std::int64_t nextQueueId = postgresIncQueueCounter(sql, 1, queueCompId);
 
@@ -5190,11 +5190,11 @@ void MySqlAPI::updateTokenPrepFiles()
 
             for (const auto& row: rs) {
                 const QueueCompId queueCompId = {
-                    row.get<std::string>("vo_name", ""),
-                    row.get<std::string>("source_se", ""),
-                    row.get<std::string>("dest_se", ""),
-                    row.get<std::string>("activity", ""),
-                    row.get<std::string>("file_state_initial", ""),
+                    .vo_name = row.get<std::string>("vo_name", ""),
+                    .source_se = row.get<std::string>("source_se", ""),
+                    .dest_se = row.get<std::string>("dest_se", ""),
+                    .activity = row.get<std::string>("activity", ""),
+                    .file_state = row.get<std::string>("file_state_initial", ""),
                 };
 
                 tokenPrepFiles.emplace_back(
