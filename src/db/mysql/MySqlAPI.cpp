@@ -4288,10 +4288,17 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
 
     try
     {
+        std::string managed_tokens_filter;
+
+        if (ServerConfig::instance().get<bool>("NonManagedTokens")) {
+            managed_tokens_filter = " scope LIKE '%offline_access%' AND ";
+        }
+
         const soci::rowset<Token> rs = (sql.prepare <<
                                 " SELECT token_id, access_token, refresh_token, issuer, scope, audience "
                                 " FROM t_token "
                                 " WHERE refresh_token IS NULL AND "
+                                << managed_tokens_filter <<
                                 "       (retry_timestamp IS NULL OR retry_timestamp < UTC_TIMESTAMP()) AND "
                                 "       attempts < 5"
                                 " ORDER BY NULL");
