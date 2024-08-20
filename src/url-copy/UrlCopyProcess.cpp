@@ -97,6 +97,26 @@ static DestFile createDestFileReport(const Transfer &transfer, Gfal2 &gfal2, Gfa
 }
 
 
+static void performDestFileReportWorkflow(const UrlCopyOpts &opts, Transfer &transfer,
+                                          Gfal2 &gfal2, Gfal2TransferParams &params)
+{
+    if (!opts.dstFileReport) {
+        return;
+    }
+
+    try {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: "
+                                        << transfer.destination << commit;
+        auto destFile = createDestFileReport(transfer, gfal2, params);
+        transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file report: " << destFile.toString() << commit;
+    } catch (const std::exception &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
+                                       << transfer.destination << " (error=" << ex.what() << ")" << commit;
+    }
+}
+
+
 static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, Transfer &transfer,
                                            Gfal2 &gfal2, Gfal2TransferParams &params)
 {
@@ -139,7 +159,7 @@ static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, Transfer &tr
         std::ostringstream errmsg;
         errmsg << "Destination file location unknown: " + xattrLocality
                << " (overwrite-when-only-on-disk requested)";
-        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EROFS, errmsg.str());
+        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EFAULT, errmsg.str());
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file not on tape. Removing file "
@@ -440,29 +460,25 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                 // File exists
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file exists" << commit;
                 bool overwrite_disk_performed = false;
+                std::string errmsg = "Destination file exists and overwrite is not enabled";
 
                 if (opts.overwriteOnDisk) {
-                    // Throws on error
-                    performOverwriteOnDiskWorkflow(opts, transfer, gfal2, params);
-                    overwrite_disk_performed = true;
-                }
-
-                if (opts.dstFileReport && !overwrite_disk_performed) {
                     try {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: "
-                                                        << transfer.destination << commit;
-                        auto destFile = createDestFileReport(transfer, gfal2, params);
-                        transfer.fileMetadata = DestFile::appendDestFileToFileMetadata(transfer.fileMetadata, destFile.toJSON());
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file report: " << destFile.toString() << commit;
-                    } catch (const std::exception &ex) {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to check integrity of destination tape file: "
-                                                       << transfer.destination << " (error=" << ex.what() << ")" << commit;
+                        performOverwriteOnDiskWorkflow(opts, transfer, gfal2, params);
+                        overwrite_disk_performed = true;
+                    } catch(const UrlCopyError &ex) {
+                        // Dealing with file on tape endpoint, allow DestFileReport
+                        if (ex.code() == EROFS) {
+                            errmsg = ex.what();
+                        } else {
+                            throw;
+                        }
                     }
                 }
 
                 if (!overwrite_disk_performed) {
-                    throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST,
-                                       "Destination file exists and overwrite is not enabled");
+                    performDestFileReportWorkflow(opts, transfer, gfal2, params);
+                    throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST, errmsg);
                 }
             } catch (const Gfal2Exception &ex) {
                 if (ex.code() != ENOENT) {
