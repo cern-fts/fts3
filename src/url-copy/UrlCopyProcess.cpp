@@ -651,6 +651,32 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
 
+    // Verify destination checksum against source or user-provided checksums
+    if (!opts.strictCopy && (transfer.checksumMode & Transfer::CHECKSUM_TARGET)) {
+        std::string dst_checksum;
+        try {
+            dst_checksum = gfal2.getChecksum(transfer.destination, transfer.checksumAlgorithm);
+        } catch (const Gfal2Exception &ex) {
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+        } catch (const std::exception &ex) {
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ex.what());
+        };
+
+        if (!src_checksum.empty()) {
+            if (!compare_checksum(src_checksum, dst_checksum)) {
+                throw UrlCopyError(TRANSFER, TRANSFER_FINALIZATION, EIO, "Source and destination "
+                        + transfer.checksumAlgorithm + " checksum do not match " + "("
+                        + src_checksum + " != " + dst_checksum + ")");
+            }
+        } else if (!user_checksum.empty()) {
+            if (!compare_checksum(transfer.checksumValue, dst_checksum)) {
+                throw UrlCopyError(TRANSFER, TRANSFER_FINALIZATION, EIO, "User-defined and destination "
+                        + transfer.checksumAlgorithm + " checksum do not match " + "("
+                        + transfer.checksumValue + " != " + dst_checksum + ")");
+            }
+        }
+    }
+
     // Release source file if we have a bring-online token
     if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
