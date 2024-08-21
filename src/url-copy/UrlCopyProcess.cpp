@@ -19,6 +19,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <filesystem>
 
 #include "LogHelper.h"
 #include "heuristics.h"
@@ -559,8 +560,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         if (ex.code() != ENOENT)
             throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination \"" << transfer.destination
-                                         << "\" does not exist" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file does not exist!" << commit;
         destination_exist = false;
     }
 
@@ -573,12 +573,25 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             };
             FTS3_COMMON_LOGGER_LOG(DEBUG, "File " + transfer.destination.fullUri + " deleted (overwrite set)");
         } else {
-            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EEXIST, "The destination file exists"
-                               " and overwrite is not enabled");
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EEXIST,
+                               "Destination file exists and overwrite is not enabled");
         }
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination does not exist, checking if the parent "
-                                            "directory exists..." << commit;
+        auto dest_path = std::filesystem::path(transfer.destination.path);
+        if (dest_path.has_parent_path()) {
+            const Uri &dest = transfer.destination;
+            const std::string parent_uri = dest.protocol + "://" + dest.host+ dest_path.parent_path().string()
+                                           + "?" + dest.queryString;
+            try {
+                gfal2.mkdir_recursive(params, parent_uri, false);
+                FTS3_COMMON_LOGGER_LOG(DEBUG, "Destination does not exist, creating " + parent_uri);
+            } catch (const Gfal2Exception &ex) {
+                if (ex.code() != EEXIST) {
+                    FTS3_COMMON_LOGGER_LOG(DEBUG, "Unable to create destination parent directory" + parent_uri);
+                    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+                }
+            }
+        }
     }
 
     // Transfer
