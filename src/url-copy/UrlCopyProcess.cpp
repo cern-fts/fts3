@@ -551,6 +551,36 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
     }
 
+    // Check for the destination and overwrite if needed
+    bool destination_exist = true;
+    try {
+        gfal2.access(params, transfer.destination, false, F_OK);
+    } catch (const Gfal2Exception &ex) {
+        if (ex.code() != ENOENT)
+            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination \"" << transfer.destination
+                                         << "\" does not exist" << commit;
+        destination_exist = false;
+    }
+
+    if (destination_exist) {
+        if (opts.overwrite) {
+            try {
+                gfal2.rm(params, transfer.destination, false);
+            } catch (const Gfal2Exception &ex) {
+                throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+            };
+            FTS3_COMMON_LOGGER_LOG(DEBUG, "File " + transfer.destination.fullUri + " deleted (overwrite set)");
+        } else {
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EEXIST, "The destination file exists"
+                               " and overwrite is not enabled");
+        }
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination does not exist, checking if the parent "
+                                            "directory exists..." << commit;
+    }
+
     // Transfer
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;
     try {
