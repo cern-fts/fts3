@@ -407,6 +407,23 @@ static bool compare_checksum(std::string source, std::string destination)
     return boost::iequals(source, destination);
 }
 
+void UrlCopyProcess::cleanup_on_failure(Gfal2TransferParams &params, const std::string &destination)
+{
+    if (!opts.disableCleanup) {
+        try {
+            gfal2.rm(params, destination, false);
+        } catch (const Gfal2Exception &ex) {
+            if (ex.code() != ENOENT) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "When trying to clean the destination: " <<  ex.what() << commit;
+            }
+        };
+
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "Destination file removed");
+    } else {
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "The transfer clean-up has been manually disabled");
+    }
+}
+
 void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params)
 {
     if (!opts.proxy.empty()) {
@@ -597,11 +614,16 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     try {
         gfal2.copy(params, transfer.source, transfer.destination);
     } catch (const Gfal2Exception &ex) {
-        if (timeoutExpired) {
-            throw UrlCopyError(TRANSFER, TRANSFER, ETIMEDOUT, ex.what());
+        // Clean-up on a copy failure
+        if (ex.code() != EEXIST) {
+            cleanup_on_failure(params, transfer.destination);
         } else {
-            throw UrlCopyError(TRANSFER, TRANSFER, ex);
+            // Should only get here due to a race condition at the storage level
+            FTS3_COMMON_LOGGER_LOG(DEBUG, "The transfer failed because the file exists. Do not clean!");
         }
+
+        int errc = (timeoutExpired ? ETIMEDOUT : ex.code());
+        throw UrlCopyError(TRANSFER, TRANSFER, errc, ex.what());
     } catch (const std::exception &ex) {
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }

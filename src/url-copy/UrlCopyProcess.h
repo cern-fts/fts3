@@ -52,6 +52,9 @@ private:
     /// Archive the transfer logs
     void archiveLogs(Transfer &transfer);
 
+    /// Transfer utils
+    void cleanup_on_failure(Gfal2TransferParams &params, const std::string &destination);
+
 public:
 
     /// Constructor. Initialize all internals from the command line options.
