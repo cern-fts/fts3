@@ -330,20 +330,6 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         params.setDestSpacetoken(transfer.destTokenDescription);
     }
 
-    if (!transfer.checksumAlgorithm.empty()) {
-    	try	{
-    		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
-    	} catch (const Gfal2Exception &ex) {
-    		if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {
-    			throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, ex);
-    		} else if (transfer.checksumMode == Transfer::CHECKSUM_TARGET) {
-    			throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
-    		} else {
-                throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
-            }
-    	}
-    }
-
     // Set HTTP copy mode
     if (!opts.copyMode.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: DEFAULT_COPY_MODE=" << opts.copyMode << commit;
@@ -628,6 +614,36 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
 
+    std::string dst_checksum;
+    if (!opts.strictCopy) {
+        try {
+            dst_checksum = gfal2.getChecksum(transfer.destination, transfer.checksumAlgorithm);
+        } catch (const Gfal2Exception &ex) {
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+        } catch (const std::exception &ex) {
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ex.what());
+        };
+    }
+
+    // Destination checksum verifications
+    if (!opts.strictCopy) {
+        if (!user_checksum.empty() && transfer.checksumMode & Transfer::CHECKSUM_TARGET) {
+            if (!compare_checksum(user_checksum, dst_checksum)) {
+                cleanup_on_failure(params, transfer.destination);
+                throw UrlCopyError(TRANSFER, TRANSFER_FINALIZATION, EIO, "User-defined and destination "
+                        + transfer.checksumAlgorithm + " checksum do not match " + "("
+                        + user_checksum + " != " + dst_checksum + ")");
+            }
+        } else { // Proceed to end-to-end comparison
+            if (!compare_checksum(src_checksum, dst_checksum)) {
+                cleanup_on_failure(params, transfer.destination);
+                throw UrlCopyError(TRANSFER, TRANSFER_FINALIZATION, EIO, "Source and destination "
+                        + transfer.checksumAlgorithm + " checksum do not match " + "("
+                        + src_checksum + " != " + dst_checksum + ")");
+            }
+        }
+    }
+
     // Release source file if we have a bring-online token
     if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
@@ -656,7 +672,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EINVAL,
                                "Source and destination file size mismatch");
         } else {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DESTINATION Source and destination file size matching" << commit;
+            FTS3_COMMON_LOGGER_LOG(INFO, "DESTINATION Source and destination file size matching");
         }
     }
 }
