@@ -19,6 +19,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <filesystem>
 
 #include "LogHelper.h"
 #include "heuristics.h"
@@ -586,6 +587,33 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination does not exist, checking if the parent "
                                             "directory exists..." << commit;
+    }
+
+    const std::filesystem::path dest_path = std::filesystem::path(transfer.destination.fullUri);
+    if (!dest_path.has_parent_path()) {
+        throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, "Could not get the parent "
+                           "directory of " + transfer.destination.fullUri);
+    }
+
+    const std::string parent_path = dest_path.parent_path().string();
+    bool parent_dst_exists = true;
+    try {
+        gfal2.access(params, parent_path, false, F_OK);
+    } catch (const Gfal2Exception &ex) {
+        if (ex.code() != ENOENT)
+            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+
+        parent_dst_exists = false;
+    }
+
+    if (!parent_dst_exists) {
+        try {
+            gfal2.mkdir_recursive(params, parent_path, false);
+        } catch (const Gfal2Exception &ex) {
+            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+        };
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Created parent directory : " 
+                                         << dest_path.parent_path() << commit;
     }
 
     // Transfer

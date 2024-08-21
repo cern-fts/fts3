@@ -466,6 +466,17 @@ public:
         }
     }
 
+    void mkdir_recursive(Gfal2TransferParams &params, const std::string &url, bool is_source)
+    {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_mkdir_rec(context, url.c_str(), 0775, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
     /// Get the checksum of a file
     std::string getChecksum(const std::string &url, const std::string &type) {
         char buffer[512];
