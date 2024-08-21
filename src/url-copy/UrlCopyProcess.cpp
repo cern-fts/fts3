@@ -621,11 +621,32 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     try {
         gfal2.copy(params, transfer.source, transfer.destination);
     } catch (const Gfal2Exception &ex) {
+        // Clean-up on a copy failure
+        if (ex.code() != EEXIST) {
+            if (!opts.disableCleanup) {
+                try {
+                    gfal2.rm(params, transfer.destination, false);
+                } catch (const Gfal2Exception &ex) {
+                    if (ex.code() != ENOENT) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "When trying to clean the destination: "
+                                                           << ex.what() << commit;
+                    }
+                };
+
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination file removed" << commit;
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "The transfer clean-up has been "
+                                                    "manully disabled" << commit;
+            }
+        } else {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "The transfer failed because the file exists."
+                                             << " Do not clean!" << commit;
+        }
+
         if (timeoutExpired) {
             throw UrlCopyError(TRANSFER, TRANSFER, ETIMEDOUT, ex.what());
-        } else {
-            throw UrlCopyError(TRANSFER, TRANSFER, ex);
         }
+        throw UrlCopyError(TRANSFER, TRANSFER, ex);
     } catch (const std::exception &ex) {
         throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
     }
