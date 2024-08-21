@@ -293,12 +293,12 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
 static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfer,
                                 Gfal2 &gfal2, Gfal2TransferParams &params)
 {
-    params.setStrictCopy(opts.strictCopy);
-    params.setCreateParentDir(true);
-    params.setReplaceExistingFile(opts.overwrite);
+    params.setStrictCopy(true);
+    params.setCreateParentDir(false);
+    params.setTransferCleanUp(false);
+    params.setReplaceExistingFile(false);
     params.setDelegationFlag(!opts.noDelegation);
     params.setStreamingFlag(!opts.noStreaming);
-    params.setTransferCleanUp(!opts.disableCleanup);
 
     // SciTag value should always be in the [65, 65535] range
     if (transfer.scitag > 0) {
