@@ -429,8 +429,21 @@ public:
         }
     }
 
+    void access(Gfal2TransferParams &params, const std::string &url, bool is_source, int amode)
+    {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_access(context, url.c_str(), amode, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
+
     /// Remove file
-    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source) {
+    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source)
+    {
         bearerInit(params, is_source ? url : "",
                            is_source ? "" : url);
 
