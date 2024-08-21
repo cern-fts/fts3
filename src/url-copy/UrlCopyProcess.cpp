@@ -330,31 +330,15 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         params.setDestSpacetoken(transfer.destTokenDescription);
     }
 
-    if (!transfer.checksumAlgorithm.empty()) {
-    	try	{
-    		params.setChecksum(transfer.checksumMode, transfer.checksumAlgorithm, transfer.checksumValue);
-    	} catch (const Gfal2Exception &ex) {
-    		if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {
-    			throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, ex);
-    		} else if (transfer.checksumMode == Transfer::CHECKSUM_TARGET) {
-    			throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
-    		} else {
-                throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
-            }
-    	}
-    }
-
     // Set HTTP copy mode
     if (!opts.copyMode.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: DEFAULT_COPY_MODE=" << opts.copyMode << commit;
         gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", opts.copyMode);
     }
 
-    // Disable TPC copy fallback
-    if (opts.disableCopyFallback) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: ENABLE_FALLBACK_TPC_COPY=false" << commit;
-        gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
-    }
+    // Disable Gfal TPC copy fallback
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: ENABLE_FALLBACK_TPC_COPY=false" << commit;
+    gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
 
     // Avoid TPC attempts in S3 to S3 transfers
     if ((transfer.source.protocol.find("s3") == 0) && (transfer.destination.protocol.find("s3") == 0)) {
