@@ -4504,14 +4504,22 @@ void MySqlAPI::updateTokenPrepFiles()
 
     try
     {
+        std::string src_unmanaged_tokens_filter;
+        std::string dst_unmanaged_tokens_filter;
+
+        if (ServerConfig::instance().get<bool>("NonManagedTokens")) {
+            src_unmanaged_tokens_filter = " OR t_src.scope NOT LIKE \"%offline_access%\"";
+            dst_unmanaged_tokens_filter = " OR t_dst.scope NOT LIKE \"%offline_access%\"";
+        }
+
         const soci::rowset<soci::row> rs = (sql.prepare <<
                                     " SELECT f.job_id, f.file_id, f.file_state_initial, f.src_token_id, f.dst_token_id "
                                     " FROM t_file f "
                                     "     INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id "
                                     "     INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id "
                                     " WHERE f.file_state = 'TOKEN_PREP' "
-                                    "     AND t_src.refresh_token IS NOT NULL "
-                                    "     AND t_dst.refresh_token IS NOT NULL "
+                                    "     AND (t_src.refresh_token IS NOT NULL " << src_unmanaged_tokens_filter << ")"
+                                    "     AND (t_dst.refresh_token IS NOT NULL " << dst_unmanaged_tokens_filter << ")"
                                     " ORDER BY NULL");
 
         // Store all data into memory structure in order to reiterate
