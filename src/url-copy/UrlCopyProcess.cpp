@@ -18,6 +18,7 @@
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "LogHelper.h"
 #include "heuristics.h"
@@ -399,6 +400,13 @@ static void pingTask(Transfer *transfer, Reporter *reporter, unsigned pingInterv
     }
 }
 
+static bool compare_checksum(std::string source, std::string destination)
+{
+    source.erase(0, source.find_first_not_of('0'));
+    destination.erase(0, destination.find_first_not_of('0'));
+
+    return boost::iequals(source, destination);
+}
 
 void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params)
 {
@@ -521,6 +529,33 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     // Ping thread
     AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
+
+    // Compare source checksum against user-provided checksum
+    std::string src_checksum;
+    const std::string &user_checksum = transfer.checksumValue;
+    if (!opts.strictCopy && (transfer.checksumMode & Transfer::CHECKSUM_SOURCE)) {
+        try {
+            src_checksum = gfal2.getChecksum(transfer.source, transfer.checksumAlgorithm);
+        } catch (const Gfal2Exception &ex) {
+            if (ex.code() != ENOSYS && ex.code() != ENOTSUP) {
+                throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum type " << transfer.checksumAlgorithm
+                                               << " not supported by source. Skip source check." << commit;
+            src_checksum.clear();
+        } catch (const std::exception &ex) {
+            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ex.what());
+        };
+
+        if (!user_checksum.empty() && !src_checksum.empty()) {
+            if (!compare_checksum(user_checksum, src_checksum)) {
+                throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, "Source and user-defined "
+                                   + user_checksum + " checksum do not match ("
+                                   + src_checksum + " != " + transfer.checksumValue + ")");
+            }
+        }
+    }
 
     // Transfer
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;

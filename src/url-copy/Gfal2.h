@@ -169,6 +169,23 @@ public:
     	}
     }
 
+    int getChecksum(std::string &checksum_type, std::string &user_checksum)
+    {
+        char csum_type[1024] = {0};
+        char user_csum[1024] = {0};
+
+        GError *error = NULL;
+        int ret = gfalt_get_checksum(params, csum_type, sizeof(csum_type),
+                                     user_csum, sizeof(user_csum), &error);
+        if (error) {
+            throw Gfal2Exception(error);
+        }
+
+        checksum_type = csum_type;
+        user_checksum = user_csum;
+        return ret;
+    }
+
     void setTimeout(unsigned timeout)
     {
         GError *error = NULL;
