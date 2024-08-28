@@ -23,7 +23,6 @@ import json
 import logging
 import logging.handlers
 import os
-import pymysql
 import requests
 import socket
 import time
@@ -73,6 +72,12 @@ def get_config(path, program_name):
     config = configparser.ConfigParser()
     config.read(path)
 
+    if config.has_option("database", "type"):
+        if config.get("database", "type") not in ("mysql", "postgresql"):
+            raise Exception(
+                'The value of the database.type option of the configuration file must be either "mysql" or "postgresql": '
+                f'path={path}  value={config.get("database", "type")}'
+            )
     if not config.has_option("database", "user"):
         raise Exception(
             f"The database section of the configuration file does not contain the user option: path={path}"
@@ -108,12 +113,24 @@ def get_config(path, program_name):
         "max_tokens_to_retire": config.getint(
             "main", "max_tokens_to_retire", fallback=600000
         ),
+        "ExperimentalPostgresSupport": config.getboolean(
+            "main", "ExperimentalPostgresSupport", fallback=False
+        ),
+        "db_type": config.get("database", "type", fallback="mysql"),
         "db_user": config.get("database", "user"),
         "db_password": config.get("database", "password"),
         "db_database": config.get("database", "database"),
         "db_host": config.get("database", "host"),
         "db_port": config.getint("database", "port"),
     }
+
+    if result["db_type"] == "postgresql" and not result["ExperimentalPostgresSupport"]:
+        raise Exception(
+            "Invalid configuration file: "
+            "database.type cannot be set to postgresql if main.ExperimentalPostgresSupport is not set to true: "
+            f"path={path}"
+        )
+
 
     return result
 
@@ -148,16 +165,26 @@ def get_major_db_schema_version(db_conn):
     return rows[0][0]
 
 
-def get_db_tables(db_conn):
+def get_db_tables(db_conn, db_type):
     cursor = db_conn.cursor()
-    cursor.execute(
-        "select"
-        "  table_name "
-        "from"
-        "  information_schema.tables "
-        "where"
-        "  table_schema = database()"
-    )
+    if db_type == "mysql":
+        cursor.execute(
+            "select"
+            "  table_name "
+            "from"
+            "  information_schema.tables "
+            "where"
+            "  table_schema = database()"
+        )
+    else:
+        cursor.execute(
+            "select"
+            "  table_name "
+            "from"
+            "  information_schema.tables "
+            "where"
+            "  table_schema = current_schema()"
+        )
     rows = cursor.fetchall()
     result = set()
     for row in rows:
@@ -269,23 +296,33 @@ def select_all_token_ids(db_conn):
     return result, select_sec
 
 
-def delete_ignore_token(db_conn, token_id):
+def delete_ignore_token(db_conn, db_type, token_id):
     start_delete = time.time()
     cursor = db_conn.cursor()
-    nb_deleted = cursor.execute(
-        "DELETE IGNORE FROM" "  t_token " "WHERE" "  token_id = %(token_id)s",
-        {"token_id": token_id},
-    )
+    if db_type == "mysql":
+        nb_deleted = cursor.execute(
+            "DELETE IGNORE FROM" "  t_token " "WHERE" "  token_id = %(token_id)s",
+            {"token_id": token_id},
+        )
+    else:
+        try:
+            nb_deleted = cursor.execute(
+                "DELETE FROM t_token WHERE token_id = %(token_id)s",
+                {"token_id": token_id},
+            )
+            nb_deleted = 0 if nb_deleted is None else nb_deleted
+        except:
+            nb_deleted = 0
     delete_sec = time.time() - start_delete
 
     return nb_deleted, delete_sec
 
 
-def delete_orphan_tokens(db_conn, token_ids):
+def delete_orphan_tokens(db_conn, db_type, token_ids):
     total_nb_deleted = 0
     total_delete_sec = 0
     for token_id in token_ids:
-        nb_deleted, delete_sec = delete_ignore_token(db_conn, token_id)
+        nb_deleted, delete_sec = delete_ignore_token(db_conn, db_type, token_id)
         total_nb_deleted += nb_deleted
         total_delete_sec += delete_sec
 
@@ -314,34 +351,46 @@ def select_redundant_failed_token_ids(db_conn):
     return result, select_sec
 
 
-def delete_ignore_redundant_failed_token(db_conn, token_id):
+def delete_ignore_redundant_failed_token(db_conn, db_type, token_id):
     start_delete = time.time()
     cursor = db_conn.cursor()
-    nb_deleted = cursor.execute(
-        "DELETE IGNORE FROM"
-        "  t_token_refresher_failed_token "
-        "WHERE"
-        "  token_id = %(token_id)s",
-        {"token_id": token_id},
-    )
+    if db_type == "mysql":
+        nb_deleted = cursor.execute(
+            "DELETE IGNORE FROM"
+            "  t_token_refresher_failed_token "
+            "WHERE"
+            "  token_id = %(token_id)s",
+            {"token_id": token_id},
+        )
+    else:
+        try:
+            nb_deleted = cursor.execute(
+                "DELETE IGNORE FROM"
+                "  t_token_refresher_failed_token "
+                "WHERE"
+                "  token_id = %(token_id)s",
+                {"token_id": token_id},
+            )
+        except:
+            nb_deleted = 0
 
     delete_sec = time.time() - start_delete
 
     return nb_deleted, delete_sec
 
 
-def delete_ignore_redundant_failed_tokens(db_conn, redundant_failed_token_ids):
+def delete_ignore_redundant_failed_tokens(db_conn, db_type, redundant_failed_token_ids):
     total_nb_deleted = 0
     total_delete_sec = 0
     for token_id in redundant_failed_token_ids:
-        nb_deleted, delete_sec = delete_ignore_redundant_failed_token(db_conn, token_id)
+        nb_deleted, delete_sec = delete_ignore_redundant_failed_token(db_conn, db_type, token_id)
         total_nb_deleted += nb_deleted
         total_delete_sec += delete_sec
 
     return total_nb_deleted, total_delete_sec
 
 
-def perform_housekeeping(db_conn, select_worker_hostname_sec, max_tokens_to_retire):
+def perform_housekeeping(db_conn, db_type, select_worker_hostname_sec, max_tokens_to_retire):
     start_time = time.time()
 
     token_ids_to_retire, select_token_ids_to_retire_sec = select_token_ids_to_retire(
@@ -351,7 +400,7 @@ def perform_housekeeping(db_conn, select_worker_hostname_sec, max_tokens_to_reti
 
     all_token_ids, select_all_token_ids_to_delete_sec = select_all_token_ids(db_conn)
     nb_deleted_tokens, delete_sec = delete_orphan_tokens(
-        db_conn, token_ids=all_token_ids
+        db_conn, db_type, token_ids=all_token_ids
     )
 
     (
@@ -362,7 +411,7 @@ def perform_housekeeping(db_conn, select_worker_hostname_sec, max_tokens_to_reti
         nb_deleted_redundant_failed_tokens,
         delete_redundant_failed_tokens_sec,
     ) = delete_ignore_redundant_failed_tokens(
-        db_conn, redundant_failed_token_ids=redundant_failed_token_ids
+        db_conn, db_type, redundant_failed_token_ids=redundant_failed_token_ids
     )
 
     total_sec = time.time() - start_time
@@ -407,14 +456,25 @@ config = get_config(cmd_line.config, program_name)
 
 log = get_log(log_file_path=config["log_file"], log_program_name=program_name)
 
-db_conn = pymysql.connect(
-    user=config["db_user"],
-    password=config["db_password"],
-    database=config["db_database"],
-    host=config["db_host"],
-    port=config["db_port"],
-    autocommit=True,
-)
+if config["db_type"] == "mysql":
+    import pymysql
+    db_conn = pymysql.connect(
+        user=config["db_user"],
+        password=config["db_password"],
+        database=config["db_database"],
+        host=config["db_host"],
+        port=config["db_port"],
+        autocommit=True,
+    )
+else:
+    import psycopg2
+    db_conn = psycopg2.connect(
+        f"dbname='{config['db_database']}' "
+        f"user='{config['db_user']}' "
+        f"host='{config['db_host']}' "
+        f"password='{config['db_password']}'"
+    )
+    db_conn.set_session(autocommit = True)
 
 min_allowed_major_db_schema_version = 9
 actual_major_db_schema_version = get_major_db_schema_version(db_conn)
@@ -427,7 +487,7 @@ if actual_major_db_schema_version < min_allowed_major_db_schema_version:
     )
     exit(1)
 
-db_tables = get_db_tables(db_conn)
+db_tables = get_db_tables(db_conn, config["db_type"])
 if "t_token" not in db_tables:
     print("The t_token table does not exist")
     exit(1)
@@ -441,7 +501,7 @@ if "t_token_refresher_failed_token" not in db_tables:
     except:
         # Maybe another script was quicker at creating the table
         pass
-    db_tables = get_db_tables(db_conn)
+    db_tables = get_db_tables(db_conn, config["db_type"])
     if "t_token_refresher_failed_token" not in db_tables:
         print(
             "The t_token_refresher_failed_token table does not exists and cannot be created"
@@ -454,7 +514,7 @@ while True:
     worker_hostname, select_worker_hostname_sec = select_worker_hostname(db_conn)
     if worker_hostname == socket.gethostname():
         perform_housekeeping(
-            db_conn, select_worker_hostname_sec, config["max_tokens_to_retire"]
+            db_conn, config["db_type"], select_worker_hostname_sec, config["max_tokens_to_retire"]
         )
 
     execution_duration = time.time() - execution_start

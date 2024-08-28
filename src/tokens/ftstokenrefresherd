@@ -24,7 +24,6 @@ import json
 import logging
 import logging.handlers
 import os
-import pymysql
 import requests
 import socket
 import time
@@ -74,6 +73,12 @@ def get_config(path, program_name):
     config = configparser.ConfigParser()
     config.read(path)
 
+    if config.has_option("database", "type"):
+        if config.get("database", "type") not in ("mysql", "postgresql"):
+            raise Exception(
+                "The value of the database.type option of the configuration file must be either mysql or postgresql: "
+                f'path={path}  value={config.get("database", "type")}'
+            )
     if not config.has_option("database", "user"):
         raise Exception(
             f"The database section of the configuration file does not contain the user option: path={path}"
@@ -115,12 +120,23 @@ def get_config(path, program_name):
         "nb_get_token_threads": config.getint(
             "main", "nb_get_token_threads", fallback=10
         ),
+        "ExperimentalPostgresSupport": config.getboolean(
+            "main", "ExperimentalPostgresSupport", fallback=False
+        ),
+        "db_type": config.get("database", "type", fallback="mysql"),
         "db_user": config.get("database", "user"),
         "db_password": config.get("database", "password"),
         "db_database": config.get("database", "database"),
         "db_host": config.get("database", "host"),
         "db_port": config.getint("database", "port"),
     }
+
+    if result["db_type"] == "postgresql" and not result["ExperimentalPostgresSupport"]:
+        raise Exception(
+            "Invalid configuration file: "
+            "database.type cannot be set to postgresql if main.ExperimentalPostgresSupport is not set to true: "
+            f"path={path}"
+        )
 
     return result
 
@@ -157,16 +173,26 @@ def get_major_db_schema_version(db_conn):
     return major_schema_version
 
 
-def get_db_tables(db_conn):
+def get_db_tables(db_conn, db_type):
     cursor = db_conn.cursor()
-    cursor.execute(
-        "select"
-        "  table_name "
-        "from"
-        "  information_schema.tables "
-        "where"
-        "  table_schema = database()"
-    )
+    if db_type == "mysql":
+        cursor.execute(
+            "select"
+            "  table_name "
+            "from"
+            "  information_schema.tables "
+            "where"
+            "  table_schema = database()"
+        )
+    else:
+        cursor.execute(
+            "select"
+            "  table_name "
+            "from"
+            "  information_schema.tables "
+            "where"
+            "  table_schema = current_schema()"
+        )
     rows = cursor.fetchall()
     result = set()
     for row in rows:
@@ -675,14 +701,25 @@ config = get_config(cmd_line.config, program_name)
 
 log = get_log(log_file_path=config["log_file"], log_program_name=program_name)
 
-db_conn = pymysql.connect(
-    user=config["db_user"],
-    password=config["db_password"],
-    database=config["db_database"],
-    host=config["db_host"],
-    port=config["db_port"],
-    autocommit=True,
-)
+if config["db_type"] == "mysql":
+    import pymysql
+    db_conn = pymysql.connect(
+        user=config["db_user"],
+        password=config["db_password"],
+        database=config["db_database"],
+        host=config["db_host"],
+        port=config["db_port"],
+        autocommit=True,
+    )
+else:
+    import psycopg2
+    db_conn = psycopg2.connect(
+        f"dbname='{config['db_database']}' "
+        f"user='{config['db_user']}' "
+        f"host='{config['db_host']}' "
+        f"password='{config['db_password']}'"
+    )
+    db_conn.set_session(autocommit = True)
 
 min_allowed_major_db_schema_version = 9
 actual_major_db_schema_version = get_major_db_schema_version(db_conn)
@@ -695,7 +732,7 @@ if actual_major_db_schema_version < min_allowed_major_db_schema_version:
     )
     exit(1)
 
-db_tables = get_db_tables(db_conn)
+db_tables = get_db_tables(db_conn, config["db_type"])
 if "t_token" not in db_tables:
     print("The t_token table does not exist")
     exit(1)
@@ -709,7 +746,7 @@ if "t_token_refresher_failed_token" not in db_tables:
     except:
         # Maybe another script was quicker at creating the table
         pass
-    db_tables = get_db_tables(db_conn)
+    db_tables = get_db_tables(db_conn, config["db_type"])
     if "t_token_refresher_failed_token" not in db_tables:
         print(
             "The t_token_refresher_failed_token table does not exists and cannot be created"
