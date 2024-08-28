@@ -63,6 +63,7 @@ CREATE TABLE t_token (
     retry_delay_m              INTEGER           NULL DEFAULT 0,
     attempts                   INTEGER           NULL DEFAULT 0,
     exchange_message           VARCHAR(2048)     NULL,
+    retired                    SMALLINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (token_id),
     CONSTRAINT fk_token_issuer
         FOREIGN KEY (issuer)
