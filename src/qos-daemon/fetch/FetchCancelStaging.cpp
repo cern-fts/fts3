@@ -20,16 +20,14 @@
 
 #include <string>
 #include <set>
-#include <unordered_map>
-#include <vector>
 
-#include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "db/generic/SingleDbInstance.h"
 #include "server/common/DrainMode.h"
 
 #include "FetchCancelStaging.h"
-#include "../task/BringOnlineTask.h"
+#include "qos-daemon/task/BringOnlineTask.h"
+#include "qos-daemon/task/HttpBringOnlineTask.h"
 
 
 void FetchCancelStaging::fetch()
@@ -52,6 +50,7 @@ void FetchCancelStaging::fetch()
             if (!urls.empty())
             {
                 BringOnlineTask::cancel(urls);
+                HttpBringOnlineTask::cancel(urls);
             }
         }
         catch (const std::exception& e)
