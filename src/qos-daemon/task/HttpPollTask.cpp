@@ -21,7 +21,6 @@
 #include <gfal_api.h>
 #include "common/Logger.h"
 
-#include "BringOnlineTask.h"
 #include "HttpPollTask.h"
 
 
@@ -283,7 +282,9 @@ void HttpPollTask::abort(std::set<std::string> const & urlSet, bool report)
     );
 
     if (status == 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE task canceled with token " << token << commit;
+        for (auto const& url: urls) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE: Stage request aborted " << url << " [token=" << token << "]"<< commit;
+        }
     }
     else {
         for (size_t i = 0; i < urls.size(); ++i) {
