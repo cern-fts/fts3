@@ -18,6 +18,9 @@
  * limitations under the License.
  */
 
+#include <chrono>
+#include <sstream>
+
 #include "config/ServerConfig.h"
 #include "Optimizer.h"
 #include "OptimizerConstants.h"
@@ -102,11 +105,21 @@ void Optimizer::run(void)
         pairsSize = pairs.size();
         pairIdx = 0;
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run: found " << pairsSize << " pairs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run start: " << pairsSize << " pairs to be optimized" << commit;
+        const auto start = std::chrono::steady_clock::now();
 
         for (auto i = pairs.begin(); i != pairs.end(); ++i) {
             runOptimizerForPair(*i);
         }
+
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - start).count();
+        std::ostringstream elapsed_ss;
+        elapsed_ss << std::fixed << std::setprecision(6) << elapsed;
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run finish: optimized " << pairsSize << " pairs"
+                                        << " elapsed=" << elapsed_ss.str() << "s" << commit;
+
     }
     catch (std::exception &e) {
         throw SystemError(std::string(__func__) + ": Caught exception " + e.what());

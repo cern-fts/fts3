@@ -509,6 +509,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Enable or disable retrieval of SE-issued tokens in the transfer agent"
     )
     (
+        "NonManagedTokens",
+        po::value<std::string>( &(_vars["NonManagedTokens"]) )->default_value("false"),
+        "Tell the FTS system to not manage access tokens that don't meet certain criteria"
+    )
+    (
         "BackwardsCompatibleProxyNames",
         po::value<std::string>( &(_vars["BackwardsCompatibleProxyNames"]) )->default_value("true"),
         "Enable or disable backwards compatible naming when searching for proxy credentials stored on the local file system."

@@ -204,7 +204,7 @@ public:
         "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
         "UNION ALL "
         "SELECT start_time, finish_time, transferred, filesize "
-        " FROM t_file USE INDEX(idx_finish_time)"
+        " FROM t_file"
         " WHERE "
         "   source_se = :sourceSe AND dest_se = :destSe "
         "   AND file_state IN ('FINISHED', 'ARCHIVING') AND finish_time >= (UTC_TIMESTAMP() - INTERVAL :interval SECOND)",
@@ -275,7 +275,7 @@ public:
         double avgDuration = 0.0;
         soci::indicator isNullAvg = soci::i_ok;
 
-        sql << "SELECT AVG(tx_duration) FROM t_file USE INDEX(idx_finish_time)"
+        sql << "SELECT AVG(tx_duration) FROM t_file"
             " WHERE source_se = :source AND dest_se = :dest AND file_state IN ('FINISHED', 'ARCHIVING') AND "
             "   tx_duration > 0 AND tx_duration IS NOT NULL AND "
             "   finish_time > (UTC_TIMESTAMP() - INTERVAL :interval SECOND) LIMIT 1",
@@ -288,7 +288,7 @@ public:
     double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
         int *retryCount) {
         soci::rowset<soci::row> rs = (sql.prepare <<
-            "SELECT file_state, retry, current_failures AS recoverable FROM t_file USE INDEX(idx_finish_time)"
+            "SELECT file_state, retry, current_failures AS recoverable FROM t_file"
             " WHERE "
             "      source_se = :source AND dest_se = :dst AND "
             "      finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "
