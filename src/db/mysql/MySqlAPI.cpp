@@ -4406,9 +4406,6 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     soci::use(limit)
                 );
 
-                std::string initState = "STARTED";
-                std::string reason;
-
                 for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                 {
                     soci::row const& row = *i3;
