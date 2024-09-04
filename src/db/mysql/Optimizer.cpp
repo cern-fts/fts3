@@ -276,7 +276,7 @@ void MySqlAPI::getThroughputInfo(const Pair &pair, const boost::posix_time::time
                 "   source_se = :sourceSe AND dest_se = :destSe AND file_state = 'ACTIVE' "
                 "UNION ALL "
                 "SELECT start_time, finish_time, transferred, filesize "
-                " FROM t_file USE INDEX(idx_finish_time)"
+                " FROM t_file "
                 " WHERE "
                 "   source_se = :sourceSe AND dest_se = :destSe "
                 "   AND file_state IN ('FINISHED', 'ARCHIVING')"
@@ -375,7 +375,7 @@ time_t MySqlAPI::getAverageDuration(const Pair &pair, const boost::posix_time::t
 
         const std::string qry = sql.get_backend_name() == "mysql" ?
                 "SELECT AVG(tx_duration) "
-                "FROM t_file USE INDEX(idx_finish_time) "
+                "FROM t_file "
                 "WHERE"
                 "    source_se = :source AND"
                 "    dest_se = :dest AND"
@@ -424,7 +424,7 @@ double MySqlAPI::getSuccessRateForPair(const Pair &pair, const boost::posix_time
                 "    file_state,"
                 "    retry,"
                 "    current_failures AS recoverable "
-                "FROM t_file USE INDEX(idx_finish_time) "
+                "FROM t_file "
                 "WHERE"
                 "    source_se = :source AND dest_se = :dst AND "
                 "    finish_time > (UTC_TIMESTAMP() - interval :calculateTimeFrame SECOND) AND "

@@ -5,13 +5,13 @@
 %define __python python3
 
 Name:       fts
-Version:    3.13.1
+Version:    3.13.2
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.13.1 https://gitlab.cern.ch/fts/fts3.git fts-3.13.1
-# tar -vczf fts-3.13.1.tar.gz --exclude-vcs fts-3.13.1/
+# git clone --depth=1 --branch v3.13.2 https://gitlab.cern.ch/fts/fts3.git fts-3.13.2
+# tar -vczf fts-3.13.2.tar.gz --exclude-vcs fts-3.13.2/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -324,6 +324,11 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Tue Sep 03 2024 Louis Regnier <louis.regnier@cern.ch> - 3.13.2
+- Do a "staging abort" when a HTTP staging transfer is cancelled
+- Allow the FTS systems to skip the token lifecycle management for certain tokens
+- No longer use the "idx_finish_time" index in Optimizer statistical queries
+
 * Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.1
 - "Overwrite-when-only-on-disk" feature
 - Drop CC7 build
