@@ -70,13 +70,13 @@ void TokenExchangeService::runService() {
                 //   - additional chance to fail in the token-exchange step
                 db->updateTokenPrepFiles();
             }
-        } catch (boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenExchangeService!" << commit;
             break;
         } catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService: " << e.what() << commit;
         } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService!" << commit;
         }
     }
 }
@@ -134,13 +134,14 @@ void TokenExchangeService::exchangeTokens() {
             }
         }
     } catch (const boost::thread_interrupted &) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TokenExchangeService:exchangeTokens" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TokenExchangeService:exchangeTokens" << commit;
         execPool.interrupt();
         execPool.join();
+        throw;
     } catch (std::exception& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService:exchangeTokens " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService:exchangeTokens: " << e.what() << commit;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService! " << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService! " << commit;
     }
 }
 

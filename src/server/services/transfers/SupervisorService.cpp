@@ -84,13 +84,13 @@ void SupervisorService::runService()
                 db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(events);
                 events.clear();
             }
-        }
-        catch (const boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in SupervisorService!" << commit;
             break;
-        }
-        catch (const std::exception &error) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << error.what() << commit;
+        } catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in SupervisorService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in SupervisorService!" << commit;
         }
     }
 }

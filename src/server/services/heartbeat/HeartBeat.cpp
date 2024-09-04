@@ -82,7 +82,8 @@ void HeartBeat::runService()
             // Sleep on successful update (on exception, repeat after 1s)
             boost::this_thread::sleep(heartBeatInterval);
         } catch (const boost::thread_interrupted&) {
-            throw;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in HeartBeat!" << commit;
+            break;
         } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Heartbeat failed: " << e.what() << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(1));

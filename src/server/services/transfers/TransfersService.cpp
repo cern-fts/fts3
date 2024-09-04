@@ -80,23 +80,17 @@ void TransfersService::runService()
             }
 
             if ("mysql" == DBSingleton::instance().getDBObjectInstance()->getDbtype()) {
-                executeUrlcopy();
+                executeUrlCopy();
             } else {
-                postgresExecuteUrlcopy();
+                postgresExecuteUrlCopy();
             }
-        }
-        catch (boost::thread_interrupted&)
-        {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TransfersService!" << commit;
             break;
-        }
-        catch (std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService " << e.what() << commit;
-        }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+        } catch (std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService!" << commit;
         }
     }
 }
@@ -253,21 +247,16 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scheduled by activity:" << out.str() << commit;
         }
-    }
-    catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TransfersService::getFiles!" << commit;
         execPool.interrupt();
         execPool.join();
         throw;
-    }
-    catch (std::exception& e)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService::getFiles: " << e.what() << commit;
         throw;
-    }
-    catch (...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService::getFiles!" << commit;
         throw;
     }
 }
@@ -305,10 +294,9 @@ static void failUnschedulable(const std::vector<QueueId> &unschedulable)
 }
 
 
-void TransfersService::executeUrlcopy()
+void TransfersService::executeUrlCopy()
 {
     std::vector<QueueId> queues, unschedulable;
-    boost::thread_group g;
 
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
@@ -323,7 +311,7 @@ void TransfersService::executeUrlcopy()
     }
 
     try {
-      time_t start = time(0); //std::chrono::system_clock::now();
+        time_t start = time(0); //std::chrono::system_clock::now();
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
         std::random_shuffle(queues.begin(), queues.end());
@@ -343,27 +331,20 @@ void TransfersService::executeUrlcopy()
                                         << "DBcall=\"getQueuesWithPending\" " 
                                         << "time=\"" << end - start << "\"" 
                                         << commit;
-    }
-    catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;
-        g.interrupt_all();
-        g.join_all();
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TransfersService::executeUrlCopy!" << commit;
         throw;
-    }
-    catch (std::exception& e)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService " << e.what() << commit;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService::executeUrlCopy: " << e.what() << commit;
         throw;
-    }
-    catch (...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService::executeUrlCopy!" << commit;
         throw;
     }
 }
 
 
-void TransfersService::postgresExecuteUrlcopy() {
+void TransfersService::postgresExecuteUrlCopy() {
     const int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     const int urlCopyCount = countProcessesWithName("fts_url_copy");
     const int availableUrlCopySlots = maxUrlCopy - urlCopyCount;

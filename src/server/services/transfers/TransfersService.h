@@ -52,9 +52,9 @@ protected:
     boost::posix_time::time_duration schedulingInterval;
 
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
-    void executeUrlcopy();
+    void executeUrlCopy();
 
-    void postgresExecuteUrlcopy();
+    void postgresExecuteUrlCopy();
 };
 
 } // end namespace server

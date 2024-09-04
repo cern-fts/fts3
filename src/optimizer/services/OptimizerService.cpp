@@ -92,7 +92,10 @@ void OptimizerService::runService()
             } else {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer: Not the leading node..." << commit;
             }
-        } catch (std::exception &e) {
+        } catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in OptimizerService!" << commit;
+            break;
+        }  catch (std::exception &e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in main process OptimizerService: " << e.what() << commit;
         } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in main process OptimizerService!" << commit;
@@ -158,7 +161,7 @@ void OptimizerService::optimizeAllPairs() {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run finish: optimized " << pairs.size() << " pairs"
                                         << " elapsed=" << elapsed_ss.str() << "s" << commit;
     } catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in OptimizerService::optimizeAllPairs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in OptimizerService::optimizeAllPairs!" << commit;
         execPool.interrupt();
         execPool.join();
         throw;

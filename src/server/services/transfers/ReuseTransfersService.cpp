@@ -69,20 +69,14 @@ void ReuseTransfersService::runService()
                 continue;
             }
 
-            executeUrlcopy();
-        }
-        catch (boost::thread_interrupted&)
-        {
+            executeUrlCopy();
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in ReuseTransfersService!" << commit;
             break;
-        }
-        catch (std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService " << e.what() << commit;
-        }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
+        } catch (std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ReuseTransfersService!" << commit;
         }
     }
 }
@@ -406,7 +400,7 @@ static void failUnschedulable(const std::vector<QueueId> &unschedulable)
 }
 
 
-void ReuseTransfersService::executeUrlcopy()
+void ReuseTransfersService::executeUrlCopy()
 {
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
@@ -435,14 +429,15 @@ void ReuseTransfersService::executeUrlcopy()
         }
 
         getFiles(queues, availableUrlCopySlots);
-    }
-    catch (std::exception& e)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService " << e.what() << commit;
-    }
-    catch (...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in ReuseTransfersService::executeUrlCopy!" << commit;
+        throw;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService::executeUrlCopy: " << e.what() << commit;
+        throw;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ReuseTransfersService!" << commit;
+        throw;
     }
 }
 

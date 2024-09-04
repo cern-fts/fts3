@@ -57,8 +57,7 @@ void MessageProcessingService::runService()
     {
         updateLastRunTimepoint();
 
-        try
-        {
+        try {
             if (boost::this_thread::interruption_requested() && messages.empty() && messagesLog.empty())
             {
                 break;
@@ -66,11 +65,9 @@ void MessageProcessingService::runService()
 
             // if conn to the db is lost, do not retrieve state, save it for later
             // use one fast query
-            try
-            {
+            try {
                 db::DBSingleton::instance().getDBObjectInstance()->getDrain();
-            }
-            catch (...) {
+            } catch (...) {
                 boost::this_thread::sleep(boost::posix_time::seconds(10));
                 continue;
             }
@@ -131,13 +128,15 @@ void MessageProcessingService::runService()
                 db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                 messagesUpdater.clear();
             }
-        }
-        catch (const std::exception& e) {
+        } catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in SupervisorService!" << commit;
+            dumpMessages();
+            break;
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown exception: " << e.what() << commit;
             dumpMessages();
-        }
-        catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception!" << commit;
             dumpMessages();
         }
 

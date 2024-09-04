@@ -197,8 +197,7 @@ void CancelerService::runService()
     {
         updateLastRunTimepoint();
 
-        try
-        {
+        try {
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (DrainMode::instance())
             {
@@ -243,28 +242,23 @@ void CancelerService::runService()
                 applyQueueTimeouts();
                 counterQueueTimeouts = 0;
             }
-        }
-        catch (boost::thread_interrupted&)
-        {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in CancelerService!" << commit;
             break;
-        }
-        catch (const std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught exception " << e.what() << commit;
+        } catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in CancelerService: " << e.what() << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
+            counterActiveTimeouts = 0;
+            counterQueueTimeouts = 0;
+            counterCanceled = 0;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in CancelerService!" << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             counterActiveTimeouts = 0;
             counterQueueTimeouts = 0;
             counterCanceled = 0;
         }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService caught unknown exception" << commit;
-            boost::this_thread::sleep(boost::posix_time::seconds(10));
-            counterActiveTimeouts = 0;
-            counterQueueTimeouts = 0;
-            counterCanceled = 0;
-        }
+
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }

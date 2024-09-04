@@ -91,6 +91,9 @@ void CleanerService::runService()
             if (multihopSanitySate >0 && counter % multihopSanitySate == 0) {
                 db::DBSingleton::instance().getDBObjectInstance()->multihopSanitySate();
             }
+        } catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in CleanerService!" << commit;
+            break;
         } catch(std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files: " << e.what() << commit;
         } catch(...) {

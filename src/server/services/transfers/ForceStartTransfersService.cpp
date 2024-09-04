@@ -104,13 +104,16 @@ void ForceStartTransfersService::forceRunJobs() {
                                         << scheduled << " have been scheduled)" << commit;
 
     } catch (const boost::thread_interrupted &) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in ForceStartTransfersService:forceRunJobs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in ForceStartTransfersService::forceRunJobs!" << commit;
         execPool.interrupt();
         execPool.join();
+        throw;
     } catch (std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService:forceRunJobs " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService::forceRunJobs: " << e.what() << commit;
+        throw;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ForceStartTransfersService::forceRunJobs!" << commit;
+        throw;
     }
 }
 
@@ -125,13 +128,13 @@ void ForceStartTransfersService::runService() {
             if (heartBeat->isLeadNode(true)) {
                 forceRunJobs();
             }
-        } catch (boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in ForceStartTransfersService!" << commit;
             break;
         } catch (std::exception &e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << commit;
         } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService!" << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ForceStartTransfersService!" << commit;
         }
     }
 }
