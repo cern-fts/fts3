@@ -29,9 +29,6 @@
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-extern time_t updateRecords;
-extern time_t stallRecords;
 
 class HeartBeat: public BaseService
 {
@@ -91,11 +88,6 @@ private:
 
     std::string processName;
     std::map<std::shared_ptr<BaseService>, WatchData> watchedServices;
-
-
-    bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords,
-            time_t stallRecords);
-    void orderedShutdown();
 };
 
 } // end namespace server

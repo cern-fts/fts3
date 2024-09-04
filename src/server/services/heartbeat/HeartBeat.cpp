@@ -33,9 +33,6 @@ using namespace fts3::config;
 namespace fts3 {
 namespace server {
 
-time_t retrieveRecords = time(0);
-time_t updateRecords = time(0);
-time_t stallRecords = time(0);
 
 HeartBeat::HeartBeat(std::string processName):
     BaseService("HeartBeat"),
@@ -44,22 +41,16 @@ HeartBeat::HeartBeat(std::string processName):
 
 void HeartBeat::runService()
 {
-    typedef boost::posix_time::time_duration TDuration;
-    TDuration heartBeatInterval, heartBeatGraceInterval;
+    using TDuration = boost::posix_time::time_duration;
+    auto heartBeatInterval = ServerConfig::instance().get<TDuration>("HeartBeatInterval");
+    auto heartBeatGraceInterval = ServerConfig::instance().get<TDuration>("HeartBeatGraceInterval");
 
-    try {
-        heartBeatInterval = ServerConfig::instance().get<TDuration>("HeartBeatInterval");
-        heartBeatGraceInterval = ServerConfig::instance().get<TDuration>("HeartBeatGraceInterval");
-        if (heartBeatInterval >= heartBeatGraceInterval) {
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT)
-                << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
-            _exit(1);
-        }
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
+    if (heartBeatInterval >= heartBeatGraceInterval) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+            << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
         _exit(1);
     }
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat interval: " << heartBeatInterval.total_seconds() << "s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat grace interval: " << heartBeatGraceInterval.total_seconds() << "s" << commit;
 
