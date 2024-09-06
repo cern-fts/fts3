@@ -20,7 +20,7 @@
 
 find_package(MySQL REQUIRED)
 
-include_directories (${MYSQL_INCLUDE_DIR})
+include_directories (${MYSQL_INCLUDE_DIRS})
 include_directories (/usr/include/soci)
 
 set(fts_db_mysql_SOURCES
