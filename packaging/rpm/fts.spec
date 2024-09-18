@@ -260,6 +260,7 @@ fi
 
 %{_sbindir}/fts_qos
 %{_sbindir}/fts_optimizer
+%{_sbindir}/fts_token
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
@@ -287,6 +288,7 @@ fi
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_qos.8.gz
 %{_mandir}/man8/fts_optimizer.8.gz
+%{_mandir}/man8/fts_token.8.gz
 %{_mandir}/man8/fts_db_cleaner.8.gz
 %{_mandir}/man8/fts_server.8.gz
 %{_mandir}/man8/fts_url_copy.8.gz
