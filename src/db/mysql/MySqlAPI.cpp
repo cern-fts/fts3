@@ -5149,8 +5149,8 @@ void MySqlAPI::updateTokenPrepFiles()
         std::string dst_unmanaged_tokens_filter;
 
         if (ServerConfig::instance().get<bool>("NonManagedTokens")) {
-            src_unmanaged_tokens_filter = " OR t_src.scope NOT LIKE \"%offline_access%\"";
-            dst_unmanaged_tokens_filter = " OR t_dst.scope NOT LIKE \"%offline_access%\"";
+            src_unmanaged_tokens_filter = " OR t_src.scope NOT LIKE \'%offline_access%\'";
+            dst_unmanaged_tokens_filter = " OR t_dst.scope NOT LIKE \'%offline_access%\'";
         }
 
         // Store all data into memory structure in order to reiterate
