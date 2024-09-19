@@ -38,6 +38,12 @@ install(FILES fts-optimizer.sysconfig
     RENAME fts-optimizer
 )
 
+install(FILES fts-token.sysconfig
+    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    RENAME fts-token
+)
+
 install(FILES fts-server.logrotate
     DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
     RENAME fts-server

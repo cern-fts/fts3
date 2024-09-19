@@ -58,8 +58,3 @@ install(FILES ftstokenhousekeeperd ftstokenrefresherd
 
 install(FILES ftstokenhousekeeperd.ini ftstokenrefresherd.ini
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3)
-
-if (SYSTEMD_INSTALL_DIR)
-    install(FILES ftstokenhousekeeperd.service ftstokenrefresherd.service
-            DESTINATION ${SYSTEMD_INSTALL_DIR})
-endif ()

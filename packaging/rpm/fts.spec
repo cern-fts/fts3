@@ -275,6 +275,7 @@ fi
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-qos.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-optimizer.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-token.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenrefresherd.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenhousekeeperd.service
 
@@ -285,6 +286,7 @@ fi
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-server
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-optimizer
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-token
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_qos.8.gz
 %{_mandir}/man8/fts_optimizer.8.gz
