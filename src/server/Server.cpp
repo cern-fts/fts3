@@ -23,7 +23,6 @@
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "services/cleaner/CleanerService.h"
-#include "services/tokens/TokenExchangeService.h"
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/ReuseTransfersService.h"
 #include "services/transfers/ForceStartTransfersService.h"
@@ -77,8 +76,7 @@ void Server::start()
     validateConfigRestraints({
         {"MessagingConsumeInterval", "MessagingConsumeGraceTime", 3},
         {"CancelCheckInterval", "CancelCheckGraceTime", 3},
-        {"SchedulingInterval", "SchedulingGraceTime", 3},
-        {"TokenExchangeCheckInterval", "TokenExchangeCheckGraceTime", 3}
+        {"SchedulingInterval", "SchedulingGraceTime", 3}
     });
 
     auto heartBeatService = std::make_shared<HeartBeat>(processName);
@@ -90,21 +88,18 @@ void Server::start()
     auto reuseTransfersService = std::make_shared<ReuseTransfersService>();
     auto supervisorService = std::make_shared<SupervisorService>();
     auto forceStartTransfersService = std::make_shared<ForceStartTransfersService>(heartBeatService);
-    auto tokenExchangeService = std::make_shared<TokenExchangeService>(heartBeatService);
 
     // Register "critical" services to be watched by the HeartBeat service
     auto messageProcessingGraceTime = ServerConfig::instance().get<int>("MessagingConsumeGraceTime");
     auto cancelerGraceTime = ServerConfig::instance().get<int>("CancelCheckGraceTime");
     auto transfersGraceTime = ServerConfig::instance().get<int>("SchedulingGraceTime");
     auto supervisorGraceTime = ServerConfig::instance().get<int>("SupervisorGraceTime");
-    auto tokenExchangeGraceTime = ServerConfig::instance().get<int>("TokenExchangeCheckGraceTime");
 
     heartBeatService->registerWatchedService(messageProcessingService, messageProcessingGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(cancelerService, cancelerGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(transfersService, transfersGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(reuseTransfersService, transfersGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(supervisorService, supervisorGraceTime, [this] { stop(); });
-    heartBeatService->registerWatchedService(tokenExchangeService, tokenExchangeGraceTime, [this] { stop(); });
 
     addService(heartBeatService);
     addService(cleanerService);
@@ -126,7 +121,6 @@ void Server::start()
     addService(reuseTransfersService);
     addService(supervisorService);
     addService(forceStartTransfersService);
-    addService(tokenExchangeService);
 }
 
 

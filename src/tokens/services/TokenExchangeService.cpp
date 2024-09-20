@@ -28,9 +28,10 @@
 
 using namespace fts3::config;
 using namespace fts3::common;
+using namespace fts3::server;
 
 namespace fts3 {
-namespace server {
+namespace token {
 
 
 TokenExchangeService::TokenExchangeService(const std::shared_ptr<HeartBeat>& heartBeat) :
@@ -176,5 +177,5 @@ void TokenExchangeService::registerFailedTokenExchange(const std::string& token_
     failedExchanges.emplace(token_id, message);
 }
 
-} // end namespace server
+} // end namespace token
 } // end namespace fts3

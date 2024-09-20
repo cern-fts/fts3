@@ -24,7 +24,7 @@
 using namespace fts3::common;
 
 namespace fts3 {
-namespace server {
+namespace token {
 
 void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
 {
@@ -208,5 +208,5 @@ std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeErro
     }
 }
 
-} // end namespace server
+} // end namespace token
 } // end namespace fts3

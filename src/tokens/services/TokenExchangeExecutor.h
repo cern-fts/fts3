@@ -27,7 +27,7 @@
 #include "db/generic/TokenProvider.h"
 
 namespace fts3 {
-namespace server {
+namespace token {
 
 /**
  * TokenExchangeExecutor is the worker class that performs the token-exchange workflow
@@ -154,5 +154,5 @@ private:
     Davix::Context context;
 };
 
-} // end namespace server
+} // end namespace token
 } // end namespace fts3

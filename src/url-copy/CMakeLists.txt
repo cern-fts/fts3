@@ -22,11 +22,14 @@ find_package(GFAL2)
 find_package(GLIB2)
 find_package(ZMQ)
 find_package(JSONCPP)
+find_package(Cryptopp)
 
-include_directories (
+include_directories(
     ${GLIB2_INCLUDE_DIRS}
     ${GFAL2_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
+    ${JSONCPP_INCLUDE_DIRS}
+    ${CRYPTOPP_INCLUDE_DIRS}
 )
 
 add_library(fts_url_copy_lib SHARED

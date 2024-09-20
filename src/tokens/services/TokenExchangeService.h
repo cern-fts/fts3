@@ -18,15 +18,15 @@
 
 #include "db/generic/Token.h"
 #include "server/common/BaseService.h"
-#include "services/heartbeat/HeartBeat.h"
+#include "server/services/heartbeat/HeartBeat.h"
 
 namespace fts3 {
-namespace server {
+namespace token {
 
-class TokenExchangeService: public BaseService
+class TokenExchangeService: public fts3::server::BaseService
 {
 public:
-    TokenExchangeService(const std::shared_ptr<HeartBeat>& heartBeat);
+    TokenExchangeService(const std::shared_ptr<fts3::server::HeartBeat>& heartBeat);
     virtual ~TokenExchangeService() = default;
 
     virtual void runService();
@@ -50,7 +50,7 @@ public:
 protected:
     int execPoolSize;
     boost::posix_time::time_duration pollInterval;
-    const std::shared_ptr<HeartBeat> heartBeat;
+    const std::shared_ptr<fts3::server::HeartBeat> heartBeat;
 
     void exchangeTokens();
     void handleFailedTokenExchange();
@@ -73,5 +73,5 @@ private:
     std::set<std::pair<std::string, std::string>> failedExchanges;
 };
 
-} // end namespace server
+} // end namespace token
 } // end namespace fts3
