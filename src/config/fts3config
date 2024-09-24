@@ -181,6 +181,8 @@ LogTokenRequests=false
 #SupervisorGraceTime = 600
 # In seconds, time window since last TokenExchangeService run to be considered inactive (default 600)
 #TokenExchangeCheckGraceTime = 600
+# In seconds, time window since last TokenRefreshService run to be considered inactive (default 120)
+#TokenRefreshGraceTime = 120
 # In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
 #OptimizerGraceTime = 3600
 
@@ -208,3 +210,6 @@ TokenExchangeCheckInterval = 30
 
 # Bulk size for how many tokens to retrieve from the database at one time for token-exchange (default 500)
 TokenExchangeBulkSize = 500
+
+# In seconds, how often to listen for new token-refresh requests from the transfer agents
+TokenRefreshInterval = 5

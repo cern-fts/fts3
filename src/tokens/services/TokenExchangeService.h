@@ -65,7 +65,7 @@ private:
     /// and will be collected at the end of a cycle
     std::set<ExchangedToken> exchangedTokens;
 
-    /// Protect concurrent access to "refreshTokens" set
+    /// Protect concurrent access to "failedExchanges" set
     boost::shared_mutex mxFailed;
 
     /// Set of <token_id, message> for failed token-exchange attempts.
