@@ -197,7 +197,8 @@ CREATE TYPE file_state AS ENUM(
     'ON_HOLD_STAGING',
     'FORCE_START',
     'TOKEN_PREP',
-    'SCHEDULED'
+    'SCHEDULED',
+    'SELECTED'
 );
 
 CREATE TABLE t_queue (
