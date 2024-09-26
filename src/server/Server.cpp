@@ -26,6 +26,7 @@
 #include "services/transfers/TransfersService.h"
 #include "services/transfers/ReuseTransfersService.h"
 #include "services/transfers/ForceStartTransfersService.h"
+#include "services/transfers/SchedulerService.h"
 #include "services/transfers/CancelerService.h"
 #include "services/heartbeat/HeartBeat.h"
 #include "services/transfers/MessageProcessingService.h"
@@ -88,6 +89,7 @@ void Server::start()
     auto reuseTransfersService = std::make_shared<ReuseTransfersService>();
     auto supervisorService = std::make_shared<SupervisorService>();
     auto forceStartTransfersService = std::make_shared<ForceStartTransfersService>(heartBeatService);
+    auto schedulerService = std::make_shared<SchedulerService>(heartBeatService);
 
     // Register "critical" services to be watched by the HeartBeat service
     auto messageProcessingGraceTime = ServerConfig::instance().get<int>("MessagingConsumeGraceTime");
@@ -121,6 +123,12 @@ void Server::start()
     addService(reuseTransfersService);
     addService(supervisorService);
     addService(forceStartTransfersService);
+
+    // Register scheduler service only if running with postgresql support
+    auto experimentalPostgresSupport = ServerConfig::instance().get<bool>("ExperimentalPostgresSupport");
+    if (experimentalPostgresSupport) {
+        addService(schedulerService);
+    }
 }
 
 

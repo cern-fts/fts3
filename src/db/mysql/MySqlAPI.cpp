@@ -2163,6 +2163,23 @@ std::list<TransferFile> MySqlAPI::getForceStartTransfers()
     }
 }
 
+void MySqlAPI::dummyScheduler()
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        // Everything in SUBMITTED state gets scheduled
+        sql << "UPDATE t_file SET file_state='SCHEDULED' WHERE file_state='SUBMITTED'";
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+}
 
 bool MySqlAPI::isTrAllowed(const std::string& sourceStorage, const std::string& destStorage)
 {

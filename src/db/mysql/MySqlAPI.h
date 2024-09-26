@@ -215,6 +215,9 @@ public:
     /// Returns list of transfers that need to be force started
     virtual std::list<TransferFile> getForceStartTransfers();
 
+    /// Implements a dummy scheduler
+    virtual void dummyScheduler();
+
     /// Returns if this host has been set to drain
     virtual bool getDrain();
 
