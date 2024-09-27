@@ -344,64 +344,84 @@ void TransfersService::executeUrlCopy()
 }
 
 
-void TransfersService::postgresExecuteUrlCopy() {
+void TransfersService::postgresExecuteUrlCopy()
+{
     const int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
     const int urlCopyCount = countProcessesWithName("fts_url_copy");
     const int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
 
-    // Bail out as soon as possible if there are too many url-copy processes
-    if (availableUrlCopySlots <= 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
-            << "Reached limitation of MaxUrlCopyProcesses"
-            << commit;
-        return;
-    }
-
-    const time_t start = time(0);
-    std::list<TransferFile> scheduledFiles =
-        DBSingleton::instance().getDBObjectInstance()->postgresGetScheduledFileTransfers(
-            availableUrlCopySlots
-        );
-    const time_t elapsed = time(0) - start;
-    if (scheduledFiles.empty()) {
-        return;
-    }
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
-                                    << "func=\"postgresqlExecuteUrlcopy\" "
-                                    << "DBcall=\"getScheduledFileTransfers\" "
-                                    << "time=\"" << elapsed << "\" "
-                                    << "nbScheduledFiles=\"" << scheduledFiles.size() << "\""
-                                    << commit;
-
     ThreadPool<FileTransferExecutor> execPool(execPoolSize);
-    std::map<std::pair<std::string, std::string>, std::string> proxies;
 
-    for (TransferFile &scheduledFile: scheduledFiles) {
-        const std::pair<std::string, std::string> proxy_key(
-            scheduledFile.credId,
-            scheduledFile.userDn
-        );
+    try {
 
-        if (proxies.find(proxy_key) == proxies.end())
-        {
-            proxies[proxy_key] = DelegCred::getProxyFile(
-                scheduledFile.userDn,
-                scheduledFile.credId
-            );
+        // Bail out as soon as possible if there are too many url-copy processes
+        if (availableUrlCopySlots <= 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                << "Reached limitation of MaxUrlCopyProcesses"
+                << commit;
+            return;
         }
 
-        FileTransferExecutor * const exec = new FileTransferExecutor(
-            scheduledFile,
-            monitoringMessages,
-            infosys,
-            ftsHostName,
-            proxies[proxy_key],
-            logDir,
-            msgDir
-        );
-        execPool.start(exec);
+        const time_t start = time(0);
+        std::list<TransferFile> scheduledFiles =
+            DBSingleton::instance().getDBObjectInstance()->postgresGetScheduledFileTransfers(
+                availableUrlCopySlots
+            );
+        const time_t elapsed = time(0) - start;
+        if (scheduledFiles.empty()) {
+            return;
+        }
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
+                                        << "func=\"postgresqlExecuteUrlcopy\" "
+                                        << "DBcall=\"getScheduledFileTransfers\" "
+                                        << "time=\"" << elapsed << "\" "
+                                        << "nbScheduledFiles=\"" << scheduledFiles.size() << "\""
+                                        << commit;
+
+        std::map<std::pair<std::string, std::string>, std::string> proxies;
+
+        for (TransferFile &scheduledFile: scheduledFiles) {
+            const std::pair<std::string, std::string> proxy_key(
+                scheduledFile.credId,
+                scheduledFile.userDn
+            );
+
+            if (proxies.find(proxy_key) == proxies.end())
+            {
+                proxies[proxy_key] = DelegCred::getProxyFile(
+                    scheduledFile.userDn,
+                    scheduledFile.credId
+                );
+            }
+
+            FileTransferExecutor * const exec = new FileTransferExecutor(
+                scheduledFile,
+                monitoringMessages,
+                infosys,
+                ftsHostName,
+                proxies[proxy_key],
+                logDir,
+                msgDir
+            );
+            execPool.start(exec);
+        }
+        execPool.join();
+
+        int scheduled = execPool.reduce(std::plus<int>());
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<"Threadpool processed: " << scheduledFiles.size()
+                << " files (" << scheduled << " have been scheduled)" << commit;
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TransfersService::getFiles!" << commit;
+        execPool.interrupt();
+        execPool.join();
+        throw;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService::getFiles: " << e.what() << commit;
+        throw;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService::getFiles!" << commit;
+        throw;
     }
-    execPool.join();
 }
 
 
