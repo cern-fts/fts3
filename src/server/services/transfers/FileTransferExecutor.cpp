@@ -82,6 +82,8 @@ std::string FileTransferExecutor::getAuthMethod(const std::string& jobMetadata)
 
 void FileTransferExecutor::run(boost::any & ctx)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start FileTransferExecutor::run " << commit;
+
     if (ctx.empty()) {
         ctx = 0;
     }
@@ -96,6 +98,7 @@ void FileTransferExecutor::run(boost::any & ctx)
     try {
         // if the pair was already checked and not scheduled skip it
         if (notScheduled.count(make_pair(tf.sourceSe, tf.destSe))) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Pair already not scheduled: " << tf.sourceSe << " -> " << tf.destSe << commit;
             return;
         }
 
