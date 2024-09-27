@@ -92,6 +92,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
     //stop forking when a signal is received to avoid deadlocks
     if (tf.fileId == 0 || boost::this_thread::interruption_requested()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exit FileTransferExecutor::run ; file_id=" << tf.fileId << commit;
         return;
     }
 
