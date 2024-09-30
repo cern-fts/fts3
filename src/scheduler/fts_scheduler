@@ -1,0 +1,541 @@
+#!/usr/bin/python3
+
+import argparse
+import base64
+import concurrent.futures
+import configparser
+import datetime
+import json
+import logging
+import logging.handlers
+import os
+import psycopg2
+import psycopg2.pool
+import socket
+import time
+
+
+class DbConn:
+    """
+    Wrapper around a psycopg2 connection object that was obtained from a
+    psycopg2.pool.ThreadedConnectionPool.  This wrapper automatically returns
+    the connection to the pool when it is closed.
+    """
+
+    def __init__(self, pool, dbconn):
+        self.open = True
+        self.pool = pool
+        self.dbconn = dbconn
+
+    def close(self):
+        """Returns this database connection to its pool"""
+        if self.open:
+            self.pool.putconn(self.dbconn)
+            self.open = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
+    def cursor(self):
+        if self.open:
+            return self.dbconn.cursor()
+        else:
+            raise Exception("Failed to get cursor from connection: Connection closed")
+
+
+class DbConnPool:
+    """
+    Wrapper around psycopg2.pool.ThreadedConnectionPool which adds get_dbconn()
+    to return DbConn objects which in turn wrap connection objects so that they
+    are automatically returned to the pool when they are closed.  The
+    get_dbconn() also switched autocommit on by default.
+    """
+
+    def __init__(
+        self, min_conn, max_conn, host, port, db_name, user, password, sslmode
+    ):
+        self.pool = psycopg2.pool.ThreadedConnectionPool(
+            minconn=min_conn,
+            maxconn=max_conn,
+            host=host,
+            port=port,
+            dbname=db_name,
+            user=user,
+            password=password,
+            sslmode=sslmode,
+        )
+
+    def get_dbconn(self):
+        """
+        Returns a database connection from the pool with autocommit set to True
+        """
+        dbconn = self.pool.getconn()
+        dbconn.set_session(autocommit=True)
+        return DbConn(self.pool, dbconn)
+
+
+def get_log(log_file_path, log_program_name, log_level="INFO"):
+    hostname = socket.gethostname()
+
+    log_format = (
+        "%(asctime)s.%(msecs)03d000 "
+        + hostname
+        + " %(levelname)s "
+        + log_program_name
+        + ':LVL="%(levelname)s" PID="%(process)d" TID="%(process)d" MSG="%(message)s"'
+    )
+    log_date_format = "%Y/%m/%d %H:%M:%S"
+    log_formatter = logging.Formatter(fmt=log_format, datefmt=log_date_format)
+
+    log_dir = os.path.dirname(log_file_path)
+    if not os.path.isdir(log_dir):
+        raise Exception(
+            "The logging directory {} is not a directory or does not exist".format(
+                log_dir
+            )
+        )
+    if not os.access(log_dir, os.W_OK):
+        raise Exception("The logging directory {} cannot be written to".format(log_dir))
+
+    log_handler = logging.handlers.TimedRotatingFileHandler(
+        filename=log_file_path, when="midnight", backupCount=30
+    )
+    log_handler.setFormatter(log_formatter)
+
+    log = logging.getLogger()
+    log.setLevel(log_level)
+    log.addHandler(log_handler)
+
+    return log
+
+
+def get_config(path, program_name):
+    if not os.path.isfile(path):
+        print(f"The {program_name} configuration file does not exist: path={path}")
+        exit(1)
+
+    config = configparser.ConfigParser()
+    config.read(path)
+
+    if not config.has_option("database", "user"):
+        raise Exception(
+            f"The database section of the configuration file does not contain the user option: path={path}"
+        )
+
+    if not config.has_option("database", "password"):
+        raise Exception(
+            f"The database section of the configuration file does not contain the password option: path={path}"
+        )
+
+    if not config.has_option("database", "dbname"):
+        raise Exception(
+            f"The database section of the configuration file does not contain the database option: path={path}"
+        )
+
+    if not config.has_option("database", "host"):
+        raise Exception(
+            f"The database section of the configuration file does not contain the host option: path={path}"
+        )
+
+    if not config.has_option("database", "port"):
+        raise Exception(
+            f"The database section of the configuration file does not contain the port option: path={path}"
+        )
+
+    result = {
+        "log_file": config.get(
+            "main", "log_file", fallback=f"/var/log/fts4/{program_name}.log"
+        ),
+        "sec_between_executions": config.getint(
+            "main", "sec_between_executions", fallback=5
+        ),
+        "db_user": config.get("database", "user"),
+        "db_password": config.get("database", "password"),
+        "db_dbname": config.get("database", "dbname"),
+        "db_host": config.get("database", "host"),
+        "db_port": config.getint("database", "port"),
+        "db_sslmode": config.get("database", "sslmode", fallback="require"),
+    }
+
+    return result
+
+
+def get_major_db_schema_version(dbconn):
+    with dbconn.cursor() as cursor:
+        cursor.execute("SELECT MAX(major) FROM  t_schema_vers")
+        rows = cursor.fetchall()
+        major_schema_version = rows[0][0]
+        return major_schema_version
+
+
+def get_queues_of_submitted_files(dbconn):
+    result = []
+    sql = """
+        SELECT
+            queue_id,
+            vo_name,
+            source_se,
+            dest_se,
+            activity,
+            nb_files
+        FROM
+            t_queue
+        WHERE
+            file_state = 'SUBMITTED'
+    """
+    with dbconn.cursor() as cursor:
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        for row in rows:
+            queue = {
+                "queue_id": row[0],
+                "vo_name": row[1],
+                "source_se": row[2],
+                "dest_se": row[3],
+                "activity": row[4],
+                "nb_files": row[5],
+            }
+            result.append(queue)
+    return result
+
+
+def inc_queue_counter(dbconn, vo_name, source_se, dest_se, activity, file_state, delta):
+    # Assume for now the t_queue row exists
+    update_sql = """
+        UPDATE
+            t_queue
+        SET
+            nb_files = nb_files + %(delta)s
+        WHERE
+            vo_name = %(vo_name)s
+        AND
+            source_se = %(source_se)s
+        AND
+            dest_se = %(dest_se)s
+        AND
+            activity = %(activity)s
+        AND
+            file_state = %(file_state)s
+        RETURNING
+            queue_id
+    """
+    update_params = {
+        "delta": delta,
+        "vo_name": vo_name,
+        "source_se": source_se,
+        "dest_se": dest_se,
+        "activity": activity,
+        "file_state": file_state,
+    }
+    with dbconn.cursor() as cursor:
+        cursor.execute(update_sql, update_params)
+        rows = cursor.fetchall()
+        if len(rows) > 0:
+            queue_id = rows[0][0]
+            return queue_id
+
+    # The t_queue row did not exist so create one
+    insert_sql = """
+        INSERT INTO t_queue (
+            vo_name,
+            source_se,
+            dest_se,
+            activity,
+            file_state,
+            nb_files
+        ) VALUES (
+            %(vo_name)s,
+            %(source_se)s,
+            %(dest_se)s,
+            %(activity)s,
+            %(file_state)s,
+            %(delta)s
+        )
+        ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
+            UPDATE SET nb_files =
+                t_queue.nb_files + EXCLUDED.nb_files
+        RETURNING
+            queue_id
+    """
+    insert_params = {
+        "vo_name": vo_name,
+        "source_se": source_se,
+        "dest_se": dest_se,
+        "activity": activity,
+        "file_state": file_state,
+        "delta": delta,
+    }
+    with dbconn.cursor() as cursor:
+        cursor.execute(insert_sql, insert_params)
+        rows = cursor.fetchall()
+        if len(rows) != 1:
+            raise Exception(
+                "Failed to increment t_queue counter: "
+                f"vo_name={vo_name} "
+                f"source_se={source_se} "
+                f"dest_se={dest_se} "
+                f"file_state={file_state} "
+                f"delta={delta}"
+            )
+        queue_id = rows[0][0]
+        return queue_id
+
+
+def update_file_to_scheduled(dbconn, submitted_queue_id, scheduled_queue_id):
+    sql = """
+        UPDATE
+            t_file
+        SET
+            file_state = 'SCHEDULED',
+            queue_id = %(scheduled_queue_id)s
+        WHERE
+            file_state = 'SUBMITTED'
+        AND
+            file_id = (
+                SELECT
+                    file_id
+                FROM
+                    t_file
+                WHERE
+                    queue_id = %(submitted_queue_id)s
+                ORDER BY
+                    queue_id, priority, file_id
+                LIMIT 1
+            )
+        RETURNING
+            file_id,
+            queue_id
+    """
+    params = {
+        "scheduled_queue_id": scheduled_queue_id,
+        "submitted_queue_id": submitted_queue_id,
+    }
+    start_db = time.time()
+    with dbconn.cursor() as cursor:
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+        update_sec = time.time() - start_db
+
+        result = {}
+        if len(rows) > 0:
+            result["file_id"] = rows[0][0]
+            result["queue_id"] = rows[0][1]
+        return result, update_sec
+
+
+def dec_queue_counter(dbconn, queue_id, delta):
+    sql = """
+        UPDATE
+            t_queue
+        SET
+            nb_files = nb_files - %(delta)s
+        WHERE
+            queue_id = %(queue_id)s
+    """
+    params = {"delta": delta, "queue_id": queue_id}
+    start_db = time.time()
+    with dbconn.cursor() as cursor:
+        cursor.execute(sql, params)
+    update_sec = time.time() - start_db
+
+    if cursor.rowcount != 1:
+        raise Exception(
+            "Failed to decrement t_queue counter: "
+            f"queue_id={queue_id} "
+            f"delta={delta}"
+        )
+
+    return update_sec
+
+
+def schedule_next_file_in_queue(dbconn, submitted_queue):
+    scheduled = False
+
+    with dbconn.cursor() as cursor:
+        cursor.execute("START TRANSACTION")
+
+    transaction_open = True
+
+    try:
+        # Increment the SCHEDULED queue counter first in order to get the ID of
+        # the queue and to create the queue if necessary
+        scheduled_queue_id = inc_queue_counter(
+            dbconn=dbconn,
+            vo_name=submitted_queue["vo_name"],
+            source_se=submitted_queue["source_se"],
+            dest_se=submitted_queue["dest_se"],
+            activity=submitted_queue["activity"],
+            file_state="SCHEDULED",
+            delta=1,
+        )
+
+        update_result, db_sec = update_file_to_scheduled(
+            dbconn=dbconn,
+            submitted_queue_id=submitted_queue["queue_id"],
+            scheduled_queue_id=scheduled_queue_id,
+        )
+        log.debug(
+            f"Scheduled file: file_id={update_result['file_id']} queue_id={update_result['queue_id']} db_sec={db_sec}"
+        )
+
+        if len(update_result) > 0:
+            dec_queue_counter(dbconn, submitted_queue["queue_id"], 1)
+            scheduled = True
+
+    except Exception as e:
+        log.error(
+            f"Failed to schedule next file in queue: "
+            f"queue_id={submitted_queue['queue_id']} "
+            f"vo_name={submitted_queue['vo_name']} "
+            f"source_se={submitted_queue['source_se']} "
+            f"dest_se={submitted_queue['dest_se']} "
+            f"activity={submitted_queue['activity']} "
+            f": {e}"
+        )
+        with dbconn.cursor() as cursor:
+            cursor.execute("ROLLBACK")
+        transaction_open = False
+
+    if transaction_open:
+        with dbconn.cursor() as cursor:
+            cursor.execute("COMMIT")
+
+    return scheduled
+
+
+def get_link_config(dbconn):
+    link_config = {}
+
+    sql = """
+        SELECT
+            source_se,
+            dest_se,
+            symbolic_name,
+            min_active,
+            max_active,
+        FROM
+            t_link_config
+    """
+    start_db = time.time()
+    cursor = dbconn.cursor()
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+    db_sec = time.time() - start_db
+
+    for row in rows:
+        link_config["source_se"] = row[0]
+        link_config["dest_se"] = row[1]
+        link_config["symbolic_name"] = row[2]
+        link_config["min_active"] = row[3]
+        link_config["max_active"] = row[4]
+
+    return link_config, db_sec
+
+
+def schedule_queue(submitted_queue):
+    nb_scheduled = 0
+
+    if submitted_queue["nb_files"] > 0:
+        scheduled = schedule_next_file_in_queue(dbconn, submitted_queue)
+        if scheduled:
+            nb_scheduled += 1
+
+    return nb_scheduled
+
+
+def schedule(dbconn):
+    nb_scheduled = 0
+
+    submitted_queues = get_queues_of_submitted_files(dbconn)
+
+    for submitted_queue in submitted_queues:
+        nb_scheduled += schedule_queue(submitted_queue)
+
+    if nb_scheduled:
+        log.info(f"Scheduled one or more transfers: nb_scheduled={nb_scheduled}")
+
+
+def select_worker_hostname(dbconn):
+    sql = """
+        SELECT
+          hostname
+        FROM
+          t_hosts
+        WHERE
+          drain IS NOT NULL OR drain = 0
+        ORDER BY
+          hostname ASC
+        LIMIT 1
+    """
+    start_db = time.time()
+    cursor = dbconn.cursor()
+    cursor.execute(sql)
+    row = cursor.fetchone()
+    db_sec = time.time() - start_db
+
+    hostname = row[0]
+
+    return hostname, db_sec
+
+
+program_name = "fts_scheduler"
+
+parser = argparse.ArgumentParser(description="Schedules FTS transfer jobs")
+parser.add_argument(
+    "-c",
+    "--config",
+    default=f"/etc/fts4/{program_name}.ini",
+    help="Path of the configuration file",
+)
+
+cmd_line = parser.parse_args()
+
+config = get_config(cmd_line.config, program_name)
+
+log = get_log(log_file_path=config["log_file"], log_program_name=program_name)
+
+log.info("Started")
+
+nb_dbconns = 1
+dbconn_pool = DbConnPool(
+    min_conn=nb_dbconns,
+    max_conn=nb_dbconns,
+    host=config["db_host"],
+    port=config["db_port"],
+    db_name=config["db_dbname"],
+    user=config["db_user"],
+    password=config["db_password"],
+    sslmode=config["db_sslmode"],
+)
+
+min_allowed_major_db_schema_version = 9
+with dbconn_pool.get_dbconn() as dbconn:
+    actual_major_db_schema_version = get_major_db_schema_version(dbconn)
+if actual_major_db_schema_version < min_allowed_major_db_schema_version:
+    print(
+        f"Aborting: "
+        "Database major version number is less than required: "
+        f"min_allowed={min_allowed_major_db_schema_version} "
+        f"actual={actual_major_db_schema_version}"
+    )
+    exit(1)
+
+while True:
+    execution_start = time.time()
+
+    try:
+        with dbconn_pool.get_dbconn() as dbconn:
+            worker_hostname, select_worker_hostname_sec = select_worker_hostname(dbconn)
+            if worker_hostname == socket.gethostname():
+                schedule(dbconn)
+    except Exception as e:
+        log.error(f"Caught exception when trying to schedule file-transfers: {e}")
+
+    execution_duration = time.time() - execution_start
+
+    secs_to_next_execution = config["sec_between_executions"] - execution_duration
+    if secs_to_next_execution > 0:
+        time.sleep(secs_to_next_execution)
