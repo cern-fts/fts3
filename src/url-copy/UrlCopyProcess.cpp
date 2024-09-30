@@ -350,11 +350,9 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
         gfal2.set("HTTP PLUGIN", "DEFAULT_COPY_MODE", opts.copyMode);
     }
 
-    // Disable TPC copy fallback
-    if (opts.disableCopyFallback) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: ENABLE_FALLBACK_TPC_COPY=false" << commit;
-        gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
-    }
+    // Disable Gfal TPC copy fallback
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: ENABLE_FALLBACK_TPC_COPY=false" << commit;
+    gfal2.set("HTTP PLUGIN", "ENABLE_FALLBACK_TPC_COPY", false);
 
     // Avoid TPC attempts in S3 to S3 transfers
     if ((transfer.source.protocol.find("s3") == 0) && (transfer.destination.protocol.find("s3") == 0)) {
