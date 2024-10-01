@@ -1,8 +1,45 @@
 stages:
+- static_code_analysis
 - build
 - docker
 - test
 - publish
+
+#---------------------------------
+# Static Code Analysis
+#---------------------------------
+
+.pylint_template: &pylint_definition
+  # Check for Python syntax errors
+  image: gitlab-registry.cern.ch/fts/fts3:ci
+  stage: static_code_analysis
+  script:
+    - PY="PY${CI_JOB_NAME##pylint}"
+    - VENV="VENV_${CI_JOB_NAME##pylint}"
+    - source ~/.bashrc
+    - pyenv global ${!PY}
+    - source ${!VENV}/bin/activate
+    - pylint --version
+    - pylint --output-format colorized --disable C,R,W ./src/scheduler/*
+  variables:
+    PYTHONPATH: ./src/scheduler
+
+black:
+  # Check that every file has been formatted with black
+  image: gitlab-registry.cern.ch/fts/fts3:ci
+  stage: static_code_analysis
+  script:
+    - black --version
+    - black --check --fast --diff --target-version py39 ./src/scheduler/*
+
+pylint39:
+  <<: *pylint_definition
+
+pylint310:
+  <<: *pylint_definition
+
+pylint311:
+  <<: *pylint_definition
 
 #--------------------------
 # Build templates
