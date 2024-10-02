@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS t_dm_backup;
 DROP TABLE IF EXISTS t_file;
 DROP TABLE IF EXISTS t_file_backup;
 DROP TABLE IF EXISTS t_queue;
-DROP TYPE  IF EXISTS file_state;
+DROP TYPE  IF EXISTS enum_file_state;
 DROP TABLE IF EXISTS t_job;
 DROP TABLE IF EXISTS t_job_backup;
 DROP TYPE  IF EXISTS job_state;
@@ -180,7 +180,7 @@ CREATE TABLE t_job_backup (
   os_project_id         VARCHAR(512)      NULL
 );
 
-CREATE TYPE file_state AS ENUM(
+CREATE TYPE enum_file_state AS ENUM(
     'STAGING',
     'ARCHIVING',
     'QOS_TRANSITION',
@@ -204,14 +204,14 @@ CREATE TYPE file_state AS ENUM(
 );
 
 CREATE TABLE t_queue (
-    queue_id      BIGSERIAL    NOT NULL,
-    created       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    vo_name       VARCHAR(50)  NOT NULL,
-    source_se     VARCHAR(255) NOT NULL,
-    dest_se       VARCHAR(255) NOT NULL,
-    activity      VARCHAR(255) NOT NULL,
-    file_state    file_state   NOT NULL,
-    nb_files      BIGINT       NOT NULL DEFAULT 0,
+    queue_id      BIGSERIAL       NOT NULL,
+    created       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    vo_name       VARCHAR(50)     NOT NULL,
+    source_se     VARCHAR(255)    NOT NULL,
+    dest_se       VARCHAR(255)    NOT NULL,
+    activity      VARCHAR(255)    NOT NULL,
+    file_state    enum_file_state NOT NULL,
+    nb_files      BIGINT          NOT NULL DEFAULT 0,
     PRIMARY KEY (queue_id),
     UNIQUE (vo_name, source_se, dest_se, activity, file_state),
     CHECK (vo_name   != ''),
@@ -226,7 +226,7 @@ CREATE TABLE t_file (
     file_id              BIGSERIAL        NOT NULL,
     file_index           INTEGER          NOT NULL,
     job_id               VARCHAR(36)      NOT NULL,
-    file_state           file_state       NOT NULL,
+    file_state           enum_file_state  NOT NULL,
     file_state_initial   VARCHAR(32)          NULL,
     transfer_host        VARCHAR(255)         NULL,
     source_surl          VARCHAR(1100)    NOT NULL,
@@ -301,7 +301,7 @@ CREATE TABLE t_file_backup (
   file_id                BIGINT           NOT NULL DEFAULT 0,
   file_index             INTEGER              NULL,
   job_id                 VARCHAR(36)      NOT NULL,
-  file_state             file_state       NOT NULL,
+  file_state             enum_file_state  NOT NULL,
   transfer_host          VARCHAR(255)         NULL,
   source_surl            VARCHAR(1100)        NULL,
   dest_surl              VARCHAR(1100)        NULL,
