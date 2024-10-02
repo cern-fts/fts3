@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS t_queue;
 DROP TYPE  IF EXISTS enum_file_state;
 DROP TABLE IF EXISTS t_job;
 DROP TABLE IF EXISTS t_job_backup;
-DROP TYPE  IF EXISTS job_state;
+DROP TYPE  IF EXISTS enum_job_state;
 DROP TABLE IF EXISTS t_token;
 DROP TABLE IF EXISTS t_gridmap;
 DROP TABLE IF EXISTS t_token_provider;
@@ -96,7 +96,7 @@ CREATE TABLE t_credential_cache (
   PRIMARY KEY (dlg_id, dn)
 );
 
-CREATE TYPE job_state AS ENUM(
+CREATE TYPE enum_job_state AS ENUM(
     'STAGING',
     'ARCHIVING',
     'QOS_TRANSITION',
@@ -111,35 +111,35 @@ CREATE TYPE job_state AS ENUM(
     'DELETE'
 );
 CREATE TABLE t_job (
-    job_id              VARCHAR(36)   NOT NULL,
-    job_state           job_state     NOT NULL,
-    job_type            VARCHAR(1)    NOT NULL,
-    cancel_job          VARCHAR(1)        NULL,
-    source_se           VARCHAR(255)      NULL,
-    dest_se             VARCHAR(255)      NULL,
-    user_dn             VARCHAR(1024)     NULL,
-    cred_id             VARCHAR(16)       NULL,
-    vo_name             VARCHAR(50)       NULL,
-    reason              VARCHAR(2048)     NULL,
-    submit_time         TIMESTAMP         NULL,
-    priority            INTEGER       NOT NULL DEFAULT 3,
-    submit_host         VARCHAR(255)  NOT NULL,
-    max_time_in_queue   INTEGER           NULL,
-    space_token         VARCHAR(255)      NULL,
-    internal_job_params VARCHAR(255)      NULL,
-    overwrite_flag      VARCHAR(1)        NULL,
-    job_finished        TIMESTAMP         NULL,
-    source_space_token  VARCHAR(255)      NULL,
-    copy_pin_lifetime   INTEGER           NULL,
-    checksum_method     VARCHAR(1)        NULL,
-    bring_online        INTEGER           NULL,
-    retry               INTEGER       NOT NULL DEFAULT 0,
-    retry_delay         INTEGER       NOT NULL DEFAULT 0,
-    target_qos          VARCHAR(255)      NULL,
-    job_metadata        TEXT              NULL,
-    archive_timeout     INTEGER           NULL,
-    dst_file_report     VARCHAR(1)        NULL,
-    os_project_id       VARCHAR(512)      NULL,
+    job_id              VARCHAR(36)    NOT NULL,
+    job_state           enum_job_state NOT NULL,
+    job_type            VARCHAR(1)     NOT NULL,
+    cancel_job          VARCHAR(1)         NULL,
+    source_se           VARCHAR(255)       NULL,
+    dest_se             VARCHAR(255)       NULL,
+    user_dn             VARCHAR(1024)      NULL,
+    cred_id             VARCHAR(16)        NULL,
+    vo_name             VARCHAR(50)        NULL,
+    reason              VARCHAR(2048)      NULL,
+    submit_time         TIMESTAMP          NULL,
+    priority            INTEGER        NOT NULL DEFAULT 3,
+    submit_host         VARCHAR(255)   NOT NULL,
+    max_time_in_queue   INTEGER            NULL,
+    space_token         VARCHAR(255)       NULL,
+    internal_job_params VARCHAR(255)       NULL,
+    overwrite_flag      VARCHAR(1)         NULL,
+    job_finished        TIMESTAMP          NULL,
+    source_space_token  VARCHAR(255)       NULL,
+    copy_pin_lifetime   INTEGER            NULL,
+    checksum_method     VARCHAR(1)         NULL,
+    bring_online        INTEGER            NULL,
+    retry               INTEGER        NOT NULL DEFAULT 0,
+    retry_delay         INTEGER        NOT NULL DEFAULT 0,
+    target_qos          VARCHAR(255)       NULL,
+    job_metadata        TEXT               NULL,
+    archive_timeout     INTEGER            NULL,
+    dst_file_report     VARCHAR(1)         NULL,
+    os_project_id       VARCHAR(512)       NULL,
     PRIMARY KEY (job_id)
 );
 CREATE INDEX idx_job_vo_name     ON t_job(vo_name);
@@ -149,35 +149,35 @@ CREATE INDEX idx_job_submission  ON t_job(submit_time, submit_host);
 CREATE INDEX idx_job_job_type    ON t_job(job_type);
 
 CREATE TABLE t_job_backup (
-  job_id                VARCHAR(36)   NOT NULL,
-  job_state             job_state     NOT NULL,
-  job_type              VARCHAR(1)        NULL,
-  cancel_job            VARCHAR(1)        NULL,
-  source_se             VARCHAR(255)      NULL,
-  dest_se               VARCHAR(255)      NULL,
-  user_dn               VARCHAR(1024)     NULL,
-  cred_id               VARCHAR(16)       NULL,
-  vo_name               VARCHAR(50)       NULL,
-  reason                VARCHAR(2048)     NULL,
-  submit_time           TIMESTAMP         NULL,
-  priority              INTEGER       NOT NULL DEFAULT 3,
-  submit_host           VARCHAR(255)      NULL,
-  max_time_in_queue     INTEGER           NULL,
-  space_token           VARCHAR(255)      NULL,
-  internal_job_params   VARCHAR(255)      NULL,
-  overwrite_flag        VARCHAR(1)        NULL,
-  job_finished          TIMESTAMP         NULL,
-  source_space_token    VARCHAR(255)      NULL,
-  copy_pin_lifetime     INTEGER           NULL,
-  checksum_method       VARCHAR(1)        NULL,
-  bring_online          INTEGER           NULL,
-  retry                 INTEGER       NOT NULL DEFAULT 0,
-  retry_delay           INTEGER       NOT NULL DEFAULT 0,
-  target_qos            VARCHAR(255)      NULL,
-  job_metadata          TEXT              NULL,
-  archive_timeout       INTEGER           NULL,
-  dst_file_report       VARCHAR(1)        NULL,
-  os_project_id         VARCHAR(512)      NULL
+  job_id                VARCHAR(36)    NOT NULL,
+  job_state             enum_job_state NOT NULL,
+  job_type              VARCHAR(1)         NULL,
+  cancel_job            VARCHAR(1)         NULL,
+  source_se             VARCHAR(255)       NULL,
+  dest_se               VARCHAR(255)       NULL,
+  user_dn               VARCHAR(1024)      NULL,
+  cred_id               VARCHAR(16)        NULL,
+  vo_name               VARCHAR(50)        NULL,
+  reason                VARCHAR(2048)      NULL,
+  submit_time           TIMESTAMP          NULL,
+  priority              INTEGER        NOT NULL DEFAULT 3,
+  submit_host           VARCHAR(255)       NULL,
+  max_time_in_queue     INTEGER            NULL,
+  space_token           VARCHAR(255)       NULL,
+  internal_job_params   VARCHAR(255)       NULL,
+  overwrite_flag        VARCHAR(1)         NULL,
+  job_finished          TIMESTAMP          NULL,
+  source_space_token    VARCHAR(255)       NULL,
+  copy_pin_lifetime     INTEGER            NULL,
+  checksum_method       VARCHAR(1)         NULL,
+  bring_online          INTEGER            NULL,
+  retry                 INTEGER        NOT NULL DEFAULT 0,
+  retry_delay           INTEGER        NOT NULL DEFAULT 0,
+  target_qos            VARCHAR(255)       NULL,
+  job_metadata          TEXT               NULL,
+  archive_timeout       INTEGER            NULL,
+  dst_file_report       VARCHAR(1)         NULL,
+  os_project_id         VARCHAR(512)       NULL
 );
 
 CREATE TYPE enum_file_state AS ENUM(
