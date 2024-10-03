@@ -1,3 +1,5 @@
+DROP FUNCTION IF EXISTS inc_queue_counter(_vo_name character varying, _source_se character varying, _dest_se character varying, _activity character varying, _file_state enum_file_state, _delta bigint);
+
 DROP TABLE IF EXISTS t_share_config;
 DROP TABLE IF EXISTS t_file_retry_errors;
 DROP TABLE IF EXISTS t_dm;
