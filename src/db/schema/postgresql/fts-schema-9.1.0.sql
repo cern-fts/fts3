@@ -685,7 +685,7 @@ CREATE OR REPLACE FUNCTION inc_queue_counter (
     _source_se varchar,
     _dest_se varchar,
     _activity varchar,
-    _file_state varchar,
+    _file_state enum_file_state,
     _delta bigint
 ) RETURNS bigint
 AS $$
@@ -706,7 +706,7 @@ BEGIN
     AND
         activity = _activity
     AND
-        file_state = _file_state::enum_file_state
+        file_state = _file_state
     RETURNING
         queue_id INTO _queue_id;
 
@@ -727,7 +727,7 @@ BEGIN
         _source_se,
         _dest_se,
         _activity,
-        _file_state::enum_file_state,
+        _file_state,
         _delta
     )
     ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
