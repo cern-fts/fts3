@@ -1302,72 +1302,21 @@ static std::int64_t postgresIncQueueCounter(
 ) {
     try {
         const soci::rowset<soci::row> rs = (sql.prepare <<
-            "UPDATE\n"
-            "    t_queue\n"
-            "SET\n"
-            "    nb_files = nb_files + :delta\n"
-            "WHERE\n"
-            "    vo_name = :vo_name\n"
-            "AND\n"
-            "    source_se = :source_se\n"
-            "AND\n"
-            "    dest_se = :dest_se\n"
-            "AND\n"
-            "    activity = :activity\n"
-            "AND\n"
-            "    file_state = :file_state\n"
-            "RETURNING\n"
-            "    queue_id",
+            "SELECT\n"
+            "inc_queue_counter(\n"
+            "    _vo_name => :vo_name,\n"
+            "    _source_se => :source_se,\n"
+            "    _dest_se => :dest_se,\n"
+            "    _activity => :activity,\n"
+            "    _file_state => :file_state,\n"
+            "    _delta => :delta\n"
+            ") AS queue_id",
             soci::use(delta, "delta"),
             soci::use(queueCompId.vo_name, "vo_name"),
             soci::use(queueCompId.source_se, "source_se"),
             soci::use(queueCompId.dest_se, "dest_se"),
             soci::use(queueCompId.activity, "activity"),
             soci::use(queueCompId.file_state, "file_state")
-        );
-        auto row_itor = rs.begin();
-        if (row_itor != rs.end()) {
-            const auto queue_id = row_itor->get<long long>(0);
-            return queue_id;
-        }
-    } catch(std::exception &ex) {
-        std::ostringstream msg;
-        msg << "postgresIncQueueCounter: Failed to execute UPDATE: " << ex.what();
-        throw std::runtime_error(msg.str());
-    } catch(...) {
-        throw std::runtime_error(
-            "postgresIncQueueCounter: Failed to execute UPDATE: Caught an unknown exception"
-        );
-    }
-
-    try {
-        const soci::rowset<soci::row> rs = (sql.prepare <<
-            "INSERT INTO t_queue (\n"
-            "    vo_name,\n"
-            "    source_se,\n"
-            "    dest_se,\n"
-            "    activity,\n"
-            "    file_state,\n"
-            "    nb_files\n"
-            ") VALUES (\n"
-            "    :vo_name,\n"
-            "    :source_se,\n"
-            "    :dest_se,\n"
-            "    :activity,\n"
-            "    :file_state,\n"
-            "    :delta\n"
-            ")\n"
-            "ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO\n"
-            "    UPDATE SET nb_files =\n"
-            "        t_queue.nb_files + EXCLUDED.nb_files\n"
-            "RETURNING\n"
-            "    queue_id",
-            soci::use(queueCompId.vo_name, "vo_name"),
-            soci::use(queueCompId.source_se, "source_se"),
-            soci::use(queueCompId.dest_se, "dest_se"),
-            soci::use(queueCompId.activity, "activity"),
-            soci::use(queueCompId.file_state, "file_state"),
-            soci::use(delta, "delta")
         );
         auto row_itor = rs.begin();
         if (row_itor == rs.end()) {
@@ -1385,11 +1334,11 @@ static std::int64_t postgresIncQueueCounter(
         return queue_id;
     } catch(std::exception &ex) {
         std::ostringstream msg;
-        msg << "postgresIncQueueCounter: Failed to execute INSERT: " << ex.what();
+        msg << "postgresIncQueueCounter: " << ex.what();
         throw std::runtime_error(msg.str());
     } catch(...) {
         throw std::runtime_error(
-            "postgresIncQueueCounter: Failed to execute INSERT: Caught an unknown exception"
+            "postgresIncQueueCounter: Caught an unknown exception"
         );
     }
 }
