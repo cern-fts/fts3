@@ -679,3 +679,63 @@ CREATE TABLE t_oauth2_tokens (
   dlg_id        VARCHAR(100)     NULL,
   PRIMARY KEY (client_id)
 );
+
+CREATE OR REPLACE FUNCTION inc_queue_counter (
+    _vo_name varchar,
+    _source_se varchar,
+    _dest_se varchar,
+    _activity varchar,
+    _file_state varchar,
+    _delta bigint
+) RETURNS bigint
+AS $$
+DECLARE
+    _queue_id bigint := NULL;
+BEGIN
+    -- Assume the t_queue row already exists
+    UPDATE
+        t_queue
+    SET
+        nb_files = nb_files + _delta
+    WHERE
+        vo_name = _vo_name
+    AND
+        source_se = _source_se
+    AND
+        dest_se = _dest_se
+    AND
+        activity = _activity
+    AND
+        file_state = _file_state::enum_file_state
+    RETURNING
+        queue_id INTO _queue_id;
+
+    IF FOUND THEN
+        RETURN _queue_id;
+    END IF;
+
+    -- The t_queue row does not exist so create one
+    INSERT INTO t_queue (
+        vo_name,
+        source_se,
+        dest_se,
+        activity,
+        file_state,
+        nb_files
+    ) VALUES (
+        _vo_name,
+        _source_se,
+        _dest_se,
+        _activity,
+        _file_state::enum_file_state,
+        _delta
+    )
+    ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
+        UPDATE SET nb_files =
+            t_queue.nb_files + EXCLUDED.nb_files
+    RETURNING
+        queue_id INTO _queue_id;
+
+    RETURN _queue_id;
+END;
+$$ LANGUAGE plpgsql;
