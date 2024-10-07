@@ -715,6 +715,8 @@ DECLARE
     _curr_queue_id bigint;
     _next_queue_id bigint;
 BEGIN
+    -- Returns TRUE if the t_file row has been changed
+
     SELECT * INTO _file_row
     FROM
         t_file
