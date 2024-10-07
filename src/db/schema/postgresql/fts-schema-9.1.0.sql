@@ -704,11 +704,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE PROCEDURE change_file_state_and_queues(
+CREATE OR REPLACE FUNCTION change_file_state_and_queues(
     _file_id bigint,
     _curr_file_state enum_file_state,
     _next_file_state enum_file_state
-) AS $$
+) RETURNS boolean
+AS $$
 DECLARE
     _file_row t_file%ROWTYPE;
     _curr_queue_id bigint;
@@ -731,7 +732,7 @@ BEGIN
     END IF;
 
     IF _file_row.file_state = _next_file_state THEN
-        RETURN;
+        RETURN FALSE;
     END IF;
 
     -- Get the ID of the current queue
@@ -809,6 +810,11 @@ BEGIN
     WHERE
         queue_id = _curr_queue_id;
 
+    IF NOT FOUND THEN
+        RAISE 'change_file_state failed: Failed to decrement counter of current queue: queue_id=%',
+            _curr_queue_id;
+    END IF;
+
     SELECT inc_queue_counter(
       _vo_name => _file_row.vo_name,
       _source_se => _file_row.source_se,
@@ -826,5 +832,12 @@ BEGIN
         file_state = _next_file_state
     WHERE
         file_id = _file_id;
+
+    IF NOT FOUND THEN
+        RAISE 'change_file_state failed: Failed to update file transfer row: file_id=%',
+            _file_id;
+    END IF;
+
+    RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;

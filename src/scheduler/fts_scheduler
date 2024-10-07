@@ -230,7 +230,7 @@ def select_for_update_next_submitted_file(dbconn, submitted_queue_id):
 
 def change_file_state_and_queues(dbconn, file_id, curr_file_state, next_file_state):
     sql = """
-        CALL change_file_state_and_queues(
+        SELECT change_file_state_and_queues(
             _file_id => %(file_id)s,
             _curr_file_state => %(curr_file_state)s,
             _next_file_state => %(next_file_state)s
@@ -244,8 +244,11 @@ def change_file_state_and_queues(dbconn, file_id, curr_file_state, next_file_sta
     start_db = time.time()
     with dbconn.cursor() as cursor:
         cursor.execute(sql, params)
+        rows = cursor.fetchall()
         db_sec = time.time() - start_db
-        return db_sec
+
+        file_changed = rows[0][0]
+        return file_changed, db_sec
 
 
 def schedule_next_file_in_queue(dbconn, submitted_queue):
@@ -263,14 +266,15 @@ def schedule_next_file_in_queue(dbconn, submitted_queue):
         db_sec += next_file_db_sec
 
         if file_id:
-            change_db_sec = change_file_state_and_queues(
+            file_changed, change_db_sec = change_file_state_and_queues(
                 dbconn, file_id, "SUBMITTED", "SCHEDULED"
             )
             scheduled = True
             db_sec += change_db_sec
-            log.debug(
-                f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
-            )
+            if file_changed:
+                log.debug(
+                    f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
+                )
 
     except Exception as e:
         log.error(
