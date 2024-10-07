@@ -204,16 +204,9 @@ def get_queues_of_submitted_files(dbconn):
 
 def select_for_update_next_submitted_file(dbconn, submitted_queue_id):
     sql = """
-        SELECT
-            file_id
-        FROM
-            t_file
-        WHERE
-            queue_id = %(submitted_queue_id)s
-        ORDER BY
-            queue_id, priority, file_id
-        LIMIT 1
-        FOR UPDATE
+        SELECT schedule_next_file_in_queue(
+            _submitted_queue_id => %(submitted_queue_id)s
+        ) AS file_id
     """
     params = {"submitted_queue_id": submitted_queue_id}
     start_db = time.time()
@@ -228,29 +221,6 @@ def select_for_update_next_submitted_file(dbconn, submitted_queue_id):
         return file_id, db_sec
 
 
-def change_file_state_and_queues(dbconn, file_id, curr_file_state, next_file_state):
-    sql = """
-        SELECT change_file_state_and_queues(
-            _file_id => %(file_id)s,
-            _curr_file_state => %(curr_file_state)s,
-            _next_file_state => %(next_file_state)s
-        )
-    """
-    params = {
-        "file_id": file_id,
-        "curr_file_state": curr_file_state,
-        "next_file_state": next_file_state,
-    }
-    start_db = time.time()
-    with dbconn.cursor() as cursor:
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
-        db_sec = time.time() - start_db
-
-        file_changed = rows[0][0]
-        return file_changed, db_sec
-
-
 def schedule_next_file_in_queue(dbconn, submitted_queue):
     scheduled = False
 
@@ -259,22 +229,14 @@ def schedule_next_file_in_queue(dbconn, submitted_queue):
     transaction_open = True
 
     try:
-        db_sec = 0
-        file_id, next_file_db_sec = select_for_update_next_submitted_file(
+        file_id, db_sec = select_for_update_next_submitted_file(
             dbconn, submitted_queue["queue_id"]
         )
-        db_sec += next_file_db_sec
-
         if file_id:
-            file_changed, change_db_sec = change_file_state_and_queues(
-                dbconn, file_id, "SUBMITTED", "SCHEDULED"
-            )
             scheduled = True
-            db_sec += change_db_sec
-            if file_changed:
-                log.debug(
-                    f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
-                )
+            log.debug(
+                f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
+            )
 
     except Exception as e:
         log.error(
