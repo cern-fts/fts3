@@ -723,11 +723,11 @@ BEGIN
     FOR UPDATE;
 
     IF NOT FOUND THEN
-       RAISE 'change_file_state failed: No such file: file_id=%', _file_id;
+       RAISE 'change_file_state_and_queues failed: No such file: file_id=%', _file_id;
     END IF;
 
     IF _file_row.file_state != _curr_file_state THEN
-       RAISE 'change_file_state failed: Unexpected current file-state: file_id=% expected=% actual=%',
+       RAISE 'change_file_state_and_queues failed: Unexpected current file-state: file_id=% expected=% actual=%',
            _file_id, _curr_file_state, _file_row.file_state;
     END IF;
 
@@ -751,7 +751,7 @@ BEGIN
         file_state = _file_row.file_state;
 
     IF NOT FOUND THEN
-       RAISE 'change_file_state failed: No such current queue: vo_name=% source_se=% dest_se=% activity=% file_state=%',
+       RAISE 'change_file_state_and_queues failed: No such current queue: vo_name=% source_se=% dest_se=% activity=% file_state=%',
            _file_row.vo_name, _file_row.source_se, _file_row.dest_se, _file_row.activity, _file_row.file_state;
     END IF;
 
@@ -811,7 +811,7 @@ BEGIN
         queue_id = _curr_queue_id;
 
     IF NOT FOUND THEN
-        RAISE 'change_file_state failed: Failed to decrement counter of current queue: queue_id=%',
+        RAISE 'change_file_state_and_queues failed: Failed to decrement counter of current queue: queue_id=%',
             _curr_queue_id;
     END IF;
 
@@ -834,7 +834,7 @@ BEGIN
         file_id = _file_id;
 
     IF NOT FOUND THEN
-        RAISE 'change_file_state failed: Failed to update file transfer row: file_id=%',
+        RAISE 'change_file_state_and_queues failed: Failed to update file transfer row: file_id=%',
             _file_id;
     END IF;
 
