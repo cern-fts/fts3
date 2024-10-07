@@ -1343,29 +1343,6 @@ static std::int64_t postgresIncQueueCounter(
     }
 }
 
-
-static bool postgresUpdateFileQueueId(soci::session &sql, const std::uint64_t fileId,
-                                        const std::uint64_t &prevQueueId,
-                                        const std::uint64_t &nextQueueId) {
-    soci::statement stmt = (sql.prepare <<
-        "UPDATE\n"
-        "    t_file\n"
-        "SET\n"
-        "    queue_id = :next_queue_id\n"
-        "WHERE\n"
-        "    file_id = :file_id\n"
-        "AND\n"
-        "    queue_id = :prev_queue_id",
-        soci::use(nextQueueId, "next_queue_id"),
-        soci::use(fileId, "file_id"),
-        soci::use(prevQueueId, "prev_queue_id")
-    );
-    stmt.execute();
-    const bool updated = stmt.get_affected_rows() > 0;
-    return updated;
-}
-
-
 static bool postgresDecQueueCounter(soci::session &sql, const std::uint64_t queueId,
                                     const std::int64_t delta) {
     soci::statement stmt = (sql.prepare <<
@@ -1381,6 +1358,24 @@ static bool postgresDecQueueCounter(soci::session &sql, const std::uint64_t queu
     stmt.execute();
     const bool updated = stmt.get_affected_rows() > 0;
     return updated;
+}
+
+static bool postgresChangeFileStateAndQueues(soci::session &sql,
+                                             const std::uint64_t fileId,
+                                             const std::string &currFileState,
+                                             const std::string &nextFileState) {
+    bool fileChanged = false;
+    sql <<
+        "SELECT change_file_state_and_queues(\n"
+        "    _file_id => :file_id,\n"
+        "    _curr_file_state => :curr_file_state,\n"
+        "    _next_file_state => :next_file_state\n"
+        ")",
+        soci::into(fileChanged),
+        soci::use(fileId, "file_id"),
+        soci::use(currFileState, "curr_file_state"),
+        soci::use(nextFileState, "next_file_state");
+    return fileChanged;
 }
 
 
@@ -1481,116 +1476,170 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
             }
         }
 
-        soci::statement stmt(sql);
-        std::ostringstream query;
+        if (sql.get_backend_name() == "mysql") {
+            soci::statement stmt(sql);
+            std::ostringstream query;
 
-        query << "UPDATE t_file SET "
-              "    file_state = :state, reason = :reason";
-        stmt.exchange(soci::use(newFileState, "state"));
-        stmt.exchange(soci::use(errorReason, "reason"));
+            query << "UPDATE t_file SET "
+                  "    file_state = :state, reason = :reason";
+            stmt.exchange(soci::use(newFileState, "state"));
+            stmt.exchange(soci::use(errorReason, "reason"));
 
-        if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
-        {
-            query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
-            stmt.exchange(soci::use(tTime, "time1"));
-        }
-        if (newFileState == "ACTIVE" || newFileState == "READY")
-        {
-            query << ", START_TIME = :time1";
-            stmt.exchange(soci::use(tTime, "time1"));
-        }
-
-        query << ", transfer_Host = :hostname";
-        stmt.exchange(soci::use(hostname, "hostname"));
-
-        if (newFileState == "FINISHED")
-        {
-            query << ", transferred = :filesize";
-            stmt.exchange(soci::use(filesize, "filesize"));
-        }
-
-        if (newFileState == "FAILED" || newFileState == "CANCELED")
-        {
-            query << ", transferred = :transferred";
-            stmt.exchange(soci::use(0, "transferred"));
-        }
-
-        if (newFileState == "STAGING")
-        {
-            if (isStaging)
+            if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
             {
-                query << ", STAGING_FINISHED = :time1";
+                query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
                 stmt.exchange(soci::use(tTime, "time1"));
             }
-            else
+            if (newFileState == "ACTIVE" || newFileState == "READY")
             {
-                query << ", STAGING_START = :time1";
+                query << ", START_TIME = :time1";
                 stmt.exchange(soci::use(tTime, "time1"));
             }
-        }
+
+            query << ", transfer_Host = :hostname";
+            stmt.exchange(soci::use(hostname, "hostname"));
+
+            if (newFileState == "FINISHED")
+            {
+                query << ", transferred = :filesize";
+                stmt.exchange(soci::use(filesize, "filesize"));
+            }
+
+            if (newFileState == "FAILED" || newFileState == "CANCELED")
+            {
+                query << ", transferred = :transferred";
+                stmt.exchange(soci::use(0, "transferred"));
+            }
+
+            if (newFileState == "STAGING")
+            {
+                if (isStaging)
+                {
+                    query << ", STAGING_FINISHED = :time1";
+                    stmt.exchange(soci::use(tTime, "time1"));
+                }
+                else
+                {
+                    query << ", STAGING_START = :time1";
+                    stmt.exchange(soci::use(tTime, "time1"));
+                }
+            }
         
-        // Move the new state to ARCHIVING if the transfer completed and the archive timeout is set
-        if (newFileState == "FINISHED" && isArchivingTransfer(sql, jobId, jobType, archiveTimeout)) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
+            // Move the new state to ARCHIVING if the transfer completed and the archive timeout is set
+            if (newFileState == "FINISHED" && isArchivingTransfer(sql, jobId, jobType, archiveTimeout)) {
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
                                              << " to ARCHIVING state" << commit;
-            newFileState = "ARCHIVING";
-        }
-
-        if (!fileMetadata.empty()) {
-            query << ", file_metadata = :file_metadata";
-            stmt.exchange(soci::use(fileMetadata, "file_metadata"));
-        }
-
-        query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-              "WHERE file_id = :fileId AND file_state = :oldState";
-        stmt.exchange(soci::use(processId, "pid"));
-        stmt.exchange(soci::use(filesize, "filesize"));
-        stmt.exchange(soci::use(duration, "duration"));
-        stmt.exchange(soci::use(throughput, "throughput"));
-        stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
-        stmt.exchange(soci::use(fileId, "fileId"));
-        stmt.exchange(soci::use(storedState, "oldState"));
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-
-        stmt.execute(true);
-
-        if (stmt.get_affected_rows() == 0) {
-            sql.rollback();
-            return boost::tuple<bool, std::string>(false, storedState);
-        }
-
-        if (sql.get_backend_name() == "postgresql" && newFileState != storedState) {
-            if (!prevQueueId) {
-                std::ostringstream msg;
-                msg << "Failed to update file-transfer queues: The previous queue ID is missing: "
-                       "jobId=" << jobId << " fileId=" << fileId;
-                throw std::runtime_error(msg.str());
+                newFileState = "ARCHIVING";
             }
 
-            const QueueCompId queueCompId = {
-                .vo_name = voName,
-                .source_se = sourceSe,
-                .dest_se = destSe,
-                .activity = activity,
-                .file_state = newFileState
-            };
-            const std::int64_t nextQueueId = postgresIncQueueCounter(sql, 1, queueCompId);
+            if (!fileMetadata.empty()) {
+                query << ", file_metadata = :file_metadata";
+                stmt.exchange(soci::use(fileMetadata, "file_metadata"));
+            }
 
-            if (!postgresUpdateFileQueueId(sql, fileId, *prevQueueId, nextQueueId)) {
-                std::ostringstream msg;
-                msg << "Failed to update queue ID of file-transfer: jobId=" << jobId <<
-                       " fileId=" << fileId;
-                throw std::runtime_error(msg.str());
+            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
+                  "WHERE file_id = :fileId AND file_state = :oldState";
+            stmt.exchange(soci::use(processId, "pid"));
+            stmt.exchange(soci::use(filesize, "filesize"));
+            stmt.exchange(soci::use(duration, "duration"));
+            stmt.exchange(soci::use(throughput, "throughput"));
+            stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
+            stmt.exchange(soci::use(fileId, "fileId"));
+            stmt.exchange(soci::use(storedState, "oldState"));
+            stmt.alloc();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
+
+            stmt.execute(true);
+
+            if (stmt.get_affected_rows() == 0) {
+                sql.rollback();
+                return boost::tuple<bool, std::string>(false, storedState);
             }
-            if (!postgresDecQueueCounter(sql, *prevQueueId, 1)) {
-                std::ostringstream msg;
-                msg << "Failed to decrement queue counter: jobId=" << jobId <<
-                       " fileId=" << fileId << " prevQueueId=" << *prevQueueId;
-                throw std::runtime_error(msg.str());
+        } else { // Else postgresql
+            // The actual new state might be ARCHIVING
+            const bool newFileStateShouldBeArchiving = newFileState == "FINISHED" &&
+                                                       isArchivingTransfer(sql, jobId, jobType, archiveTimeout);
+
+            // A separate variable for the actual new state so we can remember how we got there
+            const std::string actualNewFileState = newFileStateShouldBeArchiving ? "ARCHIVING" : newFileState;
+
+            const bool fileChanged = postgresChangeFileStateAndQueues(sql, fileId, storedState, actualNewFileState);
+            if (!fileChanged) {
+                sql.rollback();
+                return boost::tuple<bool, std::string>(false, storedState);
             }
-        }
+
+            // Update the other t_file columns depending on newFileState
+            soci::statement stmt(sql);
+            std::ostringstream query;
+
+            query << "UPDATE t_file SET reason = :reason";
+            stmt.exchange(soci::use(errorReason, "reason"));
+
+            if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
+            {
+                query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
+                stmt.exchange(soci::use(tTime, "time1"));
+            }
+            if (newFileState == "ACTIVE" || newFileState == "READY")
+            {
+                query << ", START_TIME = :time1";
+                stmt.exchange(soci::use(tTime, "time1"));
+            }
+
+            query << ", transfer_Host = :hostname";
+            stmt.exchange(soci::use(hostname, "hostname"));
+
+            if (newFileState == "FINISHED")
+            {
+                query << ", transferred = :filesize";
+                stmt.exchange(soci::use(filesize, "filesize"));
+            }
+
+            if (newFileState == "FAILED" || newFileState == "CANCELED")
+            {
+                query << ", transferred = :transferred";
+                stmt.exchange(soci::use(0, "transferred"));
+            }
+
+            if (newFileState == "STAGING")
+            {
+                if (isStaging)
+                {
+                    query << ", STAGING_FINISHED = :time1";
+                    stmt.exchange(soci::use(tTime, "time1"));
+                }
+                else
+                {
+                    query << ", STAGING_START = :time1";
+                    stmt.exchange(soci::use(tTime, "time1"));
+                }
+            }
+
+            if (!fileMetadata.empty()) {
+                query << ", file_metadata = :file_metadata";
+                stmt.exchange(soci::use(fileMetadata, "file_metadata"));
+            }
+
+            // Finished with other colums so new state can now be the "actual" new state
+            newFileState = actualNewFileState;
+
+            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
+                  "WHERE file_id = :fileId AND file_state = :newState";
+            stmt.exchange(soci::use(processId, "pid"));
+            stmt.exchange(soci::use(filesize, "filesize"));
+            stmt.exchange(soci::use(duration, "duration"));
+            stmt.exchange(soci::use(throughput, "throughput"));
+            stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
+            stmt.exchange(soci::use(fileId, "fileId"));
+            stmt.exchange(soci::use(newFileState, "newState"));
+            stmt.alloc();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
+
+            stmt.execute(true);
+        } // Else postgresql
 
         sql.commit();
 
