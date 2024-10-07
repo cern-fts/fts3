@@ -843,3 +843,47 @@ BEGIN
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION schedule_next_file_in_queue(
+    _submitted_queue_id bigint
+) RETURNS bigint
+AS $$
+DECLARE
+    _file_row t_file%ROWTYPE;
+    _file_changed boolean := FALSE;
+BEGIN
+    -- Returns the file_id of the scheduled file-transfer else NULL
+
+    SELECT * INTO _file_row
+    FROM
+        t_file
+    WHERE
+        queue_id = _submitted_queue_id
+    ORDER BY
+        queue_id, priority, file_id
+    LIMIT 1
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE 'schedule_next_file_in_queue failed: No such queue: queue_id=%',
+            _submitted_queue_id;
+    END IF;
+
+    IF _file_row.file_state != 'SUBMITTED' THEN
+        RAISE 'schedule_next_file_in_queue failed: Initial file state is not SUBMITTED: file_id=% file_state=%',
+            _file_row.file_id, _file_row.file_state;
+    END IF;
+
+    SELECT change_file_state_and_queues(
+        _file_id => _file_row.file_id,
+        _curr_file_state => 'SUBMITTED',
+        _next_file_state => 'SCHEDULED'
+    ) INTO _file_changed;
+
+    IF NOT _file_changed THEN
+        RETURN NULL;
+    ELSE
+        RETURN _file_row.file_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
