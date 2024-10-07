@@ -703,3 +703,128 @@ BEGIN
     RETURN _queue_id;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE change_file_state_and_queues(
+    _file_id bigint,
+    _curr_file_state enum_file_state,
+    _next_file_state enum_file_state
+) AS $$
+DECLARE
+    _file_row t_file%ROWTYPE;
+    _curr_queue_id bigint;
+    _next_queue_id bigint;
+BEGIN
+    SELECT * INTO _file_row
+    FROM
+        t_file
+    WHERE
+        file_id = _file_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+       RAISE 'change_file_state failed: No such file: file_id=%', _file_id;
+    END IF;
+
+    IF _file_row.file_state != _curr_file_state THEN
+       RAISE 'change_file_state failed: Unexpected current file-state: file_id=% expected=% actual=%',
+           _file_id, _curr_file_state, _file_row.file_state;
+    END IF;
+
+    IF _file_row.file_state = _next_file_state THEN
+        RETURN;
+    END IF;
+
+    -- Get the ID of the current queue
+    SELECT queue_id INTO _curr_queue_id
+    FROM
+        t_queue
+    WHERE
+        vo_name = _file_row.vo_name
+    AND
+        source_se = _file_row.source_se
+    AND
+        dest_se = _file_row.dest_se
+    AND
+        activity = _file_row.activity
+    AND
+        file_state = _file_row.file_state;
+
+    IF NOT FOUND THEN
+       RAISE 'change_file_state failed: No such current queue: vo_name=% source_se=% dest_se=% activity=% file_state=%',
+           _file_row.vo_name, _file_row.source_se, _file_row.dest_se, _file_row.activity, _file_row.file_state;
+    END IF;
+
+    -- Does the next queue exist?
+    SELECT queue_id INTO _next_queue_id
+    FROM
+        t_queue
+    WHERE
+        vo_name = _file_row.vo_name
+    AND
+        source_se = _file_row.source_se
+    AND
+        dest_se = _file_row.dest_se
+    AND
+        activity = _file_row.activity
+    AND
+        file_state = _next_file_state;
+
+    -- If the next queue already exists
+    IF FOUND THEN
+        -- Avoid deadlock by locking the current and next queues in queue_id order
+        IF _curr_queue_id < _next_queue_id THEN
+            SELECT queue_id INTO _curr_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _curr_queue_id
+            FOR UPDATE;
+            SELECT queue_id INTO _next_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _next_queue_id
+            FOR UPDATE;
+        ELSE
+            SELECT queue_id INTO _next_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _next_queue_id
+            FOR UPDATE;
+            SELECT queue_id INTO _curr_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _curr_queue_id
+            FOR UPDATE;
+        END IF;
+    END IF;
+
+    -- Decrement the current queue counter
+    UPDATE
+        t_queue
+    SET
+        nb_files = nb_files - 1
+    WHERE
+        queue_id = _curr_queue_id;
+
+    SELECT inc_queue_counter(
+      _vo_name => _file_row.vo_name,
+      _source_se => _file_row.source_se,
+      _dest_se => _file_row.dest_se,
+      _activity => _file_row.activity,
+      _file_state => _next_file_state,
+      _delta => 1
+    ) INTO _next_queue_id;
+
+    -- Update the t_file row
+    UPDATE
+        t_file
+    SET
+        queue_id = _next_queue_id,
+        file_state = _next_file_state
+    WHERE
+        file_id = _file_id;
+END;
+$$ LANGUAGE plpgsql;
