@@ -430,7 +430,10 @@ def select_worker_hostname(dbconn):
     row = cursor.fetchone()
     db_sec = time.time() - start_db
 
-    hostname = row[0]
+    if row:
+        hostname = row[0]
+    else:
+        hostname = None
 
     return hostname, db_sec
 
@@ -483,7 +486,7 @@ while True:
     try:
         with dbconn_pool.get_dbconn() as dbconn:
             worker_hostname, select_worker_hostname_sec = select_worker_hostname(dbconn)
-            if worker_hostname == socket.gethostname():
+            if worker_hostname and worker_hostname == socket.gethostname():
                 schedule(dbconn)
     except Exception as e:
         log.error(f"Caught exception when trying to schedule file-transfers: {e}")
