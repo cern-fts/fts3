@@ -222,22 +222,16 @@ def select_for_update_next_submitted_file(dbconn, submitted_queue_id):
 
 
 def schedule_next_file_in_queue(dbconn, submitted_queue):
-    scheduled = False
-
-    with dbconn.cursor() as cursor:
-        cursor.execute("START TRANSACTION")
-    transaction_open = True
-
     try:
         file_id, db_sec = select_for_update_next_submitted_file(
             dbconn, submitted_queue["queue_id"]
         )
+        scheduled = True if file_id else False
         if file_id:
-            scheduled = True
             log.debug(
                 f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
             )
-
+        return scheduled
     except Exception as e:
         log.error(
             f"Failed to schedule next file in queue: "
@@ -248,15 +242,6 @@ def schedule_next_file_in_queue(dbconn, submitted_queue):
             f"activity={submitted_queue['activity']} "
             f": {e}"
         )
-        with dbconn.cursor() as cursor:
-            cursor.execute("ROLLBACK")
-        transaction_open = False
-
-    if transaction_open:
-        with dbconn.cursor() as cursor:
-            cursor.execute("COMMIT")
-
-    return scheduled
 
 
 def get_link_config(dbconn):
