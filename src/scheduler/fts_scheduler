@@ -202,107 +202,50 @@ def get_queues_of_submitted_files(dbconn):
     return result
 
 
-def inc_queue_counter(dbconn, vo_name, source_se, dest_se, activity, file_state, delta):
+def select_for_update_next_submitted_file(dbconn, submitted_queue_id):
     sql = """
         SELECT
-            inc_queue_counter(
-                _vo_name => %(vo_name)s,
-                _source_se => %(source_se)s,
-                _dest_se => %(dest_se)s,
-                _activity => %(activity)s,
-                _file_state => %(file_state)s,
-                _delta => %(delta)s
-            ) AS queue_id
-    """
-    params = {
-        "delta": delta,
-        "vo_name": vo_name,
-        "source_se": source_se,
-        "dest_se": dest_se,
-        "activity": activity,
-        "file_state": file_state,
-    }
-    with dbconn.cursor() as cursor:
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
-        if len(rows) != 1:
-            raise Exception(
-                "Failed to increment t_queue counter: "
-                f"vo_name={vo_name} "
-                f"source_se={source_se} "
-                f"dest_se={dest_se} "
-                f"file_state={file_state} "
-                f"delta={delta}"
-            )
-        queue_id = rows[0][0]
-        return queue_id
-
-
-def update_file_to_scheduled(dbconn, submitted_queue_id, scheduled_queue_id):
-    sql = """
-        UPDATE
+            file_id
+        FROM
             t_file
-        SET
-            file_state = 'SCHEDULED',
-            queue_id = %(scheduled_queue_id)s
         WHERE
-            file_state = 'SUBMITTED'
-        AND
-            file_id = (
-                SELECT
-                    file_id
-                FROM
-                    t_file
-                WHERE
-                    queue_id = %(submitted_queue_id)s
-                ORDER BY
-                    queue_id, priority, file_id
-                LIMIT 1
-            )
-        RETURNING
-            file_id,
-            queue_id
+            queue_id = %(submitted_queue_id)s
+        ORDER BY
+            queue_id, priority, file_id
+        LIMIT 1
+        FOR UPDATE
     """
-    params = {
-        "scheduled_queue_id": scheduled_queue_id,
-        "submitted_queue_id": submitted_queue_id,
-    }
+    params = {"submitted_queue_id": submitted_queue_id}
     start_db = time.time()
     with dbconn.cursor() as cursor:
         cursor.execute(sql, params)
         rows = cursor.fetchall()
-        update_sec = time.time() - start_db
+        db_sec = time.time() - start_db
 
-        result = {}
+        file_id = None
         if len(rows) > 0:
-            result["file_id"] = rows[0][0]
-            result["queue_id"] = rows[0][1]
-        return result, update_sec
+            file_id = rows[0][0]
+        return file_id, db_sec
 
 
-def dec_queue_counter(dbconn, queue_id, delta):
+def change_file_state_and_queues(dbconn, file_id, curr_file_state, next_file_state):
     sql = """
-        UPDATE
-            t_queue
-        SET
-            nb_files = nb_files - %(delta)s
-        WHERE
-            queue_id = %(queue_id)s
+        CALL change_file_state_and_queues(
+            _file_id => %(file_id)s,
+            _curr_file_state => %(curr_file_state)s,
+            _next_file_state => %(next_file_state)s
+        )
     """
-    params = {"delta": delta, "queue_id": queue_id}
+    params = {
+        "file_id": file_id,
+        "curr_file_state": curr_file_state,
+        "next_file_state": next_file_state,
+    }
     start_db = time.time()
     with dbconn.cursor() as cursor:
         cursor.execute(sql, params)
-    update_sec = time.time() - start_db
-
-    if cursor.rowcount != 1:
-        raise Exception(
-            "Failed to decrement t_queue counter: "
-            f"queue_id={queue_id} "
-            f"delta={delta}"
-        )
-
-    return update_sec
+        db_sec = time.time() - start_db
+        return db_sec
 
 
 def schedule_next_file_in_queue(dbconn, submitted_queue):
@@ -310,34 +253,24 @@ def schedule_next_file_in_queue(dbconn, submitted_queue):
 
     with dbconn.cursor() as cursor:
         cursor.execute("START TRANSACTION")
-
     transaction_open = True
 
     try:
-        # Increment the SCHEDULED queue counter first in order to get the ID of
-        # the queue and to create the queue if necessary
-        scheduled_queue_id = inc_queue_counter(
-            dbconn=dbconn,
-            vo_name=submitted_queue["vo_name"],
-            source_se=submitted_queue["source_se"],
-            dest_se=submitted_queue["dest_se"],
-            activity=submitted_queue["activity"],
-            file_state="SCHEDULED",
-            delta=1,
+        db_sec = 0
+        file_id, next_file_db_sec = select_for_update_next_submitted_file(
+            dbconn, submitted_queue["queue_id"]
         )
+        db_sec += next_file_db_sec
 
-        update_result, db_sec = update_file_to_scheduled(
-            dbconn=dbconn,
-            submitted_queue_id=submitted_queue["queue_id"],
-            scheduled_queue_id=scheduled_queue_id,
-        )
-        log.debug(
-            f"Scheduled file: file_id={update_result['file_id']} queue_id={update_result['queue_id']} db_sec={db_sec}"
-        )
-
-        if len(update_result) > 0:
-            dec_queue_counter(dbconn, submitted_queue["queue_id"], 1)
+        if file_id:
+            change_db_sec = change_file_state_and_queues(
+                dbconn, file_id, "SUBMITTED", "SCHEDULED"
+            )
             scheduled = True
+            db_sec += change_db_sec
+            log.debug(
+                f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
+            )
 
     except Exception as e:
         log.error(
