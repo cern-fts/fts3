@@ -21,6 +21,7 @@
 #ifndef HEURISTICS_H
 #define HEURISTICS_H
 
+#include <cstdint>
 #include <string>
 
 /**
