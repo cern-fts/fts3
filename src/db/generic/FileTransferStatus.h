@@ -19,9 +19,8 @@
  */
 
 #pragma once
-#ifndef FILETRANSFERSTATUS_H_
-#define FILETRANSFERSTATUS_H_
 
+#include <cstdint>
 #include <string>
 
 /**
@@ -68,5 +67,3 @@ public:
     time_t      datetime;
     std::string reason;
 };
-
-#endif // FILETRANSFERSTATUS_H_

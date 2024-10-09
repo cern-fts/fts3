@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <set>
 #include "db/generic/Token.h"
 #include "server/common/BaseService.h"
 #include "server/services/heartbeat/HeartBeat.h"
