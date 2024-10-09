@@ -849,12 +849,14 @@ CREATE OR REPLACE FUNCTION schedule_next_file_in_queue(
 ) RETURNS bigint
 AS $$
 DECLARE
-    _file_row t_file%ROWTYPE;
+    _file_row_file_id bigint;
+    _file_row_file_state enum_file_state;
     _file_changed boolean := FALSE;
 BEGIN
     -- Returns the file_id of the scheduled file-transfer else NULL
 
-    SELECT * INTO _file_row
+    SELECT file_id, file_state
+    INTO _file_row_file_id, _file_row_file_state
     FROM
         t_file
     WHERE
@@ -869,13 +871,13 @@ BEGIN
             _submitted_queue_id;
     END IF;
 
-    IF _file_row.file_state != 'SUBMITTED' THEN
+    IF _file_row_file_state != 'SUBMITTED' THEN
         RAISE 'schedule_next_file_in_queue failed: Initial file state is not SUBMITTED: file_id=% file_state=%',
-            _file_row.file_id, _file_row.file_state;
+            _file_row_file_id, _file_row_file_state;
     END IF;
 
     SELECT change_file_state_and_queues(
-        _file_id => _file_row.file_id,
+        _file_id => _file_row_file_id,
         _curr_file_state => 'SUBMITTED',
         _next_file_state => 'SCHEDULED'
     ) INTO _file_changed;
@@ -883,7 +885,7 @@ BEGIN
     IF NOT _file_changed THEN
         RETURN NULL;
     ELSE
-        RETURN _file_row.file_id;
+        RETURN _file_row_file_id;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
