@@ -711,13 +711,28 @@ CREATE OR REPLACE FUNCTION change_file_state_and_queues(
 ) RETURNS boolean
 AS $$
 DECLARE
-    _file_row t_file%ROWTYPE;
+    _file_row_vo_name varchar;
+    _file_row_source_se varchar;
+    _file_row_dest_se varchar;
+    _file_row_activity varchar;
+    _file_row_file_state enum_file_state;
     _curr_queue_id bigint;
     _next_queue_id bigint;
 BEGIN
     -- Returns TRUE if the t_file row has been changed
 
-    SELECT * INTO _file_row
+    SELECT
+        vo_name,
+        source_se,
+        dest_se,
+        activity,
+        file_state
+    INTO
+        _file_row_vo_name,
+        _file_row_source_se,
+        _file_row_dest_se,
+        _file_row_activity,
+        _file_row_file_state
     FROM
         t_file
     WHERE
@@ -728,12 +743,12 @@ BEGIN
        RAISE 'change_file_state_and_queues failed: No such file: file_id=%', _file_id;
     END IF;
 
-    IF _file_row.file_state != _curr_file_state THEN
+    IF _file_row_file_state != _curr_file_state THEN
        RAISE 'change_file_state_and_queues failed: Unexpected current file-state: file_id=% expected=% actual=%',
-           _file_id, _curr_file_state, _file_row.file_state;
+           _file_id, _curr_file_state, _file_row_file_state;
     END IF;
 
-    IF _file_row.file_state = _next_file_state THEN
+    IF _file_row_file_state = _next_file_state THEN
         RETURN FALSE;
     END IF;
 
@@ -742,19 +757,19 @@ BEGIN
     FROM
         t_queue
     WHERE
-        vo_name = _file_row.vo_name
+        vo_name = _file_row_vo_name
     AND
-        source_se = _file_row.source_se
+        source_se = _file_row_source_se
     AND
-        dest_se = _file_row.dest_se
+        dest_se = _file_row_dest_se
     AND
-        activity = _file_row.activity
+        activity = _file_row_activity
     AND
-        file_state = _file_row.file_state;
+        file_state = _file_row_file_state;
 
     IF NOT FOUND THEN
        RAISE 'change_file_state_and_queues failed: No such current queue: vo_name=% source_se=% dest_se=% activity=% file_state=%',
-           _file_row.vo_name, _file_row.source_se, _file_row.dest_se, _file_row.activity, _file_row.file_state;
+           _file_row_vo_name, _file_row_source_se, _file_row_dest_se, _file_row_activity, _file_row_file_state;
     END IF;
 
     -- Does the next queue exist?
@@ -762,13 +777,13 @@ BEGIN
     FROM
         t_queue
     WHERE
-        vo_name = _file_row.vo_name
+        vo_name = _file_row_vo_name
     AND
-        source_se = _file_row.source_se
+        source_se = _file_row_source_se
     AND
-        dest_se = _file_row.dest_se
+        dest_se = _file_row_dest_se
     AND
-        activity = _file_row.activity
+        activity = _file_row_activity
     AND
         file_state = _next_file_state;
 
@@ -818,10 +833,10 @@ BEGIN
     END IF;
 
     SELECT inc_queue_counter(
-      _vo_name => _file_row.vo_name,
-      _source_se => _file_row.source_se,
-      _dest_se => _file_row.dest_se,
-      _activity => _file_row.activity,
+      _vo_name => _file_row_vo_name,
+      _source_se => _file_row_source_se,
+      _dest_se => _file_row_dest_se,
+      _activity => _file_row_activity,
       _file_state => _next_file_state,
       _delta => 1
     ) INTO _next_queue_id;
