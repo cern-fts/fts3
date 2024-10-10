@@ -955,3 +955,125 @@ BEGIN
     RETURN _next_hop_file_id ISNULL AND _archive_timeout > -1;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION file_transfer_finished(
+    _finished_file_id bigint,
+    _pid integer,
+    _filesize bigint,
+    _tx_duration double precision,
+    _throughput real,
+    _current_failures integer,
+    _finish_time timestamp without time zone,
+    _transferred bigint,
+    _file_metadata varchar
+) RETURNS varchar
+AS $$
+DECLARE
+    _file_changed boolean = FALSE;
+    _file_row_file_job_id varchar;
+    _file_row_file_state enum_file_state;
+    _job_row_job_type varchar;
+    _job_row_archive_timeout integer;
+    _is_archive_transfer boolean;
+    _next_file_state enum_file_state;
+BEGIN
+    -- Returns the next state of the file-transfer which will be either FINSIHED or ARCHIVING
+
+    SELECT
+        job_id,
+        file_state
+    INTO
+        _file_row_file_job_id,
+        _file_row_file_state
+    FROM
+        t_file
+    WHERE
+        file_id = _finished_file_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE 'file_transfer_finished failed: No file: file_id=%',
+            _finished_file_id;
+    END IF;
+
+    IF _file_row_file_state != 'ACTIVE' THEN
+        RAISE 'file_transfer_finished failed: Initial file state is not ACTIVE: file_id=% file_state=%',
+            _finished_file_id, _file_row_file_state;
+    END IF;
+
+    SELECT
+       job_state,
+       archive_timeout
+    INTO
+       _job_row_job_type,
+       _job_row_archive_timeout
+    FROM
+       t_job
+    WHERE
+       job_id = _file_row_file_job_id;
+
+    IF NOT FOUND THEN
+       RAISE 'file_transfer_finished failed: Failed to get job state and archive timeout: job_id=%',
+          _file_row_file_job_id;
+    END IF;
+
+    SELECT is_archiving_transfer(
+       _job_id => _file_row_file_job_id,
+       _job_type => _job_row_job_type,
+       _archive_timeout => _job_row_archive_timeout
+    ) INTO _is_archive_transfer;
+
+    IF _is_archive_transfer THEN
+        _next_file_state = 'ARCHIVING';
+    ELSE
+        _next_file_state = 'FINISHED';
+    END IF;
+
+    SELECT change_file_state_and_queues(
+        _file_id => _finished_file_id,
+        _curr_file_state => 'ACTIVE',
+        _next_file_state => _next_file_state
+    ) INTO _file_changed;
+
+    IF NOT _file_changed THEN
+       RAISE 'file_transfer_finished failed: Failed to change file state: file_id=%',
+           _finished_file_id;
+    END IF;
+
+    IF LENGTH(_file_metadata) > 0 THEN
+        UPDATE t_file SET
+            pid = _pid,
+            filesize = _filesize,
+            tx_duration = _tx_duration,
+            throughput = _throughput,
+            current_failures = _current_failures,
+            file_state = _next_file_state,
+            finish_time = _finish_time,
+            dest_surl_uuid = NULL,
+            transferred = _transferred,
+            file_metadata = _file_metadata
+        WHERE
+            file_id = _finished_file_id;
+    ELSE
+        UPDATE t_file SET
+            pid = _pid,
+            filesize = _filesize,
+            tx_duration = _tx_duration,
+            throughput = _throughput,
+            current_failures = _current_failures,
+            file_state = _next_file_state,
+            finish_time = _finish_time,
+            dest_surl_uuid = NULL,
+            transferred = _transferred
+        WHERE
+            file_id = _finished_file_id;
+    END IF;
+
+    IF NOT FOUND THEN
+        RAISE 'file_transfer_finished failed: Failed to update file: file_id=%',
+            _finished_file_id;
+    END IF;
+
+    RETURN _next_file_state;
+END;
+$$ LANGUAGE plpgsql;
