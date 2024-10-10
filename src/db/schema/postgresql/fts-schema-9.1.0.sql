@@ -914,3 +914,26 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_next_hop(
+    _job_id varchar
+) RETURNS bigint
+AS $$
+DECLARE
+    _file_id bigint := NULL;
+BEGIN
+    SELECT
+        file_id INTO _file_id
+    FROM
+        t_file
+    WHERE
+        job_id = _job_id
+    AND
+        file_state = 'NOT_USED'
+    ORDER BY file_id ASC
+    LIMIT 1;
+
+    RETURN _file_id;
+END;
+$$ LANGUAGE plpgsql;
