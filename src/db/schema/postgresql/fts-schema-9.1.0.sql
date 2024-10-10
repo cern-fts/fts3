@@ -937,3 +937,21 @@ BEGIN
     RETURN _file_id;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION is_archiving_transfer(
+    _job_id varchar,
+    _job_type varchar,
+    _archive_timeout integer
+) RETURNS boolean
+AS $$
+DECLARE
+    _next_hop_file_id bigint := NULL;
+BEGIN
+    IF _job_type = 'H' THEN -- 'H' = Multi-hop
+       SELECT get_next_hop(_job_id) INTO _next_hop_file_id;
+    END IF;
+
+    RETURN _next_hop_file_id ISNULL AND _archive_timeout > -1;
+END;
+$$ LANGUAGE plpgsql;
