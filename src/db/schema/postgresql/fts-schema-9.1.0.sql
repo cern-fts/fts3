@@ -721,6 +721,16 @@ DECLARE
 BEGIN
     -- Returns TRUE if the t_file row has been changed
 
+    IF _curr_file_state ISNULL THEN
+        RAISE 'change_file_state_and_queues failed: Current file-state input-parameter is NULL: file_id=%',
+            _file_id;
+    END IF;
+
+    IF _next_file_state ISNULL THEN
+        RAISE 'change_file_state_and_queues failed: Next file-state input-parameter is NULL: file_id=%',
+            _file_id;
+    END IF;
+
     SELECT
         vo_name,
         source_se,
