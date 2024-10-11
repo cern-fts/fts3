@@ -5458,67 +5458,29 @@ std::list<TransferFile> MySqlAPI::postgresGetScheduledFileTransfers(const int ma
 
     try
     {
-        const std::string enum_to_text_cast = sql.get_backend_name() == "mysql" ? "" : "::TEXT";
+        soci::session sql(*connectionPool);
+
+        // Start a transaction
+        sql.begin();
+
         const soci::rowset<TransferFile> rs = (sql.prepare <<
-            "SELECT\n"
-            "    f.file_state" << enum_to_text_cast << ",\n"
-            "    f.source_surl,\n"
-            "    f.dest_surl,\n"
-            "    f.job_id,\n"
-            "    j.vo_name,\n"
-            "    f.file_id,\n"
-            "    j.overwrite_flag,\n"
-            "    j.archive_timeout,\n"
-            "    j.dst_file_report,\n"
-            "    j.user_dn,\n"
-            "    j.cred_id,\n"
-            "    f.src_token_id,\n"
-            "    f.dst_token_id,\n"
-            "    f.checksum,\n"
-            "    j.checksum_method,\n"
-            "    j.source_space_token,\n"
-            "    j.space_token,\n"
-            "    j.copy_pin_lifetime,\n"
-            "    j.bring_online,\n"
-            "    f.file_metadata,\n"
-            "    f.archive_metadata,\n"
-            "    j.job_metadata,\n"
-            "    f.user_filesize,\n"
-            "    f.file_index,\n"
-            "    f.bringonline_token,\n"
-            "    f.scitag,\n"
-            "    f.activity,\n"
-            "    f.source_se,\n"
-            "    f.dest_se,\n"
-            "    f.selection_strategy,\n"
-            "    j.internal_job_params,\n"
-            "    j.job_type\n"
-            "FROM (\n"
-            "    SELECT\n"
-            "        *\n"
-            "    FROM\n"
-            "        t_file\n"
-            "    WHERE\n"
-            "        file_state = 'SCHEDULED'\n"
-            "    ORDER BY\n"
-            "        file_id\n"
-            "    FOR UPDATE SKIP LOCKED\n"
-            "    LIMIT :maxFiles\n"
-            ") AS f\n"
-            "INNER JOIN"
-            "    t_job j\n"
-            "ON\n"
-            "    f.job_id = j.job_id",
-            soci::use(maxFiles, "maxFiles")
-        );
+                "SELECT * from get_transfers_to_start(:maxFiles)",
+                soci::use(maxFiles));
+
+        // Commit the transaction
+        sql.commit();
+
+        // Return the result set as a vector of TransferFile objects
         return {rs.begin(), rs.end()};
     }
     catch (std::exception& e)
     {
+        sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
     }
     catch (...)
     {
+        sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
