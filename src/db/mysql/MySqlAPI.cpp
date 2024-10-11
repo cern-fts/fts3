@@ -1314,6 +1314,45 @@ static bool postgresChangeFileStateAndQueues(soci::session &sql,
 }
 
 
+static std::string postgresFileTransferFinished(soci::session &sql,
+                                         const std::uint64_t finishedFileId,
+                                         const int pid,
+                                         const uint64_t filesize,
+                                         const double txDuration,
+                                         const double throughput,
+                                         const int currentFailures,
+                                         const struct tm finishTime,
+                                         const uint64_t transferred,
+                                         const std::string &fileMetadata) {
+    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
+
+    std::string nextFileState;
+    sql <<
+        "SELECT file_transfer_finished(\n"
+        "   _finished_file_id => :finished_file_id,\n"
+        "   _pid => :pid,\n"
+        "   _filesize => :filesize,\n"
+        "   _tx_duration => :tx_duration,\n"
+        "   _throughput => :throughput,\n"
+        "   _current_failures => :current_failures,\n"
+        "   _finish_time => :finish_time,\n"
+        "   _transferred => :transferred,\n"
+        "   _file_metadata => :file_metadata\n"
+        ")",
+        soci::into(nextFileState),
+        soci::use(finishedFileId, "finished_file_id"),
+        soci::use(pid, "pid"),
+        soci::use(filesize, "filesize"),
+        soci::use(txDuration, "tx_duration"),
+        soci::use(throughput, "throughput"),
+        soci::use(currentFailures, "current_failures"),
+        soci::use(finishTime, "finish_time"),
+        soci::use(transferred, "transferred"),
+        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+    return nextFileState;
+}
+
+
 boost::tuple<bool, std::string>
 MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                                            std::string jobId, uint64_t fileId, int processId,
