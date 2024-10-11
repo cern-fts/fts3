@@ -1315,17 +1315,17 @@ static bool postgresChangeFileStateAndQueues(soci::session &sql,
 
 
 static std::string postgresFileTransferFinished(soci::session &sql,
-                                         const std::uint64_t finishedFileId,
-                                         const std::string &reason,
-                                         const std::string &transferHost,
-                                         const int pid,
-                                         const uint64_t filesize,
-                                         const double txDuration,
-                                         const double throughput,
-                                         const int currentFailures,
-                                         const struct tm &finishTime,
-                                         const uint64_t transferred,
-                                         const std::string &fileMetadata) {
+                                                const std::uint64_t finishedFileId,
+                                                const std::string &reason,
+                                                const std::string &transferHost,
+                                                const int pid,
+                                                const uint64_t filesize,
+                                                const double txDuration,
+                                                const double throughput,
+                                                const int currentFailures,
+                                                const struct tm &finishTime,
+                                                const uint64_t transferred,
+                                                const std::string &fileMetadata) {
     soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
 
     std::string nextFileState;
