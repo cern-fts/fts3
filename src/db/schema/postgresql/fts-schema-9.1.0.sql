@@ -1051,7 +1051,6 @@ BEGIN
             tx_duration = _tx_duration,
             throughput = _throughput,
             current_failures = _current_failures,
-            file_state = _next_file_state,
             finish_time = _finish_time,
             dest_surl_uuid = NULL,
             transferred = _transferred,
@@ -1065,7 +1064,6 @@ BEGIN
             tx_duration = _tx_duration,
             throughput = _throughput,
             current_failures = _current_failures,
-            file_state = _next_file_state,
             finish_time = _finish_time,
             dest_surl_uuid = NULL,
             transferred = _transferred
