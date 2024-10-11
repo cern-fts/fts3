@@ -1323,7 +1323,7 @@ static std::string postgresFileTransferFinished(soci::session &sql,
                                          const double txDuration,
                                          const double throughput,
                                          const int currentFailures,
-                                         const struct tm finishTime,
+                                         const struct tm &finishTime,
                                          const uint64_t transferred,
                                          const std::string &fileMetadata) {
     soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
