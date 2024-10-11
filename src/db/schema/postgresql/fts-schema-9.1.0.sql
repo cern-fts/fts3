@@ -958,6 +958,8 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION file_transfer_finished(
     _finished_file_id bigint,
+    _reason varchar,
+    _transfer_host varchar,
     _pid integer,
     _filesize bigint,
     _tx_duration double precision,
@@ -1042,6 +1044,8 @@ BEGIN
 
     IF LENGTH(_file_metadata) > 0 THEN
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,

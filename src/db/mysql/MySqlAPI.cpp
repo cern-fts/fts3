@@ -1316,6 +1316,8 @@ static bool postgresChangeFileStateAndQueues(soci::session &sql,
 
 static std::string postgresFileTransferFinished(soci::session &sql,
                                          const std::uint64_t finishedFileId,
+                                         const std::string &reason,
+                                         const std::string &transferHost,
                                          const int pid,
                                          const uint64_t filesize,
                                          const double txDuration,
@@ -1330,6 +1332,8 @@ static std::string postgresFileTransferFinished(soci::session &sql,
     sql <<
         "SELECT file_transfer_finished(\n"
         "   _finished_file_id => :finished_file_id,\n"
+        "   _reason => :reason,\n"
+        "   _transfer_host => :transfer_host,\n"
         "   _pid => :pid,\n"
         "   _filesize => :filesize,\n"
         "   _tx_duration => :tx_duration,\n"
@@ -1341,6 +1345,8 @@ static std::string postgresFileTransferFinished(soci::session &sql,
         ")",
         soci::into(nextFileState),
         soci::use(finishedFileId, "finished_file_id"),
+        soci::use(reason, "reason"),
+        soci::use(transferHost, "transfer_host"),
         soci::use(pid, "pid"),
         soci::use(filesize, "filesize"),
         soci::use(txDuration, "tx_duration"),
@@ -1536,6 +1542,8 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                 newFileState = postgresFileTransferFinished(
                     sql,
                     fileId,
+                    errorReason,
+                    hostname,
                     processId,
                     filesize,
                     duration,
