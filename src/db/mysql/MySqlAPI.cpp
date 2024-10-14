@@ -192,13 +192,15 @@ void MySqlAPI::init(const std::string& dbtype, const std::string& username, cons
         for (size_t i = 0; i < poolSize; ++i)
         {
             soci::session& sql = (*connectionPool).at(i);
-            sql.open(dbtype, connStr);
 
             if (dbtype == "mysql") {
+                sql.open(soci::mysql, connStr);  // Must use soci::mysql so the linker will look for it
                 (*connectionPool).at(i) << "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;";
 
                 soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
                 mysql_options(static_cast<MYSQL*>(be->conn_), MYSQL_OPT_RECONNECT, &reconnect);
+            } else {
+                sql.open(dbtype, connStr);
             }
         }
 
