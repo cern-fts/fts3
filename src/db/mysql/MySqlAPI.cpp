@@ -1595,6 +1595,20 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                     filesize,
                     fileMetadata
                 );
+            } else if (newFileState == "ACTIVE") {
+                postgresFileTransferActive(
+                     sql,
+                     fileId,
+                     errorReason,
+                     hostname,
+                     processId,
+                     filesize,
+                     duration,
+                     throughput,
+                     static_cast<int>(retry),
+                     tTime,
+                     fileMetadata
+                );
             } else {
                 // The actual new state might be ARCHIVING
                 const bool newFileStateShouldBeArchiving = newFileState == "FINISHED" &&
