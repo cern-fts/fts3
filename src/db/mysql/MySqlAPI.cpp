@@ -1374,7 +1374,6 @@ static void postgresFileTransferReady(soci::session &sql,
                                       const std::string &fileMetadata) {
     soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
 
-    std::string nextFileState;
     sql <<
         "CALL file_transfer_ready(\n"
         "   _ready_file_id => :ready_file_id,\n"
