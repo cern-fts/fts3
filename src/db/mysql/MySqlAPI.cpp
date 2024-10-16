@@ -1413,7 +1413,6 @@ static void postgresFileTransferActive(soci::session &sql,
                                        const std::string &fileMetadata) {
     soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
 
-    std::string nextFileState;
     sql <<
         "CALL file_transfer_active(\n"
         "   _active_file_id => :active_file_id,\n"
