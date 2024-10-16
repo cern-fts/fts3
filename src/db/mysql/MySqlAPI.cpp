@@ -1635,6 +1635,20 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                     filesize,
                     fileMetadata
                 );
+            } else if (newFileState == "READY") {
+                postgresFileTransferReady(
+                     sql,
+                     fileId,
+                     errorReason,
+                     hostname,
+                     processId,
+                     filesize,
+                     duration,
+                     throughput,
+                     static_cast<int>(retry),
+                     tTime,
+                     fileMetadata
+                );
             } else if (newFileState == "ACTIVE") {
                 postgresFileTransferActive(
                      sql,
