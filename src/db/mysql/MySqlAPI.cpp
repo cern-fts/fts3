@@ -1361,6 +1361,46 @@ static std::string postgresFileTransferFinished(soci::session &sql,
 }
 
 
+static void postgresFileTransferReady(soci::session &sql,
+                                      const std::uint64_t readyFileId,
+                                      const std::string &reason,
+                                      const std::string &transferHost,
+                                      const int pid,
+                                      const uint64_t filesize,
+                                      const double txDuration,
+                                      const double throughput,
+                                      const int currentFailures,
+                                      const struct tm &startTime,
+                                      const std::string &fileMetadata) {
+    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
+
+    std::string nextFileState;
+    sql <<
+        "CALL file_transfer_ready(\n"
+        "   _ready_file_id => :ready_file_id,\n"
+        "   _reason => :reason,\n"
+        "   _transfer_host => :transfer_host,\n"
+        "   _pid => :pid,\n"
+        "   _filesize => :filesize,\n"
+        "   _tx_duration => :tx_duration,\n"
+        "   _throughput => :throughput,\n"
+        "   _current_failures => :current_failures,\n"
+        "   _start_time => :start_time,\n"
+        "   _file_metadata => :file_metadata\n"
+        ")",
+        soci::use(readyFileId, "ready_file_id"),
+        soci::use(reason, "reason"),
+        soci::use(transferHost, "transfer_host"),
+        soci::use(pid, "pid"),
+        soci::use(filesize, "filesize"),
+        soci::use(txDuration, "tx_duration"),
+        soci::use(throughput, "throughput"),
+        soci::use(currentFailures, "current_failures"),
+        soci::use(startTime, "start_time"),
+        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+}
+
+
 static void postgresFileTransferActive(soci::session &sql,
                                        const std::uint64_t activeFileId,
                                        const std::string &reason,
