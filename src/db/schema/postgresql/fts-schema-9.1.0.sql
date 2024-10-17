@@ -1253,7 +1253,7 @@ BEGIN
 
         IF NOT _file_changed THEN
             RAISE 'file_transfer_ready failed: Failed to change file state: file_id=%',
-            _ready_file_id;
+                _ready_file_id;
         END IF;
     END IF;
 
