@@ -1239,20 +1239,22 @@ BEGIN
             _ready_file_id;
     END IF;
 
-    IF _file_row_file_state != 'SELECTED' THEN
-        RAISE 'file_transfer_ready failed: Initial file state is not SELECTED: file_id=% file_state=%',
+    IF _file_row_file_state NOT IN ('SELECTED', 'READY') THEN
+        RAISE 'file_transfer_ready failed: Initial file state is neither SELECTED nor READY: file_id=% file_state=%',
             _ready_file_id, _file_row_file_state;
     END IF;
 
-    SELECT change_file_state_and_queues(
-        _file_id => _ready_file_id,
-        _curr_file_state => 'SELECTED',
-        _next_file_state => 'READY'
-    ) INTO _file_changed;
+    IF _file_row_file_state = 'SELECTED' THEN
+        SELECT change_file_state_and_queues(
+            _file_id => _ready_file_id,
+            _curr_file_state => 'SELECTED',
+            _next_file_state => 'READY'
+        ) INTO _file_changed;
 
-    IF NOT _file_changed THEN
-       RAISE 'file_transfer_ready failed: Failed to change file state: file_id=%',
-           _ready_file_id;
+        IF NOT _file_changed THEN
+            RAISE 'file_transfer_ready failed: Failed to change file state: file_id=%',
+            _ready_file_id;
+        END IF;
     END IF;
 
     IF LENGTH(_file_metadata) > 0 THEN
