@@ -1333,8 +1333,8 @@ BEGIN
     ) INTO _file_changed;
 
     IF NOT _file_changed THEN
-       RAISE 'file_transfer_active failed: Failed to change file state: file_id=%',
-           _active_file_id;
+        RAISE 'file_transfer_active failed: Failed to change file state: file_id=%',
+            _active_file_id;
     END IF;
 
     IF LENGTH(_file_metadata) > 0 THEN
