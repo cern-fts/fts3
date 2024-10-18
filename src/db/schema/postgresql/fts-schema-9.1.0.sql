@@ -953,7 +953,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION file_transfer_finished(
-    _finished_file_id bigint,
+    _file_id bigint,
     _reason varchar,
     _transfer_host varchar,
     _pid integer,
@@ -986,17 +986,17 @@ BEGIN
     FROM
         t_file
     WHERE
-        file_id = _finished_file_id
+        file_id = _file_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_finished failed: No file: file_id=%',
-            _finished_file_id;
+            _file_id;
     END IF;
 
     IF _file_row_file_state != 'ACTIVE' THEN
         RAISE 'file_transfer_finished failed: Initial file state is not ACTIVE: file_id=% file_state=%',
-            _finished_file_id, _file_row_file_state;
+            _file_id, _file_row_file_state;
     END IF;
 
     SELECT
@@ -1028,14 +1028,14 @@ BEGIN
     END IF;
 
     SELECT change_file_state_and_queues(
-        _file_id => _finished_file_id,
+        _file_id => _file_id,
         _curr_file_state => 'ACTIVE',
         _next_file_state => _next_file_state
     ) INTO _file_changed;
 
     IF NOT _file_changed THEN
         RAISE 'file_transfer_finished failed: Failed to change file state: file_id=%',
-            _finished_file_id;
+            _file_id;
     END IF;
 
     IF LENGTH(_file_metadata) > 0 THEN
@@ -1052,7 +1052,7 @@ BEGIN
             transferred = _transferred,
             file_metadata = _file_metadata
         WHERE
-            file_id = _finished_file_id;
+            file_id = _file_id;
     ELSE
         UPDATE t_file SET
             pid = _pid,
@@ -1064,12 +1064,12 @@ BEGIN
             dest_surl_uuid = NULL,
             transferred = _transferred
         WHERE
-            file_id = _finished_file_id;
+            file_id = _file_id;
     END IF;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_finished failed: Failed to update file: file_id=%',
-            _finished_file_id;
+            _file_id;
     END IF;
 
     RETURN _next_file_state;
