@@ -1608,7 +1608,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE file_transfer_staging_finished(
-    _staging_finished_file_id bigint,
+    _file_id bigint,
     _reason varchar,
     _transfer_host varchar,
     _pid integer,
@@ -1631,17 +1631,17 @@ BEGIN
     FROM
         t_file
     WHERE
-        file_id = _staging_finished_file_id
+        file_id = _file_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_staging_finished failed: No file: file_id=%',
-            _staging_finished_file_id;
+            _file_id;
     END IF;
 
     IF _file_row_file_state != 'STAGING' THEN
         RAISE 'file_transfer_staging_finished failed: Current file state is not STAGING: file_id=% file_state=%',
-            _failed_file_id, _file_row_file_state;
+            _file_id, _file_row_file_state;
     END IF;
 
     IF LENGTH(_file_metadata) > 0 THEN
@@ -1656,7 +1656,7 @@ BEGIN
             staging_finished = _staging_finished,
             file_metadata = _file_metadata
         WHERE
-            file_id = _staging_finished_file_id;
+            file_id = _file_id;
     ELSE
         UPDATE t_file SET
             pid = _pid,
@@ -1666,7 +1666,7 @@ BEGIN
             current_failures = _current_failures,
             staging_finished = _staging_finished
         WHERE
-            file_id = _staging_finished_file_id;
+            file_id = _file_id;
     END IF;
 
     IF NOT FOUND THEN

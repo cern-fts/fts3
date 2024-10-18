@@ -1558,7 +1558,7 @@ static void postgresFileTransferStagingStart(soci::session &sql,
 
 
 static void postgresFileTransferStagingFinished(soci::session &sql,
-                                                const std::uint64_t stagingFinishedFileId,
+                                                const std::uint64_t fileId,
                                                 const std::string &reason,
                                                 const std::string &transferHost,
                                                 const int pid,
@@ -1572,7 +1572,7 @@ static void postgresFileTransferStagingFinished(soci::session &sql,
 
     sql <<
         "CALL file_transfer_staging_finished(\n"
-        "   _staging_finished_file_id => :staging_finished_file_id,\n"
+        "   _file_id => :file_id,\n"
         "   _reason => :reason,\n"
         "   _transfer_host => :transfer_host,\n"
         "   _pid => :pid,\n"
@@ -1583,7 +1583,7 @@ static void postgresFileTransferStagingFinished(soci::session &sql,
         "   _staging_finished => :staging_finished,\n"
         "   _file_metadata => :file_metadata\n"
         ")",
-        soci::use(stagingFinishedFileId, "staging_finished_file_id"),
+        soci::use(fileId, "file_id"),
         soci::use(reason, "reason"),
         soci::use(transferHost, "transfer_host"),
         soci::use(pid, "pid"),
