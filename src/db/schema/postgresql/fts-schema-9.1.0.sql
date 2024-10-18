@@ -1533,3 +1533,80 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE file_transfer_staging_start(
+    _staging_start_file_id bigint,
+    _reason varchar,
+    _transfer_host varchar,
+    _pid integer,
+    _filesize bigint,
+    _tx_duration double precision,
+    _throughput real,
+    _current_failures integer,
+    _staging_start timestamp without time zone,
+    _file_metadata varchar
+)
+AS $$
+DECLARE
+    _file_changed boolean = FALSE;
+    _file_row_file_state enum_file_state;
+BEGIN
+    SELECT
+        file_state
+    INTO
+        _file_row_file_state
+    FROM
+        t_file
+    WHERE
+        file_id = _staging_start_file_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE 'file_transfer_staging_start failed: No file: file_id=%',
+            _staging_start_file_id;
+    END IF;
+
+    IF _file_row_file_state != 'STAGING' THEN
+        SELECT change_file_state_and_queues(
+            _file_id => _staging_start_file_id,
+            _curr_file_state => _file_row_file_state,
+            _next_file_state => 'STAGING'
+        ) INTO _file_changed;
+
+        IF NOT _file_changed THEN
+            RAISE 'file_transfer_staging_start failed: Failed to change file state: file_id=%',
+                _staging_start_file_id;
+        END IF;
+    END IF;
+
+    IF LENGTH(_file_metadata) > 0 THEN
+        UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
+            pid = _pid,
+            filesize = _filesize,
+            tx_duration = _tx_duration,
+            throughput = _throughput,
+            current_failures = _current_failures,
+            staging_start = _staging_start,
+            file_metadata = _file_metadata
+        WHERE
+            file_id = _staging_start_file_id;
+    ELSE
+        UPDATE t_file SET
+            pid = _pid,
+            filesize = _filesize,
+            tx_duration = _tx_duration,
+            throughput = _throughput,
+            current_failures = _current_failures,
+            staging_start = _staging_start
+        WHERE
+            file_id = _staging_start_file_id;
+    END IF;
+
+    IF NOT FOUND THEN
+        RAISE 'file_transfer_staging_start failed: Failed to update file: file_id=%',
+            _staging_start_file_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
