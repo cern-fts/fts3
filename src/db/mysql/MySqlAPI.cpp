@@ -1519,7 +1519,7 @@ static void postgresFileTransferCanceled(soci::session &sql,
 
 
 static void postgresFileTransferStagingStart(soci::session &sql,
-                                             const std::uint64_t canceledFileId,
+                                             const std::uint64_t stagingStartFileId,
                                              const std::string &reason,
                                              const std::string &transferHost,
                                              const int pid,
@@ -1533,7 +1533,7 @@ static void postgresFileTransferStagingStart(soci::session &sql,
 
     sql <<
         "CALL file_transfer_staging_start(\n"
-        "   _staging_start_file_id => :canceled_file_id,\n"
+        "   _staging_start_file_id => :staging_start_file_id,\n"
         "   _reason => :reason,\n"
         "   _transfer_host => :transfer_host,\n"
         "   _pid => :pid,\n"
@@ -1544,7 +1544,7 @@ static void postgresFileTransferStagingStart(soci::session &sql,
         "   _staging_start => :staging_start,\n"
         "   _file_metadata => :file_metadata\n"
         ")",
-        soci::use(canceledFileId, "canceled_file_id"),
+        soci::use(stagingStartFileId, "staging_start_file_id"),
         soci::use(reason, "reason"),
         soci::use(transferHost, "transfer_host"),
         soci::use(pid, "pid"),
