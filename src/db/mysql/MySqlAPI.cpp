@@ -1328,8 +1328,6 @@ static std::string postgresFileTransferFinished(soci::session &sql,
                                                 const struct tm &finishTime,
                                                 const uint64_t transferred,
                                                 const std::string &fileMetadata) {
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
-
     std::string nextFileState;
     sql <<
         "SELECT file_transfer_finished(\n"
@@ -1356,7 +1354,7 @@ static std::string postgresFileTransferFinished(soci::session &sql,
         soci::use(currentFailures, "current_failures"),
         soci::use(finishTime, "finish_time"),
         soci::use(transferred, "transferred"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
     return nextFileState;
 }
 
@@ -1372,8 +1370,6 @@ static void postgresFileTransferReady(soci::session &sql,
                                       const int currentFailures,
                                       const struct tm &startTime,
                                       const std::string &fileMetadata) {
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
-
     sql <<
         "CALL file_transfer_ready(\n"
         "   _file_id => :file_id,\n"
@@ -1396,7 +1392,7 @@ static void postgresFileTransferReady(soci::session &sql,
         soci::use(throughput, "throughput"),
         soci::use(currentFailures, "current_failures"),
         soci::use(startTime, "start_time"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
 }
 
 
@@ -1411,8 +1407,6 @@ static void postgresFileTransferActive(soci::session &sql,
                                        const int currentFailures,
                                        const struct tm &startTime,
                                        const std::string &fileMetadata) {
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
-
     sql <<
         "CALL file_transfer_active(\n"
         "   _file_id => :file_id,\n"
@@ -1435,7 +1429,7 @@ static void postgresFileTransferActive(soci::session &sql,
         soci::use(throughput, "throughput"),
         soci::use(currentFailures, "current_failures"),
         soci::use(startTime, "start_time"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
 }
 
 
@@ -1450,8 +1444,6 @@ static void postgresFileTransferFailed(soci::session &sql,
                                        const int currentFailures,
                                        const struct tm &finishTime,
                                        const std::string &fileMetadata) {
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
-
     sql <<
         "CALL file_transfer_failed(\n"
         "   _file_id => :file_id,\n"
@@ -1474,7 +1466,7 @@ static void postgresFileTransferFailed(soci::session &sql,
         soci::use(throughput, "throughput"),
         soci::use(currentFailures, "current_failures"),
         soci::use(finishTime, "finish_time"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
 }
 
 
@@ -1489,8 +1481,6 @@ static void postgresFileTransferCanceled(soci::session &sql,
                                          const int currentFailures,
                                          const struct tm &finishTime,
                                          const std::string &fileMetadata) {
-
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
 
     sql <<
         "CALL file_transfer_canceled(\n"
@@ -1514,7 +1504,7 @@ static void postgresFileTransferCanceled(soci::session &sql,
         soci::use(throughput, "throughput"),
         soci::use(currentFailures, "current_failures"),
         soci::use(finishTime, "finish_time"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
 }
 
 
@@ -1529,8 +1519,6 @@ static void postgresFileTransferStagingStart(soci::session &sql,
                                              const int currentFailures,
                                              const struct tm &stagingStart,
                                              const std::string &fileMetadata) {
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
-
     sql <<
         "CALL file_transfer_staging_start(\n"
         "   _file_id => :file_id,\n"
@@ -1553,7 +1541,7 @@ static void postgresFileTransferStagingStart(soci::session &sql,
         soci::use(throughput, "throughput"),
         soci::use(currentFailures, "current_failures"),
         soci::use(stagingStart, "staging_start"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
 }
 
 
@@ -1568,8 +1556,6 @@ static void postgresFileTransferStagingFinished(soci::session &sql,
                                                 const int currentFailures,
                                                 const struct tm &stagingFinished,
                                                 const std::string &fileMetadata) {
-    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
-
     sql <<
         "CALL file_transfer_staging_finished(\n"
         "   _file_id => :file_id,\n"
@@ -1592,7 +1578,7 @@ static void postgresFileTransferStagingFinished(soci::session &sql,
         soci::use(throughput, "throughput"),
         soci::use(currentFailures, "current_failures"),
         soci::use(stagingFinished, "staging_finished"),
-        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+        soci::use(fileMetadata, "file_metadata");
 }
 
 
