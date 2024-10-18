@@ -1450,7 +1450,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE file_transfer_canceled(
-    _canceled_file_id bigint,
+    _file_id bigint,
     _reason varchar,
     _transfer_host varchar,
     _pid integer,
@@ -1473,24 +1473,24 @@ BEGIN
     FROM
         t_file
     WHERE
-        file_id = _canceled_file_id
+        file_id = _file_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_canceled failed: No file: file_id=%',
-            _canceled_file_id;
+            _file_id;
     END IF;
 
     IF _file_row_file_state != 'CANCELED' THEN
         SELECT change_file_state_and_queues(
-            _file_id => _canceled_file_id,
+            _file_id => _file_id,
             _curr_file_state => _file_row_file_state,
             _next_file_state => 'CANCELED'
         ) INTO _file_changed;
 
         IF NOT _file_changed THEN
             RAISE 'file_transfer_canceled failed: Failed to change file state: file_id=%',
-                _canceled_file_id;
+                _file_id;
         END IF;
     END IF;
 
@@ -1508,7 +1508,7 @@ BEGIN
             transferred = 0,
             file_metadata = _file_metadata
         WHERE
-            file_id = _canceled_file_id;
+            file_id = _file_id;
     ELSE
         UPDATE t_file SET
             pid = _pid,
@@ -1520,12 +1520,12 @@ BEGIN
             dest_surl_uuid = NULL,
             transferred = 0
         WHERE
-            file_id = _canceled_file_id;
+            file_id = _file_id;
     END IF;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_canceled failed: Failed to update file: file_id=%',
-            _canceled_file_id;
+            _file_id;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
