@@ -1362,7 +1362,7 @@ static std::string postgresFileTransferFinished(soci::session &sql,
 
 
 static void postgresFileTransferReady(soci::session &sql,
-                                      const std::uint64_t readyFileId,
+                                      const std::uint64_t fileId,
                                       const std::string &reason,
                                       const std::string &transferHost,
                                       const int pid,
@@ -1376,7 +1376,7 @@ static void postgresFileTransferReady(soci::session &sql,
 
     sql <<
         "CALL file_transfer_ready(\n"
-        "   _ready_file_id => :ready_file_id,\n"
+        "   _file_id => :file_id,\n"
         "   _reason => :reason,\n"
         "   _transfer_host => :transfer_host,\n"
         "   _pid => :pid,\n"
@@ -1387,7 +1387,7 @@ static void postgresFileTransferReady(soci::session &sql,
         "   _start_time => :start_time,\n"
         "   _file_metadata => :file_metadata\n"
         ")",
-        soci::use(readyFileId, "ready_file_id"),
+        soci::use(fileId, "file_id"),
         soci::use(reason, "reason"),
         soci::use(transferHost, "transfer_host"),
         soci::use(pid, "pid"),
