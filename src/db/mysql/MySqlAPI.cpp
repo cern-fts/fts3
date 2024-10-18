@@ -1846,103 +1846,40 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                      tTime,
                      fileMetadata
                 );
-            } else if (newFileState == "STAGING" && !isStaging) {
-                postgresFileTransferStagingStart(
-                     sql,
-                     fileId,
-                     errorReason,
-                     hostname,
-                     processId,
-                     filesize,
-                     duration,
-                     throughput,
-                     static_cast<int>(retry),
-                     tTime,
-                     fileMetadata
-                );
+            } else if (newFileState == "STAGING") {
+                if (isStaging) {
+                    postgresFileTransferStagingFinished(
+                        sql,
+                        fileId,
+                        errorReason,
+                        hostname,
+                        processId,
+                        filesize,
+                        duration,
+                        throughput,
+                        static_cast<int>(retry),
+                        tTime,
+                        fileMetadata
+                    );
+                } else {
+                    postgresFileTransferStagingStart(
+                        sql,
+                        fileId,
+                        errorReason,
+                        hostname,
+                        processId,
+                        filesize,
+                        duration,
+                        throughput,
+                        static_cast<int>(retry),
+                        tTime,
+                        fileMetadata
+                    );
+                }
             } else {
-                // The actual new state might be ARCHIVING
-                const bool newFileStateShouldBeArchiving = newFileState == "FINISHED" &&
-                                                           isArchivingTransfer(sql, jobId, jobType, archiveTimeout);
-
-                // A separate variable for the actual new state so we can remember how we got there
-                const std::string actualNewFileState = newFileStateShouldBeArchiving ? "ARCHIVING" : newFileState;
-
-                const bool fileChanged = postgresChangeFileStateAndQueues(sql, fileId, storedState, actualNewFileState);
-                if (!fileChanged) {
-                    sql.rollback();
-                    return boost::tuple<bool, std::string>(false, storedState);
-                }
-
-                // Update the other t_file columns depending on newFileState
-                soci::statement stmt(sql);
-                std::ostringstream query;
-
-                query << "UPDATE t_file SET reason = :reason";
-                stmt.exchange(soci::use(errorReason, "reason"));
-
-                if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
-                {
-                    query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
-                    stmt.exchange(soci::use(tTime, "time1"));
-                }
-                if (newFileState == "ACTIVE" || newFileState == "READY")
-                {
-                    query << ", START_TIME = :time1";
-                    stmt.exchange(soci::use(tTime, "time1"));
-                }
-
-                query << ", transfer_Host = :hostname";
-                stmt.exchange(soci::use(hostname, "hostname"));
-
-                if (newFileState == "FINISHED")
-                {
-                    query << ", transferred = :filesize";
-                    stmt.exchange(soci::use(filesize, "filesize"));
-                }
-
-                if (newFileState == "FAILED" || newFileState == "CANCELED")
-                {
-                    query << ", transferred = :transferred";
-                    stmt.exchange(soci::use(0, "transferred"));
-                }
-
-                if (newFileState == "STAGING")
-                {
-                    if (isStaging)
-                    {
-                        query << ", STAGING_FINISHED = :time1";
-                        stmt.exchange(soci::use(tTime, "time1"));
-                    }
-                    else
-                    {
-                        query << ", STAGING_START = :time1";
-                        stmt.exchange(soci::use(tTime, "time1"));
-                    }
-                }
-
-                if (!fileMetadata.empty()) {
-                    query << ", file_metadata = :file_metadata";
-                    stmt.exchange(soci::use(fileMetadata, "file_metadata"));
-                }
-
-                // Finished with other colums so new state can now be the "actual" new state
-                newFileState = actualNewFileState;
-
-                query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-                      "WHERE file_id = :fileId AND file_state = :newState";
-                stmt.exchange(soci::use(processId, "pid"));
-                stmt.exchange(soci::use(filesize, "filesize"));
-                stmt.exchange(soci::use(duration, "duration"));
-                stmt.exchange(soci::use(throughput, "throughput"));
-                stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
-                stmt.exchange(soci::use(fileId, "fileId"));
-                stmt.exchange(soci::use(newFileState, "newState"));
-                stmt.alloc();
-                stmt.prepare(query.str());
-                stmt.define_and_bind();
-
-                stmt.execute(true);
+                std::ostringstream msg;
+                msg << "Unknown new file state: newFileState=" << newFileState;
+                throw std::runtime_error(msg.str());
             }
         } // Else postgresql
 
