@@ -1366,7 +1366,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE file_transfer_failed(
-    _failed_file_id bigint,
+    _file_id bigint,
     _reason varchar,
     _transfer_host varchar,
     _pid integer,
@@ -1389,28 +1389,28 @@ BEGIN
     FROM
         t_file
     WHERE
-        file_id = _failed_file_id
+        file_id = _file_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_failed failed: No file: file_id=%',
-            _failed_file_id;
+            _file_id;
     END IF;
 
     IF _file_row_file_state NOT IN ('READY', 'ACTIVE') THEN
         RAISE 'file_transfer_failed failed: Initial file state is not READY or ACTIVE: file_id=% file_state=%',
-            _failed_file_id, _file_row_file_state;
+            _file_id, _file_row_file_state;
     END IF;
 
     SELECT change_file_state_and_queues(
-        _file_id => _failed_file_id,
+        _file_id => _file_id,
         _curr_file_state => _file_row_file_state,
         _next_file_state => 'FAILED'
     ) INTO _file_changed;
 
     IF NOT _file_changed THEN
         RAISE 'file_transfer_failed failed: Failed to change file state: file_id=%',
-            _failed_file_id;
+            _file_id;
     END IF;
 
     IF LENGTH(_file_metadata) > 0 THEN
@@ -1427,7 +1427,7 @@ BEGIN
             transferred = 0,
             file_metadata = _file_metadata
         WHERE
-            file_id = _failed_file_id;
+            file_id = _file_id;
     ELSE
         UPDATE t_file SET
             pid = _pid,
@@ -1439,12 +1439,12 @@ BEGIN
             dest_surl_uuid = NULL,
             transferred = 0
         WHERE
-            file_id = _failed_file_id;
+            file_id = _file_id;
     END IF;
 
     IF NOT FOUND THEN
         RAISE 'file_transfer_failed failed: Failed to update file: file_id=%',
-            _failed_file_id;
+            _file_id;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
