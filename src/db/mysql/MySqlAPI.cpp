@@ -1557,6 +1557,45 @@ static void postgresFileTransferStagingStart(soci::session &sql,
 }
 
 
+static void postgresFileTransferStagingFinished(soci::session &sql,
+                                                const std::uint64_t stagingFinishedFileId,
+                                                const std::string &reason,
+                                                const std::string &transferHost,
+                                                const int pid,
+                                                const uint64_t filesize,
+                                                const double txDuration,
+                                                const double throughput,
+                                                const int currentFailures,
+                                                const struct tm &stagingFinished,
+                                                const std::string &fileMetadata) {
+    soci::indicator fileMetadataInd = fileMetadata.empty() ? soci::i_null : soci::i_ok;
+
+    sql <<
+        "CALL file_transfer_staging_finished(\n"
+        "   _staging_finished_file_id => :staging_finished_file_id,\n"
+        "   _reason => :reason,\n"
+        "   _transfer_host => :transfer_host,\n"
+        "   _pid => :pid,\n"
+        "   _filesize => :filesize,\n"
+        "   _tx_duration => :tx_duration,\n"
+        "   _throughput => :throughput,\n"
+        "   _current_failures => :current_failures,\n"
+        "   _staging_finished => :staging_finished,\n"
+        "   _file_metadata => :file_metadata\n"
+        ")",
+        soci::use(stagingFinishedFileId, "staging_finished_file_id"),
+        soci::use(reason, "reason"),
+        soci::use(transferHost, "transfer_host"),
+        soci::use(pid, "pid"),
+        soci::use(filesize, "filesize"),
+        soci::use(txDuration, "tx_duration"),
+        soci::use(throughput, "throughput"),
+        soci::use(currentFailures, "current_failures"),
+        soci::use(stagingFinished, "staging_finished"),
+        soci::use(fileMetadata, fileMetadataInd, "file_metadata");
+}
+
+
 boost::tuple<bool, std::string>
 MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                                            std::string jobId, uint64_t fileId, int processId,
