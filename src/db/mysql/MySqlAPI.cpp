@@ -1596,6 +1596,135 @@ static void postgresFileTransferStagingFinished(soci::session &sql,
 }
 
 
+static std::string postgresUpdateToNewFileState(
+    soci::session &sql,
+    const std::string newFileState,
+    const bool isStaging,
+    const std::uint64_t fileId,
+    const std::string &reason,
+    const std::string &transferHost,
+    const int pid,
+    const uint64_t filesize,
+    const double txDuration,
+    const double throughput,
+    const int currentFailures,
+    const struct tm &tTime,
+    const std::string &fileMetadata
+) {
+    // New file state might become ARCHIVING
+    std::string adjustedNewFileState = newFileState;
+
+    if (newFileState == "FINISHED") {
+        adjustedNewFileState = postgresFileTransferFinished(
+            sql,
+            fileId,
+            reason,
+            transferHost,
+            pid,
+            filesize,
+            txDuration,
+            throughput,
+            currentFailures,
+            tTime,
+            filesize,
+            fileMetadata
+        );
+    } else if (newFileState == "READY") {
+        postgresFileTransferReady(
+            sql,
+            fileId,
+            reason,
+            transferHost,
+            pid,
+            filesize,
+            txDuration,
+            throughput,
+            currentFailures,
+            tTime,
+            fileMetadata
+       );
+    } else if (newFileState == "ACTIVE") {
+        postgresFileTransferActive(
+            sql,
+            fileId,
+            reason,
+            transferHost,
+            pid,
+            filesize,
+            txDuration,
+            throughput,
+            currentFailures,
+            tTime,
+            fileMetadata
+        );
+    } else if (newFileState == "FAILED") {
+        postgresFileTransferFailed(
+            sql,
+            fileId,
+            reason,
+            transferHost,
+            pid,
+            filesize,
+            txDuration,
+            throughput,
+            currentFailures,
+            tTime,
+            fileMetadata
+        );
+    } else if (newFileState == "CANCELED") {
+        postgresFileTransferCanceled(
+            sql,
+            fileId,
+            reason,
+            transferHost,
+            pid,
+            filesize,
+            txDuration,
+            throughput,
+            currentFailures,
+            tTime,
+            fileMetadata
+        );
+    } else if (newFileState == "STAGING") {
+        if (isStaging) {
+            postgresFileTransferStagingFinished(
+                sql,
+                fileId,
+                reason,
+                transferHost,
+                pid,
+                filesize,
+                txDuration,
+                throughput,
+                currentFailures,
+                tTime,
+                fileMetadata
+            );
+        } else {
+            postgresFileTransferStagingStart(
+                sql,
+                fileId,
+                reason,
+                transferHost,
+                pid,
+                filesize,
+                txDuration,
+                throughput,
+                currentFailures,
+                tTime,
+                fileMetadata
+            );
+        }
+    } else {
+        std::ostringstream msg;
+        msg << "postgresUpdateToNewFileState: Failed: Unknown new file state: newFileState=" << newFileState;
+        throw std::runtime_error(msg.str());
+    }
+
+    return adjustedNewFileState;
+}
+
+
 boost::tuple<bool, std::string>
 MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                                            std::string jobId, uint64_t fileId, int processId,
@@ -1774,113 +1903,22 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                 return boost::tuple<bool, std::string>(false, storedState);
             }
         } else { // Else postgresql
-            if (newFileState == "FINISHED") {
-                // The new file state might be ARCHIVING
-                newFileState = postgresFileTransferFinished(
-                    sql,
-                    fileId,
-                    errorReason,
-                    hostname,
-                    processId,
-                    filesize,
-                    duration,
-                    throughput,
-                    static_cast<int>(retry),
-                    tTime,
-                    filesize,
-                    fileMetadata
-                );
-            } else if (newFileState == "READY") {
-                postgresFileTransferReady(
-                     sql,
-                     fileId,
-                     errorReason,
-                     hostname,
-                     processId,
-                     filesize,
-                     duration,
-                     throughput,
-                     static_cast<int>(retry),
-                     tTime,
-                     fileMetadata
-                );
-            } else if (newFileState == "ACTIVE") {
-                postgresFileTransferActive(
-                     sql,
-                     fileId,
-                     errorReason,
-                     hostname,
-                     processId,
-                     filesize,
-                     duration,
-                     throughput,
-                     static_cast<int>(retry),
-                     tTime,
-                     fileMetadata
-                );
-            } else if (newFileState == "FAILED") {
-                postgresFileTransferFailed(
-                     sql,
-                     fileId,
-                     errorReason,
-                     hostname,
-                     processId,
-                     filesize,
-                     duration,
-                     throughput,
-                     static_cast<int>(retry),
-                     tTime,
-                     fileMetadata
-                );
-            } else if (newFileState == "CANCELED") {
-                postgresFileTransferCanceled(
-                     sql,
-                     fileId,
-                     errorReason,
-                     hostname,
-                     processId,
-                     filesize,
-                     duration,
-                     throughput,
-                     static_cast<int>(retry),
-                     tTime,
-                     fileMetadata
-                );
-            } else if (newFileState == "STAGING") {
-                if (isStaging) {
-                    postgresFileTransferStagingFinished(
-                        sql,
-                        fileId,
-                        errorReason,
-                        hostname,
-                        processId,
-                        filesize,
-                        duration,
-                        throughput,
-                        static_cast<int>(retry),
-                        tTime,
-                        fileMetadata
-                    );
-                } else {
-                    postgresFileTransferStagingStart(
-                        sql,
-                        fileId,
-                        errorReason,
-                        hostname,
-                        processId,
-                        filesize,
-                        duration,
-                        throughput,
-                        static_cast<int>(retry),
-                        tTime,
-                        fileMetadata
-                    );
-                }
-            } else {
-                std::ostringstream msg;
-                msg << "Unknown new file state: newFileState=" << newFileState;
-                throw std::runtime_error(msg.str());
-            }
+            // New file state might become ARCHIVING
+            newFileState = postgresUpdateToNewFileState(
+                sql,
+                newFileState,
+                isStaging,
+                fileId,
+                errorReason,
+                hostname,
+                processId,
+                filesize,
+                duration,
+                throughput,
+                static_cast<int>(retry),
+                tTime,
+                fileMetadata
+            );
         } // Else postgresql
 
         sql.commit();
