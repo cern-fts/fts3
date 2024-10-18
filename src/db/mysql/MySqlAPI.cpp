@@ -1754,6 +1754,20 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                      tTime,
                      fileMetadata
                 );
+            } else if (newFileState == "CANCELED") {
+                postgresFileTransferCanceled(
+                     sql,
+                     fileId,
+                     errorReason,
+                     hostname,
+                     processId,
+                     filesize,
+                     duration,
+                     throughput,
+                     static_cast<int>(retry),
+                     tTime,
+                     fileMetadata
+                );
             } else {
                 // The actual new state might be ARCHIVING
                 const bool newFileStateShouldBeArchiving = newFileState == "FINISHED" &&
