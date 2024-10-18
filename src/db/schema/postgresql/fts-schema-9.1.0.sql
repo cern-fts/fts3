@@ -720,11 +720,7 @@ DECLARE
     _next_queue_id bigint;
 BEGIN
     -- Returns TRUE if the t_file row has been changed
-
-    IF _curr_file_state ISNULL THEN
-        RAISE 'change_file_state_and_queues failed: Current file-state input-parameter is NULL: file_id=%',
-            _file_id;
-    END IF;
+    -- Only checks the current file state if _curr_file_state is not NULL
 
     IF _next_file_state ISNULL THEN
         RAISE 'change_file_state_and_queues failed: Next file-state input-parameter is NULL: file_id=%',
@@ -753,9 +749,9 @@ BEGIN
        RAISE 'change_file_state_and_queues failed: No such file: file_id=%', _file_id;
     END IF;
 
-    IF _file_row_file_state != _curr_file_state THEN
-       RAISE 'change_file_state_and_queues failed: Unexpected current file-state: file_id=% expected=% actual=%',
-           _file_id, _curr_file_state, _file_row_file_state;
+    IF _curr_file_state IS NOT NULL AND _file_row_file_state != _curr_file_state THEN
+        RAISE 'change_file_state_and_queues failed: Unexpected current file-state: file_id=% expected=% actual=%',
+            _file_id, _curr_file_state, _file_row_file_state;
     END IF;
 
     IF _file_row_file_state = _next_file_state THEN
