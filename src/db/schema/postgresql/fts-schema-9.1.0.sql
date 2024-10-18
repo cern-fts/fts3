@@ -746,7 +746,7 @@ BEGIN
     FOR UPDATE;
 
     IF NOT FOUND THEN
-       RAISE 'change_file_state_and_queues failed: No such file: file_id=%', _file_id;
+        RAISE 'change_file_state_and_queues failed: No such file: file_id=%', _file_id;
     END IF;
 
     IF _curr_file_state IS NOT NULL AND _file_row_file_state != _curr_file_state THEN
