@@ -1397,11 +1397,6 @@ BEGIN
             _file_id;
     END IF;
 
-    IF _file_row_file_state NOT IN ('READY', 'ACTIVE') THEN
-        RAISE 'file_transfer_failed failed: Initial file state is not READY or ACTIVE: file_id=% file_state=%',
-            _file_id, _file_row_file_state;
-    END IF;
-
     SELECT change_file_state_and_queues(
         _file_id => _file_id,
         _curr_file_state => _file_row_file_state,
