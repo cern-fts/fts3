@@ -202,46 +202,36 @@ def get_queues_of_submitted_files(dbconn):
     return result
 
 
-def select_for_update_next_submitted_file(dbconn, submitted_queue_id):
-    sql = """
-        SELECT schedule_next_file_in_queue(
-            _submitted_queue_id => %(submitted_queue_id)s
-        ) AS file_id
-    """
-    params = {"submitted_queue_id": submitted_queue_id}
-    start_db = time.time()
-    with dbconn.cursor() as cursor:
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
-        db_sec = time.time() - start_db
+def schedule_next_file_in_queue(dbconn, submitted_queue_id):
+    scheduled = False
 
-        file_id = None
-        if len(rows) > 0:
-            file_id = rows[0][0]
-        return file_id, db_sec
-
-
-def schedule_next_file_in_queue(dbconn, submitted_queue):
     try:
-        file_id, db_sec = select_for_update_next_submitted_file(
-            dbconn, submitted_queue["queue_id"]
-        )
-        scheduled = True if file_id else False
-        if file_id:
-            log.debug(
-                f"Scheduled file: file_id={file_id} queue_id={submitted_queue['queue_id']} db_sec={db_sec}"
-            )
-        return scheduled
+        sql = """
+            SELECT schedule_next_file_in_queue(
+                _submitted_queue_id => %(submitted_queue_id)s
+            ) AS file_id
+        """
+        params = {"submitted_queue_id": submitted_queue_id}
+        start_db = time.time()
+        with dbconn.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
+
+            if len(rows) > 0:
+                file_id = rows[0][0]
+                scheduled = True
+                log.debug(
+                    f"Scheduled file: file_id={file_id} queue_id={queue_id} db_sec={db_sec}"
+                )
     except Exception as e:
         log.error(
-            f"Failed to schedule next file in queue: "
-            f"queue_id={submitted_queue['queue_id']} "
-            f"vo_name={submitted_queue['vo_name']} "
-            f"source_se={submitted_queue['source_se']} "
-            f"dest_se={submitted_queue['dest_se']} "
-            f"activity={submitted_queue['activity']} "
+            "Failed to schedule next file in queue: "
+            f"queue_id={submitted_queue_id} "
             f": {e}"
         )
+
+    return scheduled
 
 
 def get_link_config(dbconn):
@@ -277,23 +267,33 @@ def schedule_queue(submitted_queue):
     nb_scheduled = 0
 
     if submitted_queue["nb_files"] > 0:
-        scheduled = schedule_next_file_in_queue(dbconn, submitted_queue)
-        if scheduled:
-            nb_scheduled += 1
+        nb_scheduled = 1
 
     return nb_scheduled
 
 
-def schedule(dbconn):
+class SchedulerDecision:
+    def __init__(self):
+        self.transfers_per_queue = {}
+
+    def set(self, queue_id, nb_transfers):
+        self.transfers_per_queue[queue_id] = nb_transfers
+
+
+def schedule(submitted_queues) -> SchedulerDecision:
+    decision = SchedulerDecision()
     nb_scheduled = 0
 
-    submitted_queues = get_queues_of_submitted_files(dbconn)
-
     for submitted_queue in submitted_queues:
-        nb_scheduled += schedule_queue(submitted_queue)
+        nb_transfers_for_queue = schedule_queue(submitted_queue)
+        decision.set(submitted_queue["queue_id"], nb_transfers_for_queue)
+
+        nb_scheduled += nb_transfers_for_queue
 
     if nb_scheduled:
         log.info(f"Scheduled one or more transfers: nb_scheduled={nb_scheduled}")
+
+    return decision
 
 
 def select_worker_hostname(dbconn):
@@ -371,9 +371,13 @@ while True:
         with dbconn_pool.get_dbconn() as dbconn:
             worker_hostname, select_worker_hostname_sec = select_worker_hostname(dbconn)
             if worker_hostname and worker_hostname == socket.gethostname():
-                schedule(dbconn)
+                submitted_queues = get_queues_of_submitted_files(dbconn)
+                decision = schedule(submitted_queues)
+                for queue_id, nb_transfers in decision.transfers_per_queue.items():
+                    for i in range(nb_transfers):
+                        schedule_next_file_in_queue(dbconn, queue_id)
     except Exception as e:
-        log.error(f"Caught exception when trying to schedule file-transfers: {e}")
+        log.error(f"Caught exception when trying to schedule: {e}")
 
     execution_duration = time.time() - execution_start
 
