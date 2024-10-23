@@ -5415,6 +5415,7 @@ void MySqlAPI::updateTokenPrepFiles()
         // (there might be a way to reset the rowset iterator
         std::list<TokenPrepFile> tokenPrepFiles;
 
+        const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null" : "";
         const soci::rowset<soci::row> rs = (sql.prepare <<
             "SELECT f.job_id, f.file_id, f.file_state_initial, f.src_token_id, f.dst_token_id\n"
             "FROM t_file f\n"
@@ -5422,8 +5423,8 @@ void MySqlAPI::updateTokenPrepFiles()
             "INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id\n"
             "WHERE f.file_state = 'TOKEN_PREP'\n"
             "AND (t_src.refresh_token IS NOT NULL " << src_unmanaged_tokens_filter << ")\n"
-            "AND (t_dst.refresh_token IS NOT NULL " << dst_unmanaged_tokens_filter << ")\n"
-            "ORDER BY null");
+            "AND (t_dst.refresh_token IS NOT NULL " << dst_unmanaged_tokens_filter << ")\n" <<
+            order_by_null);
 
         for (const auto& row: rs) {
             tokenPrepFiles.emplace_back(
