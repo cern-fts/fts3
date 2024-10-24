@@ -306,23 +306,17 @@ def select_tokens_to_delete_ids(db_conn):
     return result, select_sec
 
 
-def delete_ignore_token(db_conn, db_type, token_id):
+def delete_token(db_conn, db_type, token_id):
     start_delete = time.time()
     cursor = db_conn.cursor()
-    if db_type == "mysql":
+    try:
         nb_deleted = cursor.execute(
-            "DELETE IGNORE FROM" "  t_token " "WHERE" "  token_id = %(token_id)s",
+            "DELETE FROM t_token WHERE token_id = %(token_id)s",
             {"token_id": token_id},
         )
-    else:
-        try:
-            nb_deleted = cursor.execute(
-                "DELETE FROM t_token WHERE token_id = %(token_id)s",
-                {"token_id": token_id},
-            )
-            nb_deleted = 0 if nb_deleted is None else nb_deleted
-        except:
-            nb_deleted = 0
+        nb_deleted = 0 if nb_deleted is None else nb_deleted
+    except:
+        nb_deleted = 0
     delete_sec = time.time() - start_delete
 
     return nb_deleted, delete_sec
@@ -332,7 +326,7 @@ def delete_tokens(db_conn, db_type, token_ids):
     total_nb_deleted = 0
     total_delete_sec = 0
     for token_id in token_ids:
-        nb_deleted, delete_sec = delete_ignore_token(db_conn, db_type, token_id)
+        nb_deleted, delete_sec = delete_token(db_conn, db_type, token_id)
         total_nb_deleted += nb_deleted
         total_delete_sec += delete_sec
 
@@ -361,39 +355,31 @@ def select_redundant_failed_token_ids(db_conn):
     return result, select_sec
 
 
-def delete_ignore_redundant_failed_token(db_conn, db_type, token_id):
+def delete_redundant_failed_token(db_conn, db_type, token_id):
     start_delete = time.time()
     cursor = db_conn.cursor()
-    if db_type == "mysql":
+    try:
         nb_deleted = cursor.execute(
-            "DELETE IGNORE FROM"
+            "DELETE FROM"
             "  t_token_refresher_failed_token "
             "WHERE"
             "  token_id = %(token_id)s",
             {"token_id": token_id},
         )
-    else:
-        try:
-            nb_deleted = cursor.execute(
-                "DELETE IGNORE FROM"
-                "  t_token_refresher_failed_token "
-                "WHERE"
-                "  token_id = %(token_id)s",
-                {"token_id": token_id},
-            )
-        except:
-            nb_deleted = 0
+        nb_deleted = 0 if nb_deleted is None else nb_deleted
+    except:
+        nb_deleted = 0
 
     delete_sec = time.time() - start_delete
 
     return nb_deleted, delete_sec
 
 
-def delete_ignore_redundant_failed_tokens(db_conn, db_type, redundant_failed_token_ids):
+def delete_redundant_failed_tokens(db_conn, db_type, redundant_failed_token_ids):
     total_nb_deleted = 0
     total_delete_sec = 0
     for token_id in redundant_failed_token_ids:
-        nb_deleted, delete_sec = delete_ignore_redundant_failed_token(
+        nb_deleted, delete_sec = delete_redundant_failed_token(
             db_conn, db_type, token_id
         )
         total_nb_deleted += nb_deleted
@@ -426,7 +412,7 @@ def perform_housekeeping(
     (
         nb_deleted_redundant_failed_tokens,
         delete_redundant_failed_tokens_sec,
-    ) = delete_ignore_redundant_failed_tokens(
+    ) = delete_redundant_failed_tokens(
         db_conn, db_type, redundant_failed_token_ids=redundant_failed_token_ids
     )
 
