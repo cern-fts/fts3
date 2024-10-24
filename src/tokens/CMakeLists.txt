@@ -54,7 +54,8 @@ install(TARGETS fts_token RUNTIME
 
 # Install token Python scripts
 install(FILES ftstokenhousekeeperd ftstokenrefresherd
-        DESTINATION ${SBIN_INSTALL_DIR})
+        DESTINATION ${SBIN_INSTALL_DIR}
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ WORLD_READ)
 
 install(FILES ftstokenhousekeeperd.ini ftstokenrefresherd.ini
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3)
