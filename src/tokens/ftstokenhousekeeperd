@@ -131,7 +131,6 @@ def get_config(path, program_name):
             f"path={path}"
         )
 
-
     return result
 
 
@@ -281,11 +280,22 @@ def retire_tokens(db_conn, token_ids):
     return nb_retired_tokens, retire_tokens_sec
 
 
-def select_all_token_ids(db_conn):
+def select_tokens_to_delete_ids(db_conn):
     start_select = time.time()
     cursor = db_conn.cursor()
     cursor.execute(
-        "SELECT" "  token_id " "FROM" "  t_token " "ORDER BY" "  access_token_expiry"
+        """
+        SELECT
+          token_id
+        FROM
+          t_token
+        WHERE
+          retired != 0
+        AND
+          now() > access_token_expiry
+        ORDER BY
+          access_token_expiry
+        """
     )
     result = []
     rows = cursor.fetchall()
@@ -318,7 +328,7 @@ def delete_ignore_token(db_conn, db_type, token_id):
     return nb_deleted, delete_sec
 
 
-def delete_orphan_tokens(db_conn, db_type, token_ids):
+def delete_tokens(db_conn, db_type, token_ids):
     total_nb_deleted = 0
     total_delete_sec = 0
     for token_id in token_ids:
@@ -383,14 +393,18 @@ def delete_ignore_redundant_failed_tokens(db_conn, db_type, redundant_failed_tok
     total_nb_deleted = 0
     total_delete_sec = 0
     for token_id in redundant_failed_token_ids:
-        nb_deleted, delete_sec = delete_ignore_redundant_failed_token(db_conn, db_type, token_id)
+        nb_deleted, delete_sec = delete_ignore_redundant_failed_token(
+            db_conn, db_type, token_id
+        )
         total_nb_deleted += nb_deleted
         total_delete_sec += delete_sec
 
     return total_nb_deleted, total_delete_sec
 
 
-def perform_housekeeping(db_conn, db_type, select_worker_hostname_sec, max_tokens_to_retire):
+def perform_housekeeping(
+    db_conn, db_type, select_worker_hostname_sec, max_tokens_to_retire
+):
     start_time = time.time()
 
     token_ids_to_retire, select_token_ids_to_retire_sec = select_token_ids_to_retire(
@@ -398,9 +412,11 @@ def perform_housekeeping(db_conn, db_type, select_worker_hostname_sec, max_token
     )
     nb_retired_tokens, retire_tokens_sec = retire_tokens(db_conn, token_ids_to_retire)
 
-    all_token_ids, select_all_token_ids_to_delete_sec = select_all_token_ids(db_conn)
-    nb_deleted_tokens, delete_sec = delete_orphan_tokens(
-        db_conn, db_type, token_ids=all_token_ids
+    tokens_to_delete_ids, select_tokens_to_delete_ids_sec = select_tokens_to_delete_ids(
+        db_conn
+    )
+    nb_deleted_tokens, delete_sec = delete_tokens(
+        db_conn, db_type, token_ids=tokens_to_delete_ids
     )
 
     (
@@ -427,7 +443,7 @@ def perform_housekeeping(db_conn, db_type, select_worker_hostname_sec, max_token
         f"select_token_ids_to_retire_sec={select_token_ids_to_retire_sec:.3f} "
         f"nb_retired_tokens={nb_retired_tokens} "
         f"retire_tokens_sec={retire_tokens_sec:.3f} "
-        f"select_token_ids_to_delete_sec={select_all_token_ids_to_delete_sec:.3f} "
+        f"select_tokens_to_delete_ids_sec={select_tokens_to_delete_ids_sec:.3f} "
         f"nb_deleted_tokens={nb_deleted_tokens} "
         f"delete_sec={delete_sec:.3f} "
         f"select_redundant_failed_token_ids_sec={select_redundant_failed_token_ids_sec:.3f} "
@@ -458,6 +474,7 @@ log = get_log(log_file_path=config["log_file"], log_program_name=program_name)
 
 if config["db_type"] == "mysql":
     import pymysql
+
     db_conn = pymysql.connect(
         user=config["db_user"],
         password=config["db_password"],
@@ -468,13 +485,14 @@ if config["db_type"] == "mysql":
     )
 else:
     import psycopg2
+
     db_conn = psycopg2.connect(
         f"dbname='{config['db_database']}' "
         f"user='{config['db_user']}' "
         f"host='{config['db_host']}' "
         f"password='{config['db_password']}'"
     )
-    db_conn.set_session(autocommit = True)
+    db_conn.set_session(autocommit=True)
 
 min_allowed_major_db_schema_version = 9
 actual_major_db_schema_version = get_major_db_schema_version(db_conn)
@@ -514,7 +532,10 @@ while True:
     worker_hostname, select_worker_hostname_sec = select_worker_hostname(db_conn)
     if worker_hostname == socket.gethostname():
         perform_housekeeping(
-            db_conn, config["db_type"], select_worker_hostname_sec, config["max_tokens_to_retire"]
+            db_conn,
+            config["db_type"],
+            select_worker_hostname_sec,
+            config["max_tokens_to_retire"],
         )
 
     execution_duration = time.time() - execution_start
