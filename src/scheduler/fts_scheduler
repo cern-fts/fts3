@@ -222,7 +222,7 @@ def schedule_next_file_in_queue(dbconn, submitted_queue_id):
                 file_id = rows[0][0]
                 scheduled = True
                 log.debug(
-                    f"Scheduled file: file_id={file_id} queue_id={queue_id} db_sec={db_sec}"
+                    f"Scheduled file: file_id={file_id} queue_id={submitted_queue_id} db_sec={db_sec}"
                 )
     except Exception as e:
         log.error(
@@ -322,6 +322,17 @@ def select_worker_hostname(dbconn):
     return hostname, db_sec
 
 
+def this_host_is_scheduling(dbconn) -> bool:
+    worker_hostname, select_worker_hostname_sec = select_worker_hostname(dbconn)
+    return worker_hostname and worker_hostname == socket.gethostname()
+
+
+def write_scheduler_decision_to_db(dbconn, decision):
+    for queue_id, nb_transfers in decision.transfers_per_queue.items():
+        for i in range(nb_transfers):
+            schedule_next_file_in_queue(dbconn, queue_id)
+
+
 program_name = "fts_scheduler"
 
 parser = argparse.ArgumentParser(description="Schedules FTS transfer jobs")
@@ -369,13 +380,10 @@ while True:
 
     try:
         with dbconn_pool.get_dbconn() as dbconn:
-            worker_hostname, select_worker_hostname_sec = select_worker_hostname(dbconn)
-            if worker_hostname and worker_hostname == socket.gethostname():
+            if this_host_is_scheduling(dbconn):
                 submitted_queues = get_queues_of_submitted_files(dbconn)
                 decision = schedule(submitted_queues)
-                for queue_id, nb_transfers in decision.transfers_per_queue.items():
-                    for i in range(nb_transfers):
-                        schedule_next_file_in_queue(dbconn, queue_id)
+                write_scheduler_decision_to_db(dbconn, decision)
     except Exception as e:
         log.error(f"Caught exception when trying to schedule: {e}")
 
