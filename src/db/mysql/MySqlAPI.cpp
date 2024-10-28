@@ -5727,8 +5727,6 @@ std::list<TransferFile> MySqlAPI::postgresGetScheduledFileTransfers(const int ma
 
     try
     {
-        soci::session sql(*connectionPool);
-
         // Start a transaction
         sql.begin();
 
