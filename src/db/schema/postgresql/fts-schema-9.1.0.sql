@@ -897,13 +897,14 @@ BEGIN
             _file_row_file_id, _file_row_file_state;
     END IF;
 
-    SELECT change_file_state_and_queues(
-        _file_id => _file_row_file_id,
-        _curr_file_state => 'SUBMITTED',
-        _next_file_state => 'SCHEDULED'
-    ) INTO _file_changed;
+    UPDATE
+        t_file
+    SET
+        file_state = 'SCHEDULED'
+    WHERE
+        file_id = _file_row_file_id;
 
-    IF NOT _file_changed THEN
+    IF NOT FOUND THEN
         RETURN NULL;
     ELSE
         RETURN _file_row_file_id;
@@ -1027,13 +1028,14 @@ BEGIN
         _next_file_state = 'FINISHED';
     END IF;
 
-    SELECT change_file_state_and_queues(
-        _file_id => _file_id,
-        _curr_file_state => 'ACTIVE',
-        _next_file_state => _next_file_state
-    ) INTO _file_changed;
+    UPDATE
+        t_file
+    SET
+        file_state = _next_file_state
+    WHERE
+        file_id = _file_id;
 
-    IF NOT _file_changed THEN
+    IF NOT FOUND THEN
         RAISE 'file_transfer_finished failed: Failed to change file state: file_id=%',
             _file_id;
     END IF;
@@ -1138,14 +1140,15 @@ BEGIN
     -- Loop over files to update
     LOOP
         -- Update file_state and queues
-        SELECT change_file_state_and_queues(
-               _file_id => _file_id,
-               _curr_file_state => 'SCHEDULED',
-               _next_file_state => 'SELECTED'
-        ) INTO _file_changed;
+        UPDATE
+            t_file
+        SET
+            file_state = 'SELECTED'
+        WHERE
+            file_id = _file_id;
 
         -- If file state was not changed it means it was already in SELECTED state. Something must have gone wrong
-        IF NOT _file_changed THEN
+        IF NOT FOUND THEN
             RAISE 'get_transfers_to_start panic: File was already in SELECTED state: file_id=%',
             _file_id;
         END IF;
@@ -1241,13 +1244,14 @@ BEGIN
     END IF;
 
     IF _file_row_file_state = 'SELECTED' THEN
-        SELECT change_file_state_and_queues(
-            _file_id => _file_id,
-            _curr_file_state => 'SELECTED',
-            _next_file_state => 'READY'
-        ) INTO _file_changed;
+        UPDATE
+            t_file
+        SET
+            file_state = 'READY'
+        WHERE
+            file_id = _file_id;
 
-        IF NOT _file_changed THEN
+        IF NOT FOUND THEN
             RAISE 'file_transfer_ready failed: Failed to change file state: file_id=%',
                 _file_id;
         END IF;
@@ -1322,13 +1326,14 @@ BEGIN
             _file_id, _file_row_file_state;
     END IF;
 
-    SELECT change_file_state_and_queues(
-        _file_id => _file_id,
-        _curr_file_state => 'READY',
-        _next_file_state => 'ACTIVE'
-    ) INTO _file_changed;
+    UPDATE
+        t_file
+    SET
+        file_state = 'ACTIVE'
+    WHERE
+        file_id = _file_id;
 
-    IF NOT _file_changed THEN
+    IF NOT FOUND THEN
         RAISE 'file_transfer_active failed: Failed to change file state: file_id=%',
             _file_id;
     END IF;
@@ -1397,13 +1402,14 @@ BEGIN
             _file_id;
     END IF;
 
-    SELECT change_file_state_and_queues(
-        _file_id => _file_id,
-        _curr_file_state => _file_row_file_state,
-        _next_file_state => 'FAILED'
-    ) INTO _file_changed;
+    UPDATE
+        t_file
+    SET
+        file_state = 'FAILED'
+    WHERE
+        file_id = _file_id;
 
-    IF NOT _file_changed THEN
+    IF NOT FOUND THEN
         RAISE 'file_transfer_failed failed: Failed to change file state: file_id=%',
             _file_id;
     END IF;
@@ -1477,13 +1483,14 @@ BEGIN
     END IF;
 
     IF _file_row_file_state != 'CANCELED' THEN
-        SELECT change_file_state_and_queues(
-            _file_id => _file_id,
-            _curr_file_state => _file_row_file_state,
-            _next_file_state => 'CANCELED'
-        ) INTO _file_changed;
+        UPDATE
+            t_file
+        SET
+            file_state = 'CANCELED'
+        WHERE
+            file_id = _file_id;
 
-        IF NOT _file_changed THEN
+        IF NOT FOUND THEN
             RAISE 'file_transfer_canceled failed: Failed to change file state: file_id=%',
                 _file_id;
         END IF;
@@ -1558,13 +1565,14 @@ BEGIN
     END IF;
 
     IF _file_row_file_state != 'STAGING' THEN
-        SELECT change_file_state_and_queues(
-            _file_id => _file_id,
-            _curr_file_state => _file_row_file_state,
-            _next_file_state => 'STAGING'
-        ) INTO _file_changed;
+        UPDATE
+            t_file
+        SET
+            file_state = 'STAGING'
+        WHERE
+            file_id = _file_id;
 
-        IF NOT _file_changed THEN
+        IF NOT FOUND THEN
             RAISE 'file_transfer_staging_start failed: Failed to change file state: file_id=%',
                 _file_id;
         END IF;
@@ -1670,3 +1678,104 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_queue_count()
+    RETURNS TRIGGER AS $$
+DECLARE
+    _curr_queue_id bigint := OLD.queue_id;
+    _next_queue_id bigint;
+BEGIN
+    -- Get the next queue_id based on the queue_id key (vo_name, source_se, dest_se, activity, file_state).
+    SELECT
+        queue_id
+    INTO
+        _next_queue_id
+    FROM
+        t_queue
+    WHERE
+        vo_name = NEW.vo_name
+    AND
+        source_se = NEW.source_se
+    AND
+        dest_se = NEW.dest_se
+    AND
+        activity = NEW.activity
+    AND
+        file_state = NEW.file_state;
+
+    -- If the next queue already exists
+    IF FOUND THEN
+        -- Avoid deadlock by locking the current and next queues in queue_id order
+        IF _curr_queue_id < _next_queue_id THEN
+            SELECT queue_id INTO _curr_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _curr_queue_id
+            FOR UPDATE;
+            SELECT queue_id INTO _next_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _next_queue_id
+            FOR UPDATE;
+        ELSE
+            SELECT queue_id INTO _next_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _next_queue_id
+            FOR UPDATE;
+            SELECT queue_id INTO _curr_queue_id
+            FROM
+                t_queue
+            WHERE
+                queue_id = _curr_queue_id
+            FOR UPDATE;
+        END IF;
+    END IF;
+
+    -- Decrement the current queue counter
+    UPDATE
+        t_queue
+    SET
+        nb_files = nb_files - 1
+    WHERE
+        queue_id = _curr_queue_id;
+
+    IF NOT FOUND THEN
+        RAISE 'update_queue_count failed: Failed to decrement counter of current queue: queue_id=%',
+            _curr_queue_id;
+    END IF;
+
+    SELECT inc_queue_counter(
+                   _vo_name => NEW.vo_name,
+                   _source_se => NEW.source_se,
+                   _dest_se => NEW.dest_se,
+                   _activity => NEW.activity,
+                   _file_state => NEW.file_state,
+                   _delta => 1
+               ) INTO _next_queue_id;
+
+    -- Update the t_file row with the new queue_id
+    UPDATE
+        t_file
+    SET
+        queue_id = _next_queue_id
+    WHERE
+        file_id = NEW.file_id;
+
+    IF NOT FOUND THEN
+        RAISE 'update_queue_count failed: Failed to update file transfer row: file_id=%',
+            NEW.file_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_update_queue_count
+    AFTER UPDATE OF vo_name, source_se, dest_se, activity, file_state ON t_file
+    FOR EACH ROW
+EXECUTE FUNCTION update_queue_count();
