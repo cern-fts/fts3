@@ -5309,6 +5309,33 @@ std::list<TransferFile> MySqlAPI::postgresGetScheduledFileTransfers(const int ma
 }
 
 
+void MySqlAPI::postgresStoreMaxUrlCopyProcesses(const int maxUrlCopyProcesses)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        sql <<
+            "UPDATE t_hosts SET\n"
+            "    max_url_copy_processes = :max_url_copy_processes\n"
+            "WHERE\n"
+            "    service_name = 'fts_server'\n"
+            "AND\n"
+            "    hostname = :hostname",
+            soci::use(maxUrlCopyProcesses, "max_url_copy_processes"),
+            soci::use(hostname, "hostname");
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
 // the class factories
 extern "C" GenericDbIfce* create()
 {

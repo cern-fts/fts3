@@ -436,6 +436,10 @@ public:
     /// @param maxFiles The maximum number of file-transfers this method should return
     virtual std::list<TransferFile> postgresGetScheduledFileTransfers(const int maxFiles);
 
+    /// Store maxUrlCopyProcesses for the fts_server running on this host into the t_hosts table
+    /// @param maxUrlCopyProcesses Maximum number of fts_url_copy processes
+    virtual void postgresStoreMaxUrlCopyProcesses(const int maxUrlCopyProcesses);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
