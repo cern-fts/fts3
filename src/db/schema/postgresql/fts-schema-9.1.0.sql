@@ -1057,6 +1057,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
@@ -1272,6 +1274,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
@@ -1353,6 +1357,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
@@ -1431,6 +1437,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
@@ -1513,6 +1521,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
@@ -1593,6 +1603,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
@@ -1662,6 +1674,8 @@ BEGIN
             file_id = _file_id;
     ELSE
         UPDATE t_file SET
+            reason = _reason,
+            transfer_host = _transfer_host,
             pid = _pid,
             filesize = _filesize,
             tx_duration = _tx_duration,
