@@ -1316,401 +1316,6 @@ static bool postgresChangeFileStateAndQueues(soci::session &sql,
 }
 
 
-static std::string postgresFileTransferFinished(soci::session &sql,
-                                                const std::uint64_t fileId,
-                                                const std::string &reason,
-                                                const std::string &transferHost,
-                                                const int pid,
-                                                const uint64_t filesize,
-                                                const double txDuration,
-                                                const double throughput,
-                                                const int currentFailures,
-                                                const struct tm &finishTime,
-                                                const uint64_t transferred,
-                                                const std::string &fileMetadata) {
-    std::string nextFileState;
-    sql <<
-        "SELECT file_transfer_finished(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _finish_time => :finish_time,\n"
-        "   _transferred => :transferred,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::into(nextFileState),
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(finishTime, "finish_time"),
-        soci::use(transferred, "transferred"),
-        soci::use(fileMetadata, "file_metadata");
-    return nextFileState;
-}
-
-
-static void postgresFileTransferReady(soci::session &sql,
-                                      const std::uint64_t fileId,
-                                      const std::string &reason,
-                                      const std::string &transferHost,
-                                      const int pid,
-                                      const uint64_t filesize,
-                                      const double txDuration,
-                                      const double throughput,
-                                      const int currentFailures,
-                                      const struct tm &startTime,
-                                      const std::string &fileMetadata) {
-    sql <<
-        "CALL file_transfer_ready(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _start_time => :start_time,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(startTime, "start_time"),
-        soci::use(fileMetadata, "file_metadata");
-}
-
-
-static void postgresFileTransferActive(soci::session &sql,
-                                       const std::uint64_t fileId,
-                                       const std::string &reason,
-                                       const std::string &transferHost,
-                                       const int pid,
-                                       const uint64_t filesize,
-                                       const double txDuration,
-                                       const double throughput,
-                                       const int currentFailures,
-                                       const struct tm &startTime,
-                                       const std::string &fileMetadata) {
-    sql <<
-        "CALL file_transfer_active(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _start_time => :start_time,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(startTime, "start_time"),
-        soci::use(fileMetadata, "file_metadata");
-}
-
-
-static void postgresFileTransferFailed(soci::session &sql,
-                                       const std::uint64_t fileId,
-                                       const std::string &reason,
-                                       const std::string &transferHost,
-                                       const int pid,
-                                       const uint64_t filesize,
-                                       const double txDuration,
-                                       const double throughput,
-                                       const int currentFailures,
-                                       const struct tm &finishTime,
-                                       const std::string &fileMetadata) {
-    sql <<
-        "CALL file_transfer_failed(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _finish_time => :finish_time,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(finishTime, "finish_time"),
-        soci::use(fileMetadata, "file_metadata");
-}
-
-
-static void postgresFileTransferCanceled(soci::session &sql,
-                                         const std::uint64_t fileId,
-                                         const std::string &reason,
-                                         const std::string &transferHost,
-                                         const int pid,
-                                         const uint64_t filesize,
-                                         const double txDuration,
-                                         const double throughput,
-                                         const int currentFailures,
-                                         const struct tm &finishTime,
-                                         const std::string &fileMetadata) {
-
-    sql <<
-        "CALL file_transfer_canceled(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _finish_time => :finish_time,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(finishTime, "finish_time"),
-        soci::use(fileMetadata, "file_metadata");
-}
-
-
-static void postgresFileTransferStagingStart(soci::session &sql,
-                                             const std::uint64_t fileId,
-                                             const std::string &reason,
-                                             const std::string &transferHost,
-                                             const int pid,
-                                             const uint64_t filesize,
-                                             const double txDuration,
-                                             const double throughput,
-                                             const int currentFailures,
-                                             const struct tm &stagingStart,
-                                             const std::string &fileMetadata) {
-    sql <<
-        "CALL file_transfer_staging_start(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _staging_start => :staging_start,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(stagingStart, "staging_start"),
-        soci::use(fileMetadata, "file_metadata");
-}
-
-
-static void postgresFileTransferStagingFinished(soci::session &sql,
-                                                const std::uint64_t fileId,
-                                                const std::string &reason,
-                                                const std::string &transferHost,
-                                                const int pid,
-                                                const uint64_t filesize,
-                                                const double txDuration,
-                                                const double throughput,
-                                                const int currentFailures,
-                                                const struct tm &stagingFinished,
-                                                const std::string &fileMetadata) {
-    sql <<
-        "CALL file_transfer_staging_finished(\n"
-        "   _file_id => :file_id,\n"
-        "   _reason => :reason,\n"
-        "   _transfer_host => :transfer_host,\n"
-        "   _pid => :pid,\n"
-        "   _filesize => :filesize,\n"
-        "   _tx_duration => :tx_duration,\n"
-        "   _throughput => :throughput,\n"
-        "   _current_failures => :current_failures,\n"
-        "   _staging_finished => :staging_finished,\n"
-        "   _file_metadata => :file_metadata\n"
-        ")",
-        soci::use(fileId, "file_id"),
-        soci::use(reason, "reason"),
-        soci::use(transferHost, "transfer_host"),
-        soci::use(pid, "pid"),
-        soci::use(filesize, "filesize"),
-        soci::use(txDuration, "tx_duration"),
-        soci::use(throughput, "throughput"),
-        soci::use(currentFailures, "current_failures"),
-        soci::use(stagingFinished, "staging_finished"),
-        soci::use(fileMetadata, "file_metadata");
-}
-
-
-static std::string postgresUpdateToNewFileState(
-    soci::session &sql,
-    const std::string newFileState,
-    const bool isStaging,
-    const std::uint64_t fileId,
-    const std::string &reason,
-    const std::string &transferHost,
-    const int pid,
-    const uint64_t filesize,
-    const double txDuration,
-    const double throughput,
-    const int currentFailures,
-    const struct tm &tTime,
-    const std::string &fileMetadata
-) {
-    // New file state might become ARCHIVING
-    std::string adjustedNewFileState = newFileState;
-
-    if (newFileState == "FINISHED") {
-        adjustedNewFileState = postgresFileTransferFinished(
-            sql,
-            fileId,
-            reason,
-            transferHost,
-            pid,
-            filesize,
-            txDuration,
-            throughput,
-            currentFailures,
-            tTime,
-            filesize,
-            fileMetadata
-        );
-    } else if (newFileState == "READY") {
-        postgresFileTransferReady(
-            sql,
-            fileId,
-            reason,
-            transferHost,
-            pid,
-            filesize,
-            txDuration,
-            throughput,
-            currentFailures,
-            tTime,
-            fileMetadata
-       );
-    } else if (newFileState == "ACTIVE") {
-        postgresFileTransferActive(
-            sql,
-            fileId,
-            reason,
-            transferHost,
-            pid,
-            filesize,
-            txDuration,
-            throughput,
-            currentFailures,
-            tTime,
-            fileMetadata
-        );
-    } else if (newFileState == "FAILED") {
-        postgresFileTransferFailed(
-            sql,
-            fileId,
-            reason,
-            transferHost,
-            pid,
-            filesize,
-            txDuration,
-            throughput,
-            currentFailures,
-            tTime,
-            fileMetadata
-        );
-    } else if (newFileState == "CANCELED") {
-        postgresFileTransferCanceled(
-            sql,
-            fileId,
-            reason,
-            transferHost,
-            pid,
-            filesize,
-            txDuration,
-            throughput,
-            currentFailures,
-            tTime,
-            fileMetadata
-        );
-    } else if (newFileState == "STAGING") {
-        if (isStaging) {
-            postgresFileTransferStagingFinished(
-                sql,
-                fileId,
-                reason,
-                transferHost,
-                pid,
-                filesize,
-                txDuration,
-                throughput,
-                currentFailures,
-                tTime,
-                fileMetadata
-            );
-        } else {
-            postgresFileTransferStagingStart(
-                sql,
-                fileId,
-                reason,
-                transferHost,
-                pid,
-                filesize,
-                txDuration,
-                throughput,
-                currentFailures,
-                tTime,
-                fileMetadata
-            );
-        }
-    } else {
-        std::ostringstream msg;
-        msg << "postgresUpdateToNewFileState: Failed: Unknown new file state: newFileState=" << newFileState;
-        throw std::runtime_error(msg.str());
-    }
-
-    return adjustedNewFileState;
-}
-
-
 boost::tuple<bool, std::string>
 MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                                            std::string jobId, uint64_t fileId, int processId,
@@ -1808,104 +1413,85 @@ MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
             }
         }
 
-        if (sql.get_backend_name() == "mysql") {
-            soci::statement stmt(sql);
-            std::ostringstream query;
+        soci::statement stmt(sql);
+        std::ostringstream query;
 
-            query << "UPDATE t_file SET "
-                  "    file_state = :state, reason = :reason";
-            stmt.exchange(soci::use(newFileState, "state"));
-            stmt.exchange(soci::use(errorReason, "reason"));
+        query << "UPDATE t_file SET "
+              "    file_state = :state, reason = :reason";
+        stmt.exchange(soci::use(newFileState, "state"));
+        stmt.exchange(soci::use(errorReason, "reason"));
 
-            if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
-            {
-                query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
-                stmt.exchange(soci::use(tTime, "time1"));
-            }
-            if (newFileState == "ACTIVE" || newFileState == "READY")
-            {
-                query << ", START_TIME = :time1";
-                stmt.exchange(soci::use(tTime, "time1"));
-            }
+        if (newFileState == "FINISHED" || newFileState == "FAILED" || newFileState == "CANCELED")
+        {
+            query << ", FINISH_TIME = :time1, DEST_SURL_UUID = NULL";
+            stmt.exchange(soci::use(tTime, "time1"));
+        }
+        if (newFileState == "ACTIVE" || newFileState == "READY")
+        {
+            query << ", START_TIME = :time1";
+            stmt.exchange(soci::use(tTime, "time1"));
+        }
 
-            query << ", transfer_Host = :hostname";
-            stmt.exchange(soci::use(hostname, "hostname"));
+        query << ", transfer_Host = :hostname";
+        stmt.exchange(soci::use(hostname, "hostname"));
 
-            if (newFileState == "FINISHED")
-            {
-                query << ", transferred = :filesize";
-                stmt.exchange(soci::use(filesize, "filesize"));
-            }
-
-            if (newFileState == "FAILED" || newFileState == "CANCELED")
-            {
-                query << ", transferred = :transferred";
-                stmt.exchange(soci::use(0, "transferred"));
-            }
-
-            if (newFileState == "STAGING")
-            {
-                if (isStaging)
-                {
-                    query << ", STAGING_FINISHED = :time1";
-                    stmt.exchange(soci::use(tTime, "time1"));
-                }
-                else
-                {
-                    query << ", STAGING_START = :time1";
-                    stmt.exchange(soci::use(tTime, "time1"));
-                }
-            }
-        
-            // Move the new state to ARCHIVING if the transfer completed and the archive timeout is set
-            if (newFileState == "FINISHED" && isArchivingTransfer(sql, jobId, jobType, archiveTimeout)) {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
-                                             << " to ARCHIVING state" << commit;
-                newFileState = "ARCHIVING";
-            }
-
-            if (!fileMetadata.empty()) {
-                query << ", file_metadata = :file_metadata";
-                stmt.exchange(soci::use(fileMetadata, "file_metadata"));
-            }
-
-            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-                  "WHERE file_id = :fileId AND file_state = :oldState";
-            stmt.exchange(soci::use(processId, "pid"));
+        if (newFileState == "FINISHED")
+        {
+            query << ", transferred = :filesize";
             stmt.exchange(soci::use(filesize, "filesize"));
-            stmt.exchange(soci::use(duration, "duration"));
-            stmt.exchange(soci::use(throughput, "throughput"));
-            stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
-            stmt.exchange(soci::use(fileId, "fileId"));
-            stmt.exchange(soci::use(storedState, "oldState"));
-            stmt.alloc();
-            stmt.prepare(query.str());
-            stmt.define_and_bind();
+        }
 
-            stmt.execute(true);
+        if (newFileState == "FAILED" || newFileState == "CANCELED")
+        {
+            query << ", transferred = :transferred";
+            stmt.exchange(soci::use(0, "transferred"));
+        }
 
-            if (stmt.get_affected_rows() == 0) {
-                sql.rollback();
-                return boost::tuple<bool, std::string>(false, storedState);
+        if (newFileState == "STAGING")
+        {
+            if (isStaging)
+            {
+                query << ", STAGING_FINISHED = :time1";
+                stmt.exchange(soci::use(tTime, "time1"));
             }
-        } else { // Else postgresql
-            // New file state might become ARCHIVING
-            newFileState = postgresUpdateToNewFileState(
-                sql,
-                newFileState,
-                isStaging,
-                fileId,
-                errorReason,
-                hostname,
-                processId,
-                filesize,
-                duration,
-                throughput,
-                static_cast<int>(retry),
-                tTime,
-                fileMetadata
-            );
-        } // Else postgresql
+            else
+            {
+                query << ", STAGING_START = :time1";
+                stmt.exchange(soci::use(tTime, "time1"));
+            }
+        }
+    
+        // Move the new state to ARCHIVING if the transfer completed and the archive timeout is set
+        if (newFileState == "FINISHED" && isArchivingTransfer(sql, jobId, jobType, archiveTimeout)) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Moving transfer " << jobId << " " << fileId
+                                         << " to ARCHIVING state" << commit;
+            newFileState = "ARCHIVING";
+        }
+
+        if (!fileMetadata.empty()) {
+            query << ", file_metadata = :file_metadata";
+            stmt.exchange(soci::use(fileMetadata, "file_metadata"));
+        }
+
+        query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
+              "WHERE file_id = :fileId AND file_state = :oldState";
+        stmt.exchange(soci::use(processId, "pid"));
+        stmt.exchange(soci::use(filesize, "filesize"));
+        stmt.exchange(soci::use(duration, "duration"));
+        stmt.exchange(soci::use(throughput, "throughput"));
+        stmt.exchange(soci::use(static_cast<int>(retry), "current_failures"));
+        stmt.exchange(soci::use(fileId, "fileId"));
+        stmt.exchange(soci::use(storedState, "oldState"));
+        stmt.alloc();
+        stmt.prepare(query.str());
+        stmt.define_and_bind();
+
+        stmt.execute(true);
+
+        if (stmt.get_affected_rows() == 0) {
+            sql.rollback();
+            return boost::tuple<bool, std::string>(false, storedState);
+        }
 
         sql.commit();
 
