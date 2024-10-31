@@ -1297,25 +1297,6 @@ MySqlAPI::updateTransferStatus(const std::string& jobId, uint64_t fileId, int pr
 }
 
 
-static bool postgresChangeFileStateAndQueues(soci::session &sql,
-                                             const std::uint64_t fileId,
-                                             const std::string &currFileState,
-                                             const std::string &nextFileState) {
-    bool fileChanged = false;
-    sql <<
-        "SELECT change_file_state_and_queues(\n"
-        "    _file_id => :file_id,\n"
-        "    _curr_file_state => :curr_file_state,\n"
-        "    _next_file_state => :next_file_state\n"
-        ")",
-        soci::into(fileChanged),
-        soci::use(fileId, "file_id"),
-        soci::use(currFileState, "curr_file_state"),
-        soci::use(nextFileState, "next_file_state");
-    return fileChanged;
-}
-
-
 boost::tuple<bool, std::string>
 MySqlAPI::updateFileTransferStatusInternal(soci::session &sql,
                                            std::string jobId, uint64_t fileId, int processId,
@@ -5023,13 +5004,13 @@ void MySqlAPI::updateTokenPrepFiles()
         }
 
         // Prepare statement for "TOKEN_PREP" --> initial file state update
-        uint64_t mysqlStmt_file_id;
-        std::string mysqlStmt_file_state;
-        soci::statement mysqlStmt = (sql.prepare <<
+        uint64_t stmt_file_id;
+        std::string stmt_file_state;
+        soci::statement stmt = (sql.prepare <<
             "UPDATE t_file SET file_state = :fileState\n"
             "WHERE file_id = :fileId AND file_state = 'TOKEN_PREP'",
-            soci::use(mysqlStmt_file_state),
-            soci::use(mysqlStmt_file_id));
+            soci::use(stmt_file_state),
+            soci::use(stmt_file_id));
 
         sql.begin();
         for (auto& file: tokenPrepFiles) {
@@ -5041,20 +5022,9 @@ void MySqlAPI::updateTokenPrepFiles()
                 file.file_state = "SUBMITTED";
             }
 
-            if (sql.get_backend_name() == "mysql") {
-                mysqlStmt_file_id = file.file_id;
-                mysqlStmt_file_state = file.file_state;
-                mysqlStmt.execute(true);
-            } else {
-                const bool fileChanged =
-                    postgresChangeFileStateAndQueues(sql, file.file_id, "TOKEN_PREP", file.file_state);
-                if (!fileChanged) {
-                    std::ostringstream msg;
-                    msg << "Failed to move file from 'TOKEN_PREP' to '" << file.file_state << "'"
-                           " job_id=" << file.job_id << " file_id=" << file.file_id;
-                    throw std::runtime_error(msg.str());
-                }
-            }
+            stmt_file_id = file.file_id;
+            stmt_file_state = file.file_state;
+            stmt.execute(true);
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Updated 'TOKEN PREP' file:"
                             << " job_id=" << file.job_id << " file_id=" << file.file_id
