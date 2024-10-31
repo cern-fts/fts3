@@ -451,10 +451,11 @@ CREATE TABLE t_bad_dns (
 );
 
 CREATE TABLE t_hosts (
-  hostname     VARCHAR(64) NOT NULL,
-  beat         TIMESTAMP       NULL,
-  drain        INTEGER         NULL DEFAULT 0,
-  service_name VARCHAR(64) NOT NULL,
+  hostname               VARCHAR(64) NOT NULL,
+  beat                   TIMESTAMP       NULL,
+  drain                  INTEGER         NULL DEFAULT 0,
+  service_name           VARCHAR(64) NOT NULL,
+  max_url_copy_processes INTEGER         NULL,
   PRIMARY KEY (hostname, service_name)
 );
 
