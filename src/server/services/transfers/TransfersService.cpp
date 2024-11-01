@@ -45,6 +45,27 @@ namespace fts3 {
 namespace server {
 
 
+static void postgresStoreMaxUrlCopyProcessesInDb() {
+    try {
+        auto db = DBSingleton::instance().getDBObjectInstance();
+        if (!db) {
+            throw std::runtime_error("Failed to get a pointer the DBSingleton object");
+        }
+
+        const int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+        db->postgresStoreMaxUrlCopyProcesses(maxUrlCopy);
+    } catch(std::exception &se) {
+        std::ostringstream msg;
+        msg << __FUNCTION__ << ": Failed: " << se.what();
+        throw std::runtime_error(msg.str());
+    } catch(...) {
+        std::ostringstream msg;
+        msg << __FUNCTION__ << ": Failed: Caught an unknown exception";
+        throw std::runtime_error(msg.str());
+    }
+}
+
+
 TransfersService::TransfersService(): BaseService("TransfersService")
 {
     cmd = "fts_url_copy";
@@ -67,6 +88,10 @@ void TransfersService::runService()
     while (!boost::this_thread::interruption_requested())
     {
         updateLastRunTimepoint();
+
+        if (config::ServerConfig::instance().get<std::string>("DbType") == "postgresql") {
+            postgresStoreMaxUrlCopyProcessesInDb();
+        }
 
         try
         {
