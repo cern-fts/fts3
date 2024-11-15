@@ -980,3 +980,32 @@ CREATE TRIGGER trg_update_queue_count
     AFTER UPDATE OF vo_name, source_se, dest_se, activity, file_state ON t_file
     FOR EACH ROW
 EXECUTE FUNCTION update_queue_count();
+
+
+CREATE OR REPLACE FUNCTION update_queues_on_file_insert()
+    RETURNS TRIGGER AS $$
+DECLARE
+    _queue_id bigint;
+BEGIN
+    -- Increment the queue counter and get back the queue_id
+    SELECT inc_queue_counter(
+                   _vo_name => NEW.vo_name,
+                   _source_se => NEW.source_se,
+                   _dest_se => NEW.dest_se,
+                   _activity => NEW.activity,
+                   _file_state => NEW.file_state,
+                   _delta => 1
+               ) INTO _queue_id;
+
+    -- Update the t_file row with the new queue_id
+    NEW.queue_id = _queue_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_insert_file
+    BEFORE INSERT ON t_file
+    FOR EACH ROW
+EXECUTE FUNCTION update_queues_on_file_insert();
