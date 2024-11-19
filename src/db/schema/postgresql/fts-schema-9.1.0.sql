@@ -728,7 +728,7 @@ BEGIN
     FOR UPDATE;
 
     IF NOT FOUND THEN
-        RAISE 'schedule_next_file_in_queue failed: No such queue: queue_id=%',
+        RAISE 'schedule_next_file_in_queue failed: Empty queue: queue_id=%',
             _submitted_queue_id;
     END IF;
 
