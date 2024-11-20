@@ -434,6 +434,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, how often to check for tokens eligible for token-exchange (empty refresh token)"
     )
     (
+        "TokenExchangeBulkSize",
+        po::value<std::string>( &(_vars["TokenExchangeBulkSize"]) )->default_value("500"),
+        "Bulk size for how many tokens to retrieve from the database at one time for token-exchange"
+    )
+    (
         "MessagingConsumeGraceTime",
         po::value<std::string>( &(_vars["MessagingConsumeGraceTime"]) )->default_value("600"),
         "In seconds, time window since last MessageProcessingService run to be considered inactive"

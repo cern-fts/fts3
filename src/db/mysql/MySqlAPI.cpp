@@ -4742,7 +4742,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
 }
 
 
-std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
+std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh(int limit)
 {
     soci::session sql(*connectionPool);
 
@@ -4755,7 +4755,7 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
         }
 
         const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
-        const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null" : "";
+        const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null " : "";
 
         const soci::rowset<Token> rs = (sql.prepare <<
             "SELECT"
@@ -4765,8 +4765,9 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh()
             "    refresh_token IS NULL AND "
             << managed_tokens_filter <<
             "    (retry_timestamp IS NULL OR retry_timestamp < " << utc_timestamp << ") AND "
-            "    attempts < 5 " <<
-            order_by_null);
+            "    attempts < 5 "
+            << order_by_null <<
+            "LIMIT " << limit);
 
         return {rs.begin(), rs.end()};
     }

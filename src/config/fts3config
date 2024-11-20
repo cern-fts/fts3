@@ -205,3 +205,6 @@ NonManagedTokens = True
 
 # In seconds, how often to check for access tokens which don't have an associated refresh token
 TokenExchangeCheckInterval = 30
+
+# Bulk size for how many tokens to retrieve from the database at one time for token-exchange (default 500)
+TokenExchangeBulkSize = 500

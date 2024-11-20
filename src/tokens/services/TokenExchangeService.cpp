@@ -39,6 +39,7 @@ TokenExchangeService::TokenExchangeService(const std::shared_ptr<HeartBeat>& hea
 {
     execPoolSize = ServerConfig::instance().get<int>("InternalThreadPool");
     pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("TokenExchangeCheckInterval");
+    bulkSize = ServerConfig::instance().get<int>("TokenExchangeBulkSize");
 }
 
 void TokenExchangeService::runService() {
@@ -46,21 +47,28 @@ void TokenExchangeService::runService() {
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenExchangeService interval: " << pollInterval.total_seconds() << "s" << commit;
+    int exchangedTokensLastRun = 0;
 
     while (!boost::this_thread::interruption_requested()) {
         updateLastRunTimepoint();
-        boost::this_thread::sleep(pollInterval);
+
+        // Stand-by if the previous run did not max out the token-exchange bulk size
+        if (exchangedTokensLastRun < bulkSize) {
+            boost::this_thread::sleep(pollInterval);
+        }
+
+        // Reset value here in case unexpected error is thrown in the main try/catch
+        exchangedTokensLastRun = 0;
 
         try {
             if (DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more token-exchange for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
 
             // This service intentionally runs only on the first node
             if (heartBeat->isLeadNode(true)) {
-                exchangeTokens();
+                exchangedTokensLastRun = exchangeTokens();
                 handleFailedTokenExchange();
                 // The below function does not require any state from the service
                 // Refresh tokens must be obtained for ALL access tokens that don't have one.
@@ -82,7 +90,7 @@ void TokenExchangeService::runService() {
     }
 }
 
-void TokenExchangeService::exchangeTokens() {
+int TokenExchangeService::exchangeTokens() {
     auto db = db::DBSingleton::instance().getDBObjectInstance();
     ThreadPool<TokenExchangeExecutor> execPool(execPoolSize);
 
@@ -90,7 +98,7 @@ void TokenExchangeService::exchangeTokens() {
         auto providers = db->getTokenProviders();
 
         time_t start = time(nullptr);
-        auto tokens = db->getAccessTokensWithoutRefresh();
+        auto tokens = db->getAccessTokensWithoutRefresh(bulkSize);
         time_t end = time(nullptr);
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TokenExchangeService\" "
                                         << "func=\"exchangeTokens\" "
@@ -99,7 +107,7 @@ void TokenExchangeService::exchangeTokens() {
                                         << commit;
 
         if (tokens.empty()) {
-            return;
+            return 0;
         }
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved " << tokens.size() << " tokens for token-exchange" << commit;
@@ -107,11 +115,10 @@ void TokenExchangeService::exchangeTokens() {
         for (auto& token: tokens) {
             if (boost::this_thread::interruption_requested()) {
                 execPool.interrupt();
-                return;
+                return -1;
             }
 
-            TokenExchangeExecutor *exec =
-                    new TokenExchangeExecutor(token, providers[token.issuer], *this);
+            auto* exec = new TokenExchangeExecutor(token, providers[token.issuer], *this);
             execPool.start(exec);
         }
 
@@ -134,6 +141,8 @@ void TokenExchangeService::exchangeTokens() {
                 exchangedTokens.clear();
             }
         }
+
+        return static_cast<int>(tokens.size());
     } catch (const boost::thread_interrupted &) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TokenExchangeService:exchangeTokens" << commit;
         execPool.interrupt();
@@ -144,6 +153,8 @@ void TokenExchangeService::exchangeTokens() {
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService! " << commit;
     }
+
+    return -1;
 }
 
 void TokenExchangeService::handleFailedTokenExchange()

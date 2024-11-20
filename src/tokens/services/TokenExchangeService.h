@@ -48,11 +48,12 @@ public:
     void registerFailedTokenExchange(const std::string& token_id, const std::string& message);
 
 protected:
+    int bulkSize;
     int execPoolSize;
     boost::posix_time::time_duration pollInterval;
     const std::shared_ptr<fts3::server::HeartBeat> heartBeat;
 
-    void exchangeTokens();
+    int exchangeTokens();
     void handleFailedTokenExchange();
 
 private:

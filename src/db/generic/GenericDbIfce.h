@@ -379,7 +379,7 @@ public:
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
     /// Returns list of access tokens without an associated refresh token
-    virtual std::list<Token> getAccessTokensWithoutRefresh() = 0;
+    virtual std::list<Token> getAccessTokensWithoutRefresh(int limit) = 0;
 
     /// Store a list of exchanged tokens
     virtual void storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens) = 0;
