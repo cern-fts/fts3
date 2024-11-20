@@ -152,6 +152,14 @@ private:
     TokenExchangeService& tokenExchangeService;
     /// Davix context
     Davix::Context context;
+
+    /// Protect the cached token endpoints map
+    static boost::shared_mutex mxTokenEndpoints;
+
+    /// Map of <issuer --> ("token_endpoint", "expire_at")>
+    /// Used to cache the ".well-known/openid-configuration" response
+    using tokenEndpointMap_t = std::map<std::string, std::pair<std::string, int64_t>>;
+    static tokenEndpointMap_t tokenEndpointMap;
 };
 
 } // end namespace token

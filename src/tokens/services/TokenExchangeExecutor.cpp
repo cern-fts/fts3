@@ -16,6 +16,7 @@
 
 #include "common/Logger.h"
 #include "common/Exceptions.h"
+#include "common/TimeUtils.h"
 #include "TokenExchangeExecutor.h"
 #include "IAMExchangeError.h"
 
@@ -25,6 +26,9 @@ using namespace fts3::common;
 
 namespace fts3 {
 namespace token {
+
+boost::shared_mutex TokenExchangeExecutor::mxTokenEndpoints;
+TokenExchangeExecutor::tokenEndpointMap_t TokenExchangeExecutor::tokenEndpointMap;
 
 void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
 {
@@ -95,6 +99,22 @@ ExchangedToken TokenExchangeExecutor::performTokenExchange()
 
 std::string TokenExchangeExecutor::getTokenEndpoint()
 {
+    // Look into the token endpoint map first
+    {
+        boost::unique_lock<boost::shared_mutex> lock(TokenExchangeExecutor::mxTokenEndpoints);
+        auto it = TokenExchangeExecutor::tokenEndpointMap.find(token.issuer);
+
+        if (it != TokenExchangeExecutor::tokenEndpointMap.end()) {
+            if (getTimestampSeconds() < it->second.second) {
+                FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Found cached token endpoint: "
+                                                 << token.issuer << " --> " << it->second.first
+                                                 << " (expire_at=" << it->second.second <<  ")" << commit;
+                return it->second.first;
+            }
+        }
+    }
+
+    // Retrieve the "token_endpoint" via the .well-known endpoint
     std::string endpoint = token.issuer + ".well-known/openid-configuration";
 
     Davix::Uri uri(endpoint);
@@ -108,7 +128,20 @@ std::string TokenExchangeExecutor::getTokenEndpoint()
     std::string response = executeHttpRequest(req);
 
     // Extract "token_endpoint" field from the JSON response
-    return parseJson(response, "token_endpoint");
+    auto tokenEndpoint = parseJson(response, "token_endpoint");
+
+    // Save "token_endpoint" value into token endpoint cache map
+    {
+        boost::unique_lock<boost::shared_mutex> lock(TokenExchangeExecutor::mxTokenEndpoints);
+        auto expireAt = getTimestampSeconds(3600);
+        TokenExchangeExecutor::tokenEndpointMap[token.issuer] = { tokenEndpoint, expireAt };
+
+        FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Storing cached token endpoint: "
+                                         << token.issuer << " --> " << tokenEndpoint
+                                         << " (expire_at=" << expireAt << ")" << commit;
+    }
+
+    return tokenEndpoint;
 }
 
 std::string TokenExchangeExecutor::getAuthorizationHeader() const
