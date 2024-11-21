@@ -15,6 +15,282 @@ import socket
 import time
 
 
+class SchedulerDecision:
+    def __init__(self):
+        self._transfers_per_queue = {}
+        self._total_nb_transfers = 0
+        self._opaque_data = (
+            None  # # Opaque data passed from one round of scheduling to the next
+        )
+
+    def __str__(self):
+        return (
+            "{"
+            + f"transfers_per_queue={self._transfers_per_queue},"
+            + f"total_nb_transfers={self._total_nb_transfers},"
+            + f"opaque_data={self._opaque_data}"
+            + "}"
+        )
+
+    def inc_transfers_for_queue(self, queue_id, nb_transfers):
+        if queue_id in self._transfers_per_queue.keys():
+            self._transfers_per_queue[queue_id] += nb_transfers
+        else:
+            self._transfers_per_queue[queue_id] = nb_transfers
+        self._total_nb_transfers += nb_transfers
+
+    def get_transfers_per_queue(self):
+        return self._transfers_per_queue
+
+    def get_total_nb_transfers(self):
+        return self._total_nb_transfers
+
+    def set_opaque_data(self, opaque_data):
+        self._opaque_data = opaque_data
+
+    def get_opaque_data(self):
+        return self._opaque_data
+
+
+class SchedulerAlgo:
+    def __init__(self, sched_input):
+        self.sched_input = sched_input
+
+    def schedule(self) -> SchedulerDecision:
+        pass
+
+
+class CirculerBuffer:
+    def __init__(self):
+        self._buf = []
+        self._next_idx = 0
+
+    def append(self, value):
+        self._buf.append(value)
+
+    def get_next(self):
+        if not self._buf:
+            raise Exception("get_next(): Empty buffer")
+        next_value = self._buf[self._next_idx]
+        self._next_idx = (self._next_idx + 1) % len(self._buf)
+        return next_value
+
+    def __len__(self):
+        return len(self._buf)
+
+    def __bool__(self):
+        return bool(self._buf)
+
+    def __str__(self):
+        return (
+            "{"
+            + f"buf={str(self._buf)},"
+            + f"next_idx={self._next_idx},"
+            + f"next={self._buf[self._next_idx] if self._buf else None}"
+            "}"
+        )
+
+    def skip_until_after(self, val_to_skip_over):
+        """
+        Skip through this circular-buffer until after the specified value
+        """
+        if not self._buf:
+            raise Exception("skip_until_after(): Circular-buffer is empty")
+
+        for idx in range(len(self._buf)):
+            if self._buf[idx] > val_to_skip_over:
+                self._next_idx = idx
+                return
+        self._next_idx = 0
+
+    def remove_value(self, value):
+        try:
+            self._buf.remove(value)
+        except Exception as e:
+            raise Exception(f"remove_value(): {e}")
+
+        # Wrap next_idx around to 0 if has fallen off the buffer
+        if self._next_idx == len(self._buf):
+            self._next_idx = 0
+
+
+class DefaultSchedulerAlgo(SchedulerAlgo):
+    def schedule(self) -> SchedulerDecision:
+        potential_concurrent_transfers = self._get_potential_concurrent_transfers()
+
+        # Do nothing if no work to be done or concurrent transfer limit reached
+        if not self.sched_input["queues"] or not potential_concurrent_transfers:
+            return None
+
+        link_id_to_nb_queued = self._get_link_id_to_nb_queued()
+        link_id_to_queues = self._get_link_id_to_queues()
+        all_link_ids = list(link_id_to_queues.keys())
+        link_id_to_potential = self._get_link_id_to_potential(
+            all_link_ids, link_id_to_nb_queued
+        )
+
+        # Do nothing if there are no link with the potential of being scheduled
+        if not link_id_to_potential:
+            return None
+
+        # Create a circular buffer of the sorted IDs of the links with the potential to a schedule
+        # transfer
+        potential_link_ids = list(link_id_to_potential.keys())
+        potential_link_ids.sort()
+        potential_link_id_cbuf = CirculerBuffer()
+        for potential_link_id in potential_link_ids:
+            potential_link_id_cbuf.append(potential_link_id)
+
+        # Create a circular buffer of queue_ids for each link
+        potential_link_id_to_queue_id_cbuf = {}
+        for potential_link_id in potential_link_ids:
+            queues = link_id_to_queues[potential_link_id]
+            queue_ids = list(queues.keys())
+            queue_ids.sort()
+            queue_id_cbuf = CirculerBuffer()
+            for queue_id in queue_ids:
+                queue_id_cbuf.append(queue_id)
+            potential_link_id_to_queue_id_cbuf[potential_link_id] = queue_id_cbuf
+
+        if self.sched_input["opaque_data"]:
+            potential_link_id_cbuf.skip_until_after(
+                self.sched_input["opaque_data"]["id_of_last_scheduled_link"]
+            )
+
+        # Round robin free work-capacity across submission queues taking into account any
+        # constraints
+        scheduler_decision = SchedulerDecision()
+        for i in range(potential_concurrent_transfers):
+            # Identify link that could do work
+            link_id = potential_link_id_cbuf.get_next()
+
+            # Get the next eligble queue on this link
+            queue_id_cbuf = potential_link_id_to_queue_id_cbuf[link_id]
+            queue_id = queue_id_cbuf.get_next()
+
+            # Schedule a transfer for this queue
+            scheduler_decision.inc_transfers_for_queue(queue_id, 1)
+            if not scheduler_decision.get_opaque_data():
+                scheduler_decision.set_opaque_data({})
+            scheduler_decision.get_opaque_data()["id_of_last_scheduled_link"] = link_id
+
+            # Update links to reflect remaining work to be done
+            link_id_to_potential[link_id] = link_id_to_potential[link_id] - 1
+            if link_id_to_potential[link_id] == 0:
+                potential_link_id_cbuf.remove_value(link_id)
+
+            # Stop scheduling if there is no more work to be done
+            if not potential_link_id_cbuf:
+                break
+
+        return scheduler_decision
+
+    def _get_link_id_to_queues(self):
+        link_id_to_queues = {}
+        for queue_id, queue in self.sched_input["queues"].items():
+            link_id = (queue["source_se"], queue["dest_se"])
+            if link_id not in link_id_to_queues.keys():
+                link_id_to_queues[link_id] = {}
+            link_id_to_queues[link_id][queue_id] = queue
+        return link_id_to_queues
+
+    def _get_link_max_active(self, link_id):
+        if link_id in self.sched_input["link_limits"].keys():
+            return self.sched_input["link_limits"][link_id]["max_active"]
+
+        link_id = ("*", "*")
+        if link_id in self.sched_input["link_limits"].keys():
+            return self.sched_input["link_limits"][link_id]["max_active"]
+
+        raise Exception(
+            "DefaultSchedulerAlgo._get_link_max_active(): No link configuration found for "
+            "(source_se={source_se},dest_se={dest_se}) or (source_se=*, dest_se=*)"
+        )
+
+    def _get_link_nb_active(self, link_id):
+        if link_id in self.sched_input["active_links"]:
+            return self.sched_input["active_links"][link_id]["nb_active"]
+        else:
+            return 0
+
+    def _get_link_id_to_nb_queued(self):
+        link_id_to_nb_queued = {}
+        for queue_id, queue in self.sched_input["queues"].items():
+            link_id = (queue["source_se"], queue["dest_se"])
+            if link_id not in link_id_to_nb_queued.keys():
+                link_id_to_nb_queued[link_id] = queue["nb_files"]
+            else:
+                link_id_to_nb_queued[link_id] += queue["nb_files"]
+        return link_id_to_nb_queued
+
+    def _get_link_potential(self, link_id, link_nb_queued):
+        """
+        Returns the number of transfers that could potentionally be scheduled on the specified link.
+        This method takes in to account the bot link and storage endpoint constraints.
+        """
+        source_se = link_id[0]
+        dest_se = link_id[1]
+
+        link_max_active = self._get_link_max_active(link_id)
+        source_out_max_active = self._get_storage_outbound_max_active(source_se)
+        dest_in_max_active = self._get_storage_inbound_max_active(source_se)
+
+        max_active = min(link_max_active, source_out_max_active, dest_in_max_active)
+
+        link_nb_active = self._get_link_nb_active(link_id)
+        link_potential = min(link_nb_queued, max(0, max_active - link_nb_active))
+        return link_potential
+
+    def _get_link_id_to_potential(self, link_ids, link_id_to_nb_queued):
+        """
+        Returns a map from link ID to the number of transfers that could potentionally be scheduled
+        on the corresponding link.  The map only contains links that have at least 1 potential
+        transfer.
+        """
+        link_id_to_potential = {}
+        for link_id in link_ids:
+            link_nb_queued = (
+                0
+                if link_id not in link_id_to_nb_queued
+                else link_id_to_nb_queued[link_id]
+            )
+            link_potential = self._get_link_potential(link_id, link_nb_queued)
+            if link_potential > 0:
+                link_id_to_potential[link_id] = link_potential
+        return link_id_to_potential
+
+    def _get_storage_inbound_max_active(self, storage):
+        if storage in self.sched_input["storages_limits"]:
+            return self.sched_input["storages_limits"][storage]["inbound_max_active"]
+        elif "*" in self.sched_input["storages_limits"]:
+            return self.sched_input["storages_limits"]["*"]["inbound_max_active"]
+        else:
+            raise Exception(
+                "DefaultSchedulerAlgo._get_storage_inbound_max_active(): "
+                f"No storage configuration for storage={storage} or storage=*"
+            )
+
+    def _get_storage_outbound_max_active(self, storage):
+        if storage in self.sched_input["storages_limits"]:
+            return self.sched_input["storages_limits"][storage]["outbound_max_active"]
+        elif "*" in self.sched_input["storages_limits"]:
+            return self.sched_input["storages_limits"]["*"]["outbound_max_active"]
+        else:
+            raise Exception(
+                "DefaultSchedulerAlgo._get_storage_outbound_max_active(): "
+                f"No storage configuration for storage={storage} or storage=*"
+            )
+
+    def _get_potential_concurrent_transfers(self):
+        """
+        Returns the number of potential concurrent-transfers
+        """
+        nb_active = 0
+        for active_link_id, active_link in self.sched_input["active_links"].items():
+            nb_active += active_link["nb_active"]
+        return max(0, self.sched_input["max_url_copy_processes"] - nb_active)
+
+
 class DbConn:
     """
     Wrapper around a psycopg2 connection object that was obtained from a
@@ -77,7 +353,7 @@ class DbConnPool:
         return DbConn(self.pool, dbconn)
 
 
-def get_log(log_file_path, log_program_name, log_level="INFO"):
+def get_log(log_file_path, log_program_name, log_level):
     hostname = socket.gethostname()
 
     log_format = (
@@ -122,33 +398,42 @@ def get_config(path, program_name):
 
     if not config.has_option("database", "user"):
         raise Exception(
-            f"The database section of the configuration file does not contain the user option: path={path}"
+            f"Missing configuration option: option=database.user path={path}"
         )
 
     if not config.has_option("database", "password"):
         raise Exception(
-            f"The database section of the configuration file does not contain the password option: path={path}"
+            f"Missing configuration option: option=database.password path={path}"
         )
 
     if not config.has_option("database", "dbname"):
         raise Exception(
-            f"The database section of the configuration file does not contain the database option: path={path}"
+            f"Missing configuration option: option=database.dbname path={path}"
         )
 
     if not config.has_option("database", "host"):
         raise Exception(
-            f"The database section of the configuration file does not contain the host option: path={path}"
+            f"Missing configuration option: option=database.host path={path}"
         )
 
     if not config.has_option("database", "port"):
         raise Exception(
-            f"The database section of the configuration file does not contain the port option: path={path}"
+            f"Missing configuration option: option=database.port path={path}"
         )
+
+    if config.has_option("log", "level"):
+        valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        log_level = config.get("log", "level")
+        if log_level not in valid_log_levels:
+            raise Exception(
+                f"Invalid database log-level: permitted={valid_log_levels} actual={log_level}"
+            )
 
     result = {
         "log_file": config.get(
-            "main", "log_file", fallback=f"/var/log/fts4/{program_name}.log"
+            "log", "file", fallback=f"/var/log/fts4/{program_name}.log"
         ),
+        "log_level": config.get("log", "level", fallback="INFO"),
         "sec_between_executions": config.getint(
             "main", "sec_between_executions", fallback=5
         ),
@@ -171,166 +456,359 @@ def get_major_db_schema_version(dbconn):
         return major_schema_version
 
 
-def get_queues_of_submitted_files(dbconn):
-    result = []
-    sql = """
-        SELECT
-            queue_id,
-            vo_name,
-            source_se,
-            dest_se,
-            activity,
-            nb_files
-        FROM
-            t_queue
-        WHERE
-            file_state = 'SUBMITTED'
-    """
-    with dbconn.cursor() as cursor:
-        cursor.execute(sql)
-        rows = cursor.fetchall()
-        for row in rows:
-            queue = {
-                "queue_id": row[0],
-                "vo_name": row[1],
-                "source_se": row[2],
-                "dest_se": row[3],
-                "activity": row[4],
-                "nb_files": row[5],
-            }
-            result.append(queue)
-    return result
+class Scheduler:
+    def __init__(self, scheduler_algo_class):
+        self._algo_class = scheduler_algo_class
+        self._algo_opaque_data = (
+            None  # Opaque data passed from one round of scheduling to the next
+        )
 
+    def schedule(self, dbconn):
+        if not self._this_host_is_scheduling(dbconn):
+            return
 
-def schedule_next_file_in_queue(dbconn, submitted_queue_id):
-    scheduled = False
+        sched_input = self._get_sched_input(dbconn)
+        log.debug(f"sched_input={sched_input}")
+        algo = self._algo_class(sched_input)
+        scheduler_decision = algo.schedule()
+        log.debug(f"scheduler_decision={scheduler_decision}")
+        if not scheduler_decision:
+            return
 
-    try:
-        sql = """
-            SELECT schedule_next_file_in_queue(
-                _submitted_queue_id => %(submitted_queue_id)s
-            ) AS file_id
-        """
-        params = {"submitted_queue_id": submitted_queue_id}
-        start_db = time.time()
-        with dbconn.cursor() as cursor:
-            cursor.execute(sql, params)
+        self._algo_opaque_data = scheduler_decision.get_opaque_data()
+        self._write_scheduler_decision_to_db(dbconn, scheduler_decision)
+        nb_scheduled = scheduler_decision.get_total_nb_transfers()
+        if nb_scheduled:
+            log.info(f"Scheduled transfers: nb_scheduled={nb_scheduled}")
+
+    def _get_queues(self, dbconn):
+        try:
+            sql = """
+                SELECT
+                    queue_id,
+                    vo_name,
+                    source_se,
+                    dest_se,
+                    activity,
+                    nb_files
+                FROM
+                    t_queue
+                WHERE
+                    file_state = 'SUBMITTED'
+                AND
+                nb_files > 0
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
             rows = cursor.fetchall()
             db_sec = time.time() - start_db
 
-            if len(rows) > 0:
-                file_id = rows[0][0]
-                scheduled = True
-                log.debug(
-                    f"Scheduled file: file_id={file_id} queue_id={submitted_queue_id} db_sec={db_sec}"
-                )
-    except Exception as e:
-        log.error(
-            "Failed to schedule next file in queue: "
-            f"queue_id={submitted_queue_id} "
-            f": {e}"
-        )
+            queues = {}
+            for row in rows:
+                queue = {
+                    "queue_id": row[0],
+                    "vo_name": row[1],
+                    "source_se": row[2],
+                    "dest_se": row[3],
+                    "activity": row[4],
+                    "nb_files": row[5],
+                }
+                queue_id = queue["queue_id"]
+                queues[queue_id] = queue
+            return queues, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_queues(): {e}")
 
-    return scheduled
+    def _get_max_url_copy_processes(self, dbconn) -> int:
+        try:
+            sql = """
+                SELECT
+                    COALESCE(SUM(max_url_copy_processes), 0)
+                FROM
+                    t_hosts
+                WHERE
+                    service_name = 'fts_server'
+                AND
+                    drain != 1
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
 
+            if not rows:
+                raise Exception("SELECT returned no rows")
 
-def get_link_config(dbconn):
-    link_config = {}
+            max_url_copy_processes = rows[0][0]
+            return max_url_copy_processes, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_max_url_copy_processes(): {e}")
 
-    sql = """
-        SELECT
-            source_se,
-            dest_se,
-            symbolic_name,
-            min_active,
-            max_active,
-        FROM
-            t_link_config
-    """
-    start_db = time.time()
-    cursor = dbconn.cursor()
-    cursor.execute(sql)
-    rows = cursor.fetchall()
-    db_sec = time.time() - start_db
+    def _get_link_limits(self, dbconn):
+        try:
+            sql = """
+                SELECT
+                    source_se,
+                    dest_se,
+                    min_active,
+                    max_active
+                FROM
+                    t_link_config
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
 
-    for row in rows:
-        link_config["source_se"] = row[0]
-        link_config["dest_se"] = row[1]
-        link_config["symbolic_name"] = row[2]
-        link_config["min_active"] = row[3]
-        link_config["max_active"] = row[4]
+            links = {}
+            for row in rows:
+                link = {}
+                link["source_se"] = row[0]
+                link["dest_se"] = row[1]
+                link["min_active"] = row[2]
+                link["max_active"] = row[3]
 
-    return link_config, db_sec
+                link_key = (link["source_se"], link["dest_se"])
+                links[link_key] = link
 
+            return links, db_sec
+        except Exception as e:
+            raise Exception(f"Schedduler._get_link_limits(): {e}")
 
-def schedule_queue(submitted_queue):
-    nb_scheduled = 0
+    def _get_active_links(self, dbconn):
+        """
+        Returns the number of effectively active tranfers per link.  A transfer is effectively
+        considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and is on its way
+        to becoming ACTIVE, in other words if is SCHEDULED, SELECTED or READY.
+        """
+        try:
+            sql = """
+                SELECT
+                    source_se,
+                    dest_se,
+                    SUM(nb_files)::bigint as nb_active
+                FROM
+                    t_queue
+                WHERE
+                    file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+                GROUP BY
+                    source_se,
+                    dest_se
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
 
-    if submitted_queue["nb_files"] > 0:
-        nb_scheduled = 1
+            links = {}
+            for row in rows:
+                link = {}
+                link["source_se"] = row[0]
+                link["dest_se"] = row[1]
+                link["nb_active"] = row[2]
 
-    return nb_scheduled
+                link_key = (link["source_se"], link["dest_se"])
+                links[link_key] = link
 
+            return links, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_active_links: {e}")
 
-class SchedulerDecision:
-    def __init__(self):
-        self.transfers_per_queue = {}
+    def _get_storage_limits(self, dbconn):
+        try:
+            sql = """
+                SELECT
+                    storage,
+                    inbound_max_active,
+                    outbound_max_active
+                FROM
+                    t_se
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
 
-    def set(self, queue_id, nb_transfers):
-        self.transfers_per_queue[queue_id] = nb_transfers
+            storages = {}
+            for row in rows:
+                storage = {}
+                storage["storage"] = row[0]
+                storage["inbound_max_active"] = row[1]
+                storage["outbound_max_active"] = row[2]
 
+                storage_key = storage["storage"]
+                storages[storage_key] = storage
 
-def schedule(submitted_queues) -> SchedulerDecision:
-    decision = SchedulerDecision()
-    nb_scheduled = 0
+            return storages, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_storage_limits(): {e}")
 
-    for submitted_queue in submitted_queues:
-        nb_transfers_for_queue = schedule_queue(submitted_queue)
-        decision.set(submitted_queue["queue_id"], nb_transfers_for_queue)
+    def _get_active_outbound_storages(self, dbconn):
+        """
+        Returns the number of effectively active out-bound tranfers per storage.  A transfer is
+        effectively considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and is
+        on its way to becoming ACTIVE, in other words if is SCHEDULED, SELECTED or READY.
+        """
+        try:
+            sql = """
+                SELECT
+                    source_se as storage,
+                    SUM(nb_files)::bigint as outbound_active
+                FROM
+                    t_queue
+                WHERE
+                    file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+                GROUP BY
+                    source_se
+                HAVING
+                    SUM(nb_files) > 0
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
 
-        nb_scheduled += nb_transfers_for_queue
+            storages = {}
+            for row in rows:
+                storage = {}
+                storage["storage"] = row[0]
+                storage["outbound_active"] = row[1]
+                storages[storage] = storage
 
-    if nb_scheduled:
-        log.info(f"Scheduled one or more transfers: nb_scheduled={nb_scheduled}")
+            return storages, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_active_outbound_storages: {e}")
 
-    return decision
+    def _get_active_inbound_storages(self, dbconn):
+        """
+        Returns the number of effectively active in-bound tranfers per storage.  A transfer is
+        effectively considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and is
+        on its way to becoming ACTIVE, in other words if is SCHEDULED, SELECTED or READY.
+        """
+        try:
+            sql = """
+                SELECT
+                    dest_se as storage,
+                    SUM(nb_files)::bigint as inbound_active
+                FROM
+                    t_queue
+                WHERE
+                    file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+                GROUP BY
+                    dest_se
+                HAVING
+                    SUM(nb_files) > 0
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
 
+            storages = {}
+            for row in rows:
+                storage = {}
+                storage["storage"] = row[0]
+                storage["inbound_active"] = row[1]
+                storages[storage] = storage
 
-def select_worker_hostname(dbconn):
-    sql = """
-        SELECT
-          hostname
-        FROM
-          t_hosts
-        WHERE
-          drain IS NOT NULL OR drain = 0
-        ORDER BY
-          hostname ASC
-        LIMIT 1
-    """
-    start_db = time.time()
-    cursor = dbconn.cursor()
-    cursor.execute(sql)
-    row = cursor.fetchone()
-    db_sec = time.time() - start_db
+            return storages, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_active_inbound_storages: {e}")
 
-    if row:
-        hostname = row[0]
-    else:
-        hostname = None
+    def _get_sched_input(self, dbconn):
+        try:
+            id_of_last_scheduled_queue = 0
+            sched_input = {}
+            sched_input["opaque_data"] = self._algo_opaque_data
+            sched_input["max_url_copy_processes"], db_sec = (
+                self._get_max_url_copy_processes(dbconn)
+            )
+            sched_input["id_of_last_scheduled_queue"] = id_of_last_scheduled_queue
+            sched_input["queues"], db_sec = self._get_queues(dbconn)
+            sched_input["link_limits"], db_sec = self._get_link_limits(dbconn)
+            sched_input["active_links"], db_sec = self._get_active_links(dbconn)
+            sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
 
-    return hostname, db_sec
+            return sched_input
+        except Exception as e:
+            raise Exception(f"Scheduler._get_sched_input(): {e}")
 
+    def _schedule_next_file_in_queue(self, dbconn, submitted_queue_id):
+        try:
+            sql = """
+                SELECT schedule_next_file_in_queue(
+                    _submitted_queue_id => %(submitted_queue_id)s
+                ) AS file_id
+            """
+            params = {"submitted_queue_id": submitted_queue_id}
+            start_db = time.time()
+            with dbconn.cursor() as cursor:
+                cursor.execute(sql, params)
+                rows = cursor.fetchall()
+                db_sec = time.time() - start_db
 
-def this_host_is_scheduling(dbconn) -> bool:
-    worker_hostname, select_worker_hostname_sec = select_worker_hostname(dbconn)
-    return worker_hostname and worker_hostname == socket.gethostname()
+                if len(rows) > 0:
+                    file_id = rows[0][0]
+                    scheduled = True
+                    log.debug(
+                        "Scheduled file: "
+                        f"file_id={file_id} queue_id={submitted_queue_id} db_sec={db_sec}"
+                    )
+        except Exception as e:
+            raise Exception(f"Scheduler._schedule_next_file_in_queue(): {e}")
 
+    def _select_worker_hostname(self, dbconn):
+        try:
+            sql = """
+                SELECT
+                  hostname
+                FROM
+                  t_hosts
+                WHERE
+                  drain IS NOT NULL OR drain = 0
+                ORDER BY
+                  hostname ASC
+                LIMIT 1
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            row = cursor.fetchone()
+            db_sec = time.time() - start_db
 
-def write_scheduler_decision_to_db(dbconn, decision):
-    for queue_id, nb_transfers in decision.transfers_per_queue.items():
-        for i in range(nb_transfers):
-            schedule_next_file_in_queue(dbconn, queue_id)
+            if row:
+                hostname = row[0]
+            else:
+                hostname = None
+
+            return hostname, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._select_worker_hostname(): {e}")
+
+    def _this_host_is_scheduling(self, dbconn) -> bool:
+        try:
+            worker_hostname, select_worker_hostname_sec = self._select_worker_hostname(
+                dbconn
+            )
+            return worker_hostname and worker_hostname == socket.gethostname()
+        except Exception as e:
+            raise Exception(f"Scheduler._this_host_is_scheduling(): {e}")
+
+    def _write_scheduler_decision_to_db(self, dbconn, scheduler_decision):
+        try:
+            transfers_per_queue = scheduler_decision.get_transfers_per_queue()
+            for queue_id, nb_transfers in transfers_per_queue.items():
+                for i in range(nb_transfers):
+                    self._schedule_next_file_in_queue(dbconn, queue_id)
+        except Exception as e:
+            raise Exception(f"Scheduler._write_scheduler_decision_to_db(): {e}")
 
 
 program_name = "fts_scheduler"
@@ -347,7 +825,11 @@ cmd_line = parser.parse_args()
 
 config = get_config(cmd_line.config, program_name)
 
-log = get_log(log_file_path=config["log_file"], log_program_name=program_name)
+log = get_log(
+    log_file_path=config["log_file"],
+    log_program_name=program_name,
+    log_level=config["log_level"],
+)
 
 log.info("Started")
 
@@ -375,17 +857,19 @@ if actual_major_db_schema_version < min_allowed_major_db_schema_version:
     )
     exit(1)
 
+scheduler = Scheduler(DefaultSchedulerAlgo)
+
 while True:
     execution_start = time.time()
 
     try:
         with dbconn_pool.get_dbconn() as dbconn:
-            if this_host_is_scheduling(dbconn):
-                submitted_queues = get_queues_of_submitted_files(dbconn)
-                decision = schedule(submitted_queues)
-                write_scheduler_decision_to_db(dbconn, decision)
+            scheduler.schedule(dbconn)
     except Exception as e:
         log.error(f"Caught exception when trying to schedule: {e}")
+        import traceback
+
+        traceback.print_exc()
 
     execution_duration = time.time() - execution_start
 
