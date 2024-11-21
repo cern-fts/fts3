@@ -1009,3 +1009,25 @@ CREATE TRIGGER trg_insert_file
     BEFORE INSERT ON t_file
     FOR EACH ROW
 EXECUTE FUNCTION update_queues_on_file_insert();
+
+
+CREATE OR REPLACE FUNCTION update_queues_on_file_delete()
+    RETURNS TRIGGER AS $$
+BEGIN
+    -- Decrement the current queue counter
+    UPDATE
+        t_queue
+    SET
+        nb_files = nb_files - 1
+    WHERE
+        queue_id = OLD.queue_id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_delete_file
+    AFTER DELETE ON t_file
+    FOR EACH ROW
+EXECUTE FUNCTION update_queues_on_file_delete();
