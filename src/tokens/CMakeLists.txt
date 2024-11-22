@@ -17,7 +17,8 @@
 if (SERVERBUILD STREQUAL "ON")
     install(FILES       ftstokenhousekeeperd
                         ftstokenrefresherd
-            DESTINATION ${SBIN_INSTALL_DIR})
+            DESTINATION ${SBIN_INSTALL_DIR}
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ WORLD_READ)
 
     if (SYSTEMD_INSTALL_DIR)
         install(FILES       ftstokenhousekeeperd.service

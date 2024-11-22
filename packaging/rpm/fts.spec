@@ -5,13 +5,13 @@
 %define __python python3
 
 Name:       fts
-Version:    3.13.2
+Version:    3.13.3
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.13.2 https://gitlab.cern.ch/fts/fts3.git fts-3.13.2
-# tar -vczf fts-3.13.2.tar.gz --exclude-vcs fts-3.13.2/
+# git clone --depth=1 --branch v3.13.3 https://gitlab.cern.ch/fts/fts3.git fts-3.13.3
+# tar -vczf fts-3.13.3.tar.gz --exclude-vcs fts-3.13.3/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -320,6 +320,9 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Fri Nov 22 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3
+- Executable "tokenrefresherd" and "tokenhousekeeperd" daemons
+- Systemd unit files for the "/usr/sbin/" token daemons
 
 * Tue Sep 03 2024 Louis Regnier <louis.regnier@cern.ch> - 3.13.2
 - Do a "staging abort" when a HTTP staging transfer is cancelled
