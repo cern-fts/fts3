@@ -96,7 +96,7 @@ def get_config(path, program_name):
         ),
         "log_level": config.get("log", "level", fallback="INFO"),
         "sec_between_executions": config.getint(
-            "main", "sec_between_executions", fallback=5
+            "main", "sec_between_executions", fallback=2
         ),
         "db_user": config.get("database", "user"),
         "db_password": config.get("database", "password"),
