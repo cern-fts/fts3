@@ -269,6 +269,40 @@ class Scheduler:
         except Exception as e:
             raise Exception(f"Scheduler._get_active_inbound_storages: {e}")
 
+    def _get_optimizer_limits(self, dbconn):
+        """
+        Returns a map from link to the maximum number of active transfers the link can have as
+        decided by the FTS optimizer
+        """
+        try:
+            sql = """
+                SELECT
+                    source_se,
+                    dest_se,
+                    active
+                FROM
+                    t_optimizer
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
+
+            links = {}
+            for row in rows:
+                link = {}
+                link["source_se"] = row[0]
+                link["dest_se"] = row[1]
+                link["active"] = row[2]
+
+                link_key = (link["source_se"], link["dest_se"])
+                links[link_key] = link
+
+            return links, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._optimizer_max_active: {e}")
+
     def _get_sched_input(self, dbconn):
         try:
             id_of_last_scheduled_queue = 0
@@ -281,6 +315,7 @@ class Scheduler:
             sched_input["queues"], db_sec = self._get_queues(dbconn)
             sched_input["link_limits"], db_sec = self._get_link_limits(dbconn)
             sched_input["active_links"], db_sec = self._get_active_links(dbconn)
+            sched_input["optimizer_limits"], db_sec = self._get_optimizer_limits(dbconn)
             sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
 
             return sched_input

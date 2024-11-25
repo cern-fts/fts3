@@ -136,12 +136,19 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         return link_id_to_queues
 
     def _get_link_max_active(self, link_id):
-        if link_id in self.sched_input["link_limits"].keys():
-            return self.sched_input["link_limits"][link_id]["max_active"]
+        max_active = 0
 
-        link_id = ("*", "*")
         if link_id in self.sched_input["link_limits"].keys():
-            return self.sched_input["link_limits"][link_id]["max_active"]
+            max_active = self.sched_input["link_limits"][link_id]["max_active"]
+        elif ("*", "*") in self.sched_input["link_limits"].keys():
+            max_active = self.sched_input["link_limits"][("*", "*")]["max_active"]
+
+        if link_id in self.sched_input["optimizer_limits"].keys():
+            max_active = min(
+                max_active, self.sched_input["optimizer_limits"][link_id]["active"]
+            )
+
+        return max_active
 
         raise Exception(
             "DefaultSchedulerAlgo._get_link_max_active(): No link configuration found for "
