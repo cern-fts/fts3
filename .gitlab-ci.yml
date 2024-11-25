@@ -20,9 +20,9 @@ stages:
     - pyenv global ${!PY}
     - source ${!VENV}/bin/activate
     - pylint --version
-    - pylint --output-format colorized --disable C,R,W ./src/scheduler/*
+    - pylint --output-format colorized --disable C,R,W ./src/scheduler/fts_scheduler
   variables:
-    PYTHONPATH: ./src/scheduler
+    PYTHONPATH: ./src/scheduler/fts_scheduler
 
 black:
   # Check that every file has been formatted with black
@@ -30,7 +30,7 @@ black:
   stage: static_code_analysis
   script:
     - black --version
-    - black --check --fast --diff --target-version py39 ./src/scheduler/*
+    - black --check --fast --diff --target-version py39 ./src/scheduler/fts_scheduler
 
 pylint39:
   <<: *pylint_definition
