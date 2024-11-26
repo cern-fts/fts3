@@ -171,6 +171,35 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 link_to_nb_queued[link_key] += queue["nb_files"]
         return link_to_nb_queued
 
+    def _get_link_nb_active_per_vo(self, link_key):
+        nb_active_per_vo = {}
+        for queue_id, queue in self.sched_input["queues"].items():
+           queue_link_key = (queue["source_se"], queue["dest_se"])
+           if queue_link_key == link_key:
+               vo = queue["vo"]
+               nb_files = queue["nb_files"]
+
+               if vo not in nb_active_per_vo.keys():
+                   nb_active_per_vo[vo] = 0
+               nb_active_per_vo[vo] += nb_files
+        return nb_active_per_vo
+
+    def _get_link_nb_active_per_vo_activity(self, link_key):
+        nb_active_per_vo_activity = {}
+        for queue_id, queue in self.sched_input["queues"].items():
+            queue_link_key = (queue["source_se"], queue["dest_se"])
+            if queue_link_key == link_key:
+                vo = queue["vo"]
+                activity = queue["activity"]
+                nb_files = queue["nb_files"]
+
+                if vo not in nb_active_per_vo_activity.keys():
+                    nb_active_per_vo_activity[vo] = {}
+                if activity not in nb_active_per_vo_activity[vo].keys():
+                    nb_active_per_vo_activity[vo][activity] = 0
+                nb_active_per_vo_activity[vo][activity] += nb_files
+        return nb_active_per_vo_activity
+
     def _get_link_potential(self, link_key, link_nb_queued):
         """
         Returns the number of transfers that could potentionally be scheduled on the specified link.
