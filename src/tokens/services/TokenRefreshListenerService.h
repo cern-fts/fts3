@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <zmq.hpp>
+
 #include "db/generic/Token.h"
 #include "server/common/BaseService.h"
 #include "server/services/heartbeat/HeartBeat.h"
@@ -23,17 +25,28 @@
 namespace fts3 {
 namespace token {
 
-class TokenRefreshService: public fts3::server::BaseService
+class TokenRefreshListenerService: public fts3::server::BaseService
 {
 public:
-    TokenRefreshService();
-    virtual ~TokenRefreshService() = default;
+    TokenRefreshListenerService();
+    virtual ~TokenRefreshListenerService() = default;
 
     virtual void runService();
 
 protected:
-    int execPoolSize;
-    boost::posix_time::time_duration pollInterval;
+    /// ZMQ setup
+    zmq::context_t zmqContext;
+    zmq::socket_t zmqTokenRouter;
+
+private:
+    /// Register ZMQ client in the message routing map
+    void registerClientRequest(const std::string& token_id, zmq::message_t&& identity);
+
+    /// Dispatch refresh tokens to ZMQ clients
+    void dispatchClientResponses(const std::set<std::string>& token_ids);
+
+    /// Message routing map <tokenId --> [list of ZMQ identifiers]>
+    std::map<std::string, std::list<zmq::message_t>> routingMap;
 };
 
 } // end namespace token

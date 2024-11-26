@@ -44,4 +44,6 @@ public:
     void sendPing(Transfer &t) {
         pingMsgs.push_back(t);
     }
+
+    void requestTokenRefresh(const std::string&, const Transfer&) {}
 };

@@ -228,6 +228,18 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 }
 
 
+void UrlCopyCmd::setSourceTokenId(const std::string &token_id)
+{
+    setOption("src-token-id", token_id);
+}
+
+
+void UrlCopyCmd::setDestinationTokenId(const std::string &token_id)
+{
+    setOption("dst-token-id", token_id);
+}
+
+
 void UrlCopyCmd::setAuthMethod(const std::string &method)
 {
     setOption("auth-method", method);

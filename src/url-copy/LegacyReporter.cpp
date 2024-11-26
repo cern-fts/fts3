@@ -24,10 +24,14 @@ using fts3::common::commit;
 
 
 LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), opts(opts),
-    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PUB)
+    zmqContextPing(1), zmqContextToken(1),
+    zmqPingSocket(zmqContextPing, zmq::socket_type::pub),
+    zmqTokenSocket(zmqContextToken, zmq::socket_type::req)
 {
-    std::string address = std::string("ipc://") + opts.msgDir + "/url_copy-ping.ipc";
-    zmqPingSocket.connect(address.c_str());
+    auto pingAddress = "ipc://" + opts.msgDir + "/url_copy-ping.ipc";
+    auto tokenAddress = "ipc://" + opts.msgDir + "/url_copy-token-refresh.ipc";
+    zmqPingSocket.connect(pingAddress.c_str());
+    zmqTokenSocket.connect(tokenAddress.c_str());
 }
 
 
@@ -397,4 +401,27 @@ void LegacyReporter::sendPing(Transfer &transfer)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;
     }
     transfer.previousPingTransferredBytes = transfer.transferredBytes;
+}
+
+void LegacyReporter::requestTokenRefresh(const std::string& token_id, const Transfer& transfer)
+{
+    events::TokenRefreshRequest request;
+
+    request.set_token_id(token_id);
+    request.set_job_id(transfer.jobId);
+    request.set_file_id(transfer.fileId);
+    request.set_hostname(fts3::common::getFullHostname());
+    request.set_process_id(getpid());
+
+    try {
+        auto serialized = request.SerializeAsString();
+        zmqTokenSocket.send(zmq::message_t{serialized}, zmq::send_flags::none);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Sent TokenRefresh request: token_id=" << token_id << commit;
+        // Wait for server reply
+        zmq::message_t reply;
+        zmqTokenSocket.recv(reply, zmq::recv_flags::none);
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Received: " << reply.to_string() << commit;
+    } catch (const std::exception& error) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send TokenRefresh request: " << error.what() << commit;
+    }
 }

@@ -25,8 +25,10 @@ class LegacyReporter: public Reporter {
 private:
     Producer producer;
     UrlCopyOpts opts;
-    zmq::context_t zmqContext;
+    zmq::context_t zmqContextPing;
+    zmq::context_t zmqContextToken;
     zmq::socket_t zmqPingSocket;
+    zmq::socket_t zmqTokenSocket;
 
 public:
     LegacyReporter(const UrlCopyOpts &opts);
@@ -38,6 +40,8 @@ public:
     virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&);
 
     virtual void sendPing(Transfer&);
+
+    virtual void requestTokenRefresh(const std::string&, const Transfer&);
 };
 
 #endif // FTS3_LEGACYREPORTER_H

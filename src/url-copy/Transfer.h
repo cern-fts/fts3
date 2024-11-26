@@ -118,6 +118,8 @@ public:
     std::string tokenBringOnline;
     std::string sourceTokenDescription;
     std::string destTokenDescription;
+    std::string sourceTokenId;
+    std::string destTokenId;
     std::string sourceTokenIssuer;
     std::string destTokenIssuer;
     unsigned    scitag;

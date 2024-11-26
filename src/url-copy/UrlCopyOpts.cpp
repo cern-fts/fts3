@@ -61,15 +61,17 @@ const option UrlCopyOpts::long_options[] =
     {"user-dn",                required_argument, 0, 501},
     {"proxy",                  required_argument, 0, 502},
     {"oauth",                  required_argument, 0, 503},
-    {"source-issuer",          required_argument, 0, 504},
-    {"dest-issuer",            required_argument, 0, 505},
-    {"auth-method",            required_argument, 0, 506},
-    {"copy-mode",              required_argument, 0, 507},
-    {"disable-fallback",       no_argument,       0, 508},
-    {"retrieve-se-token",      no_argument,       0, 509},
-    {"cloud-config",           required_argument, 0, 510},
-    {"overwrite-disk-enabled", no_argument,       0, 511},
-    {"disable-cleanup",        no_argument,       0, 512},
+    {"src-token-id",           required_argument, 0, 504},
+    {"dst-token-id",           required_argument, 0, 505},
+    {"source-issuer",          required_argument, 0, 506},
+    {"dest-issuer",            required_argument, 0, 507},
+    {"auth-method",            required_argument, 0, 508},
+    {"copy-mode",              required_argument, 0, 509},
+    {"disable-fallback",       no_argument,       0, 510},
+    {"retrieve-se-token",      no_argument,       0, 511},
+    {"cloud-config",           required_argument, 0, 512},
+    {"overwrite-disk-enabled", no_argument,       0, 513},
+    {"disable-cleanup",        no_argument,       0, 514},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -343,30 +345,36 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     oauthFile = optarg;
                     break;
                 case 504:
-                    referenceTransfer.sourceTokenIssuer = optarg;
+                    referenceTransfer.sourceTokenId = optarg;
                     break;
                 case 505:
-                    referenceTransfer.destTokenIssuer = optarg;
+                    referenceTransfer.destTokenId = optarg;
                     break;
                 case 506:
-                    authMethod = optarg;
+                    referenceTransfer.sourceTokenIssuer = optarg;
                     break;
                 case 507:
-                    copyMode = translateCopyMode(optarg);
+                    referenceTransfer.destTokenIssuer = optarg;
                     break;
                 case 508:
-                    disableCopyFallback = true;
+                    authMethod = optarg;
                     break;
                 case 509:
-                    retrieveSEToken = true;
+                    copyMode = translateCopyMode(optarg);
                     break;
                 case 510:
-                    cloudStorageConfig = optarg;
+                    disableCopyFallback = true;
                     break;
                 case 511:
-                    overwriteDiskEnabled = true;
+                    retrieveSEToken = true;
                     break;
                 case 512:
+                    cloudStorageConfig = optarg;
+                    break;
+                case 513:
+                    overwriteDiskEnabled = true;
+                    break;
+                case 514:
                     disableCleanup = true;
                     break;
 

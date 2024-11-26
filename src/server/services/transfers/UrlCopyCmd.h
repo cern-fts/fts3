@@ -72,6 +72,8 @@ public:
     void setCloudConfig(const std::string&);
     void setOAuthFile(const std::string&);
     void setAuthMethod(const std::string&);
+    void setSourceTokenId(const std::string&);
+    void setDestinationTokenId(const std::string&);
     void setRetrieveSEToken(bool);
 
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn, const std::string &msgDir);

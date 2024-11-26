@@ -201,7 +201,7 @@ static void loadTokensFile(const std::string& path, Gfal2TransferParams &params)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load source bearer token form credentials file" << commit;
     }
 
-    // Second line contains source bearer token
+    // Second line contains destination bearer token
     if (std::getline(infile, line, '\n') && !line.empty()) {
         params.setDestBearerToken(line);
     } else {
@@ -439,6 +439,11 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dstFileReport << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;
+
+    if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Will request token refresh for!!" << commit;
+        reporter.requestTokenRefresh(transfer.sourceTokenId, transfer);
+    }
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;

@@ -1,0 +1,9 @@
+syntax = "proto2";
+
+package fts3.events;
+
+message TokenRefreshResponse {
+  required string token_id = 1;
+  required string access_token = 2;
+  required uint64 expiry_timestamp = 3;
+}
