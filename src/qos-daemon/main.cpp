@@ -119,6 +119,7 @@ static void doServer()
 
     auto logLevel = Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel"));
     theLogger().setLogLevel(logLevel);
+    theLogger().setProfiling(ServerConfig::instance().get<bool>("Profiling"));
 
     if (logLevel <= Logger::LogLevel::DEBUG) {
         setenv("XRD_LOGLEVEL", "Debug", 1);

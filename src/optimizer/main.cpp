@@ -94,6 +94,7 @@ static void doServer()
     }
 
     theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+    theLogger().setProfiling(ServerConfig::instance().get<bool>("Profiling"));
 
     initializeDatabase();
     OptimizerServer::instance().start();
