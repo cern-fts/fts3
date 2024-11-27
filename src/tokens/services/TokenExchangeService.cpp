@@ -97,15 +97,7 @@ int TokenExchangeService::exchangeTokens()
 
     try {
         auto providers = db->getTokenProviders();
-
-        time_t start = time(nullptr);
         auto tokens = db->getAccessTokensWithoutRefresh(bulkSize);
-        time_t end = time(nullptr);
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TokenExchangeService\" "
-                                        << "func=\"exchangeTokens\" "
-                                        << "DBcall=\"getAccessTokensWithoutRefresh\" "
-                                        << "time=\"" << end - start << "\""
-                                        << commit;
 
         if (tokens.empty()) {
             return 0;
