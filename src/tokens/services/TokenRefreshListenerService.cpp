@@ -61,7 +61,7 @@ void TokenRefreshListenerService::runService()
                                                 << " [" << request.process_id() << "@" << request.hostname() << "]"
                                                 << commit;
 
-                registerClientRequest(request.token_id(), std::move(identity));
+                registerClientRequest(request, std::move(identity));
 
                 // Send the TokenId to the TokenRefreshPoller service
                 tokenRefreshPoller->registerTokenToRefresh(request.token_id());
@@ -81,7 +81,8 @@ void TokenRefreshListenerService::runService()
     }
 }
 
-void TokenRefreshListenerService::registerClientRequest(const std::string& token_id, zmq::message_t&& identity)
+void TokenRefreshListenerService::registerClientRequest(
+    const fts3::events::TokenRefreshRequest& request, zmq::message_t&& identity)
 {
     /**
      * Ideally, this function would use a set, but this will create many problems
@@ -89,20 +90,26 @@ void TokenRefreshListenerService::registerClientRequest(const std::string& token
      * Over all, it's easier to use a list and ensure no duplicates are inserted
      */
     bool duplicate = false;
+    auto token_id = request.token_id();
+
 
     if (!routingMap.contains(token_id)) {
-        routingMap[token_id] = std::list<zmq::message_t>();
+        routingMap[token_id] = std::list<ZMQ_client>();
     }
 
     for (const auto& it: routingMap[token_id]) {
-        if (it == identity) {
+        if (it.identifier == identity) {
             duplicate = true;
             break;
         }
     }
 
     if (!duplicate) {
-        routingMap[token_id].emplace_back(std::move(identity));
+        routingMap[token_id].emplace_back(ZMQ_client{
+                std::move(identity),
+                request.job_id(), request.file_id(),
+                request.process_id(), request.hostname()
+        });
     }
 }
 
@@ -119,9 +126,16 @@ void TokenRefreshListenerService::dispatchClientResponses(const std::set<Token>&
             auto serialized = response.SerializeAsString();
 
             for (auto& it: map_it->second) {
-                zmqTokenRouter.send(it, zmq::send_flags::sndmore);
+                zmqTokenRouter.send(it.identifier, zmq::send_flags::sndmore);
                 zmqTokenRouter.send(zmq::message_t{0}, zmq::send_flags::sndmore);
                 zmqTokenRouter.send(zmq::message_t{serialized}, zmq::send_flags::none);
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenRefresh response sent:"
+                                << " token_id=" << response.token_id()
+                                << " expiration_time=" << response.expiry_timestamp()
+                                << " job_id=" << it.job_id << " file_id=" << it.file_id
+                                << " [" << it.process_id << "@" << it.hostname << "]"
+                                << commit;
             }
 
             routingMap.erase(map_it);

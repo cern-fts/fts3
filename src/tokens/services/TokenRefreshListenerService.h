@@ -18,6 +18,7 @@
 
 #include <zmq.hpp>
 
+#include "msg-bus/events.h"
 #include "db/generic/Token.h"
 #include "server/common/BaseService.h"
 #include "TokenRefreshPollerService.h"
@@ -54,13 +55,28 @@ protected:
 
 private:
     /// Register ZMQ client in the message routing map
-    void registerClientRequest(const std::string& token_id, zmq::message_t&& identity);
+    void registerClientRequest(const fts3::events::TokenRefreshRequest& request, zmq::message_t&& identity);
 
     /// Dispatch refresh tokens to ZMQ clients
     void dispatchClientResponses(const std::set<Token>& tokens);
 
-    /// Message routing map <tokenId --> [list of ZMQ identifiers]>
-    std::map<std::string, std::list<zmq::message_t>> routingMap;
+    struct ZMQ_client {
+        ZMQ_client(zmq::message_t&& identifier,
+                   const std::string& job_id, const uint64_t file_id,
+                   const int32_t process_id, const std::string& hostname) :
+            identifier(std::move(identifier)), job_id(job_id), file_id(file_id),
+            process_id(process_id), hostname(hostname)
+        {}
+
+        zmq::message_t identifier;
+        std::string job_id;
+        uint64_t file_id;
+        int32_t process_id;
+        std::string hostname;
+    };
+
+    /// Message routing map <tokenId --> [list of ZMQ clients]>
+    std::map<std::string, std::list<ZMQ_client>> routingMap;
 };
 
 } // end namespace token

@@ -24,8 +24,6 @@
 #include "TokenExchangeService.h"
 #include "TokenExchangeExecutor.h"
 
-#include <cstdlib>
-
 using namespace fts3::config;
 using namespace fts3::common;
 using namespace fts3::server;
@@ -68,10 +66,9 @@ void TokenExchangeService::runService()
 
             // This service intentionally runs only on the first node
             if (heartBeat->isLeadNode(true)) {
+                // Refresh tokens must be obtained for ALL access tokens that don't have one
                 exchangedTokensLastRun = exchangeTokens();
                 handleFailedTokenExchange();
-                // The below function does not require any state from the service
-                // Refresh tokens must be obtained for ALL access tokens that don't have one.
 
                 // Move the file state from "TOKEN_PREP" to its supposed initial state (stored in "t_token_file_state_initial")
                 // Note: The token-exchange can have the following impact on transfers:
@@ -124,8 +121,9 @@ int TokenExchangeService::exchangeTokens()
             for (const auto& it: exchangedTokens) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Storing exchanged token: "
                                                 << "token_id=" << it.tokenId << " "
+                                                << "expiration_time=" << it.expiry << " "
                                                 << "access_token=" << it.accessTokenToString() << " "
-                                                << "refresh_token=" << it.refreshToken
+                                                << "refresh_token=" << it.refreshTokenToString()
                                                 << commit;
             }
 
@@ -144,7 +142,7 @@ int TokenExchangeService::exchangeTokens()
     } catch (std::exception& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService:exchangeTokens: " << e.what() << commit;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService! " << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService:exchangeTokens! " << commit;
     }
 
     return -1;

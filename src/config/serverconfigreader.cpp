@@ -435,9 +435,14 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Bulk size for how many tokens to retrieve from the database at one time for token-exchange"
     )
     (
-        "TokenRefreshInterval",
-        po::value<std::string>( &(_vars["TokenRefreshInterval"]) )->default_value("5"),
-        "In seconds, how often to listen for new token-refresh requests from the transfer agents"
+        "TokenRefreshCheckInterval",
+        po::value<std::string>( &(_vars["TokenRefreshCheckInterval"]) )->default_value("15"),
+        "In seconds, how often to check for tokens marked for refreshing"
+    )
+    (
+        "TokenRefreshBulkSize",
+        po::value<std::string>( &(_vars["TokenRefreshBulkSize"]) )->default_value("500"),
+        "Bulk size for how many tokens to retrieve from the database at one time for token-refresh"
     )
     (
         "MessagingConsumeGraceTime",

@@ -73,11 +73,13 @@ public:
 class ExchangedToken
 {
 public:
-    ExchangedToken() = default;
+    ExchangedToken() :
+        expiry(0)
+    {}
 
     ExchangedToken(const std::string& id, const std::string& access,
-                   const std::string& refresh, const std::string& prevAccess) :
-           tokenId(id), accessToken(access), refreshToken(refresh), previousAccessToken(prevAccess)
+                   const std::string& refresh, const std::string& prevAccess, const time_t& exp) :
+           tokenId(id), accessToken(access), refreshToken(refresh), previousAccessToken(prevAccess), expiry(exp)
     {}
 
     ~ExchangedToken() = default;
@@ -93,13 +95,73 @@ public:
         return out.str();
     }
 
+    std::string refreshTokenToString() const {
+        if (refreshToken.empty()) {
+            return "null";
+        }
+
+        std::ostringstream out;
+        out << refreshToken.substr(0, 5) << "..."
+            << refreshToken.substr(refreshToken.size() - 5);
+        return out.str();
+    }
+
     std::string tokenId;
     std::string accessToken;
     std::string refreshToken;
     std::string previousAccessToken;
+    time_t expiry;
 
     /// Needed for STL container operations
     inline bool operator < (const ExchangedToken& other) const
+    {
+        return tokenId < other.tokenId;
+    }
+};
+
+/**
+* Object representation of a refreshed access token.
+*/
+class RefreshedToken
+{
+public:
+    RefreshedToken() :
+        expiry(0)
+    {}
+
+    RefreshedToken(const std::string& id, const std::string& access,
+                   const std::string& refresh, const std::string& prevRefresh, const time_t& exp) :
+        tokenId(id), accessToken(access), refreshToken(refresh), previousRefreshToken(prevRefresh), expiry(exp)
+    {}
+
+    ~RefreshedToken() = default;
+
+    std::string accessTokenToString() const {
+        std::ostringstream out;
+        out << accessToken.substr(0, 5) << "..."
+            << accessToken.substr(accessToken.size() - 5);
+        return out.str();
+    }
+
+    std::string refreshTokenToString() const {
+        if (refreshToken.empty()) {
+            return "null";
+        }
+
+        std::ostringstream out;
+        out << refreshToken.substr(0, 5) << "..."
+            << refreshToken.substr(refreshToken.size() - 5);
+        return out.str();
+    }
+
+    std::string tokenId;
+    std::string accessToken;
+    std::string refreshToken;
+    std::string previousRefreshToken;
+    time_t expiry;
+
+    /// Needed for STL container operations
+    inline bool operator < (const RefreshedToken& other) const
     {
         return tokenId < other.tokenId;
     }

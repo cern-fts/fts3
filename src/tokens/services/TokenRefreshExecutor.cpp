@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2023
+ * Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 #include "common/Logger.h"
 #include "common/Exceptions.h"
-#include "common/TimeUtils.h"
 #include "db/generic/DbUtils.h"
-#include "TokenExchangeExecutor.h"
+
+#include "TokenRefreshExecutor.h"
 #include "IAMExchangeError.h"
 
 #include <cryptopp/base64.h>
@@ -28,12 +28,9 @@ using namespace fts3::common;
 namespace fts3 {
 namespace token {
 
-boost::shared_mutex TokenExchangeExecutor::mxTokenEndpoints;
-TokenExchangeExecutor::tokenEndpointMap_t TokenExchangeExecutor::tokenEndpointMap;
-
-void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
+void TokenRefreshExecutor::run([[maybe_unused]] boost::any & ctx)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting token-exchange: "
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting token-refresh: "
                                     << "token_id=" << token.tokenId << " "
                                     << "expiration_time=" << token.expiry << " "
                                     << "issuer=" << token.issuer << " "
@@ -41,33 +38,33 @@ void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
                                     << commit;
 
     try {
-        auto exchanged_token = performTokenExchange();
+        auto refreshed_token = performTokenRefresh();
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtained exchanged token: "
-                                        << "token_id=" << token.tokenId << " "
-                                        << "expiration_time=" << exchanged_token.expiry << " "
-                                        << "access_token=" << exchanged_token.accessTokenToString() << " "
-                                        << "refresh_token=" << exchanged_token.refreshTokenToString()
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtained refreshed access token: "
+                                        << "token_id=" << refreshed_token.tokenId << " "
+                                        << "expiration_time=" << refreshed_token.expiry << " "
+                                        << "access_token=" << refreshed_token.accessTokenToString() << " "
+                                        << "refresh_token=" << refreshed_token.refreshTokenToString()
                                         << commit;
 
-        tokenExchangeService.registerExchangedToken(exchanged_token);
+        tokenRefreshService.registerRefreshedToken(refreshed_token);
     } catch (const IAMExchangeError& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to refresh access token: "
                                        << "token_id=" << token.tokenId << " "
                                        << "response: '" << e.what() << "'" << commit;
 
         auto message = extractErrorDescription(e);
-        tokenExchangeService.registerFailedTokenExchange(token.tokenId, message);
+        tokenRefreshService.registerFailedTokenRefresh(token.tokenId, message);
     } catch (const std::exception& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to refresh access token: "
                                        << "token_id=" << token.tokenId << " "
                                        << "error: '" << e.what() << "'" << commit;
 
-        tokenExchangeService.registerFailedTokenExchange(token.tokenId, e.what());
+        tokenRefreshService.registerFailedTokenRefresh(token.tokenId, e.what());
     }
 }
 
-ExchangedToken TokenExchangeExecutor::performTokenExchange()
+RefreshedToken TokenRefreshExecutor::performTokenRefresh()
 {
     // GET token exchange endpoint URL
     std::string token_endpoint = getTokenEndpoint();
@@ -77,56 +74,33 @@ ExchangedToken TokenExchangeExecutor::performTokenExchange()
     // Build the POST request
     Davix::DavixError* err = nullptr;
     Davix::PostRequest req(context, uri, &err);
-    auto exchangeData = getExchangeData();
+    auto refreshData = getRefreshData();
 
     // Set request parameters
     Davix::RequestParams params;
     params.addHeader("Authorization", getAuthorizationHeader());
     params.addHeader("Content-Type", "application/x-www-form-urlencoded");
     req.setParameters(params);
-    req.setRequestBody(exchangeData);
+    req.setRequestBody(refreshData);
 
     // Execute the request
-    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenExchange::" << token.tokenId << "]: > " << exchangeData << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenRefresh::" << token.tokenId << "]: > " << refreshData << commit;
     std::string response = executeHttpRequest(req);
-    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenExchange::" << token.tokenId << "]: < " << response << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenRefresh::" << token.tokenId << "]: < " << response << commit;
 
-    // Construct exchanged token from the JSON response
-    time_t expiry{token.expiry};
-    auto expiresIn = parseJson(response, "expires_in", false);
-
-    if (!expiresIn.empty()) {
-        expiry = db::getUTC(std::stoi(expiresIn));
-    }
-
+    // Construct refreshed token from the JSON response
     return {
-            token.tokenId,
-            parseJson(response, "access_token", false),
-            parseJson(response, "refresh_token"),
-            token.accessToken,
-            expiry
+        token.tokenId,
+        parseJson(response, "access_token"),
+        parseJson(response, "refresh_token", false),
+        token.refreshToken,
+        db::getUTC(std::stoi(parseJson(response, "expires_in")))
     };
 }
 
-std::string TokenExchangeExecutor::getTokenEndpoint()
+std::string TokenRefreshExecutor::getTokenEndpoint()
 {
-    // Look into the token endpoint map first
-    {
-        boost::unique_lock<boost::shared_mutex> lock(TokenExchangeExecutor::mxTokenEndpoints);
-        auto it = TokenExchangeExecutor::tokenEndpointMap.find(token.issuer);
-
-        if (it != TokenExchangeExecutor::tokenEndpointMap.end()) {
-            if (getTimestampSeconds() < it->second.second) {
-                FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Found cached token endpoint: "
-                                                 << token.issuer << " --> " << it->second.first
-                                                 << " (expire_at=" << it->second.second <<  ")" << commit;
-                return it->second.first;
-            }
-        }
-    }
-
-    // Retrieve the "token_endpoint" via the .well-known endpoint
-    std::string endpoint = token.issuer + ".well-known/openid-configuration";
+    std::string endpoint = token.issuer + "/.well-known/openid-configuration";
 
     Davix::Uri uri(endpoint);
     validateUri(uri);
@@ -139,23 +113,10 @@ std::string TokenExchangeExecutor::getTokenEndpoint()
     std::string response = executeHttpRequest(req);
 
     // Extract "token_endpoint" field from the JSON response
-    auto tokenEndpoint = parseJson(response, "token_endpoint");
-
-    // Save "token_endpoint" value into token endpoint cache map
-    {
-        boost::unique_lock<boost::shared_mutex> lock(TokenExchangeExecutor::mxTokenEndpoints);
-        auto expireAt = getTimestampSeconds(3600);
-        TokenExchangeExecutor::tokenEndpointMap[token.issuer] = { tokenEndpoint, expireAt };
-
-        FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Storing cached token endpoint: "
-                                         << token.issuer << " --> " << tokenEndpoint
-                                         << " (expire_at=" << expireAt << ")" << commit;
-    }
-
-    return tokenEndpoint;
+    return parseJson(response, "token_endpoint");
 }
 
-std::string TokenExchangeExecutor::getAuthorizationHeader() const
+std::string TokenRefreshExecutor::getAuthorizationHeader() const
 {
     std::string auth_data = tokenProvider.clientId + ":" + tokenProvider.clientSecret;
     std::string encoded_data;
@@ -168,16 +129,14 @@ std::string TokenExchangeExecutor::getAuthorizationHeader() const
     return "Basic " + encoded_data;
 }
 
-std::string TokenExchangeExecutor::getExchangeData() const
+std::string TokenRefreshExecutor::getRefreshData() const
 {
     std::stringstream ss;
-    ss << "grant_type=urn:ietf:params:oauth:grant-type:token-exchange"
-          "&requested_token_type=urn:ietf:params:oauth:token-type:refresh_token"
-          "&subject_token_type=urn:ietf:params:oauth:token-type:access_token"
-          "&subject_token=" << token.accessToken <<
-          "&scope=" << token.scope;
+    ss << "grant_type=refresh_token"
+        "&refresh_token=" << token.refreshToken <<
+        "&scope=" << token.scope;
 
-    // Add optional audience to the token exchange request
+    // Add optional audience to the token refresh request
     if (!token.audience.empty()) {
         ss << "&audience=" << token.audience;
     }
@@ -185,7 +144,7 @@ std::string TokenExchangeExecutor::getExchangeData() const
     return ss.str();
 }
 
-std::string TokenExchangeExecutor::executeHttpRequest(Davix::HttpRequest& request) {
+std::string TokenRefreshExecutor::executeHttpRequest(Davix::HttpRequest& request) {
     Davix::DavixError* req_error = nullptr;
     Davix::DavixError* response_error = nullptr;
     std::vector<char> buffer(DAVIX_BLOCK_SIZE);
@@ -222,7 +181,7 @@ std::string TokenExchangeExecutor::executeHttpRequest(Davix::HttpRequest& reques
     return response.str();
 }
 
-std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeError& e) {
+std::string TokenRefreshExecutor::extractErrorDescription(const IAMExchangeError& e) {
     // Attempt to extract meaningful message from the Token Provider response.
     // We do this by searching for the "error" and "error_description" JSON fields.
     // (IAM returns a JSON response describing the error)
@@ -242,6 +201,7 @@ std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeErro
         // Replace secrets, such as token value or FTS client ID
         // The parsed output will be the transfer failure message
         _replace(token.accessToken, token.accessTokenToString());
+        _replace(token.refreshToken, token.refreshTokenToString());
         _replace(tokenProvider.clientId, "<FTS client ID>");
         return "[" + type + "]: " + description;
     } catch (const std::exception& tmp) {
