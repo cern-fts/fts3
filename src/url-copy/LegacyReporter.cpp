@@ -403,9 +403,10 @@ void LegacyReporter::sendPing(Transfer &transfer)
     transfer.previousPingTransferredBytes = transfer.transferredBytes;
 }
 
-void LegacyReporter::requestTokenRefresh(const std::string& token_id, const Transfer& transfer)
+std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::string& token_id, const Transfer& transfer)
 {
     events::TokenRefreshRequest request;
+    events::TokenRefreshResponse response;
 
     request.set_token_id(token_id);
     request.set_job_id(transfer.jobId);
@@ -416,12 +417,23 @@ void LegacyReporter::requestTokenRefresh(const std::string& token_id, const Tran
     try {
         auto serialized = request.SerializeAsString();
         zmqTokenSocket.send(zmq::message_t{serialized}, zmq::send_flags::none);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Sent TokenRefresh request: token_id=" << token_id << commit;
-        // Wait for server reply
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sent TokenRefresh request: token_id=" << token_id << commit;
+
         zmq::message_t reply;
-        zmqTokenSocket.recv(reply, zmq::recv_flags::none);
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Received: " << reply.to_string() << commit;
+        static_cast<void>(zmqTokenSocket.recv(reply, zmq::recv_flags::none));
+
+        if (!response.ParseFromArray(reply.data(), static_cast<int>(reply.size()))) {
+            throw std::runtime_error("Failed to parse TokenRefresh response");
+        }
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Received TokenRefresh response: "
+                                        << accessTokenPayload(response.access_token())
+                                        << commit;
+
+        return {response.access_token(), response.expiry_timestamp()};
     } catch (const std::exception& error) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send TokenRefresh request: " << error.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send/receive TokenRefresh request: " << error.what() << commit;
     }
+
+    return {"", 0};
 }

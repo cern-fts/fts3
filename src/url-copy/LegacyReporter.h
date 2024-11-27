@@ -18,7 +18,9 @@
 #define FTS3_LEGACYREPORTER_H
 
 #include "Reporter.h"
+#include "msg-bus/producer.h"
 #include <zmq.hpp>
+
 
 /// Implements reporter using MsgBus
 class LegacyReporter: public Reporter {
@@ -41,7 +43,7 @@ public:
 
     virtual void sendPing(Transfer&);
 
-    virtual void requestTokenRefresh(const std::string&, const Transfer&);
+    virtual std::pair<std::string, int64_t> requestTokenRefresh(const std::string&, const Transfer&);
 };
 
 #endif // FTS3_LEGACYREPORTER_H

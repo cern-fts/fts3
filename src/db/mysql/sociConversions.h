@@ -114,6 +114,8 @@ struct type_conversion<Token>
         token.scope        = v.get<std::string>("scope");
         token.audience     = v.get<std::string>("audience", "");
         token.issuer       = v.get<std::string>("issuer");
+        auto aux_tm        = v.get<struct tm>("access_token_expiry");
+        token.expiry       = timegm(&aux_tm);
 
         auto issuer_size = token.issuer.size();
         if (token.issuer[issuer_size - 1] != '/') {

@@ -24,7 +24,10 @@
 class Token
 {
 public:
-    Token() = default;
+    Token() :
+        expiry(0)
+    {}
+
     ~Token() = default;
 
     std::string accessTokenToString() const {
@@ -55,6 +58,13 @@ public:
     std::string issuer;
     std::string scope;
     std::string audience;
+    time_t expiry;
+
+    /// Needed for STL container operations
+    inline bool operator < (const Token& other) const
+    {
+        return tokenId < other.tokenId;
+    }
 };
 
 /**

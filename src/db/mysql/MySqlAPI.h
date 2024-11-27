@@ -343,6 +343,12 @@ public:
     /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
     virtual void updateTokenPrepFiles();
 
+    /// Given a set of token ids, return a list of valid access tokens
+    virtual std::list<Token> getValidAccessTokens(const std::set<std::string>& token_ids);
+
+    /// Given a list of token ids, mark them for refreshing
+    virtual void markTokensForRefresh(const std::list<std::string>& token_ids);
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
         const std::string& voName,

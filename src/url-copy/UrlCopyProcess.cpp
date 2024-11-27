@@ -26,6 +26,7 @@
 #include "version.h"
 #include "DestFile.h"
 #include "common/Logger.h"
+#include "common/TimeUtils.h"
 
 
 using fts3::common::commit;
@@ -441,8 +442,13 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;
 
     if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
-        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Will request token refresh for!!" << commit;
-        reporter.requestTokenRefresh(transfer.sourceTokenId, transfer);
+        auto [token, expiry] = reporter.requestTokenRefresh(transfer.sourceTokenId, transfer);
+
+        if (token.empty()) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refreshed token for source!" << commit;
+        } else {
+            params.setSourceBearerToken(token);
+        }
     }
 
     if (opts.strictCopy) {
@@ -585,7 +591,7 @@ void UrlCopyProcess::run(void)
         }
 
         // Prepare logging
-        transfer.stats.process.start = millisecondsSinceEpoch();
+        transfer.stats.process.start = getTimestampMilliseconds();
         transfer.logFile = generateLogPath(opts.logDir, transfer);
 
         if (opts.debugLevel) {
@@ -638,7 +644,7 @@ void UrlCopyProcess::run(void)
         archiveLogs(transfer);
 
         // Notify back the final state
-        transfer.stats.process.end = millisecondsSinceEpoch();
+        transfer.stats.process.end = getTimestampMilliseconds();
         {
             boost::lock_guard<boost::mutex> lock(transfersMutex);
             doneTransfers.push_back(transfer);

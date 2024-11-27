@@ -20,20 +20,34 @@
 
 #include "db/generic/Token.h"
 #include "server/common/BaseService.h"
-#include "server/services/heartbeat/HeartBeat.h"
+#include "TokenRefreshPollerService.h"
 
 namespace fts3 {
 namespace token {
 
+/**
+ * This class listens to incoming ZMQ clients, which bring token-refresh requests.
+ * The token_ids are stored and passed along to the TokenRefreshPoller service
+ * which handles the interaction with the database.
+ *
+ * Tokens that need refreshing are passed to the TokenRefreshPoller service
+ * via a set of token IDs, which all need refreshing.
+ *
+ * Periodically, this service queries the TokenRefreshPoller for the
+ * list of refreshed tokens. The refreshed tokens are then dispatched
+ * back to the ZMQ clients using a ZMQ routing map.
+ */
 class TokenRefreshListenerService: public fts3::server::BaseService
 {
 public:
-    TokenRefreshListenerService();
+    TokenRefreshListenerService(const std::shared_ptr<TokenRefreshPollerService>& poller);
     virtual ~TokenRefreshListenerService() = default;
 
     virtual void runService();
 
 protected:
+    const std::shared_ptr<TokenRefreshPollerService> tokenRefreshPoller;
+
     /// ZMQ setup
     zmq::context_t zmqContext;
     zmq::socket_t zmqTokenRouter;
@@ -43,7 +57,7 @@ private:
     void registerClientRequest(const std::string& token_id, zmq::message_t&& identity);
 
     /// Dispatch refresh tokens to ZMQ clients
-    void dispatchClientResponses(const std::set<std::string>& token_ids);
+    void dispatchClientResponses(const std::set<Token>& tokens);
 
     /// Message routing map <tokenId --> [list of ZMQ identifiers]>
     std::map<std::string, std::list<zmq::message_t>> routingMap;

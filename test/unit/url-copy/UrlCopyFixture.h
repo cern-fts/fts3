@@ -45,5 +45,7 @@ public:
         pingMsgs.push_back(t);
     }
 
-    void requestTokenRefresh(const std::string&, const Transfer&) {}
+    std::pair<std::string, int64_t> requestTokenRefresh(const std::string&, const Transfer&) {
+        return {"", 0};
+    }
 };

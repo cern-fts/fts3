@@ -19,6 +19,7 @@
 #include "server/Server.h"
 #include "server/services/heartbeat/HeartBeat.h"
 #include "services/TokenExchangeService.h"
+#include "services/TokenRefreshPollerService.h"
 #include "services/TokenRefreshListenerService.h"
 #include "TokenServer.h"
 
@@ -69,7 +70,8 @@ void TokenServer::start()
 
     auto heartBeatService = std::make_shared<HeartBeat>(processName);
     auto tokenExchangeService = std::make_shared<TokenExchangeService>(heartBeatService);
-    auto tokenRefreshListenerService = std::make_shared<TokenRefreshListenerService>();
+    auto tokenRefreshPollerService = std::make_shared<TokenRefreshPollerService>();
+    auto tokenRefreshListenerService = std::make_shared<TokenRefreshListenerService>(tokenRefreshPollerService);
 
     // Register te TokenExchange service as "critical" to be watched by the HeartBeat service
     auto tokenExchangeGraceTime = ServerConfig::instance().get<int>("TokenExchangeCheckGraceTime");
@@ -77,6 +79,7 @@ void TokenServer::start()
 
     heartBeatService->registerWatchedService(tokenExchangeService, tokenExchangeGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(tokenRefreshListenerService, tokenRefreshGraceTime, [this] { stop(); });
+    heartBeatService->registerWatchedService(tokenRefreshPollerService, tokenRefreshGraceTime, [this] { stop(); });
 
     addService(heartBeatService);
 
@@ -86,6 +89,7 @@ void TokenServer::start()
     }
 
     addService(tokenExchangeService);
+    addService(tokenRefreshPollerService);
     addService(tokenRefreshListenerService);
 }
 

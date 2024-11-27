@@ -181,7 +181,7 @@ LogTokenRequests=false
 #SupervisorGraceTime = 600
 # In seconds, time window since last TokenExchangeService run to be considered inactive (default 600)
 #TokenExchangeCheckGraceTime = 600
-# In seconds, time window since last TokenRefreshService run to be considered inactive (default 120)
+# In seconds, time window since last TokenRefreshService run (applies to Refresher, Listener, Poller) to be considered inactive (default 120)
 #TokenRefreshGraceTime = 120
 # In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
 #OptimizerGraceTime = 3600

@@ -15,21 +15,19 @@
  */
 
 #include "common/Logger.h"
-#include "common/DaemonTools.h"
 #include "msg-bus/events.h"
 #include "config/ServerConfig.h"
-#include "server/common/DrainMode.h"
 #include "TokenRefreshListenerService.h"
 
 using namespace fts3::config;
 using namespace fts3::common;
-using namespace fts3::server;
 
 namespace fts3 {
 namespace token {
 
 
-TokenRefreshListenerService::TokenRefreshListenerService() : BaseService("TokenRefreshListenerService"),
+TokenRefreshListenerService::TokenRefreshListenerService(const std::shared_ptr<TokenRefreshPollerService>& poller) :
+    BaseService("TokenRefreshListenerService"), tokenRefreshPoller(poller),
     zmqContext(1), zmqTokenRouter(zmqContext, zmq::socket_type::router)
 {
     auto messagingDirectory = ServerConfig::instance().get<std::string>("MessagingDirectory");
@@ -37,8 +35,8 @@ TokenRefreshListenerService::TokenRefreshListenerService() : BaseService("TokenR
     zmqTokenRouter.bind(address);
 }
 
-void TokenRefreshListenerService::runService() {
-
+void TokenRefreshListenerService::runService()
+{
     while (!boost::this_thread::interruption_requested()) {
         zmq::message_t identity;
         zmq::message_t delimiter;
@@ -64,27 +62,21 @@ void TokenRefreshListenerService::runService() {
                                                 << commit;
 
                 registerClientRequest(request.token_id(), std::move(identity));
-            }
 
-            // Send the token_id to the TokenRefreshPoller service
-            // tokenRefreshPoller.add(request.token_id());
+                // Send the TokenId to the TokenRefreshPoller service
+                tokenRefreshPoller->registerTokenToRefresh(request.token_id());
+            }
 
             // Retrieve refreshed tokens from the TokenRefreshPoller service
-            // tokenRefreshPoller.get();
-
-            std::set<std::string> token_ids;
-            for (const auto& it: routingMap) {
-                token_ids.insert(it.first);
-            }
-
-            dispatchClientResponses(token_ids);
+            auto refreshedTokens = tokenRefreshPoller->getRefreshedTokens();
+            dispatchClientResponses(refreshedTokens);
         } catch (const boost::thread_interrupted&) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenRefreshService!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenRefreshListenerService!" << commit;
             break;
         } catch (std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenRefreshService: " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenRefreshListenerService: " << e.what() << commit;
         } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenRefreshService!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenRefreshListenerService!" << commit;
         }
     }
 }
@@ -114,17 +106,22 @@ void TokenRefreshListenerService::registerClientRequest(const std::string& token
     }
 }
 
-void TokenRefreshListenerService::dispatchClientResponses(const std::set<std::string>& token_ids)
+void TokenRefreshListenerService::dispatchClientResponses(const std::set<Token>& tokens)
 {
-    for (const auto& token_id: token_ids) {
-        const auto& map_it = routingMap.find(token_id);
+    for (const auto& token: tokens) {
+        const auto& map_it = routingMap.find(token.tokenId);
 
         if (map_it != routingMap.end()) {
+            fts3::events::TokenRefreshResponse response;
+            response.set_token_id(token.tokenId);
+            response.set_access_token(token.accessToken);
+            response.set_expiry_timestamp(token.expiry);
+            auto serialized = response.SerializeAsString();
+
             for (auto& it: map_it->second) {
-                std::string reply_message = "Refreshed token for: " + map_it->first;
                 zmqTokenRouter.send(it, zmq::send_flags::sndmore);
                 zmqTokenRouter.send(zmq::message_t{0}, zmq::send_flags::sndmore);
-                zmqTokenRouter.send(zmq::message_t{reply_message}, zmq::send_flags::none);
+                zmqTokenRouter.send(zmq::message_t{serialized}, zmq::send_flags::none);
             }
 
             routingMap.erase(map_it);

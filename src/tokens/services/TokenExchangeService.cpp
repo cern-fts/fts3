@@ -42,8 +42,8 @@ TokenExchangeService::TokenExchangeService(const std::shared_ptr<HeartBeat>& hea
     bulkSize = ServerConfig::instance().get<int>("TokenExchangeBulkSize");
 }
 
-void TokenExchangeService::runService() {
-
+void TokenExchangeService::runService()
+{
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenExchangeService interval: " << pollInterval.total_seconds() << "s" << commit;
@@ -90,7 +90,8 @@ void TokenExchangeService::runService() {
     }
 }
 
-int TokenExchangeService::exchangeTokens() {
+int TokenExchangeService::exchangeTokens()
+{
     auto db = db::DBSingleton::instance().getDBObjectInstance();
     ThreadPool<TokenExchangeExecutor> execPool(execPoolSize);
 

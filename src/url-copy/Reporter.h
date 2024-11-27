@@ -18,7 +18,6 @@
 #define FTS3_REPORTER_H
 
 #include <string>
-#include "msg-bus/producer.h"
 
 #include "Gfal2.h"
 #include "Transfer.h"
@@ -45,7 +44,7 @@ public:
     virtual void sendPing(Transfer&) = 0;
 
     /// Send a token-refresh request from the main server
-    virtual void requestTokenRefresh(const std::string&, const Transfer&) = 0;
+    virtual std::pair<std::string, int64_t> requestTokenRefresh(const std::string&, const Transfer&) = 0;
 };
 
 #endif // FTS3_REPORTER_H
