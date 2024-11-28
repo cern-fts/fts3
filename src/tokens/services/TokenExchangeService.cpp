@@ -22,7 +22,7 @@
 #include "server/common/DrainMode.h"
 
 #include "TokenExchangeService.h"
-#include "TokenExchangeExecutor.h"
+#include "tokens/executors/TokenExchangeExecutor.h"
 
 using namespace fts3::config;
 using namespace fts3::common;

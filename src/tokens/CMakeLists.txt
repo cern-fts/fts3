@@ -22,7 +22,7 @@ find_package(Cryptopp)
 find_package(Davix)
 
 # Sources
-file(GLOB fts_token_SOURCES "*.cpp" "services/*.cpp")
+file(GLOB fts_token_SOURCES "*.cpp" "services/*.cpp" "executors/*.cpp")
 
 add_executable(fts_token ${fts_token_SOURCES})
 
