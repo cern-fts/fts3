@@ -69,7 +69,11 @@ void TokenRefreshListenerService::runService()
 
             // Retrieve refreshed tokens from the TokenRefreshPoller service
             auto refreshedTokens = tokenRefreshPoller->getRefreshedTokens();
-            dispatchClientResponses(refreshedTokens);
+            dispatchAccessTokens(refreshedTokens);
+
+            // Retrieve refresh failures from the TokenRefreshPoller service
+            auto refreshFailures = tokenRefreshPoller->getFailedRefreshes();
+            dispatchRefreshFailures(refreshFailures);
         } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenRefreshListenerService!" << commit;
             break;
@@ -113,13 +117,14 @@ void TokenRefreshListenerService::registerClientRequest(
     }
 }
 
-void TokenRefreshListenerService::dispatchClientResponses(const std::set<Token>& tokens)
+void TokenRefreshListenerService::dispatchAccessTokens(const std::set<Token>& tokens)
 {
     for (const auto& token: tokens) {
         const auto& map_it = routingMap.find(token.tokenId);
 
         if (map_it != routingMap.end()) {
             fts3::events::TokenRefreshResponse response;
+            response.set_response_type(fts3::events::TokenRefreshResponse::TYPE_ACCESS_TOKEN);
             response.set_token_id(token.tokenId);
             response.set_access_token(token.accessToken);
             response.set_expiry_timestamp(token.expiry);
@@ -141,6 +146,40 @@ void TokenRefreshListenerService::dispatchClientResponses(const std::set<Token>&
             routingMap.erase(map_it);
         }
     }
+}
+
+void TokenRefreshListenerService::dispatchRefreshFailures(
+    const TokenRefreshPollerService::FailedRefreshMapType& refreshFailures)
+{
+    for (const auto& [token_id, msgPair]: refreshFailures) {
+        const auto& map_it = routingMap.find(token_id);
+
+        if (map_it != routingMap.end()) {
+            fts3::events::TokenRefreshResponse response;
+            response.set_response_type(fts3::events::TokenRefreshResponse::TYPE_REFRESH_FAILURE);
+            response.set_token_id(token_id);
+            response.set_refresh_message(msgPair.first);
+            response.set_refresh_timestamp(msgPair.second);
+            auto serialized = response.SerializeAsString();
+
+            for (auto& it: map_it->second) {
+                zmqTokenRouter.send(it.identifier, zmq::send_flags::sndmore);
+                zmqTokenRouter.send(zmq::message_t{0}, zmq::send_flags::sndmore);
+                zmqTokenRouter.send(zmq::message_t{serialized}, zmq::send_flags::none);
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenRefresh failed-refresh sent:"
+                                << " token_id=" << response.token_id()
+                                << " refresh_message=\"" << response.refresh_message() << "\""
+                                << " refresh_timestamp=" << response.refresh_timestamp()
+                                << " job_id=" << it.job_id << " file_id=" << it.file_id
+                                << " [" << it.process_id << "@" << it.hostname << "]"
+                                << commit;
+            }
+        }
+
+        routingMap.erase(map_it);
+    }
+
 }
 
 } // end namespace token

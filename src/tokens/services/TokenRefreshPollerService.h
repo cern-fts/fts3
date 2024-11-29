@@ -41,11 +41,13 @@ namespace token {
 class TokenRefreshPollerService: public fts3::server::BaseService
 {
 public:
+    /// Map for failed token-refreshes: <token_id, (message, timestamp)>
+    using FailedRefreshMapType = std::map <std::string, std::pair<std::string, int64_t>>;
+
     TokenRefreshPollerService();
     virtual ~TokenRefreshPollerService() = default;
 
     virtual void runService();
-
     /**
     * Used by the TokenRefreshListener to send tokens that need refreshing
     *
@@ -57,33 +59,45 @@ public:
     * Used by the TokenRefreshListener to get refreshed tokens
     * to send back to the clients
     *
-    * @note this operation will empty the refreshed tokens structure
+    * @note this operation will empty the refreshed tokens container
     * @return refreshed tokens set
     */
     std::set<Token> getRefreshedTokens();
 
+    /**
+     * Used by the TokenRefreshListener to get the set of failed refreshes
+     * to send back to the clients
+     *
+     * @note this operation will empty the failed refreshes container
+     * @return failed refreshes map structure
+     */
+    FailedRefreshMapType getFailedRefreshes();
 private:
-    /// Clean the cache every 10 minutes
-    void cacheCleanup();
+    /// Helper function to remove an iterable container of token-ids from the target container
+    template <class T, class U>
+    void removeFromContainer(T& container, const U& token_ids);
 
-    /// Protect concurrent access to "tokensToRefresh" set
+    /// Protect concurrent access to "tokensToRefresh" container
     boost::shared_mutex mxPoll;
 
-    /// Set of token ids to poll for refresh
-    std::set<std::string> tokensToPoll;
+    /// Map of token-refresh requests <token_id, timestamp> to poll
+    std::map<std::string, int64_t> tokensToPoll;
 
-    /// Protect concurrent access to "refreshedTokens" set
+    /// Protect concurrent access to "refreshedTokens" container
     boost::shared_mutex mxRefreshed;
 
     /// Set of refreshed tokens to send back to the clients
     std::set<Token> refreshedTokens;
 
-    /// Timestamp for when to perform next tokens cache cleanup
-    int64_t cacheCleanupTimestamp;
+    /// Protect concurrent access to "failedRefreshes" container
+    boost::shared_mutex mxFailed;
+
+    /// Map of failed token-refreshes <token_id, (message, timestamp)>
+    /// to send back to the clients
+    FailedRefreshMapType failedRefreshes;
 
     /// Cache for the tokens already marked for refreshing
-    /// Implemented as map of <token_id, valid_until_timestamp> (
-    std::map<std::string, int64_t> markedTokensCache;
+    std::set<std::string> markedTokensCache;
 };
 
 } // end namespace token

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <ranges>
+
 #include "common/Logger.h"
 #include "common/TimeUtils.h"
 #include "config/ServerConfig.h"
@@ -27,9 +29,7 @@ namespace fts3 {
 namespace token {
 
 
-TokenRefreshPollerService::TokenRefreshPollerService() : BaseService("TokenRefreshPollerService"),
-    cacheCleanupTimestamp(0)
-{}
+TokenRefreshPollerService::TokenRefreshPollerService() : BaseService("TokenRefreshPollerService") {}
 
 void TokenRefreshPollerService::runService()
 {
@@ -41,8 +41,10 @@ void TokenRefreshPollerService::runService()
             boost::this_thread::sleep(boost::posix_time::seconds(15));
 
             std::list<std::string> tokensToRefreshMark;
+            std::list<std::string> tokensToCacheClean;
             size_t tokensToPollInitialSize;
             size_t validAccessTokensSize;
+            size_t failedATRefreshesSize;
 
             {
                 boost::unique_lock<boost::shared_mutex> lockQuery(mxPoll);
@@ -54,33 +56,54 @@ void TokenRefreshPollerService::runService()
                 tokensToPollInitialSize = tokensToPoll.size();
 
                 // Look-up the tokens-to-refresh-poll set in the database
-                auto validAccessTokens = db->getValidAccessTokens(tokensToPoll);
-                validAccessTokensSize = validAccessTokens.size();
+                std::list<std::string> tokenIds;
+                std::ranges::copy(std::views::keys(tokensToPoll), std::back_inserter(tokenIds));
+
+                auto validAccessTokensDB = db->getValidAccessTokens(tokenIds);
+                validAccessTokensSize = validAccessTokensDB.size();
 
                 // Make the refreshed tokens available to the TokenRefreshListener service
                 {
                     boost::unique_lock<boost::shared_mutex> lockResults(mxRefreshed);
-                    refreshedTokens.insert(validAccessTokens.begin(), validAccessTokens.end());
+                    auto validTokenIds = std::views::keys(validAccessTokensDB);
+                    auto validTokens = std::views::values(validAccessTokensDB);
+                    refreshedTokens.insert(validTokens.begin(), validTokens.end());
+                    // Remove valid access tokens from the tokens-to-refresh-poll set
+                    // and the marked-for-refresh cache
+                    removeFromContainer(tokensToPoll, validTokenIds);
+                    removeFromContainer(markedTokensCache, validTokenIds);
                 }
 
-                // Remove valid access tokens from the tokens-to-refresh-poll set
-                for (const auto& token: validAccessTokens) {
-                     auto it = tokensToPoll.find(token.tokenId);
+                // Look-up the remaining tokens-to-refresh-poll set for token-refresh failures in the database
+                auto failedRefreshesDB = db->getFailedAccessTokenRefreshes(tokenIds);
 
-                     if (it != tokensToPoll.end()) {
-                         tokensToPoll.erase(it);
-                     }
+                // Make the failed token-refreshes available to the TokenRefreshListener service
+                {
+                    boost::unique_lock<boost::shared_mutex> lockResults(mxFailed);
+                    std::list<std::string> failedTokenIds;
+
+                    for (const auto& [token_id, msgPair]: failedRefreshesDB) {
+                        const auto& it_poll = tokensToPoll.find(token_id);
+
+                        if (it_poll->second < msgPair.second) {
+                            failedRefreshes.emplace(token_id, msgPair);
+                            failedTokenIds.emplace_back(token_id);
+                        }
+                    }
+
+                    // Remove failed access token refreshes from the tokens-to-refresh-poll set
+                    // and the marked-for-refresh cache
+                    removeFromContainer(tokensToPoll, failedTokenIds);
+                    removeFromContainer(markedTokensCache, failedTokenIds);
+                    failedATRefreshesSize = failedTokenIds.size();
                 }
 
                 // Mark the remaining tokens-to-refresh-poll in the database for refreshing
                 // Note: we use an in-memory cache to prevent excessive database marking
-                for (const auto& token_id: tokensToPoll) {
-					auto it = markedTokensCache.find(token_id);
-
-                    if ((it == markedTokensCache.end()) ||
-                        (getTimestampSeconds() >= it->second)) {
+                for (const auto& token_id: std::views::keys(tokensToPoll)) {
+                    if (!markedTokensCache.contains(token_id)) {
+                        markedTokensCache.insert(token_id);
                         tokensToRefreshMark.emplace_back(token_id);
-                        markedTokensCache.insert_or_assign(token_id, getTimestampSeconds(60));
                     }
                 }
             }
@@ -88,15 +111,14 @@ void TokenRefreshPollerService::runService()
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenRefreshPoller:"
                                             << " tokens_to_poll=" << tokensToPollInitialSize
                                             << " valid_access_tokens=" << validAccessTokensSize
-                                            << " tokens_to_refresh_precache=" << tokensToPoll.size()
-                                            << " tokens_to_refresh=" << tokensToRefreshMark.size()
+                                            << " failed_token_refreshes=" << failedATRefreshesSize
+                                            << " tokens_to_refresh_mark_precache=" << tokensToPoll.size()
+                                            << " tokens_to_refresh_mark=" << tokensToRefreshMark.size()
                                             << commit;
 
             if (!tokensToRefreshMark.empty()) {
                 db->markTokensForRefresh(tokensToRefreshMark);
             }
-
-            cacheCleanup();
         } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenRefreshPollerService!" << commit;
             break;
@@ -111,7 +133,10 @@ void TokenRefreshPollerService::runService()
 void TokenRefreshPollerService::registerTokenToRefresh(const std::string& token_id)
 {
     boost::unique_lock<boost::shared_mutex> lock(mxPoll);
-    tokensToPoll.emplace(token_id);
+
+    if (!tokensToPoll.contains(token_id)) {
+        tokensToPoll.emplace(token_id, getTimestampSeconds());
+    }
 }
 
 std::set<Token> TokenRefreshPollerService::getRefreshedTokens()
@@ -123,21 +148,20 @@ std::set<Token> TokenRefreshPollerService::getRefreshedTokens()
     return results;
 }
 
-void TokenRefreshPollerService::cacheCleanup()
+TokenRefreshPollerService::FailedRefreshMapType
+    TokenRefreshPollerService::getFailedRefreshes()
 {
-    auto now = getTimestampSeconds();
+    boost::unique_lock<boost::shared_mutex> lock(mxFailed);
+    FailedRefreshMapType results;
 
-    if (now >= cacheCleanupTimestamp) {
-        cacheCleanupTimestamp = now + 60;
-        auto threshold = 600;
+    std::swap(results, failedRefreshes);
+    return results;
+}
 
-        for (auto it = markedTokensCache.begin(); it != markedTokensCache.end(); ) {
-            if (now - it->second >= threshold) {
-                it = markedTokensCache.erase(it);
-            } else {
-                ++it;
-            }
-        }
+template<typename T, typename U>
+void TokenRefreshPollerService::removeFromContainer(T& container, const U& token_ids) {
+    for (const auto& token_id: token_ids) {
+        container.erase(token_id);
     }
 }
 

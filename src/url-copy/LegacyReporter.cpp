@@ -426,6 +426,13 @@ std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::s
             throw std::runtime_error("Failed to parse TokenRefresh response");
         }
 
+        if (response.response_type() == events::TokenRefreshResponse::TYPE_REFRESH_FAILURE) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Received failed-refresh response: \"" << response.refresh_message() << "\""
+                                               << " (refresh_timestamp=" << response.refresh_timestamp() << ")"
+                                               << commit;
+            return {"", 0};
+        }
+
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Received TokenRefresh response: "
                                         << accessTokenPayload(response.access_token())
                                         << commit;

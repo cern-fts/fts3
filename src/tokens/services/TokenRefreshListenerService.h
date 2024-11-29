@@ -57,8 +57,11 @@ private:
     /// Register ZMQ client in the message routing map
     void registerClientRequest(const fts3::events::TokenRefreshRequest& request, zmq::message_t&& identity);
 
-    /// Dispatch refresh tokens to ZMQ clients
-    void dispatchClientResponses(const std::set<Token>& tokens);
+    /// Dispatch refreshed access tokens to ZMQ clients
+    void dispatchAccessTokens(const std::set<Token>& tokens);
+
+    /// Dispatch refresh failures to ZMQ clients
+    void dispatchRefreshFailures(const TokenRefreshPollerService::FailedRefreshMapType& refreshFailures);
 
     struct ZMQ_client {
         ZMQ_client(zmq::message_t&& identifier,

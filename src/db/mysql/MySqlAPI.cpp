@@ -5063,12 +5063,12 @@ void MySqlAPI::updateTokenPrepFiles()
 }
 
 
-std::list<Token> MySqlAPI::getValidAccessTokens(const std::set<std::string>& token_ids)
+std::map<std::string, Token> MySqlAPI::getValidAccessTokens(const std::list<std::string>& token_ids)
 {
     soci::session sql(*connectionPool);
 
     try {
-        std::list<Token> validAccessTokens;
+        std::map<std::string, Token> validAccessTokens;
         std::string token_id;
         Token token;
 
@@ -5092,7 +5092,7 @@ std::list<Token> MySqlAPI::getValidAccessTokens(const std::set<std::string>& tok
             token_id = id;
 
             if (stmt.execute(true)) {
-                validAccessTokens.emplace_back(std::move(token));
+                validAccessTokens.emplace(token_id, std::move(token));
             }
         }
 
@@ -5104,6 +5104,46 @@ std::list<Token> MySqlAPI::getValidAccessTokens(const std::set<std::string>& tok
     }
 }
 
+
+std::map<std::string, std::pair<std::string, int64_t>>
+    MySqlAPI::getFailedAccessTokenRefreshes(const std::list<std::string>& token_ids)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        std::map<std::string, std::pair<std::string, int64_t>> failedTokenRefreshes;
+        std::string token_id;
+        std::string refresh_message;
+        struct tm refresh_time_st;
+        int64_t refresh_timestamp;
+
+        soci::statement stmt = (sql.prepare <<
+            "SELECT refresh_message, refresh_timestamp "
+            "FROM t_token "
+            "WHERE token_id = :tokenId "
+            "   AND refresh_message IS NOT NULL "
+            "   AND marked_for_refresh = 0",
+            soci::use(token_id),
+            soci::into(refresh_message),
+            soci::into(refresh_time_st)
+        );
+
+        for (const auto& id: token_ids) {
+            token_id = id;
+
+            if (stmt.execute(true)) {
+                refresh_timestamp = timegm(&refresh_time_st);
+                failedTokenRefreshes.emplace(token_id, std::make_pair(refresh_message, refresh_timestamp));
+            }
+        }
+
+        return failedTokenRefreshes;
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
 
 void MySqlAPI::markTokensForRefresh(const std::list<std::string>& token_ids)
 {

@@ -156,7 +156,7 @@ void TokenExchangeService::handleFailedTokenExchange()
     for (const auto& it: failedExchanges) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Handling failed token exchange: "
                                         << "token_id=" << it.first << " "
-                                        << "message=" << it.second
+                                        << "message=\"" << it.second << "\""
                                         << commit;
     }
 

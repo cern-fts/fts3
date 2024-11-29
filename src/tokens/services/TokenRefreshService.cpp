@@ -148,7 +148,7 @@ void TokenRefreshService::handleFailedTokenRefresh()
     for (const auto& it: failedRefreshes) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Handling failed token refresh: "
                                         << "token_id=" << it.first << " "
-                                        << "message=" << it.second
+                                        << "message=\"" << it.second << "\""
                                         << commit;
     }
 
