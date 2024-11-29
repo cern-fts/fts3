@@ -37,8 +37,9 @@ class TokenHttpExecutor
 {
 protected:
 
-    TokenHttpExecutor(const Token& token, const TokenProvider& tokenProvider)
-        : token(token), tokenProvider(tokenProvider) {}
+    TokenHttpExecutor(const std::string& name, const Token& token,
+                     const TokenProvider& tokenProvider)
+        : name(name), token(token), tokenProvider(tokenProvider) {}
 
     virtual ~TokenHttpExecutor() = default;
 
@@ -114,6 +115,9 @@ protected:
      * @throws DavixException on invalid Uri
      */
     static void validateUri(const Davix::Uri& uri);
+
+    /// Executor function name
+    std::string name;
 
     /// Token object
     Token token;

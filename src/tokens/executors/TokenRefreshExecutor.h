@@ -28,7 +28,7 @@ namespace token {
 
 /**
  * TokenRefreshExecutor is the worker class that performs the token-refresh workflow
- * for the given Token in order to obtain a refreshed accessed token.
+ * for the given Token in order to obtain a refreshed access token.
  * This work is done in a separate thread.
  *
  * The RefreshedTokens are added to a thread-safe queue, which is processed by the worker.
@@ -40,18 +40,17 @@ public:
 
     TokenRefreshExecutor(const Token& token, const TokenProvider& tokenProvider,
                          TokenRefreshService& tokenRefreshService)
-        : TokenHttpExecutor(token, tokenProvider),
+        : TokenHttpExecutor("TokenRefresh", token, tokenProvider),
           tokenRefreshService(tokenRefreshService) {}
 
     virtual ~TokenRefreshExecutor() = default;
 
     /**
-     * Perform token-exchange for the provided access token
-     * in order to obtain a refresh token.
+     * Perform token-refresh workflow for the provided access token
      *
-     * @return If successful, the refresh token string is uploaded
-     *         to the TokenExchange services
-     * @throws UserError in case refresh token could not be retrieved
+     * @return If successful, the refreshed access token string is uploaded
+     *         to the TokenRefresh services
+     * @throws UserError in case token-refresh could not be performed
      */
     void run(boost::any &) override;
 

@@ -32,7 +32,7 @@ TokenHttpExecutor::tokenEndpointMap_t TokenHttpExecutor::tokenEndpointMap;
 
 std::string TokenHttpExecutor::performTokenHttpRequest()
 {
-    // GET token exchange endpoint URL
+    // GET token endpoint URL
     std::string token_endpoint = getTokenEndpoint();
     Davix::Uri uri(token_endpoint);
     validateUri(uri);
@@ -40,19 +40,19 @@ std::string TokenHttpExecutor::performTokenHttpRequest()
     // Build the POST request
     Davix::DavixError* err = nullptr;
     Davix::PostRequest req(context, uri, &err);
-    auto refreshData = getPayloadData();
+    auto payloadData = getPayloadData();
 
     // Set request parameters
     Davix::RequestParams params;
     params.addHeader("Authorization", getAuthorizationHeader());
     params.addHeader("Content-Type", "application/x-www-form-urlencoded");
     req.setParameters(params);
-    req.setRequestBody(refreshData);
+    req.setRequestBody(payloadData);
 
     // Execute the request
-    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenRefresh::" << token.tokenId << "]: > " << refreshData << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[" << name << "::" << token.tokenId << "]: > " << payloadData << commit;
     auto response = executeHttpRequest(req);
-    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenRefresh::" << token.tokenId << "]: < " << response << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[" << name << "::" << token.tokenId << "]: < " << response << commit;
 
     return response;
 }

@@ -40,7 +40,7 @@ public:
 
     TokenExchangeExecutor(const Token& token, const TokenProvider& tokenProvider,
                           TokenExchangeService& tokenExchangeService)
-        : TokenHttpExecutor(token, tokenProvider),
+        : TokenHttpExecutor("TokenExchange", token, tokenProvider),
           tokenExchangeService(tokenExchangeService) {}
 
     virtual ~TokenExchangeExecutor() = default;
