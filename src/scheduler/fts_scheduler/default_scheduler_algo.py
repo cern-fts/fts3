@@ -1,7 +1,7 @@
 from scheduler_algo import SchedulerAlgo, SchedulerDecision
 
 
-class CirculerBuffer:
+class CircularBuffer:
     def __init__(self):
         self._buf = []
         self._next_idx = 0
@@ -78,7 +78,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         # transfer
         potential_link_keys = list(link_to_potential.keys())
         potential_link_keys.sort()
-        potential_link_key_cbuf = CirculerBuffer()
+        potential_link_key_cbuf = CircularBuffer()
         for potential_link_key in potential_link_keys:
             potential_link_key_cbuf.append(potential_link_key)
 
@@ -88,7 +88,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             queues = link_to_queues[potential_link_key]
             queue_ids = list(queues.keys())
             queue_ids.sort()
-            queue_id_cbuf = CirculerBuffer()
+            queue_id_cbuf = CircularBuffer()
             for queue_id in queue_ids:
                 queue_id_cbuf.append(queue_id)
             potential_link_to_queue_id_cbuf[potential_link_key] = queue_id_cbuf
