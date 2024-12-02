@@ -130,6 +130,17 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
         return scheduler_decision
 
+    def _get_vo_activities_of_queues(self, queue_ids):
+        vo_activities = {} # Activities are grouped by VO
+        for queue_id in queue_ids:
+            queue = self.sched_input["queues"][queue_id]
+            vo = queue["vo_name"]
+            activity = queue["activity"]
+            if vo not in vo_activities:
+                vo_activities[vo] = []
+            vo_activities[vo].append(activity)
+        return vo_activities
+
     def _get_link_to_queues(self):
         link_to_queues = {}
         for queue_id, queue in self.sched_input["queues"].items():
