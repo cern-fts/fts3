@@ -1,3 +1,4 @@
+import json
 import socket
 import time
 
@@ -303,6 +304,85 @@ class Scheduler:
         except Exception as e:
             raise Exception(f"Scheduler._optimizer_max_active: {e}")
 
+    def _get_link_vo_shares(self, dbconn):
+        try:
+            sql = """
+                SELECT
+                    source,
+                    destination,
+                    vo,
+                    active
+                FROM
+                    t_share_config
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
+
+            link_vo_shares = {}
+            for row in rows:
+                vo_share = {}
+                vo_share["source"] = row[0]
+                vo_share["destination"] = row[1]
+                vo_share["vo"] = row[2]
+                vo_share["active"] = row[3]
+
+                link_key = (vo_share["source"], vo_share["destination"])
+                if link_key not in link_vo_shares:
+                    link_vo_shares[link_key] = []
+                link_vo_shares[link_key].append(vo_share)
+
+            return link_vo_shares, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_link_vo_shares(): {e}")
+
+    def _activity_share_list_to_dict(self, activity_share_list):
+        try:
+            activity_share_dict = {}
+            for activity_weight_pair in activity_share_list:
+                if len(activity_weight_pair.keys()) != 1:
+                    raise Exception(
+                            "Invalid number of keys in activity to weight pair: "
+                            f"expected=1 found={len(activity_weight_pair.keys())}"
+                        )
+                activity = next(iter(activity_weight_pair))
+                weight = activity_weight_pair[activity]
+                if activity in activity_share_dict.keys():
+                    raise Exception("Duplicate activity: activity={activity}")
+                activity_share_dict[activity] = weight
+            return activity_share_dict
+        except Exception as e:
+            raise Exception(f"Scheduler._activity_share_list_to_dict(): {e}")
+
+    def _get_vo_activity_shares(self, dbconn):
+        try:
+            sql = """
+                SELECT
+                    vo,
+                    activity_share
+                FROM
+                    t_activity_share_config
+                WHERE
+                    active = 'on'
+            """
+            start_db = time.time()
+            cursor = dbconn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            db_sec = time.time() - start_db
+
+            vo_activity_shares = {}
+            for row in rows:
+                vo = row[0]
+                activity_shares_list = json.loads(row[1])
+                vo_activity_shares[vo] = self._activity_share_list_to_dict(activity_shares_list)
+
+            return vo_activity_shares, db_sec
+        except Exception as e:
+            raise Exception(f"Scheduler._get_vo_activity_shares(): {e}")
+
     def _get_sched_input(self, dbconn):
         try:
             id_of_last_scheduled_queue = 0
@@ -317,6 +397,8 @@ class Scheduler:
             sched_input["active_links"], db_sec = self._get_active_links(dbconn)
             sched_input["optimizer_limits"], db_sec = self._get_optimizer_limits(dbconn)
             sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
+            sched_input["vo_activity_shares"], db_sec = self._get_vo_activity_shares(dbconn)
+            sched_input["link_vo_shares"], db_sec = self._get_link_vo_shares(dbconn)
 
             return sched_input
         except Exception as e:
