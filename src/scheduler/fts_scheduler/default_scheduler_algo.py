@@ -136,6 +136,14 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         return link_to_queues
 
     def _get_link_max_active(self, link_key):
+        """
+        Returns the maximum number of concurrent transfers allowed on the specified link.  This
+        decision takes into account:
+            1. The link limit
+            2. The source storage-endpoint limit
+            3. The destination storage-endpoint limit
+            4. The optimizer limit
+        """
         max_active = 0
 
         if link_key in self.sched_input["link_limits"].keys():
