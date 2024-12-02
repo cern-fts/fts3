@@ -141,6 +141,17 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             vo_activities[vo].append(activity)
         return vo_activities
 
+    def _get_vo_total_activity_weights(self, vo_activities):
+        vo_total_activity_weights = {}
+        for vo in vo_activities.keys():
+            activities = vo_activities[vo]
+            activity_share = self.sched_input["vo_activity_shares"][vo]
+            total = 0
+            for activity in activities:
+                total += activity_share[activity]
+            vo_total_activity_weights[vo] = total
+        return vo_total_activity_weights
+
     def _get_link_to_queues(self):
         link_to_queues = {}
         for queue_id, queue in self.sched_input["queues"].items():
