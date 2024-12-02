@@ -1,4 +1,5 @@
 from scheduler_algo import SchedulerAlgo, SchedulerDecision
+import copy
 
 
 class CircularBuffer:
@@ -15,6 +16,9 @@ class CircularBuffer:
         next_value = self._buf[self._next_idx]
         self._next_idx = (self._next_idx + 1) % len(self._buf)
         return next_value
+
+    def get_buf_deep_copy(self):
+        return copy.deepcopy(self._buf)
 
     def __len__(self):
         return len(self._buf)
