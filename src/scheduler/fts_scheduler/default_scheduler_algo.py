@@ -203,7 +203,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
     def _get_link_potential(self, link_key, link_nb_queued):
         """
         Returns the number of transfers that could potentionally be scheduled on the specified link.
-        This method takes in to account the bot link and storage endpoint constraints.
         """
         source_se = link_key[0]
         dest_se = link_key[1]
