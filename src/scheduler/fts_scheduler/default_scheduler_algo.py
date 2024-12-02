@@ -161,6 +161,18 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             link_to_queues[link_key][queue_id] = queue
         return link_to_queues
 
+    def _get_link_to_vo_to_queue(self):
+        result = {}
+        for queue_id, queue in self.sched_input["queues"].items():
+            link_key = (queue["source_se"], queue["dest_se"])
+            vo = queue["vo_name"]
+            if link_key not in result:
+                result[link_key] = {}
+            if vo not in result[link_key]:
+                result[link_key][vo] = {}
+            result[link_key][vo][queue_id] = queue
+        return result
+
     def _get_link_max_active(self, link_key):
         """
         Returns the maximum number of concurrent transfers allowed on the specified link.  This
