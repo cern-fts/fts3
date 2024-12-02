@@ -72,10 +72,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
         link_to_nb_queued = self._get_link_to_nb_queued()
         link_to_queues = self._get_link_to_queues()
+        link_to_vo_to_queue = self._get_link_to_vo_to_queue()
         all_link_keys = list(link_to_queues.keys())
         link_to_potential = self._get_link_to_potential(
             all_link_keys, link_to_nb_queued
         )
+        storage_to_outbound_potential = self._get_storage_to_outbound_potential()
+        storage_to_inbound_potential = self._get_storage_to_inbound_potential()
 
         # Do nothing if there are no link with the potential of being scheduled
         if not link_to_potential:
@@ -109,11 +112,15 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         # constraints
         scheduler_decision = SchedulerDecision()
         for i in range(potential_concurrent_transfers):
-            # Identify link that could do work
+            # Identify the link and storages that could do the work
             link_key = potential_link_key_cbuf.get_next()
+            source_se = link_key[0]
+            dest_se = link_key[1]
+
+            # Get the circular buffer of queues with potential on the link
+            queue_id_cbuf = potential_link_to_queue_id_cbuf[link_key]
 
             # Get the next eligble queue on this link
-            queue_id_cbuf = potential_link_to_queue_id_cbuf[link_key]
             queue_id = queue_id_cbuf.get_next()
 
             # Schedule a transfer for this queue
@@ -122,10 +129,35 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 scheduler_decision.set_opaque_data({})
             scheduler_decision.get_opaque_data()["id_of_last_scheduled_link"] = link_key
 
-            # Update links to reflect remaining work to be done
+            # Update storages to reflect remaining work to be done
+            saturated_storages = []
+            storage_to_outbound_potential[source_se] -= 1
+            if storage_to_outbound_potential[source_se] < 0:
+                raise Exception(f"Outbound potential of storage went negative: source_se={source_se}")
+            if storage_to_outbound_potential[source_se] == 0:
+                saturated_storages.append(source_se)
+            storage_to_inbound_potential[dest_se] -= 1
+            if storage_to_inbound_potential[dest_se] < 0:
+                raise Exception(f"Inbound potential of storage went negative: dest_se={dest_se}")
+            if storage_to_inbound_potential[dest_se] == 0:
+                saturated_storages.append(dest_se)
+
+            # Update link potential to reflect remaining work to be done
             link_to_potential[link_key] = link_to_potential[link_key] - 1
-            if link_to_potential[link_key] == 0:
-                potential_link_key_cbuf.remove_value(link_key)
+
+            # Apply storage potential updates to link potentials
+            for link_key, link_potential in link_to_potential.items():
+                link_potential = min(
+                    link_potential,
+                    storage_to_outbound_potential[source_se],
+                    storage_to_inbound_potential[dest_se]
+                )
+
+            # Remove saturated links from circular buffer
+            staturated_links = [link_key for link_key, potential in link_to_potential.items() if potential == 0]
+            for link_key in staturated_links:
+                if link_key in potential_link_key_cbuf:
+                    potential_link_key_cbuf.remove_value(link_key)
 
             # Stop scheduling if there is no more work to be done
             if not potential_link_key_cbuf:
@@ -224,19 +256,35 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             result[storage] += nb_active
         return result
 
+    def _get_storages_with_outbound_queues(self):
+        result = set()
+        for queue_id, queue in self.sched_input["queues"].items():
+            result.add(queue["source_se"])
+        return result
+
+    def _get_storages_with_inbound_queues(self):
+        result = set()
+        for queue_id, queue in self.sched_input["queues"].items():
+            result.add(queue["dest_se"])
+        return result
+
     def _get_storage_to_outbound_potential(self):
-        storage_to_outbound_potential = self._get_storage_to_outbound_active()
+        storages_with_outbound_queues = self._get_storages_with_outbound_queues()
+        storage_to_outbound_active = self._get_storage_to_outbound_active()
         result = {}
-        for storage, nb_active in storage_to_outbound_potential.items():
+        for storage in storages_with_outbound_queues:
             max_active = self._get_storage_outbound_max_active(storage)
+            nb_active = 0 if storage not in storage_to_outbound_active else storage_to_outbound_active[storage]
             result[storage] = 0 if nb_active >= max_active else max_active - nb_active
         return result
 
     def _get_storage_to_inbound_potential(self):
-        storage_to_inbound_potential = self._get_storage_to_inbound_active()
+        storages_with_inbound_queues = self._get_storages_with_inbound_queues()
+        storage_to_inbound_active = self._get_storage_to_inbound_active()
         result = {}
-        for storage, nb_active in storage_to_inbound_potential.items():
+        for storage in storages_with_inbound_queues:
             max_active = self._get_storage_inbound_max_active(storage)
+            nb_active = 0 if storage not in storage_to_inbound_active else storage_to_inbound_active[storage]
             result[storage] = 0 if nb_active >= max_active else max_active - nb_active
         return result
 
@@ -317,10 +365,10 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         dest_se = link_key[1]
 
         link_max_active = self._get_link_max_active(link_key)
-        source_out_max_active = self._get_storage_outbound_max_active(source_se)
-        dest_in_max_active = self._get_storage_inbound_max_active(source_se)
+        source_out_potential = self._get_storage_outbound_potential(source_se)
+        dest_in_potential = self._get_storage_inbound_potential(dest_se)
 
-        max_active = min(link_max_active, source_out_max_active, dest_in_max_active)
+        max_active = min(link_max_active, source_out_potential, dest_in_potential)
 
         link_nb_active = self._get_link_nb_active(link_key)
         link_potential = min(link_nb_queued, max(0, max_active - link_nb_active))
