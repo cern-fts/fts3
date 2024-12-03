@@ -58,10 +58,10 @@ private:
     void registerClientRequest(const fts3::events::TokenRefreshRequest& request, zmq::message_t&& identity);
 
     /// Dispatch refreshed access tokens to ZMQ clients
-    void dispatchAccessTokens(const std::set<Token>& tokens);
+    void dispatchAccessTokens();
 
     /// Dispatch refresh failures to ZMQ clients
-    void dispatchRefreshFailures(const TokenRefreshPollerService::FailedRefreshMapType& refreshFailures);
+    void dispatchRefreshFailures();
 
     struct ZMQ_client {
         ZMQ_client(zmq::message_t&& identifier,

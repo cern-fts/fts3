@@ -67,13 +67,8 @@ void TokenRefreshListenerService::runService()
                 tokenRefreshPoller->registerTokenToRefresh(request.token_id());
             }
 
-            // Retrieve refreshed tokens from the TokenRefreshPoller service
-            auto refreshedTokens = tokenRefreshPoller->getRefreshedTokens();
-            dispatchAccessTokens(refreshedTokens);
-
-            // Retrieve refresh failures from the TokenRefreshPoller service
-            auto refreshFailures = tokenRefreshPoller->getFailedRefreshes();
-            dispatchRefreshFailures(refreshFailures);
+            dispatchAccessTokens();
+            dispatchRefreshFailures();
         } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TokenRefreshListenerService!" << commit;
             break;
@@ -117,8 +112,11 @@ void TokenRefreshListenerService::registerClientRequest(
     }
 }
 
-void TokenRefreshListenerService::dispatchAccessTokens(const std::set<Token>& tokens)
+void TokenRefreshListenerService::dispatchAccessTokens()
 {
+    // Retrieve refreshed tokens from the TokenRefreshPoller service
+    auto tokens = tokenRefreshPoller->getRefreshedTokens();
+
     for (const auto& token: tokens) {
         const auto& map_it = routingMap.find(token.tokenId);
 
@@ -148,9 +146,11 @@ void TokenRefreshListenerService::dispatchAccessTokens(const std::set<Token>& to
     }
 }
 
-void TokenRefreshListenerService::dispatchRefreshFailures(
-    const TokenRefreshPollerService::FailedRefreshMapType& refreshFailures)
+void TokenRefreshListenerService::dispatchRefreshFailures()
 {
+    // Retrieve refresh failures from the TokenRefreshPoller service
+    auto refreshFailures = tokenRefreshPoller->getFailedRefreshes();
+
     for (const auto& [token_id, msgPair]: refreshFailures) {
         const auto& map_it = routingMap.find(token_id);
 

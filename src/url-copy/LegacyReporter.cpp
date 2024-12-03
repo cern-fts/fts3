@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+#include <boost/thread.hpp>
+
 #include "LegacyReporter.h"
 #include "common/Logger.h"
+#include "common/TimeUtils.h"
 #include "monitoring/msg-ifce.h"
 #include "heuristics.h"
 
@@ -31,6 +34,10 @@ LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), 
     auto pingAddress = "ipc://" + opts.msgDir + "/url_copy-ping.ipc";
     auto tokenAddress = "ipc://" + opts.msgDir + "/url_copy-token-refresh.ipc";
     zmqPingSocket.connect(pingAddress.c_str());
+    // Wait at most 1 minute for token ZMQ communication
+    int tokenSocketTimeout_ms = 60 * 1000;
+    zmqTokenSocket.set(zmq::sockopt::rcvtimeo, tokenSocketTimeout_ms);
+    zmqTokenSocket.set(zmq::sockopt::sndtimeo, tokenSocketTimeout_ms);
     zmqTokenSocket.connect(tokenAddress.c_str());
 }
 
@@ -414,32 +421,59 @@ std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::s
     request.set_hostname(fts3::common::getFullHostname());
     request.set_process_id(getpid());
 
-    try {
-        auto serialized = request.SerializeAsString();
-        zmqTokenSocket.send(zmq::message_t{serialized}, zmq::send_flags::none);
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sent TokenRefresh request: token_id=" << token_id << commit;
+    int attempts{0};
+    auto end = getTimestampSeconds(300);
+    auto nextAttempt = getTimestampSeconds(60);
 
-        zmq::message_t reply;
-        static_cast<void>(zmqTokenSocket.recv(reply, zmq::recv_flags::none));
+    while (true) {
+        auto now = getTimestampSeconds();
 
-        if (!response.ParseFromArray(reply.data(), static_cast<int>(reply.size()))) {
-            throw std::runtime_error("Failed to parse TokenRefresh response");
-        }
-
-        if (response.response_type() == events::TokenRefreshResponse::TYPE_REFRESH_FAILURE) {
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Received failed-refresh response: \"" << response.refresh_message() << "\""
-                                               << " (refresh_timestamp=" << response.refresh_timestamp() << ")"
+        if (now >= end) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Aborting token-refresh request. "
+                                               << "Total operation time exceeded 300s! (attempts=" << attempts << ")"
                                                << commit;
-            return {"", 0};
+            break;
         }
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Received TokenRefresh response: "
-                                        << accessTokenPayload(response.access_token())
-                                        << commit;
+        if ((attempts > 0) && (now < nextAttempt)) {
+            auto interval = std::min(nextAttempt, end) - now;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will sleep for " << interval << " seconds!" << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(interval));
+            nextAttempt = getTimestampSeconds(60);
+        }
 
-        return {response.access_token(), response.expiry_timestamp()};
-    } catch (const std::exception& error) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send/receive TokenRefresh request: " << error.what() << commit;
+        try {
+            std::ostringstream msg;
+            msg << "Sending token-refresh request: token_id=" << token_id;
+            if (++attempts > 1) { msg << " (attempt=" << attempts << ")"; }
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << msg.str() << commit;
+
+            auto serialized = request.SerializeAsString();
+            zmqTokenSocket.send(zmq::message_t{serialized}, zmq::send_flags::none);
+
+            zmq::message_t reply;
+            static_cast<void>(zmqTokenSocket.recv(reply, zmq::recv_flags::none));
+
+            if (!response.ParseFromArray(reply.data(), static_cast<int>(reply.size()))) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Failed to parse token-refresh response!" << commit;
+                continue;
+            }
+
+            if (response.response_type() == events::TokenRefreshResponse::TYPE_REFRESH_FAILURE) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Received failed-refresh response: \"" << response.refresh_message() << "\""
+                                                   << " (refresh_timestamp=" << response.refresh_timestamp() << ")"
+                                                   << commit;
+                continue;
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Received token-refresh response: "
+                                            << accessTokenPayload(response.access_token())
+                                            << commit;
+
+            return {response.access_token(), response.expiry_timestamp()};
+        } catch (const std::exception& error) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Failed to send/receive token-refresh request: " << error.what() << commit;
+        }
     }
 
     return {"", 0};
