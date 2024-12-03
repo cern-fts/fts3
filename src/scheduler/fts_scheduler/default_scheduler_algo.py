@@ -201,6 +201,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
         return max_active
 
+    def _get_storage_outbound_active(self, storage):
+        nb_active = 0
+        for link_key, link in self.sched_input["active_links"].items():
+            if storage == link["source_se"]:
+                nb_active += link["nb_active"]
+        return nb_active
+
     def _get_link_nb_active(self, link_key):
         if link_key in self.sched_input["active_links"]:
             return self.sched_input["active_links"][link_key]["nb_active"]
