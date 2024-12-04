@@ -55,7 +55,7 @@ class CircularBuffer:
         try:
             self._buf.remove(value)
         except Exception as e:
-            raise Exception(f"remove_value(): {e}")
+            raise Exception(f"remove_value(): value={value}: {e}")
 
         # Wrap next_idx around to 0 if has fallen off the buffer
         if self._next_idx == len(self._buf):
