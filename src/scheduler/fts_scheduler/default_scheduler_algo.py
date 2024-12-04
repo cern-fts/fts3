@@ -35,6 +35,9 @@ class CircularBuffer:
             "}"
         )
 
+    def __contains__(self, item):
+        return item in self._buf
+
     def skip_until_after(self, val_to_skip_over):
         """
         Skip through this circular-buffer until after the specified value
