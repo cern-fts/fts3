@@ -372,7 +372,7 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
 }
 
 
-static void timeoutTask(boost::posix_time::time_duration &duration, UrlCopyProcess *urlCopyProcess)
+static void timeoutTask(const boost::posix_time::time_duration& duration, UrlCopyProcess *urlCopyProcess)
 {
     try {
         boost::this_thread::sleep(duration);
@@ -397,6 +397,42 @@ static void pingTask(Transfer *transfer, Reporter *reporter, unsigned pingInterv
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Ping thread stopped" << commit;
     } catch (const std::exception &ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in the ping task: " << ex.what() << commit;
+    }
+}
+
+
+static void destTokenRefreshTask(const Transfer* transfer, Reporter* reporter, const std::string& token_id, const std::string& token)
+{
+    // The AutoInterruptThread scope must be as large as the runTransfer function,
+    // hence why we check here if we're dealing with a token transfer or not
+    if (token_id.empty() || token.empty()) {
+        return;
+    }
+
+    try {
+        std::string exp_str = extractAccessTokenField(token, "exp");
+        int64_t exp = (!exp_str.empty()) ? std::stoll(exp_str) : 0;
+
+        while (!boost::this_thread::interruption_requested()) {
+            // Refresh token at "exp - 10min"
+            auto wait = std::max(static_cast<int64_t>(0), (exp - 10 * 60) - getTimestampSeconds());
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination token-refresh will be initiated in " << wait
+                                             << " seconds (token_exp=" << exp << ")" << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(wait));
+            auto [token, expiry] = reporter->requestTokenRefresh(token_id, *transfer);
+
+            if (!token.empty()) {
+                exp_str = extractAccessTokenField(token, "exp");
+                exp = (!exp_str.empty()) ? std::stoll(exp_str) : getTimestampSeconds(20 * 60);
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "(TokenRefreshThread):: Failed to obtain refreshed token for " << token_id << "! (stopping thread)" << commit;
+                break;
+            }
+        }
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination token refresh thread stopped" << commit;
+    } catch (const std::exception& ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in the destination token-refresh task: " << ex.what() << commit;
     }
 }
 
@@ -441,15 +477,27 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;
 
+    // Refresh source token if needed
     if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
-        auto [token, expiry] = reporter.requestTokenRefresh(transfer.sourceTokenId, transfer);
+        std::string src_exp = extractAccessTokenField(params.getSrcToken(), "exp");
+        int64_t exp = (!src_exp.empty()) ? std::stoll(src_exp) : 0;
 
-        if (token.empty()) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refreshed token for source!" << commit;
-        } else {
-            params.setSourceBearerToken(token);
+        // Source token expires in the next 10 minutes
+        if (exp < getTimestampSeconds(600)) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Requesting source token refresh: token_id=" << transfer.sourceTokenId
+                                             << " (token_exp=" << exp << ")" << commit;
+            auto [token, expiry] = reporter.requestTokenRefresh(transfer.sourceTokenId, transfer);
+
+            if (token.empty()) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refreshed token for source!" << commit;
+            } else {
+                params.setSourceBearerToken(token);
+            }
         }
     }
+
+    // Thread to refresh destination token
+    AutoInterruptThread destTokenRefreshThread(boost::bind(&destTokenRefreshTask, &transfer, &reporter, transfer.destTokenId, params.getDstToken()));
 
     if (opts.strictCopy) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
