@@ -344,9 +344,9 @@ class Scheduler:
             for activity_weight_pair in activity_share_list:
                 if len(activity_weight_pair.keys()) != 1:
                     raise Exception(
-                            "Invalid number of keys in activity to weight pair: "
-                            f"expected=1 found={len(activity_weight_pair.keys())}"
-                        )
+                        "Invalid number of keys in activity to weight pair: "
+                        f"expected=1 found={len(activity_weight_pair.keys())}"
+                    )
                 activity = next(iter(activity_weight_pair))
                 weight = activity_weight_pair[activity]
                 if activity in activity_share_dict.keys():
@@ -377,7 +377,9 @@ class Scheduler:
             for row in rows:
                 vo = row[0]
                 activity_shares_list = json.loads(row[1])
-                vo_activity_shares[vo] = self._activity_share_list_to_dict(activity_shares_list)
+                vo_activity_shares[vo] = self._activity_share_list_to_dict(
+                    activity_shares_list
+                )
 
             return vo_activity_shares, db_sec
         except Exception as e:
@@ -388,14 +390,18 @@ class Scheduler:
             id_of_last_scheduled_queue = 0
             sched_input = {}
             sched_input["opaque_data"] = self._algo_opaque_data
-            sched_input["max_url_copy_processes"], db_sec = self._get_max_url_copy_processes(dbconn)
+            sched_input["max_url_copy_processes"], db_sec = (
+                self._get_max_url_copy_processes(dbconn)
+            )
             sched_input["id_of_last_scheduled_queue"] = id_of_last_scheduled_queue
             sched_input["queues"], db_sec = self._get_queues(dbconn)
             sched_input["link_limits"], db_sec = self._get_link_limits(dbconn)
             sched_input["active_links"], db_sec = self._get_active_links(dbconn)
             sched_input["optimizer_limits"], db_sec = self._get_optimizer_limits(dbconn)
             sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
-            sched_input["vo_activity_shares"], db_sec = self._get_vo_activity_shares(dbconn)
+            sched_input["vo_activity_shares"], db_sec = self._get_vo_activity_shares(
+                dbconn
+            )
             sched_input["link_vo_shares"], db_sec = self._get_link_vo_shares(dbconn)
 
             return sched_input

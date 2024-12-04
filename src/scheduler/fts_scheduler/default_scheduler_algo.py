@@ -133,12 +133,16 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             saturated_storages = []
             storage_to_outbound_potential[source_se] -= 1
             if storage_to_outbound_potential[source_se] < 0:
-                raise Exception(f"Outbound potential of storage went negative: source_se={source_se}")
+                raise Exception(
+                    f"Outbound potential of storage went negative: source_se={source_se}"
+                )
             if storage_to_outbound_potential[source_se] == 0:
                 saturated_storages.append(source_se)
             storage_to_inbound_potential[dest_se] -= 1
             if storage_to_inbound_potential[dest_se] < 0:
-                raise Exception(f"Inbound potential of storage went negative: dest_se={dest_se}")
+                raise Exception(
+                    f"Inbound potential of storage went negative: dest_se={dest_se}"
+                )
             if storage_to_inbound_potential[dest_se] == 0:
                 saturated_storages.append(dest_se)
 
@@ -150,11 +154,15 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 link_potential = min(
                     link_potential,
                     storage_to_outbound_potential[source_se],
-                    storage_to_inbound_potential[dest_se]
+                    storage_to_inbound_potential[dest_se],
                 )
 
             # Remove saturated links from circular buffer
-            staturated_links = [link_key for link_key, potential in link_to_potential.items() if potential == 0]
+            staturated_links = [
+                link_key
+                for link_key, potential in link_to_potential.items()
+                if potential == 0
+            ]
             for link_key in staturated_links:
                 if link_key in potential_link_key_cbuf:
                     potential_link_key_cbuf.remove_value(link_key)
@@ -166,7 +174,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         return scheduler_decision
 
     def _get_vo_activities_of_queues(self, queue_ids):
-        vo_activities = {} # Activities are grouped by VO
+        vo_activities = {}  # Activities are grouped by VO
         for queue_id in queue_ids:
             queue = self.sched_input["queues"][queue_id]
             vo = queue["vo_name"]
@@ -274,7 +282,11 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         result = {}
         for storage in storages_with_outbound_queues:
             max_active = self._get_storage_outbound_max_active(storage)
-            nb_active = 0 if storage not in storage_to_outbound_active else storage_to_outbound_active[storage]
+            nb_active = (
+                0
+                if storage not in storage_to_outbound_active
+                else storage_to_outbound_active[storage]
+            )
             result[storage] = 0 if nb_active >= max_active else max_active - nb_active
         return result
 
@@ -284,7 +296,11 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         result = {}
         for storage in storages_with_inbound_queues:
             max_active = self._get_storage_inbound_max_active(storage)
-            nb_active = 0 if storage not in storage_to_inbound_active else storage_to_inbound_active[storage]
+            nb_active = (
+                0
+                if storage not in storage_to_inbound_active
+                else storage_to_inbound_active[storage]
+            )
             result[storage] = 0 if nb_active >= max_active else max_active - nb_active
         return result
 
@@ -331,14 +347,14 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
     def _get_link_nb_active_per_vo(self, link_key):
         nb_active_per_vo = {}
         for queue_id, queue in self.sched_input["queues"].items():
-           queue_link_key = (queue["source_se"], queue["dest_se"])
-           if queue_link_key == link_key:
-               vo = queue["vo"]
-               nb_files = queue["nb_files"]
+            queue_link_key = (queue["source_se"], queue["dest_se"])
+            if queue_link_key == link_key:
+                vo = queue["vo"]
+                nb_files = queue["nb_files"]
 
-               if vo not in nb_active_per_vo.keys():
-                   nb_active_per_vo[vo] = 0
-               nb_active_per_vo[vo] += nb_files
+                if vo not in nb_active_per_vo.keys():
+                    nb_active_per_vo[vo] = 0
+                nb_active_per_vo[vo] += nb_files
         return nb_active_per_vo
 
     def _get_link_nb_active_per_vo_activity(self, link_key):
