@@ -211,6 +211,16 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             result[storage] += nb_active
         return result
 
+    def _get_storage_to_inbound_active(self):
+        result = {}
+        for link_key, link in self.sched_input["active_links"].items():
+            storage = link["dest_se"]
+            nb_active = link["nb_active"]
+            if storage not in result:
+                result[storage] = 0
+            result[storage] += nb_active
+        return result
+
     def _get_storage_outbound_active(self, storage):
         nb_active = 0
         for link_key, link in self.sched_input["active_links"].items():
