@@ -202,43 +202,6 @@ class Scheduler:
         except Exception as e:
             raise Exception(f"Scheduler._get_storage_limits(): {e}")
 
-    def _get_active_outbound_storages(self, dbconn):
-        """
-        Returns the number of effectively active out-bound tranfers per storage.  A transfer is
-        effectively considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and is
-        on its way to becoming ACTIVE, in other words if is SCHEDULED, SELECTED or READY.
-        """
-        try:
-            sql = """
-                SELECT
-                    source_se as storage,
-                    SUM(nb_files)::bigint as outbound_active
-                FROM
-                    t_queue
-                WHERE
-                    file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
-                GROUP BY
-                    source_se
-                HAVING
-                    SUM(nb_files) > 0
-            """
-            start_db = time.time()
-            cursor = dbconn.cursor()
-            cursor.execute(sql)
-            rows = cursor.fetchall()
-            db_sec = time.time() - start_db
-
-            storages = {}
-            for row in rows:
-                storage = {}
-                storage["storage"] = row[0]
-                storage["outbound_active"] = row[1]
-                storages[storage] = storage
-
-            return storages, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_active_outbound_storages: {e}")
-
     def _get_active_inbound_storages(self, dbconn):
         """
         Returns the number of effectively active in-bound tranfers per storage.  A transfer is
