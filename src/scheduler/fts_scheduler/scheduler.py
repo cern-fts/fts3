@@ -126,17 +126,19 @@ class Scheduler:
         except Exception as e:
             raise Exception(f"Schedduler._get_link_limits(): {e}")
 
-    def _get_active_links(self, dbconn):
+    def _get_active_link_stats(self, dbconn):
         """
-        Returns the number of effectively active tranfers per link.  A transfer is effectively
-        considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and is on its way
-        to becoming ACTIVE, in other words if is SCHEDULED, SELECTED or READY.
+        Returns the number of active tranfers per acivity per VO per link.
+        A transfer is considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and
+        is on its way to becoming ACTIVE, in other words if is SCHEDULED, SELECTED or READY.
         """
         try:
             sql = """
                 SELECT
                     source_se,
                     dest_se,
+                    vo_name,
+                    activity,
                     SUM(nb_files)::bigint as nb_active
                 FROM
                     t_queue
@@ -144,7 +146,9 @@ class Scheduler:
                     file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
                 GROUP BY
                     source_se,
-                    dest_se
+                    dest_se,
+                    vo_name,
+                    activity
             """
             start_db = time.time()
             cursor = dbconn.cursor()
@@ -157,14 +161,16 @@ class Scheduler:
                 link = {}
                 link["source_se"] = row[0]
                 link["dest_se"] = row[1]
-                link["nb_active"] = row[2]
+                link["vo_name"] = row[2]
+                link["activity"] = row[3]
+                link["nb_active"] = row[4]
 
                 link_key = (link["source_se"], link["dest_se"])
                 links[link_key] = link
 
             return links, db_sec
         except Exception as e:
-            raise Exception(f"Scheduler._get_active_links: {e}")
+            raise Exception(f"Scheduler._get_active_link_stats: {e}")
 
     def _get_storage_limits(self, dbconn):
         try:
@@ -396,7 +402,9 @@ class Scheduler:
             sched_input["id_of_last_scheduled_queue"] = id_of_last_scheduled_queue
             sched_input["queues"], db_sec = self._get_queues(dbconn)
             sched_input["link_limits"], db_sec = self._get_link_limits(dbconn)
-            sched_input["active_links"], db_sec = self._get_active_links(dbconn)
+            sched_input["active_link_stats"], db_sec = self._get_active_link_stats(
+                dbconn
+            )
             sched_input["optimizer_limits"], db_sec = self._get_optimizer_limits(dbconn)
             sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
             sched_input["vo_activity_shares"], db_sec = self._get_vo_activity_shares(
