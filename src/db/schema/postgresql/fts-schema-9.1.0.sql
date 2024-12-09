@@ -788,7 +788,8 @@ CREATE TYPE transfer_to_start AS (
 );
 
 CREATE OR REPLACE FUNCTION get_transfers_to_start(
-    _nb_files bigint
+    _nb_files bigint,
+    _hostname VARCHAR(255)
 ) RETURNS SETOF transfer_to_start
 AS $$
 DECLARE
@@ -817,7 +818,9 @@ BEGIN
         UPDATE
             t_file
         SET
-            file_state = 'SELECTED'
+            file_state = 'SELECTED',
+            transfer_host = _hostname,
+            start_time = CURRENT_TIMESTAMP
         WHERE
             file_id = _file_id;
 

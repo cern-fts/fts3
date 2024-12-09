@@ -5288,8 +5288,9 @@ std::list<TransferFile> MySqlAPI::postgresGetScheduledFileTransfers(const int ma
         sql.begin();
 
         const soci::rowset<TransferFile> rs = (sql.prepare <<
-                "SELECT * from get_transfers_to_start(:maxFiles)",
-                soci::use(maxFiles));
+                "SELECT * from get_transfers_to_start(:maxFiles, :hostname)",
+                soci::use(maxFiles),
+                soci::use(hostname));
 
         // Commit the transaction
         sql.commit();
