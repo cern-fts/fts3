@@ -126,7 +126,7 @@ class Scheduler:
         except Exception as e:
             raise Exception(f"Schedduler._get_link_limits(): {e}")
 
-    def _get_active_link_stats(self, dbconn):
+    def _get_active_stats(self, dbconn):
         """
         Returns the number of active tranfers per acivity per VO per link.
         A transfer is considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and
@@ -156,21 +156,20 @@ class Scheduler:
             rows = cursor.fetchall()
             db_sec = time.time() - start_db
 
-            links = {}
+            result = []
             for row in rows:
-                link = {}
-                link["source_se"] = row[0]
-                link["dest_se"] = row[1]
-                link["vo_name"] = row[2]
-                link["activity"] = row[3]
-                link["nb_active"] = row[4]
+                stats = {}
+                stats["source_se"] = row[0]
+                stats["dest_se"] = row[1]
+                stats["vo_name"] = row[2]
+                stats["activity"] = row[3]
+                stats["nb_active"] = row[4]
 
-                link_key = (link["source_se"], link["dest_se"])
-                links[link_key] = link
+                result.append(stats)
 
-            return links, db_sec
+            return result, db_sec
         except Exception as e:
-            raise Exception(f"Scheduler._get_active_link_stats: {e}")
+            raise Exception(f"Scheduler._get_active_stats: {e}")
 
     def _get_storage_limits(self, dbconn):
         try:
@@ -328,9 +327,7 @@ class Scheduler:
             sched_input["id_of_last_scheduled_queue"] = id_of_last_scheduled_queue
             sched_input["queues"], db_sec = self._get_queues(dbconn)
             sched_input["link_limits"], db_sec = self._get_link_limits(dbconn)
-            sched_input["active_link_stats"], db_sec = self._get_active_link_stats(
-                dbconn
-            )
+            sched_input["active_stats"], db_sec = self._get_active_stats(dbconn)
             sched_input["optimizer_limits"], db_sec = self._get_optimizer_limits(dbconn)
             sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
             sched_input["vo_activity_shares"], db_sec = self._get_vo_activity_shares(

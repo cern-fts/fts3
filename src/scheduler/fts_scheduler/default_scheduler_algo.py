@@ -374,9 +374,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_storage_to_outbound_active(self):
         result = {}
-        for link_key, link in self.sched_input["active_link_stats"].items():
-            storage = link["source_se"]
-            nb_active = link["nb_active"]
+        for stats in self.sched_input["active_stats"]:
+            storage = stats["source_se"]
+            nb_active = stats["nb_active"]
             result[storage] = (
                 0 if storage not in result else result[storage] + nb_active
             )
@@ -384,9 +384,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_storage_to_inbound_active(self):
         result = {}
-        for link_key, link in self.sched_input["active_link_stats"].items():
-            storage = link["dest_se"]
-            nb_active = link["nb_active"]
+        for stats in self.sched_input["active_stats"]:
+            storage = stats["dest_se"]
+            nb_active = stats["nb_active"]
             result[storage] = (
                 0 if storage not in result else result[storage] + nb_active
             )
@@ -434,14 +434,14 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_storage_outbound_active(self, storage):
         nb_active = 0
-        for link_key, link in self.sched_input["active_link_stats"].items():
-            nb_active += link["nb_active"] if storage == link["source_se"] else 0
+        for stats in self.sched_input["active_stats"]:
+            nb_active += stats["nb_active"] if storage == stats["source_se"] else 0
         return nb_active
 
     def _get_storage_inbound_active(self, storage):
         nb_active = 0
-        for link_key, link in self.sched_input["active_link_stats"].items():
-            nb_active += link["nb_active"] if storage == link["dest_se"] else 0
+        for stats in self.sched_input["active_stats"]:
+            nb_active += stats["nb_active"] if storage == stats["dest_se"] else 0
         return nb_active
 
     def _get_storage_outbound_potential(self, storage):
@@ -455,10 +455,14 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         return 0 if active >= max_active else max_active - active
 
     def _get_link_nb_active(self, link_key):
-        nb_active = 0
-        for active_link_key, link in self.sched_input["active_link_stats"]:
-            nb_active += link["nb_files"] if link_key == active_link_key else 0
-        return nb_active
+        result = 0
+        for stats in self.sched_input["active_stats"]:
+            source_se = stats["source_se"]
+            dest_se = stats["dest_se"]
+            nb_active = stats["nb_active"]
+            stats_link_key = (source_se, dest_se)
+            result += nb_active if link_key == stats_link_key else 0
+        return result
 
     def _get_link_to_nb_queued(self):
         link_to_nb_queued = {}
@@ -501,7 +505,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_link_potential(self, link_key, link_nb_queued):
         """
-        Returns the number of transfers that could potentionally be scheduled on the specified link.
+        Returns the number of transfers that could potentially be scheduled on the specified link.
         """
         source_se = link_key[0]
         dest_se = link_key[1]
@@ -562,6 +566,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         Returns the number of potential concurrent-transfers
         """
         nb_active = 0
-        for link_key, link in self.sched_input["active_link_stats"].items():
-            nb_active += link["nb_active"]
+        for stats in self.sched_input["active_stats"]:
+            nb_active += stats["nb_active"]
         return max(0, self.sched_input["max_url_copy_processes"] - nb_active)
