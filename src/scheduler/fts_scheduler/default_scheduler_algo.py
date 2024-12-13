@@ -1,6 +1,6 @@
 import copy
 from dataclasses import dataclass
-from scheduler_algo import SchedulerAlgo, SchedulerDecision
+from scheduler_algo import SchedulerAlgo, SchedulerOutput
 from typing import Any
 
 
@@ -266,7 +266,7 @@ class LinkPotential:
 
 
 class DefaultSchedulerAlgo(SchedulerAlgo):
-    def schedule(self) -> SchedulerDecision:
+    def schedule(self) -> SchedulerOutput:
         potential_concurrent_transfers = self._get_potential_concurrent_transfers()
 
         # Do nothing if no work to be done or concurrent transfer limit reached
@@ -395,7 +395,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
         # Round robin free work-capacity across submission queues taking into account any
         # constraints
-        scheduler_decision = SchedulerDecision()
+        scheduler_decision = SchedulerOutput()
         for i in range(potential_concurrent_transfers):
             # Identify the link and storages that could do the work
             link_key = potential_link_key_cbuf.get_next()

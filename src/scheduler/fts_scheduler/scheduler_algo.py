@@ -1,4 +1,4 @@
-class SchedulerDecision:
+class SchedulerOutput:
     def __init__(self):
         self._transfers_per_queue = {}
         self._total_nb_transfers = 0
@@ -39,5 +39,5 @@ class SchedulerAlgo:
     def __init__(self, sched_input):
         self.sched_input = sched_input
 
-    def schedule(self) -> SchedulerDecision:
+    def schedule(self) -> SchedulerOutput:
         pass
