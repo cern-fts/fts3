@@ -2,8 +2,6 @@
 Scheduler-algorithm inputs and outputs
 """
 
-from dataclasses import dataclass
-
 
 class SchedulerOutput:
     """
@@ -68,8 +66,7 @@ class SchedulerOutput:
         return self._opaque_data
 
 
-@dataclass
-class SchedulerAlgo:
+class SchedulerAlgo:  # pylint:disable=too-few-public-methods
     """
     Defines the interface to a object implementing a scheduler algorithm
     """
