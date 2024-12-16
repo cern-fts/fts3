@@ -396,7 +396,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         # Round robin free work-capacity across submission queues taking into account any
         # constraints
         scheduler_decision = SchedulerOutput()
-        for i in range(potential_concurrent_transfers):
+        while potential_concurrent_transfers and potential_link_key_cbuf:
             # Identify the link and storages that could do the work
             link_key = potential_link_key_cbuf.get_next()
             source_se = link_key[0]
@@ -421,6 +421,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
             # Schedule a transfer for this queue
             scheduler_decision.inc_transfers_for_queue(queue_id, 1)
+            potential_concurrent_transfers -= 1
 
             # Update active file-transfers in order to respect activit shares
             if link_key not in link_key_to_vo_to_activity_to_nb_active:
@@ -516,10 +517,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 )
             if link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] == 0:
                 activity_wrr.remove_queue(activity)
-
-            # Stop scheduling if there is no more work to be done
-            if not potential_link_key_cbuf:
-                break
 
         return scheduler_decision
 
