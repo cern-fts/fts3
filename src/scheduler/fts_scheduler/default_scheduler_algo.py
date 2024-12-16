@@ -67,7 +67,7 @@ class CircularBuffer:
 @dataclass
 class WRRQ:
     """
-    A queue within a Weight Round-Robin (WRR) object
+    A queue within a Weighted Round-Robin (WRR) scheduler
     """
 
     q_id: Any
