@@ -763,7 +763,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 nb_active_per_vo_activity[vo][activity] += nb_files
         return nb_active_per_vo_activity
 
-    def _get_link_potential2(self, link_key, link_nb_queued):
+    def _get_link_potential(self, link_key, link_nb_queued):
         """
         Returns the number of transfers that could potentially be scheduled on the specified link.
         """
@@ -800,7 +800,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             link_nb_queued = (
                 0 if link_key not in link_to_nb_queued else link_to_nb_queued[link_key]
             )
-            link_potential = self._get_link_potential2(link_key, link_nb_queued)
+            link_potential = self._get_link_potential(link_key, link_nb_queued)
             if link_potential.get_potential() > 0:
                 link_key_to_potential[link_key] = link_potential
         return link_key_to_potential
