@@ -2,6 +2,8 @@
 Scheduler-algorithm inputs and outputs
 """
 
+from abc import ABC, abstractmethod
+
 
 class SchedulerOutput:
     """
@@ -66,7 +68,7 @@ class SchedulerOutput:
         return self._opaque_data
 
 
-class SchedulerAlgo:  # pylint:disable=too-few-public-methods
+class SchedulerAlgo(ABC):  # pylint:disable=too-few-public-methods
     """
     Defines the interface to a object implementing a scheduler algorithm
     """
@@ -74,6 +76,7 @@ class SchedulerAlgo:  # pylint:disable=too-few-public-methods
     def __init__(self, sched_input):
         self.sched_input = sched_input
 
+    @abstractmethod
     def schedule(self) -> SchedulerOutput:
         """
         The entry point to the scheduler algorithm.
