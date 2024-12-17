@@ -103,7 +103,7 @@ void FileTransferExecutor::run(boost::any & ctx)
         std::vector< std::shared_ptr<ShareConfig> > cfgs;
 
         // Set to READY state when true
-        if (db->isTrAllowed(tf.sourceSe, tf.destSe))
+        if (db->getDbtype() == "postgresql" || db->isTrAllowed(tf.sourceSe, tf.destSe)) // Only check if allowed if MySQL
         {
             UrlCopyCmd cmdBuilder;
 
