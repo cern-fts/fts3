@@ -1,9 +1,17 @@
+"""
+The file-transfer scheduler
+"""
+
 import json
 import socket
 import time
 
 
-class Scheduler:
+class Scheduler:  # pylint:disable=too-few-public-methods
+    """
+    Thefile-transfer scheduler
+    """
+
     def __init__(self, log, scheduler_algo_class):
         self.log = log
         self._algo_class = scheduler_algo_class
@@ -12,6 +20,9 @@ class Scheduler:
         )
 
     def schedule(self, dbconn):
+        """
+        Runs a single round the file-trasfer scheduler
+        """
         if not self._this_host_is_scheduling(dbconn):
             return
 
@@ -29,7 +40,8 @@ class Scheduler:
         if nb_scheduled:
             self.log.info(f"Scheduled transfers: nb_scheduled={nb_scheduled}")
 
-    def _get_queues(self, dbconn):
+    @staticmethod
+    def _get_queues(dbconn):
         try:
             sql = """
                 SELECT
@@ -65,10 +77,11 @@ class Scheduler:
                 queue_id = queue["queue_id"]
                 queues[queue_id] = queue
             return queues, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_queues(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_queues(): {ex}") from ex
 
-    def _get_max_url_copy_processes(self, dbconn) -> int:
+    @staticmethod
+    def _get_max_url_copy_processes(dbconn) -> int:
         try:
             sql = """
                 SELECT
@@ -91,10 +104,11 @@ class Scheduler:
 
             max_url_copy_processes = rows[0][0]
             return max_url_copy_processes, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_max_url_copy_processes(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_max_url_copy_processes(): {ex}") from ex
 
-    def _get_link_limits(self, dbconn):
+    @staticmethod
+    def _get_link_limits(dbconn):
         try:
             sql = """
                 SELECT
@@ -123,10 +137,11 @@ class Scheduler:
                 links[link_key] = link
 
             return links, db_sec
-        except Exception as e:
-            raise Exception(f"Schedduler._get_link_limits(): {e}")
+        except Exception as ex:
+            raise Exception(f"Schedduler._get_link_limits(): {ex}") from ex
 
-    def _get_active_stats(self, dbconn):
+    @staticmethod
+    def _get_active_stats(dbconn):
         """
         Returns the number of active tranfers per acivity per VO per link.
         A transfer is considered to be ACTIVE if is actually ACTIVE or if it has been scheduled and
@@ -168,10 +183,11 @@ class Scheduler:
                 result.append(stats)
 
             return result, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_active_stats: {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_active_stats: {ex}") from ex
 
-    def _get_storage_limits(self, dbconn):
+    @staticmethod
+    def _get_storage_limits(dbconn):
         try:
             sql = """
                 SELECT
@@ -198,10 +214,11 @@ class Scheduler:
                 storages[storage_key] = storage
 
             return storages, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_storage_limits(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_storage_limits(): {ex}") from ex
 
-    def _get_optimizer_limits(self, dbconn):
+    @staticmethod
+    def _get_optimizer_limits(dbconn):
         """
         Returns a map from link to the maximum number of active transfers the link can have as
         decided by the FTS optimizer
@@ -232,10 +249,11 @@ class Scheduler:
                 links[link_key] = link
 
             return links, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._optimizer_max_active: {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._optimizer_max_active: {ex}") from ex
 
-    def _get_link_vo_shares(self, dbconn):
+    @staticmethod
+    def _get_link_vo_shares(dbconn):
         try:
             sql = """
                 SELECT
@@ -266,10 +284,11 @@ class Scheduler:
                 link_vo_shares[link_key].append(vo_share)
 
             return link_vo_shares, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_link_vo_shares(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_link_vo_shares(): {ex}") from ex
 
-    def _activity_share_list_to_dict(self, activity_share_list):
+    @staticmethod
+    def _activity_share_list_to_dict(activity_share_list):
         try:
             activity_share_dict = {}
             for activity_weight_pair in activity_share_list:
@@ -280,14 +299,15 @@ class Scheduler:
                     )
                 activity = next(iter(activity_weight_pair))
                 weight = activity_weight_pair[activity]
-                if activity in activity_share_dict.keys():
+                if activity in activity_share_dict:
                     raise Exception("Duplicate activity: activity={activity}")
                 activity_share_dict[activity] = weight
             return activity_share_dict
-        except Exception as e:
-            raise Exception(f"Scheduler._activity_share_list_to_dict(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._activity_share_list_to_dict(): {ex}") from ex
 
-    def _get_vo_activity_shares(self, dbconn):
+    @staticmethod
+    def _get_vo_activity_shares(dbconn):
         try:
             sql = """
                 SELECT
@@ -306,38 +326,38 @@ class Scheduler:
 
             vo_activity_shares = {}
             for row in rows:
-                vo = row[0]
+                vo_name = row[0]
                 activity_shares_list = json.loads(row[1])
-                vo_activity_shares[vo] = self._activity_share_list_to_dict(
+                vo_activity_shares[vo_name] = Scheduler._activity_share_list_to_dict(
                     activity_shares_list
                 )
 
             return vo_activity_shares, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._get_vo_activity_shares(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_vo_activity_shares(): {ex}") from ex
 
     def _get_sched_input(self, dbconn):
         try:
             id_of_last_scheduled_queue = 0
             sched_input = {}
             sched_input["opaque_data"] = self._algo_opaque_data
-            sched_input["max_url_copy_processes"], db_sec = (
-                self._get_max_url_copy_processes(dbconn)
+            sched_input["max_url_copy_processes"], _ = (
+                Scheduler._get_max_url_copy_processes(dbconn)
             )
             sched_input["id_of_last_scheduled_queue"] = id_of_last_scheduled_queue
-            sched_input["queues"], db_sec = self._get_queues(dbconn)
-            sched_input["link_limits"], db_sec = self._get_link_limits(dbconn)
-            sched_input["active_stats"], db_sec = self._get_active_stats(dbconn)
-            sched_input["optimizer_limits"], db_sec = self._get_optimizer_limits(dbconn)
-            sched_input["storages_limits"], db_sec = self._get_storage_limits(dbconn)
-            sched_input["vo_activity_shares"], db_sec = self._get_vo_activity_shares(
+            sched_input["queues"], _ = Scheduler._get_queues(dbconn)
+            sched_input["link_limits"], _ = Scheduler._get_link_limits(dbconn)
+            sched_input["active_stats"], _ = Scheduler._get_active_stats(dbconn)
+            sched_input["optimizer_limits"], _ = Scheduler._get_optimizer_limits(dbconn)
+            sched_input["storages_limits"], _ = Scheduler._get_storage_limits(dbconn)
+            sched_input["vo_activity_shares"], _ = Scheduler._get_vo_activity_shares(
                 dbconn
             )
-            sched_input["link_vo_shares"], db_sec = self._get_link_vo_shares(dbconn)
+            sched_input["link_vo_shares"], _ = Scheduler._get_link_vo_shares(dbconn)
 
             return sched_input
-        except Exception as e:
-            raise Exception(f"Scheduler._get_sched_input(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._get_sched_input(): {ex}") from ex
 
     def _schedule_next_file_in_queue(self, dbconn, submitted_queue_id):
         try:
@@ -355,15 +375,15 @@ class Scheduler:
 
                 if len(rows) > 0:
                     file_id = rows[0][0]
-                    scheduled = True
                     self.log.debug(
                         "Scheduled file: "
                         f"file_id={file_id} queue_id={submitted_queue_id} db_sec={db_sec}"
                     )
-        except Exception as e:
-            raise Exception(f"Scheduler._schedule_next_file_in_queue(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._schedule_next_file_in_queue(): {ex}") from ex
 
-    def _select_worker_hostname(self, dbconn):
+    @staticmethod
+    def _select_worker_hostname(dbconn):
         try:
             sql = """
                 SELECT
@@ -388,23 +408,24 @@ class Scheduler:
                 hostname = None
 
             return hostname, db_sec
-        except Exception as e:
-            raise Exception(f"Scheduler._select_worker_hostname(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._select_worker_hostname(): {ex}") from ex
 
-    def _this_host_is_scheduling(self, dbconn) -> bool:
+    @staticmethod
+    def _this_host_is_scheduling(dbconn) -> bool:
         try:
-            worker_hostname, select_worker_hostname_sec = self._select_worker_hostname(
-                dbconn
-            )
+            worker_hostname, _ = Scheduler._select_worker_hostname(dbconn)
             return worker_hostname and worker_hostname == socket.gethostname()
-        except Exception as e:
-            raise Exception(f"Scheduler._this_host_is_scheduling(): {e}")
+        except Exception as ex:
+            raise Exception(f"Scheduler._this_host_is_scheduling(): {ex}") from ex
 
     def _write_scheduler_decision_to_db(self, dbconn, scheduler_decision):
         try:
             transfers_per_queue = scheduler_decision.get_transfers_per_queue()
             for queue_id, nb_transfers in transfers_per_queue.items():
-                for i in range(nb_transfers):
+                for _ in range(nb_transfers):
                     self._schedule_next_file_in_queue(dbconn, queue_id)
-        except Exception as e:
-            raise Exception(f"Scheduler._write_scheduler_decision_to_db(): {e}")
+        except Exception as ex:
+            raise Exception(
+                f"Scheduler._write_scheduler_decision_to_db(): {ex}"
+            ) from ex
