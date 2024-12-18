@@ -1,3 +1,7 @@
+"""
+Database access-layer of the file-transfer scheduler
+"""
+
 import psycopg2
 import psycopg2.pool
 
@@ -27,13 +31,15 @@ class DbConn:
         self.close()
 
     def cursor(self):
+        """
+        Returns the cursor of this database connection
+        """
         if self.open:
             return self.dbconn.cursor()
-        else:
-            raise Exception("Failed to get cursor from connection: Connection closed")
+        raise Exception("Failed to get cursor from connection: Connection closed")
 
 
-class DbConnPool:
+class DbConnPool:  # pylint:disable=too-few-public-methods
     """
     Wrapper around psycopg2.pool.ThreadedConnectionPool which adds get_dbconn()
     to return DbConn objects which in turn wrap connection objects so that they
@@ -43,7 +49,7 @@ class DbConnPool:
 
     def __init__(
         self, min_conn, max_conn, host, port, db_name, user, password, sslmode
-    ):
+    ):  # pylint:disable=too-many-arguments
         self.pool = psycopg2.pool.ThreadedConnectionPool(
             minconn=min_conn,
             maxconn=max_conn,
