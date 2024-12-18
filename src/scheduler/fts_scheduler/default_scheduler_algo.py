@@ -1,18 +1,31 @@
-import copy
+"""
+Default file-transfer scheduling algorithm
+"""
+
+from typing import Any
 from dataclasses import dataclass
 from scheduler_algo import SchedulerAlgo, SchedulerOutput
-from typing import Any
 
 
 class CircularBuffer:
+    """
+    A circular buffer
+    """
+
     def __init__(self):
         self._buf = []
         self._next_idx = 0
 
     def append(self, value):
+        """
+        Appends the specified value to the end of teh circular buffer
+        """
         self._buf.append(value)
 
     def get_next(self):
+        """
+        Returns the next value in the circular buffer and advances to the next
+        """
         if not self._buf:
             raise Exception("get_next(): Empty buffer")
         next_value = self._buf[self._next_idx]
@@ -44,17 +57,20 @@ class CircularBuffer:
         if not self._buf:
             raise Exception("skip_until_after(): Circular-buffer is empty")
 
-        for idx in range(len(self._buf)):
-            if self._buf[idx] > val_to_skip_over:
+        for idx, val in enumerate(self._buf):
+            if val > val_to_skip_over:
                 self._next_idx = idx
                 return
         self._next_idx = 0
 
     def remove_value(self, value):
+        """
+        Removes the specified value from the circular buffer
+        """
         try:
             self._buf.remove(value)
-        except Exception as e:
-            raise Exception(f"remove_value(): value={value}: {e}")
+        except Exception as ex:
+            raise Exception(f"remove_value(): value={value}: {ex}") from ex
 
         # Wrap next_idx around to 0 if has fallen off the buffer
         if self._next_idx == len(self._buf):
@@ -501,7 +517,8 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             link_key_to_vo_to_nb_queued[link_key][vo] -= 1
             if link_key_to_vo_to_nb_queued[link_key][vo] < 0:
                 raise Exception(
-                    f"Link to VO to nb_queued went negative: source_se={source_se} dest_se={dest_se} vo={vo}"
+                    "Link to VO to nb_queued went negative: "
+                    f"source_se={source_se} dest_se={dest_se} vo={vo}"
                 )
             if link_key_to_vo_to_nb_queued[link_key][vo] == 0:
                 vo_cbuf.remove_value(vo)
@@ -510,7 +527,8 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] -= 1
             if link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] < 0:
                 raise Exception(
-                    f"Link to VO to activity to nb_queued went negative: source_se={source_se} dest_se={dest_se} vo={vo} activity={activity}"
+                    "Link to VO to activity to nb_queued went negative: "
+                    f"source_se={source_se} dest_se={dest_se} vo={vo} activity={activity}"
                 )
             if link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] == 0:
                 activity_wrr.remove_queue(activity)
