@@ -3,6 +3,25 @@ Scheduler-algorithm inputs and outputs
 """
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any
+
+
+@dataclass
+class SchedulerInput:  # pylint:disable=too-many-instance-attributes
+    """
+    The input to a single call to a scheduling algorithm
+    """
+
+    opaque_data: Any
+    max_url_copy_processes: int
+    queues: dict
+    link_limits: dict
+    active_stats: []
+    optimizer_limits: dict
+    storage_limits: dict
+    vo_activity_shares: dict
+    link_vo_shares: dict
 
 
 class SchedulerOutput:
