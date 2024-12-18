@@ -278,8 +278,15 @@ class LinkPotential:
         self._calc_potential()
 
 
-class DefaultSchedulerAlgo(SchedulerAlgo):
+class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-methods
+    """
+    The default file-transfer scheduling algorithm
+    """
+
     def schedule(self) -> SchedulerOutput:
+        """
+        The entry point to the scheduler algorithm
+        """
         potential_concurrent_transfers = self._get_potential_concurrent_transfers()
 
         # Do nothing if no work to be done or concurrent transfer limit reached
@@ -321,8 +328,8 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         potential_link_to_vo_cbuf = {}
         for link_key in potential_link_keys:
             vo_cbuf = CircularBuffer()
-            for vo in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
-                vo_cbuf.append(vo)
+            for vo_name in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
+                vo_cbuf.append(vo_name)
             potential_link_to_vo_cbuf[link_key] = vo_cbuf
 
         # Create link-key -> VO -> activity WRR
@@ -331,30 +338,30 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             link_potential = link_key_to_potential[link_key]
             potential_link_to_vo_to_activity_wrr[link_key] = {}
             vos = link_to_vo_to_activity_to_queue[link_key].keys()
-            for vo in vos:
-                activity_shares = self.sched_input["vo_activity_shares"][vo]
+            for vo_name in vos:
+                activity_shares = self.sched_input["vo_activity_shares"][vo_name]
                 activity_queues = []
                 for activity, weight in activity_shares.items():
                     activity_queued = 0
                     if (
                         link_key in link_key_to_vo_to_activity_to_nb_queued
-                        and vo in link_key_to_vo_to_activity_to_nb_queued[link_key]
+                        and vo_name in link_key_to_vo_to_activity_to_nb_queued[link_key]
                         and activity
-                        in link_key_to_vo_to_activity_to_nb_queued[link_key][vo]
+                        in link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name]
                     ):
                         activity_queued = link_key_to_vo_to_activity_to_nb_queued[
                             link_key
-                        ][vo][activity]
+                        ][vo_name][activity]
                     activity_active = 0
                     if (
                         link_key in link_key_to_vo_to_activity_to_nb_active
-                        and vo in link_key_to_vo_to_activity_to_nb_active[link_key]
+                        and vo_name in link_key_to_vo_to_activity_to_nb_active[link_key]
                         and activity
-                        in link_key_to_vo_to_activity_to_nb_active[link_key][vo]
+                        in link_key_to_vo_to_activity_to_nb_active[link_key][vo_name]
                     ):
                         activity_active = link_key_to_vo_to_activity_to_nb_active[
                             link_key
-                        ][vo][activity]
+                        ][vo_name][activity]
 
                     activity_queue = WRRQ(
                         q_id=activity,
@@ -366,19 +373,19 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 activity_wrr = WRR(
                     max_active=link_potential.get_max_active(), queues=activity_queues
                 )
-                potential_link_to_vo_to_activity_wrr[link_key][vo] = activity_wrr
+                potential_link_to_vo_to_activity_wrr[link_key][vo_name] = activity_wrr
 
         # Create link-key -> VO -> activity -> queue-id
         potential_link_to_vo_to_activity_to_queue_id = {}
         for link_key in potential_link_keys:
             potential_link_to_vo_to_activity_to_queue_id[link_key] = {}
-            for vo, activity_to_queue in link_to_vo_to_activity_to_queue[
+            for vo_name, activity_to_queue in link_to_vo_to_activity_to_queue[
                 link_key
             ].items():
-                potential_link_to_vo_to_activity_to_queue_id[link_key][vo] = {}
+                potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name] = {}
                 for activity, queue in activity_to_queue.items():
                     queue_id = queue["queue_id"]
-                    potential_link_to_vo_to_activity_to_queue_id[link_key][vo][
+                    potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name][
                         activity
                     ] = queue_id
 
@@ -390,20 +397,23 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                     sched_opaque_data["id_of_last_scheduled_link"]
                 )
             if "link_to_last_scheduled_vo" in sched_opaque_data:
-                for link_key, vo in sched_opaque_data[
+                for link_key, vo_name in sched_opaque_data[
                     "link_to_last_scheduled_vo"
                 ].items():
                     if link_key in potential_link_to_vo_cbuf:
-                        potential_link_to_vo_cbuf[link_key].skip_until_after(vo)
+                        potential_link_to_vo_cbuf[link_key].skip_until_after(vo_name)
             if "link_to_vo_to_last_scheduled_activity" in sched_opaque_data:
                 for link_key, vo_to_activity in sched_opaque_data[
                     "link_to_vo_to_last_scheduled_activity"
                 ].items():
                     if link_key in potential_link_to_vo_to_activity_wrr:
-                        for vo, activity in vo_to_activity.items():
-                            if vo in potential_link_to_vo_to_activity_wrr[link_key]:
+                        for vo_name, activity in vo_to_activity.items():
+                            if (
+                                vo_name
+                                in potential_link_to_vo_to_activity_wrr[link_key]
+                            ):
                                 potential_link_to_vo_to_activity_wrr[link_key][
-                                    vo
+                                    vo_name
                                 ].skip_until_after(activity)
 
         # Round robin free work-capacity across submission queues taking into account any
@@ -419,16 +429,16 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             vo_cbuf = potential_link_to_vo_cbuf[link_key]
 
             # Get the next VO of the link
-            vo = vo_cbuf.get_next()
+            vo_name = vo_cbuf.get_next()
 
             # Get the WRR scheduler of activities of the VO on the link
-            activity_wrr = potential_link_to_vo_to_activity_wrr[link_key][vo]
+            activity_wrr = potential_link_to_vo_to_activity_wrr[link_key][vo_name]
 
             # Get the next activity of the VO on the link
             activity = activity_wrr.next_queue_id()
 
             # Get the ID of the next eligble queue
-            queue_id = potential_link_to_vo_to_activity_to_queue_id[link_key][vo][
+            queue_id = potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name][
                 activity
             ]
 
@@ -439,11 +449,12 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             # Update active file-transfers in order to respect activit shares
             if link_key not in link_key_to_vo_to_activity_to_nb_active:
                 link_key_to_vo_to_activity_to_nb_active[link_key] = {}
-            if vo not in link_key_to_vo_to_activity_to_nb_active[link_key]:
-                link_key_to_vo_to_activity_to_nb_active[link_key][vo] = {}
-            link_key_to_vo_to_activity_to_nb_active[link_key][vo][activity] = (
-                link_key_to_vo_to_activity_to_nb_active[link_key][vo][activity] + 1
-                if activity in link_key_to_vo_to_activity_to_nb_active[link_key][vo]
+            if vo_name not in link_key_to_vo_to_activity_to_nb_active[link_key]:
+                link_key_to_vo_to_activity_to_nb_active[link_key][vo_name] = {}
+            link_key_to_vo_to_activity_to_nb_active[link_key][vo_name][activity] = (
+                link_key_to_vo_to_activity_to_nb_active[link_key][vo_name][activity] + 1
+                if activity
+                in link_key_to_vo_to_activity_to_nb_active[link_key][vo_name]
                 else 1
             )
 
@@ -456,11 +467,11 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                 ] = {}
             opaque_data = scheduler_decision.get_opaque_data()
             opaque_data["id_of_last_scheduled_link"] = link_key
-            opaque_data["link_to_last_scheduled_vo"][link_key] = vo
+            opaque_data["link_to_last_scheduled_vo"][link_key] = vo_name
             if link_key not in opaque_data["link_to_vo_to_last_scheduled_activity"]:
                 opaque_data["link_to_vo_to_last_scheduled_activity"][link_key] = {}
             opaque_data["link_to_vo_to_last_scheduled_activity"][link_key][
-                vo
+                vo_name
             ] = activity
 
             # Update storages to reflect remaining work to be done
@@ -514,31 +525,34 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
                     potential_link_key_cbuf.remove_value(staturated_link_key)
 
             # Remove VO from VO circular-buffer if necessary
-            link_key_to_vo_to_nb_queued[link_key][vo] -= 1
-            if link_key_to_vo_to_nb_queued[link_key][vo] < 0:
+            link_key_to_vo_to_nb_queued[link_key][vo_name] -= 1
+            if link_key_to_vo_to_nb_queued[link_key][vo_name] < 0:
                 raise Exception(
                     "Link to VO to nb_queued went negative: "
-                    f"source_se={source_se} dest_se={dest_se} vo={vo}"
+                    f"source_se={source_se} dest_se={dest_se} vo_name={vo_name}"
                 )
-            if link_key_to_vo_to_nb_queued[link_key][vo] == 0:
-                vo_cbuf.remove_value(vo)
+            if link_key_to_vo_to_nb_queued[link_key][vo_name] == 0:
+                vo_cbuf.remove_value(vo_name)
 
             # Remove activity from activty circular-buffer if necessary
-            link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] -= 1
-            if link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] < 0:
+            link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][activity] -= 1
+            if link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][activity] < 0:
                 raise Exception(
                     "Link to VO to activity to nb_queued went negative: "
-                    f"source_se={source_se} dest_se={dest_se} vo={vo} activity={activity}"
+                    f"source_se={source_se} dest_se={dest_se} vo_name={vo_name} activity={activity}"
                 )
-            if link_key_to_vo_to_activity_to_nb_queued[link_key][vo][activity] == 0:
+            if (
+                link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][activity]
+                == 0
+            ):
                 activity_wrr.remove_queue(activity)
 
         return scheduler_decision
 
     def _get_link_key_to_vo_to_nb_queued(self):
         result = {}
-        for queue_id, queue in self.sched_input["queues"].items():
-            vo = queue["vo_name"]
+        for queue in self.sched_input["queues"].values():
+            vo_name = queue["vo_name"]
             source_se = queue["source_se"]
             dest_se = queue["dest_se"]
             link_key = (source_se, dest_se)
@@ -546,10 +560,10 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
             if link_key not in result:
                 result[link_key] = {}
-            result[link_key][vo] = (
+            result[link_key][vo_name] = (
                 nb_files
-                if vo not in result[link_key]
-                else result[link_key][vo] + nb_files
+                if vo_name not in result[link_key]
+                else result[link_key][vo_name] + nb_files
             )
         return result
 
@@ -557,53 +571,53 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         vo_activities = {}  # Activities are grouped by VO
         for queue_id in queue_ids:
             queue = self.sched_input["queues"][queue_id]
-            vo = queue["vo_name"]
+            vo_name = queue["vo_name"]
             activity = queue["activity"]
-            if vo not in vo_activities:
-                vo_activities[vo] = []
-            vo_activities[vo].append(activity)
+            if vo_name not in vo_activities:
+                vo_activities[vo_name] = []
+            vo_activities[vo_name].append(activity)
         return vo_activities
 
     def _get_link_key_to_queues(self):
         link_key_to_queues = {}
         for queue_id, queue in self.sched_input["queues"].items():
             link_key = (queue["source_se"], queue["dest_se"])
-            if link_key not in link_key_to_queues.keys():
+            if link_key not in link_key_to_queues:
                 link_key_to_queues[link_key] = {}
             link_key_to_queues[link_key][queue_id] = queue
         return link_key_to_queues
 
     def _get_link_to_vo_to_activity_to_queue(self):
         result = {}
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             link_key = (queue["source_se"], queue["dest_se"])
-            vo = queue["vo_name"]
+            vo_name = queue["vo_name"]
             activity = queue["activity"]
 
             if link_key not in result:
                 result[link_key] = {}
-            if vo not in result[link_key]:
-                result[link_key][vo] = {}
+            if vo_name not in result[link_key]:
+                result[link_key][vo_name] = {}
             if activity not in result:
                 result[activity] = {}
-            result[link_key][vo][activity] = queue
+            result[link_key][vo_name][activity] = queue
         return result
 
     def _get_link_key_to_vo_to_activity_to_nb_queued(self):
         result = {}
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             link_key = (queue["source_se"], queue["dest_se"])
-            vo = queue["vo_name"]
+            vo_name = queue["vo_name"]
             activity = queue["activity"]
             nb_files = queue["nb_files"]
 
             if link_key not in result:
                 result[link_key] = {}
-            if vo not in result[link_key]:
-                result[link_key][vo] = {}
+            if vo_name not in result[link_key]:
+                result[link_key][vo_name] = {}
             if activity not in result:
                 result[activity] = {}
-            result[link_key][vo][activity] = nb_files
+            result[link_key][vo_name][activity] = nb_files
         return result
 
     def _get_link_config_max_active(self, link_key):
@@ -611,9 +625,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         Returns the configured maximum number of concurrent transfers allowed on the specified link
         """
         max_active = 0
-        if link_key in self.sched_input["link_limits"].keys():
+        if link_key in self.sched_input["link_limits"]:
             max_active = self.sched_input["link_limits"][link_key]["max_active"]
-        elif ("*", "*") in self.sched_input["link_limits"].keys():
+        elif ("*", "*") in self.sched_input["link_limits"]:
             max_active = self.sched_input["link_limits"][("*", "*")]["max_active"]
         else:
             raise Exception(
@@ -636,15 +650,15 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
             source_se = stats["source_se"]
             dest_se = stats["dest_se"]
             link_key = (source_se, dest_se)
-            vo = stats["vo_name"]
+            vo_name = stats["vo_name"]
             activity = stats["activity"]
             nb_active = stats["nb_active"]
 
             if link_key not in result:
                 result[link_key] = {}
-            if vo not in result[link_key]:
-                result[link_key][vo] = {}
-            result[link_key][vo][activity] = nb_active
+            if vo_name not in result[link_key]:
+                result[link_key][vo_name] = {}
+            result[link_key][vo_name][activity] = nb_active
         return result
 
     def _get_storage_to_outbound_active(self):
@@ -669,13 +683,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_storages_with_outbound_queues(self):
         result = set()
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             result.add(queue["source_se"])
         return result
 
     def _get_storages_with_inbound_queues(self):
         result = set()
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             result.add(queue["dest_se"])
         return result
 
@@ -741,9 +755,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_link_to_nb_queued(self):
         link_to_nb_queued = {}
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             link_key = (queue["source_se"], queue["dest_se"])
-            if link_key not in link_to_nb_queued.keys():
+            if link_key not in link_to_nb_queued:
                 link_to_nb_queued[link_key] = queue["nb_files"]
             else:
                 link_to_nb_queued[link_key] += queue["nb_files"]
@@ -751,31 +765,31 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
     def _get_link_nb_active_per_vo(self, link_key):
         nb_active_per_vo = {}
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             queue_link_key = (queue["source_se"], queue["dest_se"])
             if queue_link_key == link_key:
-                vo = queue["vo"]
+                vo_name = queue["vo"]
                 nb_files = queue["nb_files"]
 
-                if vo not in nb_active_per_vo.keys():
-                    nb_active_per_vo[vo] = 0
-                nb_active_per_vo[vo] += nb_files
+                if vo_name not in nb_active_per_vo:
+                    nb_active_per_vo[vo_name] = 0
+                nb_active_per_vo[vo_name] += nb_files
         return nb_active_per_vo
 
     def _get_link_nb_active_per_vo_activity(self, link_key):
         nb_active_per_vo_activity = {}
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue in self.sched_input["queues"].values():
             queue_link_key = (queue["source_se"], queue["dest_se"])
             if queue_link_key == link_key:
-                vo = queue["vo"]
+                vo_name = queue["vo"]
                 activity = queue["activity"]
                 nb_files = queue["nb_files"]
 
-                if vo not in nb_active_per_vo_activity.keys():
-                    nb_active_per_vo_activity[vo] = {}
-                if activity not in nb_active_per_vo_activity[vo].keys():
-                    nb_active_per_vo_activity[vo][activity] = 0
-                nb_active_per_vo_activity[vo][activity] += nb_files
+                if vo_name not in nb_active_per_vo_activity:
+                    nb_active_per_vo_activity[vo_name] = {}
+                if activity not in nb_active_per_vo_activity[vo_name]:
+                    nb_active_per_vo_activity[vo_name][activity] = 0
+                nb_active_per_vo_activity[vo_name][activity] += nb_files
         return nb_active_per_vo_activity
 
     def _get_link_potential(self, link_key, link_nb_queued):
@@ -823,24 +837,22 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
     def _get_storage_inbound_max_active(self, storage):
         if storage in self.sched_input["storages_limits"]:
             return self.sched_input["storages_limits"][storage]["inbound_max_active"]
-        elif "*" in self.sched_input["storages_limits"]:
+        if "*" in self.sched_input["storages_limits"]:
             return self.sched_input["storages_limits"]["*"]["inbound_max_active"]
-        else:
-            raise Exception(
-                "DefaultSchedulerAlgo._get_storage_inbound_max_active(): "
-                f"No storage configuration for storage={storage} or storage=*"
-            )
+        raise Exception(
+            "DefaultSchedulerAlgo._get_storage_inbound_max_active(): "
+            f"No storage configuration for storage={storage} or storage=*"
+        )
 
     def _get_storage_outbound_max_active(self, storage):
         if storage in self.sched_input["storages_limits"]:
             return self.sched_input["storages_limits"][storage]["outbound_max_active"]
-        elif "*" in self.sched_input["storages_limits"]:
+        if "*" in self.sched_input["storages_limits"]:
             return self.sched_input["storages_limits"]["*"]["outbound_max_active"]
-        else:
-            raise Exception(
-                "DefaultSchedulerAlgo._get_storage_outbound_max_active(): "
-                f"No storage configuration for storage={storage} or storage=*"
-            )
+        raise Exception(
+            "DefaultSchedulerAlgo._get_storage_outbound_max_active(): "
+            f"No storage configuration for storage={storage} or storage=*"
+        )
 
     def _get_potential_concurrent_transfers(self):
         """
