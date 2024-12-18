@@ -338,13 +338,11 @@ class Scheduler:  # pylint:disable=too-few-public-methods
 
     def _get_sched_input(self, dbconn):
         try:
-            id_of_last_scheduled_queue = 0
             sched_input = {}
             sched_input["opaque_data"] = self._algo_opaque_data
             sched_input["max_url_copy_processes"], _ = (
                 Scheduler._get_max_url_copy_processes(dbconn)
             )
-            sched_input["id_of_last_scheduled_queue"] = id_of_last_scheduled_queue
             sched_input["queues"], _ = Scheduler._get_queues(dbconn)
             sched_input["link_limits"], _ = Scheduler._get_link_limits(dbconn)
             sched_input["active_stats"], _ = Scheduler._get_active_stats(dbconn)
