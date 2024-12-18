@@ -287,7 +287,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
         potential_link_keys = sorted(link_key_to_potential.keys())
 
         # To be iteratively modified in order to know when to stop considering a VO
-        link_key_to_vo_to_nb_queued = self._get_link_to_vo_to_nb_queued()
+        link_key_to_vo_to_nb_queued = self._get_link_key_to_vo_to_nb_queued()
 
         # To be iteratively modified in order to know when to stop considering an activity
         link_key_to_vo_to_activity_to_nb_queued = (
@@ -520,7 +520,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):
 
         return scheduler_decision
 
-    def _get_link_to_vo_to_nb_queued(self):
+    def _get_link_key_to_vo_to_nb_queued(self):
         result = {}
         for queue_id, queue in self.sched_input["queues"].items():
             vo = queue["vo_name"]
