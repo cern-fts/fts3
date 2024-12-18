@@ -490,6 +490,9 @@ public:
     /// Store maxUrlCopyProcesses for the fts_server running on this host into the t_hosts table
     /// @param maxUrlCopyProcesses Maximum number of fts_url_copy processes
     virtual void postgresStoreMaxUrlCopyProcesses(const int maxUrlCopyProcesses) = 0;
+
+    /// Put all the transfers assigned to this host that are in the SELECTED state back in the queue
+    virtual void recoverSelectedTransfers() = 0;
     };
 
 #endif // GENERICDBIFCE_H_

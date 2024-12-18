@@ -5337,6 +5337,65 @@ void MySqlAPI::postgresStoreMaxUrlCopyProcesses(const int maxUrlCopyProcesses)
     }
 }
 
+void MySqlAPI::recoverSelectedTransfers()
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+      // Select the ids of transfers assigned to this host and in SELECTED state
+      soci::rowset<soci::row> rs =
+          (
+              sql.prepare <<
+                  "SELECT\n"
+                  "   file_id\n"
+                  "FROM\n"
+                  "   t_file\n"
+                  "WHERE\n"
+                  "   file_state='SELECTED'\n"
+                  "AND\n"
+                  "   start_time IS NOT NULL\n"
+                  "AND\n"
+                  "   transfer_host = :hostname\n"
+                  "ORDER BY\n"
+                  "   file_id",
+                  soci::use(hostname)
+        );
+
+      // Put the transfers back in the queue
+      for (const auto& row: rs) {
+          const auto file_id = get_file_id_from_row(row);
+
+          FTS3_COMMON_LOGGER_NEWLOG(INFO) << std::string(__func__) <<
+              ": Puting tranfer with file_id=" << file_id << " back in the queue" << commit;
+
+          sql.begin();
+
+          sql <<
+              "UPDATE t_file\n"
+              "SET\n"
+              "   file_state = 'SUBMITTED',"
+              "   transfer_host = NULL,\n"
+              "   start_time = NULL\n"
+              "WHERE\n"
+              "   file_id = :file_id",
+              soci::use(file_id);
+
+          sql.commit();
+      }
+    }
+    catch (std::exception& e)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        sql.rollback();
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
 
 // the class factories
 extern "C" GenericDbIfce* create()

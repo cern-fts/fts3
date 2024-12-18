@@ -174,6 +174,18 @@ static void recoverProcessesFromDb()
     }
 }
 
+/// Put all the transfers assigned to this host that are in the SELECTED state back in the queue
+/// To be called on server start
+static void recoverTransfersInSelectedState() {
+    try {
+        DBSingleton::instance().getDBObjectInstance()->recoverSelectedTransfers();
+    } catch(std::exception &e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to recover selected transfers: " << e.what() << commit;
+    } catch(...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to recover selected transfers" << commit;
+    }
+}
+
 
 void CancelerService::runService()
 {
@@ -187,6 +199,7 @@ void CancelerService::runService()
     bool checkStalledTransfers = ServerConfig::instance().get<bool>("CheckStalledTransfers");
 
     recoverProcessesFromDb();
+    recoverTransfersInSelectedState();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService interval: 1s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CancelCheck) interval: " << cancelInterval << "s" << commit;

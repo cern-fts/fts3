@@ -440,6 +440,9 @@ public:
     /// @param maxUrlCopyProcesses Maximum number of fts_url_copy processes
     virtual void postgresStoreMaxUrlCopyProcesses(const int maxUrlCopyProcesses);
 
+    /// Put all the transfers assigned to this host that are in the SELECTED state back in the queue
+    virtual void recoverSelectedTransfers();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
