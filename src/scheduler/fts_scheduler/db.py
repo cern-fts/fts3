@@ -40,7 +40,9 @@ class DbConn:
         """
         if self.open:
             return self.dbconn.cursor()
-        raise Exception("Failed to get cursor from connection: Connection closed")
+        raise Exception(
+            "DbConn.cursor(): Failed to get cursor from connection: Connection closed"
+        )
 
 
 class DbConnPool:  # pylint:disable=too-few-public-methods
@@ -118,9 +120,7 @@ def _get_max_url_copy_processes_from_db(dbconn) -> int:
         max_url_copy_processes = rows[0][0]
         return max_url_copy_processes, db_sec
     except Exception as ex:
-        raise Exception(
-            f"SchedulerInputFromDb._get_max_url_copy_processes(): {ex}"
-        ) from ex
+        raise Exception(f"_get_max_url_copy_processes_from_db(): {ex}") from ex
 
 
 def _get_queues_from_db(dbconn):
@@ -163,7 +163,7 @@ def _get_queues_from_db(dbconn):
             queues[queue_id] = queue
         return queues, db_sec
     except Exception as ex:
-        raise Exception(f"SchedulerInputFromDb._get_queues(): {ex}") from ex
+        raise Exception(f"_get_queues_from_db(): {ex}") from ex
 
 
 def _get_link_limits_from_db(dbconn):
@@ -196,7 +196,7 @@ def _get_link_limits_from_db(dbconn):
 
         return links, db_sec
     except Exception as ex:
-        raise Exception(f"Schedduler._get_link_limits(): {ex}") from ex
+        raise Exception(f"_get_link_limits_from_db(): {ex}") from ex
 
 
 def _get_active_stats_from_db(dbconn):
@@ -242,7 +242,7 @@ def _get_active_stats_from_db(dbconn):
 
         return result, db_sec
     except Exception as ex:
-        raise Exception(f"SchedulerInputFromDb._get_active_stats: {ex}") from ex
+        raise Exception(f"_get_active_stats_from_db: {ex}") from ex
 
 
 def _get_storage_limits_from_db(dbconn):
@@ -306,7 +306,7 @@ def _get_optimizer_limits_from_db(dbconn):
 
         return links, db_sec
     except Exception as ex:
-        raise Exception(f"SchedulerInputFromDb._get_optimizer_max_active: {ex}") from ex
+        raise Exception(f"_get_optimizer_limits_from_db(): {ex}") from ex
 
 
 def _get_vo_activity_shares_from_db(dbconn):
@@ -336,7 +336,7 @@ def _get_vo_activity_shares_from_db(dbconn):
 
         return vo_activity_shares, db_sec
     except Exception as ex:
-        raise Exception(f"SchedulerInputFromDb._get_vo_activity_shares(): {ex}") from ex
+        raise Exception(f"_get_vo_activity_shares_from_db: {ex}") from ex
 
 
 def _activity_share_list_to_dict(activity_share_list):
@@ -355,9 +355,7 @@ def _activity_share_list_to_dict(activity_share_list):
             activity_share_dict[activity] = weight
         return activity_share_dict
     except Exception as ex:
-        raise Exception(
-            f"SchedulerInputFromDb._activity_share_list_to_dict(): {ex}"
-        ) from ex
+        raise Exception(f"_activity_share_list_to_dict(): {ex}") from ex
 
 
 def _get_link_vo_shares_from_db(dbconn):
@@ -392,7 +390,7 @@ def _get_link_vo_shares_from_db(dbconn):
 
         return link_vo_shares, db_sec
     except Exception as ex:
-        raise Exception(f"SchedulerInputFromDb._get_link_vo_shares(): {ex}") from ex
+        raise Exception(f"_get_link_vo_shares_from_db(): {ex}") from ex
 
 
 def get_scheduler_fqdn_from_db(dbconn):
