@@ -278,6 +278,18 @@ class LinkPotential:
         self._calc_potential()
 
 
+@dataclass
+class PrevRun:
+    """
+    Opaque data passed from one round of scheduling to the next.  This data specifies the last
+    scheduled link, VO and activity.
+    """
+
+    link_key: str
+    vo_name: str
+    activity: str
+
+
 class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-methods
     """
     The default file-transfer scheduling algorithm
@@ -390,31 +402,21 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                     ] = queue_id
 
         # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
-        if self.sched_input.opaque_data:
-            sched_opaque_data = self.sched_input.opaque_data
-            if "last_scheduled_link_key" in sched_opaque_data:
-                potential_link_key_cbuf.skip_until_after(
-                    sched_opaque_data["last_scheduled_link_key"]
+        prev_run = self.sched_input.opaque_data
+        if isinstance(prev_run, PrevRun):
+            potential_link_key_cbuf.skip_until_after(prev_run.link_key)
+            if prev_run.link_key in potential_link_to_vo_cbuf:
+                potential_link_to_vo_cbuf[prev_run.link_key].skip_until_after(
+                    prev_run.vo_name
                 )
-            if "link_to_last_scheduled_vo" in sched_opaque_data:
-                for link_key, vo_name in sched_opaque_data[
-                    "link_to_last_scheduled_vo"
-                ].items():
-                    if link_key in potential_link_to_vo_cbuf:
-                        potential_link_to_vo_cbuf[link_key].skip_until_after(vo_name)
-            if "link_to_vo_to_last_scheduled_activity" in sched_opaque_data:
-                for link_key, vo_to_activity in sched_opaque_data[
-                    "link_to_vo_to_last_scheduled_activity"
-                ].items():
-                    if link_key in potential_link_to_vo_to_activity_wrr:
-                        for vo_name, activity in vo_to_activity.items():
-                            if (
-                                vo_name
-                                in potential_link_to_vo_to_activity_wrr[link_key]
-                            ):
-                                potential_link_to_vo_to_activity_wrr[link_key][
-                                    vo_name
-                                ].skip_until_after(activity)
+            if prev_run.link_key in potential_link_to_vo_to_activity_wrr:
+                if (
+                    prev_run.vo_name
+                    in potential_link_to_vo_to_activity_wrr[prev_run.link_key]
+                ):
+                    potential_link_to_vo_to_activity_wrr[prev_run.link_key][
+                        prev_run.vo_name
+                    ].skip_until_after(prev_run.activity)
 
         # Round robin free work-capacity across submission queues taking into account any
         # constraints
@@ -459,20 +461,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             )
 
             # Update the scheduling opaque-data
-            if not sched_output.get_opaque_data():
-                sched_output.set_opaque_data({})
-                sched_output.get_opaque_data()["link_to_last_scheduled_vo"] = {}
-                sched_output.get_opaque_data()[
-                    "link_to_vo_to_last_scheduled_activity"
-                ] = {}
-            opaque_data = sched_output.get_opaque_data()
-            opaque_data["last_scheduled_link_key"] = link_key
-            opaque_data["link_to_last_scheduled_vo"][link_key] = vo_name
-            if link_key not in opaque_data["link_to_vo_to_last_scheduled_activity"]:
-                opaque_data["link_to_vo_to_last_scheduled_activity"][link_key] = {}
-            opaque_data["link_to_vo_to_last_scheduled_activity"][link_key][
-                vo_name
-            ] = activity
+            sched_output.set_opaque_data(
+                PrevRun(link_key=link_key, vo_name=vo_name, activity=activity)
+            )
 
             # Update storages to reflect remaining work to be done
             saturated_storages = []
