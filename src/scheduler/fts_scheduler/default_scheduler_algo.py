@@ -290,7 +290,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         potential_concurrent_transfers = self._get_potential_concurrent_transfers()
 
         # Do nothing if no work to be done or concurrent transfer limit reached
-        if not self.sched_input["queues"] or not potential_concurrent_transfers:
+        if not self.sched_input.queues or not potential_concurrent_transfers:
             return None
 
         link_key_to_potential = self._get_link_key_to_potential()
@@ -339,7 +339,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             potential_link_to_vo_to_activity_wrr[link_key] = {}
             vos = link_to_vo_to_activity_to_queue[link_key].keys()
             for vo_name in vos:
-                activity_shares = self.sched_input["vo_activity_shares"][vo_name]
+                activity_shares = self.sched_input.vo_activity_shares[vo_name]
                 activity_queues = []
                 for activity, weight in activity_shares.items():
                     activity_queued = 0
@@ -390,8 +390,8 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                     ] = queue_id
 
         # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
-        if self.sched_input["opaque_data"]:
-            sched_opaque_data = self.sched_input["opaque_data"]
+        if self.sched_input.opaque_data:
+            sched_opaque_data = self.sched_input.opaque_data
             if "id_of_last_scheduled_link" in sched_opaque_data:
                 potential_link_key_cbuf.skip_until_after(
                     sched_opaque_data["id_of_last_scheduled_link"]
@@ -551,7 +551,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_key_to_vo_to_nb_queued(self):
         result = {}
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             vo_name = queue["vo_name"]
             source_se = queue["source_se"]
             dest_se = queue["dest_se"]
@@ -570,7 +570,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     def _get_vo_activities_of_queues(self, queue_ids):
         vo_activities = {}  # Activities are grouped by VO
         for queue_id in queue_ids:
-            queue = self.sched_input["queues"][queue_id]
+            queue = self.sched_input.queues[queue_id]
             vo_name = queue["vo_name"]
             activity = queue["activity"]
             if vo_name not in vo_activities:
@@ -580,7 +580,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_key_to_queues(self):
         link_key_to_queues = {}
-        for queue_id, queue in self.sched_input["queues"].items():
+        for queue_id, queue in self.sched_input.queues.items():
             link_key = (queue["source_se"], queue["dest_se"])
             if link_key not in link_key_to_queues:
                 link_key_to_queues[link_key] = {}
@@ -589,7 +589,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_to_vo_to_activity_to_queue(self):
         result = {}
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             link_key = (queue["source_se"], queue["dest_se"])
             vo_name = queue["vo_name"]
             activity = queue["activity"]
@@ -605,7 +605,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_key_to_vo_to_activity_to_nb_queued(self):
         result = {}
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             link_key = (queue["source_se"], queue["dest_se"])
             vo_name = queue["vo_name"]
             activity = queue["activity"]
@@ -625,10 +625,10 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         Returns the configured maximum number of concurrent transfers allowed on the specified link
         """
         max_active = 0
-        if link_key in self.sched_input["link_limits"]:
-            max_active = self.sched_input["link_limits"][link_key]["max_active"]
-        elif ("*", "*") in self.sched_input["link_limits"]:
-            max_active = self.sched_input["link_limits"][("*", "*")]["max_active"]
+        if link_key in self.sched_input.link_limits:
+            max_active = self.sched_input.link_limits[link_key]["max_active"]
+        elif ("*", "*") in self.sched_input.link_limits:
+            max_active = self.sched_input.link_limits[("*", "*")]["max_active"]
         else:
             raise Exception(
                 "DefaultSchedulerAlgo._get_link_max_active(): No link configuration found for "
@@ -639,14 +639,14 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_optimizer_limit(self, link_key):
         return (
-            self.sched_input["optimizer_limits"][link_key]["active"]
-            if link_key in self.sched_input["optimizer_limits"]
+            self.sched_input.optimizer_limits[link_key]["active"]
+            if link_key in self.sched_input.optimizer_limits
             else None
         )
 
     def _get_link_key_to_vo_to_activity_to_nb_active(self):
         result = {}
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             source_se = stats["source_se"]
             dest_se = stats["dest_se"]
             link_key = (source_se, dest_se)
@@ -663,7 +663,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_storage_to_outbound_active(self):
         result = {}
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             storage = stats["source_se"]
             nb_active = stats["nb_active"]
             result[storage] = (
@@ -673,7 +673,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_storage_to_inbound_active(self):
         result = {}
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             storage = stats["dest_se"]
             nb_active = stats["nb_active"]
             result[storage] = (
@@ -683,13 +683,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_storages_with_outbound_queues(self):
         result = set()
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             result.add(queue["source_se"])
         return result
 
     def _get_storages_with_inbound_queues(self):
         result = set()
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             result.add(queue["dest_se"])
         return result
 
@@ -723,13 +723,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_storage_outbound_active(self, storage):
         nb_active = 0
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             nb_active += stats["nb_active"] if storage == stats["source_se"] else 0
         return nb_active
 
     def _get_storage_inbound_active(self, storage):
         nb_active = 0
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             nb_active += stats["nb_active"] if storage == stats["dest_se"] else 0
         return nb_active
 
@@ -745,7 +745,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_nb_active(self, link_key):
         result = 0
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             source_se = stats["source_se"]
             dest_se = stats["dest_se"]
             nb_active = stats["nb_active"]
@@ -755,7 +755,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_to_nb_queued(self):
         link_to_nb_queued = {}
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             link_key = (queue["source_se"], queue["dest_se"])
             if link_key not in link_to_nb_queued:
                 link_to_nb_queued[link_key] = queue["nb_files"]
@@ -765,7 +765,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_nb_active_per_vo(self, link_key):
         nb_active_per_vo = {}
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             queue_link_key = (queue["source_se"], queue["dest_se"])
             if queue_link_key == link_key:
                 vo_name = queue["vo"]
@@ -778,7 +778,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_link_nb_active_per_vo_activity(self, link_key):
         nb_active_per_vo_activity = {}
-        for queue in self.sched_input["queues"].values():
+        for queue in self.sched_input.queues.values():
             queue_link_key = (queue["source_se"], queue["dest_se"])
             if queue_link_key == link_key:
                 vo_name = queue["vo"]
@@ -835,20 +835,20 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         return link_key_to_potential
 
     def _get_storage_inbound_max_active(self, storage):
-        if storage in self.sched_input["storages_limits"]:
-            return self.sched_input["storages_limits"][storage]["inbound_max_active"]
-        if "*" in self.sched_input["storages_limits"]:
-            return self.sched_input["storages_limits"]["*"]["inbound_max_active"]
+        if storage in self.sched_input.storage_limits:
+            return self.sched_input.storage_limits[storage]["inbound_max_active"]
+        if "*" in self.sched_input.storage_limits:
+            return self.sched_input.storage_limits["*"]["inbound_max_active"]
         raise Exception(
             "DefaultSchedulerAlgo._get_storage_inbound_max_active(): "
             f"No storage configuration for storage={storage} or storage=*"
         )
 
     def _get_storage_outbound_max_active(self, storage):
-        if storage in self.sched_input["storages_limits"]:
-            return self.sched_input["storages_limits"][storage]["outbound_max_active"]
-        if "*" in self.sched_input["storages_limits"]:
-            return self.sched_input["storages_limits"]["*"]["outbound_max_active"]
+        if storage in self.sched_input.storage_limits:
+            return self.sched_input.storage_limits[storage]["outbound_max_active"]
+        if "*" in self.sched_input.storage_limits:
+            return self.sched_input.storage_limits["*"]["outbound_max_active"]
         raise Exception(
             "DefaultSchedulerAlgo._get_storage_outbound_max_active(): "
             f"No storage configuration for storage={storage} or storage=*"
@@ -859,6 +859,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         Returns the number of potential concurrent-transfers
         """
         nb_active = 0
-        for stats in self.sched_input["active_stats"]:
+        for stats in self.sched_input.active_stats:
             nb_active += stats["nb_active"]
-        return max(0, self.sched_input["max_url_copy_processes"] - nb_active)
+        return max(0, self.sched_input.max_url_copy_processes - nb_active)
