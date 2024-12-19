@@ -392,9 +392,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
         if self.sched_input.opaque_data:
             sched_opaque_data = self.sched_input.opaque_data
-            if "id_of_last_scheduled_link" in sched_opaque_data:
+            if "last_scheduled_link_key" in sched_opaque_data:
                 potential_link_key_cbuf.skip_until_after(
-                    sched_opaque_data["id_of_last_scheduled_link"]
+                    sched_opaque_data["last_scheduled_link_key"]
                 )
             if "link_to_last_scheduled_vo" in sched_opaque_data:
                 for link_key, vo_name in sched_opaque_data[
@@ -466,7 +466,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                     "link_to_vo_to_last_scheduled_activity"
                 ] = {}
             opaque_data = sched_output.get_opaque_data()
-            opaque_data["id_of_last_scheduled_link"] = link_key
+            opaque_data["last_scheduled_link_key"] = link_key
             opaque_data["link_to_last_scheduled_vo"][link_key] = vo_name
             if link_key not in opaque_data["link_to_vo_to_last_scheduled_activity"]:
                 opaque_data["link_to_vo_to_last_scheduled_activity"][link_key] = {}
