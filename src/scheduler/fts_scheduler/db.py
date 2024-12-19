@@ -395,3 +395,36 @@ def _get_link_vo_shares_from_db(dbconn):
         return link_vo_shares, db_sec
     except Exception as ex:
         raise Exception(f"SchedulerInputFromDb._get_link_vo_shares(): {ex}") from ex
+
+
+def get_scheduler_fqdn_from_db(dbconn):
+    """
+    Returns the fully qualified domain name of the host currently chosen as the one run the
+    file-transfer scheduler
+    """
+    try:
+        sql = """
+            SELECT
+              hostname
+            FROM
+              t_hosts
+            WHERE
+              drain IS NOT NULL OR drain = 0
+            ORDER BY
+              hostname ASC
+            LIMIT 1
+        """
+        start_db = time.time()
+        cursor = dbconn.cursor()
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        db_sec = time.time() - start_db
+
+        if row:
+            hostname = row[0]
+        else:
+            hostname = None
+
+        return hostname, db_sec
+    except Exception as ex:
+        raise Exception(f"get_scheduler_hostname_from_db(): {ex}") from ex

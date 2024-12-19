@@ -43,39 +43,10 @@ class Scheduler:  # pylint:disable=too-few-public-methods
     @staticmethod
     def _this_host_is_scheduling(dbconn) -> bool:
         try:
-            worker_hostname, _ = Scheduler._select_worker_hostname(dbconn)
+            worker_hostname, _ = db.get_scheduler_fqdn_from_db(dbconn)
             return worker_hostname and worker_hostname == socket.gethostname()
         except Exception as ex:
             raise Exception(f"Scheduler._this_host_is_scheduling(): {ex}") from ex
-
-    @staticmethod
-    def _select_worker_hostname(dbconn):
-        try:
-            sql = """
-                SELECT
-                  hostname
-                FROM
-                  t_hosts
-                WHERE
-                  drain IS NOT NULL OR drain = 0
-                ORDER BY
-                  hostname ASC
-                LIMIT 1
-            """
-            start_db = time.time()
-            cursor = dbconn.cursor()
-            cursor.execute(sql)
-            row = cursor.fetchone()
-            db_sec = time.time() - start_db
-
-            if row:
-                hostname = row[0]
-            else:
-                hostname = None
-
-            return hostname, db_sec
-        except Exception as ex:
-            raise Exception(f"Scheduler._select_worker_hostname(): {ex}") from ex
 
     def _write_scheduler_output_to_db(self, dbconn, sched_output):
         try:
