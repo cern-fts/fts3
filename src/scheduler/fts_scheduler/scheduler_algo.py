@@ -58,6 +58,33 @@ class StorageLimits:
 
 
 @dataclass
+class LinkLimits:
+    """
+    Configured link limits. The main purpose of this class is to provide the following
+    convenience method which encapsulates the concept of the default link from "*" to "*"
+    """
+
+    link_key_to_max_active: dict[tuple[str, str], int]
+
+    def get_max_active(self, link_key: tuple[str, str]) -> int:
+        """
+        Returns the configured maximum number of concurrent transfers allowed on the specified link
+        """
+        max_active = 0
+        if link_key in self.link_key_to_max_active:
+            max_active = self.link_key_to_max_active[link_key]
+        elif ("*", "*") in self.link_key_to_max_active:
+            max_active = self.link_key_to_max_active[("*", "*")]
+        else:
+            raise Exception(
+                "LinkLimits.get_link_max_active(): No link configuration: "
+                "(source_se={source_se},dest_se={dest_se}) or (source_se=*, dest_se=*)"
+            )
+
+        return max_active
+
+
+@dataclass
 class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     """
     The input to a single call to a scheduling algorithm
@@ -66,7 +93,7 @@ class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     opaque_data: Any
     max_url_copy_processes: int
     queues: dict
-    link_limits: dict
+    link_limits: LinkLimits
     active_stats: []
     optimizer_limits: dict
     storage_limits: StorageLimits

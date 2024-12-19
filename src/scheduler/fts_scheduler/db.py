@@ -7,7 +7,7 @@ import time
 import psycopg2
 import psycopg2.pool
 
-from scheduler_algo import SchedulerInput, StorageLimits, StorageInOutLimits
+from scheduler_algo import LinkLimits, SchedulerInput, StorageLimits, StorageInOutLimits
 
 
 class DbConn:
@@ -172,7 +172,6 @@ def _get_link_limits_from_db(dbconn):
             SELECT
                 source_se,
                 dest_se,
-                min_active,
                 max_active
             FROM
                 t_link_config
@@ -183,18 +182,12 @@ def _get_link_limits_from_db(dbconn):
         rows = cursor.fetchall()
         db_sec = time.time() - start_db
 
-        links = {}
+        link_key_to_max_active = {}
         for row in rows:
-            link = {}
-            link["source_se"] = row[0]
-            link["dest_se"] = row[1]
-            link["min_active"] = row[2]
-            link["max_active"] = row[3]
+            link_key = (row[0], row[1])
+            link_key_to_max_active[link_key] = row[2]
 
-            link_key = (link["source_se"], link["dest_se"])
-            links[link_key] = link
-
-        return links, db_sec
+        return LinkLimits(link_key_to_max_active), db_sec
     except Exception as ex:
         raise Exception(f"_get_link_limits_from_db(): {ex}") from ex
 

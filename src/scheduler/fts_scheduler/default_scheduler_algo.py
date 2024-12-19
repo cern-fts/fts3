@@ -489,7 +489,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             for link_potential_key, link_potential in link_key_to_potential.items():
                 if link_potential_key[0] != source_se and link_key[1] != dest_se:
                     break
-                link_config_max_active = self._get_link_config_max_active(
+                link_config_max_active = self.sched_input.link_limits.get_max_active(
                     link_potential_key
                 )
                 link_potential_max_active = min(
@@ -610,23 +610,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                 result[activity] = {}
             result[link_key][vo_name][activity] = nb_files
         return result
-
-    def _get_link_config_max_active(self, link_key):
-        """
-        Returns the configured maximum number of concurrent transfers allowed on the specified link
-        """
-        max_active = 0
-        if link_key in self.sched_input.link_limits:
-            max_active = self.sched_input.link_limits[link_key]["max_active"]
-        elif ("*", "*") in self.sched_input.link_limits:
-            max_active = self.sched_input.link_limits[("*", "*")]["max_active"]
-        else:
-            raise Exception(
-                "DefaultSchedulerAlgo._get_link_max_active(): No link configuration found for "
-                "(source_se={source_se},dest_se={dest_se}) or (source_se=*, dest_se=*)"
-            )
-
-        return max_active
 
     def _get_link_optimizer_limit(self, link_key):
         return (
@@ -792,7 +775,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         source_se = link_key[0]
         dest_se = link_key[1]
 
-        link_config_max_active = self._get_link_config_max_active(link_key)
+        link_config_max_active = self.sched_input.link_limits.get_max_active(link_key)
         source_out_potential = self._get_storage_outbound_potential(source_se)
         dest_in_potential = self._get_storage_inbound_potential(dest_se)
         max_active = min(
