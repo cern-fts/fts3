@@ -698,7 +698,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         storage_to_outbound_active = self._get_storage_to_outbound_active()
         result = {}
         for storage in storages_with_outbound_queues:
-            max_active = self._get_storage_outbound_max_active(storage)
+            max_active = self.sched_input.storage_limits.get_outbound_max_active(
+                storage
+            )
             nb_active = (
                 0
                 if storage not in storage_to_outbound_active
@@ -712,7 +714,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         storage_to_inbound_active = self._get_storage_to_inbound_active()
         result = {}
         for storage in storages_with_inbound_queues:
-            max_active = self._get_storage_inbound_max_active(storage)
+            max_active = self.sched_input.storage_limits.get_inbound_max_active(storage)
             nb_active = (
                 0
                 if storage not in storage_to_inbound_active
@@ -735,12 +737,12 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
     def _get_storage_outbound_potential(self, storage):
         active = self._get_storage_outbound_active(storage)
-        max_active = self._get_storage_outbound_max_active(storage)
+        max_active = self.sched_input.storage_limits.get_outbound_max_active(storage)
         return 0 if active >= max_active else max_active - active
 
     def _get_storage_inbound_potential(self, storage):
         active = self._get_storage_inbound_active(storage)
-        max_active = self._get_storage_inbound_max_active(storage)
+        max_active = self.sched_input.storage_limits.get_inbound_max_active(storage)
         return 0 if active >= max_active else max_active - active
 
     def _get_link_nb_active(self, link_key):
@@ -833,26 +835,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             if link_potential.get_potential() > 0:
                 link_key_to_potential[link_key] = link_potential
         return link_key_to_potential
-
-    def _get_storage_inbound_max_active(self, storage):
-        if storage in self.sched_input.storage_limits:
-            return self.sched_input.storage_limits[storage]["inbound_max_active"]
-        if "*" in self.sched_input.storage_limits:
-            return self.sched_input.storage_limits["*"]["inbound_max_active"]
-        raise Exception(
-            "DefaultSchedulerAlgo._get_storage_inbound_max_active(): "
-            f"No storage configuration for storage={storage} or storage=*"
-        )
-
-    def _get_storage_outbound_max_active(self, storage):
-        if storage in self.sched_input.storage_limits:
-            return self.sched_input.storage_limits[storage]["outbound_max_active"]
-        if "*" in self.sched_input.storage_limits:
-            return self.sched_input.storage_limits["*"]["outbound_max_active"]
-        raise Exception(
-            "DefaultSchedulerAlgo._get_storage_outbound_max_active(): "
-            f"No storage configuration for storage={storage} or storage=*"
-        )
 
     def _get_potential_concurrent_transfers(self):
         """

@@ -8,6 +8,56 @@ from typing import Any
 
 
 @dataclass
+class StorageInOutLimits:
+    """
+    The configured limits of a storage-endpoint
+    """
+
+    inbound_max_active: int
+    outbound_max_active: int
+
+
+@dataclass
+class StorageLimits:
+    """
+    Configured storage end-point limits.  The main purpose of this class is to provide the following
+    two convenience methods which encapsulate the concept of the default storage-endpoint named "*"
+    * get_inbound_max_active()
+    * get_outbound_max_active()
+    """
+
+    storage_to_limits: dict[str, StorageInOutLimits]
+
+    def get_inbound_max_active(self, storage):
+        """
+        Returns the configured maximum number of inbound concurrent file-transfers for the given
+        storage-endpoint
+        """
+        if storage in self.storage_to_limits:
+            return self.storage_to_limits[storage].inbound_max_active
+        if "*" in self.storage_to_limits:
+            return self.storage_to_limits["*"].inbound_max_active
+        raise Exception(
+            "StorageLimits.get_storage_inbound_max_active(): "
+            f"No storage-limit configuration: storage={storage} or storage=*"
+        )
+
+    def get_outbound_max_active(self, storage):
+        """
+        Returns the configured maximum number of outbound concurrent file-transfers for the given
+        storage-endpoint
+        """
+        if storage in self.storage_to_limits:
+            return self.storage_to_limits[storage].outbound_max_active
+        if "*" in self.storage_to_limits:
+            return self.storage_to_limits["*"].outbound_max_active
+        raise Exception(
+            "StorageLimits.get_storage_outbound_max_active(): "
+            f"No storage-limit configuration: storage={storage} or storage=*"
+        )
+
+
+@dataclass
 class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     """
     The input to a single call to a scheduling algorithm
@@ -19,7 +69,7 @@ class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     link_limits: dict
     active_stats: []
     optimizer_limits: dict
-    storage_limits: dict
+    storage_limits: StorageLimits
     vo_activity_shares: dict
     link_vo_shares: dict
 

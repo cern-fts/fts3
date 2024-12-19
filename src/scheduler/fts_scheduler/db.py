@@ -7,7 +7,7 @@ import time
 import psycopg2
 import psycopg2.pool
 
-from scheduler_algo import SchedulerInput
+from scheduler_algo import SchedulerInput, StorageLimits, StorageInOutLimits
 
 
 class DbConn:
@@ -261,19 +261,17 @@ def _get_storage_limits_from_db(dbconn):
         rows = cursor.fetchall()
         db_sec = time.time() - start_db
 
-        storages = {}
+        storage_to_limits = {}
         for row in rows:
-            storage = {}
-            storage["storage"] = row[0]
-            storage["inbound_max_active"] = row[1]
-            storage["outbound_max_active"] = row[2]
+            storage = row[0]
+            limits = StorageInOutLimits(
+                inbound_max_active=row[1], outbound_max_active=row[2]
+            )
+            storage_to_limits[storage] = limits
 
-            storage_key = storage["storage"]
-            storages[storage_key] = storage
-
-        return storages, db_sec
+        return StorageLimits(storage_to_limits), db_sec
     except Exception as ex:
-        raise Exception(f"SchedulerInputFromDb._get_storage_limits(): {ex}") from ex
+        raise Exception(f"_get_storage_limits_from_db(): {ex}") from ex
 
 
 def _get_optimizer_limits_from_db(dbconn):
