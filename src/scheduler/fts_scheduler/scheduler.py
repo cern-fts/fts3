@@ -29,14 +29,14 @@ class Scheduler:  # pylint:disable=too-few-public-methods
         sched_input = db.get_scheduler_input_from_db(dbconn, self._algo_opaque_data)
         self.log.debug(f"sched_input={sched_input}")
         algo = self._algo_class(sched_input)
-        scheduler_decision = algo.schedule()
-        self.log.debug(f"scheduler_decision={scheduler_decision}")
-        if not scheduler_decision:
+        sched_output = algo.schedule()
+        self.log.debug(f"sched_output={sched_output}")
+        if not sched_output:
             return
 
-        self._algo_opaque_data = scheduler_decision.get_opaque_data()
-        self._write_scheduler_decision_to_db(dbconn, scheduler_decision)
-        nb_scheduled = scheduler_decision.get_total_nb_transfers()
+        self._algo_opaque_data = sched_output.get_opaque_data()
+        self._write_scheduler_output_to_db(dbconn, sched_output)
+        nb_scheduled = sched_output.get_total_nb_transfers()
         if nb_scheduled:
             self.log.info(f"Scheduled transfers: nb_scheduled={nb_scheduled}")
 
@@ -77,16 +77,14 @@ class Scheduler:  # pylint:disable=too-few-public-methods
         except Exception as ex:
             raise Exception(f"Scheduler._select_worker_hostname(): {ex}") from ex
 
-    def _write_scheduler_decision_to_db(self, dbconn, scheduler_decision):
+    def _write_scheduler_output_to_db(self, dbconn, sched_output):
         try:
-            transfers_per_queue = scheduler_decision.get_transfers_per_queue()
+            transfers_per_queue = sched_output.get_transfers_per_queue()
             for queue_id, nb_transfers in transfers_per_queue.items():
                 for _ in range(nb_transfers):
                     self._schedule_next_file_in_queue(dbconn, queue_id)
         except Exception as ex:
-            raise Exception(
-                f"Scheduler._write_scheduler_decision_to_db(): {ex}"
-            ) from ex
+            raise Exception(f"Scheduler._write_scheduler_output_to_db(): {ex}") from ex
 
     def _schedule_next_file_in_queue(self, dbconn, submitted_queue_id):
         try:

@@ -418,7 +418,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
         # Round robin free work-capacity across submission queues taking into account any
         # constraints
-        scheduler_decision = SchedulerOutput()
+        sched_output = SchedulerOutput()
         while potential_concurrent_transfers and potential_link_key_cbuf:
             # Identify the link and storages that could do the work
             link_key = potential_link_key_cbuf.get_next()
@@ -443,7 +443,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             ]
 
             # Schedule a transfer for this queue
-            scheduler_decision.inc_transfers_for_queue(queue_id, 1)
+            sched_output.inc_transfers_for_queue(queue_id, 1)
             potential_concurrent_transfers -= 1
 
             # Update active file-transfers in order to respect activit shares
@@ -459,13 +459,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             )
 
             # Update the scheduling opaque-data
-            if not scheduler_decision.get_opaque_data():
-                scheduler_decision.set_opaque_data({})
-                scheduler_decision.get_opaque_data()["link_to_last_scheduled_vo"] = {}
-                scheduler_decision.get_opaque_data()[
+            if not sched_output.get_opaque_data():
+                sched_output.set_opaque_data({})
+                sched_output.get_opaque_data()["link_to_last_scheduled_vo"] = {}
+                sched_output.get_opaque_data()[
                     "link_to_vo_to_last_scheduled_activity"
                 ] = {}
-            opaque_data = scheduler_decision.get_opaque_data()
+            opaque_data = sched_output.get_opaque_data()
             opaque_data["id_of_last_scheduled_link"] = link_key
             opaque_data["link_to_last_scheduled_vo"][link_key] = vo_name
             if link_key not in opaque_data["link_to_vo_to_last_scheduled_activity"]:
@@ -547,7 +547,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             ):
                 activity_wrr.remove_queue(activity)
 
-        return scheduler_decision
+        return sched_output
 
     def _get_link_key_to_vo_to_nb_queued(self):
         result = {}
