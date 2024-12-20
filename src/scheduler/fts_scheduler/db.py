@@ -215,6 +215,8 @@ def _get_active_stats_from_db(dbconn):
                 dest_se,
                 vo_name,
                 activity
+            HAVING
+                SUM(nb_files) > 0
         """
         start_db = time.time()
         cursor = dbconn.cursor()
