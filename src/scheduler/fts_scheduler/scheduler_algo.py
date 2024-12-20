@@ -85,6 +85,19 @@ class LinkLimits:
 
 
 @dataclass
+class Queue:
+    """
+    A single queue of file-transfers
+    """
+
+    queue_id: int
+    link_key: tuple[str, str]  # link_key = tuple(source_se, dest_se)
+    vo_name: str
+    activity: str
+    nb_queued: int
+
+
+@dataclass
 class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     """
     The input to a single call to a scheduling algorithm
@@ -92,7 +105,7 @@ class SchedulerInput:  # pylint:disable=too-many-instance-attributes
 
     opaque_data: Any
     max_url_copy_processes: int
-    queues: dict
+    queues: dict[int, Queue]
     link_limits: LinkLimits
     active_stats: []
     optimizer_limits: dict

@@ -7,7 +7,13 @@ import time
 import psycopg2
 import psycopg2.pool
 
-from scheduler_algo import LinkLimits, SchedulerInput, StorageLimits, StorageInOutLimits
+from scheduler_algo import (
+    LinkLimits,
+    Queue,
+    SchedulerInput,
+    StorageLimits,
+    StorageInOutLimits,
+)
 
 
 class DbConn:
@@ -135,7 +141,7 @@ def _get_queues_from_db(dbconn):
                 source_se,
                 dest_se,
                 activity,
-                nb_files
+                nb_files as nb_queued
             FROM
                 t_queue
             WHERE
@@ -149,19 +155,18 @@ def _get_queues_from_db(dbconn):
         rows = cursor.fetchall()
         db_sec = time.time() - start_db
 
-        queues = {}
+        result = {}
         for row in rows:
-            queue = {
-                "queue_id": row[0],
-                "vo_name": row[1],
-                "source_se": row[2],
-                "dest_se": row[3],
-                "activity": row[4],
-                "nb_files": row[5],
-            }
-            queue_id = queue["queue_id"]
-            queues[queue_id] = queue
-        return queues, db_sec
+            queue_id = row[0]
+            queue = Queue(
+                queue_id=queue_id,
+                vo_name=row[1],
+                link_key=(row[2], row[3]),  # link_key = (source_se, dest_se)
+                activity=row[4],
+                nb_queued=row[5],
+            )
+            result[queue_id] = queue
+        return result, db_sec
     except Exception as ex:
         raise Exception(f"_get_queues_from_db(): {ex}") from ex
 

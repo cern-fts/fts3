@@ -396,10 +396,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             ].items():
                 potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name] = {}
                 for activity, queue in activity_to_queue.items():
-                    queue_id = queue["queue_id"]
                     potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name][
                         activity
-                    ] = queue_id
+                    ] = queue.queue_id
 
         # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
         prev_run = self.sched_input.opaque_data
@@ -543,18 +542,16 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     def _get_link_key_to_vo_to_nb_queued(self):
         result = {}
         for queue in self.sched_input.queues.values():
-            vo_name = queue["vo_name"]
-            source_se = queue["source_se"]
-            dest_se = queue["dest_se"]
-            link_key = (source_se, dest_se)
-            nb_files = queue["nb_files"]
+            link_key = queue.link_key
+            vo_name = queue.vo_name
+            nb_queued = queue.nb_queued
 
             if link_key not in result:
                 result[link_key] = {}
             result[link_key][vo_name] = (
-                nb_files
+                nb_queued
                 if vo_name not in result[link_key]
-                else result[link_key][vo_name] + nb_files
+                else result[link_key][vo_name] + nb_queued
             )
         return result
 
@@ -572,43 +569,38 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     def _get_link_key_to_queues(self):
         link_key_to_queues = {}
         for queue_id, queue in self.sched_input.queues.items():
-            link_key = (queue["source_se"], queue["dest_se"])
-            if link_key not in link_key_to_queues:
-                link_key_to_queues[link_key] = {}
-            link_key_to_queues[link_key][queue_id] = queue
+            if queue.link_key not in link_key_to_queues:
+                link_key_to_queues[queue.link_key] = {}
+            link_key_to_queues[queue.link_key][queue_id] = queue
         return link_key_to_queues
 
     def _get_link_to_vo_to_activity_to_queue(self):
         result = {}
         for queue in self.sched_input.queues.values():
-            link_key = (queue["source_se"], queue["dest_se"])
-            vo_name = queue["vo_name"]
-            activity = queue["activity"]
+            link_key = queue.link_key
+            vo_name = queue.vo_name
+            activity = queue.activity
 
             if link_key not in result:
                 result[link_key] = {}
             if vo_name not in result[link_key]:
                 result[link_key][vo_name] = {}
-            if activity not in result:
-                result[activity] = {}
             result[link_key][vo_name][activity] = queue
         return result
 
     def _get_link_key_to_vo_to_activity_to_nb_queued(self):
         result = {}
         for queue in self.sched_input.queues.values():
-            link_key = (queue["source_se"], queue["dest_se"])
-            vo_name = queue["vo_name"]
-            activity = queue["activity"]
-            nb_files = queue["nb_files"]
+            link_key = queue.link_key
+            vo_name = queue.vo_name
+            activity = queue.activity
+            nb_queued = queue.nb_queued
 
             if link_key not in result:
                 result[link_key] = {}
             if vo_name not in result[link_key]:
                 result[link_key][vo_name] = {}
-            if activity not in result:
-                result[activity] = {}
-            result[link_key][vo_name][activity] = nb_files
+            result[link_key][vo_name][activity] = nb_queued
         return result
 
     def _get_link_optimizer_limit(self, link_key):
@@ -658,13 +650,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     def _get_storages_with_outbound_queues(self):
         result = set()
         for queue in self.sched_input.queues.values():
-            result.add(queue["source_se"])
+            result.add(queue.link_key[0])  # link_key = (source_se, dest_se)
         return result
 
     def _get_storages_with_inbound_queues(self):
         result = set()
         for queue in self.sched_input.queues.values():
-            result.add(queue["dest_se"])
+            result.add(queue.link_key[1])  # link_key = (source_se, dest_se)
         return result
 
     def _get_storage_to_outbound_potential(self):
@@ -732,11 +724,10 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     def _get_link_to_nb_queued(self):
         link_to_nb_queued = {}
         for queue in self.sched_input.queues.values():
-            link_key = (queue["source_se"], queue["dest_se"])
-            if link_key not in link_to_nb_queued:
-                link_to_nb_queued[link_key] = queue["nb_files"]
+            if queue.link_key not in link_to_nb_queued:
+                link_to_nb_queued[queue.link_key] = queue.nb_queued
             else:
-                link_to_nb_queued[link_key] += queue["nb_files"]
+                link_to_nb_queued[queue.link_key] += queue.nb_queued
         return link_to_nb_queued
 
     def _get_link_nb_active_per_vo(self, link_key):
