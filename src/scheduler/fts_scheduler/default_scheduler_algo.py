@@ -55,7 +55,7 @@ class CircularBuffer:
         Skip through this circular-buffer until after the specified value
         """
         if not self._buf:
-            raise Exception("skip_until_after(): Circular-buffer is empty")
+            return
 
         for idx, val in enumerate(self._buf):
             if val > val_to_skip_over:
@@ -278,6 +278,256 @@ class LinkPotential:
         self._calc_potential()
 
 
+class PotentialLinks:
+    """
+    A Weight Round-Robin (WRR) scheduler of file-transfer links that have the potential for one or
+    more file-transfers
+    """
+
+    def __init__(self, sched_input):
+        self.sched_input = sched_input
+        self._storage_to_outbound_potential = self._get_storage_to_outbound_potential()
+        self._storage_to_inbound_potential = self._get_storage_to_inbound_potential()
+        self._link_key_to_potential = self._get_link_key_to_potential(
+            self._storage_to_outbound_potential, self._storage_to_inbound_potential
+        )
+        self._potential_link_key_cbuf = CircularBuffer()
+
+        for link_key in sorted(self._link_key_to_potential.keys()):
+            self._potential_link_key_cbuf.append(link_key)
+
+    def __bool__(self):
+        return bool(self._potential_link_key_cbuf)
+
+    def skip_until_after(self, link_key):
+        """
+        Skip through this Weight Round-Robin scheduler until after the specified link
+        """
+        self._potential_link_key_cbuf.skip_until_after(link_key)
+
+    def get_link_keys_with_potential(self):
+        """
+        Returns a list of the links with the potential to transfer at least one file
+        """
+        return list(self._link_key_to_potential.keys())
+
+    def get_link_potential(self, link_key):
+        return self._link_key_to_potential[link_key]
+
+    def get_next(self):
+        """
+        Returns the next link to be scheduled
+        """
+        next_link_key = self._potential_link_key_cbuf.get_next()
+        next_source_se = next_link_key[0]
+        next_dest_se = next_link_key[1]
+
+        # Update storages to reflect remaining work to be done
+        saturated_storages = []
+        self._storage_to_outbound_potential[next_source_se] -= 1
+        if self._storage_to_outbound_potential[next_source_se] < 0:
+            raise Exception(
+                f"Outbound potential of storage went negative: next_source_se={next_source_se}"
+            )
+        if self._storage_to_outbound_potential[next_source_se] == 0:
+            saturated_storages.append(next_source_se)
+        self._storage_to_inbound_potential[next_dest_se] -= 1
+        if self._storage_to_inbound_potential[next_dest_se] < 0:
+            raise Exception(
+                f"Inbound potential of storage went negative: next_dest_se={next_dest_se}"
+            )
+        if self._storage_to_inbound_potential[next_dest_se] == 0:
+            saturated_storages.append(next_dest_se)
+
+        # Update link potential to reflect remaining work to be done
+        self._link_key_to_potential[next_link_key].scheduled(1)
+
+        # Apply storage potential updates to link potentials
+        for link_potential_key, link_potential in self._link_key_to_potential.items():
+            if (
+                link_potential_key[0] != next_source_se
+                and link_potential_key[1] != next_dest_se
+            ):
+                break
+            link_config_max_active = self.sched_input.link_limits.get_max_active(
+                link_potential_key
+            )
+            link_potential_max_active = min(
+                link_config_max_active,
+                self._storage_to_outbound_potential[next_source_se],
+                self._storage_to_inbound_potential[next_dest_se],
+            )
+            link_optimizer_limit = self._get_link_optimizer_limit(next_link_key)
+            link_potential_max_active = (
+                min(link_potential_max_active, link_optimizer_limit)
+                if link_optimizer_limit is not None
+                else link_potential_max_active
+            )
+            link_potential.set_max_active(link_potential_max_active)
+
+        # Remove saturated links from circular buffer
+        staturated_links = [
+            link_key
+            for link_key, potential in self._link_key_to_potential.items()
+            if potential.get_potential() == 0
+        ]
+        for staturated_link_key in staturated_links:
+            if staturated_link_key in self._potential_link_key_cbuf:
+                self._potential_link_key_cbuf.remove_value(staturated_link_key)
+
+        return next_link_key
+
+    def _get_link_key_to_potential(
+        self, storage_to_outbound_potential, storage_to_inbound_potential
+    ):
+        """
+        Returns a map from link to the number of transfers that could potentially be scheduled on
+        that link.  The map only contains links that have at least 1 potential transfer.
+        """
+        link_to_nb_queued = self._get_link_to_nb_queued()
+        link_key_to_queues = self._get_link_key_to_queues()
+
+        link_key_to_potential = {}
+        for link_key in list(link_key_to_queues.keys()):
+            link_nb_queued = (
+                0 if link_key not in link_to_nb_queued else link_to_nb_queued[link_key]
+            )
+            link_potential = self._get_link_potential(
+                link_key,
+                link_nb_queued,
+                storage_to_outbound_potential,
+                storage_to_inbound_potential,
+            )
+            if link_potential.get_potential() > 0:
+                link_key_to_potential[link_key] = link_potential
+        return link_key_to_potential
+
+    def _get_link_to_nb_queued(self):
+        link_to_nb_queued = {}
+        for queue in self.sched_input.queues.values():
+            if queue.link_key not in link_to_nb_queued:
+                link_to_nb_queued[queue.link_key] = queue.nb_queued
+            else:
+                link_to_nb_queued[queue.link_key] += queue.nb_queued
+        return link_to_nb_queued
+
+    def _get_link_key_to_queues(self):
+        link_key_to_queues = {}
+        for queue_id, queue in self.sched_input.queues.items():
+            if queue.link_key not in link_key_to_queues:
+                link_key_to_queues[queue.link_key] = {}
+            link_key_to_queues[queue.link_key][queue_id] = queue
+        return link_key_to_queues
+
+    def _get_link_potential(
+        self,
+        link_key,
+        link_nb_queued,
+        storage_to_outbound_potential,
+        storage_to_inbound_potential,
+    ):
+        """
+        Returns the number of transfers that could potentially be scheduled on the specified link.
+        """
+        source_se = link_key[0]
+        dest_se = link_key[1]
+
+        link_config_max_active = self.sched_input.link_limits.get_max_active(link_key)
+        source_out_potential = storage_to_outbound_potential[source_se]
+        dest_in_potential = storage_to_inbound_potential[dest_se]
+        max_active = min(
+            link_config_max_active, source_out_potential, dest_in_potential
+        )
+        link_optimizer_limit = self._get_link_optimizer_limit(link_key)
+        if link_optimizer_limit is not None:
+            max_active = min(max_active, link_optimizer_limit)
+
+        link_nb_active = self._get_link_nb_active(link_key)
+        link_potential = LinkPotential(
+            max_active=max_active, nb_active=link_nb_active, nb_queued=link_nb_queued
+        )
+        return link_potential
+
+    def _get_link_optimizer_limit(self, link_key):
+        return (
+            self.sched_input.optimizer_limits[link_key]["active"]
+            if link_key in self.sched_input.optimizer_limits
+            else None
+        )
+
+    def _get_link_nb_active(self, link_key):
+        result = 0
+        for stats in self.sched_input.active_stats:
+            source_se = stats["source_se"]
+            dest_se = stats["dest_se"]
+            nb_active = stats["nb_active"]
+            stats_link_key = (source_se, dest_se)
+            result += nb_active if link_key == stats_link_key else 0
+        return result
+
+    def _get_storage_to_outbound_potential(self):
+        storages_with_outbound_queues = self._get_storages_with_outbound_queues()
+        storage_to_outbound_active = self._get_storage_to_outbound_active()
+        result = {}
+        for storage in storages_with_outbound_queues:
+            max_active = self.sched_input.storage_limits.get_outbound_max_active(
+                storage
+            )
+            nb_active = (
+                0
+                if storage not in storage_to_outbound_active
+                else storage_to_outbound_active[storage]
+            )
+            result[storage] = 0 if nb_active >= max_active else max_active - nb_active
+        return result
+
+    def _get_storage_to_inbound_potential(self):
+        storages_with_inbound_queues = self._get_storages_with_inbound_queues()
+        storage_to_inbound_active = self._get_storage_to_inbound_active()
+        result = {}
+        for storage in storages_with_inbound_queues:
+            max_active = self.sched_input.storage_limits.get_inbound_max_active(storage)
+            nb_active = (
+                0
+                if storage not in storage_to_inbound_active
+                else storage_to_inbound_active[storage]
+            )
+            result[storage] = 0 if nb_active >= max_active else max_active - nb_active
+        return result
+
+    def _get_storages_with_outbound_queues(self):
+        result = set()
+        for queue in self.sched_input.queues.values():
+            result.add(queue.link_key[0])  # link_key = (source_se, dest_se)
+        return result
+
+    def _get_storages_with_inbound_queues(self):
+        result = set()
+        for queue in self.sched_input.queues.values():
+            result.add(queue.link_key[1])  # link_key = (source_se, dest_se)
+        return result
+
+    def _get_storage_to_outbound_active(self):
+        result = {}
+        for stats in self.sched_input.active_stats:
+            storage = stats["source_se"]
+            nb_active = stats["nb_active"]
+            result[storage] = (
+                0 if storage not in result else result[storage] + nb_active
+            )
+        return result
+
+    def _get_storage_to_inbound_active(self):
+        result = {}
+        for stats in self.sched_input.active_stats:
+            storage = stats["dest_se"]
+            nb_active = stats["nb_active"]
+            result[storage] = (
+                0 if storage not in result else result[storage] + nb_active
+            )
+        return result
+
+
 @dataclass
 class PrevRun:
     """
@@ -295,49 +545,55 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     The default file-transfer scheduling algorithm
     """
 
-    def schedule(self) -> SchedulerOutput:
+    def _get_sched_data(self) -> SchedulerOutput:
+        sched_data = {}
+
         """
         The entry point to the scheduler algorithm
         """
+        potential_links = PotentialLinks(self.sched_input)  # SMURRAY
+        sched_data["potential_links"] = potential_links  # SMURRAY
         potential_concurrent_transfers = self._get_potential_concurrent_transfers()
+        sched_data["potential_concurrent_transfers"] = potential_concurrent_transfers
 
-        # Do nothing if no work to be done or concurrent transfer limit reached
-        if not self.sched_input.queues or not potential_concurrent_transfers:
+        # Do nothing if:
+        # - There is no queued work to be done OR
+        # - Storages and links are saturated OR
+        # - FTS is saturated (the FTS concurrent transfer limit has been reached)
+        if (
+            not self.sched_input.queues
+            or not potential_links
+            or not potential_concurrent_transfers
+        ):
             return None
-
-        link_key_to_potential = self._get_link_key_to_potential()
-
-        # Do nothing if there are no links with the potential to schedule a transfer
-        if not link_key_to_potential:
-            return None
-
-        storage_to_outbound_potential = self._get_storage_to_outbound_potential()
-        storage_to_inbound_potential = self._get_storage_to_inbound_potential()
 
         link_to_vo_to_activity_to_queue = self._get_link_to_vo_to_activity_to_queue()
 
-        potential_link_keys = sorted(link_key_to_potential.keys())
+        potential_link_keys = sorted(potential_links.get_link_keys_with_potential())
 
         # To be iteratively modified in order to know when to stop considering a VO
         link_key_to_vo_to_nb_queued = self._get_link_key_to_vo_to_nb_queued()
+        sched_data["link_key_to_vo_to_nb_queued"] = link_key_to_vo_to_nb_queued
 
         # To be iteratively modified in order to know when to stop considering an activity
         link_key_to_vo_to_activity_to_nb_queued = (
             self._get_link_key_to_vo_to_activity_to_nb_queued()
+        )
+        sched_data["link_key_to_vo_to_activity_to_nb_queued"] = (
+            link_key_to_vo_to_activity_to_nb_queued
         )
 
         # To be iteratively modified to respect activity shares
         link_key_to_vo_to_activity_to_nb_active = (
             self._get_link_key_to_vo_to_activity_to_nb_active()
         )
-
-        # Create a circular-buffer of the keys of links with the potential to schedule a transfer
-        potential_link_key_cbuf = CircularBuffer()
-        for link_key in potential_link_keys:
-            potential_link_key_cbuf.append(link_key)
+        sched_data["link_key_to_vo_to_activity_to_nb_active"] = (
+            link_key_to_vo_to_activity_to_nb_active
+        )
 
         # Create link key -> VO circular-buffer
         potential_link_to_vo_cbuf = {}
+        sched_data["potential_link_to_vo_cbuf"] = potential_link_to_vo_cbuf
         for link_key in potential_link_keys:
             vo_cbuf = CircularBuffer()
             for vo_name in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
@@ -346,8 +602,11 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
         # Create link-key -> VO -> activity WRR
         potential_link_to_vo_to_activity_wrr = {}
+        sched_data["potential_link_to_vo_to_activity_wrr"] = (
+            potential_link_to_vo_to_activity_wrr
+        )
         for link_key in potential_link_keys:
-            link_potential = link_key_to_potential[link_key]
+            link_potential = sched_data["potential_links"].get_link_potential(link_key)
             potential_link_to_vo_to_activity_wrr[link_key] = {}
             vos = link_to_vo_to_activity_to_queue[link_key].keys()
             for vo_name in vos:
@@ -389,6 +648,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
         # Create link-key -> VO -> activity -> queue-id
         potential_link_to_vo_to_activity_to_queue_id = {}
+        sched_data["potential_link_to_vo_to_activity_to_queue_id"] = (
+            potential_link_to_vo_to_activity_to_queue_id
+        )
         for link_key in potential_link_keys:
             potential_link_to_vo_to_activity_to_queue_id[link_key] = {}
             for vo_name, activity_to_queue in link_to_vo_to_activity_to_queue[
@@ -403,7 +665,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
         prev_run = self.sched_input.opaque_data
         if isinstance(prev_run, PrevRun):
-            potential_link_key_cbuf.skip_until_after(prev_run.link_key)
+            potential_links.skip_until_after(prev_run.link_key)
             if prev_run.link_key in potential_link_to_vo_cbuf:
                 potential_link_to_vo_cbuf[prev_run.link_key].skip_until_after(
                     prev_run.vo_name
@@ -417,45 +679,72 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                         prev_run.vo_name
                     ].skip_until_after(prev_run.activity)
 
+        return sched_data
+
+    def schedule(self) -> SchedulerOutput:
+        """
+        The entry point to the scheduler algorithm
+        """
+        sched_data = self._get_sched_data()
+        if sched_data is None:
+            return None
+
         # Round robin free work-capacity across submission queues taking into account any
         # constraints
         sched_output = SchedulerOutput()
-        while potential_concurrent_transfers and potential_link_key_cbuf:
+        while (
+            sched_data["potential_concurrent_transfers"]
+            and sched_data["potential_links"]
+        ):
             # Identify the link and storages that could do the work
-            link_key = potential_link_key_cbuf.get_next()
+            link_key = sched_data["potential_links"].get_next()
             source_se = link_key[0]
             dest_se = link_key[1]
 
             # Get the circular buffer of VOs on the link
-            vo_cbuf = potential_link_to_vo_cbuf[link_key]
+            vo_cbuf = sched_data["potential_link_to_vo_cbuf"][link_key]
 
             # Get the next VO of the link
             vo_name = vo_cbuf.get_next()
 
             # Get the WRR scheduler of activities of the VO on the link
-            activity_wrr = potential_link_to_vo_to_activity_wrr[link_key][vo_name]
+            activity_wrr = sched_data["potential_link_to_vo_to_activity_wrr"][link_key][
+                vo_name
+            ]
 
             # Get the next activity of the VO on the link
             activity = activity_wrr.next_queue_id()
 
             # Get the ID of the next eligble queue
-            queue_id = potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name][
-                activity
-            ]
+            queue_id = sched_data["potential_link_to_vo_to_activity_to_queue_id"][
+                link_key
+            ][vo_name][activity]
 
             # Schedule a transfer for this queue
             sched_output.inc_transfers_for_queue(queue_id, 1)
-            potential_concurrent_transfers -= 1
+            sched_data["potential_concurrent_transfers"] -= 1
 
             # Update active file-transfers in order to respect activit shares
-            if link_key not in link_key_to_vo_to_activity_to_nb_active:
-                link_key_to_vo_to_activity_to_nb_active[link_key] = {}
-            if vo_name not in link_key_to_vo_to_activity_to_nb_active[link_key]:
-                link_key_to_vo_to_activity_to_nb_active[link_key][vo_name] = {}
-            link_key_to_vo_to_activity_to_nb_active[link_key][vo_name][activity] = (
-                link_key_to_vo_to_activity_to_nb_active[link_key][vo_name][activity] + 1
+            if link_key not in sched_data["link_key_to_vo_to_activity_to_nb_active"]:
+                sched_data["link_key_to_vo_to_activity_to_nb_active"][link_key] = {}
+            if (
+                vo_name
+                not in sched_data["link_key_to_vo_to_activity_to_nb_active"][link_key]
+            ):
+                sched_data["link_key_to_vo_to_activity_to_nb_active"][link_key][
+                    vo_name
+                ] = {}
+            sched_data["link_key_to_vo_to_activity_to_nb_active"][link_key][vo_name][
+                activity
+            ] = (
+                sched_data["link_key_to_vo_to_activity_to_nb_active"][link_key][
+                    vo_name
+                ][activity]
+                + 1
                 if activity
-                in link_key_to_vo_to_activity_to_nb_active[link_key][vo_name]
+                in sched_data["link_key_to_vo_to_activity_to_nb_active"][link_key][
+                    vo_name
+                ]
                 else 1
             )
 
@@ -464,78 +753,34 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                 PrevRun(link_key=link_key, vo_name=vo_name, activity=activity)
             )
 
-            # Update storages to reflect remaining work to be done
-            saturated_storages = []
-            storage_to_outbound_potential[source_se] -= 1
-            if storage_to_outbound_potential[source_se] < 0:
-                raise Exception(
-                    f"Outbound potential of storage went negative: source_se={source_se}"
-                )
-            if storage_to_outbound_potential[source_se] == 0:
-                saturated_storages.append(source_se)
-            storage_to_inbound_potential[dest_se] -= 1
-            if storage_to_inbound_potential[dest_se] < 0:
-                raise Exception(
-                    f"Inbound potential of storage went negative: dest_se={dest_se}"
-                )
-            if storage_to_inbound_potential[dest_se] == 0:
-                saturated_storages.append(dest_se)
-
-            # Update link potential to reflect remaining work to be done
-            link_key_to_potential[link_key].scheduled(1)
-
-            # Apply storage potential updates to link potentials
-            for link_potential_key, link_potential in link_key_to_potential.items():
-                if (
-                    link_potential_key[0] != source_se
-                    and link_potential_key[1] != dest_se
-                ):
-                    break
-                link_config_max_active = self.sched_input.link_limits.get_max_active(
-                    link_potential_key
-                )
-                link_potential_max_active = min(
-                    link_config_max_active,
-                    storage_to_outbound_potential[source_se],
-                    storage_to_inbound_potential[dest_se],
-                )
-                link_optimizer_limit = self._get_link_optimizer_limit(link_key)
-                link_potential_max_active = (
-                    min(link_potential_max_active, link_optimizer_limit)
-                    if link_optimizer_limit is not None
-                    else link_potential_max_active
-                )
-                link_potential.set_max_active(link_potential_max_active)
-
-            # Remove saturated links from circular buffer
-            staturated_links = [
-                link_key
-                for link_key, potential in link_key_to_potential.items()
-                if potential.get_potential() == 0
-            ]
-            for staturated_link_key in staturated_links:
-                if staturated_link_key in potential_link_key_cbuf:
-                    potential_link_key_cbuf.remove_value(staturated_link_key)
-
             # Remove VO from VO circular-buffer if necessary
-            link_key_to_vo_to_nb_queued[link_key][vo_name] -= 1
-            if link_key_to_vo_to_nb_queued[link_key][vo_name] < 0:
+            sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] -= 1
+            if sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] < 0:
                 raise Exception(
                     "Link to VO to nb_queued went negative: "
                     f"source_se={source_se} dest_se={dest_se} vo_name={vo_name}"
                 )
-            if link_key_to_vo_to_nb_queued[link_key][vo_name] == 0:
+            if sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] == 0:
                 vo_cbuf.remove_value(vo_name)
 
             # Remove activity from activty circular-buffer if necessary
-            link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][activity] -= 1
-            if link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][activity] < 0:
+            sched_data["link_key_to_vo_to_activity_to_nb_queued"][link_key][vo_name][
+                activity
+            ] -= 1
+            if (
+                sched_data["link_key_to_vo_to_activity_to_nb_queued"][link_key][
+                    vo_name
+                ][activity]
+                < 0
+            ):
                 raise Exception(
                     "Link to VO to activity to nb_queued went negative: "
                     f"source_se={source_se} dest_se={dest_se} vo_name={vo_name} activity={activity}"
                 )
             if (
-                link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][activity]
+                sched_data["link_key_to_vo_to_activity_to_nb_queued"][link_key][
+                    vo_name
+                ][activity]
                 == 0
             ):
                 activity_wrr.remove_queue(activity)
@@ -630,109 +875,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             result[link_key][vo_name][activity] = nb_active
         return result
 
-    def _get_storage_to_outbound_active(self):
-        result = {}
-        for stats in self.sched_input.active_stats:
-            storage = stats["source_se"]
-            nb_active = stats["nb_active"]
-            result[storage] = (
-                0 if storage not in result else result[storage] + nb_active
-            )
-        return result
-
-    def _get_storage_to_inbound_active(self):
-        result = {}
-        for stats in self.sched_input.active_stats:
-            storage = stats["dest_se"]
-            nb_active = stats["nb_active"]
-            result[storage] = (
-                0 if storage not in result else result[storage] + nb_active
-            )
-        return result
-
-    def _get_storages_with_outbound_queues(self):
-        result = set()
-        for queue in self.sched_input.queues.values():
-            result.add(queue.link_key[0])  # link_key = (source_se, dest_se)
-        return result
-
-    def _get_storages_with_inbound_queues(self):
-        result = set()
-        for queue in self.sched_input.queues.values():
-            result.add(queue.link_key[1])  # link_key = (source_se, dest_se)
-        return result
-
-    def _get_storage_to_outbound_potential(self):
-        storages_with_outbound_queues = self._get_storages_with_outbound_queues()
-        storage_to_outbound_active = self._get_storage_to_outbound_active()
-        result = {}
-        for storage in storages_with_outbound_queues:
-            max_active = self.sched_input.storage_limits.get_outbound_max_active(
-                storage
-            )
-            nb_active = (
-                0
-                if storage not in storage_to_outbound_active
-                else storage_to_outbound_active[storage]
-            )
-            result[storage] = 0 if nb_active >= max_active else max_active - nb_active
-        return result
-
-    def _get_storage_to_inbound_potential(self):
-        storages_with_inbound_queues = self._get_storages_with_inbound_queues()
-        storage_to_inbound_active = self._get_storage_to_inbound_active()
-        result = {}
-        for storage in storages_with_inbound_queues:
-            max_active = self.sched_input.storage_limits.get_inbound_max_active(storage)
-            nb_active = (
-                0
-                if storage not in storage_to_inbound_active
-                else storage_to_inbound_active[storage]
-            )
-            result[storage] = 0 if nb_active >= max_active else max_active - nb_active
-        return result
-
-    def _get_storage_outbound_active(self, storage):
-        nb_active = 0
-        for stats in self.sched_input.active_stats:
-            nb_active += stats["nb_active"] if storage == stats["source_se"] else 0
-        return nb_active
-
-    def _get_storage_inbound_active(self, storage):
-        nb_active = 0
-        for stats in self.sched_input.active_stats:
-            nb_active += stats["nb_active"] if storage == stats["dest_se"] else 0
-        return nb_active
-
-    def _get_storage_outbound_potential(self, storage):
-        active = self._get_storage_outbound_active(storage)
-        max_active = self.sched_input.storage_limits.get_outbound_max_active(storage)
-        return 0 if active >= max_active else max_active - active
-
-    def _get_storage_inbound_potential(self, storage):
-        active = self._get_storage_inbound_active(storage)
-        max_active = self.sched_input.storage_limits.get_inbound_max_active(storage)
-        return 0 if active >= max_active else max_active - active
-
-    def _get_link_nb_active(self, link_key):
-        result = 0
-        for stats in self.sched_input.active_stats:
-            source_se = stats["source_se"]
-            dest_se = stats["dest_se"]
-            nb_active = stats["nb_active"]
-            stats_link_key = (source_se, dest_se)
-            result += nb_active if link_key == stats_link_key else 0
-        return result
-
-    def _get_link_to_nb_queued(self):
-        link_to_nb_queued = {}
-        for queue in self.sched_input.queues.values():
-            if queue.link_key not in link_to_nb_queued:
-                link_to_nb_queued[queue.link_key] = queue.nb_queued
-            else:
-                link_to_nb_queued[queue.link_key] += queue.nb_queued
-        return link_to_nb_queued
-
     def _get_link_nb_active_per_vo(self, link_key):
         nb_active_per_vo = {}
         for queue in self.sched_input.queues.values():
@@ -761,48 +903,6 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                     nb_active_per_vo_activity[vo_name][activity] = 0
                 nb_active_per_vo_activity[vo_name][activity] += nb_files
         return nb_active_per_vo_activity
-
-    def _get_link_potential(self, link_key, link_nb_queued):
-        """
-        Returns the number of transfers that could potentially be scheduled on the specified link.
-        """
-        source_se = link_key[0]
-        dest_se = link_key[1]
-
-        link_config_max_active = self.sched_input.link_limits.get_max_active(link_key)
-        source_out_potential = self._get_storage_outbound_potential(source_se)
-        dest_in_potential = self._get_storage_inbound_potential(dest_se)
-        max_active = min(
-            link_config_max_active, source_out_potential, dest_in_potential
-        )
-        link_optimizer_limit = self._get_link_optimizer_limit(link_key)
-        if link_optimizer_limit is not None:
-            max_active = min(max_active, link_optimizer_limit)
-
-        link_nb_active = self._get_link_nb_active(link_key)
-        link_potential = LinkPotential(
-            max_active=max_active, nb_active=link_nb_active, nb_queued=link_nb_queued
-        )
-        return link_potential
-
-    def _get_link_key_to_potential(self):
-        """
-        Returns a map from link to the number of transfers that could potentially be scheduled on
-        that link.  The map only contains links that have at least 1 potential transfer.
-        """
-        link_to_nb_queued = self._get_link_to_nb_queued()
-        link_key_to_queues = self._get_link_key_to_queues()
-        link_keys = list(link_key_to_queues.keys())
-
-        link_key_to_potential = {}
-        for link_key in link_keys:
-            link_nb_queued = (
-                0 if link_key not in link_to_nb_queued else link_to_nb_queued[link_key]
-            )
-            link_potential = self._get_link_potential(link_key, link_nb_queued)
-            if link_potential.get_potential() > 0:
-                link_key_to_potential[link_key] = link_potential
-        return link_key_to_potential
 
     def _get_potential_concurrent_transfers(self):
         """
