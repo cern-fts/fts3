@@ -486,7 +486,10 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
 
             # Apply storage potential updates to link potentials
             for link_potential_key, link_potential in link_key_to_potential.items():
-                if link_potential_key[0] != source_se and link_key[1] != dest_se:
+                if (
+                    link_potential_key[0] != source_se
+                    and link_potential_key[1] != dest_se
+                ):
                     break
                 link_config_max_active = self.sched_input.link_limits.get_max_active(
                     link_potential_key
