@@ -20,7 +20,7 @@ stages:
     - pyenv global ${!PY}
     - source ${!VENV}/bin/activate
     - pylint --version
-    - pylint --output-format colorized --disable C,R,W ./src/scheduler/fts_scheduler
+    - pylint --output-format colorized ./src/scheduler/fts_scheduler
   variables:
     PYTHONPATH: ./src/scheduler/fts_scheduler
 
