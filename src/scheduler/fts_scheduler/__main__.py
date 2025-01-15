@@ -17,6 +17,12 @@ from db import DbConnPool
 from scheduler import Scheduler
 
 
+class LogException(Exception):
+    """
+    Logging related exception
+    """
+
+
 def get_log(log_file_path, log_program_name, log_level):
     """
     Creates and returns the program's logger object
@@ -35,11 +41,11 @@ def get_log(log_file_path, log_program_name, log_level):
 
     log_dir = os.path.dirname(log_file_path)
     if not os.path.isdir(log_dir):
-        raise Exception(
+        raise LogException(
             f"Logging directory is not a directory or does not exist: path={log_dir}"
         )
     if not os.access(log_dir, os.W_OK):
-        raise Exception(f"Logging directory cannot be written to: path={log_dir}")
+        raise LogException(f"Logging directory cannot be written to: path={log_dir}")
 
     log_handler = logging.handlers.TimedRotatingFileHandler(
         filename=log_file_path, when="midnight", backupCount=30
@@ -51,6 +57,12 @@ def get_log(log_file_path, log_program_name, log_level):
     logger.addHandler(log_handler)
 
     return logger
+
+
+class ConfigException(Exception):
+    """
+    Configuration related exception
+    """
 
 
 def get_config(path, log_file_fallback) -> dict[str, Any]:
@@ -65,27 +77,27 @@ def get_config(path, log_file_fallback) -> dict[str, Any]:
     config_parser.read(path)
 
     if not config_parser.has_option("database", "user"):
-        raise Exception(
+        raise ConfigException(
             f"Missing configuration option: option=database.user path={path}"
         )
 
     if not config_parser.has_option("database", "password"):
-        raise Exception(
+        raise ConfigException(
             f"Missing configuration option: option=database.password path={path}"
         )
 
     if not config_parser.has_option("database", "dbname"):
-        raise Exception(
+        raise ConfigException(
             f"Missing configuration option: option=database.dbname path={path}"
         )
 
     if not config_parser.has_option("database", "host"):
-        raise Exception(
+        raise ConfigException(
             f"Missing configuration option: option=database.host path={path}"
         )
 
     if not config_parser.has_option("database", "port"):
-        raise Exception(
+        raise ConfigException(
             f"Missing configuration option: option=database.port path={path}"
         )
 
@@ -93,7 +105,7 @@ def get_config(path, log_file_fallback) -> dict[str, Any]:
         valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         log_level = config_parser.get("log", "level")
         if log_level not in valid_log_levels:
-            raise Exception(
+            raise ConfigException(
                 f"Invalid database log-level: permitted={valid_log_levels} actual={log_level}"
             )
 
@@ -179,6 +191,13 @@ if actual_major_db_schema_version < MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION:
     )
     sys.exit(1)
 
+
+class ImportPythonException(Exception):
+    """
+    Exception relation to importing python code
+    """
+
+
 try:
     sys.path.append("/usr/share/fts/fts_scheduler_algo")
     try:
@@ -186,15 +205,15 @@ try:
             config["scheduler_algo_module_name"]
         )
     except Exception as ex:
-        raise Exception(f"Failed to import module: {ex}") from ex
+        raise ImportPythonException(f"Failed to import module: {ex}") from ex
 
     SchedulerAlgoClass = getattr(
         scheduler_algo_module, config["scheduler_algo_class_name"], None
     )
     if SchedulerAlgoClass is None:
-        raise Exception("Failed to find class")
+        raise ImportPythonException("Failed to find scheduler-algorithm class")
 except Exception as ex:
-    raise Exception(
+    raise ImportPythonException(
         "Failed to import the scheduler-algorithm class: "
         f"module={config['scheduler_algo_module_name']} "
         f"class={config['scheduler_algo_class_name']}: "
