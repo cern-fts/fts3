@@ -575,71 +575,24 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         )
 
         # To be iteratively modified to respect activity shares
-        link_key_to_vo_to_activity_to_nb_active = (
-            self._get_link_key_to_vo_to_activity_to_nb_active()
-        )
         sched_data["link_key_to_vo_to_activity_to_nb_active"] = (
-            link_key_to_vo_to_activity_to_nb_active
+            self._get_link_key_to_vo_to_activity_to_nb_active()
         )
 
         # Create link key -> VO circular-buffer
-        sched_data["potential_link_to_vo_cbuf"] = {}
-        for link_key in potential_link_keys:
-            vo_cbuf = CircularBuffer()
-            for vo_name in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
-                vo_cbuf.append(vo_name)
-            sched_data["potential_link_to_vo_cbuf"][link_key] = vo_cbuf
+        sched_data["potential_link_to_vo_cbuf"] = self._get_link_key_to_vo_cbuf(
+            potential_link_keys, link_to_vo_to_activity_to_queue
+        )
 
         # Create link-key -> VO -> activity WRR
-        sched_data["potential_link_to_vo_to_activity_wrr"] = {}
-        for link_key in potential_link_keys:
-            link_potential = sched_data["potential_links"].get_link_potential(link_key)
-            sched_data["potential_link_to_vo_to_activity_wrr"][link_key] = {}
-            vos = link_to_vo_to_activity_to_queue[link_key].keys()
-            for vo_name in vos:
-                activity_shares = self.sched_input.vo_activity_shares[vo_name]
-                activity_queues = []
-                for activity, weight in activity_shares.items():
-                    activity_queued = 0
-                    if (
-                        link_key
-                        in sched_data["link_key_to_vo_to_activity_to_nb_queued"]
-                        and vo_name
-                        in sched_data["link_key_to_vo_to_activity_to_nb_queued"][
-                            link_key
-                        ]
-                        and activity
-                        in sched_data["link_key_to_vo_to_activity_to_nb_queued"][
-                            link_key
-                        ][vo_name]
-                    ):
-                        activity_queued = sched_data[
-                            "link_key_to_vo_to_activity_to_nb_queued"
-                        ][link_key][vo_name][activity]
-                    activity_active = 0
-                    if (
-                        link_key in link_key_to_vo_to_activity_to_nb_active
-                        and vo_name in link_key_to_vo_to_activity_to_nb_active[link_key]
-                        and activity
-                        in link_key_to_vo_to_activity_to_nb_active[link_key][vo_name]
-                    ):
-                        activity_active = link_key_to_vo_to_activity_to_nb_active[
-                            link_key
-                        ][vo_name][activity]
-
-                    activity_queue = WRRQ(
-                        q_id=activity,
-                        weight=weight,
-                        queued=activity_queued,
-                        active=activity_active,
-                    )
-                    activity_queues.append(activity_queue)
-                activity_wrr = WRR(
-                    max_active=link_potential.get_max_active(), queues=activity_queues
-                )
-                sched_data["potential_link_to_vo_to_activity_wrr"][link_key][
-                    vo_name
-                ] = activity_wrr
+        sched_data["potential_link_to_vo_to_activity_wrr"] = (
+            self._get_potential_link_to_vo_to_activity_wrr(
+                sched_data["potential_links"],
+                link_to_vo_to_activity_to_queue,
+                sched_data["link_key_to_vo_to_activity_to_nb_queued"],
+                sched_data["link_key_to_vo_to_activity_to_nb_active"],
+            )
+        )
 
         # Create link-key -> VO -> activity -> queue-id
         sched_data["potential_link_to_vo_to_activity_to_queue_id"] = {}
@@ -871,6 +824,16 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             result[link_key][vo_name][activity] = nb_active
         return result
 
+    @staticmethod
+    def _get_link_key_to_vo_cbuf(potential_link_keys, link_to_vo_to_activity_to_queue):
+        result = {}
+        for link_key in potential_link_keys:
+            vo_cbuf = CircularBuffer()
+            for vo_name in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
+                vo_cbuf.append(vo_name)
+            result[link_key] = vo_cbuf
+        return result
+
     def _get_link_nb_active_per_vo(self, link_key):
         nb_active_per_vo = {}
         for queue in self.sched_input.queues.values():
@@ -908,3 +871,55 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         for stats in self.sched_input.active_stats:
             nb_active += stats["nb_active"]
         return max(0, self.sched_input.max_url_copy_processes - nb_active)
+
+    def _get_potential_link_to_vo_to_activity_wrr(
+        self,
+        potential_links,
+        link_to_vo_to_activity_to_queue,
+        link_key_to_vo_to_activity_to_nb_queued,
+        link_key_to_vo_to_activity_to_nb_active,
+    ):
+        result = {}
+        for link_key in sorted(potential_links.get_link_keys_with_potential()):
+            result[link_key] = {}
+            for vo_name in link_to_vo_to_activity_to_queue[link_key].keys():
+                activity_queues = []
+                for activity, weight in self.sched_input.vo_activity_shares[
+                    vo_name
+                ].items():
+                    activity_queued = 0
+                    if (
+                        link_key in link_key_to_vo_to_activity_to_nb_queued
+                        and vo_name in link_key_to_vo_to_activity_to_nb_queued[link_key]
+                        and activity
+                        in link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name]
+                    ):
+                        activity_queued = link_key_to_vo_to_activity_to_nb_queued[
+                            link_key
+                        ][vo_name][activity]
+                    activity_active = 0
+                    if (
+                        link_key in link_key_to_vo_to_activity_to_nb_active
+                        and vo_name in link_key_to_vo_to_activity_to_nb_active[link_key]
+                        and activity
+                        in link_key_to_vo_to_activity_to_nb_active[link_key][vo_name]
+                    ):
+                        activity_active = link_key_to_vo_to_activity_to_nb_active[
+                            link_key
+                        ][vo_name][activity]
+
+                    activity_queue = WRRQ(
+                        q_id=activity,
+                        weight=weight,
+                        queued=activity_queued,
+                        active=activity_active,
+                    )
+                    activity_queues.append(activity_queue)
+                activity_wrr = WRR(
+                    max_active=potential_links.get_link_potential(
+                        link_key
+                    ).get_max_active(),
+                    queues=activity_queues,
+                )
+                result[link_key][vo_name] = activity_wrr
+        return result
