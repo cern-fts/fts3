@@ -7,6 +7,12 @@ from dataclasses import dataclass
 from scheduler_algo import SchedulerAlgo, SchedulerOutput
 
 
+class CircularBufferException(Exception):
+    """
+    Circular-buffer exception
+    """
+
+
 class CircularBuffer:
     """
     A circular buffer
@@ -27,7 +33,7 @@ class CircularBuffer:
         Returns the next value in the circular buffer and advances to the next
         """
         if not self._buf:
-            raise Exception("get_next(): Empty buffer")
+            raise CircularBufferException("get_next(): Empty buffer")
         next_value = self._buf[self._next_idx]
         self._next_idx = (self._next_idx + 1) % len(self._buf)
         return next_value
@@ -67,10 +73,7 @@ class CircularBuffer:
         """
         Removes the specified value from the circular buffer
         """
-        try:
-            self._buf.remove(value)
-        except Exception as ex:
-            raise Exception(f"remove_value(): value={value}: {ex}") from ex
+        self._buf.remove(value)
 
         # Wrap next_idx around to 0 if has fallen off the buffer
         if self._next_idx == len(self._buf):
@@ -87,6 +90,12 @@ class WRRQ:
     weight: float
     queued: int
     active: int
+
+
+class WRRException(Exception):
+    """
+    Weighted round-robin exception
+    """
 
 
 class WRR:
@@ -129,7 +138,9 @@ class WRR:
             # Skip dormant queue
             self._next_idx = (self._next_idx + 1) % len(self._queues)
         if not found_active_queue:
-            raise Exception(f"next_queue_id(): Failed to find an active queue: {self}")
+            raise WRRException(
+                f"next_queue_id(): Failed to find an active queue: {self}"
+            )
 
         # Update queue counts
         queue.queued -= 1
@@ -168,7 +179,7 @@ class WRR:
         Skip through this Weight Round-Robin scheduler until after the specified queue ID
         """
         if not self._queues:
-            raise Exception("skip_until_after(): No queues")
+            raise WRRException("skip_until_after(): No queues")
 
         for idx, queue in enumerate(self._queues):
             if queue.q_id > q_id_to_skip_over:
@@ -193,6 +204,12 @@ class WRR:
 
         # Wrap next_idx around to 0 if has fallen off the buffer
         self._next_idx = 0 if self._next_idx == len(self._queues) else self._next_idx
+
+
+class LinkPotentialException(Exception):
+    """
+    Link-potential exception
+    """
 
 
 class LinkPotential:
@@ -254,12 +271,12 @@ class LinkPotential:
         file-transfers
         """
         if nb_scheduled > self._nb_queued:
-            raise Exception(
+            raise LinkPotentialException(
                 "LinkPotential.update(): nb_scheduled > nb_queued: "
                 f"nb_scheduled={nb_scheduled} nb_queued={self._nb_queued}"
             )
         if self._nb_active + nb_scheduled > self._max_active:
-            raise Exception(
+            raise LinkPotentialException(
                 "LinkPotential.update(): nb_active + nb_scheduled > max_active:"
                 f"nb_active={self._nb_active} "
                 f"nb_scheduled={nb_scheduled} "
@@ -276,6 +293,12 @@ class LinkPotential:
         """
         self._max_active = max_active
         self._calc_potential()
+
+
+class PotentialLinksException(Exception):
+    """
+    Potential-links exception
+    """
 
 
 class PotentialLinks:
@@ -329,14 +352,14 @@ class PotentialLinks:
         saturated_storages = []
         self._storage_to_outbound_potential[next_source_se] -= 1
         if self._storage_to_outbound_potential[next_source_se] < 0:
-            raise Exception(
+            raise PotentialLinksException(
                 f"Outbound potential of storage went negative: next_source_se={next_source_se}"
             )
         if self._storage_to_outbound_potential[next_source_se] == 0:
             saturated_storages.append(next_source_se)
         self._storage_to_inbound_potential[next_dest_se] -= 1
         if self._storage_to_inbound_potential[next_dest_se] < 0:
-            raise Exception(
+            raise PotentialLinksException(
                 f"Inbound potential of storage went negative: next_dest_se={next_dest_se}"
             )
         if self._storage_to_inbound_potential[next_dest_se] == 0:
@@ -531,6 +554,12 @@ class PrevRun:
     activity: str
 
 
+class SchedulingException(Exception):
+    """
+    Scheduling exception
+    """
+
+
 class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-methods
     """
     The default file-transfer scheduling algorithm
@@ -705,7 +734,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             # Remove VO from VO circular-buffer if necessary
             sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] -= 1
             if sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] < 0:
-                raise Exception(
+                raise SchedulingException(
                     "Link to VO to nb_queued went negative: "
                     f"source_se={source_se} dest_se={dest_se} vo_name={vo_name}"
                 )
@@ -722,7 +751,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                 ][activity]
                 < 0
             ):
-                raise Exception(
+                raise SchedulingException(
                     "Link to VO to activity to nb_queued went negative: "
                     f"source_se={source_se} dest_se={dest_se} vo_name={vo_name} activity={activity}"
                 )
