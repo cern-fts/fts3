@@ -17,6 +17,12 @@ class StorageInOutLimits:
     outbound_max_active: int
 
 
+class StorageLimitException(Exception):
+    """
+    Storage-limit exception
+    """
+
+
 @dataclass
 class StorageLimits:
     """
@@ -37,7 +43,7 @@ class StorageLimits:
             return self.storage_to_limits[storage].inbound_max_active
         if "*" in self.storage_to_limits:
             return self.storage_to_limits["*"].inbound_max_active
-        raise Exception(
+        raise StorageLimitException(
             "StorageLimits.get_storage_inbound_max_active(): "
             f"No storage-limit configuration: storage={storage} or storage=*"
         )
@@ -51,10 +57,16 @@ class StorageLimits:
             return self.storage_to_limits[storage].outbound_max_active
         if "*" in self.storage_to_limits:
             return self.storage_to_limits["*"].outbound_max_active
-        raise Exception(
+        raise StorageLimitException(
             "StorageLimits.get_storage_outbound_max_active(): "
             f"No storage-limit configuration: storage={storage} or storage=*"
         )
+
+
+class LinkLimitException(Exception):
+    """
+    Link-limit exception
+    """
 
 
 @dataclass
@@ -76,7 +88,7 @@ class LinkLimits:
         elif ("*", "*") in self.link_key_to_max_active:
             max_active = self.link_key_to_max_active[("*", "*")]
         else:
-            raise Exception(
+            raise LinkLimitException(
                 "LinkLimits.get_link_max_active(): No link configuration: "
                 "(source_se={source_se},dest_se={dest_se}) or (source_se=*, dest_se=*)"
             )
