@@ -41,8 +41,5 @@ class Scheduler:  # pylint:disable=too-few-public-methods
 
     @staticmethod
     def _this_host_is_scheduling(dbconn) -> bool:
-        try:
-            worker_hostname, _ = db.get_scheduler_fqdn_from_db(dbconn)
-            return worker_hostname and worker_hostname == socket.gethostname()
-        except Exception as ex:
-            raise Exception(f"Scheduler._this_host_is_scheduling(): {ex}") from ex
+        worker_hostname, _ = db.get_scheduler_fqdn_from_db(dbconn)
+        return worker_hostname and worker_hostname == socket.gethostname()
