@@ -311,7 +311,10 @@ class PotentialLinks:
         """
         return list(self._link_key_to_potential.keys())
 
-    def get_link_potential(self, link_key):
+    def get_link_potential(self, link_key) -> LinkPotential:
+        """
+        Returns the portential of teh specified link
+        """
         return self._link_key_to_potential[link_key]
 
     def get_next(self):
@@ -534,15 +537,15 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     """
 
     def _get_sched_data(self) -> SchedulerOutput:
-        sched_data = {}
-
         """
         The entry point to the scheduler algorithm
         """
-        potential_links = PotentialLinks(self.sched_input)  # SMURRAY
-        sched_data["potential_links"] = potential_links  # SMURRAY
-        potential_concurrent_transfers = self._get_potential_concurrent_transfers()
-        sched_data["potential_concurrent_transfers"] = potential_concurrent_transfers
+        sched_data = {}
+
+        sched_data["potential_links"] = PotentialLinks(self.sched_input)
+        sched_data["potential_concurrent_transfers"] = (
+            self._get_potential_concurrent_transfers()
+        )
 
         # Do nothing if:
         # - There is no queued work to be done OR
@@ -550,25 +553,25 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         # - FTS is saturated (the FTS concurrent transfer limit has been reached)
         if (
             not self.sched_input.queues
-            or not potential_links
-            or not potential_concurrent_transfers
+            or not sched_data["potential_links"]
+            or not sched_data["potential_concurrent_transfers"]
         ):
             return None
 
         link_to_vo_to_activity_to_queue = self._get_link_to_vo_to_activity_to_queue()
 
-        potential_link_keys = sorted(potential_links.get_link_keys_with_potential())
+        potential_link_keys = sorted(
+            sched_data["potential_links"].get_link_keys_with_potential()
+        )
 
         # To be iteratively modified in order to know when to stop considering a VO
-        link_key_to_vo_to_nb_queued = self._get_link_key_to_vo_to_nb_queued()
-        sched_data["link_key_to_vo_to_nb_queued"] = link_key_to_vo_to_nb_queued
+        sched_data["link_key_to_vo_to_nb_queued"] = (
+            self._get_link_key_to_vo_to_nb_queued()
+        )
 
         # To be iteratively modified in order to know when to stop considering an activity
-        link_key_to_vo_to_activity_to_nb_queued = (
-            self._get_link_key_to_vo_to_activity_to_nb_queued()
-        )
         sched_data["link_key_to_vo_to_activity_to_nb_queued"] = (
-            link_key_to_vo_to_activity_to_nb_queued
+            self._get_link_key_to_vo_to_activity_to_nb_queued()
         )
 
         # To be iteratively modified to respect activity shares
@@ -580,22 +583,18 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         )
 
         # Create link key -> VO circular-buffer
-        potential_link_to_vo_cbuf = {}
-        sched_data["potential_link_to_vo_cbuf"] = potential_link_to_vo_cbuf
+        sched_data["potential_link_to_vo_cbuf"] = {}
         for link_key in potential_link_keys:
             vo_cbuf = CircularBuffer()
             for vo_name in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
                 vo_cbuf.append(vo_name)
-            potential_link_to_vo_cbuf[link_key] = vo_cbuf
+            sched_data["potential_link_to_vo_cbuf"][link_key] = vo_cbuf
 
         # Create link-key -> VO -> activity WRR
-        potential_link_to_vo_to_activity_wrr = {}
-        sched_data["potential_link_to_vo_to_activity_wrr"] = (
-            potential_link_to_vo_to_activity_wrr
-        )
+        sched_data["potential_link_to_vo_to_activity_wrr"] = {}
         for link_key in potential_link_keys:
             link_potential = sched_data["potential_links"].get_link_potential(link_key)
-            potential_link_to_vo_to_activity_wrr[link_key] = {}
+            sched_data["potential_link_to_vo_to_activity_wrr"][link_key] = {}
             vos = link_to_vo_to_activity_to_queue[link_key].keys()
             for vo_name in vos:
                 activity_shares = self.sched_input.vo_activity_shares[vo_name]
@@ -603,14 +602,20 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                 for activity, weight in activity_shares.items():
                     activity_queued = 0
                     if (
-                        link_key in link_key_to_vo_to_activity_to_nb_queued
-                        and vo_name in link_key_to_vo_to_activity_to_nb_queued[link_key]
-                        and activity
-                        in link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name]
-                    ):
-                        activity_queued = link_key_to_vo_to_activity_to_nb_queued[
+                        link_key
+                        in sched_data["link_key_to_vo_to_activity_to_nb_queued"]
+                        and vo_name
+                        in sched_data["link_key_to_vo_to_activity_to_nb_queued"][
                             link_key
-                        ][vo_name][activity]
+                        ]
+                        and activity
+                        in sched_data["link_key_to_vo_to_activity_to_nb_queued"][
+                            link_key
+                        ][vo_name]
+                    ):
+                        activity_queued = sched_data[
+                            "link_key_to_vo_to_activity_to_nb_queued"
+                        ][link_key][vo_name][activity]
                     activity_active = 0
                     if (
                         link_key in link_key_to_vo_to_activity_to_nb_active
@@ -632,40 +637,43 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                 activity_wrr = WRR(
                     max_active=link_potential.get_max_active(), queues=activity_queues
                 )
-                potential_link_to_vo_to_activity_wrr[link_key][vo_name] = activity_wrr
+                sched_data["potential_link_to_vo_to_activity_wrr"][link_key][
+                    vo_name
+                ] = activity_wrr
 
         # Create link-key -> VO -> activity -> queue-id
-        potential_link_to_vo_to_activity_to_queue_id = {}
-        sched_data["potential_link_to_vo_to_activity_to_queue_id"] = (
-            potential_link_to_vo_to_activity_to_queue_id
-        )
+        sched_data["potential_link_to_vo_to_activity_to_queue_id"] = {}
         for link_key in potential_link_keys:
-            potential_link_to_vo_to_activity_to_queue_id[link_key] = {}
+            sched_data["potential_link_to_vo_to_activity_to_queue_id"][link_key] = {}
             for vo_name, activity_to_queue in link_to_vo_to_activity_to_queue[
                 link_key
             ].items():
-                potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name] = {}
+                sched_data["potential_link_to_vo_to_activity_to_queue_id"][link_key][
+                    vo_name
+                ] = {}
                 for activity, queue in activity_to_queue.items():
-                    potential_link_to_vo_to_activity_to_queue_id[link_key][vo_name][
-                        activity
-                    ] = queue.queue_id
+                    sched_data["potential_link_to_vo_to_activity_to_queue_id"][
+                        link_key
+                    ][vo_name][activity] = queue.queue_id
 
         # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
         prev_run = self.sched_input.opaque_data
         if isinstance(prev_run, PrevRun):
-            potential_links.skip_until_after(prev_run.link_key)
-            if prev_run.link_key in potential_link_to_vo_cbuf:
-                potential_link_to_vo_cbuf[prev_run.link_key].skip_until_after(
-                    prev_run.vo_name
-                )
-            if prev_run.link_key in potential_link_to_vo_to_activity_wrr:
+            sched_data["potential_links"].skip_until_after(prev_run.link_key)
+            if prev_run.link_key in sched_data["potential_link_to_vo_cbuf"]:
+                sched_data["potential_link_to_vo_cbuf"][
+                    prev_run.link_key
+                ].skip_until_after(prev_run.vo_name)
+            if prev_run.link_key in sched_data["potential_link_to_vo_to_activity_wrr"]:
                 if (
                     prev_run.vo_name
-                    in potential_link_to_vo_to_activity_wrr[prev_run.link_key]
+                    in sched_data["potential_link_to_vo_to_activity_wrr"][
+                        prev_run.link_key
+                    ]
                 ):
-                    potential_link_to_vo_to_activity_wrr[prev_run.link_key][
-                        prev_run.vo_name
-                    ].skip_until_after(prev_run.activity)
+                    sched_data["potential_link_to_vo_to_activity_wrr"][
+                        prev_run.link_key
+                    ][prev_run.vo_name].skip_until_after(prev_run.activity)
 
         return sched_data
 
