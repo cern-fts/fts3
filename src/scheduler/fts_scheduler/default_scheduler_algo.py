@@ -384,17 +384,13 @@ class PotentialLinks:
         Returns a map from link to the number of transfers that could potentially be scheduled on
         that link.  The map only contains links that have at least 1 potential transfer.
         """
-        link_to_nb_queued = self._get_link_to_nb_queued()
-        link_key_to_queues = self._get_link_key_to_queues()
+        link_key_to_nb_queued = self._get_link_key_to_nb_queued()
 
         link_key_to_potential = {}
-        for link_key in list(link_key_to_queues.keys()):
-            link_nb_queued = (
-                0 if link_key not in link_to_nb_queued else link_to_nb_queued[link_key]
-            )
+        for link_key, nb_queued in link_key_to_nb_queued.items():
             link_potential = self._get_link_potential(
                 link_key,
-                link_nb_queued,
+                nb_queued,
                 storage_to_outbound_potential,
                 storage_to_inbound_potential,
             )
@@ -402,7 +398,7 @@ class PotentialLinks:
                 link_key_to_potential[link_key] = link_potential
         return link_key_to_potential
 
-    def _get_link_to_nb_queued(self):
+    def _get_link_key_to_nb_queued(self):
         link_to_nb_queued = {}
         for queue in self.sched_input.queues.values():
             if queue.link_key not in link_to_nb_queued:
@@ -410,14 +406,6 @@ class PotentialLinks:
             else:
                 link_to_nb_queued[queue.link_key] += queue.nb_queued
         return link_to_nb_queued
-
-    def _get_link_key_to_queues(self):
-        link_key_to_queues = {}
-        for queue_id, queue in self.sched_input.queues.items():
-            if queue.link_key not in link_key_to_queues:
-                link_key_to_queues[queue.link_key] = {}
-            link_key_to_queues[queue.link_key][queue_id] = queue
-        return link_key_to_queues
 
     def _get_link_potential(
         self,
