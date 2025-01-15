@@ -308,7 +308,7 @@ class PotentialLinks:
     """
 
     def __init__(self, sched_input):
-        self.sched_input = sched_input
+        self._sched_input = sched_input
         self._storage_to_outbound_potential = self._get_storage_to_outbound_potential()
         self._storage_to_inbound_potential = self._get_storage_to_inbound_potential()
         self._link_key_to_potential = self._get_link_key_to_potential(
@@ -375,7 +375,7 @@ class PotentialLinks:
                 and link_potential_key[1] != next_dest_se
             ):
                 break
-            link_config_max_active = self.sched_input.link_limits.get_max_active(
+            link_config_max_active = self._sched_input.link_limits.get_max_active(
                 link_potential_key
             )
             link_potential_max_active = min(
@@ -426,7 +426,7 @@ class PotentialLinks:
 
     def _get_link_key_to_nb_queued(self):
         link_to_nb_queued = {}
-        for queue in self.sched_input.queues.values():
+        for queue in self._sched_input.queues.values():
             if queue.link_key not in link_to_nb_queued:
                 link_to_nb_queued[queue.link_key] = queue.nb_queued
             else:
@@ -446,7 +446,7 @@ class PotentialLinks:
         source_se = link_key[0]
         dest_se = link_key[1]
 
-        link_config_max_active = self.sched_input.link_limits.get_max_active(link_key)
+        link_config_max_active = self._sched_input.link_limits.get_max_active(link_key)
         source_out_potential = storage_to_outbound_potential[source_se]
         dest_in_potential = storage_to_inbound_potential[dest_se]
         max_active = min(
@@ -464,14 +464,14 @@ class PotentialLinks:
 
     def _get_link_optimizer_limit(self, link_key):
         return (
-            self.sched_input.optimizer_limits[link_key]["active"]
-            if link_key in self.sched_input.optimizer_limits
+            self._sched_input.optimizer_limits[link_key]["active"]
+            if link_key in self._sched_input.optimizer_limits
             else None
         )
 
     def _get_link_nb_active(self, link_key):
         result = 0
-        for stats in self.sched_input.active_stats:
+        for stats in self._sched_input.active_stats:
             source_se = stats["source_se"]
             dest_se = stats["dest_se"]
             nb_active = stats["nb_active"]
@@ -484,7 +484,7 @@ class PotentialLinks:
         storage_to_outbound_active = self._get_storage_to_outbound_active()
         result = {}
         for storage in storages_with_outbound_queues:
-            max_active = self.sched_input.storage_limits.get_outbound_max_active(
+            max_active = self._sched_input.storage_limits.get_outbound_max_active(
                 storage
             )
             nb_active = (
@@ -500,7 +500,9 @@ class PotentialLinks:
         storage_to_inbound_active = self._get_storage_to_inbound_active()
         result = {}
         for storage in storages_with_inbound_queues:
-            max_active = self.sched_input.storage_limits.get_inbound_max_active(storage)
+            max_active = self._sched_input.storage_limits.get_inbound_max_active(
+                storage
+            )
             nb_active = (
                 0
                 if storage not in storage_to_inbound_active
@@ -511,19 +513,19 @@ class PotentialLinks:
 
     def _get_storages_with_outbound_queues(self):
         result = set()
-        for queue in self.sched_input.queues.values():
+        for queue in self._sched_input.queues.values():
             result.add(queue.link_key[0])  # link_key = (source_se, dest_se)
         return result
 
     def _get_storages_with_inbound_queues(self):
         result = set()
-        for queue in self.sched_input.queues.values():
+        for queue in self._sched_input.queues.values():
             result.add(queue.link_key[1])  # link_key = (source_se, dest_se)
         return result
 
     def _get_storage_to_outbound_active(self):
         result = {}
-        for stats in self.sched_input.active_stats:
+        for stats in self._sched_input.active_stats:
             storage = stats["source_se"]
             nb_active = stats["nb_active"]
             result[storage] = (
@@ -533,7 +535,7 @@ class PotentialLinks:
 
     def _get_storage_to_inbound_active(self):
         result = {}
-        for stats in self.sched_input.active_stats:
+        for stats in self._sched_input.active_stats:
             storage = stats["dest_se"]
             nb_active = stats["nb_active"]
             result[storage] = (
