@@ -314,19 +314,19 @@ class PotentialLinks:
         self._link_key_to_potential = self._get_link_key_to_potential(
             self._storage_to_outbound_potential, self._storage_to_inbound_potential
         )
-        self._potential_link_key_cbuf = CircularBuffer()
+        self.link_key_cbuf = CircularBuffer()
 
         for link_key in sorted(self._link_key_to_potential.keys()):
-            self._potential_link_key_cbuf.append(link_key)
+            self.link_key_cbuf.append(link_key)
 
     def __bool__(self):
-        return bool(self._potential_link_key_cbuf)
+        return bool(self.link_key_cbuf)
 
     def skip_until_after(self, link_key):
         """
         Skip through this Weight Round-Robin scheduler until after the specified link
         """
-        self._potential_link_key_cbuf.skip_until_after(link_key)
+        self.link_key_cbuf.skip_until_after(link_key)
 
     def get_link_keys_with_potential(self):
         """
@@ -344,7 +344,7 @@ class PotentialLinks:
         """
         Returns the next link to be scheduled
         """
-        next_link_key = self._potential_link_key_cbuf.get_next()
+        next_link_key = self.link_key_cbuf.get_next()
         next_source_se = next_link_key[0]
         next_dest_se = next_link_key[1]
 
@@ -398,8 +398,8 @@ class PotentialLinks:
             if potential.get_potential() == 0
         ]
         for staturated_link_key in staturated_links:
-            if staturated_link_key in self._potential_link_key_cbuf:
-                self._potential_link_key_cbuf.remove_value(staturated_link_key)
+            if staturated_link_key in self.link_key_cbuf:
+                self.link_key_cbuf.remove_value(staturated_link_key)
 
         return next_link_key
 
