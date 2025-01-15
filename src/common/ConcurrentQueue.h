@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,40 +18,78 @@
  * limitations under the License.
  */
 
-#ifndef CONCURRENT_QUEUE_H
-#define CONCURRENT_QUEUE_H
+#pragma once
 
 #include <queue>
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
+#include <condition_variable>
+#include <mutex>
+#include <cassert>
+#include "common/Logger.h"
 
 namespace fts3 {
 namespace common {
 
-
+template<typename T>
 class ConcurrentQueue {
 private:
-    static ConcurrentQueue *single;
-    boost::mutex mutex;
-    boost::condition_variable cv;
+    std::queue<T> theQueue;
 
-    ConcurrentQueue();
+    std::mutex mutex;
+    std::condition_variable_any cv;
+    std::stop_token stop_token;
+
+    ConcurrentQueue() {};
 
 public:
     static const size_t MaxElements = 20000;
 
-    static ConcurrentQueue *getInstance();
+    static ConcurrentQueue<T>& getInstance()
+    {
+        static ConcurrentQueue<T> instance;
+        return instance;
+    }
 
-    std::queue<std::string> theQueue;
+    void set_stop_token(std::stop_token token)
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        stop_token = token;
+    }
 
     /// Return true if the queue is empty
-    bool empty();
+    bool empty()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return theQueue.empty();
+    }
 
     /// Return the size of the queue
-    size_t size();
+    size_t size()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return theQueue.size();
+    }
 
     /// Push a new element into the queue
-    void push(const std::string &value);
+    void push(const T &value)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        if (theQueue.size() < ConcurrentQueue::MaxElements)
+            theQueue.push(value);
+        lock.unlock();
+
+        cv.notify_all();
+    }
+
+    void push(T &&value)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        if (theQueue.size() < ConcurrentQueue::MaxElements)
+            theQueue.push(std::move(value));
+        lock.unlock();
+
+        cv.notify_all();
+    }
+
 
     /// Pop an element off the queue
     /// If wait is 0, return null if the queue is empty, otherwise wait until an item is placed in the queue
@@ -59,11 +97,44 @@ public:
     ///  wait = -1 => block until an item is placed in the queue, and return it
     ///  wait = 0  => don't block, return null if the queue is empty
     /// wait > 0  => block for <block> seconds
-    std::string pop(const int wait = -1);
+    T pop(const int wait = -1)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+
+        if (theQueue.empty()) {
+            if (wait == 0) {
+                return T();
+            } else if (wait > 0) {
+                cv.wait_for(lock, stop_token, std::chrono::seconds(wait), [this] { return !theQueue.empty(); });
+            } else if (wait == -1) {
+                cv.wait(lock, stop_token, [this] {return !theQueue.empty();});
+            }
+
+            if (theQueue.empty()) {
+                return T();
+            }
+        }
+
+        T ret(std::move(theQueue.front()));
+        theQueue.pop();
+        lock.unlock();
+
+        cv.notify_all();
+        return ret;
+    }
+
+    void drain()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        if (theQueue.empty()) {
+            return;
+        }
+
+        const size_t queue_size = theQueue.size();
+        cv.wait(lock, stop_token, [this, &queue_size] {return theQueue.size() < queue_size;});
+    }
 };
 
 
 }
 }
-
-#endif

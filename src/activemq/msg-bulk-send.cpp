@@ -27,6 +27,7 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
+#include "msg-bus/consumer.h"
 
 #include "BrokerConfig.h"
 #include "MsgPipe.h"
@@ -54,8 +55,8 @@ static void DoServer(bool isDaemon) throw()
         activemq::library::ActiveMQCPP::initializeLibrary();
 
         //initialize here to avoid race conditions
-        ConcurrentQueue::getInstance();
 
+        ConcurrentQueue<MonitoringMessage>::getInstance();
         MsgPipe pipeMsg1(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         MsgProducer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"), config);
 
