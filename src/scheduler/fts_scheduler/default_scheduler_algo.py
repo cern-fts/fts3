@@ -345,10 +345,15 @@ class PotentialLinks:
         Returns the next link to be scheduled
         """
         next_link_key = self.link_key_cbuf.get_next()
+        self._update_storage_potential(next_link_key)
+        self._update_link_potential(next_link_key)
+
+        return next_link_key
+
+    def _update_storage_potential(self, next_link_key):
         next_source_se = next_link_key[0]
         next_dest_se = next_link_key[1]
 
-        # Update storages to reflect remaining work to be done
         saturated_storages = []
         self._storage_to_outbound_potential[next_source_se] -= 1
         if self._storage_to_outbound_potential[next_source_se] < 0:
@@ -365,18 +370,17 @@ class PotentialLinks:
         if self._storage_to_inbound_potential[next_dest_se] == 0:
             saturated_storages.append(next_dest_se)
 
-        # Update link potential to reflect remaining work to be done
+    def _update_link_potential(self, next_link_key):
         self._link_key_to_potential[next_link_key].scheduled(1)
 
         # Apply storage potential updates to link potentials
-        for link_potential_key, link_potential in self._link_key_to_potential.items():
-            if (
-                link_potential_key[0] != next_source_se
-                and link_potential_key[1] != next_dest_se
-            ):
+        next_source_se = next_link_key[0]
+        next_dest_se = next_link_key[1]
+        for link_key, link_potential in self._link_key_to_potential.items():
+            if link_key[0] != next_source_se and link_key[1] != next_dest_se:
                 break
             link_config_max_active = self._sched_input.link_limits.get_max_active(
-                link_potential_key
+                link_key
             )
             link_potential_max_active = min(
                 link_config_max_active,
@@ -400,8 +404,6 @@ class PotentialLinks:
         for staturated_link_key in staturated_links:
             if staturated_link_key in self.link_key_cbuf:
                 self.link_key_cbuf.remove_value(staturated_link_key)
-
-        return next_link_key
 
     def _get_link_key_to_potential(
         self, storage_to_outbound_potential, storage_to_inbound_potential
