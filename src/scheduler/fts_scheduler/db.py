@@ -102,6 +102,8 @@ def get_scheduler_input_from_db(dbconn, opaque_data) -> SchedulerInput:
         storage_limits=_get_storage_limits_from_db(dbconn)[0],
         vo_activity_shares=_get_vo_activity_shares_from_db(dbconn)[0],
         link_vo_shares=_get_link_vo_shares_from_db(dbconn)[0],
+        inbound_se_shares=_get_inbound_se_shares(dbconn)[0],
+        inbound_se_default_weights=_get_inbound_se_default_weights(dbconn)[0],
     )
 
 
@@ -380,6 +382,63 @@ def _get_link_vo_shares_from_db(dbconn):
         link_vo_shares[link_key].append(vo_share)
 
     return link_vo_shares, db_sec
+
+
+def _get_inbound_se_shares(dbconn):
+    sql = """
+        SELECT
+            source_se,
+            dest_se,
+            inbound_weight
+        FROM
+            t_link_config
+        WHERE
+            inbound_weight IS NOT NULL
+    """
+    start_db = time.time()
+    cursor = dbconn.cursor()
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+    db_sec = time.time() - start_db
+
+    dst_to_src_to_weight = {}
+    for row in rows:
+        source_se = row[0]
+        dest_se = row[1]
+        inbound_weight = row[2]
+
+        if dest_se not in dst_to_src_to_weight:
+            dst_to_src_to_weight[dest_se] = {}
+
+        dst_to_src_to_weight[dest_se][source_se] = inbound_weight
+
+    return dst_to_src_to_weight, db_sec
+
+
+def _get_inbound_se_default_weights(dbconn):
+    sql = """
+        SELECT
+            storage,
+            inbound_default_weight
+        FROM
+            t_se
+        WHERE
+            inbound_default_weight IS NOT NULL
+    """
+    start_db = time.time()
+    cursor = dbconn.cursor()
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+    db_sec = time.time() - start_db
+
+    storage_to_default_weight = {}
+    for row in rows:
+        storage = row[0]
+        inbound_default_weight = row[1]
+
+        storage_to_default_weight[storage] = inbound_default_weight
+
+    return storage_to_default_weight, db_sec
 
 
 def get_scheduler_fqdn_from_db(dbconn):
