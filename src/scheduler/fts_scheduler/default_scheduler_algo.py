@@ -206,15 +206,15 @@ class WRR:
         self._next_idx = 0 if self._next_idx == len(self._queues) else self._next_idx
 
 
-class LinkPotentialException(Exception):
+class TransferPotentialException(Exception):
     """
     Link-potential exception
     """
 
 
-class LinkPotential:
+class TransferPotential:
     """
-    The potential of a link
+    The potential of a link or storage endpoint to carry out new file-transfers
     """
 
     def __init__(self, max_active: int, nb_active: int, nb_queued: int):
@@ -225,7 +225,7 @@ class LinkPotential:
 
     def __repr__(self):
         return (
-            "LinkPotential("
+            "TransferPotential("
             f"max_active={self._max_active},"
             f"nb_active={self._nb_active},"
             f"nb_queued={self._nb_queued},"
@@ -235,7 +235,7 @@ class LinkPotential:
 
     def _calc_potential(self):
         """
-        Calculates the number of file-transfers that could porentially be scheduled
+        Calculates the number of file-transfers that could potentially be scheduled
         """
         self._potential = min(
             self._nb_queued, max(0, self._max_active - self._nb_active)
@@ -261,23 +261,23 @@ class LinkPotential:
 
     def get_potential(self) -> int:
         """
-        Returns the number of file-transfers that could porentially be scheduled
+        Returns the number of file-transfers that could potentially be scheduled
         """
         return self._potential
 
     def scheduled(self, nb_scheduled: int):
         """
-        Updates the potential of the link taking into account the specified number of scheduled
+        Updates the transfer-potential by taking into account the specified number of scheduled
         file-transfers
         """
         if nb_scheduled > self._nb_queued:
-            raise LinkPotentialException(
-                "LinkPotential.update(): nb_scheduled > nb_queued: "
+            raise TransferPotentialException(
+                "TransferPotential.update(): nb_scheduled > nb_queued: "
                 f"nb_scheduled={nb_scheduled} nb_queued={self._nb_queued}"
             )
         if self._nb_active + nb_scheduled > self._max_active:
-            raise LinkPotentialException(
-                "LinkPotential.update(): nb_active + nb_scheduled > max_active:"
+            raise TransferPotentialException(
+                "TransferPotential.update(): nb_active + nb_scheduled > max_active:"
                 f"nb_active={self._nb_active} "
                 f"nb_scheduled={nb_scheduled} "
                 f"max_active={self._max_active}"
@@ -288,8 +288,8 @@ class LinkPotential:
 
     def set_max_active(self, max_active):
         """
-        Updates the potential of the link taking into account the specified maximum number of active
-        file-transfers
+        Updates the transfer-potential by taking into account the specified maximum number of
+        active file-transfers
         """
         self._max_active = max_active
         self._calc_potential()
@@ -334,7 +334,7 @@ class PotentialLinks:
         """
         return list(self._link_key_to_potential.keys())
 
-    def get_link_potential(self, link_key) -> LinkPotential:
+    def get_link_potential(self, link_key) -> TransferPotential:
         """
         Returns the portential of teh specified link
         """
@@ -459,7 +459,7 @@ class PotentialLinks:
             max_active = min(max_active, link_optimizer_limit)
 
         link_nb_active = self._get_link_nb_active(link_key)
-        link_potential = LinkPotential(
+        link_potential = TransferPotential(
             max_active=max_active, nb_active=link_nb_active, nb_queued=link_nb_queued
         )
         return link_potential
