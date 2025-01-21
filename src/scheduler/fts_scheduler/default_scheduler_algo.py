@@ -355,19 +355,11 @@ class PotentialLinks:
         next_dest_se = next_link_key[1]
 
         saturated_storages = []
-        self._storage_to_outbound_potential[next_source_se] -= 1
-        if self._storage_to_outbound_potential[next_source_se] < 0:
-            raise PotentialLinksException(
-                f"Outbound potential of storage went negative: next_source_se={next_source_se}"
-            )
-        if self._storage_to_outbound_potential[next_source_se] == 0:
+        self._storage_to_outbound_potential[next_source_se].scheduled(1)
+        if self._storage_to_outbound_potential[next_source_se].get_potential() == 0:
             saturated_storages.append(next_source_se)
-        self._storage_to_inbound_potential[next_dest_se] -= 1
-        if self._storage_to_inbound_potential[next_dest_se] < 0:
-            raise PotentialLinksException(
-                f"Inbound potential of storage went negative: next_dest_se={next_dest_se}"
-            )
-        if self._storage_to_inbound_potential[next_dest_se] == 0:
+        self._storage_to_inbound_potential[next_dest_se].scheduled(1)
+        if self._storage_to_inbound_potential[next_dest_se].get_potential() == 0:
             saturated_storages.append(next_dest_se)
 
     def _update_link_potential(self, next_link_key):
@@ -384,8 +376,8 @@ class PotentialLinks:
             )
             link_potential_max_active = min(
                 link_config_max_active,
-                self._storage_to_outbound_potential[next_source_se],
-                self._storage_to_inbound_potential[next_dest_se],
+                self._storage_to_outbound_potential[next_source_se].get_potential(),
+                self._storage_to_inbound_potential[next_dest_se].get_potential(),
             )
             link_optimizer_limit = self._get_link_optimizer_limit(next_link_key)
             link_potential_max_active = (
@@ -452,7 +444,9 @@ class PotentialLinks:
         source_out_potential = storage_to_outbound_potential[source_se]
         dest_in_potential = storage_to_inbound_potential[dest_se]
         max_active = min(
-            link_config_max_active, source_out_potential, dest_in_potential
+            link_config_max_active,
+            source_out_potential.get_potential(),
+            dest_in_potential.get_potential(),
         )
         link_optimizer_limit = self._get_link_optimizer_limit(link_key)
         if link_optimizer_limit is not None:
@@ -481,9 +475,28 @@ class PotentialLinks:
             result += nb_active if link_key == stats_link_key else 0
         return result
 
+    def _get_storage_to_outbound_to_nb_queued(self):
+        result = {}
+        for queue in self._sched_input.queues.values():
+            queue_source_se = queue.link_key[0]  # link_key = (source_se, dest_se)
+            if queue_source_se not in result:
+                result[queue_source_se] = 0
+            result[queue_source_se] += queue.nb_queued
+        return result
+
+    def _get_storage_to_inbound_to_nb_queued(self):
+        result = {}
+        for queue in self._sched_input.queues.values():
+            queue_dest_se = queue.link_key[1]  # link_key = (source_se, dest_se)
+            if queue_dest_se not in result:
+                result[queue_dest_se] = 0
+            result[queue_dest_se] += queue.nb_queued
+        return result
+
     def _get_storage_to_outbound_potential(self):
         storages_with_outbound_queues = self._get_storages_with_outbound_queues()
         storage_to_outbound_active = self._get_storage_to_outbound_active()
+        storage_to_outbound_nb_queued = self._get_storage_to_outbound_to_nb_queued()
         result = {}
         for storage in storages_with_outbound_queues:
             max_active = self._sched_input.storage_limits.get_outbound_max_active(
@@ -494,12 +507,21 @@ class PotentialLinks:
                 if storage not in storage_to_outbound_active
                 else storage_to_outbound_active[storage]
             )
-            result[storage] = 0 if nb_active >= max_active else max_active - nb_active
+            nb_queued = (
+                0
+                if storage not in storage_to_outbound_nb_queued
+                else storage_to_outbound_nb_queued[storage]
+            )
+
+            result[storage] = TransferPotential(
+                max_active=max_active, nb_active=nb_active, nb_queued=nb_queued
+            )
         return result
 
     def _get_storage_to_inbound_potential(self):
         storages_with_inbound_queues = self._get_storages_with_inbound_queues()
         storage_to_inbound_active = self._get_storage_to_inbound_active()
+        storage_to_inbound_nb_queued = self._get_storage_to_inbound_to_nb_queued()
         result = {}
         for storage in storages_with_inbound_queues:
             max_active = self._sched_input.storage_limits.get_inbound_max_active(
@@ -510,7 +532,15 @@ class PotentialLinks:
                 if storage not in storage_to_inbound_active
                 else storage_to_inbound_active[storage]
             )
-            result[storage] = 0 if nb_active >= max_active else max_active - nb_active
+            nb_queued = (
+                0
+                if storage not in storage_to_inbound_nb_queued
+                else storage_to_inbound_nb_queued[storage]
+            )
+
+            result[storage] = TransferPotential(
+                max_active=max_active, nb_active=nb_active, nb_queued=nb_queued
+            )
         return result
 
     def _get_storages_with_outbound_queues(self):
