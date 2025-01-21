@@ -2,6 +2,8 @@
 Default file-transfer scheduling algorithm
 """
 
+# pylint:disable=too-many-lines
+
 from typing import Any
 from dataclasses import dataclass
 from scheduler_algo import SchedulerAlgo, SchedulerOutput
@@ -837,30 +839,21 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
     def _get_link_to_vo_to_activity_to_queue(self):
         result = {}
         for queue in self.sched_input.queues.values():
-            link_key = queue.link_key
-            vo_name = queue.vo_name
-            activity = queue.activity
-
-            if link_key not in result:
-                result[link_key] = {}
-            if vo_name not in result[link_key]:
-                result[link_key][vo_name] = {}
-            result[link_key][vo_name][activity] = queue
+            if queue.link_key not in result:
+                result[queue.link_key] = {}
+            if queue.vo_name not in result[queue.link_key]:
+                result[queue.link_key][queue.vo_name] = {}
+            result[queue.link_key][queue.vo_name][queue.activity] = queue
         return result
 
     def _get_link_key_to_vo_to_activity_to_nb_queued(self):
         result = {}
         for queue in self.sched_input.queues.values():
-            link_key = queue.link_key
-            vo_name = queue.vo_name
-            activity = queue.activity
-            nb_queued = queue.nb_queued
-
-            if link_key not in result:
-                result[link_key] = {}
-            if vo_name not in result[link_key]:
-                result[link_key][vo_name] = {}
-            result[link_key][vo_name][activity] = nb_queued
+            if queue.link_key not in result:
+                result[queue.link_key] = {}
+            if queue.vo_name not in result[queue.link_key]:
+                result[queue.link_key][queue.vo_name] = {}
+            result[queue.link_key][queue.vo_name][queue.activity] = queue.nb_queued
         return result
 
     def _get_link_optimizer_limit(self, link_key):
@@ -946,43 +939,73 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         for link_key in sorted(potential_links.get_link_keys_with_potential()):
             result[link_key] = {}
             for vo_name in link_to_vo_to_activity_to_queue[link_key].keys():
+                activity_shares = (
+                    self.sched_input.vo_activity_shares[vo_name]
+                    if vo_name in self.sched_input.vo_activity_shares
+                    else {"default": 1}
+                )
+                if "default" not in activity_shares:
+                    raise SchedulingException(
+                        f"Default activity share missing from VO activity-shares: vo_name={vo_name}"
+                    )
+
+                self._spread_default_weight_over_weightless_activities(
+                    link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name].keys(),
+                    activity_shares,
+                )
                 activity_queues = []
-                for activity, weight in self.sched_input.vo_activity_shares[
-                    vo_name
-                ].items():
-                    activity_queued = 0
-                    if (
-                        link_key in link_key_to_vo_to_activity_to_nb_queued
+                for activity, weight in activity_shares.items():
+                    queued = (
+                        link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name][
+                            activity
+                        ]
+                        if link_key in link_key_to_vo_to_activity_to_nb_queued
                         and vo_name in link_key_to_vo_to_activity_to_nb_queued[link_key]
                         and activity
                         in link_key_to_vo_to_activity_to_nb_queued[link_key][vo_name]
-                    ):
-                        activity_queued = link_key_to_vo_to_activity_to_nb_queued[
-                            link_key
-                        ][vo_name][activity]
-                    activity_active = 0
-                    if (
-                        link_key in link_key_to_vo_to_activity_to_nb_active
+                        else 0
+                    )
+                    active = (
+                        link_key_to_vo_to_activity_to_nb_active[link_key][vo_name][
+                            activity
+                        ]
+                        if link_key in link_key_to_vo_to_activity_to_nb_active
                         and vo_name in link_key_to_vo_to_activity_to_nb_active[link_key]
                         and activity
                         in link_key_to_vo_to_activity_to_nb_active[link_key][vo_name]
-                    ):
-                        activity_active = link_key_to_vo_to_activity_to_nb_active[
-                            link_key
-                        ][vo_name][activity]
-
-                    activity_queue = WRRQ(
-                        q_id=activity,
-                        weight=weight,
-                        queued=activity_queued,
-                        active=activity_active,
+                        else 0
                     )
-                    activity_queues.append(activity_queue)
-                activity_wrr = WRR(
+
+                    activity_queues.append(
+                        WRRQ(q_id=activity, weight=weight, queued=queued, active=active)
+                    )
+                result[link_key][vo_name] = WRR(
                     max_active=potential_links.get_link_potential(
                         link_key
                     ).get_max_active(),
                     queues=activity_queues,
                 )
-                result[link_key][vo_name] = activity_wrr
         return result
+
+    @staticmethod
+    def _spread_default_weight_over_weightless_activities(
+        queued_activities, activity_shares
+    ):
+        """
+        Modifies the specified activity shares by equally spreading the weight of the default
+        activity over the default activity itself and activities that have no configured weight
+        """
+        weightless_activities = {
+            activity
+            for activity in queued_activities
+            if activity not in activity_shares
+        }
+        if weightless_activities:
+            nb_weightless_activities_and_default = len(weightless_activities) + 1
+            total_default_weight = activity_shares["default"]
+            split_default_weight = (
+                total_default_weight / nb_weightless_activities_and_default
+            )
+            activity_shares["default"] = split_default_weight
+            for weightless_activity in weightless_activities:
+                activity_shares[weightless_activity] = split_default_weight
