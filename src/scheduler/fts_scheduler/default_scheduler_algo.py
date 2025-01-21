@@ -208,7 +208,7 @@ class WRR:
 
 class TransferPotentialException(Exception):
     """
-    Link-potential exception
+    Transfer-potential exception
     """
 
 
