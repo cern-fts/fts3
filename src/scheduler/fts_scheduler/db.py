@@ -103,7 +103,6 @@ def get_scheduler_input_from_db(dbconn, opaque_data) -> SchedulerInput:
         vo_activity_shares=_get_vo_activity_shares_from_db(dbconn)[0],
         link_vo_shares=_get_link_vo_shares_from_db(dbconn)[0],
         inbound_se_shares=_get_inbound_se_shares(dbconn)[0],
-        inbound_se_default_weights=_get_inbound_se_default_weights(dbconn)[0],
     )
 
 
@@ -394,6 +393,13 @@ def _get_inbound_se_shares(dbconn):
             t_link_config
         WHERE
             inbound_weight IS NOT NULL
+        UNION SELECT
+            'default' as source_se,
+             storage as dest_se,
+             inbound_default_weight as inbound_weight
+        FROM t_se
+        WHERE
+             inbound_default_weight IS NOT NULL
     """
     start_db = time.time()
     cursor = dbconn.cursor()
@@ -412,33 +418,14 @@ def _get_inbound_se_shares(dbconn):
 
         dst_to_src_to_weight[dest_se][source_se] = inbound_weight
 
+    for dest_se, src_to_weight in dst_to_src_to_weight.items():
+        if "default" not in src_to_weight:
+            raise DbException(
+                "Default weight missing from inbound storage-endpoint shares: "
+                f"storage={dest_se}"
+            )
+
     return dst_to_src_to_weight, db_sec
-
-
-def _get_inbound_se_default_weights(dbconn):
-    sql = """
-        SELECT
-            storage,
-            inbound_default_weight
-        FROM
-            t_se
-        WHERE
-            inbound_default_weight IS NOT NULL
-    """
-    start_db = time.time()
-    cursor = dbconn.cursor()
-    cursor.execute(sql)
-    rows = cursor.fetchall()
-    db_sec = time.time() - start_db
-
-    storage_to_default_weight = {}
-    for row in rows:
-        storage = row[0]
-        inbound_default_weight = row[1]
-
-        storage_to_default_weight[storage] = inbound_default_weight
-
-    return storage_to_default_weight, db_sec
 
 
 def get_scheduler_fqdn_from_db(dbconn):
