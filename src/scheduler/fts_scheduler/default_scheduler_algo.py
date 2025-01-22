@@ -4,6 +4,7 @@ Default file-transfer scheduling algorithm
 
 # pylint:disable=too-many-lines
 
+import math
 from typing import Any
 from dataclasses import dataclass
 from scheduler_algo import SchedulerAlgo, SchedulerOutput
@@ -132,7 +133,9 @@ class WRR:
         found_active_queue = False
         for _ in range(len(self._queues)):
             queue = self._queues[self._next_idx]
-            target = round(queue.weight / self._total_weight * self._max_active)
+            target = math.floor(
+                queue.weight / self._total_weight * self._max_active + 0.5
+            )
             queue_is_active = queue.active < target
             if queue_is_active:
                 found_active_queue = True
