@@ -27,7 +27,7 @@ class CircularBuffer:
 
     def append(self, value):
         """
-        Appends the specified value to the end of teh circular buffer
+        Appends the specified value to the end of the circular buffer
         """
         self._buf.append(value)
 
@@ -301,7 +301,7 @@ class TransferPotential:
             )
         if self._nb_active + nb_scheduled > self._max_active:
             raise TransferPotentialException(
-                "TransferPotential.update(): nb_active + nb_scheduled > max_active:"
+                "TransferPotential.update(): nb_active + nb_scheduled > max_active: "
                 f"nb_active={self._nb_active} "
                 f"nb_scheduled={nb_scheduled} "
                 f"max_active={self._max_active}"
@@ -360,7 +360,7 @@ class PotentialLinks:
 
     def get_link_potential(self, link_key) -> TransferPotential:
         """
-        Returns the portential of teh specified link
+        Returns the potential of the specified link
         """
         return self._link_key_to_potential[link_key]
 
@@ -369,24 +369,36 @@ class PotentialLinks:
         Returns the next link to be scheduled
         """
         next_link_key = self.link_key_cbuf.get_next()
-        self._update_storage_potential(next_link_key)
-        self._update_link_potential(next_link_key)
+
+        # Update storage and link potentials
+        self._storage_to_outbound_potential[next_link_key[0]].scheduled(1)
+        self._storage_to_inbound_potential[next_link_key[1]].scheduled(1)
+        self._update_link_potential(
+            next_link_key
+        )  # Links must be updated AFTER storages
+
+        # Remove staturated storages
+        if not self._storage_to_outbound_potential[next_link_key[0]].get_potential():
+            del self._storage_to_outbound_potential[next_link_key[0]]
+        if not self._storage_to_inbound_potential[next_link_key[1]].get_potential():
+            del self._storage_to_inbound_potential[next_link_key[1]]
+
+        # Remove saturated links
+        staturated_links = [
+            link_key
+            for link_key, potential in self._link_key_to_potential.items()
+            if potential.get_potential() == 0
+        ]
+        for staturated_link_key in staturated_links:
+            if staturated_link_key in self.link_key_cbuf:
+                self.link_key_cbuf.remove_value(staturated_link_key)
 
         return next_link_key
 
-    def _update_storage_potential(self, next_link_key):
-        next_source_se = next_link_key[0]
-        next_dest_se = next_link_key[1]
-
-        saturated_storages = []
-        self._storage_to_outbound_potential[next_source_se].scheduled(1)
-        if self._storage_to_outbound_potential[next_source_se].get_potential() == 0:
-            saturated_storages.append(next_source_se)
-        self._storage_to_inbound_potential[next_dest_se].scheduled(1)
-        if self._storage_to_inbound_potential[next_dest_se].get_potential() == 0:
-            saturated_storages.append(next_dest_se)
-
     def _update_link_potential(self, next_link_key):
+        """
+        Update link potentials.  This method assumes storage potentials have already been updated.
+        """
         self._link_key_to_potential[next_link_key].scheduled(1)
 
         # Apply storage potential updates to link potentials
@@ -411,16 +423,6 @@ class PotentialLinks:
                 else link_potential_max_active
             )
             link_potential.set_max_active(link_potential_max_active)
-
-        # Remove saturated links from circular buffer
-        staturated_links = [
-            link_key
-            for link_key, potential in self._link_key_to_potential.items()
-            if potential.get_potential() == 0
-        ]
-        for staturated_link_key in staturated_links:
-            if staturated_link_key in self.link_key_cbuf:
-                self.link_key_cbuf.remove_value(staturated_link_key)
 
     def _get_link_key_to_potential(
         self, storage_to_outbound_potential, storage_to_inbound_potential
