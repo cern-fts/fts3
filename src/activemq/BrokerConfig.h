@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 
 
-#ifndef FTS3_BROKERCONFIG_H
-#define FTS3_BROKERCONFIG_H
+#pragma once
 
 #include <boost/program_options.hpp>
 
@@ -31,9 +30,28 @@ public:
     /// Get the log full path
     std::string GetLogFilePath() const;
 
+    /// Get the broker host
+    std::string GetBroker() const;
+
     /// Get the broker URI in a format that is suitable for createCMSConnectionFactory,
     /// depending on the configuration
     std::string GetBrokerURI() const;
+
+    /// Get the STOMP port used by the Broker
+    std::string GetBrokerStompPort() const;
+
+    /// Get the STOMP/SSL port used by the Broker
+    std::string GetBrokerStompSslPort() const;
+
+    /// Get the connection string in a format that is suitable for createCMSConnectionFactory,
+    /// depending on the provided broker hostname
+    std::string GetConnectionString(const std::string &broker) const;
+
+    unsigned int GetMessageQueueCapacity() const;
+
+    unsigned int GetMessageQueueBatchSize() const;
+
+    unsigned int GetBrokerCheckInterval() const;
 
     /// Return true if user/password credentials must be used
     bool UseBrokerCredentials() const;
@@ -62,6 +80,9 @@ public:
     /// Destination for optimizer updates
     std::string GetOptimizerDestination() const;
 
+    /// Resolve broker alias
+    std::vector<std::string> resolve_dns_alias(const std::string &hostname) const;
+
     /// Messages time-to-live, in hours
     int GetTTL() const;
 
@@ -83,6 +104,3 @@ public:
     /// Password for the client cert and private key
     std::string GetClientKeyStorePassword() const;
 };
-
-
-#endif //FTS3_BROKERCONFIG_H
