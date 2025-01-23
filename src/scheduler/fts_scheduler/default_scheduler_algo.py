@@ -131,17 +131,36 @@ class WRR:
 
         # Find the next active-queue
         found_active_queue = False
+        found_unrounded_target_above_zero = False
         for _ in range(len(self._queues)):
             queue = self._queues[self._next_idx]
-            target = math.floor(
-                queue.weight / self._total_weight * self._max_active + 0.5
+            unrounded_target = queue.weight / self._total_weight * self._max_active
+            found_unrounded_target_above_zero = (
+                found_unrounded_target_above_zero or unrounded_target > 0
             )
+            target = math.floor(unrounded_target + 0.5)
             queue_is_active = queue.active < target
             if queue_is_active:
                 found_active_queue = True
                 break
             # Skip dormant queue
             self._next_idx = (self._next_idx + 1) % len(self._queues)
+
+        # Try again if at least one target was above 0 because all targets may have been < 0.5
+        if not found_active_queue and found_unrounded_target_above_zero:
+            # Try again because all targets were less than 0.5
+            found_active_queue = False
+            for _ in range(len(self._queues)):
+                queue = self._queues[self._next_idx]
+                unrounded_target = queue.weight / self._total_weight * self._max_active
+                target = 1 if unrounded_target > 0 else 0
+                queue_is_active = queue.active < target
+                if queue_is_active:
+                    found_active_queue = True
+                    break
+                # Skip dormant queue
+                self._next_idx = (self._next_idx + 1) % len(self._queues)
+
         if not found_active_queue:
             raise WRRException(
                 f"next_queue_id(): Failed to find an active queue: {self}"
