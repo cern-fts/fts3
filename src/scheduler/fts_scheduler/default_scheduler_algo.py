@@ -393,8 +393,9 @@ class PotentialLinks:
         next_source_se = next_link_key[0]
         next_dest_se = next_link_key[1]
         for link_key, link_potential in self._link_key_to_potential.items():
+            # Ignore link if not involved
             if link_key[0] != next_source_se and link_key[1] != next_dest_se:
-                break
+                continue
             link_config_max_active = self._sched_input.link_limits.get_max_active(
                 link_key
             )
