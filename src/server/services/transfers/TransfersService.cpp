@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,6 +18,9 @@
  * limitations under the License.
  */
 
+#include <ctime>
+#include <random>
+
 #include "TransfersService.h"
 #include "VoShares.h"
 
@@ -34,9 +37,8 @@
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"
 
-#include <msg-bus/producer.h>
+#include "msg-bus/producer.h"
 
-#include <ctime>
 
 using namespace fts3::common;
 
@@ -339,7 +341,9 @@ void TransfersService::executeUrlCopy()
         time_t start = time(0); //std::chrono::system_clock::now();
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
-        std::random_shuffle(queues.begin(), queues.end());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(queues.begin(), queues.end(), g);
         // Apply VO shares at this level. Basically, if more than one VO is used the same link,
         // pick one each time according to their respective weights
         queues = applyVoShares(queues, unschedulable);
