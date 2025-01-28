@@ -38,6 +38,7 @@ LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), 
     int tokenSocketTimeout_ms = 60 * 1000;
     zmqTokenSocket.set(zmq::sockopt::rcvtimeo, tokenSocketTimeout_ms);
     zmqTokenSocket.set(zmq::sockopt::sndtimeo, tokenSocketTimeout_ms);
+    zmqTokenSocket.set(zmq::sockopt::req_relaxed, 1);
     zmqTokenSocket.connect(tokenAddress.c_str());
 }
 
@@ -437,8 +438,12 @@ std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::s
 
         if ((attempts > 0) && (now < nextAttempt)) {
             auto interval = std::min(nextAttempt, end) - now;
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Will sleep for " << interval << " seconds!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "token-refresh request: Will sleep for " << interval << " seconds!" << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(interval));
+            now = getTimestampSeconds();
+        }
+
+        if (now >= nextAttempt) {
             nextAttempt = getTimestampSeconds(60);
         }
 
