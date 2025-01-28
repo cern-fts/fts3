@@ -158,7 +158,7 @@ std::stringstream ReadCommandLineOptionsTestTraits::strstream;
 
 struct TestServerConfigReader : public fts3::config::ServerConfigReader
 {
-    TestServerConfigReader()
+    TestServerConfigReader() : argc(2)
     {
         argv[0] = const_cast<char*> ("executable");
         testDesc.add_options()("help,h", "Description");
@@ -224,8 +224,8 @@ struct TestServerConfigReader : public fts3::config::ServerConfigReader
     }
 
 protected:
-    static const int argc = 2;
-    char *argv[argc];
+    const int argc;
+    char *argv[2];
     boost::program_options::options_description testDesc;
 };
 
@@ -286,7 +286,8 @@ BOOST_FIXTURE_TEST_CASE(readCommandLineOptionsCheckNoDaemonMissing, TestServerCo
 
 BOOST_FIXTURE_TEST_CASE(storeAString, TestServerConfigReader)
 {
-    setupParameters("--intpar=10");
+    std::string param("--intpar=10");
+    setupParameters(param);
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, testDesc), _vm);
     boost::program_options::notify(_vm);
     // Execute test - with existing parameter
