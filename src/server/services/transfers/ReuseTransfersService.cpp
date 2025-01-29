@@ -21,6 +21,7 @@
 #include "ReuseTransfersService.h"
 
 #include <fstream>
+#include <random>
 
 #include "common/DaemonTools.h"
 #include "config/ServerConfig.h"
@@ -419,7 +420,9 @@ void ReuseTransfersService::executeUrlCopy()
         std::vector<QueueId> queues, unschedulable;
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
-        std::random_shuffle(queues.begin(), queues.end());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(queues.begin(), queues.end(), g);
         queues = applyVoShares(queues, unschedulable);
         // Fail all that are unschedulable
         failUnschedulable(unschedulable);
