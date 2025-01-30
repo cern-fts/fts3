@@ -438,7 +438,7 @@ std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::s
 
         if ((attempts > 0) && (now < nextAttempt)) {
             auto interval = std::min(nextAttempt, end) - now;
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "token-refresh request: Will sleep for " << interval << " seconds!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Token-refresh request: Will sleep for " << interval << " seconds!" << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(interval));
             now = getTimestampSeconds();
         }
@@ -457,7 +457,18 @@ std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::s
             zmqTokenSocket.send(zmq::message_t{serialized}, zmq::send_flags::none);
 
             zmq::message_t reply;
-            static_cast<void>(zmqTokenSocket.recv(reply, zmq::recv_flags::none));
+            auto recv_result = zmqTokenSocket.recv(reply, zmq::recv_flags::none);
+
+            if (!recv_result) {
+                if (zmq_errno() == EAGAIN) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Token-refresh request: waiting for response timed out!" << commit;
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Token-refresh request: failure receiving response ("
+                                                       << zmq_strerror(zmq_errno()) << ")" << commit;
+                }
+
+                continue;
+            }
 
             if (!response.ParseFromArray(reply.data(), static_cast<int>(reply.size()))) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Failed to parse token-refresh response!" << commit;
