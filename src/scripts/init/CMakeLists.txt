@@ -30,6 +30,11 @@ if (SYSTEMD_INSTALL_DIR)
                   ftstokenhousekeeperd.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
+    if (FTS4SCHEDULERBUILD)
+        install(FILES fts-scheduler.service
+            DESTINATION ${SYSTEMD_INSTALL_DIR}
+        )
+    endif ()
 # Init scripts
 else ()
     install(FILES fts-server.initd

@@ -3,6 +3,12 @@
 %global selinux_variants mls targeted
 # Compile Python scripts using Python3
 %define __python python3
+%if 0%{!?fts4_scheduler_build:1}
+%define fts4_scheduler_build OFF
+%endif
+%if "%{fts4_scheduler_build}" != "ON"
+%define fts4_scheduler_build OFF
+%endif
 
 Name:       fts
 Version:    3.13.3
@@ -77,6 +83,23 @@ VOMS based. Furthermore, the service provides a mechanism that
 dynamically adjust transfer parameters for optimal bandwidth
 utilization and allows for configuring so called VO-shares.
 
+%if "%{fts4_scheduler_build}" == "ON"
+%package scheduler
+Summary: FTS4 scheduler
+
+Requires: python3-psycopg2
+
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
+
+%description scheduler
+The FTS4 scheduler is a daemon that schedules the next set of file-transfers by
+reading the current state of the FTS instance and its queues from the FTS
+database, taking the neccessary scheduling decisions and then writing them back
+to the database.
+%endif
+
 %package libs
 Summary:    File Transfer Service version 3 libraries
 
@@ -145,6 +168,7 @@ if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
 fi
 
 %cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON \
+    -DFTS4SCHEDULERBUILD=%{fts4_scheduler_build} \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX='' \
@@ -302,6 +326,15 @@ fi
 
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %{_mandir}/man8/fts_msg_bulk.8.gz
+
+%if "%{fts4_scheduler_build}" == "ON"
+%files scheduler
+%dir %attr(0755,fts3,root) /opt/fts
+%dir %attr(0755,fts3,root) /opt/fts/fts_scheduler
+/opt/fts/fts_scheduler/*.py
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-scheduler.service
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-scheduler.ini
+%endif
 
 %files libs
 %{_libdir}/libfts_common.so*

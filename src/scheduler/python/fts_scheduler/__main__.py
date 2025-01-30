@@ -143,25 +143,23 @@ def get_major_db_schema_version(param_dbconn):
         return major_schema_version
 
 
-PROGRAM_NAME = "fts_scheduler"
-
 parser = argparse.ArgumentParser(description="Schedules FTS transfer jobs")
 parser.add_argument(
     "-c",
     "--config",
-    default=f"/etc/fts4/{PROGRAM_NAME}.ini",
+    default="/etc/fts3/fts-scheduler.ini",
     help="Path of the configuration file",
 )
 
 cmd_line = parser.parse_args()
 
 config = get_config(
-    cmd_line.config, log_file_fallback=f"/var/log/fts4/{PROGRAM_NAME}.log"
+    cmd_line.config, log_file_fallback="/var/log/fts3/fts-scheduler.log"
 )
 
 log = get_log(
     log_file_path=config["log_file"],
-    log_program_name=PROGRAM_NAME,
+    log_program_name="fts-scheduler",
     log_level=config["log_level"],
 )
 
