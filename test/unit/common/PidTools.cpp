@@ -17,6 +17,7 @@
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/test_tools.hpp>
 #include <fstream>
+#include <unistd.h>
 #include "common/PidTools.h"
 
 using namespace fts3::common;
@@ -28,10 +29,17 @@ BOOST_AUTO_TEST_SUITE(PidTools)
 
 BOOST_AUTO_TEST_CASE(basic)
 {
-    uint64_t selfStartTime = getPidStartime(getpid());
+    pid_t pid = fork();
+    if (!pid) {
+        char sleep[] = "/usr/bin/sleep";
+        char timing[] = "5";
+        char *const argv[] = {sleep, timing, NULL};
+        execve(sleep, argv, NULL);
+    }
 
-    BOOST_CHECK_GT(selfStartTime, (time(NULL) - 120) * 1000);
-    BOOST_CHECK_LT(selfStartTime, (time(NULL) + 1) * 1000);
+    const uint64_t childStartTime = getPidStartime(pid);
+    BOOST_CHECK_GT(childStartTime, (time(NULL) - 1) * 1000);
+    BOOST_CHECK_LT(childStartTime, (time(NULL) + 1) * 1000);
 }
 
 

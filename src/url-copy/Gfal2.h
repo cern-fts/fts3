@@ -169,6 +169,23 @@ public:
     	}
     }
 
+    int getChecksum(std::string &checksum_type, std::string &user_checksum)
+    {
+        char csum_type[1024] = {0};
+        char user_csum[1024] = {0};
+
+        GError *error = NULL;
+        int ret = gfalt_get_checksum(params, csum_type, sizeof(csum_type),
+                                     user_csum, sizeof(user_csum), &error);
+        if (error) {
+            throw Gfal2Exception(error);
+        }
+
+        checksum_type = csum_type;
+        user_checksum = user_csum;
+        return ret;
+    }
+
     void setTimeout(unsigned timeout)
     {
         GError *error = NULL;
@@ -412,8 +429,21 @@ public:
         }
     }
 
+    void access(Gfal2TransferParams &params, const std::string &url, bool is_source, int amode)
+    {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_access(context, url.c_str(), amode, &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
+
     /// Remove file
-    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source) {
+    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source)
+    {
         bearerInit(params, is_source ? url : "",
                            is_source ? "" : url);
 
@@ -432,6 +462,17 @@ public:
 
         GError *error = NULL;
         if (gfal2_release_file(context, url.c_str(), token.c_str(), &error) < 0) {
+            throw Gfal2Exception(error);
+        }
+    }
+
+    void mkdir_recursive(Gfal2TransferParams &params, const std::string &url, bool is_source)
+    {
+        bearerInit(params, is_source ? url : "",
+                           is_source ? "" : url);
+
+        GError *error = NULL;
+        if (gfal2_mkdir_rec(context, url.c_str(), 0775, &error) < 0) {
             throw Gfal2Exception(error);
         }
     }

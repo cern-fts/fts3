@@ -67,7 +67,7 @@ BOOST_FIXTURE_TEST_CASE (simpleDestFileReport, UrlCopyFixture)
 
 BOOST_FIXTURE_TEST_CASE (overwriteEnabled, UrlCopyFixture) {
     Transfer original;
-    original.source = Uri::parse("mock://host/path?size=10");
+    original.source = Uri::parse("mock://host/path?size=10&checksum=abc123ab");
     original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2"
                                       "&checksum=abc123ab&user.status=NEARLINE");
     opts.transfers.push_back(original);
