@@ -51,7 +51,7 @@ srpm: dist $(SPEC) $(RPMBUILD) override_release
 	/usr/bin/rpmbuild --nodeps -bs $(RPMDEFINES_SRC) $(SPEC)
 
 rpm: srpm
-	/usr/bin/rpmbuild --rebuild $(RPMDEFINES_BIN) $(NAME)-$(VERSION)-*.src.rpm
+	/usr/bin/rpmbuild --rebuild --define="fts4_scheduler_build ON" $(RPMDEFINES_BIN) $(NAME)-$(VERSION)-*.src.rpm
 
 mock: srpm
 	/usr/bin/mock $(MOCK_FLAGS) -r $(MOCK_CHROOT) $(NAME)-$(VERSION)-*.src.rpm

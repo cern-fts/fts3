@@ -42,4 +42,4 @@ cd packaging/
 make srpm RELEASE=${RELEASE} RPMBUILD=${RPMBUILD} SRPMS=${SRPMS}
 dnf builddep -y ${SRPMS}/*
 
-rpmbuild --rebuild --define="_topdir ${RPMBUILD}" ${SRPMS}/*
+rpmbuild --rebuild --define="_topdir ${RPMBUILD}" --define="fts4_scheduler_build ON" ${SRPMS}/*
