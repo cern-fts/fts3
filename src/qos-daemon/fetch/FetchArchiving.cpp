@@ -48,7 +48,11 @@ void FetchArchiving::fetch()
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            std::map<GroupByType, ArchivingContext> tasks;
+            if (fts3::server::DrainMode::instance()) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
+                continue;
+            }
+
             std::vector<ArchivingOperation> files;
 
             time_t start = time(0);
@@ -56,53 +60,15 @@ void FetchArchiving::fetch()
             time_t end = time(0);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchArchiving\" "
                                             << "func=\"fetch\" "
-                                            << "DBcall=\"getFilesForArchiving\" " 
-                                            << "time=\"" << end - start << "\"" 
+                                            << "DBcall=\"getFilesForArchiving\" "
+                                            << "time=\"" << end - start << "\""
                                             << commit;
 
-            for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
-            {
-                std::string storage = Uri::parse(it_f->surl).getSeName();
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "storage: " << storage << commit;
-                GroupByType key(it_f->credId, storage);
-                auto it_t = tasks.find(key);
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "inserting task for storage:  " << storage << commit;
-                if (it_t == tasks.end()) {
-                    tasks.insert(std::make_pair(
-                        key, ArchivingContext(
-                        		QoSServer::instance(), *it_f
-                        ))
-                    );
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "task inserted for storage:  " << storage << commit;
-                }
-                else {
-                    it_t->second.add(*it_f);
-                }
-            }
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetched " << files.size()
+                                            << " files for archiving" << commit;
 
-            for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
-            {
-                try
-                {    
-                    it_t->second.setArchiveStartTime();
-                    threadpool.start(new ArchivingPollTask(it_t->second));
-                }
-                catch(UserError const & ex)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << ex.what() << commit;
-                }
-                catch(...)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-                }
-            }
+            startArchivePollTasks(files);
             boost::this_thread::sleep(boost::posix_time::seconds(60));
-
-            if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
-                continue;
-            }
-
         }
         catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving " << e.what() << commit;
@@ -120,14 +86,21 @@ void FetchArchiving::fetch()
 }
 
 
-void FetchArchiving::recoverStartedTasks()
+void FetchArchiving::recoverStartedTasks() const
 {
     std::vector<ArchivingOperation> startedArchivingOps;
 
-
     try {
-    	// Retrieve the files with archive_start_time not null
+        // Retrieve from DB all the files with archive_start_time not null
+        time_t start = time(0);
         db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedArchiving(startedArchivingOps);
+        time_t end = time(0);
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchArchiving\" "
+                                        << "func=\"recoverStartedTasks\" "
+                                        << "DBcall=\"getAlreadyStartedArchiving\" "
+                                        << "time=\"" << end - start << "\""
+                                        << commit;
+
     }
     catch (UserError const & ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
@@ -137,38 +110,63 @@ void FetchArchiving::recoverStartedTasks()
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering " << startedArchivingOps.size()
+                                    << " archiving operations" << commit;
+
+    startArchivePollTasks(startedArchivingOps);
+}
+
+
+void FetchArchiving::startArchivePollTasks(const std::vector<ArchivingOperation>& archivingOperations) const
+{
+    auto archivePollBulkSize = fts3::config::ServerConfig::instance().get<uint64_t>("ArchivePollBulkSize");
     std::map<GroupByType, ArchivingContext> tasks;
 
-    for (auto it_f = startedArchivingOps.begin(); it_f != startedArchivingOps.end(); ++it_f) {
+    for (const auto& op : archivingOperations) {
         // Apply grouping by credential ID and storage endpoint
-        std::string storage = Uri::parse(it_f->surl).getSeName();
-        GroupByType key(it_f->credId, storage);
-        auto it_t = tasks.find(key);
-        if (it_t == tasks.end()) {
-            tasks.insert(std::make_pair(
-                    key, ArchivingContext(
-                            QoSServer::instance(), *it_f
-                    ))
-            );
+        std::string storage = Uri::parse(op.surl).getSeName();
+        GroupByType key(op.credId, storage);
+        // Look up for a task with a current key
+        auto task_it = tasks.find(key);
+
+        if (task_it == tasks.end()) {
+            // No task exist for this key so insert a new one in the tasks container
+            tasks.try_emplace(key, QoSServer::instance(), op);
         }
-        else {
-            it_t->second.add(*it_f);
+        // Task already exists. See if it contains enough URL's to start an ArchivePollTask on the server thread pool
+        else if (task_it->second.getNbUrls() >= archivePollBulkSize) {
+            // Start ArchivePollTasks on the server thread pool
+            scheduleArchivePollTask(task_it->second);
+            // Remove key from the task container as it has already been started
+            tasks.erase(key);
+            // Create a new task with the current operation
+            tasks.try_emplace(key, QoSServer::instance(), op);
+        } else {
+            // There are not yet enough urls on this task to start a ArchivePollTask so just add current operation
+            task_it->second.add(op);
         }
     }
 
-    for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
-        try {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered archiving for storage " << it_t->first.second << ": "
-                                            <<  it_t->second.getLogMsg() << commit;
-            threadpool.start(new ArchivingPollTask(it_t->second));
-        }
-        catch (UserError const & ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        }
-        catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-        }
+    // Start ArchivePollTasks for the remaining tasks that don't have enough urls to fill a batch
+    for (const auto& task : tasks) {
+        scheduleArchivePollTask(task.second);
     }
 }
 
+
+void FetchArchiving::scheduleArchivePollTask(const ArchivingContext &context) const {
+    try {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting archiving task for storage " << context.getStorageEndpoint()
+                                        << " with " << context.getNbUrls() << " files : "
+                                        <<  context.getLogMsg() << commit;
+
+        threadpool.start(new ArchivingPollTask(context));
+    }
+    catch (UserError const & ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+    }
+    catch(...)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+    }
+}

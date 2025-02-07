@@ -31,7 +31,7 @@
 #include "cred/DelegCred.h"
 
 #include "../task/Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "../context/ArchivingContext.h"
 
 
 /**
@@ -50,7 +50,16 @@ public:
     typedef std::pair<std::string, std::string> GroupByType;
 
 private:
-    void recoverStartedTasks();
+    // Function that recovers from DB archiving tasks that already started
+    // To be called on the server start
+    void recoverStartedTasks() const;
+
+    // Function that iterates over a set of archiving operations and groups them into batches to be scheduled
+    void startArchivePollTasks(const  std::vector<ArchivingOperation>& archivingOperations) const;
+
+    // Function to start ArchivePollTasks on the server thread pool
+    void scheduleArchivePollTask(const ArchivingContext& context) const;
+
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
 
 };

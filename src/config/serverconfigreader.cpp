@@ -314,6 +314,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Monitoring configuration file"
     )
     (
+        "ArchivePollBulkSize",
+        po::value<std::string>( &(_vars["ArchivePollBulkSize"]) )->default_value("100"),
+        "Archive polling bulk size"
+    )
+    (
         "StagingBulkSize",
         po::value<std::string>( &(_vars["StagingBulkSize"]) )->default_value("200"),
         "Staging bulk size"
