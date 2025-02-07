@@ -62,6 +62,7 @@ void FetchStaging::fetch()
             //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                boost::this_thread::sleep(boost::posix_time::seconds(60));
                 continue;
             }
 

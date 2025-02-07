@@ -81,7 +81,13 @@ LogTokenRequests=false
 # The default is 400 / Use 0 to disable the check
 # MaxUrlCopyProcesses = 400
 
-## Parameters for QoS daemon - BringOnline operation
+## Parameters for QoS daemon
+# ArchivePoll operation
+# Maximum size for the archive poll request
+# Similar to logic as the StagingBulkSize
+# ArchivePollBulkSize=100
+
+# BringOnline operation
 # Maximum bulk size
 # If the size is too large, it will take more resources (memory and CPU) to generate the requests
 # and parse the responses. Some servers may reject the requests if they are too big.
