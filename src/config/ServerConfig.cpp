@@ -31,8 +31,7 @@ using namespace fts3::config;
 using namespace fts3::common;
 
 
-ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0),
-    readTime(0)
+ServerConfig::ServerConfig() : reading(0), getting(0), readTime(0)
 {
     FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "ServerConfig created" << commit;
 }
@@ -60,14 +59,6 @@ const std::string &ServerConfig::_get_str(const std::string &aVariable)
 void ServerConfig::read(int argc, char** argv)
 {
     _read<ServerConfigReader> (argc, argv);
-}
-
-
-void ServerConfig::startMonitor(void)
-{
-    cfgmonitor.start(
-        get<std::string>("configfile")
-    );
 }
 
 

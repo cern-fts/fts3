@@ -127,9 +127,6 @@ static void spawnServer(int argc, char** argv)
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
 
-    // Watch for changes on the config file
-    ServerConfig::instance().startMonitor();
-
     doServer();
 }
 
