@@ -24,8 +24,6 @@
 #ifndef SERVERCONFIG_H_
 #define SERVERCONFIG_H_
 
-#include "FileMonitor.h"
-
 #include <map>
 #include <vector>
 #include <boost/lexical_cast.hpp>
@@ -56,10 +54,6 @@ public:
     /// @param argc     The number of command line arguments
     /// @param argv     The command line arguments
     void read(int argc, char** argv);
-
-    /// Start the thread that watches for changes on the configuration file
-    /// @note Beware of forks! Remember threads are gone after a fork
-    void startMonitor(void);
 
     /// Read the configurations from config file only
     void read(const std::string& aFileName);
@@ -100,9 +94,6 @@ protected:
 
     /// The internal store of config variables.
     _t_vars _vars;
-
-    /// Configuration file monitor
-    FileMonitor cfgmonitor;
 
     bool reading;
     int getting;
