@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2013-2015
+# Copyright (c) CERN 2013-2025
 #
 # Copyright (c) Members of the EMI Collaboration. 2010-2013
 #  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -29,7 +29,7 @@ set(CMAKE_MODULE_PATH
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 13)
-set(VERSION_PATCH 3)
+set(VERSION_PATCH 4)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Generate include header with the version string
