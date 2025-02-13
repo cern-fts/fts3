@@ -717,6 +717,7 @@ else:
         f"dbname='{config['db_database']}' "
         f"user='{config['db_user']}' "
         f"host='{config['db_host']}' "
+        f"port='{config['db_port']}' "
         f"password='{config['db_password']}'"
     )
     db_conn.set_session(autocommit = True)
