@@ -4068,12 +4068,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
     soci::session sql(*connectionPool);
     std::vector<fts3::events::MessageBringonline> messages;
 
-    int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
-    int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
-    int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
+    const int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
+    const int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
+    const int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
 
-    try
-    {
+    try {
         //now get fresh states/files from the database
         soci::rowset<soci::row> rs2 = (sql.prepare <<
             " SELECT DISTINCT vo_name, source_se "
@@ -4084,8 +4083,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             soci::use(hashSegment.start), soci::use(hashSegment.end)
         );
 
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-        {
+        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
             soci::row const& r = *i2;
             std::string source_se = r.get<std::string>("source_se","");
             std::string vo_name = r.get<std::string>("vo_name","");
@@ -4104,27 +4102,16 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     soci::use(vo_name), soci::into(maxValueConfig);
             }
 
-            if(maxValueConfig > 0)
-            {
+            if (maxValueConfig > 0) {
                 //check current staging
                 sql <<  "SELECT count(*) FROM t_file "
                     "WHERE vo_name=:vo_name AND source_se = :endpoint AND file_state='STARTED'",
                     soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
 
-                if(currentStagingActive > 0)
-                {
-                    limit = maxValueConfig - currentStagingActive;
-                }
-                else
-                {
-                    limit = maxValueConfig;
-                }
-
-                if(limit <= 0)
+                limit = currentStagingActive > 0 ? maxValueConfig - currentStagingActive : maxValueConfig;
+                if (limit <= 0)
                     continue;
-            }
-            else
-            {
+            } else {
                 limit = maxStagingBulkSize; // Use a sensible default
             }
 
@@ -4138,7 +4125,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 " vo_name=:vo_name AND file_state='STARTED' AND source_se=:source_se AND bringonline_token IS NOT NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
 
-            if(countActiveRequests > maxStagingConcurrentRequests)
+            if (countActiveRequests > maxStagingConcurrentRequests)
                 continue;
 
             //now make sure there are enough files to put in a single request
@@ -4149,22 +4136,18 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
             // If we haven't got enough for a bulk request, give some time for more
             // requests to arrive
-            if(countQueuedFiles < maxStagingBulkSize)
-            {
+            if (countQueuedFiles < maxStagingBulkSize) {
                 auto now = boost::posix_time::second_clock::local_time();
                 auto itQueue = queuedStagingFiles.find(source_se);
 
-                if(itQueue != queuedStagingFiles.end())
-                {
+                if (itQueue != queuedStagingFiles.end()) {
                     auto nextSubmission = itQueue->second;
 
-                    if(nextSubmission > now) {
+                    if (nextSubmission > now) {
                         continue;
                     }
                     queuedStagingFiles.erase(itQueue);
-                }
-                else
-                {
+                } else {
                     queuedStagingFiles[source_se] = now + boost::posix_time::seconds(stagingWaitingFactor);
                     continue;
                 }
@@ -4183,8 +4166,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                                              soci::use(vo_name), soci::use(source_se)
                                          );
 
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            {
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
                 soci::row const& row = *i;
 
                 source_se = row.get<std::string>("source_se");
@@ -4208,8 +4190,7 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     soci::use(limit)
                 );
 
-                for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
-                {
+                for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3) {
                     soci::row const& row = *i3;
                     std::string source_url = row.get<std::string>("source_surl");
                     std::string metadata = row.get<std::string>("staging_metadata", "");
@@ -4236,13 +4217,9 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 }
             }
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
