@@ -3836,9 +3836,9 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
 {
     soci::session sql(*connectionPool);
     //TODO: query for credentials to be checked when integrating OIDC
-    //TODO: create a view as for staging
+
     try {
-        soci::rowset<soci::row> rs2 = (sql.prepare <<
+        soci::rowset<soci::row> rs = (sql.prepare <<
                                                    " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, f.vo_name,  c.dn, c.dlg_id, j.archive_timeout"
                                                    " FROM t_file f "
                                                    " INNER JOIN t_job j ON (f.job_id = j.job_id) "
@@ -3846,32 +3846,24 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
                                                    " WHERE "
                                                    "         f.file_state = 'ARCHIVING' AND "
                                                    "         f.archive_start_time IS NULL AND "
-                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+                                                   "         (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
         );
 
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-        {
-            soci::row const& r = *i2;
-            std::string job_id = r.get<std::string>("job_id");
-            uint64_t file_id = get_file_id_from_row(r);
-            std::string dest_surl = r.get<std::string>("dest_surl");
-            std::string voname = r.get<std::string>("vo_name");
-            std::string dn = r.get<std::string>("dn");
-            std::string dlg_id = r.get<std::string>("dlg_id");
-            int archive_timeout = r.get<int>("archive_timeout",0);
+        for (const auto& row: rs) {
+            auto job_id = row.get<std::string>("job_id");
+            uint64_t file_id = get_file_id_from_row(row);
+            auto dest_surl = row.get<std::string>("dest_surl");
+            auto voname = row.get<std::string>("vo_name");
+            auto dn = row.get<std::string>("dn");
+            auto dlg_id = row.get<std::string>("dlg_id");
+            int archive_timeout = row.get<int>("archive_timeout",0);
             archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, 0, archive_timeout);
         }
-
-        //TODO: add throttling
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
@@ -4277,13 +4269,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 }
 
 
-void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archiveOps)
+void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation>& archivingOps)
 {
     soci::session sql(*connectionPool);
 
-    try
-    {
-
+    try {
         soci::rowset<soci::row> rs =
                 (
                         sql.prepare <<
@@ -4298,16 +4288,13 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
                         soci::use(hashSegment.start), soci::use(hashSegment.end)
                 );
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering archiving tasks with hashed_id between "
-                                        << hashSegment.start << " and "
-                                        << hashSegment.end << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering archiving tasks with hashed_id: "
+                                        << "[" << hashSegment.start << ", "<< hashSegment.end << "]" << commit;
 
-        for (soci::rowset<soci::row>::const_iterator i3 = rs.begin(); i3 != rs.end(); ++i3)
-        {
-            soci::row const& row = *i3;
-            std::string vo_name = row.get<std::string>("vo_name");
-            std::string dest_url = row.get<std::string>("dest_surl");
-            std::string job_id = row.get<std::string>("job_id");
+        for (const auto& row: rs) {
+            auto vo_name = row.get<std::string>("vo_name");
+            auto dest_url = row.get<std::string>("dest_surl");
+            auto job_id = row.get<std::string>("job_id");
             uint64_t file_id = get_file_id_from_row(row);
             int archive_timeout = row.get<int>("archive_timeout", 0);
 
@@ -4317,23 +4304,19 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
                 archive_start_time = timegm(&start_tm);
             }
 
-            std::string user_dn = row.get<std::string>("user_dn");
-            std::string cred_id = row.get<std::string>("cred_id");
+            auto user_dn = row.get<std::string>("user_dn");
+            auto cred_id = row.get<std::string>("cred_id");
             
-            archiveOps.emplace_back(
+            archivingOps.emplace_back(
                     job_id, file_id, vo_name,
                     user_dn, cred_id, dest_url,
                     archive_start_time, archive_timeout
             );
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
