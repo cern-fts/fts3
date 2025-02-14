@@ -248,7 +248,8 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     std::map<uint64_t, std::string> fileIds = generateJobFile(representative.jobId, files);
 
     // Can we run?
-    if (!db->isTrAllowed(representative.sourceSe, representative.destSe)) {
+    if ((representative.fileState != "FORCE_START") &&
+        (!db->isTrAllowed(representative.sourceSe, representative.destSe))) {
         return;
     }
 
