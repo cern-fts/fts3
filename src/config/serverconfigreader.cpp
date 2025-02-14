@@ -518,6 +518,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["SigKillDelay"]) )->default_value("500"),
         "In milliseconds, delay between graceful SIGTERM and SIGKILL"
     )
+    (
+        "AllowSessionReuse",
+        po::value<std::string>( &(_vars["AllowSessionReuse"]) )->default_value("true"),
+        "Enable or disable session reuse transfers (default true)"
+    )
     (   "AutoSessionReuse",
     	po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
 	    "Enable or disable auto session reuse"

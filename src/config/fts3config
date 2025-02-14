@@ -139,6 +139,9 @@ LogTokenRequests=false
 # Decrease step size when the optimizer considers the performance is bad
 # OptimizerDecreaseStep = 1
 
+# Enable or disable session reuse transfers (default true)
+# AllowSessionReuse = True
+
 ## Cleaner Service settings
 # Set the cleaning bulk size when purging old records (number of jobs)
 #CleanBulkSize=5000

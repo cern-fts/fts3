@@ -98,7 +98,6 @@ void Server::start()
     heartBeatService->registerWatchedService(messageProcessingService, messageProcessingGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(cancelerService, cancelerGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(transfersService, transfersGraceTime, [this] { stop(); });
-    heartBeatService->registerWatchedService(reuseTransfersService, transfersGraceTime, [this] { stop(); });
     heartBeatService->registerWatchedService(supervisorService, supervisorGraceTime, [this] { stop(); });
 
     addService(heartBeatService);
@@ -118,9 +117,16 @@ void Server::start()
 
     addService(cancelerService);
     addService(transfersService);
-    addService(reuseTransfersService);
     addService(supervisorService);
     addService(forceStartTransfersService);
+
+    // Do not start ReuseTransfersService if AllowSessionReuse turned off
+    if (ServerConfig::instance().get<bool> ("AllowSessionReuse")) {
+        heartBeatService->registerWatchedService(reuseTransfersService, transfersGraceTime, [this] { stop(); });
+        addService(reuseTransfersService);
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disabling ReuseTransfersService (AllowSessionReuse = false)" << commit;
+    }
 }
 
 

@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <shared_mutex>
 
 #include "common/Singleton.h"
 #include "server/common/BaseService.h"
@@ -57,6 +58,7 @@ public:
     void registerWatchedService(const std::shared_ptr<BaseService>& service, int graceTime,
                                 const std::function<void()>& gracefulAbortFun)
     {
+        std::scoped_lock lock(mxWatchedServices);
         watchedServices.emplace(service, WatchData(graceTime, gracefulAbortFun));
     }
 
@@ -87,6 +89,7 @@ private:
     unsigned end;   ///< End hash range for this index
 
     std::string processName;
+    std::shared_mutex mxWatchedServices;
     std::map<std::shared_ptr<BaseService>, WatchData> watchedServices;
 };
 
