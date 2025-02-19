@@ -548,9 +548,14 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	    "Max number of big files  per session reuse"
     )
     (
+        "AllowJobPriority",
+        po::value<std::string>( &(_vars["AllowJobPriority"]) )->default_value("true"),
+        "Enable or disable job priorities (default true)"
+    )
+    (
         "UseFixedJobPriority",
         po::value<std::string>( &(_vars["UseFixedJobPriority"]) )->default_value("0"),
-        "Configure the system to use a fixed Job Priority, by default it queries the system to honour the priorities specified by the users"
+        "Schedule only transfers of a certain job priority. When 0, honor the user-specified priorities (default value = 0)"
     )
     (
         "CancelUnusedMultihopFiles",

@@ -595,12 +595,10 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
     soci::session sql(*connectionPool);
     time_t now = time(NULL);
 
-    try
-    {
+    try {
         // Iterate through queues, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
-        for (auto it = queues.begin(); it != queues.end(); ++it)
-        {
+        for (auto it = queues.begin(); it != queues.end(); ++it) {
             int maxActive = 0;
             soci::indicator maxActiveNull = soci::i_ok;
             int filesNum = 10;
@@ -614,18 +612,21 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    soci::into(maxActive, maxActiveNull);
 
             // Calculate how many tops we should pick
-            if (maxActiveNull != soci::i_null && maxActive > 0)
-            {
+            if (maxActiveNull != soci::i_null && maxActive > 0) {
                 filesNum = (maxActive - activeCount);
-                if(filesNum <= 0 ) {
+
+                if (filesNum <= 0) {
                     continue;
                 }
             }
 
-            int fixedPriority =  ServerConfig::instance().get<int> ("UseFixedJobPriority");
-            soci::indicator isMaxPriorityNull = soci::i_ok;
-            int maxPriority = 3;
-            if (fixedPriority == 0) {
+            bool allowPriority = ServerConfig::instance().get<bool>("AllowJobPriority");
+            int fixedPriority = std::min(ServerConfig::instance().get<int>("UseFixedJobPriority"), 5);
+            int schedulePriority = 3;
+
+            if (allowPriority && !fixedPriority) {
+                soci::indicator isMaxPriorityNull = soci::i_ok;
+
                 // Get highest priority waiting for this queue
                 // We then filter by this, and order by file_id
                 // Doing this, we avoid a order by priority, which would trigger a filesort, which
@@ -638,20 +639,19 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "    hashed_id BETWEEN :hStart AND :hEnd",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
                    soci::use(hashSegment.start), soci::use(hashSegment.end),
-                   soci::into(maxPriority, isMaxPriorityNull);
+                   soci::into(schedulePriority, isMaxPriorityNull);
+
                 if (isMaxPriorityNull == soci::i_null) {
                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
                    continue;
                 }
-            } 
-            else 
-            {
+            } else if (allowPriority && fixedPriority) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
-                << " Using fixed priority for Jobs."
-                << commit;
-
-                maxPriority=fixedPriority;
+                            << " Using fixed priority for Jobs (priority = " << fixedPriority << ")"
+                            << commit;
+                schedulePriority = fixedPriority;
             }
+
             std::set<std::string> default_activities;
             std::map<std::string, int> activityFilesNum =
                 getFilesNumPerActivity(sql, it->sourceSe, it->destSe, it->voName, filesNum, default_activities);
@@ -660,13 +660,14 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             gmtime_r(&now, &tTime);
 
             const std::string enum_to_text_cast = sql.get_backend_name() == "mysql" ? "" : "::TEXT";
-            if (activityFilesNum.empty())
-            {
+
+            if (activityFilesNum.empty()) {
                 const std::string use_index = sql.get_backend_name() == "mysql" ? " USE INDEX(idx_link_state_vo)" : "";
-                soci::rowset<TransferFile> rs = (
-                    sql.prepare <<
+                const std::string use_priority = allowPriority ? (std::string(" AND j.priority = ") + std::to_string(schedulePriority) + std::string(" ")) : "";
+
+                std::string select =
                         "SELECT"
-                        "    f.file_state" << enum_to_text_cast << ","
+                        "    f.file_state" + enum_to_text_cast + ","
                         "    f.source_surl,"
                         "    f.dest_surl,"
                         "    f.job_id,"
@@ -698,7 +699,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.selection_strategy,"
                         "    j.internal_job_params,"
                         "    j.job_type "
-                        "FROM t_file f" << use_index << ", t_job j "
+                        "FROM t_file f" + use_index + ", t_job j "
                         "WHERE"
                         "    f.job_id = j.job_id AND"
                         "    f.file_state = 'SUBMITTED' AND"
@@ -707,24 +708,22 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.vo_name = :vo_name AND "
                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                         "    j.job_type IN ('N', 'R', 'H') AND "
-                        "    f.hashed_id BETWEEN :hStart AND :hEnd AND "
-                        "    j.priority = :maxPriority "
+                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                        + use_priority +
                         "ORDER BY file_id ASC "
-                        "LIMIT :filesNum",
+                        "LIMIT :filesNum";
+
+                soci::rowset<TransferFile> rs = (
+                    sql.prepare << select,
                     soci::use(it->sourceSe),
                     soci::use(it->destSe),
                     soci::use(it->voName),
                     soci::use(tTime),
                     soci::use(hashSegment.start), soci::use(hashSegment.end),
-                    soci::use(maxPriority),
                     soci::use(filesNum));
 
-                for (auto ti = rs.begin(); ti != rs.end(); ++ti)
-                {
-                    TransferFile& tfile = *ti;
-
-                    if(tfile.jobType == Job::kTypeMultipleReplica)
-                    {
+                for (auto& tfile: rs) {
+                    if (tfile.jobType == Job::kTypeMultipleReplica) {
                         int total = 0;
                         int remain = 0;
                         sql << " select count(*) as c1, "
@@ -737,8 +736,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                         tfile.lastReplica = (total == remain)? 1: 0;
                     }
-                    if(tfile.jobType == Job::kTypeMultiHop)
-                    {
+
+                    if (tfile.jobType == Job::kTypeMultiHop) {
                         int maxIndex = 0;
                         sql << "SELECT MAX(file_index) "
                                "FROM t_file "
@@ -751,16 +750,12 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                     files[tfile.voName].push_back(tfile);
                 }
-            }
-            else
-            {
+            } else {
                 // we are always checking empty string
                 std::string def_act = " (''";
-                if (!default_activities.empty())
-                {
+                if (!default_activities.empty()) {
                     std::set<std::string>::const_iterator it_def;
-                    for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def)
-                    {
+                    for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def) {
                         def_act += ", '" + *it_def + "'";
                     }
                 }
@@ -771,8 +766,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 std::vector<ActivityNumTuple> vActivityFilesNum;
                 vActivityFilesNum.reserve(activityFilesNum.size());
 
-                for (auto it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
-                {
+                for (auto it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act) {
                     vActivityFilesNum.emplace_back(it_act->first, it_act->second);
                 }
 
@@ -780,11 +774,12 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 auto random_engine = std::default_random_engine{static_cast<unsigned>(seed)};
                 std::shuffle(vActivityFilesNum.begin(), vActivityFilesNum.end(), random_engine);
 
-                for (auto it_act = vActivityFilesNum.begin(); it_act != vActivityFilesNum.end(); ++it_act)
-                {
+                for (auto it_act = vActivityFilesNum.begin(); it_act != vActivityFilesNum.end(); ++it_act) {
                     if (it_act->second == 0) continue;
 
                     const std::string use_index = sql.get_backend_name() == "mysql" ? " USE INDEX(idx_link_state_vo)" : "";
+                    const std::string use_priority = allowPriority ? (std::string(" AND j.priority = ") + std::to_string(schedulePriority) + std::string(" ")) : "";
+
                     std::string select =
                         "SELECT"
                         "    f.file_state" + enum_to_text_cast + ","
@@ -825,22 +820,19 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.file_state = 'SUBMITTED' AND"
                         "    f.source_se = :source_se AND"
                         "    f.dest_se = :dest_se AND"
-                        "    (j.job_type = 'N' OR"
-                        "    j.job_type = 'R') AND"
                         "    f.vo_name = :vo_name AND"
-                        "    (f.retry_timestamp is NULL OR"
-                        "    f.retry_timestamp < :tTime) AND ";
+                        "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                        "    j.job_type IN ('N', 'R') AND ";
                     select +=
                         it_act->first == "default" ?
                         "     (f.activity = :activity OR f.activity IS NULL OR f.activity IN " + def_act + ") AND "
                         :
                         "     f.activity = :activity AND ";
                     select +=
-                        "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                        "   j.priority = :maxPriority "
+                        "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                        + use_priority +
                         "   ORDER BY file_id ASC "
                         "   LIMIT :filesNum";
-
 
                     soci::rowset<TransferFile> rs = (
                          sql.prepare <<
@@ -851,16 +843,11 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                          soci::use(tTime),
                          soci::use(it_act->first),
                          soci::use(hashSegment.start), soci::use(hashSegment.end),
-                         soci::use(maxPriority),
                          soci::use(it_act->second)
                     );
 
-                    for (auto ti = rs.begin(); ti != rs.end(); ++ti)
-                    {
-                        TransferFile& tfile = *ti;
-
-                        if(tfile.jobType == Job::kTypeMultipleReplica)
-                        {
+                    for (auto& tfile: rs) {
+                        if (tfile.jobType == Job::kTypeMultipleReplica) {
                             int total = 0;
                             int remain = 0;
                             sql << " select count(*) as c1, "
@@ -873,8 +860,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                             tfile.lastReplica = (total == remain)? 1: 0;
                         }
-                        if(tfile.jobType == Job::kTypeMultiHop)
-                        {
+
+                        if (tfile.jobType == Job::kTypeMultiHop) {
                             int maxIndex = 0;
                             sql << "SELECT MAX(file_index) "
                                    "FROM t_file "
@@ -891,14 +878,10 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 }
             }
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         files.clear();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         files.clear();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }

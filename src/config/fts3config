@@ -193,8 +193,12 @@ LogTokenRequests=false
 # In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
 #OptimizerGraceTime = 3600
 
-# Enable or disable job priorities (1 = fixed, 0 = follow job priorities)
-# By default (value = 0), it honors the user-specified priorities
+# Enable or disable job priorities (default true)
+#AllowJobPriority = True
+
+# Schedule only transfers with a certain job priority (default 0)
+#  - value = 0, honor the user-specified priorities
+#  - 1 <= value <= 5, schedule only transfers with job priority = value
 #UseFixedJobPriority = 0
 
 # Behavior for failed multihop jobs
@@ -202,7 +206,7 @@ LogTokenRequests=false
 #CancelUnusedMultihopFiles = False
 
 # Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default false)
-#RetrieveSEToken = false
+#RetrieveSEToken = False
 
 # Tell the FTS system to not manage access tokens that don't meet certain criteria (default false)
 NonManagedTokens = True
