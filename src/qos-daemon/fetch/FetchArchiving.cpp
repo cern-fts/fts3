@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -26,7 +26,7 @@
 #include "server/common/DrainMode.h"
 
 #include "FetchArchiving.h"
-#include "../task/ArchivingPollTask.h"
+#include "qos-daemon/task/ArchivingPollTask.h"
 
 
 void FetchArchiving::fetch()
@@ -50,6 +50,7 @@ void FetchArchiving::fetch()
         try {
             if (fts3::server::DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
+                boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
 
