@@ -246,25 +246,21 @@ std::list<fts3::events::MessageUpdater> MySqlAPI::getActiveInHost(const std::str
 
         std::list<fts3::events::MessageUpdater> msgs;
 
-        for (auto i = rs.begin(); i != rs.end(); ++i) {
+        for (const auto& row: rs) {
             fts3::events::MessageUpdater msg;
 
-            msg.set_job_id(i->get<std::string>("job_id"));
-            msg.set_file_id(get_file_id_from_row(*i));
-            msg.set_process_id(i->get<int>("pid"));
+            msg.set_job_id(row.get<std::string>("job_id"));
+            msg.set_file_id(get_file_id_from_row(row));
+            msg.set_process_id(row.get<int>("pid", 0));
             msg.set_timestamp(millisecondsSinceEpoch());
-
             msgs.push_back(msg);
         }
 
         return msgs;
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         throw SystemError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         throw SystemError(std::string(__func__) + ": Caught exception " );
     }
 }

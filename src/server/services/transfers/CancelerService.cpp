@@ -18,12 +18,10 @@
  * limitations under the License.
  */
 
-#include "CancelerService.h"
-
 #include <signal.h>
-
 #include <boost/filesystem.hpp>
 
+#include "CancelerService.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "server/common/DrainMode.h"
@@ -165,12 +163,19 @@ void CancelerService::applyActiveTimeouts()
 /// To be called on start
 static void recoverProcessesFromDb()
 {
-    auto actives = DBSingleton::instance().getDBObjectInstance()->getActiveInHost(getFullHostname());
-    for (auto i = actives.begin(); i != actives.end(); ++i) {
-        const fts3::events::MessageUpdater &msg = *i;
-        ThreadSafeList::get_instance().push_back(*i);
+    auto activeProcesses = DBSingleton::instance().getDBObjectInstance()->getActiveInHost(getFullHostname());
+
+    for (auto& process: activeProcesses) {
+        ThreadSafeList::get_instance().push_back(process);
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Adding to watchlist from DB: "
-            << msg.job_id() << " / " << msg.file_id() << commit;
+                                        << process.job_id() << " / " << process.file_id()
+                                        << " (pid=" << process.process_id() << ")" << commit;
+
+        if (process.process_id() == 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "[CancelerService] Transfer process with pid=0"
+                                               << " (" << process.job_id() << " / " << process.file_id() << ")"
+                                               << commit;
+        }
     }
 }
 
@@ -184,7 +189,10 @@ void CancelerService::runService()
     auto cancelInterval = static_cast<unsigned int>(ServerConfig::instance().get<int>("CancelCheckInterval"));
     auto queueTimeoutInterval = static_cast<unsigned int>(ServerConfig::instance().get<int>("QueueTimeoutCheckInterval"));
     auto activeTimeoutInterval = static_cast<unsigned int>(ServerConfig::instance().get<int>("ActiveTimeoutCheckInterval"));
-    bool checkStalledTransfers = ServerConfig::instance().get<bool>("CheckStalledTransfers");
+
+    auto checkStalledTransfers = ServerConfig::instance().get<bool>("CheckStalledTransfers");
+    auto checkStalledTimeout = ServerConfig::instance().get<int>("CheckStalledTimeout");
+    auto sigKillDelay = ServerConfig::instance().get<int>("SigKillDelay");
 
     recoverProcessesFromDb();
 
@@ -192,6 +200,10 @@ void CancelerService::runService()
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CancelCheck) interval: " << cancelInterval << "s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(QueueTimeoutCheck) interval: " << queueTimeoutInterval << "s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(ActiveTimeoutCheck) interval: " << activeTimeoutInterval << "s" << commit;
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CheckStalledTransfers): " << (checkStalledTransfers ? "true" : "false") << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CheckStalledTimeout) value: " << checkStalledTimeout << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(SigKillDelay) value: " << sigKillDelay << "ms" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
@@ -275,7 +287,7 @@ void CancelerService::killRunningJob(const std::vector<int>& pids)
         kill(pid, SIGTERM);
     }
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Giving " << sigKillDelay << " ms for graceful termination" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Giving " << sigKillDelay << "ms for graceful termination" << commit;
     boost::this_thread::sleep(boost::posix_time::milliseconds(sigKillDelay));
 
     for (auto iter = pids.begin(); iter != pids.end(); ++iter) {
