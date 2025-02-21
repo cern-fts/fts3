@@ -194,8 +194,6 @@ void CancelerService::runService()
     auto checkStalledTimeout = ServerConfig::instance().get<int>("CheckStalledTimeout");
     auto sigKillDelay = ServerConfig::instance().get<int>("SigKillDelay");
 
-    recoverProcessesFromDb();
-
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService interval: 1s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CancelCheck) interval: " << cancelInterval << "s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(QueueTimeoutCheck) interval: " << queueTimeoutInterval << "s" << commit;
@@ -204,6 +202,8 @@ void CancelerService::runService()
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CheckStalledTransfers): " << (checkStalledTransfers ? "true" : "false") << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(CheckStalledTimeout) value: " << checkStalledTimeout << "s" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "CancelerService(SigKillDelay) value: " << sigKillDelay << "ms" << commit;
+
+    recoverProcessesFromDb();
 
     while (!boost::this_thread::interruption_requested())
     {
