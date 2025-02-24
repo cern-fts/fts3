@@ -3817,6 +3817,8 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
     //TODO: query for credentials to be checked when integrating OIDC
 
     try {
+        auto limit = ServerConfig::instance().get<int>("FetchArchivingLimit");
+
         soci::rowset<soci::row> rs = (sql.prepare <<
                                                    " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, f.vo_name,  c.dn, c.dlg_id, j.archive_timeout"
                                                    " FROM t_file f "
@@ -3825,8 +3827,10 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
                                                    " WHERE "
                                                    "         f.file_state = 'ARCHIVING' AND "
                                                    "         f.archive_start_time IS NULL AND "
-                                                   "         (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-                soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                                   "         (hashed_id >= :hStart AND hashed_id <= :hEnd) "
+                                                   " LIMIT :limit",
+                soci::use(hashSegment.start), soci::use(hashSegment.end),
+                soci::use(limit)
         );
 
         for (const auto& row: rs) {

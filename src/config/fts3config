@@ -82,18 +82,21 @@ LogTokenRequests=false
 # MaxUrlCopyProcesses = 400
 
 ## Parameters for QoS daemon
-# ArchivePoll operation
+## ArchivePoll settings
+# Maximum number of archive monitoring operations to fetch from the database
+# Note: larger values mean more efficient database access, but larger in-memory footprint
+# FetchArchivingLimit=50000
+
 # Maximum size for the archive poll request
 # Similar to logic as the StagingBulkSize
 # ArchivePollBulkSize=100
 
-# StagingPoll operation
+## Staging and StagingPoll settings
 # Maximum number of staging requests to fetch from the database
 # Note: larger values mean more efficient database access, but larger in-memory footprint
 # FetchStagingLimit=50000
 
-# BringOnline operation
-# Maximum bulk size
+# Maximum staging bulk size
 # If the size is too large, it will take more resources (memory and CPU) to generate the requests
 # and parse the responses. Some servers may reject the requests if they are too big.
 # If it is too small, performance will be reduced.

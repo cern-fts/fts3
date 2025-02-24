@@ -314,14 +314,19 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Monitoring configuration file"
     )
     (
-        "FetchStagingLimit",
-        po::value<std::string>( &(_vars["FetchStagingLimit"]) )->default_value("50000"),
-        "Maximum number of staging requests to fetch from the database"
+        "FetchArchivingLimit",
+        po::value<std::string>( &(_vars["FetchArchivingLimit"]) )->default_value("50000"),
+        "Maximum number of archive monitoring operations to fetch from the database"
     )
     (
         "ArchivePollBulkSize",
         po::value<std::string>( &(_vars["ArchivePollBulkSize"]) )->default_value("100"),
         "Archive polling bulk size"
+    )
+    (
+        "FetchStagingLimit",
+        po::value<std::string>( &(_vars["FetchStagingLimit"]) )->default_value("50000"),
+        "Maximum number of staging requests to fetch from the database"
     )
     (
         "StagingBulkSize",
