@@ -21,6 +21,7 @@
 #include "DaemonTools.h"
 #include "Exceptions.h"
 
+#include <charconv>
 #include <cstring>
 #include <grp.h>
 #include <pwd.h>
@@ -28,10 +29,12 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <fstream>
 #include <vector>
+#include <iostream>
 
 
 namespace fs = boost::filesystem;
@@ -79,33 +82,28 @@ int countProcessesWithName(const std::string& name)
     int count = 0;
 
     try {
-        fs::directory_iterator end_itr;
-        for (fs::directory_iterator itr("/proc"); itr != end_itr; ++itr) {
-            char *endptr;
-            errno = 0;
-            long pid = strtol(itr->path().filename().c_str(), &endptr, 10);
-            if (*endptr != '\0' || ((pid == LONG_MIN || pid == LONG_MAX) && errno == ERANGE))
+        const std::filesystem::path proc{"/proc"};
+        for (auto const& proc_entry : std::filesystem::directory_iterator{proc}) {
+            std::filesystem::path pid = proc_entry.path();
+            int result;
+            auto [ptr, ec] = std::from_chars(pid.filename().c_str(), pid.filename().c_str() + pid.filename().string().size(), result);
+            if (ec != std::errc())
                 continue;
 
-            fs::path cmdline(itr->path());
-            cmdline /= "cmdline";
-
+            const std::filesystem::path cmdline{pid.string() + "/cmdline"};
             try {
-                std::ifstream cmdlineStream(cmdline.string().c_str(), std::ios_base::in);
-                char cmdName[256];
+                std::ifstream cmdlineStream(cmdline.c_str(), std::ios_base::in);
+                std::string cmdName;
 
-                cmdlineStream.getline(cmdName, sizeof(cmdName), '\0');
-
-                if (boost::ends_with(cmdName, name)) {
+                std::getline(cmdlineStream, cmdName, '\0');
+                if (cmdName.ends_with(name)) {
                     ++count;
                 }
-            }
-            catch (...) {
+            } catch (...) {
                 // pass
             }
-        }
-    }
-    catch (...) {
+       }
+    } catch (...) {
         return -1;
     }
 
