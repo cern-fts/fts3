@@ -481,7 +481,14 @@ else:
     )
     db_conn.set_session(autocommit=True)
 
-min_allowed_major_db_schema_version = 9
+MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION_MYSQL = 9
+MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION_POSTGRESQL = 0
+
+min_allowed_major_db_schema_version = (
+    MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION_MYSQL
+    if config["db_type"] == "mysql"
+    else MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION_POSTGRESQL
+)
 actual_major_db_schema_version = get_major_db_schema_version(db_conn)
 if actual_major_db_schema_version < min_allowed_major_db_schema_version:
     print(

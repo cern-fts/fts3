@@ -177,7 +177,7 @@ dbconn_pool = DbConnPool(
     sslmode=config["db_sslmode"],
 )
 
-MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION = 9
+MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION = 0
 with dbconn_pool.get_dbconn() as dbconn:
     actual_major_db_schema_version = get_major_db_schema_version(dbconn)
 if actual_major_db_schema_version < MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION:

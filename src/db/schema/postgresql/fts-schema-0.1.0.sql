@@ -467,7 +467,7 @@ CREATE TABLE t_schema_vers (
   PRIMARY KEY (major, minor, patch)
 );
 INSERT INTO t_schema_vers (major, minor, patch, message)
-VALUES (9, 1, 0, 'Schema 9.1.0');
+VALUES (0, 1, 0, 'Schema 0.1.0');
 
 CREATE TABLE t_bad_ses (
   se            VARCHAR(256) NOT NULL DEFAULT '',
@@ -1036,3 +1036,11 @@ CREATE TRIGGER trg_delete_file
     AFTER DELETE ON t_file
     FOR EACH ROW
 EXECUTE FUNCTION update_queues_on_file_delete();
+
+
+CREATE TABLE t_token_refresher_failed_token(
+  token_id         CHAR(16)      NOT NULL,
+  failed_timestamp TIMESTAMP     NOT NULL,
+  error_message    VARCHAR(1024) NOT null,
+  PRIMARY KEY (token_id)
+);
