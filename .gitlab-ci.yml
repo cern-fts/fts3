@@ -31,6 +31,8 @@ black:
   script:
     - black --version
     - black --check --fast --diff --target-version py39 ./src/scheduler/python
+    - black --check --fast --diff --target-version py39 ./src/tokens/ftstokenhousekeeperd
+    - black --check --fast --diff --target-version py39 ./src/tokens/ftstokenrefresherd
 
 pylint39:
   <<: *pylint_definition
