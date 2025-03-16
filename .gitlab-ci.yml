@@ -20,9 +20,9 @@ stages:
     - pyenv global ${!PY}
     - source ${!VENV}/bin/activate
     - pylint --version
-    - pylint --output-format colorized ./src/scheduler/python/fts_scheduler
-  variables:
-    PYTHONPATH: ./src/scheduler/python/fts_scheduler
+    - pylint --output-format colorized --source-roots ./src/scheduler/python/fts_scheduler ./src/scheduler/python/fts_scheduler
+    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenhousekeeperd --ignored-modules=pymysql,requests
+    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenrefresherd --ignored-modules=pymysql,requests
 
 black:
   # Check that every file has been formatted with black
