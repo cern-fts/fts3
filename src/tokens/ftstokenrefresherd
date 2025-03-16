@@ -385,9 +385,9 @@ def get_fresh_access_token(token_providers, openid_configurations, token_row):
     client_secret = token_provider["client_secret"]
     openid_configuration = openid_configurations[token_issuer]
     if not openid_configuration:
-        result[
-            "non_recoverable_error"
-        ] = f"Token issuer has no OpenID configuration: token_issuer={token_issuer}"
+        result["non_recoverable_error"] = (
+            f"Token issuer has no OpenID configuration: token_issuer={token_issuer}"
+        )
         return result
     token_endpoint = openid_configuration["token_endpoint"]
 
@@ -414,16 +414,16 @@ def get_fresh_access_token(token_providers, openid_configurations, token_row):
         result["post_sec"] = time.time() - start_post
     except Exception as e:
         result["post_sec"] = time.time() - start_post
-        result[
-            "recoverable_error"
-        ] = f"Failed to get fresh access token: requests.post raised an exception: {e}"
+        result["recoverable_error"] = (
+            f"Failed to get fresh access token: requests.post raised an exception: {e}"
+        )
         log.warn(result["recoverable_error"])
         return result
 
     if response is None:
-        result[
-            "recoverable_error"
-        ] = "Failed to get fresh access token: response has unexpected None value"
+        result["recoverable_error"] = (
+            "Failed to get fresh access token: response has unexpected None value"
+        )
         return result
 
     if response.status_code == 401:
@@ -436,30 +436,30 @@ def get_fresh_access_token(token_providers, openid_configurations, token_row):
         return result
 
     if response.status_code != 200:
-        result[
-            "recoverable_error"
-        ] = f"Failed to get fresh access token: status_code={response.status_code}"
+        result["recoverable_error"] = (
+            f"Failed to get fresh access token: status_code={response.status_code}"
+        )
         return result
 
     json_response = None
     try:
         json_response = json.loads(response.text)
     except Exception as e:
-        result[
-            "recoverable_error"
-        ] = f"Failed to get fresh access token: Failed to parse response.text as JSON: {e}"
+        result["recoverable_error"] = (
+            f"Failed to get fresh access token: Failed to parse response.text as JSON: {e}"
+        )
         return result
 
     if "access_token" not in json_response:
-        result[
-            "recoverable_error"
-        ] = "Failed to get fresh access token: No access token in the response"
+        result["recoverable_error"] = (
+            "Failed to get fresh access token: No access token in the response"
+        )
         return result
 
     if "refresh_token" not in json_response:
-        result[
-            "recoverable_error"
-        ] = "Failed to get fresh access token: No refresh token in the response"
+        result["recoverable_error"] = (
+            "Failed to get fresh access token: No refresh token in the response"
+        )
         return result
 
     result["new_access_token"] = decode_token(json_response["access_token"])
@@ -498,7 +498,9 @@ def update_token_row(db_conn, token_id, new_access_token, new_refresh_token_raw)
         if new_access_token["payload"]["exp"] > new_access_token["payload"]["nbf"]
         else 0
     )
-    new_access_token_refresh_after = new_access_token["payload"]["nbf"] + new_access_token_lifetime_sec * 0.5
+    new_access_token_refresh_after = (
+        new_access_token["payload"]["nbf"] + new_access_token_lifetime_sec * 0.5
+    )
 
     start_update = time.time()
     cursor = db_conn.cursor()
@@ -703,6 +705,7 @@ log = get_log(log_file_path=config["log_file"], log_program_name=program_name)
 
 if config["db_type"] == "mysql":
     import pymysql
+
     db_conn = pymysql.connect(
         user=config["db_user"],
         password=config["db_password"],
@@ -713,6 +716,7 @@ if config["db_type"] == "mysql":
     )
 else:
     import psycopg2
+
     db_conn = psycopg2.connect(
         f"dbname='{config['db_database']}' "
         f"user='{config['db_user']}' "
@@ -720,7 +724,7 @@ else:
         f"port='{config['db_port']}' "
         f"password='{config['db_password']}'"
     )
-    db_conn.set_session(autocommit = True)
+    db_conn.set_session(autocommit=True)
 
 MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION_MYSQL = 9
 MIN_ALLOWED_MAJOR_DB_SCHEMA_VERSION_POSTGRESQL = 0
