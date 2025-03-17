@@ -16,13 +16,14 @@ stages:
   script:
     - PY="PY${CI_JOB_NAME##pylint}"
     - VENV="VENV_${CI_JOB_NAME##pylint}"
-    - source ~/.bashrc
+    - export PYENV_ROOT="$HOME/.pyenv"
+    - export PATH="$PYENV_ROOT/bin:$PATH"
     - pyenv global ${!PY}
     - source ${!VENV}/bin/activate
     - pylint --version
     - pylint --output-format colorized --source-roots ./src/scheduler/python/fts_scheduler ./src/scheduler/python/fts_scheduler
-    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenhousekeeperd --ignored-modules=pymysql,requests
-    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenrefresherd --ignored-modules=pymysql,requests
+    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenhousekeeperd
+    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenrefresherd
 
 black:
   # Check that every file has been formatted with black
