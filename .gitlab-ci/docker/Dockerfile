@@ -43,15 +43,15 @@ ENV VENV_311 /home/ci/venv_311
 
 RUN . ~/.bashrc && pyenv global $PY39 && python3 -m venv $VENV_39 && \
     . $VENV_39/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-    pip install black && pip install pylint && pip install psycopg2 && deactivate
+    pip install black && pip install pylint && pip install pymysql && pip install psycopg2 && pip install requests && deactivate
 
 RUN . ~/.bashrc && pyenv global $PY310 && python3 -m venv $VENV_310 && \
     . $VENV_310/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-    pip install black && pip install pylint && pip install psycopg2 && deactivate
+    pip install black && pip install pylint && pip install pymysql && pip install psycopg2 && pip install requests && deactivate
 
 RUN . ~/.bashrc && pyenv global $PY311 && python3 -m venv $VENV_311 && \
     . $VENV_311/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-    pip install black && pip install pylint && pip install psycopg2 && deactivate
+    pip install black && pip install pylint && pip install pymysql && pip install psycopg2 && pip install requests && deactivate
 
 # Run on Python3.9 by default
 RUN . ~/.bashrc && pyenv global $PY39
