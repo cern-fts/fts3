@@ -43,8 +43,8 @@ BOOST_FIXTURE_TEST_CASE (simpleTransfer, UrlCopyFixture)
     BOOST_CHECK_NE(c.stats.transfer.end, 0);
 }
 
-// User checksum missmatch source checksum
-BOOST_FIXTURE_TEST_CASE (sourceUserChecksumMissmatch, UrlCopyFixture)
+// User checksum mismatch source checksum
+BOOST_FIXTURE_TEST_CASE (sourceUserChecksumMismatch, UrlCopyFixture)
 {
     Transfer original;
     original.source        = Uri::parse("mock://host/path/file?checksum=42");
@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_CASE (sourceUserChecksumMissmatch, UrlCopyFixture)
     BOOST_CHECK_EQUAL(t.error->code(), EIO);
     const std::string error_message = "Source and user-defined " + original.checksumAlgorithm +
                                       " checksum do not match (00000042 != " + original.checksumValue +")";
-    BOOST_CHECK_EQUAL(t.error->scope(), TRANSFER);
+    BOOST_CHECK_EQUAL(t.error->scope(), SOURCE);
     BOOST_CHECK_EQUAL(t.error->phase(), TRANSFER_PREPARATION);
     BOOST_CHECK_EQUAL(t.error->what(), error_message);
 }
@@ -97,8 +97,8 @@ BOOST_FIXTURE_TEST_CASE (sourceUserChecksumMatch, UrlCopyFixture)
     BOOST_CHECK_EQUAL(t.error.get(), (void*)NULL);
 }
 
-// User checksum missmatch destination checksum
-BOOST_FIXTURE_TEST_CASE (destinationUserChecksumMissmatch, UrlCopyFixture)
+// User checksum mismatch destination checksum
+BOOST_FIXTURE_TEST_CASE (destinationUserChecksumMismatch, UrlCopyFixture)
 {
     Transfer original;
     original.source        = Uri::parse("mock://host/path/file?checksum=42");
@@ -120,7 +120,7 @@ BOOST_FIXTURE_TEST_CASE (destinationUserChecksumMissmatch, UrlCopyFixture)
     BOOST_CHECK_EQUAL(t.error->code(), EIO);
     const std::string error_message = "User-defined and destination " + original.checksumAlgorithm +
         " checksum do not match (" + original.checksumValue + " != 00000042)";
-    BOOST_CHECK_EQUAL(t.error->scope(), TRANSFER);
+    BOOST_CHECK_EQUAL(t.error->scope(), DESTINATION);
     BOOST_CHECK_EQUAL(t.error->phase(), TRANSFER_FINALIZATION);
     BOOST_CHECK_EQUAL(t.error->what(), error_message);
 }
@@ -174,8 +174,8 @@ BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMatch, UrlCopyFixture)
     BOOST_CHECK_EQUAL(t.error.get(), (void*)NULL);
 }
 
-// Source and destination checksum missmatch
-BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMissMatch, UrlCopyFixture)
+// Source and destination checksum mismatch
+BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMisMatch, UrlCopyFixture)
 {
     Transfer original;
     original.source        = Uri::parse("mock://host/path/file?checksum=24");
@@ -194,7 +194,7 @@ BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMissMatch, UrlCopyFixture)
     BOOST_CHECK_EQUAL(t.error->code(), EIO);
     const std::string error_message = "Source and destination " + original.checksumAlgorithm +
         " checksum do not match (00000024 != 00000042)";
-    BOOST_CHECK_EQUAL(t.error->scope(), TRANSFER);
+    BOOST_CHECK_EQUAL(t.error->scope(), DESTINATION);
     BOOST_CHECK_EQUAL(t.error->phase(), TRANSFER_FINALIZATION);
     BOOST_CHECK_EQUAL(t.error->what(), error_message);
 }
@@ -218,7 +218,7 @@ BOOST_FIXTURE_TEST_CASE (destinationExist, UrlCopyFixture)
     BOOST_CHECK_NE(t.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(t.error->code(), EEXIST);
     const std::string &error_message = "Destination file exists and overwrite is not enabled";
-    BOOST_CHECK_EQUAL(t.error->scope(), TRANSFER);
+    BOOST_CHECK_EQUAL(t.error->scope(), DESTINATION);
     BOOST_CHECK_EQUAL(t.error->phase(), TRANSFER_PREPARATION);
     BOOST_CHECK_EQUAL(t.error->what(), error_message);
 }
@@ -290,7 +290,7 @@ BOOST_FIXTURE_TEST_CASE (destinationNoParentPath, UrlCopyFixture)
     Transfer &t = completedMsgs.front();
     BOOST_CHECK_NE(t.error.get(), (void*)NULL);
     BOOST_CHECK_EQUAL(t.error->code(), EPERM);
-    BOOST_CHECK_EQUAL(t.error->scope(), TRANSFER);
+    BOOST_CHECK_EQUAL(t.error->scope(), DESTINATION);
     BOOST_CHECK_EQUAL(t.error->phase(), TRANSFER_PREPARATION);
 }
 
