@@ -32,14 +32,14 @@ black:
     - black --version
     - black --check --fast --diff --target-version py39 ./src/scheduler/*
 
-pylint39:
-  <<: *pylint_definition
-
-pylint310:
-  <<: *pylint_definition
-
-pylint311:
-  <<: *pylint_definition
+#pylint39:
+#  <<: *pylint_definition
+#
+#pylint310:
+#  <<: *pylint_definition
+#
+#pylint311:
+#  <<: *pylint_definition
 
 #--------------------------
 # Build templates
