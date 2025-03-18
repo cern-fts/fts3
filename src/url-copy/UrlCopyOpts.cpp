@@ -18,10 +18,12 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
-#include <fstream>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include "Transfer.h"
 #include "UrlCopyOpts.h"
 #include "common/Logger.h"
@@ -110,6 +112,13 @@ const option UrlCopyOpts::long_options[] =
 
 const char UrlCopyOpts::short_options[] = "";
 
+static std::string formatAdler32Checksum(std::string checksum)
+{
+    unsigned int padding = std::max(0, 8 - static_cast<int>(checksum.length()));
+    checksum.insert(0, padding, '0');
+    return checksum;
+}
+
 static void setChecksum(Transfer &transfer, const std::string &checksum)
 {
     if (checksum == "x") {
@@ -122,8 +131,15 @@ static void setChecksum(Transfer &transfer, const std::string &checksum)
         transfer.checksumValue.clear();
     }
     else {
-        transfer.checksumAlgorithm.assign(checksum.substr(0, colon));
-        transfer.checksumValue.assign(checksum.substr(colon + 1));
+        auto algorithm = checksum.substr(0, colon);
+        auto formatted = checksum.substr(colon + 1);
+
+        if (boost::iequals(algorithm, "adler32")) {
+            formatted = formatAdler32Checksum(formatted);
+        }
+
+        transfer.checksumAlgorithm.assign(algorithm);
+        transfer.checksumValue.assign(formatted);
     }
 }
 

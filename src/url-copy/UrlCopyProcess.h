@@ -53,7 +53,15 @@ private:
     void archiveLogs(Transfer &transfer);
 
     /// Transfer utils
-    void cleanup_on_failure(Gfal2TransferParams &params, const std::string &destination);
+    uint64_t obtainFileSize(Gfal2TransferParams& params, const std::string& url, bool is_source);
+    std::string obtainFileChecksum(const std::string& url, const std::string& algorithm,
+                                   const std::string& scope, const std::string& phase);
+    bool checkFileExists(Gfal2TransferParams& params, const std::string& url);
+    void deleteFile(Gfal2TransferParams& params, const std::string& url);
+    void mkdirRecursive(Gfal2TransferParams& params, const Uri& uri);
+    void performCopy(Gfal2TransferParams& params, Transfer& transfer);
+    void releaseSourceFile(Gfal2TransferParams& params, Transfer& transfer);
+    void cleanupOnFailure(Gfal2TransferParams& params, Transfer& transfer);
 
 public:
 

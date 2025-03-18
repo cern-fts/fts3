@@ -134,6 +134,10 @@ public:
     // File size
     uint64_t fileSize;
 
+    // Source and destination checksums
+    std::string sourceChecksumValue;
+    std::string destChecksumValue;
+
     // Progress markers
     double averageThroughput; // In KiB/s
     double instantaneousThroughput; // In KiB/s

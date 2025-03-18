@@ -180,6 +180,138 @@ static void performOverwriteOnDiskWorkflow(const UrlCopyOpts &opts, Transfer &tr
 }
 
 
+uint64_t UrlCopyProcess::obtainFileSize(Gfal2TransferParams& params, const std::string& url, bool is_source)
+{
+    auto target = is_source ? "source" : "destination";
+    auto scope = is_source ? SOURCE : DESTINATION;
+    auto phase = is_source ? TRANSFER_PREPARATION : TRANSFER_FINALIZATION;
+
+    try {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Getting " << target << " file size" << commit;
+        auto filesize = gfal2.stat(params, url, is_source).st_size;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File size: " << filesize << commit;
+        return filesize;
+    } catch (const Gfal2Exception &ex) {
+        throw UrlCopyError(scope, phase, ex);
+    } catch (const std::exception &ex) {
+        throw UrlCopyError(scope, phase, EINVAL, ex.what());
+    }
+}
+
+
+std::string UrlCopyProcess::obtainFileChecksum(const std::string& url, const std::string& algorithm,
+                                               const std::string& scope, const std::string& phase)
+{
+    try {
+        return gfal2.getChecksum(url, algorithm);
+    } catch (const Gfal2Exception &ex) {
+        throw UrlCopyError(scope, phase, ex);
+    } catch (const std::exception &ex) {
+        throw UrlCopyError(scope, phase, EINVAL, ex.what());
+    }
+}
+
+
+bool UrlCopyProcess::checkFileExists(Gfal2TransferParams& params, const std::string& url)
+{
+    try {
+        gfal2.access(params, url, false, F_OK);
+        return true;
+    } catch (const Gfal2Exception &ex) {
+        if (ex.code() != ENOENT) {
+            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+        }
+
+        return false;
+    }
+}
+
+
+void UrlCopyProcess::deleteFile(Gfal2TransferParams& params, const std::string& url)
+{
+    try {
+        gfal2.rm(params, url, false);
+    } catch (const Gfal2Exception &ex) {
+        throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "OVERWRITE Deleted file: " << url << commit;
+}
+
+
+void UrlCopyProcess::mkdirRecursive(Gfal2TransferParams& params, const Uri& uri)
+{
+    std::filesystem::path dest_path(uri.path);
+
+    if (dest_path.has_parent_path()) {
+        const std::string parent_uri = uri.protocol + "://" + uri.host + dest_path.parent_path().string()
+                                       + "?" + uri.queryString;
+        try {
+            gfal2.mkdir_recursive(params, parent_uri, false);
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination does not exist, creating: " + parent_uri << commit;
+        } catch (const Gfal2Exception &ex) {
+            if (ex.code() != EEXIST) {
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Unable to create destination parent directory: " + parent_uri << commit;
+                throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
+            }
+        }
+    }
+}
+
+void UrlCopyProcess::performCopy(Gfal2TransferParams& params, Transfer& transfer)
+{
+    try {
+        gfal2.copy(params, transfer.source, transfer.destination);
+    } catch (const Gfal2Exception &ex) {
+        // Clean-up on a copy failure
+        if (ex.code() != EEXIST) {
+            cleanupOnFailure(params, transfer);
+        } else {
+            // Should only get here due to a race condition at the storage level
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "The transfer failed because the file exists. Do not clean!" << commit;
+        }
+
+        int errc = (timeoutExpired ? ETIMEDOUT : ex.code());
+        throw UrlCopyError(TRANSFER, TRANSFER, errc, ex.what());
+    } catch (const std::exception &ex) {
+        throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
+    }
+}
+
+
+void UrlCopyProcess::releaseSourceFile(Gfal2TransferParams& params, Transfer& transfer)
+{
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Releasing source file" << commit;
+    try {
+        gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
+        transfer.stats.evictionRetc = 0;
+    } catch (const Gfal2Exception &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release source file: "
+                                           << transfer.source << commit;
+        transfer.stats.evictionRetc = std::abs(ex.code());
+    }
+}
+
+
+void UrlCopyProcess::cleanupOnFailure(Gfal2TransferParams& params, Transfer& transfer)
+{
+    if (!opts.disableCleanup) {
+        try {
+            gfal2.rm(params, transfer.destination, false);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file removed (cleanup-on-failure)" << commit;
+            transfer.stats.cleanupRetc = 0;
+        } catch (const Gfal2Exception &ex) {
+            if (ex.code() != ENOENT) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Error when trying to clean the destination: " <<  ex.what() << commit;
+            }
+            transfer.stats.cleanupRetc = std::abs(ex.code());
+        };
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The cleanup-on-failure has been explicitly disabled" << commit;
+    }
+}
+
+
 UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
     opts(opts), reporter(reporter), canceled(false), timeoutExpired(false)
 {
@@ -386,30 +518,15 @@ static void pingTask(Transfer *transfer, Reporter *reporter, unsigned pingInterv
     }
 }
 
-static bool compare_checksum(std::string source, std::string destination)
+
+static bool compare_checksum(std::string source, std::string target)
 {
     source.erase(0, source.find_first_not_of('0'));
-    destination.erase(0, destination.find_first_not_of('0'));
+    target.erase(0, target.find_first_not_of('0'));
 
-    return boost::iequals(source, destination);
+    return boost::iequals(source, target);
 }
 
-void UrlCopyProcess::cleanup_on_failure(Gfal2TransferParams &params, const std::string &destination)
-{
-    if (!opts.disableCleanup) {
-        try {
-            gfal2.rm(params, destination, false);
-        } catch (const Gfal2Exception &ex) {
-            if (ex.code() != ENOENT) {
-                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "When trying to clean the destination: " <<  ex.what() << commit;
-            }
-        };
-
-        FTS3_COMMON_LOGGER_LOG(DEBUG, "Destination file removed");
-    } else {
-        FTS3_COMMON_LOGGER_LOG(DEBUG, "The transfer clean-up has been manually disabled");
-    }
-}
 
 static void destTokenRefreshTask(const Transfer* transfer, Reporter* reporter, const std::string& token_id, const std::string& token)
 {
@@ -509,35 +626,55 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     // Thread to refresh destination token
     AutoInterruptThread destTokenRefreshThread(boost::bind(&destTokenRefreshTask, &transfer, &reporter, transfer.destTokenId, params.getDstToken()));
 
-    if (opts.strictCopy) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
-        transfer.fileSize = transfer.userFileSize;
-    } else {
-        try {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Getting source file size" << commit;
-            transfer.fileSize = gfal2.stat(params, transfer.source, true).st_size;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File size: " << transfer.fileSize << commit;
-        } catch (const Gfal2Exception &ex) {
-            throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, ex);
-        } catch (const std::exception &ex) {
-            throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, EINVAL, ex.what());
+    ////////////////////////////
+    /// Source file verification
+    ////////////////////////////
+
+    if (!opts.strictCopy) {
+        transfer.fileSize = obtainFileSize(params, transfer.source, true);
+
+        // User-set checksum available & checksum-mode == source
+        if ((!transfer.checksumValue.empty()) &&
+            (transfer.checksumMode & Transfer::CHECKSUM_SOURCE)) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing source checksum verification" << commit;
+
+            transfer.sourceChecksumValue = obtainFileChecksum(transfer.source, transfer.checksumAlgorithm,
+                                                              SOURCE, TRANSFER_PREPARATION);
+
+            if (!compare_checksum(transfer.sourceChecksumValue, transfer.checksumValue)) {
+                throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, EIO,
+                    "Source and user-defined " + transfer.checksumAlgorithm + " checksum do not match "
+                        + "(" + transfer.sourceChecksumValue + " != " + transfer.checksumValue + ")");
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and user-defined checksum match! (" << transfer.checksumValue << ")" << commit;
         }
+    }
 
-        if (!opts.overwrite) {
-            try {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
-                gfal2.stat(params, transfer.destination, false);
+    ////////////////////////////////
+    /// Destination file preparation
+    ////////////////////////////////
 
-                // File exists
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file exists" << commit;
-                bool overwrite_disk_performed = false;
+    if (!opts.strictCopy) {
+        // Check if destination exists
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking existence of destination file" << commit;
+        bool destination_exists = checkFileExists(params, transfer.destination);
+
+        // Apply the overwrite workflows
+        if (destination_exists) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file exists!" << commit;
+
+            if (opts.overwrite) {
+                deleteFile(params, transfer.destination);
+            } else {
                 std::string errmsg = "Destination file exists and overwrite is not enabled";
+                bool overwrite_disk_performed = false;
 
                 if (opts.overwriteOnDisk) {
                     try {
                         performOverwriteOnDiskWorkflow(opts, transfer, gfal2, params);
                         overwrite_disk_performed = true;
-                    } catch(const UrlCopyError &ex) {
+                    } catch (const UrlCopyError &ex) {
                         // Dealing with file on tape endpoint, allow DestFileReport
                         if (ex.code() == EROFS) {
                             errmsg = ex.what();
@@ -551,12 +688,16 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                     performDestFileReportWorkflow(opts, transfer, gfal2, params);
                     throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, EEXIST, errmsg);
                 }
-            } catch (const Gfal2Exception &ex) {
-                if (ex.code() != ENOENT) {
-                    throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
-                }
             }
+        } else {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file does not exist!" << commit;
+            mkdirRecursive(params, transfer.destination);
         }
+    }
+
+    if (opts.strictCopy) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
+        transfer.fileSize = transfer.userFileSize;
     }
 
     // Timeout
@@ -591,148 +732,67 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
 
-    std::string src_checksum;
-    if (!opts.strictCopy) {
-        try {
-            src_checksum = gfal2.getChecksum(transfer.source, transfer.checksumAlgorithm);
-        } catch (const std::exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum type " << transfer.checksumAlgorithm
-                                               << " not supported by source. Aborting transfer..." << commit;
-            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ex.what());
-        };
-    }
+    /////////////////////////////////
+    /// Transfer
+    /////////////////////////////////
 
-    // Compare source checksum against user-provided checksum
-    const std::string &user_checksum = transfer.checksumValue;
-    if (!opts.strictCopy && !user_checksum.empty() && transfer.checksumMode & Transfer::CHECKSUM_SOURCE) {
-        if (!compare_checksum(user_checksum, src_checksum)) {
-            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EIO, "Source and user-defined "
-                    + transfer.checksumAlgorithm + " checksum do not match ("
-                    + src_checksum + " != " + user_checksum + ")");
-        }
-    }
-
-    // Check for the destination and overwrite if needed
-    bool destination_exist = true;
-    try {
-        gfal2.access(params, transfer.destination, false, F_OK);
-    } catch (const Gfal2Exception &ex) {
-        if (ex.code() != ENOENT)
-            throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
-
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination file does not exist!" << commit;
-        destination_exist = false;
-    }
-
-    if (destination_exist) {
-        if (opts.overwrite) {
-            try {
-                gfal2.rm(params, transfer.destination, false);
-            } catch (const Gfal2Exception &ex) {
-                throw UrlCopyError(DESTINATION, TRANSFER_PREPARATION, ex);
-            };
-            FTS3_COMMON_LOGGER_LOG(DEBUG, "File " + transfer.destination.fullUri + " deleted (overwrite set)");
-        } else {
-            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EEXIST,
-                               "Destination file exists and overwrite is not enabled");
-        }
-    } else {
-        auto dest_path = std::filesystem::path(transfer.destination.path);
-        if (dest_path.has_parent_path()) {
-            const Uri &dest = transfer.destination;
-            const std::string parent_uri = dest.protocol + "://" + dest.host+ dest_path.parent_path().string()
-                                           + "?" + dest.queryString;
-            try {
-                gfal2.mkdir_recursive(params, parent_uri, false);
-                FTS3_COMMON_LOGGER_LOG(DEBUG, "Destination does not exist, creating " + parent_uri);
-            } catch (const Gfal2Exception &ex) {
-                if (ex.code() != EEXIST) {
-                    FTS3_COMMON_LOGGER_LOG(DEBUG, "Unable to create destination parent directory" + parent_uri);
-                    throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
-                }
-            }
-        }
-    }
-
-    // Transfer
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;
-    try {
-        gfal2.copy(params, transfer.source, transfer.destination);
-    } catch (const Gfal2Exception &ex) {
-        // Clean-up on a copy failure
-        if (ex.code() != EEXIST) {
-            cleanup_on_failure(params, transfer.destination);
-        } else {
-            // Should only get here due to a race condition at the storage level
-            FTS3_COMMON_LOGGER_LOG(DEBUG, "The transfer failed because the file exists. Do not clean!");
-        }
+    performCopy(params, transfer);
 
-        int errc = (timeoutExpired ? ETIMEDOUT : ex.code());
-        throw UrlCopyError(TRANSFER, TRANSFER, errc, ex.what());
-    } catch (const std::exception &ex) {
-        throw UrlCopyError(TRANSFER, TRANSFER, EINVAL, ex.what());
-    }
+    /////////////////////////////////
+    /// Destination file verification
+    /////////////////////////////////
 
-    std::string dst_checksum;
     if (!opts.strictCopy) {
-        try {
-            dst_checksum = gfal2.getChecksum(transfer.destination, transfer.checksumAlgorithm);
-        } catch (const Gfal2Exception &ex) {
-            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, ex);
-        } catch (const std::exception &ex) {
-            throw UrlCopyError(TRANSFER, TRANSFER_PREPARATION, EINVAL, ex.what());
-        };
-    }
+        auto destSize = obtainFileSize(params, transfer.destination, false);
 
-    // Destination checksum verifications
-    if (!opts.strictCopy) {
-        if (!user_checksum.empty() && transfer.checksumMode & Transfer::CHECKSUM_TARGET) {
-            if (!compare_checksum(user_checksum, dst_checksum)) {
-                cleanup_on_failure(params, transfer.destination);
-                throw UrlCopyError(TRANSFER, TRANSFER_FINALIZATION, EIO, "User-defined and destination "
-                        + transfer.checksumAlgorithm + " checksum do not match " + "("
-                        + user_checksum + " != " + dst_checksum + ")");
-            }
-        } else { // Proceed to end-to-end comparison
-            if (!compare_checksum(src_checksum, dst_checksum)) {
-                cleanup_on_failure(params, transfer.destination);
-                throw UrlCopyError(TRANSFER, TRANSFER_FINALIZATION, EIO, "Source and destination "
-                        + transfer.checksumAlgorithm + " checksum do not match " + "("
-                        + src_checksum + " != " + dst_checksum + ")");
-            }
-        }
-    }
-
-    // Release source file if we have a bring-online token
-    if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Releasing source file" << commit;
-        try {
-            gfal2.releaseFile(params, transfer.source, transfer.tokenBringOnline, true);
-            transfer.stats.evictionRetc = 0;
-        } catch (const Gfal2Exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "RELEASE-PIN Failed to release source file: "
-                                               << transfer.source << commit;
-            transfer.stats.evictionRetc = std::abs(ex.code());
-        }
-    }
-
-    // Validate destination size
-    if (!opts.strictCopy) {
-        uint64_t destSize;
-        try {
-            destSize = gfal2.stat(params, transfer.destination, false).st_size;
-        } catch (const Gfal2Exception &ex) {
-            throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, ex);
-        } catch (const std::exception &ex) {
-            throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EINVAL, ex.what());
-        }
-
-        if (destSize != transfer.fileSize) {
+        if (transfer.fileSize != destSize) {
+            cleanupOnFailure(params, transfer);
             throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EINVAL,
                                "Source and destination file size mismatch");
-        } else {
-            FTS3_COMMON_LOGGER_LOG(INFO, "DESTINATION Source and destination file size matching");
         }
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and destination file size matching" << commit;
+        transfer.destChecksumValue = obtainFileChecksum(transfer.destination, transfer.checksumAlgorithm,
+                                                        DESTINATION, TRANSFER_FINALIZATION);
+
+        if ((!transfer.checksumValue.empty()) &&
+            (transfer.checksumMode & Transfer::CHECKSUM_TARGET)) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing target checksum verification" << commit;
+
+            if (!compare_checksum(transfer.checksumValue, transfer.destChecksumValue)) {
+                cleanupOnFailure(params, transfer);
+                throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
+                    "User-defined and destination " + transfer.checksumAlgorithm + " checksum do not match "
+                        + "(" + transfer.checksumValue + " != " + transfer.destChecksumValue + ")");
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User-defined and destination checksum match! (" << transfer.checksumValue << ")" << commit;
+        } else { // Proceed to end-to-end comparison
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing end-to-end checksum verification" << commit;
+
+            if (transfer.sourceChecksumValue.empty()) {
+                transfer.sourceChecksumValue = obtainFileChecksum(transfer.source, transfer.checksumAlgorithm,
+                                                                  DESTINATION, TRANSFER_FINALIZATION);
+            }
+
+            if (!compare_checksum(transfer.sourceChecksumValue, transfer.destChecksumValue)) {
+                cleanupOnFailure(params, transfer);
+                throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
+                    "Source and destination " + transfer.checksumAlgorithm + " checksum do not match "
+                        + "(" + transfer.sourceChecksumValue + " != " + transfer.destChecksumValue + ")");
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "End-to-end checksum match! (" << transfer.destChecksumValue << ")" << commit;
+        }
+    }
+
+    /////////////////////////////////
+    /// Release source file
+    /////////////////////////////////
+
+    if (!transfer.tokenBringOnline.empty() && !opts.skipEvict) {
+        releaseSourceFile(params, transfer);
     }
 }
 
