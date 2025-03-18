@@ -55,6 +55,7 @@ set(fts_msg_bulk_SOURCES
     msg-bulk-send.cpp
     MessageLoader.cpp
     BrokerConnection.cpp
+    BrokerPublisher.cpp
     BrokerConfig.cpp
 )
 
