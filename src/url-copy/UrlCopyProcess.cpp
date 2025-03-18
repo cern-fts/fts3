@@ -632,7 +632,33 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
     if (!opts.strictCopy) {
         transfer.fileSize = obtainFileSize(params, transfer.source, true);
+    } else {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
+        transfer.fileSize = transfer.userFileSize;
+    }
 
+    /////////////////////////
+    /// Internal housekeeping
+    /////////////////////////
+
+    // Timeout
+    unsigned timeout = opts.timeout;
+    if (timeout == 0) {
+        timeout = adjustTimeoutBasedOnSize(transfer.fileSize, opts.addSecPerMb);
+    }
+
+    // Set protocol parameters
+    params.setNumberOfStreams(opts.nStreams);
+    params.setTcpBuffersize(opts.tcpBuffersize);
+    params.setTimeout(timeout);
+    // Send filesize and other parameters to server
+    reporter.sendProtocol(transfer, params);
+
+    ////////////////////////////////
+    /// Source checksum verification
+    ////////////////////////////////
+
+    if (!opts.strictCopy) {
         // User-set checksum available & checksum-mode == source
         if ((!transfer.checksumValue.empty()) &&
             (transfer.checksumMode & Transfer::CHECKSUM_SOURCE)) {
@@ -695,46 +721,29 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
     }
 
-    if (opts.strictCopy) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
-        transfer.fileSize = transfer.userFileSize;
-    }
-
-    // Timeout
-    unsigned timeout = opts.timeout;
-    if (timeout == 0) {
-        timeout = adjustTimeoutBasedOnSize(transfer.fileSize, opts.addSecPerMb);
-    }
-
-    // Set protocol parameters
-    params.setNumberOfStreams(opts.nStreams);
-    params.setTcpBuffersize(opts.tcpBuffersize);
-    params.setTimeout(timeout);
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "IPv6: " << (boost::indeterminate(opts.enableIpv6) ? "indeterminate" :
-                                                   (opts.enableIpv6 ? "true" : "false")) << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
-
-    reporter.sendProtocol(transfer, params);
+    /////////////////////////////////
+    /// Transfer
+    /////////////////////////////////
 
     // Install callbacks
     params.addEventCallback(eventCallback, &transfer);
     params.addMonitorCallback(performanceCallback, &transfer);
 
+    // Timeout thread
     timeoutExpired = false;
     AutoInterruptThread timeoutThread(
         boost::bind(&timeoutTask, boost::posix_time::seconds(timeout + 60), this)
     );
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "IPv6: " << (boost::indeterminate(opts.enableIpv6) ? "indeterminate" :
+                                                   (opts.enableIpv6 ? "true" : "false")) << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << timeout << commit;
 
     // Ping thread
     AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
-
-    /////////////////////////////////
-    /// Transfer
-    /////////////////////////////////
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;
     performCopy(params, transfer);
