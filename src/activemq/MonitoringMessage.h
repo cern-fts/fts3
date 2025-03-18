@@ -18,24 +18,25 @@
  * limitations under the License.
  */
 
+
+#ifndef MONITORING_MESSAGE_H
+#define MONITORING_MESSAGE_H
+
 #pragma once
 
-#include <thread>
-#include "msg-bus/DirQ.h"
+#include <string>
 
-class MessageLoader
-{
-    private:
-        std::string last_message = "00000000000000";
-        std::unique_ptr<DirQ> monitoringQueue;
-        std::stop_token stop_token;
-        //_purge(monitoringQueue.get());
+struct MonitoringMessage {
+    std::string message;
+    std::string dirq_iter;
 
-        int loadMonitoringMessages();
+    MonitoringMessage() : message(), dirq_iter()
+    {
+    }
 
-    public:
-        MessageLoader(const std::string &baseDir, std::stop_token stop_token);
-        ~MessageLoader();
-
-        void start();
+    MonitoringMessage(std::string&& message, std::string&& dirq_iter) : message(std::move(message)), dirq_iter(std::move(dirq_iter))
+    {
+    }
 };
+
+#endif

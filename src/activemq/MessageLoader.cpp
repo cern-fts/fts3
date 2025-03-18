@@ -18,89 +18,109 @@
  * limitations under the License.
  */
 
-#include "MsgPipe.h"
-
-#include <signal.h>
-#include <iostream>
-#include <boost/filesystem.hpp>
-
+#include <fstream>
 #include "common/Logger.h"
 #include "common/ConcurrentQueue.h"
-
-extern bool stopThreads;
-static bool signalReceived = false;
+#include "MonitoringMessage.h"
+#include "msg-bus/DirQ.h"
+#include "MessageLoader.h"
 
 using fts3::common::ConcurrentQueue;
-namespace fs = boost::filesystem;
+using namespace fts3::common;
 
-void handler(int)
-{
-    if (!signalReceived) {
-        signalReceived = true;
-        stopThreads = true;
-        sleep(5);
-        exit(0);
-    }
-}
-
-
-MsgPipe::MsgPipe(const std::string &baseDir):
-    consumer(baseDir), producer(baseDir)
-{
-    //register sig handler to cleanup resources upon exiting
-    signal(SIGFPE, handler);
-    signal(SIGILL, handler);
-    signal(SIGSEGV, handler);
-    signal(SIGBUS, handler);
-    signal(SIGABRT, handler);
-    signal(SIGTERM, handler);
-    signal(SIGINT, handler);
-    signal(SIGQUIT, handler);
-}
-
-
-MsgPipe::~MsgPipe()
+MessageLoader::MessageLoader(const std::string &baseDir, std::stop_token token) :
+                             monitoringQueue(std::make_unique<DirQ>(baseDir + "/monitoring")), stop_token(token)
 {
 }
 
-
-void MsgPipe::run()
+MessageLoader::~MessageLoader()
 {
-    std::vector<std::string> messages;
+}
 
-    while (stopThreads == false) {
+int MessageLoader::loadMonitoringMessages()
+{
+    const char *error = NULL;
+    dirq_clear_error(*monitoringQueue);
+
+    const unsigned int batch_size = 5000;
+    std::unique_ptr<std::vector<MonitoringMessage>> current_vector = std::make_unique<std::vector<MonitoringMessage>>();
+    current_vector->reserve(batch_size);
+    for (const char *iter = dirq_first(*monitoringQueue); iter != nullptr; iter = dirq_next(*monitoringQueue)) {
+        auto& concurrentQueue = fts3::common::ConcurrentQueue<std::unique_ptr<std::vector<MonitoringMessage>>>::getInstance();
+        if (stop_token.stop_requested()) {
+            return 0;
+        }
+
+        if (strcmp(iter, last_message.c_str()) <= 0) {
+            continue;
+        }
+
+        if (current_vector->size() >= batch_size) {
+            if (concurrentQueue.size() > 10) {
+                concurrentQueue.drain();
+            }
+            concurrentQueue.push(std::move(current_vector));
+            current_vector = std::make_unique<std::vector<MonitoringMessage>>();
+            current_vector->reserve(batch_size);
+        }
+
+        if (dirq_lock(*monitoringQueue, iter, 0)) {
+            if (dirq_unlock(*monitoringQueue, iter, 0) && dirq_lock(*monitoringQueue, iter, 0)) {
+                break;
+            }
+        }
+
+        const char *path = dirq_get_path(*monitoringQueue, iter);
         try {
-            int returnValue = consumer.runConsumerMonitoring(messages);
-            if (returnValue != 0) {
-                std::ostringstream errorMessage;
-                errorMessage << "runConsumerMonitoring returned " << returnValue;
-                FTS3_COMMON_LOGGER_LOG(ERR, errorMessage.str());
-            }
+            std::ifstream fstream{path};
+            std::string content{(std::istreambuf_iterator<char>(fstream)), std::istreambuf_iterator<char>()};
+            std::string iterator{iter};
 
-            for (auto iter = messages.begin(); iter != messages.end(); ++iter) {
-                ConcurrentQueue::getInstance()->push(*iter);
-            }
-            messages.clear();
+            current_vector->emplace_back(std::move(content), std::move(iterator));
+            last_message = iter;
+        } catch (const std::exception &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load message from " << path << " (" << ex.what() << ")"
+                                           << fts3::common::commit;
         }
-        catch (const fs::filesystem_error &ex) {
-            FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
-            cleanup();
+
+        if (dirq_unlock(*monitoringQueue, iter, 0)) {
+            break;
         }
-        catch (...) {
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
-            cleanup();
-        }
-        sleep(1);
     }
+
+    if (!current_vector->empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Pushing vector to concurrent queue:" << current_vector->size() << " elements" << fts3::common::commit;
+        fts3::common::ConcurrentQueue<std::unique_ptr<std::vector<MonitoringMessage>>>::getInstance().push(std::move(current_vector));
+    }
+
+    error = dirq_get_errstr(*monitoringQueue);
+    if (error) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
+        return -1;
+    }
+
+    return 0;
 }
 
-
-void MsgPipe::cleanup()
+void MessageLoader::start()
 {
-    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-    while (!myQueue.empty()) {
-        std::string msg = myQueue.front();
-        myQueue.pop();
-        producer.runProducerMonitoring(msg);
+    pthread_setname_np(pthread_self(), "fts-msg-loader");
+
+    std::condition_variable_any cv;
+    std::mutex mtx;
+    std::unique_lock lock(mtx);
+    while (!stop_token.stop_requested()) {
+        try {
+            if (loadMonitoringMessages()) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "MessageLoader: unable to consume DirQ monitoring messages" << commit;
+            }
+        } catch (const std::exception &ex) {
+            FTS3_COMMON_LOGGER_LOG(ERR, "Unable to load monitoring messages" << ex.what()) << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
+        }
+        cv.wait_for(lock, stop_token, std::chrono::seconds(30), []{ return false; });
+        dirq_purge(*monitoringQueue);
     }
+    FTS3_COMMON_LOGGER_LOG(DEBUG, "MessageLoader exited!");
 }

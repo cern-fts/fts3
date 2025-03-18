@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef CONSUMER_H
-#define CONSUMER_H
 
 #include <map>
 #include <memory>
@@ -45,23 +43,13 @@ private:
 public:
 
     Consumer(const std::string &baseDir, unsigned limit = 10000);
-
     ~Consumer();
 
     int runConsumerStatus(std::vector<fts3::events::Message> &messages);
-
     int runConsumerStall(std::vector<fts3::events::MessageUpdater> &messages);
-
     int runConsumerLog(std::map<int, fts3::events::MessageLog> &messages);
-
     int runConsumerDeletions(std::vector<fts3::events::MessageBringonline> &messages);
-
     int runConsumerStaging(std::vector<fts3::events::MessageBringonline> &messages);
-
-    int runConsumerMonitoring(std::vector<std::string> &messages);
 
     void purgeAll();
 };
-
-
-#endif // CONSUMER_H

@@ -30,7 +30,7 @@
 #include "msg-bus/consumer.h"
 
 #include "BrokerConfig.h"
-#include "MsgPipe.h"
+#include "MessageLoader.h"
 #include "MsgProducer.h"
 
 using namespace fts3::common;
@@ -55,13 +55,12 @@ static void DoServer(bool isDaemon) throw()
         activemq::library::ActiveMQCPP::initializeLibrary();
 
         //initialize here to avoid race conditions
-
         ConcurrentQueue<MonitoringMessage>::getInstance();
-        MsgPipe pipeMsg1(ServerConfig::instance().get<std::string>("MessagingDirectory"));
+        MessageLoader messageLoader(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         MsgProducer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"), config);
 
         // Start the pipe thread.
-        decaf::lang::Thread pipeThread(&pipeMsg1);
+        decaf::lang::Thread pipeThread(&messageLoader);
         pipeThread.start();
 
         // Start the producer thread.
@@ -74,7 +73,6 @@ static void DoServer(bool isDaemon) throw()
         pipeThread.join();
         producerThread.join();
 
-        pipeMsg1.cleanup();
         producer.cleanup();
 
         activemq::library::ActiveMQCPP::shutdownLibrary();
