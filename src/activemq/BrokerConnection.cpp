@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -22,14 +22,14 @@
 #include <json/json.h>
 #include <decaf/lang/System.h>
 
-#include "MsgProducer.h"
+#include "BrokerConnection.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
 #include "common/ConcurrentQueue.h"
 #include "config/ServerConfig.h"
 
 using namespace fts3::config;
-
+using namespace fts3::common;
 
 // Originally, this was a End-Of-Transmission character (0x04)
 // which makes the messages invalid json.
@@ -42,41 +42,102 @@ using namespace fts3::config;
 static const char EOT = ' ';
 
 
-bool stopThreads = false;
-
-using namespace fts3::common;
-
-
-MsgProducer::MsgProducer(const std::string &localBaseDir, const BrokerConfig& config):
-    brokerConfig(config), localProducer(localBaseDir)
+BrokerConnection::BrokerConnection(const std::string &brokerName, const BrokerConfig &config, const std::string &connectionString)
+        : brokerName(brokerName), brokerConfig(config), FTSEndpoint(fts3::config::ServerConfig::instance().get<std::string>("Alias")),
+          FQDN(getFullHostname()), connectionFactory(std::make_unique<activemq::core::ActiveMQConnectionFactory>(connectionString,
+          brokerConfig.GetUserName(), brokerConfig.GetPassword())), connection(connectionFactory->createConnection()),
+          session(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE))
 {
-    connection = NULL;
-    session = NULL;
-    destination_transfer_started = NULL;
-    destination_transfer_completed = NULL;
-    producer_transfer_completed = NULL;
-    producer_transfer_started = NULL;
-    producer_transfer_state = NULL;
-    destination_transfer_state = NULL;
-    producer_optimizer = NULL;
-    destination_optimizer = NULL;
-    FTSEndpoint = fts3::config::ServerConfig::instance().get<std::string>("Alias");
-    FQDN = getFullHostname();
-    connected = false;
+    connection->start();
+
+    // Prepare the different destination
+    if (brokerConfig.UseTopics()) {
+        destination_transfer_started.reset(session->createTopic(brokerConfig.GetStartDestination()));
+
+        destination_transfer_completed.reset(session->createTopic(brokerConfig.GetCompleteDestination()));
+
+        destination_transfer_state.reset(session->createTopic(brokerConfig.GetStateDestination()));
+
+        destination_optimizer.reset(session->createTopic(brokerConfig.GetOptimizerDestination()));
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "ActiveMQ use topics");
+    } else {
+        destination_transfer_started.reset(session->createQueue(brokerConfig.GetStartDestination()));
+
+        destination_transfer_completed.reset(session->createQueue(brokerConfig.GetCompleteDestination()));
+
+        destination_transfer_state.reset(session->createQueue(brokerConfig.GetStateDestination()));
+
+        destination_optimizer.reset(session->createQueue(brokerConfig.GetOptimizerDestination()));
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "ActiveMQ use queues");
+    }
+
+    const int ttlMs = brokerConfig.GetTTL() * 3600000;
+
+    producer_transfer_started.reset(session->createProducer(destination_transfer_started.get()));
+    producer_transfer_started->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
+    producer_transfer_started->setTimeToLive(ttlMs);
+
+    producer_transfer_completed.reset(session->createProducer(destination_transfer_completed.get()));
+    producer_transfer_completed->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
+    producer_transfer_completed->setTimeToLive(ttlMs);
+
+    producer_transfer_state.reset(session->createProducer(destination_transfer_state.get()));
+    producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
+    producer_transfer_state->setTimeToLive(ttlMs);
+
+    producer_optimizer.reset(session->createProducer(destination_optimizer.get()));
+    producer_optimizer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
+    producer_optimizer->setTimeToLive(ttlMs);
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection(" << getBrokerName() << "): connected!" << commit;
 }
 
-MsgProducer::~MsgProducer()
+BrokerConnection::~BrokerConnection()
+{
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection(" << getBrokerName() << "): closing connection!" << commit;
+    if (connection.get()) {
+        try {
+            connection->close();
+        } catch (const cms::CMSException &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection(" << getBrokerName()
+                                             << "): CMSException occurred " << ex.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection(" << getBrokerName()
+                                             << "): Unknown exception occurred while closing the connection with "
+                                             " the ActiveMQ broker." << commit;
+        };
+    }
+}
+
+MonitoringMessageCallback::MonitoringMessageCallback(MonitoringMessage&& msg)
+    : state(ready), message(std::move(msg))
 {
 }
 
-
-void MsgProducer::sendMessage(const std::string &rawMsg)
+MonitoringMessageCallback::~MonitoringMessageCallback()
 {
-    std::string type = rawMsg.substr(0, 2);
+}
+
+void MonitoringMessageCallback::onSuccess()
+{
+    state = delivered;
+}
+
+void MonitoringMessageCallback::onException(const cms::CMSException& ex)
+{
+    state = failed;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Message delivery failed: " << ex.what() << commit;
+}
+
+bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
+{
+    const std::string& rawMsg = cb.message.message;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "rawMsg:" << rawMsg << commit;
+    const std::string type = rawMsg.substr(0, 2);
 
     // Modify on the fly to add the endpoint
     Json::Value msg;
-    std::istringstream input(rawMsg.substr(2));
+
+    std::istringstream input(rawMsg.substr(3));
     input >> msg;
 
     msg["endpnt"] = FTSEndpoint;
@@ -88,12 +149,16 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
     std::ostringstream output;
     output << msg;
 
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << type << " " << output.str() << commit;
     // Add EOT character
     output << EOT;
 
     // Create message and set VO attribute if available
-    std::unique_ptr<cms::TextMessage> message(session->createTextMessage(output.str()));
+    std::unique_ptr<cms::TextMessage> message = nullptr;
+    try {
+        message.reset(session->createTextMessage(output.str()));
+    } catch (const cms::CMSException &e) {
+        return false;
+    };
 
     if (msg.isMember("vo_name")) {
         message->setStringProperty("vo", msg.get("vo_name", "").asString());
@@ -101,21 +166,21 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
 
     // Route
     if (type == "ST") {
-        producer_transfer_started->send(message.get());
+        producer_transfer_started->send(message.get(), &cb);
         auto transferId = msg.get("transfer_id", "").asString();
 
         if (!transferId.empty()) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message: " << transferId << commit;
         }
     } else if (type == "CO") {
-        producer_transfer_completed->send(message.get());
+        producer_transfer_completed->send(message.get(), &cb);
         auto transferId = msg.get("tr_id", "").asString();
 
         if (!transferId.empty()) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Completion message: " << transferId << commit;
         }
     } else if (type == "SS") {
-        producer_transfer_state->send(message.get());
+        producer_transfer_state->send(message.get(), &cb);
         auto state = msg.get("file_state", "INVALID").asString();
         auto jobId = msg.get("job_id", "").asString();
 
@@ -125,7 +190,7 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
                 << commit;
         }
     } else if (type == "OP") {
-        producer_optimizer->send(message.get());
+        producer_optimizer->send(message.get(), &cb);
         auto sourceSe = msg.get("source_se", "").asString();
         auto destSe = msg.get("dest_se", "").asString();
 
@@ -136,212 +201,53 @@ void MsgProducer::sendMessage(const std::string &rawMsg)
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Dropping unknown message type: " << type << commit;
     }
+
+    return true;
 }
 
 
-bool MsgProducer::getConnection()
+BrokerConnection::BrokerConnection(BrokerConnection&& other) :
+                                    brokerName(std::move(other.brokerName)),
+                                    brokerConfig(std::move(other.brokerConfig)),
+                                    FTSEndpoint(std::move(other.FTSEndpoint)),
+                                    FQDN(std::move(other.FQDN)),
+                                    connectionFactory(std::move(other.connectionFactory)),
+                                    connection(std::move(other.connection)),
+                                    session(std::move(other.session)),
+                                    destination_transfer_started(std::move(other.destination_transfer_started)),
+                                    destination_transfer_completed(std::move(other.destination_transfer_completed)),
+                                    destination_transfer_state(std::move(other.destination_transfer_state)),
+                                    destination_optimizer(std::move(other.destination_optimizer)),
+                                    producer_transfer_started(std::move(other.producer_transfer_started)),
+                                    producer_transfer_completed(std::move(other.producer_transfer_completed)),
+                                    producer_transfer_state(std::move(other.producer_transfer_state)),
+                                    producer_optimizer(std::move(other.producer_optimizer))
 {
-    try {
-    	if (brokerConfig.UseMsgBroker()) {
-			// Set properties for SSL, if enabled
-			if (brokerConfig.UseSSL()) {
-				FTS3_COMMON_LOGGER_LOG(INFO, "Using SSL");
-				decaf::lang::System::setProperty("decaf.net.ssl.keyStore", brokerConfig.GetClientKeyStore());
-				if (!brokerConfig.GetClientKeyStorePassword().empty()) {
-					decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword",
-						brokerConfig.GetClientKeyStorePassword());
-				}
-				decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
-				if (brokerConfig.SslVerify()) {
-					decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
-				}
-				else {
-					FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
-					decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
-				}
-			}
-			else {
-				FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
-			}
-			FTS3_COMMON_LOGGER_LOG(DEBUG, brokerConfig.GetBrokerURI());
-
-			// Create a ConnectionFactory
-			activemq::core::ActiveMQConnectionFactory connectionFactory(brokerConfig.GetBrokerURI());
-
-			// Disable advisories
-			connectionFactory.setWatchTopicAdvisories(false);
-
-			// Create a Connection
-			if (brokerConfig.UseBrokerCredentials()) {
-				connection = connectionFactory.createConnection(brokerConfig.GetUserName(), brokerConfig.GetPassword());
-			}
-			else {
-				connection = connectionFactory.createConnection();
-			}
-
-			//connection->setExceptionListener(this);
-			connection->start();
-
-			session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
-
-			// Create the destination (Topic or Queue)
-			if (brokerConfig.UseTopics()) {
-				destination_transfer_started = session->createTopic(brokerConfig.GetStartDestination());
-				destination_transfer_completed = session->createTopic(brokerConfig.GetCompleteDestination());
-				destination_transfer_state = session->createTopic(brokerConfig.GetStateDestination());
-				destination_optimizer = session->createTopic(brokerConfig.GetOptimizerDestination());
-			}
-			else {
-				destination_transfer_started = session->createQueue(brokerConfig.GetStartDestination());
-				destination_transfer_completed = session->createQueue(brokerConfig.GetCompleteDestination());
-				destination_transfer_state = session->createQueue(brokerConfig.GetStateDestination());
-				destination_optimizer = session->createQueue(brokerConfig.GetOptimizerDestination());
-			}
-
-			// setTimeToLive expects milliseconds
-			// GetTTL gives hours
-			int ttlMs = brokerConfig.GetTTL() * 3600000;
-
-			// Create a message producer
-			producer_transfer_started = session->createProducer(destination_transfer_started);
-			producer_transfer_started->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-			producer_transfer_started->setTimeToLive(ttlMs);
-
-			producer_transfer_completed = session->createProducer(destination_transfer_completed);
-			producer_transfer_completed->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-			producer_transfer_completed->setTimeToLive(ttlMs);
-
-			producer_transfer_state = session->createProducer(destination_transfer_state);
-			producer_transfer_state->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
-			producer_transfer_state->setTimeToLive(ttlMs);
-
-			producer_optimizer = session->createProducer(destination_optimizer);
-			producer_optimizer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
-			producer_optimizer->setTimeToLive(ttlMs);
-
-			connected = true;
-    	}
-    	else {
-    		FTS3_COMMON_LOGGER_LOG(INFO, "The message broker is disabled");
-    	}
-    }
-    catch (cms::CMSException &e) {
-        FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
-        connected = false;
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_LOG(ERR, "Unknown exception");
-        connected = false;
-    }
-
-    return connected;
 }
 
-// If something bad happens you see it here as this class is also been
-// registered as an ExceptionListener with the connection.
-void MsgProducer::onException(const cms::CMSException &ex AMQCPP_UNUSED)
+const std::string& BrokerConnection::getBrokerName() const
 {
-    FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
-    stopThreads = true;
-    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->theQueue;
-    while (!myQueue.empty()) {
-        std::string msg = myQueue.front();
-        myQueue.pop();
-        localProducer.runProducerMonitoring(msg);
-    }
-    connected = false;
-    sleep(5);
+    return brokerName;
 }
 
-
-void MsgProducer::run()
+std::ostream& operator << (std::ostream& os, const std::vector<BrokerConnection>& vec)
 {
-    std::string msg("");
-
-    while (stopThreads == false) {
-        try {
-            if (!connected) {
-                cleanup();
-                getConnection();
-
-                if (!connected) {
-                    sleep(10);
-                    continue;
-                }
-            }
-
-            //send messages
-            msg = ConcurrentQueue::getInstance()->pop();
-            if (!msg.empty()) {
-                sendMessage(msg);
-            }
-            usleep(100);
-        }
-        catch (cms::CMSException &e) {
-            localProducer.runProducerMonitoring(msg);
-            FTS3_COMMON_LOGGER_LOG(ERR, e.getMessage());
-            connected = false;
-            sleep(5);
-        }
-        catch (std::exception &e) {
-            localProducer.runProducerMonitoring(msg);
-            FTS3_COMMON_LOGGER_LOG(ERR, e.what());
-            connected = false;
-            sleep(5);
-        }
-        catch (...) {
-            localProducer.runProducerMonitoring(msg);
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
-            connected = false;
-            sleep(5);
+    for (std::vector<BrokerConnection>::const_iterator i = vec.begin(); i != vec.end(); ++i) {
+        os << (*i).getBrokerName();
+        if (std::next(i) != vec.end()) {
+            os << ", ";
         }
     }
+    return os;
 }
 
-
-void MsgProducer::cleanup()
+std::ostream& operator << (std::ostream& os, const std::list<BrokerConnection>& list)
 {
-    delete destination_transfer_started;
-    destination_transfer_started = NULL;
-
-    delete producer_transfer_started;
-    producer_transfer_started = NULL;
-
-    delete destination_transfer_completed;
-    destination_transfer_completed = NULL;
-
-    delete producer_transfer_completed;
-    producer_transfer_completed = NULL;
-
-
-    delete destination_transfer_state;
-    destination_transfer_state = NULL;
-
-    delete producer_transfer_state;
-    producer_transfer_state = NULL;
-
-    // Close open resources.
-    try {
-        if (session != NULL) {
-            session->close();
+    for (std::list<BrokerConnection>::const_iterator i = list.begin(); i != list.end(); ++i) {
+        os << (*i).getBrokerName();
+        if (std::next(i) != list.end()) {
+            os << ", ";
         }
     }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
-
-    delete session;
-    session = NULL;
-
-    try {
-        if (connection != NULL) {
-            connection->close();
-        }
-    }
-    catch (cms::CMSException &e) {
-        e.printStackTrace();
-    }
-
-    delete connection;
-    connection = NULL;
+    return os;
 }
