@@ -244,11 +244,20 @@ void UrlCopyProcess::mkdirRecursive(Gfal2TransferParams& params, const Uri& uri)
     std::filesystem::path dest_path(uri.path);
 
     if (dest_path.has_parent_path()) {
-        const std::string parent_uri = uri.protocol + "://" + uri.host + dest_path.parent_path().string()
-                                       + "?" + uri.queryString;
+        std::string parent_uri = uri.protocol + "://" + uri.host + dest_path.parent_path().string();
+
+        if (!uri.queryString.empty()) {
+            parent_uri += "?" + uri.queryString;
+        }
+
+        // Parent directory exists, exit early
+        if (checkFileExists(params, parent_uri)) {
+            return;
+        }
+
         try {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination parent directory does not exist, creating: " + parent_uri << commit;
             gfal2.mkdir_recursive(params, parent_uri, false);
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination does not exist, creating: " + parent_uri << commit;
         } catch (const Gfal2Exception &ex) {
             if (ex.code() != EEXIST) {
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Unable to create destination parent directory: " + parent_uri << commit;
