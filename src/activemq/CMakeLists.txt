@@ -50,17 +50,17 @@ set_target_properties(fts_msg_ifce PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
 )
 
-# fts_msg_bulk binary
-set(fts_msg_bulk_SOURCES
-    msg-bulk-send.cpp
+# fts_activemq binary
+set(fts_activemq_SOURCES
+    main.cpp
     MessageLoader.cpp
     BrokerConnection.cpp
     BrokerPublisher.cpp
     BrokerConfig.cpp
 )
 
-add_executable(fts_msg_bulk ${fts_msg_bulk_SOURCES})
-target_link_libraries(fts_msg_bulk
+add_executable(fts_activemq ${fts_activemq_SOURCES})
+target_link_libraries(fts_activemq
     ${ACTIVEMQCPP_LIBRARIES}
     fts_common
     fts_config
@@ -71,7 +71,7 @@ target_link_libraries(fts_msg_bulk
 )
 
 # Artifacts
-install(TARGETS fts_msg_bulk
+install(TARGETS fts_activemq
 	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )
 
