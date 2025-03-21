@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -343,10 +343,8 @@ public:
         }
     }
 
-    /// Destructor
-    ~Gfal2() {
-        // gfal2_context_free(context); //FTS-1996: Intentional memory leak; Do not free gfal2 context to prevent crash
-    }
+    /// Destructor (empty on purpose: FTS-1996)
+    ~Gfal2() {}
 
     /// Can not copy
     Gfal2(const Gfal2&) = delete;

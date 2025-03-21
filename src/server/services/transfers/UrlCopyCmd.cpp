@@ -69,7 +69,7 @@ void UrlCopyCmd::setOption(const std::string &key, const std::string &value, boo
 }
 
 
-std::string UrlCopyCmd::generateParameters(void)
+std::string UrlCopyCmd::generateParameters()
 {
     std::ostringstream cmd;
 
@@ -206,7 +206,7 @@ void UrlCopyCmd::setCopyMode(CopyMode copyMode)
 }
 
 
-bool UrlCopyCmd::isIPv6Explicit(void)
+bool UrlCopyCmd::isIPv6Explicit()
 {
     return IPv6Explicit;
 }
@@ -246,12 +246,6 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
-void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_token)
-{
-    setFlag("retrieve-se-token", retrieve_se_token);
-}
-
-
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {
@@ -283,8 +277,9 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setFlag("archiving", true);
         setFlag("dst-file-report", !transfer.dstFileReport.empty());
     }
-    setOption("dest-token-desc", transfer.destinationSpaceToken);
-    setOption("source-token-desc", transfer.sourceSpaceToken);
+
+    setOption("source-space-token", transfer.sourceSpaceToken);
+    setOption("dest-space-token", transfer.destinationSpaceToken);
 
     if (!transfer.fileMetadata.empty()) {
         try {

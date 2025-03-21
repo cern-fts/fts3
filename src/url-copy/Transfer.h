@@ -116,12 +116,10 @@ public:
     std::string fileMetadata;
     std::string archiveMetadata;
     std::string tokenBringOnline;
-    std::string sourceTokenDescription;
-    std::string destTokenDescription;
+    std::string sourceSpaceToken;
+    std::string destSpaceToken;
     std::string sourceTokenId;
     std::string destTokenId;
-    std::string sourceTokenIssuer;
-    std::string destTokenIssuer;
     unsigned    scitag;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;

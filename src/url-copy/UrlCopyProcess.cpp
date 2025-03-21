@@ -342,19 +342,18 @@ static void loadTokensFile(const std::string& path, Gfal2TransferParams &params)
     if (std::getline(infile, line, '\n') && !line.empty()) {
         params.setSourceBearerToken(line);
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load source bearer token form credentials file" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth2 source bearer token form credentials file" << commit;
     }
 
     // Second line contains destination bearer token
     if (std::getline(infile, line, '\n') && !line.empty()) {
         params.setDestBearerToken(line);
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load destination bearer token form credentials file" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth2 destination bearer token form credentials file" << commit;
     }
 
     // Close the file as we are only interested in the first two lines
     infile.close();
-
     unlink(path.c_str());
 }
 
@@ -364,6 +363,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
 {
     // Load Cloud + OIDC credentials
     if (!opts.cloudStorageConfig.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Loading cloud storage credentials" << commit;
         try {
             gfal2.loadConfigFile(opts.cloudStorageConfig);
         } catch (const std::exception &ex) {
@@ -374,16 +374,9 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     }
 
     if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Loading OAuth2 token credentials" << commit;
+        // OAuth2 tokens have been passed in the OAuthFile
         loadTokensFile(opts.oauthFile, params);
-        // OIDC tokens have been passed in the OauthFile
-        // to be loaded by Gfal2 in its credentials map
-        return;
-    }
-
-    // Check if allowed to retrieve Storage Element issued tokens
-    if (!opts.retrieveSEToken) {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Configured to skip retrieval of SE-issued tokens. "
-                                        << "Retrieval delegated to downstream Gfal2 client" << commit;
         return;
     }
 
@@ -401,32 +394,33 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer,
     bool macaroonEnabledDestination = ((transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0));
     unsigned macaroonValidity = 180;
 
-    // Request a macaroon longer twice the timeout as we could run both push and pull mode
+    // Compute macaroon lifetime (minutes) long enough for full transfer duration
     if (opts.timeout) {
-        macaroonValidity = ((unsigned) (2 * opts.timeout) / 60) + 10 ;
+        macaroonValidity = (opts.timeout / 60) + 10 ;
     } else if (transfer.userFileSize) {
-        macaroonValidity = ((unsigned) (2 * adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb)) / 60) + 10;
+        macaroonValidity = (adjustTimeoutBasedOnSize(transfer.userFileSize, opts.addSecPerMb) / 60) + 10;
     }
 
-    if (!transfer.sourceTokenIssuer.empty() || macaroonEnabledSource) {
-        std::string tokenType = (!transfer.sourceTokenIssuer.empty()) ? "bearer token" : "macaroon";
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Will attempt retrieval of " << tokenType << " for source" << commit;
+    if (macaroonEnabledSource) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Will attempt retrieval of \"SE-issued token (macaroon)\" for source" << commit;
         try {
-            params.setSourceBearerToken(gfal2.tokenRetrieve(transfer.source, transfer.sourceTokenIssuer,
-                                                            macaroonValidity, {"DOWNLOAD", "LIST"}));
+            auto token = gfal2.tokenRetrieve(transfer.source, "",
+                                             macaroonValidity, {"DOWNLOAD", "LIST"});
+            params.setSourceBearerToken(token);
         } catch (const Gfal2Exception& ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve " << tokenType << " for source: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve \"SE-issued token (macaroon)\" for source: " << ex.what() << commit;
         }
     }
 
-    if (!transfer.destTokenIssuer.empty() || macaroonEnabledDestination) {
-        std::string tokenType = (!transfer.destTokenIssuer.empty()) ? "bearer token" : "macaroon";
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Will attempt retrieval of " << tokenType << " for destination" << commit;
+    if (macaroonEnabledDestination) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Will attempt retrieval of \"SE-issued token (macaroon)\" for destination" << commit;
         try {
-            params.setDestBearerToken(gfal2.tokenRetrieve(transfer.destination, transfer.destTokenIssuer,
-                                                          macaroonValidity, {"MANAGE", "UPLOAD", "DELETE", "LIST"}));
+
+            auto token = gfal2.tokenRetrieve(transfer.destination, "",
+                                             macaroonValidity, {"MANAGE", "UPLOAD", "DELETE", "LIST"});
+            params.setDestBearerToken(token);
         } catch (const Gfal2Exception& ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve " << tokenType << " for destination: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve \"SE-issued token (macaroon)\" for destination: " << ex.what() << commit;
         }
     }
 }
@@ -464,12 +458,12 @@ static void setupTransferConfig(const UrlCopyOpts &opts, const Transfer &transfe
 
     setupTokenConfig(opts, transfer, gfal2, params);
 
-    if (!transfer.sourceTokenDescription.empty()) {
-        params.setSourceSpacetoken(transfer.sourceTokenDescription);
+    if (!transfer.sourceSpaceToken.empty()) {
+        params.setSourceSpacetoken(transfer.sourceSpaceToken);
     }
 
-    if (!transfer.destTokenDescription.empty()) {
-        params.setDestSpacetoken(transfer.destTokenDescription);
+    if (!transfer.destSpaceToken.empty()) {
+        params.setDestSpacetoken(transfer.destSpaceToken);
     }
 
     // Set HTTP copy mode
@@ -595,8 +589,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable local streaming: " << opts.noStreaming << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Skip eviction of source file: " << opts.skipEvict << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Disable cleanup: " << opts.disableCleanup << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destTokenDescription << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceTokenDescription << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceSpaceToken << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destSpaceToken << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled: " << transfer.checksumMode << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize: " << transfer.userFileSize << commit;
@@ -607,8 +601,6 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Bringonline token: " << transfer.tokenBringOnline << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enableUdt << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token issuer: " << transfer.sourceTokenIssuer << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token issuer: " << transfer.destTokenIssuer << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dstFileReport << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;

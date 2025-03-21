@@ -55,9 +55,9 @@ const option UrlCopyOpts::long_options[] =
     {"3rd-party-turl",    required_argument, 0, 304},
     {"scitag",            required_argument, 0, 305},
 
-    {"token-bringonline", required_argument, 0, 400},
-    {"dest-token-desc",   required_argument, 0, 401},
-    {"source-token-desc", required_argument, 0, 402},
+    {"token-bringonline",  required_argument, 0, 400},
+    {"source-space-token", required_argument, 0, 401},
+    {"dest-space-token",   required_argument, 0, 402},
 
     {"vo",                     required_argument, 0, 500},
     {"user-dn",                required_argument, 0, 501},
@@ -65,15 +65,12 @@ const option UrlCopyOpts::long_options[] =
     {"oauth",                  required_argument, 0, 503},
     {"src-token-id",           required_argument, 0, 504},
     {"dst-token-id",           required_argument, 0, 505},
-    {"source-issuer",          required_argument, 0, 506},
-    {"dest-issuer",            required_argument, 0, 507},
-    {"auth-method",            required_argument, 0, 508},
-    {"copy-mode",              required_argument, 0, 509},
-    {"disable-fallback",       no_argument,       0, 510},
-    {"retrieve-se-token",      no_argument,       0, 511},
-    {"cloud-config",           required_argument, 0, 512},
-    {"overwrite-disk-enabled", no_argument,       0, 513},
-    {"disable-cleanup",        no_argument,       0, 514},
+    {"auth-method",            required_argument, 0, 506},
+    {"copy-mode",              required_argument, 0, 507},
+    {"disable-fallback",       no_argument,       0, 508},
+    {"cloud-config",           required_argument, 0, 509},
+    {"overwrite-disk-enabled", no_argument,       0, 510},
+    {"disable-cleanup",        no_argument,       0, 511},
 
     {"infosystem",        required_argument, 0, 600},
     {"alias",             required_argument, 0, 601},
@@ -183,10 +180,8 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.archiveMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
     t.tokenBringOnline = strArray[7] == "x" ? "" : strArray[7];
     t.scitag = boost::lexical_cast<unsigned>(strArray[8]);
-    t.sourceTokenDescription = reference.sourceTokenDescription;
-    t.destTokenDescription = reference.destTokenDescription;
-    t.sourceTokenIssuer = reference.sourceTokenIssuer;
-    t.destTokenIssuer = reference.destTokenIssuer;
+    t.sourceSpaceToken = reference.sourceSpaceToken;
+    t.destSpaceToken = reference.destSpaceToken;
     t.isMultipleReplicaJob = false;
     t.isLastReplica = false;
     return t;
@@ -220,7 +215,7 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 
 
 UrlCopyOpts::UrlCopyOpts(): isSessionReuse(false), strictCopy(false), disableCleanup(false),
-                            dstFileReport(false), disableCopyFallback(false), retrieveSEToken(false),
+                            dstFileReport(false), disableCopyFallback(false),
                             overwriteDiskEnabled(false), optimizerLevel(0), overwrite(false),
                             overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
                             timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
@@ -342,10 +337,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.tokenBringOnline = optarg;
                     break;
                 case 401:
-                    referenceTransfer.destTokenDescription = optarg;
+                    referenceTransfer.sourceSpaceToken = optarg;
                     break;
                 case 402:
-                    referenceTransfer.sourceTokenDescription = optarg;
+                    referenceTransfer.destSpaceToken = optarg;
                     break;
 
                 case 500:
@@ -367,30 +362,21 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.destTokenId = optarg;
                     break;
                 case 506:
-                    referenceTransfer.sourceTokenIssuer = optarg;
-                    break;
-                case 507:
-                    referenceTransfer.destTokenIssuer = optarg;
-                    break;
-                case 508:
                     authMethod = optarg;
                     break;
-                case 509:
+                case 507:
                     copyMode = translateCopyMode(optarg);
                     break;
-                case 510:
+                case 508:
                     disableCopyFallback = true;
                     break;
-                case 511:
-                    retrieveSEToken = true;
-                    break;
-                case 512:
+                case 509:
                     cloudStorageConfig = optarg;
                     break;
-                case 513:
+                case 510:
                     overwriteDiskEnabled = true;
                     break;
-                case 514:
+                case 511:
                     disableCleanup = true;
                     break;
 

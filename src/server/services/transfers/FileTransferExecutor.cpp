@@ -149,9 +149,6 @@ void FileTransferExecutor::run(boost::any & ctx)
                 }
             }
 
-            // Retrieve SE-issued tokens flag
-            cmdBuilder.setRetrieveSEToken(fts3::config::ServerConfig::instance().get<bool>("RetrieveSEToken"));
-
             // Debug level
             cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));
 

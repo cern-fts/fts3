@@ -63,7 +63,6 @@ public:
     std::string authMethod;
     std::string copyMode;
     bool disableCopyFallback;
-    bool retrieveSEToken;
     bool overwriteDiskEnabled;
 
     unsigned optimizerLevel;

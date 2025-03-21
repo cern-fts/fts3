@@ -559,11 +559,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Enable or disable behaviour to cancel all NOT_USED files in a failed multihop job"
     )
     (
-        "RetrieveSEToken",
-        po::value<std::string>( &(_vars["RetrieveSEToken"]) )->default_value("false"),
-        "Enable or disable retrieval of SE-issued tokens in the transfer agent"
-    )
-    (
         "NonManagedTokens",
         po::value<std::string>( &(_vars["NonManagedTokens"]) )->default_value("false"),
         "Tell the FTS system to not manage access tokens that don't meet certain criteria"
