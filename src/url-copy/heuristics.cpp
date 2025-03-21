@@ -18,16 +18,12 @@
  * limitations under the License.
  */
 
-#include "heuristics.h"
-#include "common/Logger.h"
-
+#include <errno.h>
 #include <json/json.h>
 #include <cryptopp/base64.h>
 #include <boost/algorithm/string.hpp>
 
-#include <errno.h>
-
-using namespace fts3::common;
+#include "heuristics.h"
 
 
 static bool findSubstring(const std::string &stack, const char *needles[])

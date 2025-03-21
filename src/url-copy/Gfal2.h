@@ -136,16 +136,6 @@ public:
         }
     }
 
-    void setSourceBearerToken(const std::string &token)
-    {
-        src_token = token;
-    }
-
-    void setDestBearerToken(const std::string &token)
-    {
-        dst_token = token;
-    }
-
     void setStrictCopy(bool value)
     {
         GError *error = NULL;
@@ -202,7 +192,7 @@ public:
         }
     }
 
-    uint32_t getNumberOfStreams(void)
+    uint32_t getNumberOfStreams()
     {
         GError *error = NULL;
         uint32_t val = gfalt_get_nbstreams(params, &error);
@@ -220,7 +210,7 @@ public:
         }
     }
 
-    uint64_t getTcpBuffersize(void)
+    uint64_t getTcpBuffersize()
     {
         GError *error = NULL;
         uint64_t val = gfalt_get_tcp_buffer_size(params, &error);
@@ -230,7 +220,7 @@ public:
         return val;
     }
 
-    uint64_t getTimeout(void)
+    uint64_t getTimeout()
     {
         GError *error = NULL;
         uint64_t val = gfalt_get_timeout(params, &error);
@@ -238,14 +228,6 @@ public:
             throw Gfal2Exception(error);
         }
         return val;
-    }
-
-    inline std::string getSrcToken() const {
-        return src_token;
-    }
-
-    inline std::string getDstToken() const {
-        return dst_token;
     }
 
     void setDelegationFlag(bool value)
@@ -307,38 +289,14 @@ public:
 
 
 class Gfal2 {
-private:
-    gfal2_context_t context;
-
-    /// Configure bearer token.
-    void bearerInit(Gfal2TransferParams &params,
-                    const std::string &source, const std::string &destination)
-    {
-        GError *error = NULL;
-        if (!source.empty() && !params.src_token.empty()) {
-            gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.src_token.c_str());
-            //set the bearer associated to the source URL
-            if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
-                throw Gfal2Exception(error);
-            }
-        }
-        if (!destination.empty() && !params.dst_token.empty()) {
-            gfal2_cred_t *token_cred = gfal2_cred_new("BEARER", params.dst_token.c_str());
-            //set the bearer associated to the host 
-            std::string destHost = Uri::parse(destination).host;
-            if (gfal2_cred_set(context, destHost.c_str(), token_cred, &error) < 0) {
-                throw Gfal2Exception(error);
-            }
-        }
-    }
-
 public:
 
     /// Constructor
     Gfal2() {
         GError *error = NULL;
         context = gfal2_context_new(&error);
-        if (context == NULL ){
+
+        if (context == NULL) {
             throw Gfal2Exception(error);
         }
     }
@@ -356,6 +314,45 @@ public:
         if (gfal2_load_opts_from_file(context, path.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
+    }
+
+    /// Set source bearer token credential
+    void setSourceToken(const std::string& source, const std::string& token)
+    {
+        GError* error = nullptr;
+
+        if (!token.empty()) {
+            src_token = token;
+            auto* token_cred = gfal2_cred_new("BEARER", token.c_str());
+
+            if (gfal2_cred_set(context, source.c_str(), token_cred, &error) < 0) {
+                throw Gfal2Exception(error);
+            }
+        }
+    }
+
+    /// Set destination bearer token credential
+    void setDestinationToken(const std::string& destination, const std::string& token)
+    {
+        GError* error = nullptr;
+
+        if (!token.empty()) {
+            dst_token = token;
+            auto* token_cred = gfal2_cred_new("BEARER", token.c_str());
+            auto destHost = Uri::parse(destination).host;
+
+            if (gfal2_cred_set(context, destHost.c_str(), token_cred, &error) < 0) {
+                throw Gfal2Exception(error);
+            }
+        }
+    }
+
+    std::string getSourceToken() const {
+        return src_token;
+    }
+
+    std::string getDestinationToken() const {
+        return dst_token;
     }
 
     /// Set a boolean config value
@@ -399,40 +396,36 @@ public:
     }
 
     /// Cancel any running operation
-    void cancel(void) {
+    void cancel() {
         gfal2_cancel(context);
     }
 
     /// Stat a file
-    struct stat stat(Gfal2TransferParams &params, const std::string &url, bool is_source) {
-        bearerInit(params, is_source ? url : "",
-                           is_source ? "" : url);
-
+    struct stat stat(const std::string &url) {
         GError *error = NULL;
         struct stat buffer;
+
         if (gfal2_stat(context, url.c_str(), &buffer, &error) < 0) {
             throw Gfal2Exception(error);
         }
+
         return buffer;
     }
 
     /// Copy a file
     void copy(Gfal2TransferParams &params, const std::string &source, const std::string &destination)
     {
-        bearerInit(params, source, destination);
-
         GError *error = NULL;
+
         if (gfalt_copy_file(context, params, source.c_str(), destination.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }
 
-    void access(Gfal2TransferParams &params, const std::string &url, bool is_source, int amode)
+    void access(const std::string &url, int amode)
     {
-        bearerInit(params, is_source ? url : "",
-                           is_source ? "" : url);
-
         GError *error = NULL;
+
         if (gfal2_access(context, url.c_str(), amode, &error) < 0) {
             throw Gfal2Exception(error);
         }
@@ -440,36 +433,29 @@ public:
 
 
     /// Remove file
-    void rm(Gfal2TransferParams &params, const std::string &url, bool is_source)
+    void rm(const std::string &url)
     {
-        bearerInit(params, is_source ? url : "",
-                           is_source ? "" : url);
-
         GError *error = NULL;
+
         if (gfal2_unlink(context, url.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }
 
     /// Release file
-    void releaseFile(Gfal2TransferParams &params, const std::string &url, const std::string &token,
-                     bool is_source)
+    void releaseFile(const std::string &url, const std::string &token)
     {
-        bearerInit(params, is_source ? url : "",
-                           is_source ? "" : url);
-
         GError *error = NULL;
+
         if (gfal2_release_file(context, url.c_str(), token.c_str(), &error) < 0) {
             throw Gfal2Exception(error);
         }
     }
 
-    void mkdir_recursive(Gfal2TransferParams &params, const std::string &url, bool is_source)
+    void mkdir_recursive(const std::string &url)
     {
-        bearerInit(params, is_source ? url : "",
-                           is_source ? "" : url);
-
         GError *error = NULL;
+
         if (gfal2_mkdir_rec(context, url.c_str(), 0775, &error) < 0) {
             throw Gfal2Exception(error);
         }
@@ -479,9 +465,11 @@ public:
     std::string getChecksum(const std::string &url, const std::string &type) {
         char buffer[512];
         GError *error = NULL;
+
         if (gfal2_checksum(context, url.c_str(), type.c_str(), 0, 0, buffer, sizeof(buffer), &error)) {
             throw Gfal2Exception(error);
         }
+
         return buffer;
     }
 
@@ -489,9 +477,11 @@ public:
     std::string getXattr(const std::string &url, const std::string &name) {
         char buffer[1024];
         GError *error = NULL;
+
         if (gfal2_getxattr(context, url.c_str(), name.c_str(), buffer, sizeof(buffer), &error) < 0) {
             throw Gfal2Exception(error);
         }
+
         return buffer;
     }
 
@@ -500,12 +490,14 @@ public:
         std::string value = "N/A";
         GError *error = NULL;
         char* cfgvalue = gfal2_get_opt_string(context, group.c_str(), key.c_str(), &error);
+
         if (error != NULL) {
             g_error_free(error);
         } else {
             value = cfgvalue;
             g_free(cfgvalue);
         }
+
         return value;
     }
 
@@ -521,7 +513,6 @@ public:
         }
         activity_list.push_back(NULL);
 
-
         ssize_t ret = gfal2_token_retrieve(context, url.c_str(), issuer.c_str(), false, validity,
                                            &activity_list[0], buff, sizeof(buff), &error);
 
@@ -531,6 +522,11 @@ public:
 
         return std::string(buff);
     }
+
+private:
+    gfal2_context_t context; ///< Gfal2 context object
+    std::string src_token; ///< Source bearer token
+    std::string dst_token; ///< Destination bearer token
 };
 
 
