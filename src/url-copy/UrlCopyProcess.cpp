@@ -106,7 +106,7 @@ void UrlCopyProcess::performDestFileReportWorkflow(Transfer& transfer)
         return;
     }
 
-    refreshExpiredAccessToken(transfer, false);
+    refreshExpiredAccessToken(transfer, IS_DEST);
 
     try {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking integrity of destination tape file: "
@@ -123,7 +123,7 @@ void UrlCopyProcess::performDestFileReportWorkflow(Transfer& transfer)
 
 void UrlCopyProcess::performOverwriteOnDiskWorkflow(Transfer& transfer)
 {
-    refreshExpiredAccessToken(transfer, false);
+    refreshExpiredAccessToken(transfer, IS_DEST);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Entering \"overwrite-when-only-on-disk\" workflow" << commit;
     std::string xattrLocality;
@@ -589,42 +589,6 @@ static bool compare_checksum(std::string source, std::string target)
 }
 
 
-static void destTokenRefreshTask(const Transfer* transfer, Reporter* reporter, const std::string& token_id, const std::string& token)
-{
-    // The AutoInterruptThread scope must be as large as the runTransfer function,
-    // hence why we check here if we're dealing with a token transfer or not
-    if (token_id.empty() || token.empty()) {
-        return;
-    }
-
-    try {
-        std::string exp_str = extractAccessTokenField(token, "exp");
-        int64_t exp = (!exp_str.empty()) ? std::stoll(exp_str) : 0;
-
-        while (!boost::this_thread::interruption_requested()) {
-            // Refresh token at "exp - 10min"
-            auto wait = std::max(static_cast<int64_t>(0), (exp - 10 * 60) - getTimestampSeconds());
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination token-refresh will be initiated in " << wait
-                                             << " seconds (token_exp=" << exp << ")" << commit;
-            boost::this_thread::sleep(boost::posix_time::seconds(wait));
-            auto [token, expiry] = reporter->requestTokenRefresh(token_id, *transfer);
-
-            if (!token.empty()) {
-                exp_str = extractAccessTokenField(token, "exp");
-                exp = (!exp_str.empty()) ? std::stoll(exp_str) : getTimestampSeconds(20 * 60);
-            } else {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "(TokenRefreshThread):: Failed to obtain refreshed token for " << token_id << "! (stopping thread)" << commit;
-                break;
-            }
-        }
-    } catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Destination token refresh thread stopped" << commit;
-    } catch (const std::exception& ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in the destination token-refresh task: " << ex.what() << commit;
-    }
-}
-
-
 void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params)
 {
     if (!opts.proxy.empty()) {
@@ -663,35 +627,12 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;
 
-    // Refresh source token if needed
-    if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
-        std::string src_exp = extractAccessTokenField(gfal2.getSourceToken(), "exp");
-        int64_t exp = (!src_exp.empty()) ? std::stoll(src_exp) : 0;
-
-        // Source token expires in the next 10 minutes
-        if (exp < getTimestampSeconds(600)) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Requesting source token refresh: token_id=" << transfer.sourceTokenId
-                                             << " (token_exp=" << exp << ")" << commit;
-            auto [token, expiry] = reporter.requestTokenRefresh(transfer.sourceTokenId, transfer);
-
-            if (token.empty()) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refreshed token for source!" << commit;
-            } else {
-                gfal2.setSourceToken(transfer.source, token);
-            }
-        }
-    }
-
-    // Thread to refresh destination token
-    AutoInterruptThread destTokenRefreshThread(boost::bind(&destTokenRefreshTask, &transfer, &reporter,
-                                               transfer.destTokenId, gfal2.getDestinationToken()));
-
     ////////////////////////////
     /// Source file verification
     ////////////////////////////
 
     if (!opts.strictCopy) {
-        transfer.fileSize = obtainFileSize(transfer, true);
+        transfer.fileSize = obtainFileSize(transfer, IS_SOURCE);
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Copy only transfer!" << commit;
         transfer.fileSize = transfer.userFileSize;
@@ -724,7 +665,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             (transfer.checksumMode & Transfer::CHECKSUM_SOURCE)) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing source checksum verification" << commit;
 
-            transfer.sourceChecksumValue = obtainFileChecksum(transfer, true, transfer.checksumAlgorithm,
+            transfer.sourceChecksumValue = obtainFileChecksum(transfer, IS_SOURCE, transfer.checksumAlgorithm,
                                                               SOURCE, TRANSFER_PREPARATION);
 
             if (!compare_checksum(transfer.sourceChecksumValue, transfer.checksumValue)) {
@@ -813,7 +754,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     /////////////////////////////////
 
     if (!opts.strictCopy) {
-        auto destSize = obtainFileSize(transfer, false);
+        auto destSize = obtainFileSize(transfer, IS_DEST);
 
         if (transfer.fileSize != destSize) {
             cleanupOnFailure(transfer);
@@ -822,7 +763,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and destination file size matching" << commit;
-        transfer.destChecksumValue = obtainFileChecksum(transfer, false, transfer.checksumAlgorithm,
+        transfer.destChecksumValue = obtainFileChecksum(transfer, IS_DEST, transfer.checksumAlgorithm,
                                                         DESTINATION, TRANSFER_FINALIZATION);
 
         if ((!transfer.checksumValue.empty()) &&
@@ -841,7 +782,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing end-to-end checksum verification" << commit;
 
             if (transfer.sourceChecksumValue.empty()) {
-                transfer.sourceChecksumValue = obtainFileChecksum(transfer, true, transfer.checksumAlgorithm,
+                transfer.sourceChecksumValue = obtainFileChecksum(transfer, IS_SOURCE, transfer.checksumAlgorithm,
                                                                   DESTINATION, TRANSFER_FINALIZATION);
             }
 
