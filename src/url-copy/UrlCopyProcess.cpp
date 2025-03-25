@@ -292,7 +292,13 @@ void UrlCopyProcess::mkdirRecursive(const Transfer& transfer)
     std::filesystem::path dest_path(uri.path);
 
     if (dest_path.has_parent_path()) {
-        std::string parent_uri = uri.protocol + "://" + uri.host + dest_path.parent_path().string();
+        std::string parent_uri = uri.protocol + "://" + uri.host;
+
+        if (uri.port != 0) {
+            parent_uri += ":" + std::to_string(uri.port);
+        }
+
+        parent_uri += dest_path.parent_path().string();
 
         if (!uri.queryString.empty()) {
             parent_uri += "?" + uri.queryString;
