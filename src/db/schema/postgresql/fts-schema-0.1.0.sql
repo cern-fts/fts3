@@ -508,7 +508,6 @@ CREATE TABLE t_se (
   skip_eviction           VARCHAR(1)       NULL,
   tape_endpoint           VARCHAR(1)       NULL,
   overwrite_disk_enabled  VARCHAR(1)       NULL,
-  inbound_default_weight  REAL             NULL,
   PRIMARY KEY (storage)
 );
 INSERT INTO t_se (storage, inbound_max_active, outbound_max_active)
