@@ -102,7 +102,7 @@ def get_scheduler_input_from_db(dbconn, opaque_data) -> SchedulerInput:
         storage_limits=_get_storage_limits_from_db(dbconn)[0],
         vo_activity_shares=_get_vo_activity_shares_from_db(dbconn)[0],
         link_vo_shares=_get_link_vo_shares_from_db(dbconn)[0],
-        inbound_se_shares=_get_inbound_se_shares(dbconn)[0],
+        storage_to_inbound_weights=_get_storage_to_inbound_weights(dbconn)[0],
     )
 
 
@@ -383,7 +383,11 @@ def _get_link_vo_shares_from_db(dbconn):
     return link_vo_shares, db_sec
 
 
-def _get_inbound_se_shares(dbconn):
+def _get_storage_to_inbound_weights(dbconn):
+    """
+    Returns a dictionary of dictionaries.  The key of the top dictionary is storage-endpoint. Each
+    contained dictionary maps source storages to their weights.
+    """
     sql = """
         SELECT
             source_se,
@@ -400,18 +404,18 @@ def _get_inbound_se_shares(dbconn):
     rows = cursor.fetchall()
     db_sec = time.time() - start_db
 
-    dst_to_src_to_weight = {}
+    storage_to_inbound_weights = {}
     for row in rows:
         source_se = row[0]
         dest_se = row[1]
         inbound_weight = row[2]
 
-        if dest_se not in dst_to_src_to_weight:
-            dst_to_src_to_weight[dest_se] = {}
+        if dest_se not in storage_to_inbound_weights:
+            storage_to_inbound_weights[dest_se] = {}
 
-        dst_to_src_to_weight[dest_se][source_se] = inbound_weight
+        storage_to_inbound_weights[dest_se][source_se] = inbound_weight
 
-    return dst_to_src_to_weight, db_sec
+    return storage_to_inbound_weights, db_sec
 
 
 def get_scheduler_fqdn_from_db(dbconn):

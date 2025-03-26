@@ -124,7 +124,7 @@ class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     storage_limits: StorageLimits
     vo_activity_shares: dict
     link_vo_shares: dict
-    inbound_se_shares: dict
+    storage_to_inbound_weights: dict
 
 
 class SchedulerOutput:
