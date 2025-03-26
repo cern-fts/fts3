@@ -217,8 +217,7 @@ TokenRefreshPollerInterval = 15
 TokenRefreshBulkSize = 500
 
 # In seconds, period before access token expiry up to which still consider access token eligible (default 300)
-# Example: safety period of 300s means token will be used up to "exp - 300s" timestamp. After this timestamp,
-#          token becomes eligible for token-refresh
+# Example: safety period of 300s means token will be used up to "exp - 300s" timestamp. After, token must be refreshed
 TokenRefreshSafetyPeriod = 0
 # In seconds, period before token expiry at which the transfer agent will request a token refresh (default 300)
 # Example: margin period of 300s means the transfer agent will request token refresh at "exp - 300s" timestamp

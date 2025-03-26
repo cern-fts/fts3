@@ -192,6 +192,7 @@ void UrlCopyProcess::refreshExpiredAccessToken(const Transfer& transfer, bool is
     auto accessToken = is_source ? gfal2.getSourceToken() : gfal2.getDestinationToken();
     auto tokenId = is_source ? transfer.sourceTokenId : transfer.destTokenId;
     auto target = is_source ? "source" : "destination";
+    auto scope = is_source ? SOURCE : DESTINATION;
 
     std::string expField = extractAccessTokenField(accessToken, "exp");
     auto exp = (!expField.empty()) ? std::stoll(expField) : 0;
@@ -207,12 +208,15 @@ void UrlCopyProcess::refreshExpiredAccessToken(const Transfer& transfer, bool is
 
     if (token.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refreshed token for " << target << "!" << commit;
-    } else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Successfully refreshed access token for " << target << ": "
-                                        << accessTokenPayload(token) << commit;
-        if (is_source) { gfal2.setSourceToken(transfer.source, token); }
-        else           { gfal2.setDestinationToken(transfer.destination, token); }
+        std::ostringstream errmsg;
+        errmsg << "Failed to obtain refresh token for " << target;
+        throw UrlCopyError(scope, TRANSFER_PREPARATION, EFAULT, errmsg.str());
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Successfully refreshed access token for " << target << ": "
+                                    << accessTokenPayload(token) << commit;
+    if (is_source) { gfal2.setSourceToken(transfer.source, token); }
+    else           { gfal2.setDestinationToken(transfer.destination, token); }
 }
 
 
