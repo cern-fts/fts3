@@ -440,9 +440,24 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, how often to check for tokens marked for refreshing"
     )
     (
+        "TokenRefreshPollerInterval",
+        po::value<std::string>( &(_vars["TokenRefreshPollerInterval"]) )->default_value("15"),
+        "In seconds, how often to process ZMQ token-refresh requests"
+    )
+    (
         "TokenRefreshBulkSize",
         po::value<std::string>( &(_vars["TokenRefreshBulkSize"]) )->default_value("500"),
         "Bulk size for how many tokens to retrieve from the database at one time for token-refresh"
+    )
+    (
+        "TokenRefreshSafetyPeriod",
+        po::value<std::string>( &(_vars["TokenRefreshSafetyPeriod"]) )->default_value("300"),
+        "In seconds, period before access token expiry up to which still consider access token valid"
+    )
+    (
+        "TokenRefreshMarginPeriod",
+        po::value<std::string>( &(_vars["TokenRefreshMarginPeriod"]) )->default_value("300"),
+        "In seconds, period before token expiry at which the transfer agent will request a token refresh"
     )
     (
         "MessagingConsumeGraceTime",

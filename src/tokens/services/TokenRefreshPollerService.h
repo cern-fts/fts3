@@ -72,6 +72,10 @@ public:
      * @return failed refreshes map structure
      */
     FailedRefreshMapType getFailedRefreshes();
+
+protected:
+    boost::posix_time::time_duration pollInterval;
+
 private:
     /// Helper function to remove an iterable container of token-ids from the target container
     template <class T, class U>

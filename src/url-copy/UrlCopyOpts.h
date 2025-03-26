@@ -79,6 +79,7 @@ public:
     bool     skipEvict;
     bool     enableMonitoring;
     unsigned pingInterval;
+    unsigned tokenRefreshMargin;
 
     unsigned retry;
     unsigned retryMax;

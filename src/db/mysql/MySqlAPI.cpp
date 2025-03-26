@@ -5072,11 +5072,12 @@ std::map<std::string, Token> MySqlAPI::getValidAccessTokens(const std::list<std:
         std::string token_id;
         Token token;
 
+        auto refreshDelta = ServerConfig::instance().get<int>("TokenRefreshSafetyPeriod");
         const std::string time_comparison =
             sql.get_backend_name() == "mysql" ?
-                "(UTC_TIMESTAMP() + interval 5 minute)"
+                "(UTC_TIMESTAMP() + interval :refreshDelta second)"
             :
-                "(NOW() AT TIME ZONE 'UTC' + MAKE_INTERVAL(MINS => 5))";
+                "(NOW() AT TIME ZONE 'UTC' + MAKE_INTERVAL(SECS => :refreshDelta))";
 
         soci::statement stmt = (sql.prepare <<
             "SELECT token_id, access_token, refresh_token, issuer, scope, audience, access_token_expiry "
@@ -5085,6 +5086,7 @@ std::map<std::string, Token> MySqlAPI::getValidAccessTokens(const std::list<std:
             "   AND refresh_token IS NOT NULL "
             "   AND access_token_expiry > " + time_comparison,
             soci::use(token_id),
+            soci::use(refreshDelta),
             soci::into(token)
         );
 

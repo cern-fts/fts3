@@ -246,6 +246,12 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
+void UrlCopyCmd::setTokenRefreshMarginPeriod(int margin)
+{
+    setOption("token-refresh-margin", margin);
+}
+
+
 void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
     bool is_multiple, bool publishUserDn, const std::string &msgDir)
 {

@@ -146,6 +146,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     // Keep these functions grouped together until refactoring
                     cmdBuilder.setSourceTokenId(tf.sourceTokenId);
                     cmdBuilder.setDestinationTokenId(tf.destinationTokenId);
+                    cmdBuilder.setTokenRefreshMarginPeriod(fts3::config::ServerConfig::instance().get<int>("TokenRefreshMarginPeriod"));
                 }
             }
 

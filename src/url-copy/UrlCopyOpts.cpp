@@ -72,10 +72,11 @@ const option UrlCopyOpts::long_options[] =
     {"overwrite-disk-enabled", no_argument,       0, 510},
     {"disable-cleanup",        no_argument,       0, 511},
 
-    {"infosystem",        required_argument, 0, 600},
-    {"alias",             required_argument, 0, 601},
-    {"monitoring",        no_argument,       0, 602},
-    {"ping-interval",     required_argument, 0, 603},
+    {"infosystem",           required_argument, 0, 600},
+    {"alias",                required_argument, 0, 601},
+    {"monitoring",           no_argument,       0, 602},
+    {"ping-interval",        required_argument, 0, 603},
+    {"token-refresh-margin", required_argument, 0, 604},
 
     {"file-metadata",     required_argument, 0, 700},
     {"archive-metadata",  required_argument, 0, 701},
@@ -219,7 +220,8 @@ UrlCopyOpts::UrlCopyOpts(): isSessionReuse(false), strictCopy(false), disableCle
                             overwriteDiskEnabled(false), optimizerLevel(0), overwrite(false),
                             overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
                             timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
-                            noStreaming(false), skipEvict(false), enableMonitoring(false), pingInterval(60),
+                            noStreaming(false), skipEvict(false), enableMonitoring(false),
+                            pingInterval(60), tokenRefreshMargin(300),
                             retry(0), retryMax(0), logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
                             debugLevel(0), logToStderr(false)
 {
@@ -391,6 +393,9 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 603:
                     pingInterval = boost::lexical_cast<unsigned>(optarg);
+                    break;
+                case 604:
+                    tokenRefreshMargin = boost::lexical_cast<unsigned>(optarg);
                     break;
 
                 case 700:

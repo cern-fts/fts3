@@ -29,16 +29,21 @@ namespace fts3 {
 namespace token {
 
 
-TokenRefreshPollerService::TokenRefreshPollerService() : BaseService("TokenRefreshPollerService") {}
+TokenRefreshPollerService::TokenRefreshPollerService() :
+    BaseService("TokenRefreshPollerService")
+{
+    pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("TokenRefreshPollerInterval");
+}
 
 void TokenRefreshPollerService::runService()
 {
     auto db = db::DBSingleton::instance().getDBObjectInstance();
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenRefreshPollerService interval: " << pollInterval.total_seconds() << "s" << commit;
 
     while (!boost::this_thread::interruption_requested()) {
         try {
             updateLastRunTimepoint();
-            boost::this_thread::sleep(boost::posix_time::seconds(15));
+            boost::this_thread::sleep(pollInterval);
 
             std::list<std::string> tokensToRefreshMark;
             std::list<std::string> tokensToCacheClean;

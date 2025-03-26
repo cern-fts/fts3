@@ -196,8 +196,8 @@ void UrlCopyProcess::refreshExpiredAccessToken(const Transfer& transfer, bool is
     std::string expField = extractAccessTokenField(accessToken, "exp");
     auto exp = (!expField.empty()) ? std::stoll(expField) : 0;
 
-    // No "exp" or more than 10 minutes until expiration
-    if (exp == 0 || getTimestampSeconds(600) <= exp) {
+    // No "exp" or more than "TokenRefreshMarginPeriod" seconds until expiration
+    if (exp == 0 || getTimestampSeconds(opts.tokenRefreshMargin) <= exp) {
         return;
     }
 
@@ -208,7 +208,7 @@ void UrlCopyProcess::refreshExpiredAccessToken(const Transfer& transfer, bool is
     if (token.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refreshed token for " << target << "!" << commit;
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Successfully refresh access token for " << target << ": "
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Successfully refreshed access token for " << target << ": "
                                         << accessTokenPayload(token) << commit;
         if (is_source) { gfal2.setSourceToken(transfer.source, token); }
         else           { gfal2.setDestinationToken(transfer.destination, token); }
