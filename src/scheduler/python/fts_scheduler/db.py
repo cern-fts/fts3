@@ -385,8 +385,7 @@ def _get_link_vo_shares_from_db(dbconn):
 
 def _get_storage_to_inbound_weights(dbconn):
     """
-    Returns a dictionary of dictionaries.  The key of the top dictionary is storage-endpoint. Each
-    contained dictionary maps source storages to their weights.
+    Returns a dictionary of dictionaries: dest_se -> source_se -> inbound_weight
     """
     sql = """
         SELECT
