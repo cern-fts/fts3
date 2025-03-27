@@ -165,12 +165,6 @@ public:
         return storageEndpoint;
     }
 
-    // Returns how many file urls belong to this task
-    uint64_t getNbUrls() const
-    {
-        return urlToIDs.size();
-    }
-
 private:
     ArchivingStateUpdater &stateUpdater;
     WaitingRoom<ArchivingPollTask> &waitingRoom;

@@ -124,6 +124,14 @@ public:
     std::set<std::string> getUrls() const;
 
     /**
+     * @return : number of URLs
+     */
+    size_t getNbUrls() const
+    {
+        return urlToIDs.size();
+    }
+
+    /**
      * @return  Set of pairs <jobId, surl>
      */
     std::set<std::pair<std::string, std::string>> getSurls() const

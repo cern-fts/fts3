@@ -87,6 +87,11 @@ LogTokenRequests=false
 # Similar to logic as the StagingBulkSize
 # ArchivePollBulkSize=100
 
+# StagingPoll operation
+# Maximum number of staging requests to fetch from the database
+# Note: larger values mean more efficient database access, but larger in-memory footprint
+# FetchStagingLimit=50000
+
 # BringOnline operation
 # Maximum bulk size
 # If the size is too large, it will take more resources (memory and CPU) to generate the requests
