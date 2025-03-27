@@ -4761,7 +4761,7 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh(int limit)
 
         const soci::rowset<Token> rs = (sql.prepare <<
             "SELECT"
-            "    token_id, access_token, refresh_token, issuer, scope, audience "
+            "    token_id, access_token, refresh_token, issuer, scope, audience, access_token_expiry "
             "FROM t_token "
             "WHERE"
             "    refresh_token IS NULL AND "
@@ -4794,14 +4794,18 @@ void MySqlAPI::storeExchangedTokens(const std::set<ExchangedToken>& exchangedTok
         std::string tokenId;
         std::string accessToken;
         std::string refreshToken;
+        struct tm accessTokenExpiry;
+
         soci::statement stmt = (sql.prepare <<
                                             " UPDATE t_token SET "
                                             "   access_token = :accessToken, "
                                             "   refresh_token = :refreshToken, "
+                                            "   access_token_expiry = :expiry, "
                                             "   exchange_message = NULL "
                                             " WHERE token_id = :tokenId",
                                 soci::use(accessToken),
                                 soci::use(refreshToken),
+                                soci::use(accessTokenExpiry),
                                 soci::use(tokenId));
 
         sql.begin();
@@ -4809,6 +4813,7 @@ void MySqlAPI::storeExchangedTokens(const std::set<ExchangedToken>& exchangedTok
             tokenId = it.tokenId;
             accessToken = it.accessToken;
             refreshToken = it.refreshToken;
+            gmtime_r(&it.expiry, &accessTokenExpiry);
 
             if (accessToken.empty()) {
                 accessToken = it.previousAccessToken;
@@ -5055,6 +5060,233 @@ void MySqlAPI::updateTokenPrepFiles()
     }
     catch (...)
     {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+std::map<std::string, Token> MySqlAPI::getValidAccessTokens(const std::list<std::string>& token_ids)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        std::map<std::string, Token> validAccessTokens;
+        std::string token_id;
+        Token token;
+
+        auto refreshDelta = ServerConfig::instance().get<int>("TokenRefreshSafetyPeriod");
+        const std::string time_comparison =
+            sql.get_backend_name() == "mysql" ?
+                "(UTC_TIMESTAMP() + interval :refreshDelta second)"
+            :
+                "(NOW() AT TIME ZONE 'UTC' + MAKE_INTERVAL(SECS => :refreshDelta))";
+
+        soci::statement stmt = (sql.prepare <<
+            "SELECT token_id, access_token, refresh_token, issuer, scope, audience, access_token_expiry "
+            "FROM t_token "
+            "WHERE token_id = :tokenId "
+            "   AND refresh_token IS NOT NULL "
+            "   AND access_token_expiry > " + time_comparison,
+            soci::use(token_id),
+            soci::use(refreshDelta),
+            soci::into(token)
+        );
+
+        for (const auto& id: token_ids) {
+            token_id = id;
+
+            if (stmt.execute(true)) {
+                validAccessTokens.emplace(token_id, std::move(token));
+            }
+        }
+
+        return validAccessTokens;
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+std::map<std::string, std::pair<std::string, int64_t>>
+    MySqlAPI::getFailedAccessTokenRefreshes(const std::list<std::string>& token_ids)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        std::map<std::string, std::pair<std::string, int64_t>> failedTokenRefreshes;
+        std::string token_id;
+        std::string refresh_message;
+        struct tm refresh_time_st;
+        int64_t refresh_timestamp;
+
+        soci::statement stmt = (sql.prepare <<
+            "SELECT refresh_message, refresh_timestamp "
+            "FROM t_token "
+            "WHERE token_id = :tokenId "
+            "   AND refresh_message IS NOT NULL "
+            "   AND marked_for_refresh = 0",
+            soci::use(token_id),
+            soci::into(refresh_message),
+            soci::into(refresh_time_st)
+        );
+
+        for (const auto& id: token_ids) {
+            token_id = id;
+
+            if (stmt.execute(true)) {
+                refresh_timestamp = timegm(&refresh_time_st);
+                failedTokenRefreshes.emplace(token_id, std::make_pair(refresh_message, refresh_timestamp));
+            }
+        }
+
+        return failedTokenRefreshes;
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+void MySqlAPI::markTokensForRefresh(const std::list<std::string>& token_ids)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        std::string token_id;
+
+        const std::string time_comparison =
+            sql.get_backend_name() == "mysql" ?
+                "(UTC_TIMESTAMP() + interval 5 minute)"
+            :
+                "(NOW() AT TIME ZONE 'UTC' + MAKE_INTERVAL(MINS => 5))";
+
+        soci::statement stmt = (sql.prepare <<
+            "UPDATE t_token SET marked_for_refresh = 1 "
+            "WHERE token_id = :tokenId"
+            "   AND access_token_expiry <= " + time_comparison,
+            soci::use(token_id)
+        );
+
+        sql.begin();
+        for (const auto& id: token_ids) {
+            token_id = id;
+            stmt.execute(true);
+        }
+        sql.commit();
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+std::list<Token> MySqlAPI::getAccessTokensForRefresh(int limit)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null " : "";
+
+        const soci::rowset<Token> rs = (sql.prepare <<
+            "SELECT"
+            "    token_id, access_token, refresh_token, issuer, scope, audience, access_token_expiry "
+            "FROM t_token "
+            "WHERE"
+            "    marked_for_refresh = 1 "
+            << order_by_null <<
+            "LIMIT " << limit);
+
+        return {rs.begin(), rs.end()};
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::storeRefreshedTokens(const std::set<RefreshedToken>& refreshedTokens)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        const std::string utc_timestamp =
+            sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
+
+        // Prepare statement for storing refreshed token
+        std::string tokenId;
+        std::string accessToken;
+        std::string refreshToken;
+        struct tm accessTokenExpiry;
+
+        soci::statement stmt = (sql.prepare <<
+                                            " UPDATE t_token SET "
+                                            "   access_token = :accessToken, "
+                                            "   refresh_token = :refreshToken, "
+                                            "   access_token_expiry = :expiry, "
+                                            "   refresh_message = NULL, "
+                                            "   refresh_timestamp = " + utc_timestamp + ", "
+                                            "   marked_for_refresh = 0"
+                                            " WHERE token_id = :tokenId",
+                                soci::use(accessToken),
+                                soci::use(refreshToken),
+                                soci::use(accessTokenExpiry),
+                                soci::use(tokenId));
+
+        sql.begin();
+        for (const auto& it: refreshedTokens) {
+            tokenId = it.tokenId;
+            accessToken = it.accessToken;
+            refreshToken = it.refreshToken;
+            gmtime_r(&it.expiry, &accessTokenExpiry);
+
+            if (refreshToken.empty()) {
+                refreshToken = it.previousRefreshToken;
+            }
+
+            stmt.execute(true);
+        }
+        sql.commit();
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
+        throw UserError(std::string(__func__) + ": Caught exception");
+    }
+}
+
+
+void MySqlAPI::markFailedTokenRefresh(const std::set< std::pair<std::string, std::string> >& failedRefreshes)
+{
+    soci::session sql(*connectionPool);
+
+    try {
+        const std::string utc_timestamp =
+            sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
+
+        std::string tokenId;
+        std::string refreshError;
+
+        soci::statement stmt = (sql.prepare <<
+                        " UPDATE t_token SET "
+                        "     refresh_message = :refreshError, refresh_timestamp = " + utc_timestamp + ", "
+                        "     marked_for_refresh = 0"
+                        " WHERE token_id = :tokenId",
+                    soci::use(refreshError),
+                    soci::use(tokenId));
+
+        sql.begin();
+        for (const auto& it: failedRefreshes) {
+            tokenId = it.first;
+            refreshError = it.second;
+            stmt.execute(true);
+        }
+        sql.commit();
+    } catch (std::exception& e) {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    } catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception");
     }
 }

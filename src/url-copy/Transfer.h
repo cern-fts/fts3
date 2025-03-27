@@ -116,10 +116,10 @@ public:
     std::string fileMetadata;
     std::string archiveMetadata;
     std::string tokenBringOnline;
-    std::string sourceTokenDescription;
-    std::string destTokenDescription;
-    std::string sourceTokenIssuer;
-    std::string destTokenIssuer;
+    std::string sourceSpaceToken;
+    std::string destSpaceToken;
+    std::string sourceTokenId;
+    std::string destTokenId;
     unsigned    scitag;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
@@ -131,6 +131,10 @@ public:
 
     // File size
     uint64_t fileSize;
+
+    // Source and destination checksums
+    std::string sourceChecksumValue;
+    std::string destChecksumValue;
 
     // Progress markers
     double averageThroughput; // In KiB/s

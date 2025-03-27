@@ -28,8 +28,8 @@ BOOST_FIXTURE_TEST_CASE (simpleDestFileReport, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2"
-                                      "&checksum=abc123ab&user.status=NEARLINE");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10&size_post=10"
+                                      "&time=2&checksum=abc123ab&user.status=NEARLINE");
     opts.transfers.push_back(original);
 
     // Ask for destination file report
@@ -67,9 +67,9 @@ BOOST_FIXTURE_TEST_CASE (simpleDestFileReport, UrlCopyFixture)
 
 BOOST_FIXTURE_TEST_CASE (overwriteEnabled, UrlCopyFixture) {
     Transfer original;
-    original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2"
-                                      "&checksum=abc123ab&user.status=NEARLINE");
+    original.source = Uri::parse("mock://host/path?size=10&checksum=abc123ab");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10&size_post=10"
+                                      "&time=2&checksum=abc123ab&user.status=NEARLINE");
     opts.transfers.push_back(original);
 
     // Ask for destination file report
@@ -97,7 +97,8 @@ BOOST_FIXTURE_TEST_CASE (fileOnlineAndNearline, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=ONLINE_AND_NEARLINE");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10"
+                                      "&time=2&user.status=ONLINE_AND_NEARLINE");
     opts.transfers.push_back(original);
 
     // Ask for destination file report
@@ -133,7 +134,8 @@ BOOST_FIXTURE_TEST_CASE (fileOnline, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=ONLINE");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10"
+                                      "&time=2&user.status=ONLINE");
     opts.transfers.push_back(original);
 
     // Ask for destination file report
@@ -169,7 +171,8 @@ BOOST_FIXTURE_TEST_CASE (fileNearline, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=NEARLINE");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10"
+                                      "&time=2&user.status=NEARLINE");
     opts.transfers.push_back(original);
 
     // Ask for destination file report
@@ -205,7 +208,8 @@ BOOST_FIXTURE_TEST_CASE (invalidStatus, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=INVALID");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10"
+                                      "&time=2&user.status=INVALID");
     opts.transfers.push_back(original);
 
     // Ask for destination file report
@@ -241,7 +245,8 @@ BOOST_FIXTURE_TEST_CASE (md5Checksum, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&time=2&user.status=ONLINE&checksum=abc123ab");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10"
+                                      "&time=2&checksum=abc123ab&user.status=ONLINE");
     original.checksumAlgorithm = "MD5";
     opts.transfers.push_back(original);
 
@@ -283,7 +288,8 @@ BOOST_FIXTURE_TEST_CASE (maxFileSize, UrlCopyFixture)
     source_url << "mock://host/path?size=" << max_file_size;
 
     std::stringstream dest_url;
-    dest_url << "mock://host/path?time=2&user.status=ONLINE&checksum=abc123ab&size_pre=" << max_file_size << "&size_post=" << max_file_size;
+    dest_url << "mock://host/path?exists=1&time=2&user.status=ONLINE&checksum=abc123ab"
+             << "&size_pre=" << max_file_size << "&size_post=" << max_file_size;
 
     original.source = Uri::parse(source_url.str());
     original.destination = Uri::parse(dest_url.str());
@@ -323,7 +329,8 @@ BOOST_FIXTURE_TEST_CASE (fileMetadataExists, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2&user.status=NEARLINE");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10&size_post=10"
+                                      "&time=2&user.status=NEARLINE");
     std::string test_metadata = "This is a test";
     // The following metadata will later be put into a JSON. The key that will contain this value is file_metadata
     original.fileMetadata = test_metadata;
@@ -360,7 +367,8 @@ BOOST_FIXTURE_TEST_CASE (fileMetadataExistsAsJSON, UrlCopyFixture)
 {
     Transfer original;
     original.source = Uri::parse("mock://host/path?size=10");
-    original.destination = Uri::parse("mock://host/path?size_pre=10&size_post=10&time=2&user.status=NEARLINE");
+    original.destination = Uri::parse("mock://host/path?exists=1&size_pre=10&size_post=10"
+                                      "&time=2&user.status=NEARLINE");
 
     // Create a JSON object and send it as the file metadata
     Json::Value output;

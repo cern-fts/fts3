@@ -18,15 +18,19 @@
 #define FTS3_LEGACYREPORTER_H
 
 #include "Reporter.h"
+#include "msg-bus/producer.h"
 #include <zmq.hpp>
+
 
 /// Implements reporter using MsgBus
 class LegacyReporter: public Reporter {
 private:
     Producer producer;
     UrlCopyOpts opts;
-    zmq::context_t zmqContext;
+    zmq::context_t zmqContextPing;
+    zmq::context_t zmqContextToken;
     zmq::socket_t zmqPingSocket;
+    zmq::socket_t zmqTokenSocket;
 
 public:
     LegacyReporter(const UrlCopyOpts &opts);
@@ -38,6 +42,8 @@ public:
     virtual void sendTransferCompleted(const Transfer&, Gfal2TransferParams&);
 
     virtual void sendPing(Transfer&);
+
+    virtual std::pair<std::string, int64_t> requestTokenRefresh(const std::string&, const Transfer&);
 };
 
 #endif // FTS3_LEGACYREPORTER_H

@@ -24,7 +24,7 @@ find_package (DIRQ REQUIRED)
 find_package (GLIB2 REQUIRED)
 find_package (Protobuf REQUIRED)
 
-include_directories (${DIRQ_INCLUDE_DIR})
+include_directories(${DIRQ_INCLUDE_DIR})
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
 # Disable "-Wconversion" warning during Protobuf generation

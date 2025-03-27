@@ -148,7 +148,7 @@ Summary:    FTS unit tests
 Group:      Development/Tools
 
 Requires:   fts-libs%{?_isa} = %{version}-%{release}
-Requires:   gfal2-plugin-mock
+Requires:   gfal2-plugin-mock%{?_isa} >= 2.23.1
 
 %description tests
 Testing binaries for the FTS Server and related components.

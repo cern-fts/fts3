@@ -394,6 +394,25 @@ public:
     /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
     virtual void updateTokenPrepFiles() = 0;
 
+    /// Given a list of token ids, return a map of valid <token_id, Token>
+    virtual std::map<std::string, Token> getValidAccessTokens(const std::list<std::string>& token_ids) = 0;
+
+    /// Given a list of token ids, return a map of failed token-refreshes <token_id, (message, timestamp)>
+    virtual std::map<std::string, std::pair<std::string, int64_t>>
+        getFailedAccessTokenRefreshes(const std::list<std::string>& token_ids) = 0;
+
+    /// Given a list of token ids, mark them for refreshing
+    virtual void markTokensForRefresh(const std::list<std::string>& token_ids) = 0;
+
+    /// Returns list of access tokens marked for refreshing
+    virtual std::list<Token> getAccessTokensForRefresh(int limit) = 0;
+
+    /// Store a list of refreshed tokens
+    virtual void storeRefreshedTokens(const std::set<RefreshedToken>& refreshedTokens) = 0;
+
+    /// Mark token-refresh timestamp and error message
+    virtual void markFailedTokenRefresh(const std::set< std::pair<std::string, std::string> >& failedRefreshes) = 0;
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,

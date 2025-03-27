@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+#include <boost/thread.hpp>
+
 #include "LegacyReporter.h"
 #include "common/Logger.h"
+#include "common/TimeUtils.h"
 #include "monitoring/msg-ifce.h"
 #include "heuristics.h"
 
@@ -24,10 +27,19 @@ using fts3::common::commit;
 
 
 LegacyReporter::LegacyReporter(const UrlCopyOpts &opts): producer(opts.msgDir), opts(opts),
-    zmqContext(1), zmqPingSocket(zmqContext, ZMQ_PUB)
+    zmqContextPing(1), zmqContextToken(1),
+    zmqPingSocket(zmqContextPing, zmq::socket_type::pub),
+    zmqTokenSocket(zmqContextToken, zmq::socket_type::req)
 {
-    std::string address = std::string("ipc://") + opts.msgDir + "/url_copy-ping.ipc";
-    zmqPingSocket.connect(address.c_str());
+    auto pingAddress = "ipc://" + opts.msgDir + "/url_copy-ping.ipc";
+    auto tokenAddress = "ipc://" + opts.msgDir + "/url_copy-token-refresh.ipc";
+    zmqPingSocket.connect(pingAddress.c_str());
+    // Wait at most 1 minute for token ZMQ communication
+    int tokenSocketTimeout_ms = 60 * 1000;
+    zmqTokenSocket.set(zmq::sockopt::rcvtimeo, tokenSocketTimeout_ms);
+    zmqTokenSocket.set(zmq::sockopt::sndtimeo, tokenSocketTimeout_ms);
+    zmqTokenSocket.set(zmq::sockopt::req_relaxed, 1);
+    zmqTokenSocket.connect(tokenAddress.c_str());
 }
 
 
@@ -83,8 +95,8 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     started.user_dn = replaceMetadataString(opts.userDn);
     started.file_metadata = replaceMetadataString(transfer.fileMetadata);
     started.job_metadata = replaceMetadataString(opts.jobMetadata);
-    started.srm_space_token_source = transfer.sourceTokenDescription;
-    started.srm_space_token_dest = transfer.destTokenDescription;
+    started.srm_space_token_source = transfer.sourceSpaceToken;
+    started.srm_space_token_dest = transfer.destSpaceToken;
     started.tr_timestamp_start = millisecondsSinceEpoch();
 
     if (opts.enableMonitoring) {
@@ -249,8 +261,8 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.job_multihop = transfer.isMultihopJob;
     completed.is_lasthop = transfer.isLastHop;
     completed.is_archiving = transfer.isArchiving;
-    completed.srm_space_token_source = transfer.sourceTokenDescription;
-    completed.srm_space_token_dest = transfer.destTokenDescription;
+    completed.srm_space_token_source = transfer.sourceSpaceToken;
+    completed.srm_space_token_dest = transfer.destSpaceToken;
     completed.transfer_timeout = params.getTimeout();
 
     if (transfer.error) {
@@ -397,4 +409,88 @@ void LegacyReporter::sendPing(Transfer &transfer)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to send heartbeat: " << error.what() << commit;
     }
     transfer.previousPingTransferredBytes = transfer.transferredBytes;
+}
+
+std::pair<std::string, int64_t> LegacyReporter::requestTokenRefresh(const std::string& token_id, const Transfer& transfer)
+{
+    events::TokenRefreshRequest request;
+    events::TokenRefreshResponse response;
+
+    request.set_token_id(token_id);
+    request.set_job_id(transfer.jobId);
+    request.set_file_id(transfer.fileId);
+    request.set_hostname(fts3::common::getFullHostname());
+    request.set_process_id(getpid());
+
+    int attempts{0};
+    auto end = getTimestampSeconds(300);
+    auto nextAttempt = getTimestampSeconds(60);
+
+    while (true) {
+        auto now = getTimestampSeconds();
+
+        if (now >= end) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Aborting token-refresh request. "
+                                               << "Total operation time exceeded 300s! (attempts=" << attempts << ")"
+                                               << commit;
+            break;
+        }
+
+        if ((attempts > 0) && (now < nextAttempt)) {
+            auto interval = std::min(nextAttempt, end) - now;
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Token-refresh request: Will sleep for " << interval << " seconds!" << commit;
+            boost::this_thread::sleep(boost::posix_time::seconds(interval));
+            now = getTimestampSeconds();
+        }
+
+        if (now >= nextAttempt) {
+            nextAttempt = getTimestampSeconds(60);
+        }
+
+        try {
+            std::ostringstream msg;
+            msg << "Sending token-refresh request: token_id=" << token_id;
+            if (++attempts > 1) { msg << " (attempt=" << attempts << ")"; }
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << msg.str() << commit;
+
+            auto serialized = request.SerializeAsString();
+            zmqTokenSocket.send(zmq::message_t{serialized}, zmq::send_flags::none);
+
+            zmq::message_t reply;
+            auto recv_result = zmqTokenSocket.recv(reply, zmq::recv_flags::none);
+
+            if (!recv_result) {
+                if (zmq_errno() == EAGAIN) {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Token-refresh request: waiting for response timed out!" << commit;
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Token-refresh request: failure receiving response ("
+                                                       << zmq_strerror(zmq_errno()) << ")" << commit;
+                }
+
+                continue;
+            }
+
+            if (!response.ParseFromArray(reply.data(), static_cast<int>(reply.size()))) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Failed to parse token-refresh response!" << commit;
+                continue;
+            }
+
+            if (response.response_type() == events::TokenRefreshResponse::TYPE_REFRESH_FAILURE) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Received failed-refresh response: \"" << response.refresh_message() << "\""
+                                                   << " (refresh_timestamp=" << response.refresh_timestamp() << ")"
+                                                   << commit;
+                continue;
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Received token-refresh response: "
+                                            << accessTokenPayload(response.access_token())
+                                            << commit;
+
+            return {response.access_token(), response.expiry_timestamp()};
+        } catch (const std::exception& error) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Failed to send/receive token-refresh request: " << error.what() << commit;
+        }
+    }
+
+    return {"", 0};
 }

@@ -63,7 +63,6 @@ public:
     std::string authMethod;
     std::string copyMode;
     bool disableCopyFallback;
-    bool retrieveSEToken;
     bool overwriteDiskEnabled;
 
     unsigned optimizerLevel;
@@ -80,6 +79,7 @@ public:
     bool     skipEvict;
     bool     enableMonitoring;
     unsigned pingInterval;
+    unsigned tokenRefreshMargin;
 
     unsigned retry;
     unsigned retryMax;

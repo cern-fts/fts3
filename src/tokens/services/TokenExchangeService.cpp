@@ -22,9 +22,7 @@
 #include "server/common/DrainMode.h"
 
 #include "TokenExchangeService.h"
-#include "TokenExchangeExecutor.h"
-
-#include <cstdlib>
+#include "tokens/executors/TokenExchangeExecutor.h"
 
 using namespace fts3::config;
 using namespace fts3::common;
@@ -42,8 +40,8 @@ TokenExchangeService::TokenExchangeService(const std::shared_ptr<HeartBeat>& hea
     bulkSize = ServerConfig::instance().get<int>("TokenExchangeBulkSize");
 }
 
-void TokenExchangeService::runService() {
-
+void TokenExchangeService::runService()
+{
     auto db = db::DBSingleton::instance().getDBObjectInstance();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TokenExchangeService interval: " << pollInterval.total_seconds() << "s" << commit;
@@ -68,10 +66,9 @@ void TokenExchangeService::runService() {
 
             // This service intentionally runs only on the first node
             if (heartBeat->isLeadNode(true)) {
+                // Refresh tokens must be obtained for ALL access tokens that don't have one
                 exchangedTokensLastRun = exchangeTokens();
                 handleFailedTokenExchange();
-                // The below function does not require any state from the service
-                // Refresh tokens must be obtained for ALL access tokens that don't have one.
 
                 // Move the file state from "TOKEN_PREP" to its supposed initial state (stored in "t_token_file_state_initial")
                 // Note: The token-exchange can have the following impact on transfers:
@@ -90,21 +87,14 @@ void TokenExchangeService::runService() {
     }
 }
 
-int TokenExchangeService::exchangeTokens() {
+int TokenExchangeService::exchangeTokens()
+{
     auto db = db::DBSingleton::instance().getDBObjectInstance();
     ThreadPool<TokenExchangeExecutor> execPool(execPoolSize);
 
     try {
         auto providers = db->getTokenProviders();
-
-        time_t start = time(nullptr);
         auto tokens = db->getAccessTokensWithoutRefresh(bulkSize);
-        time_t end = time(nullptr);
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TokenExchangeService\" "
-                                        << "func=\"exchangeTokens\" "
-                                        << "DBcall=\"getAccessTokensWithoutRefresh\" "
-                                        << "time=\"" << end - start << "\""
-                                        << commit;
 
         if (tokens.empty()) {
             return 0;
@@ -131,8 +121,9 @@ int TokenExchangeService::exchangeTokens() {
             for (const auto& it: exchangedTokens) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Storing exchanged token: "
                                                 << "token_id=" << it.tokenId << " "
+                                                << "expiration_time=" << it.expiry << " "
                                                 << "access_token=" << it.accessTokenToString() << " "
-                                                << "refresh_token=" << it.refreshToken
+                                                << "refresh_token=" << it.refreshTokenToString()
                                                 << commit;
             }
 
@@ -151,7 +142,7 @@ int TokenExchangeService::exchangeTokens() {
     } catch (std::exception& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TokenExchangeService:exchangeTokens: " << e.what() << commit;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService! " << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TokenExchangeService:exchangeTokens! " << commit;
     }
 
     return -1;
@@ -165,7 +156,7 @@ void TokenExchangeService::handleFailedTokenExchange()
     for (const auto& it: failedExchanges) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Handling failed token exchange: "
                                         << "token_id=" << it.first << " "
-                                        << "message=" << it.second
+                                        << "message=\"" << it.second << "\""
                                         << commit;
     }
 

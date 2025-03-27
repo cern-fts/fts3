@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2023
+* Copyright (c) CERN 2024
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
  */
 
 #include "common/Logger.h"
-#include "common/Exceptions.h"
 #include "common/TimeUtils.h"
-#include "TokenExchangeExecutor.h"
-#include "IAMExchangeError.h"
+
+#include "IAMWorkflowError.h"
+#include "TokenHttpExecutor.h"
 
 #include <cryptopp/base64.h>
 
@@ -27,46 +27,12 @@ using namespace fts3::common;
 namespace fts3 {
 namespace token {
 
-boost::shared_mutex TokenExchangeExecutor::mxTokenEndpoints;
-TokenExchangeExecutor::tokenEndpointMap_t TokenExchangeExecutor::tokenEndpointMap;
+boost::shared_mutex TokenHttpExecutor::mxTokenEndpoints;
+TokenHttpExecutor::tokenEndpointMap_t TokenHttpExecutor::tokenEndpointMap;
 
-void TokenExchangeExecutor::run([[maybe_unused]] boost::any & ctx)
+std::string TokenHttpExecutor::performTokenHttpRequest()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting token-exchange: "
-                                    << "token_id=" << token.tokenId << " "
-                                    << "access_token=" << token.accessTokenToString() << " "
-                                    << "issuer=" << token.issuer
-                                    << commit;
-
-    try {
-        auto exchanged_token = performTokenExchange();
-
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtained exchanged token: "
-                                        << "token_id=" << token.tokenId << " "
-                                        << "access_token=" << exchanged_token.accessTokenToString() << " "
-                                        << "refresh_token=" << exchanged_token.refreshToken
-                                        << commit;
-
-        tokenExchangeService.registerExchangedToken(exchanged_token);
-    } catch (const IAMExchangeError& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
-                                       << "token_id=" << token.tokenId << " "
-                                       << "response: '" << e.what() << "'" << commit;
-
-        auto message = extractErrorDescription(e);
-        tokenExchangeService.registerFailedTokenExchange(token.tokenId, message);
-    } catch (const std::exception& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to obtain refresh token: "
-                                       << "token_id=" << token.tokenId << " "
-                                       << "error: '" << e.what() << "'" << commit;
-
-        tokenExchangeService.registerFailedTokenExchange(token.tokenId, e.what());
-    }
-}
-
-ExchangedToken TokenExchangeExecutor::performTokenExchange()
-{
-    // GET token exchange endpoint URL
+    // GET token endpoint URL
     std::string token_endpoint = getTokenEndpoint();
     Davix::Uri uri(token_endpoint);
     validateUri(uri);
@@ -74,37 +40,31 @@ ExchangedToken TokenExchangeExecutor::performTokenExchange()
     // Build the POST request
     Davix::DavixError* err = nullptr;
     Davix::PostRequest req(context, uri, &err);
-    auto exchangeData = getExchangeData();
+    auto payloadData = getPayloadData();
 
     // Set request parameters
     Davix::RequestParams params;
     params.addHeader("Authorization", getAuthorizationHeader());
     params.addHeader("Content-Type", "application/x-www-form-urlencoded");
     req.setParameters(params);
-    req.setRequestBody(exchangeData);
+    req.setRequestBody(payloadData);
 
     // Execute the request
-    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenExchange::" << token.tokenId << "]: > " << exchangeData << commit;
-    std::string response = executeHttpRequest(req);
-    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[TokenExchange::" << token.tokenId << "]: < " << response << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[" << name << "::" << token.tokenId << "]: > " << payloadData << commit;
+    auto response = executeHttpRequest(req);
+    FTS3_COMMON_LOGGER_NEWLOG(TOKEN) << "[" << name << "::" << token.tokenId << "]: < " << response << commit;
 
-    // Construct exchanged access token from the JSON response
-    return {
-            token.tokenId,
-            parseJson(response, "access_token", false),
-            parseJson(response, "refresh_token"),
-            token.accessToken
-    };
+    return response;
 }
 
-std::string TokenExchangeExecutor::getTokenEndpoint()
+std::string TokenHttpExecutor::getTokenEndpoint()
 {
     // Look into the token endpoint map first
     {
-        boost::unique_lock<boost::shared_mutex> lock(TokenExchangeExecutor::mxTokenEndpoints);
-        auto it = TokenExchangeExecutor::tokenEndpointMap.find(token.issuer);
+        boost::unique_lock<boost::shared_mutex> lock(mxTokenEndpoints);
+        auto it = tokenEndpointMap.find(token.issuer);
 
-        if (it != TokenExchangeExecutor::tokenEndpointMap.end()) {
+        if (it != tokenEndpointMap.end()) {
             if (getTimestampSeconds() < it->second.second) {
                 FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Found cached token endpoint: "
                                                  << token.issuer << " --> " << it->second.first
@@ -132,9 +92,9 @@ std::string TokenExchangeExecutor::getTokenEndpoint()
 
     // Save "token_endpoint" value into token endpoint cache map
     {
-        boost::unique_lock<boost::shared_mutex> lock(TokenExchangeExecutor::mxTokenEndpoints);
+        boost::unique_lock<boost::shared_mutex> lock(mxTokenEndpoints);
         auto expireAt = getTimestampSeconds(3600);
-        TokenExchangeExecutor::tokenEndpointMap[token.issuer] = { tokenEndpoint, expireAt };
+        tokenEndpointMap[token.issuer] = { tokenEndpoint, expireAt };
 
         FTS3_COMMON_LOGGER_NEWLOG(TRACE) << "Storing cached token endpoint: "
                                          << token.issuer << " --> " << tokenEndpoint
@@ -144,12 +104,14 @@ std::string TokenExchangeExecutor::getTokenEndpoint()
     return tokenEndpoint;
 }
 
-std::string TokenExchangeExecutor::getAuthorizationHeader() const
+std::string TokenHttpExecutor::getAuthorizationHeader() const
 {
+    constexpr bool noNewLineInBase64Output = false;
+
     std::string auth_data = tokenProvider.clientId + ":" + tokenProvider.clientSecret;
     std::string encoded_data;
+
     // Base64 encode the authorization information
-    const bool noNewLineInBase64Output = false;
     CryptoPP::StringSource ss1(auth_data, true,
                                new CryptoPP::Base64Encoder(
                                        new CryptoPP::StringSink(encoded_data), noNewLineInBase64Output)
@@ -157,24 +119,8 @@ std::string TokenExchangeExecutor::getAuthorizationHeader() const
     return "Basic " + encoded_data;
 }
 
-std::string TokenExchangeExecutor::getExchangeData() const
+std::string TokenHttpExecutor::executeHttpRequest(Davix::HttpRequest& request)
 {
-    std::stringstream ss;
-    ss << "grant_type=urn:ietf:params:oauth:grant-type:token-exchange"
-          "&requested_token_type=urn:ietf:params:oauth:token-type:refresh_token"
-          "&subject_token_type=urn:ietf:params:oauth:token-type:access_token"
-          "&subject_token=" << token.accessToken <<
-          "&scope=" << token.scope;
-
-    // Add optional audience to the token exchange request
-    if (!token.audience.empty()) {
-        ss << "&audience=" << token.audience;
-    }
-
-    return ss.str();
-}
-
-std::string TokenExchangeExecutor::executeHttpRequest(Davix::HttpRequest& request) {
     Davix::DavixError* req_error = nullptr;
     Davix::DavixError* response_error = nullptr;
     std::vector<char> buffer(DAVIX_BLOCK_SIZE);
@@ -205,17 +151,19 @@ std::string TokenExchangeExecutor::executeHttpRequest(Davix::HttpRequest& reques
         // Throw an IAM Exception containing the response body
         // The response message will later be parsed for relevant info.
         // In case no relevant info is found, the initial request error is returned
-        throw IAMExchangeError(request.getRequestCode(), response.str(), req_error);
+        throw IAMWorkflowError(request.getRequestCode(), response.str(), req_error);
     }
 
     return response.str();
 }
 
-std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeError& e) {
+std::string TokenHttpExecutor::extractErrorDescription(const IAMWorkflowError& e,
+                                                       const std::string& tokenId,
+                                                       const std::map<std::string, std::string>& secrets)
+{
     // Attempt to extract meaningful message from the Token Provider response.
     // We do this by searching for the "error" and "error_description" JSON fields.
     // (IAM returns a JSON response describing the error)
-
     try {
         auto type = parseJson(e.what(), "error");
         auto description = parseJson(e.what(), "error_description");
@@ -230,15 +178,40 @@ std::string TokenExchangeExecutor::extractErrorDescription(const IAMExchangeErro
 
         // Replace secrets, such as token value or FTS client ID
         // The parsed output will be the transfer failure message
-        _replace(token.accessToken, token.accessTokenToString());
-        _replace(tokenProvider.clientId, "<FTS client ID>");
+        for (const auto& [secret, replacement]: secrets) {
+            _replace(secret, replacement);
+        }
+
         return "[" + type + "]: " + description;
     } catch (const std::exception& tmp) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Failed to extract \"error_description\" field from server response: "
-                                         << "token_id=" << token.tokenId << " exception=\"" << tmp.what() << "\" "
+                                         << "token_id=" << tokenId << " exception=\"" << tmp.what() << "\" "
                                          << "response: '" << e.what() << "'" << commit;
         return e.davix_error();
     }
+}
+
+std::string TokenHttpExecutor::parseJson(const std::string& msg, const::std::string& key, const bool strict)
+{
+    Json::Value obj;
+    std::stringstream(msg) >> obj;
+    std::string res = obj.get(key, "").asString();
+
+    if (res.empty() && strict) {
+        std::stringstream error;
+        error << "Response JSON did not contain " << key << " key";
+        Json::throwLogicError(error.str());
+    }
+
+    return res;
+}
+
+void TokenHttpExecutor::validateUri(const Davix::Uri& uri)
+{
+    Davix::DavixError* err = nullptr;
+    Davix::uriCheckError(uri, &err);
+    // Throws Davix exception if error is not empty
+    Davix::checkDavixError(&err);
 }
 
 } // end namespace token

@@ -25,10 +25,27 @@
  * @param offset Add the offset to the returned timestamp value
  * @return current time as UNIX timestamp (in seconds)
  */
-int64_t getTimestampSeconds(unsigned offset = 0)
+inline int64_t getTimestampSeconds(unsigned offset = 0)
 {
     std::chrono::seconds timestamp =
         std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        );
+
+    return timestamp.count() + offset;
+}
+
+/**
+ * Return the current time as UNIX timestamp (in milliseconds).
+ * An optional offset may be added to the returned value
+ *
+ * @param offset Add the offset to the returned timestamp value
+ * @return current time as UNIX timestamp (in seconds)
+ */
+inline int64_t getTimestampMilliseconds(unsigned offset = 0)
+{
+    std::chrono::milliseconds timestamp =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()
         );
 

@@ -16,10 +16,11 @@
 
 #pragma once
 
+#include <davix.hpp>
+
 #include "common/Exceptions.h"
 
-
-class IAMExchangeError: public fts3::common::BaseException {
+class IAMWorkflowError: public fts3::common::BaseException {
 
 private:
     int _code;                     ///< HTTP response code
@@ -28,7 +29,7 @@ private:
 
 public:
 
-    IAMExchangeError(int code, const std::string& message, Davix::DavixError* dav_error) :
+    IAMWorkflowError(int code, const std::string& message, Davix::DavixError* dav_error) :
             _code(code), _message(message), _dav_error(dav_error) {
         // Sanitize server response for newlines:
         // - remove trailing newlines
@@ -44,7 +45,7 @@ public:
         }
     }
 
-    ~IAMExchangeError() = default;
+    ~IAMWorkflowError() = default;
 
     const char* what() const noexcept {
         return _message.c_str();
@@ -59,6 +60,6 @@ public:
             return _dav_error->getErrMsg();
         }
 
-        return "Token exchange request failed (no additional info could be provided)";
+        return "Token workflow request failed (no additional info could be provided)";
     }
 };

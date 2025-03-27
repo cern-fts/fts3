@@ -1,0 +1,39 @@
+syntax = "proto2";
+
+package fts3.events;
+
+message TokenRefreshResponse {
+    enum Type {
+        TYPE_ACCESS_TOKEN = 0;
+        TYPE_REFRESH_FAILURE = 1;
+    }
+
+    required string token_id = 1;
+    required Type response_type = 2;
+    optional string access_token = 3;
+    optional uint64 expiry_timestamp = 4;
+    optional string refresh_message = 5;
+    optional uint64 refresh_timestamp = 6;
+}
+
+/*
+Experimental one-of solution (requires recent version of protobuf compiler)
+
+message TokenRefreshResponse {
+    oneof oneof_refreshResponse {
+        AccessToken accessToken = 1;
+        RefreshFailure refreshFailure = 2;
+    }
+}
+message AccessToken {
+    required string token_id = 1;
+    required string access_token = 2;
+    required uint64 expiry_timestamp = 3;
+}
+
+message RefreshFailure {
+    required string token_id = 1;
+    required string refresh_message = 2;
+    required uint64 refresh_timestamp = 3;
+}
+*/

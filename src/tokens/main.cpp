@@ -94,6 +94,8 @@ static void doServer()
     }
 
     theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+    theLogger().setProfiling(ServerConfig::instance().get<bool>("Profiling"));
+    theLogger().setLogTokenRequests(ServerConfig::instance().get<bool>("LogTokenRequests"));
 
     initializeDatabase();
     TokenServer::instance().start();

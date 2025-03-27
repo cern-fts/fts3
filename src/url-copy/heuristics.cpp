@@ -18,16 +18,12 @@
  * limitations under the License.
  */
 
-#include "heuristics.h"
-#include "common/Logger.h"
-
+#include <errno.h>
 #include <json/json.h>
 #include <cryptopp/base64.h>
 #include <boost/algorithm/string.hpp>
 
-#include <errno.h>
-
-using namespace fts3::common;
+#include "heuristics.h"
 
 
 static bool findSubstring(const std::string &stack, const char *needles[])
@@ -39,10 +35,32 @@ static bool findSubstring(const std::string &stack, const char *needles[])
     return false;
 }
 
+static Json::Value decodeAccessTokenPayload(std::string token)
+{
+    auto start = token.find('.');
+    auto end = token.rfind('.');
+
+    if ((start == std::string::npos) || (end == std::string::npos) || (start == end)) {
+        throw std::exception();
+    }
+
+    token = token.substr(start + 1, end - start - 1);
+
+    std::string decoded;
+    CryptoPP::StringSource ss(token, true,
+                              new CryptoPP::Base64Decoder(
+                                      new CryptoPP::StringSink(decoded)));
+
+    Json::Value jsonDecoded;
+    std::istringstream(decoded) >> jsonDecoded;
+
+    return jsonDecoded;
+}
+
 
 bool retryTransfer(int errorNo, const std::string &category, const std::string &message)
 {
-    // If the following strings appear in the error message, assume retriable
+    // If the following strings appear in the error message, assume retryable
     const char *msg_imply_retry[] = {
         "performance marker",
         "Name or service not known",
@@ -197,32 +215,32 @@ std::string sanitizeQueryString(const std::string& text)
 }
 
 
-std::string accessTokenPayload(std::string token)
+std::string extractAccessTokenField(const std::string& token, const std::string& field)
+{
+    try {
+        auto decoded = decodeAccessTokenPayload(token);
+
+        if (decoded.isMember(field)) {
+            return decoded.get(field, "").asString();
+        }
+    } catch (...) { }
+
+    return "";
+}
+
+
+std::string accessTokenPayload(const std::string& token)
 {
     std::ostringstream message;
 
     try {
-        auto start = token.find('.');
-        auto end = token.rfind('.');
-
-        if ((start == std::string::npos) || (end == std::string::npos) || (start == end)) {
-            throw std::exception();
-        }
-
-        token = token.substr(start + 1, end - start - 1);
-
-        std::string decoded;
-        CryptoPP::StringSource ss(token, true,
-                                  new CryptoPP::Base64Decoder(
-                                          new CryptoPP::StringSink(decoded)));
-
-        Json::Value jsonDecoded, jsonFiltered;
-        std::istringstream(decoded) >> jsonDecoded;
+        auto decoded = decodeAccessTokenPayload(token);
+        Json::Value filtered;
 
         auto tokenFields = { "aud", "iat", "nbf", "exp", "iss", "scope", "wlcg.ver" };
         for (const auto& key: tokenFields) {
-            if (jsonDecoded.isMember(key)) {
-                jsonFiltered[key] = jsonDecoded.get(key, "");
+            if (decoded.isMember(key)) {
+                filtered[key] = decoded.get(key, "");
             }
         }
 
@@ -230,8 +248,8 @@ std::string accessTokenPayload(std::string token)
         builder["indentation"] = "";
 
         std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-        writer->write(jsonFiltered, &message);
-    } catch (std::exception& e) {
+        writer->write(filtered, &message);
+    } catch (std::exception&) {
         message << "Failed to decode token!";
 
         if (token.size() > 50) {

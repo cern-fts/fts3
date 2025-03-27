@@ -187,6 +187,8 @@ LogTokenRequests=false
 #SupervisorGraceTime = 600
 # In seconds, time window since last TokenExchangeService run to be considered inactive (default 600)
 #TokenExchangeCheckGraceTime = 600
+# In seconds, time window since last TokenRefreshService run (applies to Refresher, Listener, Poller) to be considered inactive (default 120)
+#TokenRefreshGraceTime = 120
 # In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
 #OptimizerGraceTime = 3600
 
@@ -198,9 +200,6 @@ LogTokenRequests=false
 # Cancel all NOT_USED files in a failed multihop job (default false)
 #CancelUnusedMultihopFiles = False
 
-# Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default false)
-#RetrieveSEToken = false
-
 # Tell the FTS system to not manage access tokens that don't meet certain criteria (default false)
 NonManagedTokens = True
 
@@ -209,8 +208,23 @@ NonManagedTokens = True
 # Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
 #BackwardsCompatibleProxyNames = False
 
+## Token Exchange settings
 # In seconds, how often to check for access tokens which don't have an associated refresh token
 TokenExchangeCheckInterval = 30
-
 # Bulk size for how many tokens to retrieve from the database at one time for token-exchange (default 500)
 TokenExchangeBulkSize = 500
+
+## Token Refresh settings
+# In seconds, how often to check for access tokens marked for refreshing (default 15)
+TokenRefreshCheckInterval = 15
+# In seconds, how often to process ZMQ token-refresh requests (default 15)
+TokenRefreshPollerInterval = 15
+# Bulk size for how many tokens to retrieve from the database at one time for token-refresh (default 500)
+TokenRefreshBulkSize = 500
+
+# In seconds, period before access token expiry up to which still consider access token eligible (default 300)
+# Example: safety period of 300s means token will be used up to "exp - 300s" timestamp. After, token must be refreshed
+TokenRefreshSafetyPeriod = 0
+# In seconds, period before token expiry at which the transfer agent will request a token refresh (default 300)
+# Example: margin period of 300s means the transfer agent will request token refresh at "exp - 300s" timestamp
+TokenRefreshMarginPeriod = 300

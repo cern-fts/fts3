@@ -98,65 +98,61 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
         "IP address that the server is bound to"
     )
-
     (
         "DbConnectString,s",
         po::value<std::string>( &(_vars["DbConnectString"]) )->default_value(""),
         "Connect string for the used database account"
     )
-
     (
         "DbType,d",
         po::value<std::string>( &(_vars["DbType"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT),
         "Database backend type. Allowed values: mysql"
     )
-
     (
         "DbUserName,u",
         po::value<std::string>( &(_vars["DbUserName"]) )->default_value(""),
         "Database account user name"
     )
-
     (
         "DbPassword,w",
         po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
         "Database account password"
     )
-	(
-	 	"AuthorizationProvider,w",
-	    po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
-	    "Authorization provider ex IAM"
-	)
-	(
-		"AuthorizationProviderTokenEndpoint,w",
-		po::value<std::string>( &(_vars["AuthorizationProviderTokenEndpoint"]) )->default_value(""),
-		"Authorization token endpoint ex IAM"
-	)
-	(
-		"AuthorizationProviderJwkEndpoint,w",
-		po::value<std::string>( &(_vars["AuthorizationProviderJwkEndpoint"]) )->default_value(""),
-		"Jwk enpoint of Authorization provider"
-	)
+    (
+        "AuthorizationProvider,w",
+        po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
+        "Authorization provider ex IAM"
+    )
+    (
+        "AuthorizationProviderTokenEndpoint,w",
+        po::value<std::string>( &(_vars["AuthorizationProviderTokenEndpoint"]) )->default_value(""),
+        "Authorization token endpoint ex IAM"
+    )
+    (
+        "AuthorizationProviderJwkEndpoint,w",
+        po::value<std::string>( &(_vars["AuthorizationProviderJwkEndpoint"]) )->default_value(""),
+        "Jwk enpoint of Authorization provider"
+    )
     (
         "ClientId,w",
         po::value<std::string>( &(_vars["ClientId"]) )->default_value(""),
         "Authorization provider CLient id"
     )
-	(
-		"ClientSecret,w",
-		po::value<std::string>( &(_vars["ClientSecret"]) )->default_value(""),
-		"Authorization provider Client Secret"
-	)
-	(
-		"TokenRefreshTimeSinceLastTransferInSeconds,w",
-		po::value<std::string>( &(_vars["TokenRefreshTimeSinceLastTransferInSeconds"]) )->default_value(""),
-		"Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)"
-	)
-	(
-		"TokenRefreshDaemonIntervalInSeconds,w",
-		po::value<std::string>( &(_vars["TokenRefreshDaemonIntervalInSeconds"]) )->default_value(""),
-		"The interval that the token refresh daemon will run"
-	)
+    (
+        "ClientSecret,w",
+        po::value<std::string>( &(_vars["ClientSecret"]) )->default_value(""),
+        "Authorization provider Client Secret"
+    )
+    (
+        "TokenRefreshTimeSinceLastTransferInSeconds,w",
+        po::value<std::string>( &(_vars["TokenRefreshTimeSinceLastTransferInSeconds"]) )->default_value(""),
+        "Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)"
+    )
+    (
+        "TokenRefreshDaemonIntervalInSeconds,w",
+        po::value<std::string>( &(_vars["TokenRefreshDaemonIntervalInSeconds"]) )->default_value(""),
+        "The interval that the token refresh daemon will run"
+    )
     (
         "Infosys",
         po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
@@ -349,9 +345,9 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Default bring-online timeout for BringOnline operations"
     )
     (
-         "DefaultCopyPinLifetime",
-         po::value<std::string>( &(_vars["DefaultCopyPinLifetime"]) )->default_value("604800"),
-         "Default copy-pin-lifetime for BringOnline operations"
+        "DefaultCopyPinLifetime",
+        po::value<std::string>( &(_vars["DefaultCopyPinLifetime"]) )->default_value("604800"),
+        "Default copy-pin-lifetime for BringOnline operations"
     )
     (
         "HeartBeatInterval",
@@ -444,6 +440,31 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Bulk size for how many tokens to retrieve from the database at one time for token-exchange"
     )
     (
+        "TokenRefreshCheckInterval",
+        po::value<std::string>( &(_vars["TokenRefreshCheckInterval"]) )->default_value("15"),
+        "In seconds, how often to check for tokens marked for refreshing"
+    )
+    (
+        "TokenRefreshPollerInterval",
+        po::value<std::string>( &(_vars["TokenRefreshPollerInterval"]) )->default_value("15"),
+        "In seconds, how often to process ZMQ token-refresh requests"
+    )
+    (
+        "TokenRefreshBulkSize",
+        po::value<std::string>( &(_vars["TokenRefreshBulkSize"]) )->default_value("500"),
+        "Bulk size for how many tokens to retrieve from the database at one time for token-refresh"
+    )
+    (
+        "TokenRefreshSafetyPeriod",
+        po::value<std::string>( &(_vars["TokenRefreshSafetyPeriod"]) )->default_value("300"),
+        "In seconds, period before access token expiry up to which still consider access token valid"
+    )
+    (
+        "TokenRefreshMarginPeriod",
+        po::value<std::string>( &(_vars["TokenRefreshMarginPeriod"]) )->default_value("300"),
+        "In seconds, period before token expiry at which the transfer agent will request a token refresh"
+    )
+    (
         "MessagingConsumeGraceTime",
         po::value<std::string>( &(_vars["MessagingConsumeGraceTime"]) )->default_value("600"),
         "In seconds, time window since last MessageProcessingService run to be considered inactive"
@@ -469,30 +490,35 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In seconds, time window since last TokenExchangeService run to be considered inactive"
     )
     (
+        "TokenRefreshGraceTime",
+        po::value<std::string>( &(_vars["TokenRefreshGraceTime"]) )->default_value("120"),
+        "In seconds, time window since last TokenRefreshService run to be considered inactive"
+    )
+    (
         "OptimizerGraceTime",
         po::value<std::string>( &(_vars["OptimizerGraceTime"]) )->default_value("3600"),
         "In seconds, time window since last OptimizerService run to be considered inactive"
     )
-	(
-	    "OptimizerMaxSuccessRate",
-	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
-	    "Percentage of the max success rate considered by the optimizer"
-	)
-	(
-	    "OptimizerMedSuccessRate",
-	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
-	    "Percentage of the med success rate considered by the optimizer"
-	)
-	(
-	    "OptimizerLowSuccessRate",
-	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT),
-	    "Percentage of the low success rate considered by the optimizer"
-	)
-	(
-	    "OptimizerBaseSuccessRate",
-	    po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT),
-	    "Percentage of the base success rate considered by the optimizer"
-	)
+    (
+        "OptimizerMaxSuccessRate",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MAX_SUCCESS_RATE_DEFAULT),
+        "Percentage of the max success rate considered by the optimizer"
+    )
+    (
+        "OptimizerMedSuccessRate",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_MED_SUCCESS_RATE_DEFAULT),
+        "Percentage of the med success rate considered by the optimizer"
+    )
+    (
+        "OptimizerLowSuccessRate",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_LOW_SUCCESS_RATE_DEFAULT),
+        "Percentage of the low success rate considered by the optimizer"
+    )
+    (
+        "OptimizerBaseSuccessRate",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_BASE_SUCCESS_RATE_DEFAULT),
+        "Percentage of the base success rate considered by the optimizer"
+    )
     (
         "OptimizerEMAAlpha",
         po::value<double>()->default_value(0.1),
@@ -519,18 +545,18 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "In milliseconds, delay between graceful SIGTERM and SIGKILL"
     )
     (   "AutoSessionReuse",
-    	po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
-	    "Enable or disable auto session reuse"
+        po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
+        "Enable or disable auto session reuse"
     )
     (
         "AutoSessionReuseMaxSmallFileSize",
-    	po::value<int>()->default_value(104857600),
-	    "Max small file size for session reuse in bytes"
+        po::value<int>()->default_value(104857600),
+        "Max small file size for session reuse in bytes"
     )
     (
         "AutoSessionReuseMaxBigFileSize",
-	    po::value<long long>()->default_value(1073741824),
-	    "Max big file size for session reuse in bytes"
+        po::value<long long>()->default_value(1073741824),
+        "Max big file size for session reuse in bytes"
     )
     (
         "AutoSessionReuseMaxFiles",
@@ -539,8 +565,8 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "AutoSessionReuseMaxBigFiles",
-	    po::value<int>()->default_value(2),
-	    "Max number of big files  per session reuse"
+        po::value<int>()->default_value(2),
+        "Max number of big files  per session reuse"
     )
     (
         "UseFixedJobPriority",
@@ -551,11 +577,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "CancelUnusedMultihopFiles",
         po::value<std::string>( &(_vars["CancelUnusedMultihopFiles"]) )->default_value("false"),
         "Enable or disable behaviour to cancel all NOT_USED files in a failed multihop job"
-    )
-    (
-        "RetrieveSEToken",
-        po::value<std::string>( &(_vars["RetrieveSEToken"]) )->default_value("false"),
-        "Enable or disable retrieval of SE-issued tokens in the transfer agent"
     )
     (
         "NonManagedTokens",
