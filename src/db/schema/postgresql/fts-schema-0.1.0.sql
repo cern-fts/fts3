@@ -28,6 +28,9 @@ CREATE TABLE t_token (
     attempts                   INTEGER           NULL DEFAULT 0,
     exchange_message           VARCHAR(2048)     NULL,
     retired                    SMALLINT      NOT NULL DEFAULT 0,
+    marked_for_refresh         SMALLINT          NULL DEFAULT 0,
+    refresh_message            VARCHAR(2048)     NULL,
+    refresh_timestamp          TIMESTAMP         NULL,
     PRIMARY KEY (token_id),
     CONSTRAINT fk_token_issuer
         FOREIGN KEY (issuer)
