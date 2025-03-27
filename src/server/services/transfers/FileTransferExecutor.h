@@ -58,20 +58,21 @@ class FileTransferExecutor
 public:
 
     /**
-     * Constructor.
+     * FileTransferExecutor constructor
      *
-     * @param optimize - flag stating if optimization is ON
-     * @param monitoringMsg - is true if monitoring messages are in use
-     * @param infosys - information system host
-     * @param ftsHostName - hostname of the machine hosting FTS3
+     * @param tf - the transfer object
+     * @param monitoringMsg - true if monitoring messages are in use
+     * @param infosys - the information system host
+     * @param FTSInstanceAlias - the FTS3 instance alias
+     * @param proxy - the proxy certificate file
+     * @param logDir - location for the transfer log file
+     * @param msgDir - location for the monitoring state messages
      */
     FileTransferExecutor(TransferFile& tf,
-        bool monitoringMsg, std::string infosys, std::string ftsHostName, std::string proxy,
+        bool monitoringMsg, std::string infosys,
+        std::string FTSInstanceAlias, std::string proxy,
         std::string logDir, std::string msgDir);
 
-    /**
-     * Destructor.
-     */
     virtual ~FileTransferExecutor();
 
     /**
@@ -90,7 +91,7 @@ private:
     TransferFile tf;
     bool monitoringMsg;
     std::string infosys;
-    std::string ftsHostName;
+    std::string FTSInstanceAlias;
     std::string proxy;
     std::string logsDir;
     std::string msgDir;
@@ -104,4 +105,5 @@ private:
 
 } /* namespace server */
 } /* namespace fts3 */
+
 #endif /* TRANSFERHANDLER_H_ */

@@ -89,10 +89,10 @@ std::string StagingContext::getStorageProtocol() const {
 
 std::unique_ptr<StagingContext> StagingContext::createStagingContext(QoSServer& qosServer, const StagingOperation& stagingOp) {
     std::string protocol = Uri::parse(stagingOp.surl).protocol;
+
     if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
-        return std::unique_ptr<StagingContext>(new HttpStagingContext(qosServer, stagingOp));
+        return std::make_unique<HttpStagingContext>(qosServer, stagingOp);
     }
-    else {
-        return std::unique_ptr<StagingContext>(new StagingContext(qosServer, stagingOp));
-    }
+
+    return std::make_unique<StagingContext>(qosServer, stagingOp);
 }

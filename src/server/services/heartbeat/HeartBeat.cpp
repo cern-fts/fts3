@@ -87,6 +87,8 @@ void HeartBeat::runService()
 
 void HeartBeat::criticalServiceExpired()
 {
+    std::scoped_lock lock(mxWatchedServices);
+
     for (const auto& [service, data]: watchedServices) {
         auto serviceName = service->getServiceName();
         auto last = service->getLastRunTimepoint();

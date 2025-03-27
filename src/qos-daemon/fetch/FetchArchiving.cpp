@@ -33,15 +33,11 @@ void FetchArchiving::fetch()
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving starting" << commit;
 
-    // we want to be sure that this won't break out fetching thread
-    try
-    {
+    try {
         recoverStartedTasks();
-    }
-    catch (BaseException& e) {
+    } catch (BaseException& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving " << e.what() << commit;
-    }
-    catch (...)
+    } catch (...)
     {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving Fatal error (unknown origin)" << commit;
     }
@@ -50,7 +46,7 @@ void FetchArchiving::fetch()
         try {
             if (fts3::server::DrainMode::instance()) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::seconds(15));
+                boost::this_thread::sleep(boost::posix_time::seconds(60));
                 continue;
             }
 
@@ -70,15 +66,12 @@ void FetchArchiving::fetch()
 
             startArchivePollTasks(files);
             boost::this_thread::sleep(boost::posix_time::seconds(60));
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving " << e.what() << commit;
-        }
-        catch (const boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving interruption requested" << commit;
             break;
-        }
-        catch (...) {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving Fatal error (unknown origin)" << commit;
         }
     }
@@ -102,23 +95,21 @@ void FetchArchiving::recoverStartedTasks() const
                                         << "time=\"" << end - start << "\""
                                         << commit;
 
-    }
-    catch (UserError const & ex) {
+    } catch (UserError const & ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-    }
-    catch(...)
-    {
+    } catch(...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering " << startedArchivingOps.size()
                                     << " archiving operations" << commit;
 
-    startArchivePollTasks(startedArchivingOps);
+    startArchivePollTasks(startedArchivingOps, true);
 }
 
 
-void FetchArchiving::startArchivePollTasks(const std::vector<ArchivingOperation>& archivingOperations) const
+void FetchArchiving::startArchivePollTasks(const std::vector<ArchivingOperation>& archivingOperations,
+                                           const bool recovery) const
 {
     auto archivePollBulkSize = fts3::config::ServerConfig::instance().get<uint64_t>("ArchivePollBulkSize");
     std::map<GroupByType, ArchivingContext> tasks;
@@ -137,7 +128,7 @@ void FetchArchiving::startArchivePollTasks(const std::vector<ArchivingOperation>
         // Task already exists. See if it contains enough URL's to start an ArchivePollTask on the server thread pool
         else if (task_it->second.getNbUrls() >= archivePollBulkSize) {
             // Start ArchivePollTasks on the server thread pool
-            scheduleArchivePollTask(task_it->second);
+            scheduleArchivePollTask(task_it->second, recovery);
             // Remove key from the task container as it has already been started
             tasks.erase(key);
             // Create a new task with the current operation
@@ -149,25 +140,27 @@ void FetchArchiving::startArchivePollTasks(const std::vector<ArchivingOperation>
     }
 
     // Start ArchivePollTasks for the remaining tasks that don't have enough urls to fill a batch
-    for (const auto& task : tasks) {
-        scheduleArchivePollTask(task.second);
+    for (auto& task: tasks) {
+        scheduleArchivePollTask(task.second, recovery);
     }
 }
 
 
-void FetchArchiving::scheduleArchivePollTask(const ArchivingContext &context) const {
+void FetchArchiving::scheduleArchivePollTask(ArchivingContext &context, const bool recovery) const {
     try {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting archiving task for storage " << context.getStorageEndpoint()
-                                        << " with " << context.getNbUrls() << " files : "
+        std::string actionWord = (recovery) ? "Recovering" : "Starting";
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << actionWord << " archiving task for storage " << context.getStorageEndpoint()
+                                        << " with " << context.getNbUrls() << " files: "
                                         <<  context.getLogMsg() << commit;
 
+        if (!recovery) {
+            context.setArchiveStartTime();
+        }
+
         threadpool.start(new ArchivingPollTask(context));
-    }
-    catch (UserError const & ex) {
+    } catch (UserError const & ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-    }
-    catch(...)
-    {
+    } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 }

@@ -45,11 +45,11 @@ namespace server
 
 FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
     bool monitoringMsg, std::string infosys,
-    std::string ftsHostName, std::string proxy, std::string logDir, std::string msgDir) :
+    std::string FTSInstanceAlias, std::string proxy, std::string logDir, std::string msgDir) :
     tf(tf),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
-    ftsHostName(ftsHostName),
+    FTSInstanceAlias(FTSInstanceAlias),
     proxy(proxy),
     logsDir(logDir),
     msgDir(msgDir),
@@ -103,7 +103,10 @@ void FileTransferExecutor::run(boost::any & ctx)
         std::vector< std::shared_ptr<ShareConfig> > cfgs;
 
         // Set to READY state when true
-        if (db->getDbtype() == "postgresql" || db->isTrAllowed(tf.sourceSe, tf.destSe)) // Only check if allowed if MySQL
+        // Note: only check if allowed for MySQL and not "FORCE_START"
+        if ((db->getDbtype() == "postgresql") ||
+            (tf.fileState == "FORCE_START") ||
+            (db->isTrAllowed(tf.sourceSe, tf.destSe)))
         {
             UrlCopyCmd cmdBuilder;
 
@@ -194,7 +197,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setCopyMode(db->getCopyMode(tf.sourceSe, tf.destSe));
 
             // FTS3 host name
-            cmdBuilder.setFTSName(ftsHostName);
+            cmdBuilder.setFTSName(FTSInstanceAlias);
 
             // Number of retries and maximum number allowed
             int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);

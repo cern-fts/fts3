@@ -248,25 +248,21 @@ std::list<fts3::events::MessageUpdater> MySqlAPI::getActiveInHost(const std::str
 
         std::list<fts3::events::MessageUpdater> msgs;
 
-        for (auto i = rs.begin(); i != rs.end(); ++i) {
+        for (const auto& row: rs) {
             fts3::events::MessageUpdater msg;
 
-            msg.set_job_id(i->get<std::string>("job_id"));
-            msg.set_file_id(get_file_id_from_row(*i));
-            msg.set_process_id(i->get<int>("pid"));
+            msg.set_job_id(row.get<std::string>("job_id"));
+            msg.set_file_id(get_file_id_from_row(row));
+            msg.set_process_id(row.get<int>("pid", 0));
             msg.set_timestamp(millisecondsSinceEpoch());
-
             msgs.push_back(msg);
         }
 
         return msgs;
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         throw SystemError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         throw SystemError(std::string(__func__) + ": Caught exception " );
     }
 }
@@ -597,12 +593,10 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
     soci::session sql(*connectionPool);
     time_t now = time(NULL);
 
-    try
-    {
+    try {
         // Iterate through queues, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
-        for (auto it = queues.begin(); it != queues.end(); ++it)
-        {
+        for (auto it = queues.begin(); it != queues.end(); ++it) {
             int maxActive = 0;
             soci::indicator maxActiveNull = soci::i_ok;
             int filesNum = 10;
@@ -616,18 +610,21 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    soci::into(maxActive, maxActiveNull);
 
             // Calculate how many tops we should pick
-            if (maxActiveNull != soci::i_null && maxActive > 0)
-            {
+            if (maxActiveNull != soci::i_null && maxActive > 0) {
                 filesNum = (maxActive - activeCount);
-                if(filesNum <= 0 ) {
+
+                if (filesNum <= 0) {
                     continue;
                 }
             }
 
-            int fixedPriority =  ServerConfig::instance().get<int> ("UseFixedJobPriority");
-            soci::indicator isMaxPriorityNull = soci::i_ok;
-            int maxPriority = 3;
-            if (fixedPriority == 0) {
+            bool allowPriority = ServerConfig::instance().get<bool>("AllowJobPriority");
+            int fixedPriority = std::min(ServerConfig::instance().get<int>("UseFixedJobPriority"), 5);
+            int schedulePriority = 3;
+
+            if (allowPriority && !fixedPriority) {
+                soci::indicator isMaxPriorityNull = soci::i_ok;
+
                 // Get highest priority waiting for this queue
                 // We then filter by this, and order by file_id
                 // Doing this, we avoid a order by priority, which would trigger a filesort, which
@@ -640,20 +637,19 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                    "    hashed_id BETWEEN :hStart AND :hEnd",
                    soci::use(it->voName), soci::use(it->sourceSe), soci::use(it->destSe),
                    soci::use(hashSegment.start), soci::use(hashSegment.end),
-                   soci::into(maxPriority, isMaxPriorityNull);
+                   soci::into(schedulePriority, isMaxPriorityNull);
+
                 if (isMaxPriorityNull == soci::i_null) {
                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "NULL MAX(priority), skip entry" << commit;
                    continue;
                 }
-            } 
-            else 
-            {
+            } else if (allowPriority && fixedPriority) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING) << __func__
-                << " Using fixed priority for Jobs."
-                << commit;
-
-                maxPriority=fixedPriority;
+                            << " Using fixed priority for Jobs (priority = " << fixedPriority << ")"
+                            << commit;
+                schedulePriority = fixedPriority;
             }
+
             std::set<std::string> default_activities;
             std::map<std::string, int> activityFilesNum =
                 getFilesNumPerActivity(sql, it->sourceSe, it->destSe, it->voName, filesNum, default_activities);
@@ -662,13 +658,14 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
             gmtime_r(&now, &tTime);
 
             const std::string enum_to_text_cast = sql.get_backend_name() == "mysql" ? "" : "::TEXT";
-            if (activityFilesNum.empty())
-            {
+
+            if (activityFilesNum.empty()) {
                 const std::string use_index = sql.get_backend_name() == "mysql" ? " USE INDEX(idx_link_state_vo)" : "";
-                soci::rowset<TransferFile> rs = (
-                    sql.prepare <<
+                const std::string use_priority = allowPriority ? (std::string(" AND j.priority = ") + std::to_string(schedulePriority) + std::string(" ")) : "";
+
+                std::string select =
                         "SELECT"
-                        "    f.file_state" << enum_to_text_cast << ","
+                        "    f.file_state" + enum_to_text_cast + ","
                         "    f.source_surl,"
                         "    f.dest_surl,"
                         "    f.job_id,"
@@ -700,7 +697,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.selection_strategy,"
                         "    j.internal_job_params,"
                         "    j.job_type "
-                        "FROM t_file f" << use_index << ", t_job j "
+                        "FROM t_file f" + use_index + ", t_job j "
                         "WHERE"
                         "    f.job_id = j.job_id AND"
                         "    f.file_state = 'SUBMITTED' AND"
@@ -709,24 +706,22 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.vo_name = :vo_name AND "
                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                         "    j.job_type IN ('N', 'R', 'H') AND "
-                        "    f.hashed_id BETWEEN :hStart AND :hEnd AND "
-                        "    j.priority = :maxPriority "
+                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                        + use_priority +
                         "ORDER BY file_id ASC "
-                        "LIMIT :filesNum",
+                        "LIMIT :filesNum";
+
+                soci::rowset<TransferFile> rs = (
+                    sql.prepare << select,
                     soci::use(it->sourceSe),
                     soci::use(it->destSe),
                     soci::use(it->voName),
                     soci::use(tTime),
                     soci::use(hashSegment.start), soci::use(hashSegment.end),
-                    soci::use(maxPriority),
                     soci::use(filesNum));
 
-                for (auto ti = rs.begin(); ti != rs.end(); ++ti)
-                {
-                    TransferFile& tfile = *ti;
-
-                    if(tfile.jobType == Job::kTypeMultipleReplica)
-                    {
+                for (auto& tfile: rs) {
+                    if (tfile.jobType == Job::kTypeMultipleReplica) {
                         int total = 0;
                         int remain = 0;
                         sql << " select count(*) as c1, "
@@ -739,8 +734,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                         tfile.lastReplica = (total == remain)? 1: 0;
                     }
-                    if(tfile.jobType == Job::kTypeMultiHop)
-                    {
+
+                    if (tfile.jobType == Job::kTypeMultiHop) {
                         int maxIndex = 0;
                         sql << "SELECT MAX(file_index) "
                                "FROM t_file "
@@ -753,16 +748,12 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                     files[tfile.voName].push_back(tfile);
                 }
-            }
-            else
-            {
+            } else {
                 // we are always checking empty string
                 std::string def_act = " (''";
-                if (!default_activities.empty())
-                {
+                if (!default_activities.empty()) {
                     std::set<std::string>::const_iterator it_def;
-                    for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def)
-                    {
+                    for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def) {
                         def_act += ", '" + *it_def + "'";
                     }
                 }
@@ -773,8 +764,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 std::vector<ActivityNumTuple> vActivityFilesNum;
                 vActivityFilesNum.reserve(activityFilesNum.size());
 
-                for (auto it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
-                {
+                for (auto it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act) {
                     vActivityFilesNum.emplace_back(it_act->first, it_act->second);
                 }
 
@@ -782,11 +772,12 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 auto random_engine = std::default_random_engine{static_cast<unsigned>(seed)};
                 std::shuffle(vActivityFilesNum.begin(), vActivityFilesNum.end(), random_engine);
 
-                for (auto it_act = vActivityFilesNum.begin(); it_act != vActivityFilesNum.end(); ++it_act)
-                {
+                for (auto it_act = vActivityFilesNum.begin(); it_act != vActivityFilesNum.end(); ++it_act) {
                     if (it_act->second == 0) continue;
 
                     const std::string use_index = sql.get_backend_name() == "mysql" ? " USE INDEX(idx_link_state_vo)" : "";
+                    const std::string use_priority = allowPriority ? (std::string(" AND j.priority = ") + std::to_string(schedulePriority) + std::string(" ")) : "";
+
                     std::string select =
                         "SELECT"
                         "    f.file_state" + enum_to_text_cast + ","
@@ -827,22 +818,19 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.file_state = 'SUBMITTED' AND"
                         "    f.source_se = :source_se AND"
                         "    f.dest_se = :dest_se AND"
-                        "    (j.job_type = 'N' OR"
-                        "    j.job_type = 'R') AND"
                         "    f.vo_name = :vo_name AND"
-                        "    (f.retry_timestamp is NULL OR"
-                        "    f.retry_timestamp < :tTime) AND ";
+                        "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                        "    j.job_type IN ('N', 'R') AND ";
                     select +=
                         it_act->first == "default" ?
                         "     (f.activity = :activity OR f.activity IS NULL OR f.activity IN " + def_act + ") AND "
                         :
                         "     f.activity = :activity AND ";
                     select +=
-                        "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                        "   j.priority = :maxPriority "
+                        "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                        + use_priority +
                         "   ORDER BY file_id ASC "
                         "   LIMIT :filesNum";
-
 
                     soci::rowset<TransferFile> rs = (
                          sql.prepare <<
@@ -853,16 +841,11 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                          soci::use(tTime),
                          soci::use(it_act->first),
                          soci::use(hashSegment.start), soci::use(hashSegment.end),
-                         soci::use(maxPriority),
                          soci::use(it_act->second)
                     );
 
-                    for (auto ti = rs.begin(); ti != rs.end(); ++ti)
-                    {
-                        TransferFile& tfile = *ti;
-
-                        if(tfile.jobType == Job::kTypeMultipleReplica)
-                        {
+                    for (auto& tfile: rs) {
+                        if (tfile.jobType == Job::kTypeMultipleReplica) {
                             int total = 0;
                             int remain = 0;
                             sql << " select count(*) as c1, "
@@ -875,8 +858,8 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
 
                             tfile.lastReplica = (total == remain)? 1: 0;
                         }
-                        if(tfile.jobType == Job::kTypeMultiHop)
-                        {
+
+                        if (tfile.jobType == Job::kTypeMultiHop) {
                             int maxIndex = 0;
                             sql << "SELECT MAX(file_index) "
                                    "FROM t_file "
@@ -893,14 +876,10 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                 }
             }
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         files.clear();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         files.clear();
         throw UserError(std::string(__func__) + ": Caught exception ");
     }
@@ -3838,9 +3817,11 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
 {
     soci::session sql(*connectionPool);
     //TODO: query for credentials to be checked when integrating OIDC
-    //TODO: create a view as for staging
+
     try {
-        soci::rowset<soci::row> rs2 = (sql.prepare <<
+        auto limit = ServerConfig::instance().get<int>("FetchArchivingLimit");
+
+        soci::rowset<soci::row> rs = (sql.prepare <<
                                                    " SELECT DISTINCT j.job_id, f.file_id, f.dest_surl, f.vo_name,  c.dn, c.dlg_id, j.archive_timeout"
                                                    " FROM t_file f "
                                                    " INNER JOIN t_job j ON (f.job_id = j.job_id) "
@@ -3848,32 +3829,26 @@ void MySqlAPI::getFilesForArchiving(std::vector<ArchivingOperation> &archivingOp
                                                    " WHERE "
                                                    "         f.file_state = 'ARCHIVING' AND "
                                                    "         f.archive_start_time IS NULL AND "
-                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-                soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                                   "         (hashed_id >= :hStart AND hashed_id <= :hEnd) "
+                                                   " LIMIT :limit",
+                soci::use(hashSegment.start), soci::use(hashSegment.end),
+                soci::use(limit)
         );
 
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-        {
-            soci::row const& r = *i2;
-            std::string job_id = r.get<std::string>("job_id");
-            uint64_t file_id = get_file_id_from_row(r);
-            std::string dest_surl = r.get<std::string>("dest_surl");
-            std::string voname = r.get<std::string>("vo_name");
-            std::string dn = r.get<std::string>("dn");
-            std::string dlg_id = r.get<std::string>("dlg_id");
-            int archive_timeout = r.get<int>("archive_timeout",0);
+        for (const auto& row: rs) {
+            auto job_id = row.get<std::string>("job_id");
+            uint64_t file_id = get_file_id_from_row(row);
+            auto dest_surl = row.get<std::string>("dest_surl");
+            auto voname = row.get<std::string>("vo_name");
+            auto dn = row.get<std::string>("dn");
+            auto dlg_id = row.get<std::string>("dlg_id");
+            int archive_timeout = row.get<int>("archive_timeout",0);
             archivingOps.emplace_back(job_id, file_id,voname,dn, dlg_id, dest_surl, 0, archive_timeout);
         }
-
-        //TODO: add throttling
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
@@ -4099,12 +4074,11 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
     soci::session sql(*connectionPool);
     std::vector<fts3::events::MessageBringonline> messages;
 
-    int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
-    int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
-    int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
+    const int maxStagingBulkSize = ServerConfig::instance().get<int>("StagingBulkSize");
+    const int stagingWaitingFactor = ServerConfig::instance().get<int>("StagingWaitingFactor");
+    const int maxStagingConcurrentRequests = ServerConfig::instance().get<int>("StagingConcurrentRequests");
 
-    try
-    {
+    try {
         //now get fresh states/files from the database
         soci::rowset<soci::row> rs2 = (sql.prepare <<
             " SELECT DISTINCT vo_name, source_se "
@@ -4115,62 +4089,48 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
             soci::use(hashSegment.start), soci::use(hashSegment.end)
         );
 
-        for (auto i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-        {
-            soci::row const& r = *i2;
-            std::string source_se = r.get<std::string>("source_se","");
-            std::string vo_name = r.get<std::string>("vo_name","");
+        for (const auto& r: rs2) {
+            auto source_se = r.get<std::string>("source_se","");
+            auto vo_name = r.get<std::string>("vo_name","");
+
+            // now check for max concurrent active requests (must not exceed the limit)
+            int countActiveRequests = 0;
+            sql << "SELECT COUNT(distinct bringonline_token) FROM t_file where "
+                " vo_name=:vo_name AND file_state='STARTED' AND source_se=:source_se AND bringonline_token IS NOT NULL ",
+                soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
+
+            if (countActiveRequests > maxStagingConcurrentRequests)
+                continue;
 
             int maxValueConfig = 0;
             int currentStagingActive = 0;
             int limit = 0;
 
-            //check max configured
-            sql <<  "SELECT concurrent_ops FROM t_stage_req "
-                "WHERE vo_name=:vo_name AND host = :endpoint AND operation='staging' AND concurrent_ops IS NOT NULL ",
+            // Take into account per-SE configured staging limit
+            sql << "SELECT concurrent_ops FROM t_stage_req "
+                   "WHERE vo_name=:vo_name AND host=:endpoint AND operation='staging' AND concurrent_ops IS NOT NULL",
                 soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
             if (maxValueConfig <= 0) {
-                sql <<  "SELECT concurrent_ops FROM t_stage_req "
-                    "WHERE vo_name=:vo_name AND host = '*' AND operation='staging' AND concurrent_ops IS NOT NULL ",
+                sql << "SELECT concurrent_ops FROM t_stage_req "
+                       "WHERE vo_name=:vo_name AND host='*' AND operation='staging' AND concurrent_ops IS NOT NULL",
                     soci::use(vo_name), soci::into(maxValueConfig);
             }
 
-            if(maxValueConfig > 0)
-            {
+            if (maxValueConfig > 0) {
                 //check current staging
-                sql <<  "SELECT count(*) FROM t_file "
-                    "WHERE vo_name=:vo_name AND source_se = :endpoint AND file_state='STARTED'",
+                sql << "SELECT count(*) FROM t_file "
+                       "WHERE vo_name=:vo_name AND source_se = :endpoint AND file_state='STARTED'",
                     soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
 
-                if(currentStagingActive > 0)
-                {
-                    limit = maxValueConfig - currentStagingActive;
-                }
-                else
-                {
-                    limit = maxValueConfig;
-                }
+                limit = (currentStagingActive > 0) ? (maxValueConfig - currentStagingActive) : maxValueConfig;
 
-                if(limit <= 0)
+                if (limit <= 0)
                     continue;
             }
-            else
-            {
-                limit = maxStagingBulkSize; // Use a sensible default
-            }
 
-            // Make sure we do not grab more than the limit for a bulk
-            if (limit > maxStagingBulkSize)
-                limit = maxStagingBulkSize;
-
-            //now check for max concurrent active requests, must no exceed the limit
-            int countActiveRequests = 0;
-            sql << " SELECT COUNT(distinct bringonline_token) FROM t_file where "
-                " vo_name=:vo_name AND file_state='STARTED' AND source_se=:source_se AND bringonline_token IS NOT NULL ",
-                soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
-
-            if(countActiveRequests > maxStagingConcurrentRequests)
-                continue;
+            auto fetchStagingLimit = ServerConfig::instance().get<int>("FetchStagingLimit");
+            limit = (limit != 0) ? std::min(limit, fetchStagingLimit) : fetchStagingLimit;
 
             //now make sure there are enough files to put in a single request
             int countQueuedFiles = 0;
@@ -4180,22 +4140,18 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
 
             // If we haven't got enough for a bulk request, give some time for more
             // requests to arrive
-            if(countQueuedFiles < maxStagingBulkSize)
-            {
+            if (countQueuedFiles < maxStagingBulkSize) {
                 auto now = boost::posix_time::second_clock::local_time();
                 auto itQueue = queuedStagingFiles.find(source_se);
 
-                if(itQueue != queuedStagingFiles.end())
-                {
+                if (itQueue != queuedStagingFiles.end()) {
                     auto nextSubmission = itQueue->second;
 
-                    if(nextSubmission > now) {
+                    if (nextSubmission > now) {
                         continue;
                     }
                     queuedStagingFiles.erase(itQueue);
-                }
-                else
-                {
+                } else {
                     queuedStagingFiles[source_se] = now + boost::posix_time::seconds(stagingWaitingFactor);
                     continue;
                 }
@@ -4214,12 +4170,9 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                                              soci::use(vo_name), soci::use(source_se)
                                          );
 
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            {
-                soci::row const& row = *i;
-
+            for (const auto& row: rs) {
                 source_se = row.get<std::string>("source_se");
-                std::string cred_id = row.get<std::string>("cred_id");
+                auto cred_id = row.get<std::string>("cred_id");
 
                 soci::rowset<soci::row> rs3 = (sql.prepare <<
                     "SELECT f.source_surl, f.staging_metadata, f.job_id, f.file_id,"
@@ -4239,24 +4192,23 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                     soci::use(limit)
                 );
 
-                for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
-                {
-                    soci::row const& row = *i3;
-                    std::string source_url = row.get<std::string>("source_surl");
-                    std::string metadata = row.get<std::string>("staging_metadata", "");
-                    std::string job_id = row.get<std::string>("job_id");
+                for (const auto& row: rs3) {
+                    auto source_url = row.get<std::string>("source_surl");
+                    auto metadata = row.get<std::string>("staging_metadata", "");
+                    auto job_id = row.get<std::string>("job_id");
                     uint64_t file_id = get_file_id_from_row(row);
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                     int bring_online = row.get<int>("bring_online",0);
 
-                    if(copy_pin_lifetime > 0 && bring_online <= 0)
+                    if (copy_pin_lifetime > 0 && bring_online <= 0) {
                         bring_online = ServerConfig::instance().get<int>("DefaultBringOnlineTimeout");
-                    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+                    } else if (bring_online > 0 && copy_pin_lifetime <= 0) {
                         copy_pin_lifetime = ServerConfig::instance().get<int>("DefaultCopyPinLifetime");
+                    }
 
-                    std::string user_dn = row.get<std::string>("user_dn");
-                    std::string cred_id = row.get<std::string>("cred_id");
-                    std::string source_space_token = row.get<std::string>("source_space_token", "");
+                    auto user_dn = row.get<std::string>("user_dn");
+                    auto cred_id = row.get<std::string>("cred_id");
+                    auto source_space_token = row.get<std::string>("source_space_token", "");
 
                     stagingOps.emplace_back(
                         job_id, file_id, vo_name,
@@ -4267,25 +4219,19 @@ void MySqlAPI::getFilesForStaging(std::vector<StagingOperation> &stagingOps)
                 }
             }
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 }
 
 
-void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archiveOps)
+void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation>& archivingOps)
 {
     soci::session sql(*connectionPool);
 
-    try
-    {
-
+    try {
         soci::rowset<soci::row> rs =
                 (
                         sql.prepare <<
@@ -4300,16 +4246,13 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
                         soci::use(hashSegment.start), soci::use(hashSegment.end)
                 );
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering archiving tasks with hashed_id between "
-                                        << hashSegment.start << " and "
-                                        << hashSegment.end << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering archiving tasks with hashed_id: "
+                                        << "[" << hashSegment.start << ", "<< hashSegment.end << "]" << commit;
 
-        for (soci::rowset<soci::row>::const_iterator i3 = rs.begin(); i3 != rs.end(); ++i3)
-        {
-            soci::row const& row = *i3;
-            std::string vo_name = row.get<std::string>("vo_name");
-            std::string dest_url = row.get<std::string>("dest_surl");
-            std::string job_id = row.get<std::string>("job_id");
+        for (const auto& row: rs) {
+            auto vo_name = row.get<std::string>("vo_name");
+            auto dest_url = row.get<std::string>("dest_surl");
+            auto job_id = row.get<std::string>("job_id");
             uint64_t file_id = get_file_id_from_row(row);
             int archive_timeout = row.get<int>("archive_timeout", 0);
 
@@ -4319,23 +4262,19 @@ void MySqlAPI::getAlreadyStartedArchiving(std::vector<ArchivingOperation> &archi
                 archive_start_time = timegm(&start_tm);
             }
 
-            std::string user_dn = row.get<std::string>("user_dn");
-            std::string cred_id = row.get<std::string>("cred_id");
+            auto user_dn = row.get<std::string>("user_dn");
+            auto cred_id = row.get<std::string>("cred_id");
             
-            archiveOps.emplace_back(
+            archivingOps.emplace_back(
                     job_id, file_id, vo_name,
                     user_dn, cred_id, dest_url,
                     archive_start_time, archive_timeout
             );
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " );
     }

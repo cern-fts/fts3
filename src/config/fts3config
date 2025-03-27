@@ -82,13 +82,21 @@ LogTokenRequests=false
 # MaxUrlCopyProcesses = 400
 
 ## Parameters for QoS daemon
-# ArchivePoll operation
+## ArchivePoll settings
+# Maximum number of archive monitoring operations to fetch from the database
+# Note: larger values mean more efficient database access, but larger in-memory footprint
+# FetchArchivingLimit=50000
+
 # Maximum size for the archive poll request
 # Similar to logic as the StagingBulkSize
 # ArchivePollBulkSize=100
 
-# BringOnline operation
-# Maximum bulk size
+## Staging and StagingPoll settings
+# Maximum number of staging requests to fetch from the database
+# Note: larger values mean more efficient database access, but larger in-memory footprint
+# FetchStagingLimit=50000
+
+# Maximum staging bulk size
 # If the size is too large, it will take more resources (memory and CPU) to generate the requests
 # and parse the responses. Some servers may reject the requests if they are too big.
 # If it is too small, performance will be reduced.
@@ -138,6 +146,9 @@ LogTokenRequests=false
 # OptimizerAggressiveIncreaseStep = 2
 # Decrease step size when the optimizer considers the performance is bad
 # OptimizerDecreaseStep = 1
+
+# Enable or disable session reuse transfers (default true)
+# AllowSessionReuse = True
 
 ## Cleaner Service settings
 # Set the cleaning bulk size when purging old records (number of jobs)
@@ -192,8 +203,12 @@ LogTokenRequests=false
 # In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
 #OptimizerGraceTime = 3600
 
-# Enable or disable job priorities (1 = fixed, 0 = follow job priorities)
-# By default (value = 0), it honors the user-specified priorities
+# Enable or disable job priorities (default true)
+#AllowJobPriority = True
+
+# Schedule only transfers with a certain job priority (default 0)
+#  - value = 0, honor the user-specified priorities
+#  - 1 <= value <= 5, schedule only transfers with job priority = value
 #UseFixedJobPriority = 0
 
 # Behavior for failed multihop jobs

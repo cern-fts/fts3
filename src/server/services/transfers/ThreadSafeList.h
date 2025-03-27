@@ -27,7 +27,6 @@
 #include <boost/thread.hpp>
 #include "msg-bus/events.h"
 
-
 class ThreadSafeList
 {
 public:

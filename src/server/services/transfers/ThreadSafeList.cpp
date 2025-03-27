@@ -72,7 +72,6 @@ void ThreadSafeList::checkExpiredMsg(std::vector<fts3::events::MessageUpdater> &
         for (auto iter = m_list.begin(); iter != m_list.end(); ++iter) {
             auto nowTime = boost::posix_time::microsec_clock::universal_time();
             auto lastMsgTime = epoch + boost::posix_time::milliseconds(iter->timestamp());
-
             auto age = nowTime - lastMsgTime;
 
             if (age > timeout) {
