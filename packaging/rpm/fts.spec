@@ -11,7 +11,7 @@
 %endif
 
 Name:       fts
-Version:    3.13.3
+Version:    3.14.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
