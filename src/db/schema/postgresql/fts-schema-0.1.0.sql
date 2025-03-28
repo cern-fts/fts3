@@ -31,6 +31,7 @@ CREATE TABLE t_token (
     marked_for_refresh         SMALLINT          NULL DEFAULT 0,
     refresh_message            VARCHAR(2048)     NULL,
     refresh_timestamp          TIMESTAMP         NULL,
+    unmanaged                  SMALLINT          NULL DEFAULT 0,
     PRIMARY KEY (token_id),
     CONSTRAINT fk_token_issuer
         FOREIGN KEY (issuer)

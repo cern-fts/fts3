@@ -9,7 +9,8 @@
 ALTER TABLE `t_token`
   ADD COLUMN `marked_for_refresh` tinyint(1) NULL DEFAULT 0,
   ADD COLUMN `refresh_message` varchar(2048) NULL DEFAULT NULL,
-  ADD COLUMN `refresh_timestamp` timestamp NULL DEFAULT NULL;
+  ADD COLUMN `refresh_timestamp` timestamp NULL DEFAULT NULL,
+  ADD COLUMN `unmanaged` tinyint(1) NULL DEFAULT 0;
 
 ALTER TABLE `t_file`
     ADD INDEX `idx_staging_token` (`file_state`, `vo_name`, `source_se`, `bringonline_token`);

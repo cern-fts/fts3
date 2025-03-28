@@ -4689,12 +4689,6 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh(int limit)
 
     try
     {
-        std::string managed_tokens_filter;
-
-        if (ServerConfig::instance().get<bool>("NonManagedTokens")) {
-            managed_tokens_filter = " scope LIKE '%offline_access%' AND ";
-        }
-
         const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
         const std::string order_by_null = sql.get_backend_name() == "mysql" ? " ORDER BY null " : "";
 
@@ -4704,7 +4698,7 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh(int limit)
             "FROM t_token "
             "WHERE"
             "    refresh_token IS NULL AND "
-            << managed_tokens_filter <<
+            "    unmanaged = 0 AND "
             "    (retry_timestamp IS NULL OR retry_timestamp < " << utc_timestamp << ") AND "
             "    attempts < 5 "
             << order_by_null <<
@@ -4917,14 +4911,6 @@ void MySqlAPI::updateTokenPrepFiles()
 
     try
     {
-        std::string src_unmanaged_tokens_filter;
-        std::string dst_unmanaged_tokens_filter;
-
-        if (ServerConfig::instance().get<bool>("NonManagedTokens")) {
-            src_unmanaged_tokens_filter = " OR t_src.scope NOT LIKE \'%offline_access%\'";
-            dst_unmanaged_tokens_filter = " OR t_dst.scope NOT LIKE \'%offline_access%\'";
-        }
-
         // Store all data into memory structure in order to reiterate
         // (there might be a way to reset the rowset iterator
         std::list<TokenPrepFile> tokenPrepFiles;
@@ -4936,8 +4922,8 @@ void MySqlAPI::updateTokenPrepFiles()
             "INNER JOIN t_token t_src ON f.src_token_id = t_src.token_id\n"
             "INNER JOIN t_token t_dst ON f.dst_token_id = t_dst.token_id\n"
             "WHERE f.file_state = 'TOKEN_PREP'\n"
-            "AND (t_src.refresh_token IS NOT NULL " << src_unmanaged_tokens_filter << ")\n"
-            "AND (t_dst.refresh_token IS NOT NULL " << dst_unmanaged_tokens_filter << ")\n" <<
+            "AND (t_src.refresh_token IS NOT NULL OR t_src.unmanaged = 1)\n"
+            "AND (t_dst.refresh_token IS NOT NULL OR t_dst.unmanaged = 1)\n" <<
             order_by_null);
 
         for (const auto& row: rs) {

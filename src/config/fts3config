@@ -215,9 +215,6 @@ LogTokenRequests=false
 # Cancel all NOT_USED files in a failed multihop job (default false)
 #CancelUnusedMultihopFiles = False
 
-# Tell the FTS system to not manage access tokens that don't meet certain criteria (default false)
-NonManagedTokens = True
-
 # Flag to enable backwards compatible names when searching for proxy credentials on the local filesystem (default true)
 # New naming convention: /tmp/x509up_h<hash>_<delegation_id>
 # Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
