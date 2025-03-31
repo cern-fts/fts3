@@ -22,8 +22,7 @@ stages:
     - source ${!VENV}/bin/activate
     - pylint --version
     - pylint --output-format colorized --source-roots ./src/scheduler/python/fts_scheduler ./src/scheduler/python/fts_scheduler
-    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenhousekeeperd
-    - pylint --output-format colorized --disable C,R,W ./src/tokens/ftstokenrefresherd
+    - pylint --output-format colorized --disable C,R,W ./src/tokens/scripts/ftstokenhousekeeperd
 
 black:
   # Check that every file has been formatted with black
@@ -32,8 +31,7 @@ black:
   script:
     - black --version
     - black --check --fast --diff --target-version py39 ./src/scheduler/python
-    - black --check --fast --diff --target-version py39 ./src/tokens/ftstokenhousekeeperd
-    - black --check --fast --diff --target-version py39 ./src/tokens/ftstokenrefresherd
+    - black --check --fast --diff --target-version py39 ./src/tokens/scripts/ftstokenhousekeeperd
 
 pylint39:
   <<: *pylint_definition

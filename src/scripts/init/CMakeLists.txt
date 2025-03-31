@@ -26,7 +26,6 @@ if (SYSTEMD_INSTALL_DIR)
                   fts-qos.service
                   fts-optimizer.service
                   fts-token.service
-                  ftstokenrefresherd.service
                   ftstokenhousekeeperd.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )

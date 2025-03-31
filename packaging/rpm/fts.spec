@@ -289,7 +289,6 @@ fi
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_rotate
-%{_sbindir}/ftstokenrefresherd
 %{_sbindir}/ftstokenhousekeeperd
 
 %dir %attr(0755,root,root) %{_datadir}/fts/
@@ -300,12 +299,10 @@ fi
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-qos.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-optimizer.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-token.service
-%config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenrefresherd.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenhousekeeperd.service
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
-%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/ftstokenrefresherd.ini
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/ftstokenhousekeeperd.ini
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-server
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos

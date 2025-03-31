@@ -52,10 +52,10 @@ target_link_libraries(fts_token
 install(TARGETS fts_token RUNTIME
         DESTINATION ${SBIN_INSTALL_DIR})
 
-# Install token Python scripts
-install(FILES ftstokenhousekeeperd ftstokenrefresherd
+# Install Python token housekeeper script
+install(FILES scripts/ftstokenhousekeeperd
         DESTINATION ${SBIN_INSTALL_DIR}
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ WORLD_READ)
 
-install(FILES ftstokenhousekeeperd.ini ftstokenrefresherd.ini
+install(FILES scripts/ftstokenhousekeeperd.ini
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3)
