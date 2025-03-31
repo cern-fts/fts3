@@ -189,6 +189,12 @@ void UrlCopyProcess::refreshExpiredAccessToken(const Transfer& transfer, bool is
         return;
     }
 
+    // Unmanaged tokens
+    if ((is_source && transfer.sourceTokenUnmanaged) ||
+        (!is_source && transfer.destTokenUnmanaged)) {
+        return;
+    }
+
     auto accessToken = is_source ? gfal2.getSourceToken() : gfal2.getDestinationToken();
     auto tokenId = is_source ? transfer.sourceTokenId : transfer.destTokenId;
     auto target = is_source ? "source" : "destination";
@@ -606,6 +612,10 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     } else if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token: " << accessTokenPayload(gfal2.getSourceToken()) << commit;
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token: " << accessTokenPayload(gfal2.getDestinationToken()) << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source token id: " << transfer.sourceTokenId
+                                        << " (" << (transfer.sourceTokenUnmanaged ? "unmanaged" : "managed") << ")" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destination token id: " << transfer.destTokenId
+                                        << " (" << (transfer.destTokenUnmanaged ? "unmanaged" : "managed") << ")" << commit;
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Running without any authentication!" << commit;
     }

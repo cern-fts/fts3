@@ -63,20 +63,23 @@ const option UrlCopyOpts::long_options[] =
     {"user-dn",                required_argument, 0, 501},
     {"proxy",                  required_argument, 0, 502},
     {"oauth",                  required_argument, 0, 503},
-    {"src-token-id",           required_argument, 0, 504},
-    {"dst-token-id",           required_argument, 0, 505},
-    {"auth-method",            required_argument, 0, 506},
-    {"copy-mode",              required_argument, 0, 507},
-    {"disable-fallback",       no_argument,       0, 508},
-    {"cloud-config",           required_argument, 0, 509},
-    {"overwrite-disk-enabled", no_argument,       0, 510},
-    {"disable-cleanup",        no_argument,       0, 511},
+    {"auth-method",            required_argument, 0, 504},
+    {"copy-mode",              required_argument, 0, 505},
+    {"disable-fallback",       no_argument,       0, 506},
+    {"cloud-config",           required_argument, 0, 507},
+    {"overwrite-disk-enabled", no_argument,       0, 508},
+    {"disable-cleanup",        no_argument,       0, 509},
+
+    {"src-token-id",           required_argument, 0, 520},
+    {"dst-token-id",           required_argument, 0, 521},
+    {"src-token-unmanaged",    no_argument,       0, 522},
+    {"dst-token-unmanaged",    no_argument,       0, 523},
+    {"token-refresh-margin",   required_argument, 0, 524},
 
     {"infosystem",           required_argument, 0, 600},
     {"alias",                required_argument, 0, 601},
     {"monitoring",           no_argument,       0, 602},
     {"ping-interval",        required_argument, 0, 603},
-    {"token-refresh-margin", required_argument, 0, 604},
 
     {"file-metadata",     required_argument, 0, 700},
     {"archive-metadata",  required_argument, 0, 701},
@@ -358,28 +361,38 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     oauthFile = optarg;
                     break;
                 case 504:
-                    referenceTransfer.sourceTokenId = optarg;
-                    break;
-                case 505:
-                    referenceTransfer.destTokenId = optarg;
-                    break;
-                case 506:
                     authMethod = optarg;
                     break;
-                case 507:
+                case 505:
                     copyMode = translateCopyMode(optarg);
                     break;
-                case 508:
+                case 506:
                     disableCopyFallback = true;
                     break;
-                case 509:
+                case 507:
                     cloudStorageConfig = optarg;
                     break;
-                case 510:
+                case 508:
                     overwriteDiskEnabled = true;
                     break;
-                case 511:
+                case 509:
                     disableCleanup = true;
+                    break;
+
+                case 520:
+                    referenceTransfer.sourceTokenId = optarg;
+                    break;
+                case 521:
+                    referenceTransfer.destTokenId = optarg;
+                    break;
+                case 522:
+                    referenceTransfer.sourceTokenUnmanaged = true;
+                    break;
+                case 523:
+                    referenceTransfer.destTokenUnmanaged = true;
+                    break;
+                case 524:
+                    tokenRefreshMargin = boost::lexical_cast<unsigned>(optarg);
                     break;
 
                 case 600:
@@ -393,9 +406,6 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case 603:
                     pingInterval = boost::lexical_cast<unsigned>(optarg);
-                    break;
-                case 604:
-                    tokenRefreshMargin = boost::lexical_cast<unsigned>(optarg);
                     break;
 
                 case 700:

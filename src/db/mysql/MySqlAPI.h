@@ -92,8 +92,8 @@ public:
 
     /// Get the token associated with the given token ID
     /// @param tokenId          The token ID
-    /// @return                 The token with tokenId, if any
-    virtual std::string findToken(const std::string& tokenId);
+    /// @return                 The <token, unmanaged flag> pair for the token ID, if any
+    virtual std::pair<std::string, bool> findToken(const std::string& tokenId);
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache

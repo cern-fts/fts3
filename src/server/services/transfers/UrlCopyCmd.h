@@ -74,6 +74,8 @@ public:
     void setAuthMethod(const std::string&);
     void setSourceTokenId(const std::string&);
     void setDestinationTokenId(const std::string&);
+    void setSourceTokenUnmanaged(bool);
+    void setDestinationTokenUnmanaged(bool);
     void setTokenRefreshMarginPeriod(int);
 
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn, const std::string &msgDir);

@@ -24,6 +24,7 @@
 
 
 Transfer::Transfer() : fileId(0), userFileSize(0), scitag(0),
+                       sourceTokenUnmanaged(false), destTokenUnmanaged(false),
                        isMultipleReplicaJob(false), isLastReplica(false),
                        isMultihopJob(false), isLastHop(false), isArchiving(false),
                        checksumMode(Transfer::CHECKSUM_NONE), fileSize(0),

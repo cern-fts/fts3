@@ -246,6 +246,18 @@ void UrlCopyCmd::setAuthMethod(const std::string &method)
 }
 
 
+void UrlCopyCmd::setSourceTokenUnmanaged(bool unmanaged)
+{
+    setFlag("src-token-unmanaged", unmanaged);
+}
+
+
+void UrlCopyCmd::setDestinationTokenUnmanaged(bool unmanaged)
+{
+    setFlag("dst-token-unmanaged", unmanaged);
+}
+
+
 void UrlCopyCmd::setTokenRefreshMarginPeriod(int margin)
 {
     setOption("token-refresh-margin", margin);

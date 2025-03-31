@@ -121,6 +121,8 @@ public:
     std::string sourceTokenId;
     std::string destTokenId;
     unsigned    scitag;
+    bool        sourceTokenUnmanaged;
+    bool        destTokenUnmanaged;
     bool        isMultipleReplicaJob;
     bool        isLastReplica;
     bool        isMultihopJob;

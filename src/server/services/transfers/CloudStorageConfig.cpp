@@ -205,9 +205,11 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
         std::string token;
 
         if (isCloudStorage(Uri::parse(tf.sourceSe))) {
-            token = db->findToken(tf.sourceTokenId);
+            auto [src_token, _] = db->findToken(tf.sourceTokenId);
+            token = src_token;
         } else if (isCloudStorage(Uri::parse(tf.destSe))){
-            token = db->findToken(tf.destinationTokenId);
+            auto [dst_token, _] = db->findToken(tf.destinationTokenId);
+            token = dst_token;
         }
 
         if (token.empty()) {
@@ -231,8 +233,13 @@ static void writeTokensFile(FILE *f, const std::string& srcToken, const std::str
 }
 
 
-std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf)
+std::string fts3::generateOAuthConfigFile(const std::string& src_token, const std::string& dst_token)
 {
+    // There should be a token for the source and destination endpoints
+    if (src_token.empty() || dst_token.empty()) {
+        return "";
+    }
+
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
     char errDescr[128];
     FILE *f = nullptr;
@@ -252,15 +259,6 @@ std::string fts3::generateOAuthConfigFile(GenericDbIfce* db, const TransferFile&
         strerror_r(errno, errDescr, sizeof(errDescr));
         remove(oauth_path);
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
-    }
-
-    auto src_token = db->findToken(tf.sourceTokenId);
-    auto dst_token = db->findToken(tf.destinationTokenId);
-    // There should be a token for the source and destination endpoints
-    if (src_token.empty() || dst_token.empty()) {
-    	fclose(f);
-        remove(oauth_path);
-        return "";
     }
 
     // Write both tokens in the authorization file

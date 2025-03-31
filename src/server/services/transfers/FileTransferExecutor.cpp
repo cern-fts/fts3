@@ -142,14 +142,21 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // Not a cloud storage transfer but still using oauth2 method
             if (cloudStorageConfig.empty() && "oauth2" == authMethod) {
-                std::string oauthCredentials = generateOAuthConfigFile(db, tf);
+                auto [src_token, src_unmanaged] = db->findToken(tf.sourceTokenId);
+                auto [dst_token, dst_unmanaged] = db->findToken(tf.destinationTokenId);
+
+                std::string oauthCredentials = generateOAuthConfigFile(src_token, dst_token);
                 if (!oauthCredentials.empty()) {
                     cmdBuilder.setOAuthFile(oauthCredentials);
                     // Should be set via the "setFromTransfer()" function, but ATs are not
                     // Keep these functions grouped together until refactoring
                     cmdBuilder.setSourceTokenId(tf.sourceTokenId);
                     cmdBuilder.setDestinationTokenId(tf.destinationTokenId);
-                    cmdBuilder.setTokenRefreshMarginPeriod(fts3::config::ServerConfig::instance().get<int>("TokenRefreshMarginPeriod"));
+                    cmdBuilder.setSourceTokenUnmanaged(src_unmanaged);
+                    cmdBuilder.setDestinationTokenUnmanaged(dst_unmanaged);
+                    if (!src_unmanaged || !dst_unmanaged) {
+                        cmdBuilder.setTokenRefreshMarginPeriod(fts3::config::ServerConfig::instance().get<int>("TokenRefreshMarginPeriod"));
+                    }
                 }
             }
 

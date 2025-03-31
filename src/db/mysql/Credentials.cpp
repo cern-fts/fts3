@@ -92,32 +92,31 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
 }
 
 
-std::string MySqlAPI::findToken(const std::string& tokenId)
+std::pair<std::string, bool> MySqlAPI::findToken(const std::string& tokenId)
 {
     soci::session sql(*connectionPool);
 
-    try
-    {
+    try {
         std::string token;
-        sql << "SELECT access_token "
+        bool unmanagedVal;
+        soci::indicator unmanagedNull = soci::i_ok;
+
+        sql << "SELECT access_token, unmanaged "
                "FROM t_token "
                "WHERE token_id = :tokenID",
                 soci::use(tokenId),
-                soci::into(token);
+                soci::into(token),
+                soci::into(unmanagedVal, unmanagedNull);
 
-        if (sql.got_data())
-        {
-            return token;
+        if (sql.got_data()) {
+            bool unmanaged = (unmanagedNull != soci::i_null) ? unmanagedVal : false;
+            return {token, unmanaged};
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         throw UserError(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         throw UserError(std::string(__func__) + ": Caught exception " );
     }
 
-    return {};
+    return {"", false};
 }

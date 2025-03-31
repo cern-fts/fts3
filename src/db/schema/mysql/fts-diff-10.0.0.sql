@@ -3,6 +3,7 @@
 -- [FTS-2131] Create database schema v10.0.0
 -- [FTS-1925] Full OAuth2 capabilities in FTS for submission, transfers and tape operations
 -- [FTS-1990] Implement Token Refresh service in FTS Server
+-- [FTS-2044] Allow the FTS systems to skip the token lifecycle management for certain tokens
 -- [FTS-2132] Index to optimize the staging requests count query
 --
 
