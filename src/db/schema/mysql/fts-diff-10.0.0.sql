@@ -13,6 +13,10 @@ ALTER TABLE `t_token`
   ADD COLUMN `refresh_timestamp` timestamp NULL DEFAULT NULL,
   ADD COLUMN `unmanaged` tinyint(1) NULL DEFAULT 0;
 
+ALTER TABLE `t_token_provider`
+  ADD COLUMN `required_submission_scope` varchar(255) NULL DEFAULT NULL,
+  ADD COLUMN `vo_mapping` varchar(100) NULL DEFAULT NULL;
+
 ALTER TABLE `t_file`
     ADD INDEX `idx_staging_token` (`file_state`, `vo_name`, `source_se`, `bringonline_token`);
 

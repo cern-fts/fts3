@@ -6,10 +6,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TABLE t_token_provider (
-    name          VARCHAR(255)  NOT NULL,
-    issuer        VARCHAR(1024) NOT NULL,
-    client_id     VARCHAR(255)  NOT NULL,
-    client_secret VARCHAR(255)  NOT NULL,
+    name                        VARCHAR(255)  NOT NULL,
+    issuer                      VARCHAR(1024) NOT NULL,
+    client_id                   VARCHAR(255)  NOT NULL,
+    client_secret               VARCHAR(255)  NOT NULL,
+    required_submission_scope   VARCHAR(255)      NULL,
+    vo_mapping                  VARCHAR(100)      NULL,
     PRIMARY KEY (issuer)
 );
 
