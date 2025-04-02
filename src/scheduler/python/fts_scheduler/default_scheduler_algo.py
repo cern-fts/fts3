@@ -10,15 +10,15 @@ from dataclasses import dataclass
 from scheduler_algo import SchedulerAlgo, SchedulerOutput
 
 
-class CircularBufferException(Exception):
+class RRSException(Exception):
     """
-    Circular-buffer exception
+    Round-robin scheduler exception
     """
 
 
-class CircularBuffer:
+class RRS:
     """
-    A circular buffer
+    Round-Robin Scheduler (RSS)
     """
 
     def __init__(self):
@@ -27,16 +27,16 @@ class CircularBuffer:
 
     def append(self, value):
         """
-        Appends the specified value to the end of the circular buffer
+        Appends the specified value to the end of the round-robin scheduler
         """
         self._buf.append(value)
 
     def get_next(self):
         """
-        Returns the next value in the circular buffer and advances to the next
+        Returns the next value
         """
         if not self._buf:
-            raise CircularBufferException("get_next(): Empty buffer")
+            raise RRSException("get_next(): Empty buffer")
         next_value = self._buf[self._next_idx]
         self._next_idx = (self._next_idx + 1) % len(self._buf)
         return next_value
@@ -49,7 +49,7 @@ class CircularBuffer:
 
     def __repr__(self):
         return (
-            "CircularBuffer("
+            "RRS("
             + f"buf={self._buf},"
             + f"next_idx={self._next_idx},"
             + f"next={self._buf[self._next_idx] if self._buf else None}"
@@ -61,7 +61,7 @@ class CircularBuffer:
 
     def skip_until_after(self, val_to_skip_over):
         """
-        Skip through this circular-buffer until after the specified value
+        Skip through this round-robin scheduler until after the specified value
         """
         if not self._buf:
             return
@@ -74,7 +74,7 @@ class CircularBuffer:
 
     def remove_value(self, value):
         """
-        Removes the specified value from the circular buffer
+        Removes the specified value from this round-robin scheduler
         """
         self._buf.remove(value)
 
@@ -84,9 +84,9 @@ class CircularBuffer:
 
 
 @dataclass
-class WRRQ:
+class WRRSQ:
     """
-    A queue within a Weighted Round-Robin (WRR) scheduler
+    A queue within a Weighted Round-Robin Sheduler (WRRS)
     """
 
     q_id: Any
@@ -95,18 +95,18 @@ class WRRQ:
     active: int
 
 
-class WRRException(Exception):
+class WRRSException(Exception):
     """
-    Weighted round-robin exception
-    """
-
-
-class WRR:
-    """
-    An interleaved Weight Round-Robin (WRR) scheduler
+    Weighted Round-Robin Scheduler (WRRS) exception
     """
 
-    def __init__(self, max_active: int, queues: list[WRRQ]):
+
+class WRRS:
+    """
+    An interleaved Weight Round-Robin Scheduler (WRRS)
+    """
+
+    def __init__(self, max_active: int, queues: list[WRRSQ]):
         self._max_active = max_active
         self._total_active = sum(q.active for q in queues)
         self._total_weight = sum(
@@ -162,7 +162,7 @@ class WRR:
                 self._next_idx = (self._next_idx + 1) % len(self._queues)
 
         if not found_active_queue:
-            raise WRRException(
+            raise WRRSException(
                 f"next_queue_id(): Failed to find an active queue: {self}"
             )
 
@@ -189,7 +189,7 @@ class WRR:
 
     def __repr__(self):
         return (
-            "WRR("
+            "WRRS("
             f"max_active={self._max_active},"
             f"total_active={self._total_active},"
             f"total_weight={self._total_weight},"
@@ -203,7 +203,7 @@ class WRR:
         Skip through this Weight Round-Robin scheduler until after the specified queue ID
         """
         if not self._queues:
-            raise WRRException("skip_until_after(): No queues")
+            raise WRRSException("skip_until_after(): No queues")
 
         for idx, queue in enumerate(self._queues):
             if queue.q_id > q_id_to_skip_over:
@@ -327,8 +327,8 @@ class PotentialLinksException(Exception):
 
 class PotentialLinks:
     """
-    A Weight Round-Robin (WRR) scheduler of file-transfer links that have the potential for one or
-    more file-transfers
+    A Round-Robin Scheduler (RSS) of file-transfer links that have the potential for one or more
+    file-transfers
     """
 
     def __init__(self, sched_input):
@@ -338,19 +338,19 @@ class PotentialLinks:
         self._link_key_to_potential = self._get_link_key_to_potential(
             self._storage_to_outbound_potential, self._storage_to_inbound_potential
         )
-        self.link_key_cbuf = CircularBuffer()
+        self.link_key_rrs = RRS()
 
         for link_key in sorted(self._link_key_to_potential.keys()):
-            self.link_key_cbuf.append(link_key)
+            self.link_key_rrs.append(link_key)
 
     def __bool__(self):
-        return bool(self.link_key_cbuf)
+        return bool(self.link_key_rrs)
 
     def skip_until_after(self, link_key):
         """
         Skip through this Weight Round-Robin scheduler until after the specified link
         """
-        self.link_key_cbuf.skip_until_after(link_key)
+        self.link_key_rrs.skip_until_after(link_key)
 
     def get_link_keys_with_potential(self):
         """
@@ -368,7 +368,7 @@ class PotentialLinks:
         """
         Returns the next link to be scheduled
         """
-        next_link_key = self.link_key_cbuf.get_next()
+        next_link_key = self.link_key_rrs.get_next()
 
         # Update storage and link potentials
         self._storage_to_outbound_potential[next_link_key[0]].scheduled(1)
@@ -390,8 +390,8 @@ class PotentialLinks:
             if potential.get_potential() == 0
         ]
         for staturated_link_key in staturated_links:
-            if staturated_link_key in self.link_key_cbuf:
-                self.link_key_cbuf.remove_value(staturated_link_key)
+            if staturated_link_key in self.link_key_rrs:
+                self.link_key_rrs.remove_value(staturated_link_key)
 
         return next_link_key
 
@@ -669,8 +669,8 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             self._get_link_key_to_vo_to_activity_to_nb_active()
         )
 
-        # Create link key -> VO circular-buffer
-        sched_data["potential_link_to_vo_cbuf"] = self._get_link_key_to_vo_cbuf(
+        # Create link key -> VO round-robin scheduler
+        sched_data["potential_link_to_vo_rrs"] = self._get_link_key_to_vo_rrs(
             potential_link_keys, link_to_vo_to_activity_to_queue
         )
 
@@ -699,12 +699,12 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                         link_key
                     ][vo_name][activity] = queue.queue_id
 
-        # Fast-forward circular buffers and WRR schedulers based on previous scheduling run
+        # Fast-forward schedulers based on previous scheduling run
         prev_run = self.sched_input.opaque_data
         if isinstance(prev_run, PrevRun):
             sched_data["potential_links"].skip_until_after(prev_run.link_key)
-            if prev_run.link_key in sched_data["potential_link_to_vo_cbuf"]:
-                sched_data["potential_link_to_vo_cbuf"][
+            if prev_run.link_key in sched_data["potential_link_to_vo_rrs"]:
+                sched_data["potential_link_to_vo_rrs"][
                     prev_run.link_key
                 ].skip_until_after(prev_run.vo_name)
             if prev_run.link_key in sched_data["potential_link_to_vo_to_activity_wrr"]:
@@ -740,13 +740,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
             source_se = link_key[0]
             dest_se = link_key[1]
 
-            # Get the circular buffer of VOs on the link
-            vo_cbuf = sched_data["potential_link_to_vo_cbuf"][link_key]
+            # Get the round-robin scheduler of VOs on the link
+            vo_rrs = sched_data["potential_link_to_vo_rrs"][link_key]
 
             # Get the next VO of the link
-            vo_name = vo_cbuf.get_next()
+            vo_name = vo_rrs.get_next()
 
-            # Get the WRR scheduler of activities of the VO on the link
+            # Get the weighted round-robin scheduler of activities of the VO on the link
             activity_wrr = sched_data["potential_link_to_vo_to_activity_wrr"][link_key][
                 vo_name
             ]
@@ -792,7 +792,7 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                 PrevRun(link_key=link_key, vo_name=vo_name, activity=activity)
             )
 
-            # Remove VO from VO circular-buffer if necessary
+            # Remove VO from VO round-robin scheduler if necessary
             sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] -= 1
             if sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] < 0:
                 raise SchedulingException(
@@ -800,9 +800,9 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                     f"source_se={source_se} dest_se={dest_se} vo_name={vo_name}"
                 )
             if sched_data["link_key_to_vo_to_nb_queued"][link_key][vo_name] == 0:
-                vo_cbuf.remove_value(vo_name)
+                vo_rrs.remove_value(vo_name)
 
-            # Remove activity from activty circular-buffer if necessary
+            # Remove activity from activty round-robin scheduler if necessary
             sched_data["link_key_to_vo_to_activity_to_nb_queued"][link_key][vo_name][
                 activity
             ] -= 1
@@ -906,13 +906,13 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
         return result
 
     @staticmethod
-    def _get_link_key_to_vo_cbuf(potential_link_keys, link_to_vo_to_activity_to_queue):
+    def _get_link_key_to_vo_rrs(potential_link_keys, link_to_vo_to_activity_to_queue):
         result = {}
         for link_key in potential_link_keys:
-            vo_cbuf = CircularBuffer()
+            vo_rrs = RRS()
             for vo_name in sorted(link_to_vo_to_activity_to_queue[link_key].keys()):
-                vo_cbuf.append(vo_name)
-            result[link_key] = vo_cbuf
+                vo_rrs.append(vo_name)
+            result[link_key] = vo_rrs
         return result
 
     def _get_link_nb_active_per_vo(self, link_key):
@@ -1002,9 +1002,11 @@ class DefaultSchedulerAlgo(SchedulerAlgo):  # pylint:disable=too-few-public-meth
                     )
 
                     activity_queues.append(
-                        WRRQ(q_id=activity, weight=weight, queued=queued, active=active)
+                        WRRSQ(
+                            q_id=activity, weight=weight, queued=queued, active=active
+                        )
                     )
-                result[link_key][vo_name] = WRR(
+                result[link_key][vo_name] = WRRS(
                     max_active=potential_links.get_link_potential(
                         link_key
                     ).get_max_active(),
