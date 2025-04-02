@@ -587,6 +587,57 @@ class PotentialLinks:
         return result
 
     @staticmethod
+    def _get_storage_inbound_weights(
+        storage, inbound_storages, storage_to_inbound_weights
+    ):
+        """
+        Returns a dictionary mapping the source-storages (source_ses) to their respective weights.
+
+        storage_to_inbound_weights is a dictionary of dictionaries: dest_se -> source_se -> weight.
+
+        If a source-storage has no weight entry in storage_to_inbound_weights then it is considered
+        to be "weightless".   This function spreads the "default" inbound weight across the
+        weightless inbound-storages.
+
+        The default inbound-weight is determined by searching for inbound_weights[dest_se]["*"] and
+        if not found searching for inbound_weights["*"]["*"].  An exception is raised if there is
+        at least one weightless active-source and no default weight can be found.
+        """
+        inbound_weights = {}
+        weightless_inbound_storages = set()
+
+        inbound_weights = storage_to_inbound_weights.get(storage)
+        inbound_weights = {} if inbound_weights is None else inbound_weights
+
+        # Add inbound storages that have weights and find those that do not
+        for inbound_storage in inbound_storages:
+            weight = inbound_weights.get(inbound_storage)
+            if weight is not None:
+                inbound_weights[inbound_storage] = weight
+            else:
+                weightless_inbound_storages.add(inbound_storage)
+
+        # No need to go further if all inbound storages have weights
+        if not weightless_inbound_storages:
+            return inbound_weights
+
+        # Try to get the default weight and raise an exception if it cannot be found
+        default_weight = PotentialLinks._get_default_inbound_weight(
+            storage, storage_to_inbound_weights
+        )
+        if default_weight is None:
+            raise PotentialLinksException(
+                f"_get_inbound_weights(): Missing default inbound-weight: storage={storage}"
+            )
+
+        # Spread default weight across weightless inbound storages
+        split_default_weight = default_weight / len(weightless_inbound_storages)
+        for weightless_inbound_storage in weightless_inbound_storages:
+            inbound_weights[weightless_inbound_storage] = split_default_weight
+
+        return inbound_weights
+
+    @staticmethod
     def _get_default_inbound_weight(dest_se, storage_to_inbound_weights):
         """
         Returns the default inbound weight of the specified destination storage-endpoint (dest_se)
