@@ -586,6 +586,29 @@ class PotentialLinks:
             )
         return result
 
+    @staticmethod
+    def _get_default_inbound_weight(dest_se, storage_to_inbound_weights):
+        """
+        Returns the default inbound weight of the specified destination storage-endpoint (dest_se)
+        by searching for inbound_weights[dest_se]["*"] and if not found searching for
+        inbound_weights["*"]["*"].  This function return None if the default could not be found.
+        """
+        default_weight = None
+
+        # Search for inbound_weights[dest_se]["*"]
+        inbound_weights = storage_to_inbound_weights.get(dest_se)
+        if inbound_weights:
+            default_weight = inbound_weights.get["*"]
+        if default_weight is not None:
+            return default_weight
+
+        # Search for inbound_weights["*"]["*"]
+        inbound_weights = storage_to_inbound_weights.get("*")
+        if inbound_weights:
+            return inbound_weights.get("*")
+
+        return None
+
 
 @dataclass
 class PrevRun:
