@@ -587,6 +587,45 @@ class PotentialLinks:
         return result
 
     @staticmethod
+    def _get_storage_to_inbound_wrrs(
+        link_key_to_potential,
+        storage_to_inbound_weights,
+    ):
+        """
+        Returns a dict from storage -> Weighted Round-Robin Scheduler (WRRS) of inbound storages
+        """
+        storage_to_inbound_potentials = (
+            PotentialLinks._get_storage_to_inbound_potentials(link_key_to_potential)
+        )
+
+        storage_to_inbound_wrrs = {}
+        for (
+            storage,
+            inbound_storage_to_potential,
+        ) in storage_to_inbound_potentials.items():
+            inbound_storages = inbound_storage_to_potential.keys()
+            inbound_weights = PotentialLinks._get_storage_inbound_weights(
+                storage, inbound_storages, storage_to_inbound_weights
+            )
+
+            inbound_queues = []
+            for inbound_storage, weight in inbound_weights.items():
+                inbound_potential = inbound_storage_to_potential[inbound_storage]
+                inbound_queues.append(
+                    WRRSQ(
+                        q_id=inbound_storage,
+                        weight=weight,
+                        queued=inbound_potential.get_nb_queued(),
+                        active=inbound_potential.get_nb_active(),
+                    )
+                )
+            storage_to_inbound_wrrs[storage] = WRRS(
+                max_active=inbound_potential.get_max_active(), queues=inbound_queues
+            )
+
+        return storage_to_inbound_wrrs
+
+    @staticmethod
     def _get_storage_to_inbound_potentials(link_key_to_potential):
         """
         Returns a dict from storage -> inbound_storage -> link_potential
