@@ -587,6 +587,20 @@ class PotentialLinks:
         return result
 
     @staticmethod
+    def _get_storage_to_inbound_potentials(link_key_to_potential):
+        """
+        Returns a dict from storage -> inbound_storage -> link_potential
+        """
+        storage_to_inbound_potentials = {}
+        for link_key, inbound_potential in link_key_to_potential.items():
+            source_se = link_key[0]
+            dest_se = link_key[1]
+            if dest_se not in storage_to_inbound_potentials:
+                storage_to_inbound_potentials[dest_se] = {}
+            storage_to_inbound_potentials[dest_se][source_se] = inbound_potential
+        return storage_to_inbound_potentials
+
+    @staticmethod
     def _get_storage_inbound_weights(
         storage, inbound_storages, storage_to_inbound_weights
     ):
