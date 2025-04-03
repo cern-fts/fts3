@@ -4849,7 +4849,7 @@ void MySqlAPI::failTransfersWithFailedTokenExchange(
                 const auto src_token_id = row.get<std::string>("src_token_id", "");
                 const auto dst_token_id = row.get<std::string>("dst_token_id", "");
 
-                std::string reason = "Failed to get refresh token for ";
+                std::string reason = "[TokenExchange] Failed to get refresh token for ";
 
                 if (!src_token_id.empty()) {
                     reason += "source token: " + it.second;
