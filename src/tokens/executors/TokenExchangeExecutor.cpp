@@ -94,6 +94,10 @@ std::string TokenExchangeExecutor::getPayloadData() const
           "&subject_token=" << token.accessToken <<
           "&scope=" << token.scope;
 
+    if (token.scope.find("offline_access") == std::string::npos) {
+        ss << " offline_access";
+    }
+
     // Add optional audience to the token exchange request
     if (!token.audience.empty()) {
         ss << "&audience=" << token.audience;
