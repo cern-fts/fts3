@@ -35,19 +35,20 @@ void ArchivingPollTask::run(const boost::any&)
 {
     handle_timeouts();
 
-	// Use the same var for staging pool retries now
-	int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
-	bool forcePoll = false;
+    // Use the same var for staging pool retries now
+    int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+    int archivePollInterval = fts3::config::ServerConfig::instance().get<int>("ArchivePollInterval");
+    bool forcePoll = false;
 
-	std::set<std::string> urlSet = ctx.getUrls();
-	if (urlSet.empty())
-		return;
+    std::set<std::string> urlSet = ctx.getUrls();
+    if (urlSet.empty())
+        return;
 
-	std::vector<const char*> urls;
-	urls.reserve(urlSet.size());
-	for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
-		urls.push_back(set_i->c_str());
-	}
+    std::vector<const char*> urls;
+    urls.reserve(urlSet.size());
+    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
+        urls.push_back(set_i->c_str());
+    }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ArchivingPollTask starting"
         << " [ files=" << urls.size() << " / start=" <<  ctx.getStartTime()
@@ -61,14 +62,14 @@ void ArchivingPollTask::run(const boost::any&)
     // Refresh the proxy, if needed
     ctx.refreshProxy();
 
-	std::vector<GError*> errors(urls.size(), NULL);
-	int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
+    std::vector<GError*> errors(urls.size(), NULL);
+    int status = gfal2_archive_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), errors.data());
 
-	// Status return code meaning:
-	//  0  - Not all files are in terminal state
-	//  1  - All files are in terminal successful state
-	//  2  - All files are in terminal state, but not all are successful
-	// -1  - All files are in error state
+    // Status return code meaning:
+    //  0  - Not all files are in terminal state
+    //  1  - All files are in terminal successful state
+    //  2  - All files are in terminal state, but not all are successful
+    // -1  - All files are in error state
 
     for (size_t i = 0 ; i < urls.size(); i++) {
         auto ids = ctx.getIDs(urls[i]);
@@ -117,16 +118,16 @@ void ArchivingPollTask::run(const boost::any&)
         g_clear_error(&errors[i]);
     }
 
-	// Schedule a new poll
-	if (status == 0 || forcePoll) {
-		time_t interval = getPollInterval(++nPolls);
-		time_t now = time(NULL);
-		wait_until = now + interval;
+    // Schedule a new poll
+    if (status == 0 || forcePoll) {
+        time_t interval = getPollInterval(++nPolls, archivePollInterval);
+        time_t now = time(NULL);
+        wait_until = now + interval;
 
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling " << ctx.getLogMsg() << commit;
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
-		ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
-	}
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling " << ctx.getLogMsg() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ARCHIVING polling next attempt in " << interval << " seconds" << commit;
+        ctx.getWaitingRoom().add(new ArchivingPollTask(std::move(*this)));
+    }
 }
 
 

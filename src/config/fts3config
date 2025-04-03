@@ -91,6 +91,9 @@ LogTokenRequests=false
 # Similar to logic as the StagingBulkSize
 # ArchivePollBulkSize=100
 
+# Interval between consecutive archive poll tasks (in seconds)
+# ArchivePollInterval=600
+
 ## Staging and StagingPoll settings
 # Maximum number of staging requests to fetch from the database
 # Note: larger values mean more efficient database access, but larger in-memory footprint
@@ -117,6 +120,9 @@ LogTokenRequests=false
 # StagingSchedulingInterval=60
 # Number of times to retry if a staging poll fails with ECOMM
 # StagingPollRetries=3
+
+# Interval between consecutive staging poll tasks (in seconds)
+# StagingPollInterval=600
 
 # Default value for bring-online timeout if none if provided by the user
 # DefaultBringOnlineTimeout = 604800

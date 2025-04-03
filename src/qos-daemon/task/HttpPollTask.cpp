@@ -32,6 +32,7 @@ void HttpPollTask::run(const boost::any&)
     handle_canceled();
 
     int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+    int stagingPollInterval = fts3::config::ServerConfig::instance().get<int>("StagingPollInterval");
     bool forcePoll = false;
 
     std::set<std::string> urlSet = ctx.getUrls();
@@ -204,7 +205,7 @@ void HttpPollTask::run(const boost::any&)
 
     // If status was 0, not everything is terminal, so schedule a new poll
     if (status == 0 || forcePoll) {
-        time_t interval = getPollInterval(++nPolls);
+        time_t interval = getPollInterval(++nPolls, stagingPollInterval);
         time_t now = time(NULL);
         wait_until = now + interval;
 

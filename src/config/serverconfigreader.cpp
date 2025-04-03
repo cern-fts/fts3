@@ -320,6 +320,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Archive polling bulk size"
     )
     (
+        "ArchivePollInterval",
+        po::value<std::string>( &(_vars["ArchivePollInterval"]) )->default_value("600"),
+        "Time interval between consecutive archive poll tasks"
+    )
+    (
         "FetchStagingLimit",
         po::value<std::string>( &(_vars["FetchStagingLimit"]) )->default_value("50000"),
         "Maximum number of staging requests to fetch from the database"
@@ -348,6 +353,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "StagingPollRetries",
         po::value<std::string>( &(_vars["StagingPollRetries"]) )->default_value("3"),
         "Retry this number of times if a staging poll fails with ECOMM"
+    )
+    (
+        "StagingPollInterval",
+        po::value<std::string>( &(_vars["StagingPollInterval"]) )->default_value("600"),
+        "Time interval between consecutive staging poll tasks"
     )
     (
         "DefaultBringOnlineTimeout",
