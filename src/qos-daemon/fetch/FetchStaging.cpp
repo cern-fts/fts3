@@ -37,25 +37,22 @@
 
 void FetchStaging::fetch()
 {
-    StagingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("StagingSchedulingInterval");
+    stagingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("StagingSchedulingInterval");
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting (interval: "
+                                    << stagingSchedulingInterval.total_seconds() << "s)" << commit;
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting" << commit;
-
-    // we want to be sure that this won't break our fetching thread
     try {
         recoverStartedTasks();
     } catch (BaseException& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging: " << e.what() << commit;
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
     }
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::seconds(60));
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more FetchStaging for this instance!" << commit;
                 continue;
             }
 
@@ -81,7 +78,7 @@ void FetchStaging::fetch()
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
         }
 
-        boost::this_thread::sleep(StagingSchedulingInterval);
+        boost::this_thread::sleep(stagingSchedulingInterval);
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging exiting" << commit;

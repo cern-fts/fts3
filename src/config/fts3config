@@ -92,6 +92,8 @@ LogTokenRequests=false
 # ArchivePollBulkSize=200
 # Interval between consecutive archive poll tasks (in seconds)
 # ArchivePollInterval=600
+# How often to run the scheduler for archive poll operations (in seconds)
+# ArchivePollSchedulingInterval=60
 
 ## Staging and StagingPoll settings
 # Maximum number of staging requests to fetch from the database
@@ -115,7 +117,7 @@ LogTokenRequests=false
 # Note that the resolution is the StagingSchedulingInterval.
 # StagingWaitingFactor=300
 
-# How often to run the scheduler for BringOnline operations (measured in seconds)
+# How often to run the scheduler for staging operations (in seconds)
 # StagingSchedulingInterval=60
 # Number of times to retry if a staging poll fails with ECOMM
 # StagingPollRetries=3

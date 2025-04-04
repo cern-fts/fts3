@@ -325,6 +325,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Time interval between consecutive archive poll tasks"
     )
     (
+        "ArchivePollSchedulingInterval",
+        po::value<std::string>( &(_vars["ArchivePollSchedulingInterval"]) )->default_value("60"),
+        "In seconds, how often to run the scheduler for archive poll operations"
+    )
+    (
         "FetchStagingLimit",
         po::value<std::string>( &(_vars["FetchStagingLimit"]) )->default_value("50000"),
         "Maximum number of staging requests to fetch from the database"
@@ -347,7 +352,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     (
         "StagingSchedulingInterval",
         po::value<std::string>( &(_vars["StagingSchedulingInterval"]) )->default_value("60"),
-        "In seconds, how often to run the scheduler for bring online operations"
+        "In seconds, how often to run the scheduler for staging operations"
     )
     (
         "StagingPollRetries",

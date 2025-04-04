@@ -59,5 +59,5 @@ private:
     void schedulePollTask(StagingContext& context, const std::string& token) const;
 
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
-    boost::posix_time::time_duration StagingSchedulingInterval;
+    boost::posix_time::time_duration stagingSchedulingInterval;
 };

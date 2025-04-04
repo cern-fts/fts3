@@ -31,22 +31,22 @@
 
 void FetchArchiving::fetch()
 {
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving starting" << commit;
+    archivePollSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("ArchivePollSchedulingInterval");
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving starting (interval: "
+                                    << archivePollSchedulingInterval.total_seconds() << "s)" << commit;
 
     try {
         recoverStartedTasks();
     } catch (BaseException& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving " << e.what() << commit;
-    } catch (...)
-    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving: " << e.what() << commit;
+    } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving Fatal error (unknown origin)" << commit;
     }
 
     while (!boost::this_thread::interruption_requested()) {
         try {
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking archiving files for this instance!" << commit;
-                boost::this_thread::sleep(boost::posix_time::seconds(60));
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more FetchArchiving for this instance!" << commit;
                 continue;
             }
 
@@ -58,14 +58,11 @@ void FetchArchiving::fetch()
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchArchiving\" "
                                             << "func=\"fetch\" "
                                             << "DBcall=\"getFilesForArchiving\" "
-                                            << "time=\"" << end - start << "\""
+                                            << "time=\"" << end - start << "\" "
+                                            << "archiveOperations=\"" << files.size() << "\""
                                             << commit;
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetched " << files.size()
-                                            << " files for archiving" << commit;
-
             startArchivePollTasks(files);
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
         } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving " << e.what() << commit;
         } catch (const boost::thread_interrupted&) {
@@ -74,6 +71,8 @@ void FetchArchiving::fetch()
         } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchArchiving Fatal error (unknown origin)" << commit;
         }
+
+        boost::this_thread::sleep(archivePollSchedulingInterval);
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchArchiving exiting" << commit;

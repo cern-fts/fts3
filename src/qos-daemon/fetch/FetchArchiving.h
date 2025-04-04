@@ -70,4 +70,5 @@ private:
     void scheduleArchivePollTask(ArchivingContext& context, bool recovery) const;
 
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
+    boost::posix_time::time_duration archivePollSchedulingInterval;
 };
