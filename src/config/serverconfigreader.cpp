@@ -320,6 +320,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Archive polling bulk size"
     )
     (
+        "ArchivePollRetries",
+        po::value<std::string>( &(_vars["ArchivePollRetries"]) )->default_value("3"),
+        "Retry this number of times if an archive poll fails with ECOMM"
+    )
+    (
         "ArchivePollInterval",
         po::value<std::string>( &(_vars["ArchivePollInterval"]) )->default_value("600"),
         "Time interval between consecutive archive poll tasks"

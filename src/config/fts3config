@@ -90,6 +90,8 @@ LogTokenRequests=false
 # Maximum size for the archive poll request
 # Similar to logic as the StagingBulkSize
 # ArchivePollBulkSize=200
+# Number of times to retry if an archive poll fails with ECOMM
+# ArchivePollRetries=3
 # Interval between consecutive archive poll tasks (in seconds)
 # ArchivePollInterval=600
 # How often to run the scheduler for archive poll operations (in seconds)
@@ -117,13 +119,12 @@ LogTokenRequests=false
 # Note that the resolution is the StagingSchedulingInterval.
 # StagingWaitingFactor=300
 
-# How often to run the scheduler for staging operations (in seconds)
-# StagingSchedulingInterval=60
 # Number of times to retry if a staging poll fails with ECOMM
 # StagingPollRetries=3
-
 # Interval between consecutive staging poll tasks (in seconds)
 # StagingPollInterval=600
+# How often to run the scheduler for staging operations (in seconds)
+# StagingSchedulingInterval=60
 
 # Default value for bring-online timeout if none if provided by the user
 # DefaultBringOnlineTimeout = 604800

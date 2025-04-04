@@ -35,8 +35,7 @@ void ArchivingPollTask::run(const boost::any&)
 {
     handle_timeouts();
 
-    // Use the same var for staging pool retries now
-    int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("StagingPollRetries");
+    int maxPollRetries = fts3::config::ServerConfig::instance().get<int>("ArchivePollRetries");
     int archivePollInterval = fts3::config::ServerConfig::instance().get<int>("ArchivePollInterval");
     bool forcePoll = false;
 
