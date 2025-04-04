@@ -154,29 +154,9 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "The interval that the token refresh daemon will run"
     )
     (
-        "Infosys",
-        po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
-        "Set infosys"
-    )
-    (
-        "BDIIKeepAlive",
-        po::value<std::string>( &(_vars["BDIIKeepAlive"]) )->default_value("true"),
-        "Sets the keep alive property of the BDII"
-    )
-    (
         "MyOSG,m",
         po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
         "Set the MyOSG URL (or flase meaning MyOSG wont be used)"
-    )
-    (
-        "InfoProviders",
-        po::value<std::string>( &(_vars["InfoProviders"]) )->default_value("glue1"),
-        "The list of info providers ( e.g.: glue1:glue2)"
-    )
-    (
-        "InfoPublisher,P",
-        po::value<std::string>( &(_vars["InfoPublisher"]) )->default_value("false"),
-        "Set this VM to be the info provider for Glue2"
     )
     (
         "Alias,a",

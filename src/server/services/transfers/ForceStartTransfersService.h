@@ -32,7 +32,6 @@ public:
 
 protected:
     std::string ftsHostName;
-    std::string infosys;
     bool monitoringMessages;
     int execPoolSize;
     std::string logDir;

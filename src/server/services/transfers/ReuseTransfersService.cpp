@@ -299,9 +299,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
         cmdBuilder.setDebugLevel(debugLevel);
     }
 
-    // Infosystem
-    cmdBuilder.setInfosystem(infosys);
-
     // FTS3 name
     cmdBuilder.setFTSName(ftsHostName);
 

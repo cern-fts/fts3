@@ -104,12 +104,6 @@ void UrlCopyCmd::setPingInterval(int interval)
 }
 
 
-void UrlCopyCmd::setInfosystem(const std::string &infosys)
-{
-    setOption("infosystem", infosys);
-}
-
-
 void UrlCopyCmd::setOptimizerLevel(int level)
 {
     setOption("level", level);

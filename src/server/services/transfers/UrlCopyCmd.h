@@ -58,7 +58,6 @@ public:
     void setLogDir(const std::string&);
     void setMonitoring(bool, const std::string&);
     void setPingInterval(int interval);
-    void setInfosystem(const std::string&);
     void setOptimizerLevel(int);
     void setDebugLevel(int);
     void setProxy(const std::string&);

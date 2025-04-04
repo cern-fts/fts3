@@ -62,16 +62,14 @@ public:
      *
      * @param tf - the transfer object
      * @param monitoringMsg - true if monitoring messages are in use
-     * @param infosys - the information system host
      * @param FTSInstanceAlias - the FTS3 instance alias
      * @param proxy - the proxy certificate file
      * @param logDir - location for the transfer log file
      * @param msgDir - location for the monitoring state messages
      */
     FileTransferExecutor(TransferFile& tf,
-        bool monitoringMsg, std::string infosys,
-        std::string FTSInstanceAlias, std::string proxy,
-        std::string logDir, std::string msgDir);
+        bool monitoringMsg, std::string FTSInstanceAlias,
+        std::string proxy, std::string logDir, std::string msgDir);
 
     virtual ~FileTransferExecutor();
 
@@ -90,7 +88,6 @@ private:
     /// variables from process_service_handler
     TransferFile tf;
     bool monitoringMsg;
-    std::string infosys;
     std::string FTSInstanceAlias;
     std::string proxy;
     std::string logsDir;

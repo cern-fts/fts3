@@ -76,7 +76,6 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
     ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
-    infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
@@ -239,7 +238,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                     scheduledByActivity[tf.activity]++;
 
                     FileTransferExecutor *exec = new FileTransferExecutor(tf,
-                        monitoringMessages, infosys, ftsHostName,
+                        monitoringMessages, ftsHostName,
                         proxies[proxy_key], logDir, msgDir);
 
                     execPool.start(exec);
@@ -422,7 +421,6 @@ void TransfersService::postgresExecuteUrlCopy() {
         FileTransferExecutor * const exec = new FileTransferExecutor(
             scheduledFile,
             monitoringMessages,
-            infosys,
             ftsHostName,
             proxies[proxy_key],
             logDir,

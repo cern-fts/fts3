@@ -55,13 +55,10 @@ public:
     /**
      * Creates a prototype for all gfal2 contexts that will be created
      *
-     * @param infosys: name of the information system
      * @param debug: activate debug logging
      */
-    static void createPrototype(const std::string& infosys,
-                                bool debug = false)
+    static void createPrototype(bool debug = false)
     {
-        Gfal2Task::infosys = infosys;
         Gfal2Task::http_log_content = debug;
     }
 
@@ -98,6 +95,7 @@ protected:
             // Set up handle
             GError *error = NULL;
             gfal2_ctx = gfal2_context_new(&error);
+
             if (!gfal2_ctx) {
                 std::stringstream ss;
                 ss << operation << " bad initialisation " << error->code << " " << error->message;
@@ -106,13 +104,7 @@ protected:
                 throw fts3::common::UserError(ss.str());
             }
 
-            if (infosys == "false") {
-                gfal2_set_opt_boolean(gfal2_ctx, "BDII", "ENABLED", false, NULL);
-            }
-            else {
-                gfal2_set_opt_string(gfal2_ctx, "BDII", "LCG_GFAL_INFOSYS",
-                    (char *) infosys.c_str(), NULL);
-            }
+            gfal2_set_opt_boolean(gfal2_ctx, "BDII", "ENABLED", false, NULL);
 
             // Log HTTP content when debug mode enabled
             if (http_log_content == true) {
@@ -171,9 +163,6 @@ protected:
         /// the operation, e.g. 'BRINGONLINE', 'ARCHIVING', etc.
         std::string const operation;
     };
-
-    /// the infosys used to create all gfal2 contexts
-    static std::string infosys;
 
     /// Setting to enable logging of HTTP content (when debug mode enabled)
     static bool http_log_content;

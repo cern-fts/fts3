@@ -21,12 +21,6 @@ DbThreadsNum=26
 # Note: will be published in the FTS Transfers Dashboard
 Alias=replacethis
 
-# Infosys: <fqdn:port> of a BDII instance or false to disable BDII access
-Infosys=lcg-bdii.cern.ch:2170
-
-# Query the info systems according to the given order (e.g.: glue1;glue2)
-InfoProviders=glue1
-
 # Site name running the FTS3 service (will be published to GLUE2)
 SiteName=replacethis
 
