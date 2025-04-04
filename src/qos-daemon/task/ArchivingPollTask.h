@@ -118,13 +118,14 @@ private:
      * Gets the interval after next polling should be done
      *
      * @param nPolls : number of polls already done
+     * @param archivePollInterval : Configurable interval for tape archive polling
      */
-    static time_t getPollInterval(int nPolls)
+    static time_t getPollInterval(int nPolls, int archivePollInterval)
     {
-        if (nPolls > 8)
-            return 600;
+        if (nPolls > 1)
+            return archivePollInterval;  // Subsequent polls follow the configured interval
         else
-            return (2 << nPolls);
+            return 300;     // First retry after 5 minutes
     }
 
     /// archiving details
