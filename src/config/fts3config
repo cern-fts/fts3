@@ -89,8 +89,7 @@ LogTokenRequests=false
 
 # Maximum size for the archive poll request
 # Similar to logic as the StagingBulkSize
-# ArchivePollBulkSize=100
-
+# ArchivePollBulkSize=200
 # Interval between consecutive archive poll tasks (in seconds)
 # ArchivePollInterval=600
 

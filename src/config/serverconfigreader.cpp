@@ -316,7 +316,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "ArchivePollBulkSize",
-        po::value<std::string>( &(_vars["ArchivePollBulkSize"]) )->default_value("100"),
+        po::value<std::string>( &(_vars["ArchivePollBulkSize"]) )->default_value("200"),
         "Archive polling bulk size"
     )
     (
