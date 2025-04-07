@@ -24,7 +24,6 @@
 #include "common/Singleton.h"
 #include "common/ThreadPool.h"
 
-#include "state/DeletionStateUpdater.h"
 #include "state/StagingStateUpdater.h"
 #include "state/ArchivingStateUpdater.h"
 #include "task/Gfal2Task.h"
@@ -43,10 +42,6 @@ public:
     void start();
     void stop();
     void wait();
-
-    DeletionStateUpdater& getDeletionStateUpdater() {
-    	return deletionStateUpdater;
-    }
 
     StagingStateUpdater& getStagingStateUpdater() {
         return stagingStateUpdater;
@@ -75,7 +70,6 @@ private:
     WaitingRoom<HttpPollTask> httpWaitingRoom;
     WaitingRoom<ArchivingPollTask> archivingWaitingRoom;
 
-    DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;
     ArchivingStateUpdater archivingStateUpdater;
 };

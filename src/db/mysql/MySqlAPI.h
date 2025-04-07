@@ -257,18 +257,6 @@ public:
     /// Puts into the vector queues the Queues for which there are session-reuse pending transfers
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues);
 
-    /// Updates the status for delete operations
-    /// @param delOpsStatus  Update for files in delete or started
-    virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus);
-
-    /// Gets a list of delete operations in the queue
-    /// @params[out] delOps A list of namespace operations (deletion)
-    virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps);
-
-    /// Revert namespace operations already in 'STARTED' back to the 'DELETE'
-    /// state, so they re-enter the queue
-    virtual void requeueStartedDeletes();
-
     /// Updates the status for staging operations
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus);
@@ -470,8 +458,6 @@ private:
 
     void updateArchivingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &archivingOpsStatus);
 
-    void updateDeletionsStateInternal(soci::session& sql, const std::vector<MinFileStatus> &delOpsStatus);
-
     void updateStagingStateInternal(soci::session& sql, const std::vector<MinFileStatus> &stagingOpsStatus);
 
     boost::tuple<bool, std::string> updateFileTransferStatusInternal(soci::session& sql,
@@ -484,13 +470,9 @@ private:
 
     bool resetForRetryStaging(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry, int& times);
 
-    bool resetForRetryDelete(soci::session& sql, uint64_t fileId, const std::string & jobId, bool retry);
-
     uint64_t getBestNextReplica(soci::session& sql, const std::string & jobId, const std::string & voName);
 
     std::vector<TransferState> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
-
-    std::vector<TransferState> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, uint64_t fileId);
 
     void useFileReplica(soci::session& sql, std::string jobId, uint64_t fileId, std::string destSurlUuid, soci::indicator destSurlUuidInd);
 
@@ -512,7 +494,6 @@ private:
     // Sanity checks
     void fixJobNonTerminallAllFilesTerminal(soci::session &sql);
     void fixJobTerminalFileNonTerminal(soci::session &sql);
-    void fixDeleteInconsistencies(soci::session &sql);
     void recoverFromDeadHosts(soci::session &sql);
     void recoverStalledStaging(soci::session &sql);
     void recoverStalledArchiving(soci::session &sql);

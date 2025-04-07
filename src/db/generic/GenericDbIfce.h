@@ -42,7 +42,6 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
-#include "DeleteOperation.h"
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
@@ -306,18 +305,6 @@ public:
 
     /// Puts into the vector queues the Queues for which there are session-reuse pending transfers
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues) = 0;
-
-    /// Updates the status for delete operations
-    /// @param delOpsStatus  Update for files in delete or started
-    virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus) = 0;
-
-    /// Gets a list of delete operations in the queue
-    /// @params[out] delOps A list of namespace operations (deletion)
-    virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps) = 0;
-
-    /// Revert namespace operations already in 'STARTED' back to the 'DELETE'
-    /// state, so they re-enter the queue
-    virtual void requeueStartedDeletes() = 0;
 
     /// Updates the status for staging operations
     /// @param stagingOpStatus  Update for files in staging or started

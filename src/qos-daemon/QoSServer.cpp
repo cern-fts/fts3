@@ -34,9 +34,7 @@
 #include "fetch/FetchCancelStaging.h"
 #include "fetch/FetchArchiving.h"
 #include "fetch/FetchCancelArchiving.h"
-#include "fetch/FetchDeletion.h"
 #include "state/StagingStateUpdater.h"
-#include "state/DeletionStateUpdater.h"
 
 using namespace fts3::common;
 using namespace fts3::config;
@@ -65,7 +63,6 @@ void QoSServer::start()
 
     FetchStaging fs(threadpool);
     FetchCancelStaging fcs(threadpool);
-    FetchDeletion fd(threadpool);
     FetchArchiving fa(threadpool);
     FetchCancelArchiving fca(threadpool);
 
@@ -92,10 +89,7 @@ void QoSServer::start()
     // Archiving
     systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));
     systemThreads.create_thread(boost::bind(&FetchCancelArchiving::fetch, fca));
-    // Deletion
-    systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
     // StateUpdaters
-    systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
     systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
     systemThreads.create_thread(boost::bind(&ArchivingStateUpdater::run, &archivingStateUpdater));
 }
@@ -111,7 +105,6 @@ void QoSServer::wait()
 void QoSServer::stop()
 {
     stagingStateUpdater.recover();
-    deletionStateUpdater.recover();
     archivingStateUpdater.recover();
     threadpool.interrupt();
     systemThreads.interrupt_all();
