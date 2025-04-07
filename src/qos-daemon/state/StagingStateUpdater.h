@@ -110,22 +110,6 @@ public:
                 << fileId << "  " << state << "  " << error.String() << " " << jobId << " " << error.IsRecoverable() << commit;
     }
 
-    void cdmiUpdateFileStateToFinished(const std::string &jobId, uint64_t fileId) {
-        db.updateFileStateToQosTerminal(jobId, fileId, "FINISHED");
-    }
-
-    void cdmiUpdateFileStateToFailed(const std::string &jobId, uint64_t fileId, const std::string &reason = "") {
-        db.updateFileStateToQosTerminal(jobId, fileId, "FAILED", reason);
-    }
-
-    void cdmiGetFilesForQosRequestSubmitted(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string& qosOp) {
-        db.getFilesForQosTransition(qosTransitionOps, qosOp, true);
-    }
-
-    bool cdmiUpdateFileStateToQosRequestSubmitted(const std::string &jobId, uint64_t fileId) {
-        return db.updateFileStateToQosRequestSubmitted(jobId, fileId);
-    }
-
     /// Destructor
     virtual ~StagingStateUpdater() {}
 

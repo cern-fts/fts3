@@ -297,20 +297,6 @@ public:
     /// @params[out] archivingOps The list of Archiving  operations will be put here
     virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps);
 
-    /// Get qosTransition operations ready to be started
-    /// @params[out] qosTransitionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string &qosOp,
-                                          bool matchHost = false);
-
-    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
-    /// @params[out] true if file state was updated, false otherwise
-    virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId);
-
-    /// Update File State to FINISHED after QoS Transition of file reached a terminal state
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
-                                              const std::string& reason = "");
-
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps);

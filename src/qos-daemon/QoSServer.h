@@ -31,7 +31,6 @@
 #include "task/WaitingRoom.h"
 
 class PollTask;
-class CDMIPollTask;
 class ArchivingPollTask;
 class HttpPollTask;
 
@@ -65,10 +64,6 @@ public:
         return httpWaitingRoom;
     }
 
-    WaitingRoom<CDMIPollTask>& getCDMIWaitingRoom() {
-        return cdmiWaitingRoom;
-    }
-
     WaitingRoom<ArchivingPollTask>& getArchivingWaitingRoom() {
         return archivingWaitingRoom;
     }
@@ -78,7 +73,6 @@ private:
     fts3::common::ThreadPool<Gfal2Task> threadpool;
     WaitingRoom<PollTask> waitingRoom;
     WaitingRoom<HttpPollTask> httpWaitingRoom;
-    WaitingRoom<CDMIPollTask> cdmiWaitingRoom;
     WaitingRoom<ArchivingPollTask> archivingWaitingRoom;
 
     DeletionStateUpdater deletionStateUpdater;
