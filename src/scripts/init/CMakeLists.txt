@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2013-2015
+# Copyright (c) CERN 2013-2025
 #
 # Copyright (c) Members of the EMI Collaboration. 2010-2013
 #  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,7 +18,6 @@
 # limitations under the License.
 #
 
-# Systemd services
 if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-server.service
                   fts-msg-bulk.service
@@ -34,29 +33,6 @@ if (SYSTEMD_INSTALL_DIR)
             DESTINATION ${SYSTEMD_INSTALL_DIR}
         )
     endif ()
-# Init scripts
 else ()
-    install(FILES fts-server.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-        RENAME fts-server
-    )
-
-    install(FILES fts-msg-bulk.initd
-       DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-       PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-       RENAME fts-msg-bulk
-    )
-
-    install(FILES fts-records-cleaner.initd
-       DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-       PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-       RENAME fts-records-cleaner
-    )
-    
-    install(FILES fts-qos.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-        RENAME fts-qos
-    )
+    message(FATAL_ERROR "FTS3 Service installation requires systemd!")
 endif ()
