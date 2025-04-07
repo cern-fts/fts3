@@ -36,12 +36,10 @@ BOOST_AUTO_TEST_SUITE(ServerConfigReaderTestSuite)
 BOOST_FIXTURE_TEST_CASE (functionOperator, fts3::config::ServerConfigReader)
 {
     std::vector<const char*> args{
-        "executable", "--configfile=/dev/null",
-        "--Port=7823682", "--SiteName", "required"
+        "executable", "--configfile=/dev/null", "--SiteName", "required"
     };
 
     (*this)(args.size(), (char**)args.data());
-    BOOST_CHECK_EQUAL(_vars["Port"], std::string("7823682"));
     BOOST_CHECK_EQUAL(_vars["SiteName"], std::string("required"));
 }
 
@@ -91,8 +89,6 @@ BOOST_FIXTURE_TEST_CASE (functionOperatorFromFile, fts3::config::ServerConfigRea
     // Write a temporary config file
     std::string f_intval = "32234";
     std::string f_str = "randomval";
-    file << "Port=" << f_intval << std::endl;
-    file << "IP=" << f_str << std::endl;
     file << "DbConnectString=" << f_str << std::endl;
     file << "DbUserName=" << f_str << std::endl;
     file << "DbPassword=" << f_str << std::endl;
@@ -109,9 +105,7 @@ BOOST_FIXTURE_TEST_CASE (functionOperatorFromFile, fts3::config::ServerConfigRea
     (*this)(argv.size(), (char**)argv.data());
 
     // Do the checks
-    BOOST_CHECK_EQUAL (_vars["Port"], f_intval);
     BOOST_CHECK_EQUAL (_vars["ThreadNum"], f_intval);
-    BOOST_CHECK_EQUAL (_vars["IP"], f_str);
     BOOST_CHECK_EQUAL (_vars["DbConnectString"], f_str);
     BOOST_CHECK_EQUAL (_vars["DbUserName"], f_str);
     BOOST_CHECK_EQUAL (_vars["DbPassword"], f_str);

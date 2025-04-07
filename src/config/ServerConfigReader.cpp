@@ -31,8 +31,6 @@ using namespace fts3::config;
 
 
 // Default config values
-#define FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT 8443
-#define FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT "localhost"
 #define FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT 10
 #define FTS3_CONFIG_SERVERCONFIG_SERVERLOGDIRECTOTY_DEFAULT ""
 #define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTORY_DEFAULT "/var/log/fts3"
@@ -74,11 +72,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 
     config.add_options()
     (
-        "Port,p",
-        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT),
-        "File transfer listening port"
-    )
-    (
         "PidDirectory",
         po::value<std::string>( &(_vars["PidDirectory"]) )->default_value("/var/lib/fts3"),
         "Where to put the PID files"
@@ -92,11 +85,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "MaxNumberOfProcesses,M",
         po::value<std::string>( &(_vars["MaxNumberOfProcesses"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT),
         "Maximum processes resource limit"
-    )
-    (
-        "IP,i",
-        po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
-        "IP address that the server is bound to"
     )
     (
         "DbConnectString,s",
@@ -119,64 +107,9 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Database account password"
     )
     (
-        "AuthorizationProvider,w",
-        po::value<std::string>( &(_vars["AuthorizationProvider"]) )->default_value(""),
-        "Authorization provider ex IAM"
-    )
-    (
-        "AuthorizationProviderTokenEndpoint,w",
-        po::value<std::string>( &(_vars["AuthorizationProviderTokenEndpoint"]) )->default_value(""),
-        "Authorization token endpoint ex IAM"
-    )
-    (
-        "AuthorizationProviderJwkEndpoint,w",
-        po::value<std::string>( &(_vars["AuthorizationProviderJwkEndpoint"]) )->default_value(""),
-        "Jwk enpoint of Authorization provider"
-    )
-    (
-        "ClientId,w",
-        po::value<std::string>( &(_vars["ClientId"]) )->default_value(""),
-        "Authorization provider CLient id"
-    )
-    (
-        "ClientSecret,w",
-        po::value<std::string>( &(_vars["ClientSecret"]) )->default_value(""),
-        "Authorization provider Client Secret"
-    )
-    (
-        "TokenRefreshTimeSinceLastTransferInSeconds,w",
-        po::value<std::string>( &(_vars["TokenRefreshTimeSinceLastTransferInSeconds"]) )->default_value(""),
-        "Time interval since last sumbit for a user to have his token refreshed (i.e. a for a month inactive user should not have his token refreshed)"
-    )
-    (
-        "TokenRefreshDaemonIntervalInSeconds,w",
-        po::value<std::string>( &(_vars["TokenRefreshDaemonIntervalInSeconds"]) )->default_value(""),
-        "The interval that the token refresh daemon will run"
-    )
-    (
-        "MyOSG,m",
-        po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
-        "Set the MyOSG URL (or flase meaning MyOSG wont be used)"
-    )
-    (
         "Alias,a",
         po::value<std::string>( &(_vars["Alias"]) )->default_value(""),
         "Set the alias for FTS 3 endpoint"
-    )
-    (
-        "Optimizer,o",
-        po::value<std::string>( &(_vars["Optimizer"]) )->default_value("true"),
-        "Control auto-tuning activation"
-    )
-    (
-        "CleanRecordsHost,C",
-        po::value<std::string>( &(_vars["CleanRecordsHost"]) )->default_value("true"),
-        "Set to true when this host will be cleaning old records from the database"
-    )
-    (
-        "HttpKeepAlive,k",
-        po::value<std::string>( &(_vars["HttpKeepAlive"]) )->default_value("true"),
-        "Control HTTP Keep alive in gsoap"
     )
     (
         "ServerLogDirectory",
@@ -193,16 +126,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "MessagingDirectory",
         po::value<std::string>( &(_vars["MessagingDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MESSAGINGDIRECTORY_DEFAULT),
         "Directory where the internal FTS3 messages are written"
-    )
-    (
-        "AuthorizedVO,v",
-        po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
-        "List of authorized VOs"
-    )
-    (
-        "roles.*",
-        po::value<std::string>(),
-        "Authorization rights definition."
     )
     (
         "SiteName",
@@ -278,11 +201,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "LogTokenRequests",
         po::value<std::string>( &(_vars["LogTokenRequests"]) )->default_value("false"),
         "Log HTTP content of token requests"
-    )
-    (
-        "WithoutSoap",
-        po::value<std::string>( &(_vars["WithoutSoap"]) )->default_value("false"),
-        "Disable SOAP interface"
     )
     (
         "MonitoringConfigFile",
@@ -559,30 +477,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["AllowSessionReuse"]) )->default_value("true"),
         "Enable or disable session reuse transfers (default true)"
     )
-    (   "AutoSessionReuse",
-        po::value<std::string>( &(_vars["AutoSessionReuse"]) )->default_value("false"),
-        "Enable or disable auto session reuse"
-    )
-    (
-        "AutoSessionReuseMaxSmallFileSize",
-        po::value<int>()->default_value(104857600),
-        "Max small file size for session reuse in bytes"
-    )
-    (
-        "AutoSessionReuseMaxBigFileSize",
-        po::value<long long>()->default_value(1073741824),
-        "Max big file size for session reuse in bytes"
-    )
-    (
-        "AutoSessionReuseMaxFiles",
-        po::value<int>()->default_value(1000),
-        "Max number of files per session reuse"
-    )
-    (
-        "AutoSessionReuseMaxBigFiles",
-        po::value<int>()->default_value(2),
-        "Max number of big files  per session reuse"
-    )
     (
         "AllowJobPriority",
         po::value<std::string>( &(_vars["AllowJobPriority"]) )->default_value("true"),
@@ -602,11 +496,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "BackwardsCompatibleProxyNames",
         po::value<std::string>( &(_vars["BackwardsCompatibleProxyNames"]) )->default_value("true"),
         "Enable or disable backwards compatible naming when searching for proxy credentials stored on the local file system."
-    )
-    (
-        "ExperimentalTapeRESTAPI",
-        po::value<std::string>( &(_vars["ExperimentalTapeRESTAPI"]) )->default_value("false"),
-        "Enable or disable experimental features of the TAPE REST API"
     )
     (
         "ExperimentalPostgresSupport",
@@ -659,7 +548,6 @@ struct ReadCommandLineOptions_SystemTraits
     )
     {
         aReader.storeValuesAsStrings ();
-        aReader.storeRoles ();
     }
 };
 
@@ -687,7 +575,6 @@ struct ReadConfigFile_SystemTraits
     static void processVariables(ServerConfigReader& reader)
     {
         reader.storeValuesAsStrings();
-        reader.storeRoles ();
         reader.validateRequired("SiteName");
     }
 };
@@ -747,7 +634,6 @@ void ServerConfigReader::storeAsString<int>(const std::string& aName)
 
 void ServerConfigReader::storeValuesAsStrings ()
 {
-    storeAsString("Port");
     storeAsString("ThreadNum");
     storeAsString("OptimizerMaxSuccessRate");
     storeAsString("OptimizerMedSuccessRate");
@@ -757,18 +643,6 @@ void ServerConfigReader::storeValuesAsStrings ()
     storeAsString("OptimizerIncreaseStep");
     storeAsString("OptimizerAggressiveIncreaseStep");
     storeAsString("OptimizerDecreaseStep");
-}
-
-void ServerConfigReader::storeRoles ()
-{
-    po::variables_map::iterator it;
-    for (it = _vm.begin(); it != _vm.end(); it++)
-        {
-            if (it->first.find("roles.") == 0)
-                {
-                    _vars[it->first] = it->second.as<std::string>();
-                }
-        }
 }
 
 void ServerConfigReader::validateRequired(const std::string& key)
