@@ -493,11 +493,6 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Enable or disable behaviour to cancel all NOT_USED files in a failed multihop job"
     )
     (
-        "BackwardsCompatibleProxyNames",
-        po::value<std::string>( &(_vars["BackwardsCompatibleProxyNames"]) )->default_value("true"),
-        "Enable or disable backwards compatible naming when searching for proxy credentials stored on the local file system."
-    )
-    (
         "ExperimentalPostgresSupport",
         po::value<std::string>( &(_vars["ExperimentalPostgresSupport"]) )->default_value("false"),
         "Enable or disable experimental features of using PostgreSQL"

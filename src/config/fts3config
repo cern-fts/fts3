@@ -217,11 +217,6 @@ LogTokenRequests=false
 # Cancel all NOT_USED files in a failed multihop job (default false)
 #CancelUnusedMultihopFiles = False
 
-# Flag to enable backwards compatible names when searching for proxy credentials on the local filesystem (default true)
-# New naming convention: /tmp/x509up_h<hash>_<delegation_id>
-# Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
-#BackwardsCompatibleProxyNames = False
-
 ## Token Exchange settings
 # In seconds, how often to check for access tokens which don't have an associated refresh token
 TokenExchangeCheckInterval = 30
