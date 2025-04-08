@@ -42,12 +42,10 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
-#include "DeleteOperation.h"
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
 #include "ArchivingOperation.h"
-#include "QosTransitionOperation.h"
 #include "Token.h"
 #include "TokenProvider.h"
 #include "TransferFile.h"
@@ -308,18 +306,6 @@ public:
     /// Puts into the vector queues the Queues for which there are session-reuse pending transfers
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues) = 0;
 
-    /// Updates the status for delete operations
-    /// @param delOpsStatus  Update for files in delete or started
-    virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus) = 0;
-
-    /// Gets a list of delete operations in the queue
-    /// @params[out] delOps A list of namespace operations (deletion)
-    virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps) = 0;
-
-    /// Revert namespace operations already in 'STARTED' back to the 'DELETE'
-    /// state, so they re-enter the queue
-    virtual void requeueStartedDeletes() = 0;
-
     /// Updates the status for staging operations
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus) = 0;
@@ -347,20 +333,6 @@ public:
     /// Get archiving operations ready to be started
     /// @params[out] archivingOps The list of archiving operations will be put here
     virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps) = 0;
-
-    /// Get qosTransition operations ready to be started
-    /// @params[out] qosTransitionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string &qosOp,
-                                          bool matchHost = false) = 0;
-
-    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
-    /// @params[out] true if file state was updated, false otherwise
-    virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId) = 0;
-
-    /// Update File State to FINISHED after QoS Transition for file successfully completed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
-                                              const std::string& reason = "") = 0;
 
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here

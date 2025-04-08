@@ -28,17 +28,13 @@
 #include "QoSServer.h"
 #include "task/PollTask.h"
 #include "task/HttpPollTask.h"
-#include "task/CDMIPollTask.h"
 #include "task/ArchivingPollTask.h"
 #include "task/WaitingRoom.h"
 #include "fetch/FetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
 #include "fetch/FetchArchiving.h"
 #include "fetch/FetchCancelArchiving.h"
-#include "fetch/FetchDeletion.h"
-#include "fetch/CDMIFetchQosTransition.h"
 #include "state/StagingStateUpdater.h"
-#include "state/DeletionStateUpdater.h"
 
 using namespace fts3::common;
 using namespace fts3::config;
@@ -61,26 +57,21 @@ void QoSServer::start()
 {
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
-    std::string infosys = ServerConfig::instance().get<std::string>("Infosys");
     auto logLevel = Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel"));
     bool debugLogging = (logLevel <= Logger::LogLevel::DEBUG);
-    Gfal2Task::createPrototype(infosys, debugLogging);
+    Gfal2Task::createPrototype(debugLogging);
 
     FetchStaging fs(threadpool);
-    CDMIFetchQosTransition cdmifs(threadpool);
     FetchCancelStaging fcs(threadpool);
-    FetchDeletion fd(threadpool);
     FetchArchiving fa(threadpool);
     FetchCancelArchiving fca(threadpool);
 
     waitingRoom.attach(threadpool);
     httpWaitingRoom.attach(threadpool);
-    cdmiWaitingRoom.attach(threadpool);
     archivingWaitingRoom.attach(threadpool);
 
     systemThreads.create_thread(boost::bind(&WaitingRoom<PollTask>::run, &waitingRoom));
     systemThreads.create_thread(boost::bind(&WaitingRoom<HttpPollTask>::run, &httpWaitingRoom));
-    systemThreads.create_thread(boost::bind(&WaitingRoom<CDMIPollTask>::run, &cdmiWaitingRoom));
     systemThreads.create_thread(boost::bind(&WaitingRoom<ArchivingPollTask>::run, &archivingWaitingRoom));
 
     // HeartBeat
@@ -98,12 +89,7 @@ void QoSServer::start()
     // Archiving
     systemThreads.create_thread(boost::bind(&FetchArchiving::fetch, fa));
     systemThreads.create_thread(boost::bind(&FetchCancelArchiving::fetch, fca));
-    // CDMI
-    systemThreads.create_thread(boost::bind(&CDMIFetchQosTransition::fetch, cdmifs));
-    // Deletion
-    systemThreads.create_thread(boost::bind(&FetchDeletion::fetch, fd));
     // StateUpdaters
-    systemThreads.create_thread(boost::bind(&DeletionStateUpdater::run, &deletionStateUpdater));
     systemThreads.create_thread(boost::bind(&StagingStateUpdater::run, &stagingStateUpdater));
     systemThreads.create_thread(boost::bind(&ArchivingStateUpdater::run, &archivingStateUpdater));
 }
@@ -119,7 +105,6 @@ void QoSServer::wait()
 void QoSServer::stop()
 {
     stagingStateUpdater.recover();
-    deletionStateUpdater.recover();
     archivingStateUpdater.recover();
     threadpool.interrupt();
     systemThreads.interrupt_all();

@@ -44,11 +44,10 @@ namespace server
 
 
 FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
-    bool monitoringMsg, std::string infosys,
-    std::string FTSInstanceAlias, std::string proxy, std::string logDir, std::string msgDir) :
+    bool monitoringMsg, std::string FTSInstanceAlias,
+    std::string proxy, std::string logDir, std::string msgDir) :
     tf(tf),
     monitoringMsg(monitoringMsg),
-    infosys(infosys),
     FTSInstanceAlias(FTSInstanceAlias),
     proxy(proxy),
     logsDir(logDir),
@@ -184,11 +183,6 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Set proxy path if authentication method is not OAuth2
             if (!proxy.empty() && authMethod != "oauth2") {
                 cmdBuilder.setProxy(proxy);
-            }
-
-            // Info system
-            if (!infosys.empty()) {
-                cmdBuilder.setInfosystem(infosys);
             }
 
             // UDT and IPv6

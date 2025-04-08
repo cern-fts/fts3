@@ -1,6 +1,5 @@
 /var/log/fts3/msg.log
 /var/log/fts3/fts3server.log
-/var/log/fts3/fts3bringonline.log
 /var/log/fts3/fts3qos.log
 /var/log/fts3/fts3optimizer.log
 /var/log/fts3/fts3token.log {

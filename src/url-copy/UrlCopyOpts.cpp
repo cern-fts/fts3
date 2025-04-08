@@ -76,10 +76,9 @@ const option UrlCopyOpts::long_options[] =
     {"dst-token-unmanaged",    no_argument,       0, 523},
     {"token-refresh-margin",   required_argument, 0, 524},
 
-    {"infosystem",           required_argument, 0, 600},
-    {"alias",                required_argument, 0, 601},
-    {"monitoring",           no_argument,       0, 602},
-    {"ping-interval",        required_argument, 0, 603},
+    {"alias",                required_argument, 0, 600},
+    {"monitoring",           no_argument,       0, 601},
+    {"ping-interval",        required_argument, 0, 602},
 
     {"file-metadata",     required_argument, 0, 700},
     {"archive-metadata",  required_argument, 0, 701},
@@ -396,15 +395,12 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
 
                 case 600:
-                    infosys = optarg;
-                    break;
-                case 601:
                     alias = optarg;
                     break;
-                case 602:
+                case 601:
                     enableMonitoring = true;
                     break;
-                case 603:
+                case 602:
                     pingInterval = boost::lexical_cast<unsigned>(optarg);
                     break;
 

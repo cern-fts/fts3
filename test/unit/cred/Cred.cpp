@@ -69,15 +69,6 @@ BOOST_AUTO_TEST_CASE(ProxyName)
     std::stringstream proxyname;
     proxyname << "/tmp/x509up_h" << hash << "_" << credId;
     BOOST_CHECK_EQUAL(DelegCred::generateProxyName(dn, credId), proxyname.str());
-
-    std::string encodedDN = dn;
-    std::transform(dn.begin(), dn.end(), encodedDN.begin(),
-                   [](unsigned char c) -> unsigned char {
-                       return isalnum(c) ? static_cast<unsigned char>(tolower(c)) : 'X';
-                   });
-    std::stringstream proxyname_legacy;
-    proxyname_legacy << "/tmp/x509up_h" << hash << encodedDN;
-    BOOST_CHECK_EQUAL(DelegCred::generateProxyName(dn, credId, true), proxyname_legacy.str());
 }
 
 BOOST_AUTO_TEST_CASE(InvalidProxy)

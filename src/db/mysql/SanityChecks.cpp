@@ -255,48 +255,6 @@ void MySqlAPI::fixJobTerminalFileNonTerminal(soci::session &sql)
     sql.commit();
 }
 
-/// Search for DELETE tasks that are still running, but belong to a job marked as terminal
-void MySqlAPI::fixDeleteInconsistencies(soci::session &sql)
-{
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check delete jobs" << commit;
-
-    const std::string qry = sql.get_backend_name() == "mysql" ?
-            "SELECT j.job_id "
-            "FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
-            "WHERE"
-            "    j.job_finished >= (UTC_TIMESTAMP() - INTERVAL '24' HOUR) AND"
-            "    f.file_state IN ('STARTED','DELETE')"
-        :
-            "SELECT j.job_id "
-            "FROM t_job j INNER JOIN t_dm f ON (j.job_id = f.job_id) "
-            "WHERE"
-            "    j.job_finished >= (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(HOURS => 24)) AND"
-            "    f.file_state IN ('STARTED','DELETE')";
-
-    soci::rowset<std::string> rs = (sql.prepare << qry);
-
-    const std::string utc_timestamp = sql.get_backend_name() == "mysql" ? "UTC_TIMESTAMP()" : "NOW() AT TIME ZONE 'UTC'";
-    sql.begin();
-    for (auto i = rs.begin(); i != rs.end(); ++i) {
-        std::string jobId = (*i);
-        sql <<
-            "UPDATE t_dm "
-            "SET"
-            "    file_state = 'FAILED',"
-            "    job_finished = " << utc_timestamp << ","
-            "    finish_time = " << utc_timestamp << ","
-            "    reason = 'Force failure due to file state inconsistency' "
-            "WHERE"
-            "    file_state in ('DELETE','STARTED') AND"
-            "    job_id = :jobId",
-            soci::use(jobId);
-
-        logInconsistency(jobId,
-            "The job is in terminal state, but there are still deletion tasks in non terminal state");
-    }
-    sql.commit();
-}
-
 
 /// Search for hosts that haven't updated their status for more than two hours.
 /// For those matches, mark assigned transfers as CANCELED
@@ -467,7 +425,6 @@ void MySqlAPI::checkSanityState()
     try {
         fixJobNonTerminallAllFilesTerminal(sql);
         fixJobTerminalFileNonTerminal(sql);
-        fixDeleteInconsistencies(sql);
         recoverFromDeadHosts(sql);
         recoverStalledStaging(sql);
         recoverStalledArchiving(sql);

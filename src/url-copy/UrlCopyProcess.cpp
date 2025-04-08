@@ -38,17 +38,10 @@ static void setupGlobalGfal2Config(const UrlCopyOpts &opts, Gfal2 &gfal2)
 {
     gfal2.set("GRIDFTP PLUGIN", "SESSION_REUSE", true);
     gfal2.set("GRIDFTP PLUGIN", "ENABLE_UDT", opts.enableUdt);
+    gfal2.set("BDII", "ENABLED", false);
 
     if (!indeterminate(opts.enableIpv6)) {
         gfal2.set("GRIDFTP PLUGIN", "IPV6", static_cast<bool>(opts.enableIpv6));
-    }
-
-    if (opts.infosys.compare("false") == 0) {
-        gfal2.set("BDII", "ENABLED",false);
-    }
-    else {
-        gfal2.set("BDII", "ENABLED",true);
-        gfal2.set("BDII", "LCG_GFAL_INFOSYS", opts.infosys);
     }
 
     if (!opts.thirdPartyTURL.empty()) {
@@ -642,7 +635,6 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job metadata: " << opts.jobMetadata << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Bringonline token: " << transfer.tokenBringOnline << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "UDT: " << opts.enableUdt << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BDII:" << opts.infosys << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Report on the destination tape file: " << opts.dstFileReport << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;

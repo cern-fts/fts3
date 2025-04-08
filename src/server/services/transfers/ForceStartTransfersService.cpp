@@ -40,7 +40,6 @@ ForceStartTransfersService::ForceStartTransfersService(const std::shared_ptr<Hea
     msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = ServerConfig::instance().get<int>("InternalThreadPool");
     ftsHostName = ServerConfig::instance().get<std::string>("Alias");
-    infosys = ServerConfig::instance().get<std::string>("Infosys");
 
     monitoringMessages = ServerConfig::instance().get<bool>("MonitoringMessaging");
     pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransfersCheckInterval");
@@ -86,7 +85,7 @@ void ForceStartTransfersService::forceRunJobs() {
                 proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
             }
 
-            FileTransferExecutor *exec = new FileTransferExecutor(tf, monitoringMessages, infosys, ftsHostName,
+            FileTransferExecutor *exec = new FileTransferExecutor(tf, monitoringMessages, ftsHostName,
                                                                   proxies[proxy_key], logDir, msgDir);
             execPool.start(exec);
 

@@ -18,25 +18,20 @@
  * limitations under the License.
  */
 
-#include "TempFile.h"
-#include "DelegCred.h"
-
-#include "CredUtility.h"
-#include "db/generic/SingleDbInstance.h"
-
-#include <globus_gsi_credential.h>
-
-#include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
+#include <fstream>
 #include <errno.h>
 #include <boost/lexical_cast.hpp>
-#include <fstream>
+#include <globus_gsi_credential.h>
 
+#include "TempFile.h"
+#include "DelegCred.h"
+#include "CredUtility.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
+#include "db/generic/SingleDbInstance.h"
 
 using namespace db;
 using namespace fts3::common;
@@ -48,32 +43,8 @@ const char * const TMP_DIRECTORY = "/tmp/";
 const char * const PROXY_NAME_PREFIX = "x509up_h";
 }
 
-/*
- * encodeName
- *
- * Encode a string (not URL encoded since the hash is always prefixed)
- */
-static std::string encodeDN(const std::string& dn)
-{
-    std::string encoded;
-    encoded.reserve(dn.length());
 
-    // for each character
-    std::string::const_iterator s_it;
-    for (s_it = dn.begin(); s_it != dn.end(); ++s_it) {
-        if (isalnum((*s_it))) {
-            encoded.push_back(static_cast<char>(tolower((*s_it))));
-        }
-        else {
-            encoded.push_back('X');
-        }
-    }
-    return encoded;
-}
-
-
-std::string DelegCred::getProxyFile(const std::string& userDn,
-        const std::string& id)
+std::string DelegCred::getProxyFile(const std::string& userDn, const std::string& id)
 {
     try {
         // Check Preconditions
@@ -85,24 +56,17 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
             throw SystemError("Invalid credential id specified");
         }
 
-        std::list<std::string> proxy_filenames;
-        proxy_filenames.push_back(generateProxyName(userDn, id));
+        std::string proxy_filename = generateProxyName(userDn, id);
 
-        if (fts3::config::ServerConfig::instance().get<bool>("BackwardsCompatibleProxyNames")) {
-            proxy_filenames.push_back(generateProxyName(userDn, id, true));
+        // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
+        if (proxy_filename.length() > (FILENAME_MAX - 7)) {
+            throw SystemError("Invalid credential file name generated");
         }
 
-        for (auto it = proxy_filenames.begin(); it != proxy_filenames.end(); it++) {
-            // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
-            if ((*it).length() > (FILENAME_MAX - 7)) {
-                throw SystemError("Invalid credential file name generated");
-            }
-
-            // Check if the Proxy Certificate is already there and is valid
-            std::string tmpMessage;
-            if (isValidProxy(*it, tmpMessage)) {
-                return *it;
-            }
+        // Check if the Proxy Certificate is already there and is valid
+        std::string tmpMessage;
+        if (isValidProxy(proxy_filename, tmpMessage)) {
+            return proxy_filename;
         }
 
         // Check if the database contains a valid proxy for this dlg id and DN
@@ -120,16 +84,12 @@ std::string DelegCred::getProxyFile(const std::string& userDn,
         getNewCertificate(userDn, id, tmp_proxy.name());
 
         // Rename the Temporary File
-        tmp_proxy.rename(proxy_filenames.front());
+        tmp_proxy.rename(proxy_filename);
 
-        return proxy_filenames.front();
-    }
-    catch(const std::exception& exc)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user: " << exc.what() << commit;
-    }
-    catch(...)
-    {
+        return proxy_filename;
+    } catch(const std::exception& ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user: " << ex.what() << commit;
+    } catch(...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user" << commit;
     }
 
@@ -244,7 +204,7 @@ void DelegCred::getNewCertificate(const std::string &userDn,
 }
 
 
-std::string DelegCred::generateProxyName(const std::string& userDn, const std::string& id, bool legacy)
+std::string DelegCred::generateProxyName(const std::string& userDn, const std::string& id)
 {
     // Hash the <DN><cred_id>
     size_t h = std::hash<std::string>()(userDn + id);
@@ -252,13 +212,7 @@ std::string DelegCred::generateProxyName(const std::string& userDn, const std::s
     ss << h;
 
     std::string hash_str = ss.str();
-    std::string encoded;
-
-    if (legacy) {
-        encoded = encodeDN(userDn);
-    } else {
-        encoded += "_" + id;
-    }
+    std::string encoded = "_" + id;
 
     // Compute filename maximum length (ignore errors)
     long sys_max_length = pathconf(TMP_DIRECTORY, _PC_NAME_MAX);
@@ -293,4 +247,3 @@ unsigned long DelegCred::minValidityTime()
 {
     return 5400;
 }
-

@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-/** \file serverconfig.h Define FTS3 server configuration. */
+/** \file ServerConfigReader.h Define FTS3 server configuration. */
 
 #pragma once
 
@@ -33,7 +33,7 @@ namespace config {
 
 namespace po = boost::program_options;
 
-/** \brief Class reading the server server configuration, from the command line
+/** \brief Class reading the server configuration, from the command line
  * and from the config file. */
 class ServerConfigReader
 {
@@ -55,11 +55,6 @@ public:
     /** Convert all the non-string parameters to strings, and store
      * them accordingly. */
     void storeValuesAsStrings();
-
-    /**
-     * Map the roles to the VOMS attributes
-     */
-    void storeRoles();
 
     void validateRequired(const std::string& key);
 
@@ -179,4 +174,3 @@ protected:
 
 } // end namespace config
 } // end namespace fts3
-

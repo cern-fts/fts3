@@ -21,12 +21,6 @@ DbThreadsNum=26
 # Note: will be published in the FTS Transfers Dashboard
 Alias=replacethis
 
-# Infosys: <fqdn:port> of a BDII instance or false to disable BDII access
-Infosys=lcg-bdii.cern.ch:2170
-
-# Query the info systems according to the given order (e.g.: glue1;glue2)
-InfoProviders=glue1
-
 # Site name running the FTS3 service (will be published to GLUE2)
 SiteName=replacethis
 
@@ -222,11 +216,6 @@ LogTokenRequests=false
 # Behavior for failed multihop jobs
 # Cancel all NOT_USED files in a failed multihop job (default false)
 #CancelUnusedMultihopFiles = False
-
-# Flag to enable backwards compatible names when searching for proxy credentials on the local filesystem (default true)
-# New naming convention: /tmp/x509up_h<hash>_<delegation_id>
-# Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
-#BackwardsCompatibleProxyNames = False
 
 ## Token Exchange settings
 # In seconds, how often to check for access tokens which don't have an associated refresh token

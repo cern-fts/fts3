@@ -24,14 +24,12 @@
 #include "common/Singleton.h"
 #include "common/ThreadPool.h"
 
-#include "state/DeletionStateUpdater.h"
 #include "state/StagingStateUpdater.h"
 #include "state/ArchivingStateUpdater.h"
 #include "task/Gfal2Task.h"
 #include "task/WaitingRoom.h"
 
 class PollTask;
-class CDMIPollTask;
 class ArchivingPollTask;
 class HttpPollTask;
 
@@ -44,10 +42,6 @@ public:
     void start();
     void stop();
     void wait();
-
-    DeletionStateUpdater& getDeletionStateUpdater() {
-    	return deletionStateUpdater;
-    }
 
     StagingStateUpdater& getStagingStateUpdater() {
         return stagingStateUpdater;
@@ -65,10 +59,6 @@ public:
         return httpWaitingRoom;
     }
 
-    WaitingRoom<CDMIPollTask>& getCDMIWaitingRoom() {
-        return cdmiWaitingRoom;
-    }
-
     WaitingRoom<ArchivingPollTask>& getArchivingWaitingRoom() {
         return archivingWaitingRoom;
     }
@@ -78,10 +68,8 @@ private:
     fts3::common::ThreadPool<Gfal2Task> threadpool;
     WaitingRoom<PollTask> waitingRoom;
     WaitingRoom<HttpPollTask> httpWaitingRoom;
-    WaitingRoom<CDMIPollTask> cdmiWaitingRoom;
     WaitingRoom<ArchivingPollTask> archivingWaitingRoom;
 
-    DeletionStateUpdater deletionStateUpdater;
     StagingStateUpdater stagingStateUpdater;
     ArchivingStateUpdater archivingStateUpdater;
 };
