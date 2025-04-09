@@ -113,6 +113,7 @@ class WRRS:
         )  # Ignore empty queues
         self._next_idx = 0
         self._queues = [q for q in queues if q.queued > 0]  # Ignore empty queues
+        self._last_value_returned_by_next_queue_id = None
 
     def next_queue_id(self):
         """
@@ -120,6 +121,7 @@ class WRRS:
         """
         # Return None if nothing queued or maximum activity reached
         if not self._queues or self._total_active >= self._max_active:
+            self._last_value_returned_by_next_queue_id = None
             return None
 
         queue = self._queues[self._next_idx]
@@ -169,7 +171,16 @@ class WRRS:
             # Move to the next queue because this is an interleaved WRR
             self._next_idx = (self._next_idx + 1) % len(self._queues)
 
+        self._last_value_returned_by_next_queue_id = queue.q_id
         return queue.q_id
+
+    def get_last_value_returned_by_next_queue_id(self):
+        """
+        Returns the value returned by the last call to WRRS.next_queue_id() or None if the method
+        has not been called yet.
+        """
+
+        return self._last_value_returned_by_next_queue_id
 
     def __repr__(self):
         return (
