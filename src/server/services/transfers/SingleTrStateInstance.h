@@ -25,7 +25,7 @@
 #include <boost/thread/tss.hpp>
 
 #include "msg-bus/events.h"
-#include "monitoring/msg-ifce.h"
+#include "activemq/msg-ifce.h"
 #include "db/generic/TransferState.h"
 
 

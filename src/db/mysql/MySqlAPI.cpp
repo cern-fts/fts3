@@ -32,7 +32,7 @@
 
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "monitoring/msg-ifce.h"
+#include "activemq/msg-ifce.h"
 
 using namespace fts3::common;
 using namespace db;
