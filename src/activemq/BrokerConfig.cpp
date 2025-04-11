@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include "BrokerConfig.h"
 #include <fstream>
+#include "BrokerConfig.h"
 #include "config/ServerConfig.h"
+#include "common/Logger.h"
 
 namespace po = boost::program_options;
 
@@ -123,7 +124,18 @@ BrokerConfig::BrokerConfig(const std::string &path)
     )
     ;
 
-    std::ifstream in(path.c_str());
+    std::ifstream in;
+    in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try {
+        in.open(path);
+    } catch (const std::system_error& ex) {
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "Could not open " + path);
+        throw;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "PROCESS_ERROR Unknown exception");
+    }
+    in.exceptions(std::ifstream::goodbit);
+
     po::store(po::parse_config_file(in, opt_desc, true), vm);
 }
 
@@ -134,7 +146,6 @@ std::string BrokerConfig::GetLogFilePath() const
     auto file = vm["LOGFILENAME"].as<std::string>();
     return dir + file;
 }
-
 
 std::string BrokerConfig::GetBrokerURI() const
 {
