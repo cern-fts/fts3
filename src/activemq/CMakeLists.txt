@@ -54,7 +54,7 @@ set_target_properties(fts_msg_ifce PROPERTIES
 set(fts_msg_bulk_SOURCES
     msg-bulk-send.cpp
     MessageLoader.cpp
-    MsgProducer.cpp
+    BrokerConnection.cpp
     BrokerConfig.cpp
 )
 
