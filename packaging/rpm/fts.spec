@@ -321,7 +321,7 @@ fi
 
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-activemq.service
 
-%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-activemq.conf
 %{_mandir}/man8/fts_activemq.8.gz
 
 %if "%{fts4_scheduler_build}" == "ON"

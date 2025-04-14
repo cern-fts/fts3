@@ -140,17 +140,27 @@ BrokerConfig::BrokerConfig(const std::string &path)
     )
     ;
 
-    std::ifstream in;
-    in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try {
-        in.open(path);
-    } catch (...) {
+    std::ifstream monitoringConfigFile{path};
+    if (!monitoringConfigFile.is_open()) {
         FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: " + path);
-        throw;
+        const std::string fallback = "/etc/fts3/fts-msg-monitoring.conf";
+        try {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Try to fallback with " + fallback + " configuration file");
+            monitoringConfigFile.open(fallback);
+        } catch (...) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: " + fallback);
+            throw;
+        }
     }
-    in.exceptions(std::ifstream::goodbit);
 
-    po::store(po::parse_config_file(in, opt_desc, true), vm);
+    if (!monitoringConfigFile.is_open()) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open the configuration file.");
+        exit(EXIT_FAILURE);
+    }
+
+    po::store(po::parse_config_file(monitoringConfigFile, opt_desc, true), vm);
+
+    monitoringConfigFile.close();
 }
 
 
