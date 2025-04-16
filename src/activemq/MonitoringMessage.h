@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,26 +18,25 @@
  * limitations under the License.
  */
 
+
+#ifndef MONITORING_MESSAGE_H
+#define MONITORING_MESSAGE_H
+
 #pragma once
-#ifndef MSGPIPE_H
-#define MSGPIPE_H
 
-#include <decaf/lang/Runnable.h>
-#include "msg-bus/consumer.h"
-#include "msg-bus/producer.h"
+#include <string>
 
+struct MonitoringMessage {
+    std::string message;
+    std::string dirq_iter;
 
-class MsgPipe : public decaf::lang::Runnable
-{
-private:
-    Consumer consumer;
-    Producer producer;
+    MonitoringMessage() : message(), dirq_iter()
+    {
+    }
 
-public:
-    MsgPipe(const std::string &baseDir);
-    virtual ~MsgPipe();
-    virtual void run();
-    void cleanup();
+    MonitoringMessage(std::string&& message, std::string&& dirq_iter) : message(std::move(message)), dirq_iter(std::move(dirq_iter))
+    {
+    }
 };
 
-#endif // MSGPIPE_H
+#endif

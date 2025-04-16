@@ -24,7 +24,7 @@ Alias=replacethis
 # Site name running the FTS3 service (will be published to GLUE2)
 SiteName=replacethis
 
-# Enable or disable monitoring messages (see fts-msg-monitoring.conf)
+# Enable or disable monitoring messages (see fts-activemq.conf)
 MonitoringMessaging=true
 
 # Directory where the internal FTS3 messages are written

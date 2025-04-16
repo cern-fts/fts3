@@ -237,14 +237,14 @@ exit 0
 
 %preun msg
 if [ $1 -eq 0 ] ; then
-  /bin/systemctl stop fts-msg-bulk.service > /dev/null 2>&1 || :
-  /bin/systemctl --no-reload disable fts-msg-bulk.service > /dev/null 2>&1 || :
+  /bin/systemctl stop fts-activemq.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-activemq.service > /dev/null 2>&1 || :
 fi
 exit 0
 
 %postun msg
 if [ "$1" -ge "1" ] ; then
-  /bin/systemctl try-restart fts-msg-bulk.service > /dev/null 2>&1 || :
+  /bin/systemctl try-restart fts-activemq.service > /dev/null 2>&1 || :
 fi
 exit 0
 
@@ -317,12 +317,12 @@ fi
 %{_mandir}/man8/fts_url_copy.8.gz
 
 %files msg
-%{_sbindir}/fts_msg_bulk
+%{_sbindir}/fts_activemq
 
-%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-msg-bulk.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-activemq.service
 
-%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
-%{_mandir}/man8/fts_msg_bulk.8.gz
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-activemq.conf
+%{_mandir}/man8/fts_activemq.8.gz
 
 %if "%{fts4_scheduler_build}" == "ON"
 %files scheduler

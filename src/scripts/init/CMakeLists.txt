@@ -20,7 +20,7 @@
 
 if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-server.service
-                  fts-msg-bulk.service
+                  fts-activemq.service
                   fts-records-cleaner.service
                   fts-qos.service
                   fts-optimizer.service

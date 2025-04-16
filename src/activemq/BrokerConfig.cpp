@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2016
+ * Copyright (c) CERN 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-#include "BrokerConfig.h"
 #include <fstream>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include "BrokerConfig.h"
 #include "config/ServerConfig.h"
+#include "common/Logger.h"
 
 namespace po = boost::program_options;
-
 
 BrokerConfig::BrokerConfig(const std::string &path)
 {
@@ -27,9 +29,24 @@ BrokerConfig::BrokerConfig(const std::string &path)
 
     opt_desc.add_options()
     (
-        "BROKER",
+        "BROKER_DNS_ALIAS",
         po::value<std::string>()->default_value(""),
         "Broker"
+    )
+    (
+        "STOMP_PORT",
+        po::value<std::string>()->default_value("61613"),
+        "Broker port number for STOMP"
+    )
+    (
+        "SSL_PORT",
+        po::value<std::string>()->default_value("61616"),
+        "Broker port number for STOMP over SSL"
+    )
+    (
+        "BROKER_CHECK_INTERVAL",
+        po::value<unsigned int>()->default_value(60U),
+        "Interval in minutes between two check of the broker connections"
     )
     (
         "START",
@@ -123,8 +140,27 @@ BrokerConfig::BrokerConfig(const std::string &path)
     )
     ;
 
-    std::ifstream in(path.c_str());
-    po::store(po::parse_config_file(in, opt_desc, true), vm);
+    std::ifstream monitoringConfigFile{path};
+    if (!monitoringConfigFile.is_open()) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: " + path);
+        const std::string fallback = "/etc/fts3/fts-msg-monitoring.conf";
+        try {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Try to fallback with " + fallback + " configuration file");
+            monitoringConfigFile.open(fallback);
+        } catch (...) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: " + fallback);
+            throw;
+        }
+    }
+
+    if (!monitoringConfigFile.is_open()) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open the configuration file.");
+        exit(EXIT_FAILURE);
+    }
+
+    po::store(po::parse_config_file(monitoringConfigFile, opt_desc, true), vm);
+
+    monitoringConfigFile.close();
 }
 
 
@@ -135,18 +171,21 @@ std::string BrokerConfig::GetLogFilePath() const
     return dir + file;
 }
 
-
 std::string BrokerConfig::GetBrokerURI() const
 {
-    auto broker = vm["BROKER"].as<std::string>();
-    std::string proto = "tcp";
-    if (UseSSL()) {
-        proto = "ssl";
-    }
+    auto broker = GetBroker();
+    return GetConnectionString(broker);
+}
+
+std::string BrokerConfig::GetConnectionString(const std::string &broker) const
+{
+    const std::string protocol = UseSSL() ? "ssl" : "tcp";
+    const std::string protocol_port = UseSSL() ? GetBrokerStompSslPort() : GetBrokerStompPort();
 
     std::ostringstream str;
-    str << proto << "://" << broker << "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
-
+    str << protocol << "://" << broker << ":" << protocol_port<< "?wireFormat=stomp";
+    str << "&wireFormat.maxInactivityDuration=2000";
+    str << "&maxInactivityDurationInitalDelay=2000";
     if (fts3::config::ServerConfig::instance().get<std::string>("LogLevel") == "DEBUG") {
         str << "&transport.commandTracingEnabled=true";
     }
@@ -154,6 +193,73 @@ std::string BrokerConfig::GetBrokerURI() const
     return str.str();
 }
 
+std::vector<std::string> BrokerConfig::resolve_dns_alias(const std::string &hostname) const
+{
+    char ipaddr[INET_ADDRSTRLEN];
+    struct addrinfo* addresses = NULL;
+    const struct addrinfo hints = {
+        .ai_flags = AI_CANONNAME,
+        .ai_family = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM,
+        .ai_protocol = 0, .ai_addrlen = 0, .ai_addr = 0, .ai_canonname = 0, .ai_next = 0,
+    };
+    std::vector<std::string> hostnames;
+
+    int rc = getaddrinfo(hostname.c_str(), NULL, &hints, &addresses);
+    if (rc || !addresses) {
+        if (addresses) {
+            freeaddrinfo(addresses);
+        }
+        return hostnames;
+    }
+
+    for (struct addrinfo *addrP = addresses; addrP != NULL; addrP = addrP->ai_next) {
+        char resolved_hostname[NI_MAXHOST];
+        inet_ntop(addrP->ai_family, addrP->ai_addr->sa_data, ipaddr, sizeof(ipaddr));
+        void *ptr = NULL;
+        switch (addrP->ai_family) {
+            case AF_INET:
+                ptr = &((struct sockaddr_in *) addrP->ai_addr)->sin_addr;
+                if (ptr) {
+                    inet_ntop(addrP->ai_family, ptr, ipaddr, sizeof(ipaddr));
+                }
+                break;
+            case AF_INET6:
+                ptr = &((struct sockaddr_in6 *) addrP->ai_addr)->sin6_addr;
+                if (ptr) {
+                    inet_ntop(addrP->ai_family, ptr, ipaddr, sizeof(ipaddr));
+                }
+                break;
+        }
+
+        // Reverse DNS. Try to translate the address to a hostname. If successful save hostname for logging
+        if (!getnameinfo(addrP->ai_addr, addrP->ai_addrlen, resolved_hostname, sizeof(resolved_hostname), NULL, 0, NI_NAMEREQD)) {
+            hostnames.push_back(resolved_hostname);
+        }
+    }
+    freeaddrinfo(addresses);
+    return hostnames;
+}
+
+std::string BrokerConfig::GetBroker() const
+{
+    return vm["BROKER_DNS_ALIAS"].as<std::string>();
+}
+
+std::string BrokerConfig::GetBrokerStompPort() const
+{
+    return vm["STOMP_PORT"].as<std::string>();
+}
+
+std::string BrokerConfig::GetBrokerStompSslPort() const
+{
+    return vm["SSL_PORT"].as<std::string>();
+}
+
+unsigned int BrokerConfig::GetBrokerCheckInterval() const
+{
+    return vm["BROKER_CHECK_INTERVAL"].as<unsigned int>();
+}
 
 bool BrokerConfig::UseBrokerCredentials() const
 {

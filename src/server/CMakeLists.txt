@@ -74,7 +74,7 @@ set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
 install(FILES
 		"${MAN_INPUT_DIR}/fts_server.8"
 		"${MAN_INPUT_DIR}/fts_db_cleaner.8"
-		"${MAN_INPUT_DIR}/fts_msg_bulk.8"
+		"${MAN_INPUT_DIR}/fts_activemq.8"
 		"${MAN_INPUT_DIR}/fts_url_copy.8"
 		"${MAN_INPUT_DIR}/fts_qos.8"
 		"${MAN_INPUT_DIR}/fts_optimizer.8"

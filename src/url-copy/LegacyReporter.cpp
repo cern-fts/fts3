@@ -19,7 +19,7 @@
 #include "LegacyReporter.h"
 #include "common/Logger.h"
 #include "common/TimeUtils.h"
-#include "monitoring/msg-ifce.h"
+#include "activemq/msg-ifce.h"
 #include "heuristics.h"
 
 namespace events = fts3::events;

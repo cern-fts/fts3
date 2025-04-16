@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,6 +19,7 @@
  */
 
 #include <cstdlib>
+#include <csignal>
 #include <activemq/library/ActiveMQCPP.h>
 #include <common/PidTools.h>
 
@@ -27,17 +28,37 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
+#include "msg-bus/consumer.h"
 
 #include "BrokerConfig.h"
-#include "MsgPipe.h"
-#include "MsgProducer.h"
+#include "BrokerPublisher.h"
+#include "MessageLoader.h"
+#include "msg-bus/DirQ.h"
 
 using namespace fts3::common;
 using namespace fts3::config;
 
+std::stop_source stop_source{};
+
+void signal_handler(int signum)
+{
+    std::cout << "fts_activemq: signal " << signum << " received. Requesting stop..." << std::endl;
+    if (stop_source.stop_requested()) {
+        std::cout << "fts_activemq: was force killed" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    stop_source.request_stop();
+}
 
 static void DoServer(bool isDaemon) throw()
 {
+    try {
+        activemq::library::ActiveMQCPP::initializeLibrary();
+    } catch (const std::runtime_error &err) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "fts_activemq: error while loading the ActiveMQCPP library!");
+        return;
+    }
+
     try {
         BrokerConfig config(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
 
@@ -50,45 +71,49 @@ static void DoServer(bool isDaemon) throw()
         }
 
         theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+        std::signal(SIGINT, signal_handler);
+        std::signal(SIGTERM, signal_handler);
 
-        activemq::library::ActiveMQCPP::initializeLibrary();
+        //Initialize here to avoid race conditions
+        ConcurrentQueue<std::unique_ptr<std::vector<MonitoringMessage>>>::getInstance().set_stop_token(stop_source.get_token());
 
-        //initialize here to avoid race conditions
-        ConcurrentQueue::getInstance();
+        auto msg_directory = ServerConfig::instance().get<std::string>("MessagingDirectory");
+        MessageLoader messageLoader(msg_directory, stop_source.get_token());
+        MessageRemover messageRemover(msg_directory);
+        BrokerPublisher brokerPublisher(config, messageRemover, stop_source.get_token());
+        std::jthread messageLoaderThread(&MessageLoader::start, &messageLoader);
+        std::jthread messageRemoverThread([&messageRemover](std::stop_token s) {messageRemover.start(s);} );
+        std::jthread brokerPublisherThread(&BrokerPublisher::start, &brokerPublisher);
 
-        MsgPipe pipeMsg1(ServerConfig::instance().get<std::string>("MessagingDirectory"));
-        MsgProducer producer(ServerConfig::instance().get<std::string>("MessagingDirectory"), config);
+        FTS3_COMMON_LOGGER_LOG(INFO, "Started MessageLoaderThread, MessageRemoverThread, BrokerPublisherThread!");
+        if (messageLoaderThread.joinable()) {
+            messageLoaderThread.join();
+        }
 
-        // Start the pipe thread.
-        decaf::lang::Thread pipeThread(&pipeMsg1);
-        pipeThread.start();
+        if (brokerPublisherThread.joinable()) {
+            brokerPublisherThread.join();
+        }
 
-        // Start the producer thread.
-        decaf::lang::Thread producerThread(&producer);
-        producerThread.start();
-
-        FTS3_COMMON_LOGGER_LOG(INFO, "Threads started");
-
-        // Wait for the threads to complete.
-        pipeThread.join();
-        producerThread.join();
-
-        pipeMsg1.cleanup();
-        producer.cleanup();
-
-        activemq::library::ActiveMQCPP::shutdownLibrary();
-    }
-    catch (cms::CMSException& e) {
+        // Once the brokerPublisherThread exit, this guarantees that no more messages will be moved to the MessageRemoverThread for deletion.
+        // Then, we let the MessageRemover thread collect and remove all remaining messages, this is necessary to avoid sending duplicate
+        // messages on the next fts_activemq daemon start.
+        if (messageRemoverThread.joinable()) {
+            FTS3_COMMON_LOGGER_LOG(INFO, "Waitig on messageRemoverThread to exit!");
+            messageRemoverThread.request_stop();
+            messageRemoverThread.join();
+        }
+        FTS3_COMMON_LOGGER_LOG(INFO, "All threads finished, exiting...");
+    } catch (cms::CMSException& e) {
         std::string errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
         FTS3_COMMON_LOGGER_LOG(ERR, errorMessage);
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::string  errorMessage = "PROCESS_ERROR " + std::string(e.what());
         FTS3_COMMON_LOGGER_LOG(ERR, errorMessage);
-    }
-    catch (...) {
+    } catch (...) {
         FTS3_COMMON_LOGGER_LOG(ERR, "PROCESS_ERROR Unknown exception");
     }
+
+    activemq::library::ActiveMQCPP::shutdownLibrary();
 }
 
 
@@ -111,35 +136,34 @@ static void spawnServer(int argc, char **argv)
         }
     }
 
-    createPidFile(pidDir, "fts-msg-bulk.pid");
+    createPidFile(pidDir, "fts-activemq.pid");
 
-    DoServer(argc <= 1);
+    DoServer(isDaemon);
 }
 
 
 int main(int argc, char **argv)
 {
+    pthread_setname_np(pthread_self(), "fts_activemq");
     // Do not even try if already running
-    int n_running = countProcessesWithName("fts_msg_bulk");
+    int n_running = countProcessesWithName("fts_activemq");
     if (n_running < 0) {
         std::cerr << "Could not check if FTS3 is already running" << std::endl;
         return EXIT_FAILURE;
-    }
-    else if (n_running > 1) {
+    } else if (n_running > 1) {
         std::cerr << "Only 1 instance of FTS3 messaging daemon can run at a time" << std::endl;
         return EXIT_FAILURE;
     }
 
     try {
         spawnServer(argc, argv);
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception& ex) {
         std::cerr << "Failed to spawn the messaging server! " << ex.what() << std::endl;
         return EXIT_FAILURE;
-    }
-    catch (...) {
+    } catch (...) {
         std::cerr << "Failed to spawn the messaging server! Unknown exception" << std::endl;
         return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }

@@ -19,7 +19,7 @@
 #include <string>
 
 #include <db/generic/Pair.h>
-#include <monitoring/msg-ifce.h>
+#include <activemq/msg-ifce.h>
 
 // Virtual class used by the optimizer to notify decisions
 class OptimizerCallbacks {

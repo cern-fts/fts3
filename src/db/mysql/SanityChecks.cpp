@@ -22,7 +22,7 @@
 #include "common/Exceptions.h"
 #include "common/Logger.h"
 #include "db/generic/DbUtils.h"
-#include "monitoring/msg-ifce.h"
+#include "activemq/msg-ifce.h"
 #include "sociConversions.h"
 
 
