@@ -118,7 +118,7 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
 
 static void validateSchemaVersion(const std::string& dbtype, soci::connection_pool *connectionPool)
 {
-    static const unsigned expect_mysql[] = {9, 1};
+    static const unsigned expect_mysql[] = {10, 0};
     static const unsigned expect_posgresql[] = {0, 1};
     static const unsigned (&expect)[2] = dbtype == "mysql" ? expect_mysql : expect_posgresql;
     unsigned major, minor;
