@@ -98,6 +98,8 @@ docker_latest:
   needs:
     - job: alma9
   rules:
+    - if: '$CI_PROJECT_NAMESPACE != "fts"'
+      when: never
     - if: $CI_COMMIT_REF_NAME == "develop"
 
 docker_tag:
