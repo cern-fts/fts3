@@ -114,9 +114,9 @@ well as, common definitions and interfaces
 
 %package activemq
 Summary:    File Transfer Service version 3 messaging integration
-Requires:   fts-server%{?_isa} = %{version}-%{release}
-Provides:   %{name}-msg = %{version}-%{release}
-Obsoletes:  %{name}-msg < %{version}
+Requires:   fts-libs%{?_isa} = %{version}-%{release}
+Provides:   %{name}-msg%{?_isa} = %{version}-%{release}
+Obsoletes:  %{name}-msg <= %{version}
 
 %description activemq
 FTS ActiveMQ broker publisher daemon
