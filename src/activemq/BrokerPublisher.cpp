@@ -28,37 +28,34 @@
 #include "BrokerConnection.h"
 #include "common/Logger.h"
 #include "common/ConcurrentQueue.h"
-#include "msg-bus/consumer.h"
 
 using namespace fts3::common;
 
 BrokerPublisher::BrokerPublisher(const BrokerConfig& config, MessageRemover& msgRemover, std::stop_token token) :
                                  stop_token(token), brokerConfig(config), msgRemover(msgRemover), connected(false)
 {
-    if (brokerConfig.UseMsgBroker()) {
-        // Set properties for SSL, if enabled
-        if (brokerConfig.UseSSL()) {
-            const std::string clientKeystore = brokerConfig.GetClientKeyStore();
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Using clientKeystore " << clientKeystore << commit;
-            decaf::lang::System::setProperty("decaf.net.ssl.keyStore", clientKeystore);
-            if (!brokerConfig.GetClientKeyStorePassword().empty()) {
-                const std::string keyStorePassword = brokerConfig.GetClientKeyStorePassword();
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Using keyStorePassword " << keyStorePassword << commit;
-                decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", keyStorePassword);
-            }
-
-            const std::string trustStore = brokerConfig.GetRootCA();
-            decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Using trustStore " << trustStore << commit;
-            if (brokerConfig.SslVerify()) {
-                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
-            } else {
-                FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
-                decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
-            }
-        } else {
-            FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
+    // Set properties for SSL, if enabled
+    if (brokerConfig.UseSSL()) {
+        const std::string clientKeystore = brokerConfig.GetClientKeyStore();
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Using clientKeystore " << clientKeystore << commit;
+        decaf::lang::System::setProperty("decaf.net.ssl.keyStore", clientKeystore);
+        if (!brokerConfig.GetClientKeyStorePassword().empty()) {
+            const std::string keyStorePassword = brokerConfig.GetClientKeyStorePassword();
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Using keyStorePassword " << keyStorePassword << commit;
+            decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", keyStorePassword);
         }
+
+        const std::string trustStore = brokerConfig.GetRootCA();
+        decaf::lang::System::setProperty("decaf.net.ssl.trustStore", brokerConfig.GetRootCA());
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Using trustStore " << trustStore << commit;
+        if (brokerConfig.SslVerify()) {
+            decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
+        } else {
+            FTS3_COMMON_LOGGER_LOG(INFO, "Disable peer verification");
+            decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
+        }
+    } else {
+        FTS3_COMMON_LOGGER_LOG(INFO, "Not using SSL");
     }
 }
 
@@ -137,7 +134,7 @@ bool BrokerPublisher::refresh_sessions()
         bool fresh_connections = false;
         for (auto broker = hostnames.begin(); broker != hostnames.end(); ++broker) {
             if (stop_token.stop_requested()) {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Broker stop requested!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "MessageRemoverThread: stop requested!" << commit;
                 break;
             }
 
@@ -153,10 +150,10 @@ bool BrokerPublisher::refresh_sessions()
                 fresh_connections = true;
                 continue;
             } catch (const cms::InvalidDestinationException &ex) {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "MessageProducer: Unable to connect to '" << *broker
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection: Unable to connect to '" << *broker
                                                  << "' (InvalidDestinationException: " << ex.what() << ")." << commit;
             } catch (const cms::CMSException &ex) {
-                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "MessageProducer: Unable to connect to '" << *broker
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection: Unable to connect to '" << *broker
                                                  << "' (CMSException: " << ex.what() << ")." << commit;
             }
 

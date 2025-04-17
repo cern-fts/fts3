@@ -25,7 +25,21 @@ private:
     boost::program_options::variables_map vm;
 
 public:
-    BrokerConfig(const std::string &path);
+    BrokerConfig(std::string path);
+
+    /// Get the User
+    std::string GetUser() const;
+
+    /// Get the Group
+    std::string GetGroup() const;
+
+    std::string GetPidDirectory() const;
+
+    std::string GetLogLevel() const;
+
+    std::string GetMessageDirectory() const;
+
+    std::string GetFTSEndpoint() const;
 
     /// Get the log full path
     std::string GetLogFilePath() const;
@@ -88,9 +102,6 @@ public:
 
     /// If true, enable SSL for the producer
     bool UseSSL() const;
-
-    /// If true, use the messaging broker
-    bool UseMsgBroker() const;
 
     /// If true, verify broker certificate
     bool SslVerify() const;
