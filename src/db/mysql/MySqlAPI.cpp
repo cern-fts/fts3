@@ -3912,8 +3912,8 @@ std::list<Token> MySqlAPI::getAccessTokensWithoutRefresh(int limit)
             "WHERE"
             "    refresh_token IS NULL AND "
             "    unmanaged = 0 AND "
-            "    (retry_timestamp IS NULL OR retry_timestamp < " << utc_timestamp << ") AND "
-            "    attempts < 5 "
+            "    (exchange_retry_timestamp IS NULL OR exchange_retry_timestamp < " << utc_timestamp << ") AND "
+            "    exchange_attempts < 5 "
             << order_by_null <<
             "LIMIT " << limit);
 
@@ -3995,7 +3995,11 @@ void MySqlAPI::markFailedTokenExchange(const std::set< std::pair<std::string, st
             auto tokenId = it.first;
             auto exchangeError = it.second;
 
-            sql << " SELECT retry_timestamp, retry_delay_m, attempts FROM t_token "
+            sql << " SELECT "
+                   "     exchange_retry_timestamp, "
+                   "     exchange_retry_delay_m,"
+                   "     exchange_attempts "
+                   " FROM t_token "
                    " WHERE token_id = :tokenId",
                    soci::use(tokenId),
                    soci::into(retryTimestamp, nullRetryTimestamp),
@@ -4016,8 +4020,10 @@ void MySqlAPI::markFailedTokenExchange(const std::set< std::pair<std::string, st
 
             sql.begin();
             sql << " UPDATE t_token SET "
-                   "     retry_timestamp = :retryTimestamp, retry_delay_m = :retryDelay, "
-                   "     attempts = :attempts, exchange_message = :exchangeError"
+                   "     exchange_retry_timestamp = :retryTimestamp, "
+                   "     exchange_retry_delay_m = :retryDelay, "
+                   "     exchange_attempts = :attempts, "
+                   "     exchange_message = :exchangeError "
                    " WHERE token_id = :tokenId",
                    soci::use(retryTimestamp), soci::use(retryDelay),
                    soci::use(attempts), soci::use(exchangeError),
