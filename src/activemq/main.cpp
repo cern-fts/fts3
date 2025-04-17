@@ -27,16 +27,12 @@
 #include "common/DaemonTools.h"
 #include "common/Exceptions.h"
 #include "common/Logger.h"
-#include "config/ServerConfig.h"
-#include "msg-bus/consumer.h"
 
 #include "BrokerConfig.h"
 #include "BrokerPublisher.h"
 #include "MessageLoader.h"
-#include "msg-bus/DirQ.h"
 
 using namespace fts3::common;
-using namespace fts3::config;
 
 std::stop_source stop_source{};
 
@@ -50,7 +46,7 @@ void signal_handler(int signum)
     stop_source.request_stop();
 }
 
-static void DoServer(bool isDaemon) throw()
+static void DoServer(BrokerConfig &config, bool isDaemon) throw()
 {
     try {
         activemq::library::ActiveMQCPP::initializeLibrary();
@@ -60,8 +56,6 @@ static void DoServer(bool isDaemon) throw()
     }
 
     try {
-        BrokerConfig config(ServerConfig::instance().get<std::string>("MonitoringConfigFile"));
-
         std::string logFile = config.GetLogFilePath();
         if (isDaemon) {
             if (theLogger().redirect(logFile, logFile) != 0) {
@@ -70,14 +64,14 @@ static void DoServer(bool isDaemon) throw()
             }
         }
 
-        theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
+        theLogger().setLogLevel(Logger::getLogLevel(config.GetLogLevel()));
         std::signal(SIGINT, signal_handler);
         std::signal(SIGTERM, signal_handler);
 
         //Initialize here to avoid race conditions
         ConcurrentQueue<std::unique_ptr<std::vector<MonitoringMessage>>>::getInstance().set_stop_token(stop_source.get_token());
 
-        auto msg_directory = ServerConfig::instance().get<std::string>("MessagingDirectory");
+        auto msg_directory = config.GetMessageDirectory();
         MessageLoader messageLoader(msg_directory, stop_source.get_token());
         MessageRemover messageRemover(msg_directory);
         BrokerPublisher brokerPublisher(config, messageRemover, stop_source.get_token());
@@ -117,18 +111,16 @@ static void DoServer(bool isDaemon) throw()
 }
 
 
-static void spawnServer(int argc, char **argv)
+static void spawnServer(BrokerConfig &config, bool isDaemon)
 {
-    ServerConfig::instance().read(argc, argv);
-    std::string user = ServerConfig::instance().get<std::string>("User");
-    std::string group = ServerConfig::instance().get<std::string>("Group");
-    std::string pidDir = ServerConfig::instance().get<std::string>("PidDirectory");
+    std::string user = config.GetUser();
+    std::string group = config.GetGroup();
+    std::string pidDir = config.GetPidDirectory();
 
     if (dropPrivileges(user, group)) {
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Changed running user and group to " << user << ":" << group << commit;
     }
 
-    bool isDaemon = !ServerConfig::instance().get<bool> ("no-daemon");
     if (isDaemon) {
         int d = daemon(0, 0);
         if (d < 0) {
@@ -138,9 +130,8 @@ static void spawnServer(int argc, char **argv)
 
     createPidFile(pidDir, "fts-activemq.pid");
 
-    DoServer(isDaemon);
+    DoServer(config, isDaemon);
 }
-
 
 int main(int argc, char **argv)
 {
@@ -148,20 +139,48 @@ int main(int argc, char **argv)
     // Do not even try if already running
     int n_running = countProcessesWithName("fts_activemq");
     if (n_running < 0) {
-        std::cerr << "Could not check if FTS3 is already running" << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not check if fts_activemq is already running, exception occurred!" << commit;
         return EXIT_FAILURE;
     } else if (n_running > 1) {
-        std::cerr << "Only 1 instance of FTS3 messaging daemon can run at a time" << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Only 1 instance of fts_activmq daemon can run at a time" << commit;
         return EXIT_FAILURE;
     }
 
+    std::string configFile{};
+    bool isDaemon = true;
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (!arg.compare("--configfile") || !arg.compare("-f")) {
+            if (i + 1 < argc) {
+                configFile = std::string{argv[i + 1]};
+                ++i;
+            } else {
+                std::cout << argv[0] << ": --configfile PATH is missing!" << std::endl;
+                return EXIT_FAILURE;
+            }
+        } else if (arg.starts_with("--configfile=") || arg.starts_with("-f=")) {
+            const size_t value_pos = arg.find("=") + 1;
+            configFile = arg.substr(value_pos);
+        } else if (!arg.compare("--no-daemon") || !arg.compare("-n")) {
+            isDaemon = false;
+        } else if (!arg.compare("--help") || !arg.compare("-h")) {
+            std::cout << "fts_activemq [args]" << std::endl;
+            std::cout << "Arguments:" << std::endl;
+            std::cout << "   -f, --configfile CONFIGPATH  fts_activemq configuration path (default=/etc/fts3/fts-activemq.conf)" << std::endl;
+            std::cout << "   -n, --no-daemon              Do not run fts_activemq as a daemon (run in foreground)" << std::endl;
+            std::cout << "   -h, --help                   Show this help" << std::endl;
+            return EXIT_SUCCESS;
+        }
+    }
+
     try {
-        spawnServer(argc, argv);
+        BrokerConfig config(configFile);
+        spawnServer(config, isDaemon);
     } catch (const std::exception& ex) {
-        std::cerr << "Failed to spawn the messaging server! " << ex.what() << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Failed to spawn the messaging server! " << commit;
         return EXIT_FAILURE;
     } catch (...) {
-        std::cerr << "Failed to spawn the messaging server! Unknown exception" << std::endl;
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Failed to spawn the messaging server! Unknown exception" << commit;
         return EXIT_FAILURE;
     }
 

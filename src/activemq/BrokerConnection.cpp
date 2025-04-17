@@ -25,10 +25,7 @@
 #include "BrokerConnection.h"
 #include "common/Logger.h"
 #include "common/Uri.h"
-#include "common/ConcurrentQueue.h"
-#include "config/ServerConfig.h"
 
-using namespace fts3::config;
 using namespace fts3::common;
 
 // Originally, this was a End-Of-Transmission character (0x04)
@@ -43,7 +40,7 @@ static const char EOT = ' ';
 
 
 BrokerConnection::BrokerConnection(const std::string &brokerName, const BrokerConfig &config, const std::string &connectionString)
-        : brokerName(brokerName), brokerConfig(config), FTSEndpoint(fts3::config::ServerConfig::instance().get<std::string>("Alias")),
+        : brokerName(brokerName), brokerConfig(config), FTSEndpoint(brokerConfig.GetFTSEndpoint()),
           FQDN(getFullHostname()), connectionFactory(std::make_unique<activemq::core::ActiveMQConnectionFactory>(connectionString,
           brokerConfig.GetUserName(), brokerConfig.GetPassword())), connection(connectionFactory->createConnection()),
           session(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE))

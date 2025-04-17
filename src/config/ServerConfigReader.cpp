@@ -642,6 +642,6 @@ void ServerConfigReader::storeValuesAsStrings ()
 
 void ServerConfigReader::validateRequired(const std::string& key)
 {
-    if (!_vm.count("SiteName"))
+    if (!_vm.count(key))
         throw UserError("The required configuration option: '" + key + "' has not been found!");
 }

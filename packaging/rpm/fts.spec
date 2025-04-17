@@ -112,12 +112,14 @@ server. This includes among others: configuration
 parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
-%package msg
+%package activemq
 Summary:    File Transfer Service version 3 messaging integration
 Requires:   fts-server%{?_isa} = %{version}-%{release}
+Provides:   %{name}-msg = %{version}-%{release}
+Obsoletes:  %{name}-msg < %{version}
 
-%description msg
-FTS messaging integration
+%description activemq
+FTS ActiveMQ broker publisher daemon
 
 %package server-selinux
 Summary:    SELinux support for fts-server
@@ -230,19 +232,19 @@ if [ "$1" -ge "1" ] ; then
 fi
 exit 0
 
-# Messaging scriptlets
-%post msg
+# ActiveMQ scriptlets
+%post activemq
 /bin/systemctl daemon-reload > /dev/null 2>&1 || :
 exit 0
 
-%preun msg
+%preun activemq
 if [ $1 -eq 0 ] ; then
   /bin/systemctl stop fts-activemq.service > /dev/null 2>&1 || :
   /bin/systemctl --no-reload disable fts-activemq.service > /dev/null 2>&1 || :
 fi
 exit 0
 
-%postun msg
+%postun activemq
 if [ "$1" -ge "1" ] ; then
   /bin/systemctl try-restart fts-activemq.service > /dev/null 2>&1 || :
 fi
@@ -316,7 +318,7 @@ fi
 %{_mandir}/man8/fts_server.8.gz
 %{_mandir}/man8/fts_url_copy.8.gz
 
-%files msg
+%files activemq
 %{_sbindir}/fts_activemq
 
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-activemq.service

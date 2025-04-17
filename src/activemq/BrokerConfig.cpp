@@ -18,20 +18,49 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "BrokerConfig.h"
-#include "config/ServerConfig.h"
 #include "common/Logger.h"
 
 namespace po = boost::program_options;
 
-BrokerConfig::BrokerConfig(const std::string &path)
+BrokerConfig::BrokerConfig(std::string path)
 {
     po::options_description opt_desc("Configuration");
 
     opt_desc.add_options()
     (
+        "PidDirectory",
+        po::value<std::string>()->default_value("/var/lib/fts3"),
+        "Where to put the PID files"
+    )
+    (
+        "User",
+        po::value<std::string>()->default_value("fts3"),
+        "Use this user to run the service"
+    )
+    (
+        "Group",
+        po::value<std::string>()->default_value("fts3"),
+        "Use this group to run the service"
+    )
+    (
+        "Alias",
+        po::value<std::string>()->default_value(""),
+        "Set the alias for FTS3 endpoint"
+    )
+    (
+        "LogLevel",
+        po::value<std::string>()->default_value("INFO"),
+        "Logging level"
+    )
+    (
+        "MessageDirectory",
+        po::value<std::string>()->default_value("/var/lib/fts3/"),
+        "Directory where the internal FTS3 messages are written"
+    )
+    (
         "BROKER_DNS_ALIAS",
         po::value<std::string>()->default_value(""),
-        "Broker"
+        "Broker DNS alias"
     )
     (
         "STOMP_PORT",
@@ -67,11 +96,6 @@ BrokerConfig::BrokerConfig(const std::string &path)
         "TOPIC",
         po::value<bool>()->default_value(true),
         "Use topics instead of queues"
-    )
-    (
-        "ACTIVE",
-        po::value<bool>()->default_value(true),
-        "Monitoring active"
     )
     (
         "LOGFILEDIR",
@@ -140,16 +164,34 @@ BrokerConfig::BrokerConfig(const std::string &path)
     )
     ;
 
+    if (!path.empty()) {
+        FTS3_COMMON_LOGGER_LOG(DEBUG, "Using: \"" + path + "\" as the configuration file.");
+        std::ifstream monitoringConfigFile{path};
+        if (!monitoringConfigFile.is_open()) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: \"" + path + "\".");
+            exit(EXIT_FAILURE);
+        }
+
+        po::store(po::parse_config_file(monitoringConfigFile, opt_desc, true), vm);
+        monitoringConfigFile.close();
+        if (GetFTSEndpoint().empty()) {
+            FTS3_COMMON_LOGGER_LOG(CRIT, "The 'Alias' option has to be defined in the \"" + path + "\" configuration file.");
+            exit(EXIT_FAILURE);
+        }
+        return;
+    }
+
+    path = "/etc/fts3/fts-activemq.conf";
     std::ifstream monitoringConfigFile{path};
     if (!monitoringConfigFile.is_open()) {
-        FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: " + path);
-        const std::string fallback = "/etc/fts3/fts-msg-monitoring.conf";
+        FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: \"" + path + "\".");
+        path = "/etc/fts3/fts-msg-monitoring.conf";
         try {
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Try to fallback with " + fallback + " configuration file");
-            monitoringConfigFile.open(fallback);
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Try to fallback with \"" + path + "\" configuration file");
+            monitoringConfigFile.open(path);
         } catch (...) {
-            FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: " + fallback);
-            throw;
+            FTS3_COMMON_LOGGER_LOG(CRIT, "Unable to open FTS monitoring configuration file: \"" + path + "\".");
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -158,11 +200,45 @@ BrokerConfig::BrokerConfig(const std::string &path)
         exit(EXIT_FAILURE);
     }
 
+    FTS3_COMMON_LOGGER_LOG(DEBUG, "Using: \"" + path + "\" as the configuration file.");
     po::store(po::parse_config_file(monitoringConfigFile, opt_desc, true), vm);
-
     monitoringConfigFile.close();
+
+    if (GetFTSEndpoint().empty()) {
+        FTS3_COMMON_LOGGER_LOG(CRIT, "The 'Alias' option has to be defined in the \"" + path + "\" configuration file.");
+        exit(EXIT_FAILURE);
+    }
 }
 
+std::string BrokerConfig::GetUser() const
+{
+    return vm["User"].as<std::string>();
+}
+
+std::string BrokerConfig::GetGroup() const
+{
+    return vm["Group"].as<std::string>();
+}
+
+std::string BrokerConfig::GetPidDirectory() const
+{
+    return vm["PidDirectory"].as<std::string>();
+}
+
+std::string BrokerConfig::GetLogLevel() const
+{
+    return vm["LogLevel"].as<std::string>();
+}
+
+std::string BrokerConfig::GetMessageDirectory() const
+{
+    return vm["MessageDirectory"].as<std::string>();
+}
+
+std::string BrokerConfig::GetFTSEndpoint() const
+{
+    return vm["Alias"].as<std::string>();
+}
 
 std::string BrokerConfig::GetLogFilePath() const
 {
@@ -186,7 +262,7 @@ std::string BrokerConfig::GetConnectionString(const std::string &broker) const
     str << protocol << "://" << broker << ":" << protocol_port<< "?wireFormat=stomp";
     str << "&wireFormat.maxInactivityDuration=2000";
     str << "&maxInactivityDurationInitalDelay=2000";
-    if (fts3::config::ServerConfig::instance().get<std::string>("LogLevel") == "DEBUG") {
+    if (GetLogLevel() == "DEBUG") {
         str << "&transport.commandTracingEnabled=true";
     }
 
@@ -282,12 +358,6 @@ std::string BrokerConfig::GetPassword() const
 bool BrokerConfig::PublishFQDN() const
 {
     return vm["PUBLISH_FQDN"].as<bool>();
-}
-
-
-bool BrokerConfig::UseMsgBroker() const
-{
-    return vm["ACTIVE"].as<bool>();
 }
 
 

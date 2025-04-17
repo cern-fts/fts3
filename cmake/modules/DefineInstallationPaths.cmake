@@ -69,7 +69,7 @@ if (UNIX)
   )
 
   SET(SYSTEMD_INSTALL_DIR
-    "%{CMAKE_INSTALL_PREFIX}/usr/lib/systemd/system"
+    "${CMAKE_INSTALL_PREFIX}/usr/lib/systemd/system"
     CACHE PATH "The directory where systemd unit files are installed (default prefix/usr/lib/systemd/system)"
   )
 
