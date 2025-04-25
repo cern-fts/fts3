@@ -104,8 +104,6 @@ int MessageLoader::loadMonitoringMessages()
 
 void MessageLoader::start()
 {
-    pthread_setname_np(pthread_self(), "fts-msg-loader");
-
     std::condition_variable_any cv;
     std::mutex mtx;
     std::unique_lock lock(mtx);

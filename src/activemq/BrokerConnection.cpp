@@ -122,7 +122,7 @@ void MonitoringMessageCallback::onSuccess()
 void MonitoringMessageCallback::onException(const cms::CMSException& ex)
 {
     state = failed;
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Message delivery failed: " << ex.what() << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Message delivery failed: " << ex.what() << commit;
 }
 
 bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
@@ -182,9 +182,8 @@ bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
         auto jobId = msg.get("job_id", "").asString();
 
         if (!jobId.empty() && msg.isMember("file_id")) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "State change: "
-                << state << " " << jobId << "/" << msg.get("file_id", 0).asUInt64()
-                << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "State change: " << state << " " << jobId << "/"
+                                            << msg.get("file_id", 0).asUInt64() << commit;
         }
     } else if (type == "OP") {
         producer_optimizer->send(message.get(), &cb);
@@ -192,8 +191,7 @@ bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
         auto destSe = msg.get("dest_se", "").asString();
 
         if (!sourceSe.empty() && !destSe.empty()) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer update: "
-                << sourceSe << " => " << destSe << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer update: " << sourceSe << " => " << destSe << commit;
         }
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Dropping unknown message type: " << type << commit;

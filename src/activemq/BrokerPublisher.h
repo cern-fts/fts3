@@ -76,7 +76,6 @@ class MessageRemover {
 
         void start(std::stop_token stoken)
         {
-            pthread_setname_np(pthread_self(), "fts-msg-remover");
             stop_token = stoken;
 
             for (;;) {

@@ -176,7 +176,7 @@ bool BrokerPublisher::refresh_sessions()
                                              << " resolved via " << broker_alias << " alias." << commit;
         }
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerPublisher: Active brokers connections: " << MsgProducers << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BrokerPublisher: Active brokers connections: " << MsgProducers << commit;
         return true;
     } catch (const cms::CMSException &ex) {
         FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
@@ -243,7 +243,6 @@ void BrokerPublisher::dispatch_messages()
                 msg = messages.erase(msg);
                 break;
             case MonitoringMessageCallback::MessageState::failed:
-                FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Unable to deliver" << commit;
                 if (!stop_token.stop_requested()) {
                     monitoring_msg->state = MonitoringMessageCallback::MessageState::ready;
                     if (MsgProducers.empty()) {
@@ -264,8 +263,6 @@ void BrokerPublisher::dispatch_messages()
 
 void BrokerPublisher::start()
 {
-    pthread_setname_np(pthread_self(), "fts-msg-loader");
-
     auto start_time = std::chrono::steady_clock::now();
     try {
         messages_to_remove = std::make_unique<std::list<std::unique_ptr<MonitoringMessageCallback>>>();

@@ -75,9 +75,15 @@ static void DoServer(BrokerConfig &config, bool isDaemon) throw()
         MessageLoader messageLoader(msg_directory, stop_source.get_token());
         MessageRemover messageRemover(msg_directory);
         BrokerPublisher brokerPublisher(config, messageRemover, stop_source.get_token());
+
         std::jthread messageLoaderThread(&MessageLoader::start, &messageLoader);
+        pthread_setname_np(messageLoaderThread.native_handle(), "fts-msg-loader");
+
         std::jthread messageRemoverThread([&messageRemover](std::stop_token s) {messageRemover.start(s);} );
+        pthread_setname_np(messageRemoverThread.native_handle(), "fts-msg-remover");
+
         std::jthread brokerPublisherThread(&BrokerPublisher::start, &brokerPublisher);
+        pthread_setname_np(brokerPublisherThread.native_handle(), "fts-msg-send");
 
         FTS3_COMMON_LOGGER_LOG(INFO, "Started MessageLoaderThread, MessageRemoverThread, BrokerPublisherThread!");
         if (messageLoaderThread.joinable()) {
@@ -135,7 +141,6 @@ static void spawnServer(BrokerConfig &config, bool isDaemon)
 
 int main(int argc, char **argv)
 {
-    pthread_setname_np(pthread_self(), "fts_activemq");
     // Do not even try if already running
     int n_running = countProcessesWithName("fts_activemq");
     if (n_running < 0) {
