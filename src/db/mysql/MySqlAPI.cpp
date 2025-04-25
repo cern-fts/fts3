@@ -820,7 +820,7 @@ void MySqlAPI::getReadyTransfers(const std::vector<QueueId>& queues,
                         "    f.dest_se = :dest_se AND"
                         "    f.vo_name = :vo_name AND"
                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                        "    j.job_type IN ('N', 'R') AND ";
+                        "    j.job_type IN ('N', 'R', 'H') AND ";
                     select +=
                         it_act->first == "default" ?
                         "     (f.activity = :activity OR f.activity IS NULL OR f.activity IN " + def_act + ") AND "
