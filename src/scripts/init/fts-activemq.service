@@ -1,6 +1,8 @@
 [Unit]
 Description=FTS ActiveMQ Publisher Daemon
 Documentation=man:fts_activemq
+Requires=network-online.target
+After=network-online.target
 
 [Service]
 Type=forking
