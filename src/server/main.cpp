@@ -194,9 +194,8 @@ static void runEnvironmentChecks()
 
 
 /// Prepare, fork and run FTS3
-static void spawnServer(int argc, char** argv)
+static void spawnServer()
 {
-    ServerConfig::instance().read(argc, argv);
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
     std::string pidDir = ServerConfig::instance().get<std::string>("PidDirectory");
@@ -229,19 +228,22 @@ static void spawnServer(int argc, char** argv)
 /// Entry point
 int main(int argc, char** argv)
 {
-    int n_running = countProcessesWithName("fts_server");
-    if (n_running < 0) {
-        std::cerr << "Could not check if FTS3 is already running" << std::endl;
-        return EXIT_FAILURE;
-    }
-    else if (n_running > 1) {
-        std::cerr << "Only one instance of FTS3 can run at the time"
-                << std::endl;
-        return EXIT_FAILURE;
-    }
-
+    
     try {
-        spawnServer(argc, argv);
+        ServerConfig::instance().read(argc, argv);
+
+        int n_running = countProcessesWithName("fts_server");
+        if (n_running < 0) {
+            std::cerr << "Could not check if FTS3 is already running" << std::endl;
+            return EXIT_FAILURE;
+        }
+        else if (n_running > 1) {
+            std::cerr << "Only one instance of FTS3 can run at the time"
+                    << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        spawnServer();
     }
     catch (const std::exception& ex) {
         std::cerr << "Failed to spawn the server! " << ex.what() << std::endl;

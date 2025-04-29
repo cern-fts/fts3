@@ -523,10 +523,10 @@ po::options_description ServerConfigReader::_defineHiddenOptions()
 /** Read command line option - the real thing. */
 struct ReadCommandLineOptions_SystemTraits
 {
-    /*static void exit(const int aVal)
+    static void exit(const int aVal)
     {
         ::exit(aVal);
-    }*/
+    }
 
     /* ---------------------------------------------------------------------- */
 

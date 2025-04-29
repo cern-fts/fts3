@@ -90,15 +90,13 @@ protected:
         if (_vm.count("help"))
             {
                 DEPENDENCIES::stream() << desc << "\n";
-                return;
-                //DEPENDENCIES::exit(1);
+                DEPENDENCIES::exit(1);
             }
 
         if (_vm.count("version"))
             {
                 DEPENDENCIES::stream() << VERSION << "\n";
-                return;
-                //DEPENDENCIES::exit(1);
+                DEPENDENCIES::exit(1);
             }
 
         bool isNoDaemon = _vm.count ("no-daemon");
