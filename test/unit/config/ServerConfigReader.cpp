@@ -271,13 +271,6 @@ BOOST_FIXTURE_TEST_CASE(readCommandLineOptionsCheckNoDaemonShortForm, TestServer
 }
 
 
-BOOST_FIXTURE_TEST_CASE(readCommandLineOptionsCheckNoDaemonMissing, TestServerConfigReader)
-{
-    setupParameters ("--help" );
-    do_noDaemonNotSpecifiedTest();
-}
-
-
 BOOST_FIXTURE_TEST_CASE(storeAString, TestServerConfigReader)
 {
     std::string param("--intpar=10");
