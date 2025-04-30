@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2024
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,39 +19,79 @@
  */
 
 #pragma once
-#ifndef HEARTBEAT_H_
-#define HEARTBEAT_H_
 
+#include <chrono>
 #include <ctime>
-#include "../BaseService.h"
+#include <shared_mutex>
 
+#include "common/Singleton.h"
+#include "server/common/BaseService.h"
 
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-extern time_t updateRecords;
-extern time_t stallRecords;
-extern time_t tokenExchangeRecords;
 
 class HeartBeat: public BaseService
 {
 public:
-    HeartBeat();
+    HeartBeat(std::string processName);
+    virtual ~HeartBeat() = default;
+
     virtual void runService();
 
-    bool isLeadNode(bool bypassDraining = false);
+    /**
+     * Returns whether this node is the first alphabetical node
+     * running the service in "t_hosts" (not in draining)
+     *
+     * @param bypassDraining When true, consider between all nodes,
+     *                       including those in draining
+     */
+    bool isLeadNode(bool bypassDraining = false) const;
+
+    /**
+     * Register services which should be watched to not become inactive.
+     * On registration, a grace time and a graceful abort function are provided.
+     *
+     * If a service is inactive for more than the grace time, the graceful
+     * abort function is called and the entire process is abruptly stopped.
+     */
+    void registerWatchedService(const std::shared_ptr<BaseService>& service, int graceTime,
+                                const std::function<void()>& gracefulAbortFun)
+    {
+        std::scoped_lock lock(mxWatchedServices);
+        watchedServices.emplace(service, WatchData(graceTime, gracefulAbortFun));
+    }
 
 private:
-    unsigned index, count, start, end;
+    struct WatchData {
+        explicit WatchData(const int graceTime,
+                          const std::function<void()>& fun_gracefulAbort):
+        graceTime(graceTime),
+        fun_gracefulAbort(fun_gracefulAbort)
+        {
+            last = std::chrono::steady_clock::now();
+        }
 
-    bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords,
-            time_t stallRecords);
+        int graceTime;
+        const std::function<void()> fun_gracefulAbort;
+        std::chrono::time_point<std::chrono::steady_clock> last;
+    };
 
-    void orderedShutdown();
+    /**
+     * Check all watched services if they became inactive.
+     * If an inactive service is found, (gracefully) abort the whole process.
+     */
+    void criticalServiceExpired();
+
+    unsigned index; ///< Current node's order in the alphabetical sorting
+    unsigned count; ///< Total number of nodes running the same service
+    unsigned start; ///< Start hash range for this index
+    unsigned end;   ///< End hash range for this index
+
+    std::string processName;
+    std::shared_mutex mxWatchedServices;
+    std::map<std::shared_ptr<BaseService>, WatchData> watchedServices;
 };
 
 } // end namespace server
 } // end namespace fts3
-
-#endif // HEARTBEAT_H_

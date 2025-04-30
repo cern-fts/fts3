@@ -109,13 +109,14 @@ private:
      * Gets the interval after next polling should be done
      *
      * @param nPolls : number of polls already done
+     * @param stagingPollInterval : Configurable interval for tape stage polling
      */
-    static time_t getPollInterval(int nPolls)
+    static time_t getPollInterval(int nPolls, int stagingPollInterval)
     {
-        if (nPolls > 9)
-            return 600;
+        if (nPolls > 1)
+            return stagingPollInterval;  // Subsequent polls follow the configured interval
         else
-            return (2 << nPolls);
+            return 300;     // First retry after 5 minutes
     }
 
     /// the token that will be used for polling

@@ -20,15 +20,16 @@
 
 find_package(MySQL REQUIRED)
 
-include_directories (${MYSQL_INCLUDE_DIR})
+include_directories (${MYSQL_INCLUDE_DIRS})
 include_directories (/usr/include/soci)
 
 set(fts_db_mysql_SOURCES
         MySqlAPI.cpp
         Config.cpp
         Credentials.cpp
-        OptimizerDataSource.cpp
+        Optimizer.cpp
         SanityChecks.cpp
+        sociConversions.cpp
         MultihopSanityCheck.cpp
 )
 add_library(fts_db_mysql SHARED ${fts_db_mysql_SOURCES})

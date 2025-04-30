@@ -32,22 +32,24 @@ SupervisorService::SupervisorService(): BaseService("SupervisorService"),
 {
     std::string messagingDirectory = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     std::string address = std::string("ipc://") + messagingDirectory + "/url_copy-ping.ipc";
-    zmqPingSocket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-
+    zmqPingSocket.set(zmq::sockopt::subscribe, "");
     zmqPingSocket.bind(address.c_str());
 }
 
 
 void SupervisorService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "SupervisorService interval: 1s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
         std::vector<fts3::events::MessageUpdater> events;
         zmq::message_t message;
 
         try {
+            updateLastRunTimepoint();
             boost::this_thread::sleep(boost::posix_time::seconds(1));
 
-            while (zmqPingSocket.recv(&message, ZMQ_NOBLOCK)) {
+            while (zmqPingSocket.recv(message, zmq::recv_flags::dontwait)) {
                 fts3::events::MessageUpdater event;
 
                 // Must cast value in order to silence conversion warning
@@ -82,13 +84,13 @@ void SupervisorService::runService()
                 db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(events);
                 events.clear();
             }
-        }
-        catch (const boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in SupervisorService!" << commit;
             break;
-        }
-        catch (const std::exception &error) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << error.what() << commit;
+        } catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in SupervisorService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in SupervisorService!" << commit;
         }
     }
 }

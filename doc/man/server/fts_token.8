@@ -1,0 +1,18 @@
+.\" Manpage for fts_token.
+.\" Contact fts-devel@cern.ch for any corrections.
+.TH man 8 "18 Sep 2024" "1.0" "token man page"
+.SH NAME
+fts_token
+.SH SYNOPSIS
+Starts the FTS Token daemon, core component of the FTS server responsible for token lifecycle management.
+The FTS token daemon contains the following services:
+.RS
+.IP \fBTokenExchangeService\fP
+\- This service performs the token-exchange workflow, exchanging a valid access token for a refresh token with the Token Provider.
+This service runs only on the lead node of an FTS deployment.
+.IP \fBTokenRefreshService\fP
+\- This service performs the refresh workflow, using the refresh token to obtain a new access token from the Token Provider.
+This service runs on every node within an FTS deployment.
+.RE
+.SH SEE ALSO
+https://fts.web.cern.ch/

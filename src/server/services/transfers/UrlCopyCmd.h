@@ -53,12 +53,11 @@ public:
 
     UrlCopyCmd();
 
-    std::string generateParameters(void);
+    std::string generateParameters();
 
     void setLogDir(const std::string&);
     void setMonitoring(bool, const std::string&);
     void setPingInterval(int interval);
-    void setInfosystem(const std::string&);
     void setOptimizerLevel(int);
     void setDebugLevel(int);
     void setProxy(const std::string&);
@@ -67,12 +66,16 @@ public:
     void setSkipEvict(boost::tribool);
     void setOverwriteDiskEnabled(boost::tribool);
     void setCopyMode(CopyMode);
-    bool isIPv6Explicit(void);
+    bool isIPv6Explicit();
     void setFTSName(const std::string&);
     void setCloudConfig(const std::string&);
     void setOAuthFile(const std::string&);
     void setAuthMethod(const std::string&);
-    void setRetrieveSEToken(bool);
+    void setSourceTokenId(const std::string&);
+    void setDestinationTokenId(const std::string&);
+    void setSourceTokenUnmanaged(bool);
+    void setDestinationTokenUnmanaged(bool);
+    void setTokenRefreshMarginPeriod(int);
 
     void setFromTransfer(const TransferFile&, bool isMultiple, bool publishUserDn, const std::string &msgDir);
 

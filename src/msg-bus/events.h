@@ -23,6 +23,8 @@
 #include <msg-bus/events/MessageUpdater.pb.h>
 #include <msg-bus/events/TransferStart.pb.h>
 #include <msg-bus/events/TransferCompleted.pb.h>
+#include <msg-bus/events/TokenRefreshRequest.pb.h>
+#include <msg-bus/events/TokenRefreshResponse.pb.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 

@@ -50,11 +50,9 @@ public:
      * The length of this name should be (MAX_FILENAME - 7) maximum.
      * @param userDn [IN] the user DN passed to the get method
      * @param id [IN] the credential id passed to the get method
-     * @param legacy [IN] when true, generate the proxy file name by encoding the user DN,
-     *                    otherwise append the credential ID
      * @return the generated file name
      */
-    static std::string generateProxyName(const std::string &userDn, const std::string &id, bool legacy = false);
+    static std::string generateProxyName(const std::string &userDn, const std::string &id);
 
 private:
     /**

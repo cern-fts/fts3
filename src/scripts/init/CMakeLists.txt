@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2013-2015
+# Copyright (c) CERN 2013-2025
 #
 # Copyright (c) Members of the EMI Collaboration. 2010-2013
 #  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,47 +18,21 @@
 # limitations under the License.
 #
 
-# Sytemd services
 if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-server.service
+                  fts-activemq.service
+                  fts-records-cleaner.service
+                  fts-qos.service
+                  fts-optimizer.service
+                  fts-token.service
+                  ftstokenhousekeeperd.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
-
-    install(FILES fts-msg-bulk.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-
-    install(FILES fts-records-cleaner.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-    install(FILES fts-qos.service
-        DESTINATION ${SYSTEMD_INSTALL_DIR}
-    )
-# Init scripts
+    if (FTS4SCHEDULERBUILD)
+        install(FILES fts-scheduler.service
+            DESTINATION ${SYSTEMD_INSTALL_DIR}
+        )
+    endif ()
 else ()
-    install(FILES fts-server.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-        RENAME fts-server
-    )
-
-    install(FILES fts-msg-bulk.initd
-       DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-       PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-       RENAME fts-msg-bulk
-    )
-
-    install(FILES fts-records-cleaner.initd
-       DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-       PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-       RENAME fts-records-cleaner
-    )
-    
-    install(FILES fts-qos.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d
-        PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-        RENAME fts-qos
-    )
-
+    message(WARNING "FTS3 Service installation without systemd!")
 endif ()
-

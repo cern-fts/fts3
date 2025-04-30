@@ -20,11 +20,13 @@
 
 
 #include <map>
+#include <ctime>
+#include <ranges>
 
-#include "config/ServerConfig.h"
 #include "common/Uri.h"
+#include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "FetchStaging.h"
 #include "qos-daemon/task/BringOnlineTask.h"
@@ -32,156 +34,164 @@
 #include "qos-daemon/task/PollTask.h"
 #include "qos-daemon/task/HttpPollTask.h"
 
-#include <ctime>
 
 void FetchStaging::fetch()
 {
-    // VO, user dn, storage, space token
-    typedef std::tuple<std::string, std::string, std::string> GroupByType;
-    StagingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("StagingSchedulingInterval");
+    stagingSchedulingInterval = fts3::config::ServerConfig::instance().get<boost::posix_time::time_duration>("StagingSchedulingInterval");
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting (interval: "
+                                    << stagingSchedulingInterval.total_seconds() << "s)" << commit;
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging starting" << commit;
-
-    // we want to be sure that this won't break our fetching thread
-    try
-    {
+    try {
         recoverStartedTasks();
-    }
-    catch (BaseException& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging " << e.what() << commit;
-    }
-    catch (...)
-    {
+    } catch (BaseException& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging: " << e.what() << commit;
+    } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
     }
 
     while (!boost::this_thread::interruption_requested()) {
         try {
-            boost::this_thread::sleep(StagingSchedulingInterval);
-
-            //if we drain a host, no need to check if url_copy are reporting being alive
             if (fts3::server::DrainMode::instance()) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more FetchStaging for this instance!" << commit;
                 continue;
             }
 
-            std::map<GroupByType, std::unique_ptr<StagingContext>> tasks;
-            std::vector<StagingOperation> files;
-
+            std::vector<StagingOperation> stagingOperations;
             time_t start = time(0);
-            db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
+            db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(stagingOperations);
             time_t end = time(0);
+
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchStaging\" "
                                             << "func=\"fetch\" "
-                                            << "DBcall=\"getFilesForStaging\" " 
-                                            << "time=\"" << end - start << "\""
+                                            << "DBcall=\"getFilesForStaging\" "
+                                            << "time=\"" << end - start << "\" "
+                                            << "stagingOperations=\"" << stagingOperations.size() << "\""
                                             << commit;
 
-            for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
-            {
-                std::string storage = Uri::parse(it_f->surl).getSeName();
-                GroupByType key(it_f->credId, storage, it_f->spaceToken);
-                auto it_t = tasks.find(key);
-                if (it_t == tasks.end()) {
-                    tasks.insert(std::make_pair(
-                        key, StagingContext::createStagingContext(QoSServer::instance(), *it_f))
-                    );
-                }
-                else {
-                    it_t->second->add(*it_f);
-                }
-            }
-
-            for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
-            {
-                try
-                {
-                    if (it_t->second->updateStateToStarted()) {
-                        std::string protocol = it_t->second->getStorageProtocol();
-                        if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
-                            threadpool.start(new HttpBringOnlineTask(static_cast<HttpStagingContext&&>(std::move(*(it_t->second)))));
-                        } else {
-                            threadpool.start(new BringOnlineTask(std::move(*(it_t->second))));
-                        }
-                    }
-                }
-                catch(UserError const & ex)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << ex.what() << commit;
-                }
-                catch(...)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-                }
-            }
-
-        }
-        catch (const std::exception& e) {
+            startBringonlineTasks(stagingOperations);
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging " << e.what() << commit;
-        }
-        catch (const boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging interruption requested" << commit;
             break;
-        }
-        catch (...) {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FetchStaging Fatal error (unknown origin)" << commit;
         }
+
+        boost::this_thread::sleep(stagingSchedulingInterval);
     }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FetchStaging exiting" << commit;
 }
 
-
-void FetchStaging::recoverStartedTasks()
+void FetchStaging::recoverStartedTasks() const
 {
     std::vector<StagingOperation> startedStagingOps;
 
     try {
+        const time_t start = time(0);
         db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(startedStagingOps);
-    }
-    catch (UserError const & ex) {
+        const time_t end = time(0);
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"FetchStaging\" "
+                                        << "func=\"recoverStartedTasks\" "
+                                        << "DBcall=\"getAlreadyStartedStaging\" "
+                                        << "time=\"" << end - start << "\" "
+                                        << "startedStagingOps=\"" << startedStagingOps.size() << "\""
+                                        << commit;
+    } catch (UserError const & ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-    }
-    catch(...)
-    {
+    } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 
     std::map<std::string, std::unique_ptr<StagingContext>> tasks;
 
-    for (auto it_f = startedStagingOps.begin(); it_f != startedStagingOps.end(); ++it_f) {
-        auto it_t = tasks.find(it_f->token);
-        if (it_t == tasks.end()) {
-            tasks.insert(std::make_pair(it_f->token,
-                                        StagingContext::createStagingContext(QoSServer::instance(), *it_f))
-                                        );
+    for (const auto& op: startedStagingOps) {
+        auto task = tasks.find(op.token);
+
+        if (task == tasks.end()) {
+            tasks.try_emplace(op.token, StagingContext::createStagingContext(QoSServer::instance(), op));
         } else {
-            it_t->second->add(*it_f);
+            auto& context = task->second;
+            context->add(op);
         }
     }
 
-    for (auto it_t = tasks.begin(); it_t != tasks.end(); ++it_t) {
+    for (auto& [token, context]: tasks) {
+        schedulePollTask(*context, token);
+    }
+}
+
+void FetchStaging::startBringonlineTasks(const std::vector<StagingOperation>& stagingOperations) const
+{
+    const auto stagingBulkSize = fts3::config::ServerConfig::instance().get<uint64_t>("StagingBulkSize");
+    std::map<GroupByType, std::unique_ptr<StagingContext>> tasks;
+
+    for (const auto& op: stagingOperations) {
+        std::string storage = Uri::parse(op.surl).getSeName();
+        GroupByType key(op.credId, storage, op.spaceToken);
+        auto task = tasks.find(key);
+
+        if (task == tasks.end()) {
+            tasks.try_emplace(key, StagingContext::createStagingContext(QoSServer::instance(), op));
+            continue;
+        }
+
+        auto& context = task->second;
+
+        if (context->getNbUrls() >= stagingBulkSize) {
+            scheduleBringonlineTask(*context);
+            tasks.erase(key);
+            tasks.try_emplace(key, StagingContext::createStagingContext(QoSServer::instance(), op));
+        } else {
+            context->add(op);
+        }
+    }
+
+    for (auto& context: tasks | std::views::values) {
+        scheduleBringonlineTask(*context);
+    }
+}
+
+void FetchStaging::scheduleBringonlineTask(StagingContext& context) const
+{
+    if (context.updateStateToStarted()) {
         try {
-            std::set<std::string> urls = it_t->second->getUrls();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovered with token " << it_t->first << commit;
-            for (auto ui = urls.begin(); ui != urls.end(); ++ui) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "\t" << *ui << commit;
-            }
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting BringonlineTask [storage=" << context.getStorageEndpoint()
+                                            << " / " << context.getNbUrls() << " files]: "
+                                            << context.getLogMsg() << commit;
 
-            std::string protocol = it_t->second->getStorageProtocol();
-
+            std::string protocol = context.getStorageProtocol();
             if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
-                threadpool.start(new HttpPollTask(static_cast<HttpStagingContext&&>(std::move(*it_t->second)), it_t->first));
+                threadpool.start(new HttpBringOnlineTask(std::move(dynamic_cast<HttpStagingContext&&>(context))));
             } else {
-                threadpool.start(new PollTask(std::move(*it_t->second), it_t->first));
+                threadpool.start(new BringOnlineTask(std::move(context)));
             }
-        }
-        catch (UserError const & ex) {
+        } catch (UserError const & ex) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        }
-        catch(...)
-        {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
         }
+    }
+}
+
+void FetchStaging::schedulePollTask(StagingContext& context, const std::string& token) const
+{
+    try {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Recovering PollingTask [storage=" << context.getStorageEndpoint()
+                                        << " / " << context.getNbUrls() << " files]: "
+                                        << context.getLogMsg() << commit;
+
+        std::string protocol = context.getStorageProtocol();
+        if (protocol == "http" || protocol == "https" || protocol == "dav" || protocol == "davs") {
+            threadpool.start(new HttpPollTask(std::move(dynamic_cast<HttpStagingContext&>(context)), token));
+        } else {
+            threadpool.start(new PollTask(std::move(context), token));
+        }
+    } catch (UserError const & ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
     }
 }

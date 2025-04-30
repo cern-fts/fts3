@@ -18,10 +18,12 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
-#include <fstream>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include "Transfer.h"
 #include "UrlCopyOpts.h"
 #include "common/Logger.h"
@@ -53,27 +55,30 @@ const option UrlCopyOpts::long_options[] =
     {"3rd-party-turl",    required_argument, 0, 304},
     {"scitag",            required_argument, 0, 305},
 
-    {"token-bringonline", required_argument, 0, 400},
-    {"dest-token-desc",   required_argument, 0, 401},
-    {"source-token-desc", required_argument, 0, 402},
+    {"token-bringonline",  required_argument, 0, 400},
+    {"source-space-token", required_argument, 0, 401},
+    {"dest-space-token",   required_argument, 0, 402},
 
     {"vo",                     required_argument, 0, 500},
     {"user-dn",                required_argument, 0, 501},
     {"proxy",                  required_argument, 0, 502},
     {"oauth",                  required_argument, 0, 503},
-    {"source-issuer",          required_argument, 0, 504},
-    {"dest-issuer",            required_argument, 0, 505},
-    {"auth-method",            required_argument, 0, 506},
-    {"copy-mode",              required_argument, 0, 507},
-    {"disable-fallback",       no_argument,       0, 508},
-    {"retrieve-se-token",      no_argument,       0, 509},
-    {"cloud-config",           required_argument, 0, 510},
-    {"overwrite-disk-enabled", no_argument,       0, 511},
+    {"auth-method",            required_argument, 0, 504},
+    {"copy-mode",              required_argument, 0, 505},
+    {"disable-fallback",       no_argument,       0, 506},
+    {"cloud-config",           required_argument, 0, 507},
+    {"overwrite-disk-enabled", no_argument,       0, 508},
+    {"disable-cleanup",        no_argument,       0, 509},
 
-    {"infosystem",        required_argument, 0, 600},
-    {"alias",             required_argument, 0, 601},
-    {"monitoring",        no_argument,       0, 602},
-    {"ping-interval",     required_argument, 0, 603},
+    {"src-token-id",           required_argument, 0, 520},
+    {"dst-token-id",           required_argument, 0, 521},
+    {"src-token-unmanaged",    no_argument,       0, 522},
+    {"dst-token-unmanaged",    no_argument,       0, 523},
+    {"token-refresh-margin",   required_argument, 0, 524},
+
+    {"alias",                required_argument, 0, 600},
+    {"monitoring",           no_argument,       0, 601},
+    {"ping-interval",        required_argument, 0, 602},
 
     {"file-metadata",     required_argument, 0, 700},
     {"archive-metadata",  required_argument, 0, 701},
@@ -107,6 +112,13 @@ const option UrlCopyOpts::long_options[] =
 
 const char UrlCopyOpts::short_options[] = "";
 
+static std::string formatAdler32Checksum(std::string checksum)
+{
+    unsigned int padding = std::max(0, 8 - static_cast<int>(checksum.length()));
+    checksum.insert(0, padding, '0');
+    return checksum;
+}
+
 static void setChecksum(Transfer &transfer, const std::string &checksum)
 {
     if (checksum == "x") {
@@ -119,8 +131,15 @@ static void setChecksum(Transfer &transfer, const std::string &checksum)
         transfer.checksumValue.clear();
     }
     else {
-        transfer.checksumAlgorithm.assign(checksum.substr(0, colon));
-        transfer.checksumValue.assign(checksum.substr(colon + 1));
+        auto algorithm = checksum.substr(0, colon);
+        auto formatted = checksum.substr(colon + 1);
+
+        if (boost::iequals(algorithm, "adler32")) {
+            formatted = formatAdler32Checksum(formatted);
+        }
+
+        transfer.checksumAlgorithm.assign(algorithm);
+        transfer.checksumValue.assign(formatted);
     }
 }
 
@@ -164,10 +183,8 @@ static Transfer createFromString(const Transfer &reference, const std::string &l
     t.archiveMetadata = strArray[6] == "x" ? "" : replaceMetadataString(strArray[6]);
     t.tokenBringOnline = strArray[7] == "x" ? "" : strArray[7];
     t.scitag = boost::lexical_cast<unsigned>(strArray[8]);
-    t.sourceTokenDescription = reference.sourceTokenDescription;
-    t.destTokenDescription = reference.destTokenDescription;
-    t.sourceTokenIssuer = reference.sourceTokenIssuer;
-    t.destTokenIssuer = reference.destTokenIssuer;
+    t.sourceSpaceToken = reference.sourceSpaceToken;
+    t.destSpaceToken = reference.destSpaceToken;
     t.isMultipleReplicaJob = false;
     t.isLastReplica = false;
     return t;
@@ -200,14 +217,15 @@ static Transfer::TransferList initListFromFile(const Transfer &reference, const 
 }
 
 
-UrlCopyOpts::UrlCopyOpts():
-        isSessionReuse(false), strictCopy(false), dstFileReport(false),
-        disableCopyFallback(false), retrieveSEToken(false), overwriteDiskEnabled(false),
-        optimizerLevel(0), overwrite(false), overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
-        timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0), noStreaming(false),
-        skipEvict(false), enableMonitoring(false), pingInterval(60), retry(0), retryMax(0),
-        logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
-        debugLevel(0), logToStderr(false)
+UrlCopyOpts::UrlCopyOpts(): isSessionReuse(false), strictCopy(false), disableCleanup(false),
+                            dstFileReport(false), disableCopyFallback(false),
+                            overwriteDiskEnabled(false), optimizerLevel(0), overwrite(false),
+                            overwriteOnDisk(false), noDelegation(false), nStreams(0), tcpBuffersize(0),
+                            timeout(0), enableUdt(false), enableIpv6(boost::indeterminate), addSecPerMb(0),
+                            noStreaming(false), skipEvict(false), enableMonitoring(false),
+                            pingInterval(60), tokenRefreshMargin(300),
+                            retry(0), retryMax(0), logDir("/var/log/fts3"), msgDir("/var/lib/fts3"),
+                            debugLevel(0), logToStderr(false)
 {
 }
 
@@ -323,10 +341,10 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     referenceTransfer.tokenBringOnline = optarg;
                     break;
                 case 401:
-                    referenceTransfer.destTokenDescription = optarg;
+                    referenceTransfer.sourceSpaceToken = optarg;
                     break;
                 case 402:
-                    referenceTransfer.sourceTokenDescription = optarg;
+                    referenceTransfer.destSpaceToken = optarg;
                     break;
 
                 case 500:
@@ -342,40 +360,47 @@ void UrlCopyOpts::parse(int argc, char * const argv[])
                     oauthFile = optarg;
                     break;
                 case 504:
-                    referenceTransfer.sourceTokenIssuer = optarg;
-                    break;
-                case 505:
-                    referenceTransfer.destTokenIssuer = optarg;
-                    break;
-                case 506:
                     authMethod = optarg;
                     break;
-                case 507:
+                case 505:
                     copyMode = translateCopyMode(optarg);
                     break;
-                case 508:
+                case 506:
                     disableCopyFallback = true;
                     break;
-                case 509:
-                    retrieveSEToken = true;
-                    break;
-                case 510:
+                case 507:
                     cloudStorageConfig = optarg;
                     break;
-                case 511:
+                case 508:
                     overwriteDiskEnabled = true;
+                    break;
+                case 509:
+                    disableCleanup = true;
+                    break;
+
+                case 520:
+                    referenceTransfer.sourceTokenId = optarg;
+                    break;
+                case 521:
+                    referenceTransfer.destTokenId = optarg;
+                    break;
+                case 522:
+                    referenceTransfer.sourceTokenUnmanaged = true;
+                    break;
+                case 523:
+                    referenceTransfer.destTokenUnmanaged = true;
+                    break;
+                case 524:
+                    tokenRefreshMargin = boost::lexical_cast<unsigned>(optarg);
                     break;
 
                 case 600:
-                    infosys = optarg;
-                    break;
-                case 601:
                     alias = optarg;
                     break;
-                case 602:
+                case 601:
                     enableMonitoring = true;
                     break;
-                case 603:
+                case 602:
                     pingInterval = boost::lexical_cast<unsigned>(optarg);
                     break;
 

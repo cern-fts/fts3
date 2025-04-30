@@ -68,12 +68,24 @@ static void shutdownCallback(int signum, void*)
 /// Initialize the database backend
 static void initializeDatabase()
 {
-    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
-    std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    auto dbType = ServerConfig::instance().get<std::string > ("DbType");
+    auto dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    auto dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    auto dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    int pooledConn = ServerConfig::instance().get<int>("DbThreadsNum");
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, 8);
+    auto experimentalPostgresSupport =
+        ServerConfig::instance().get<std::string>("ExperimentalPostgresSupport");
+
+    if (dbType == "postgresql" && experimentalPostgresSupport != "true") {
+        throw std::runtime_error(
+            "Failed to initialize database: "
+            "DbType cannot be set to postgresql if ExperimentalPostgresSupport is not set to true"
+        );
+    }
+
+    db::DBSingleton::instance().getDBObjectInstance()->init(
+        dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
 
@@ -107,6 +119,7 @@ static void doServer()
 
     auto logLevel = Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel"));
     theLogger().setLogLevel(logLevel);
+    theLogger().setProfiling(ServerConfig::instance().get<bool>("Profiling"));
 
     if (logLevel <= Logger::LogLevel::DEBUG) {
         setenv("XRD_LOGLEVEL", "Debug", 1);
@@ -151,9 +164,6 @@ static void spawnServer(int argc, char** argv)
 
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
-
-    // Watch for changes on the config file
-    ServerConfig::instance().startMonitor();
 
     doServer();
 }

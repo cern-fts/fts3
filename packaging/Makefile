@@ -1,7 +1,7 @@
 NAME=fts
 SPEC=rpm/$(NAME).spec
 VERSION=${shell grep '^Version:' $(SPEC) | awk '{print $$2}' }
-# Leave blank. To be overriden by CI tools.
+# Leave blank. To be overridden by CI tools.
 RELEASE=
 
 CWD=${shell pwd}
@@ -10,7 +10,7 @@ RPMBUILD=/tmp/rpmbuild
 SRPMS=$(CWD)
 RPMS=$(CWD)/out
 
-MOCK_CHROOT=epel-7-x86_64
+MOCK_CHROOT=epel-9-x86_64
 MOCK_FLAGS=--verbose
 
 
@@ -37,7 +37,9 @@ clean:
 	rm -rfv "$(RPMBUILD)"
 
 dist: clean
-	tar vczf "$(NAME)-$(VERSION).tar.gz" --exclude="packaging" --exclude=".git" --exclude="*.pyc" --transform="s,^,$(NAME)-$(VERSION)/," ..
+	tar vczf "$(NAME)-$(VERSION).tar.gz" --exclude="packaging" --exclude=".git" --exclude="*.pyc" --exclude=".idea" \
+										 --exclude=".clion*" --exclude="build" --exclude="cmake-build*" \
+										 --transform="s,^,$(NAME)-$(VERSION)/," ..
 
 $(RPMBUILD):
 	mkdir -p "$(RPMBUILD)"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -19,19 +19,14 @@
  */
 
 #pragma once
-#ifndef FETCHSTAGING_H_
-#define FETCHSTAGING_H_
 
-#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include "common/ThreadPool.h"
-#include "cred/DelegCred.h"
-
-#include "../task/Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "qos-daemon/task/Gfal2Task.h"
+#include "qos-daemon/context/StagingContext.h"
 
 
 /**
@@ -46,11 +41,23 @@ public:
 
     void fetch();
 
+    // Group by credential ID (VO + DN), storage endpoint and space token
+    typedef std::tuple<std::string, std::string, std::string> GroupByType;
+
 private:
-    void recoverStartedTasks();
+    // Function that recovers from DB staging tasks that already started
+    // To be called on the daemon start
+    void recoverStartedTasks() const;
+
+    // Function that iterates over a set of staging operations and groups them into batches to be scheduled
+    void startBringonlineTasks(const std::vector<StagingOperation>& stagingOperations) const;
+
+    // Function to start HTTPBringOnlineTask & BringOnlineTask on the QoS thread pool
+    void scheduleBringonlineTask(StagingContext& context) const;
+
+    // Function to start HTTPPollTask & PollTask on the QoS thread pool
+    void schedulePollTask(StagingContext& context, const std::string& token) const;
+
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
-    boost::posix_time::time_duration StagingSchedulingInterval;
-
+    boost::posix_time::time_duration stagingSchedulingInterval;
 };
-
-#endif // FETCHSTAGING_H_

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,6 +18,9 @@
  * limitations under the License.
  */
 
+#include <ctime>
+#include <random>
+
 #include "TransfersService.h"
 #include "VoShares.h"
 
@@ -29,14 +32,13 @@
 
 #include "db/generic/TransferFile.h"
 
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 
 #include "TransferFileHandler.h"
 #include "FileTransferExecutor.h"
 
-#include <msg-bus/producer.h>
+#include "msg-bus/producer.h"
 
-#include <ctime>
 
 using namespace fts3::common;
 
@@ -44,7 +46,26 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
+
+static void postgresStoreMaxUrlCopyProcessesInDb() {
+    try {
+        auto db = DBSingleton::instance().getDBObjectInstance();
+        if (!db) {
+            throw std::runtime_error("Failed to get a pointer the DBSingleton object");
+        }
+
+        const int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+        db->postgresStoreMaxUrlCopyProcesses(maxUrlCopy);
+    } catch(std::exception &se) {
+        std::ostringstream msg;
+        msg << __FUNCTION__ << ": Failed: " << se.what();
+        throw std::runtime_error(msg.str());
+    } catch(...) {
+        std::ostringstream msg;
+        msg << __FUNCTION__ << ": Failed: Caught an unknown exception";
+        throw std::runtime_error(msg.str());
+    }
+}
 
 
 TransfersService::TransfersService(): BaseService("TransfersService")
@@ -55,23 +76,23 @@ TransfersService::TransfersService(): BaseService("TransfersService")
     msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
     execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
     ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
-    infosys = config::ServerConfig::instance().get<std::string>("Infosys");
 
     monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
     schedulingInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("SchedulingInterval");
 }
 
 
-TransfersService::~TransfersService()
-{
-}
-
-
 void TransfersService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TransfersService interval: " << schedulingInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
-        retrieveRecords = time(0);
+        updateLastRunTimepoint();
+
+        if (config::ServerConfig::instance().get<std::string>("DbType") == "postgresql") {
+            postgresStoreMaxUrlCopyProcessesInDb();
+        }
 
         try
         {
@@ -84,20 +105,18 @@ void TransfersService::runService()
                 continue;
             }
 
-            executeUrlcopy();
-        }
-        catch (boost::thread_interrupted&)
-        {
+            if ("mysql" == DBSingleton::instance().getDBObjectInstance()->getDbtype()) {
+                executeUrlCopy();
+            } else {
+                postgresExecuteUrlCopy();
+            }
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in TransfersService!" << commit;
             break;
-        }
-        catch (std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService " << e.what() << commit;
-        }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+        } catch (std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService!" << commit;
         }
     }
 }
@@ -219,7 +238,7 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
                     scheduledByActivity[tf.activity]++;
 
                     FileTransferExecutor *exec = new FileTransferExecutor(tf,
-                        monitoringMessages, infosys, ftsHostName,
+                        monitoringMessages, ftsHostName,
                         proxies[proxy_key], logDir, msgDir);
 
                     execPool.start(exec);
@@ -254,21 +273,16 @@ void TransfersService::getFiles(const std::vector<QueueId>& queues, int availabl
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scheduled by activity:" << out.str() << commit;
         }
-    }
-    catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService:getFiles" << commit;
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TransfersService::getFiles!" << commit;
         execPool.interrupt();
         execPool.join();
         throw;
-    }
-    catch (std::exception& e)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService:getFiles " << e.what() << commit;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService::getFiles: " << e.what() << commit;
         throw;
-    }
-    catch (...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService::getFiles!" << commit;
         throw;
     }
 }
@@ -306,10 +320,9 @@ static void failUnschedulable(const std::vector<QueueId> &unschedulable)
 }
 
 
-void TransfersService::executeUrlcopy()
+void TransfersService::executeUrlCopy()
 {
     std::vector<QueueId> queues, unschedulable;
-    boost::thread_group g;
 
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
@@ -324,10 +337,12 @@ void TransfersService::executeUrlcopy()
     }
 
     try {
-      time_t start = time(0); //std::chrono::system_clock::now();
+        time_t start = time(0); //std::chrono::system_clock::now();
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithPending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
-        std::random_shuffle(queues.begin(), queues.end());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(queues.begin(), queues.end(), g);
         // Apply VO shares at this level. Basically, if more than one VO is used the same link,
         // pick one each time according to their respective weights
         queues = applyVoShares(queues, unschedulable);
@@ -344,24 +359,78 @@ void TransfersService::executeUrlcopy()
                                         << "DBcall=\"getQueuesWithPending\" " 
                                         << "time=\"" << end - start << "\"" 
                                         << commit;
-    }
-    catch (const boost::thread_interrupted&) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in TransfersService" << commit;
-        g.interrupt_all();
-        g.join_all();
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in TransfersService::executeUrlCopy!" << commit;
         throw;
-    }
-    catch (std::exception& e)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService " << e.what() << commit;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService::executeUrlCopy: " << e.what() << commit;
         throw;
-    }
-    catch (...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in TransfersService!" << commit;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in TransfersService::executeUrlCopy!" << commit;
         throw;
     }
 }
+
+
+void TransfersService::postgresExecuteUrlCopy() {
+    const int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
+    const int urlCopyCount = countProcessesWithName("fts_url_copy");
+    const int availableUrlCopySlots = maxUrlCopy - urlCopyCount;
+
+    // Bail out as soon as possible if there are too many url-copy processes
+    if (availableUrlCopySlots <= 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+            << "Reached limitation of MaxUrlCopyProcesses"
+            << commit;
+        return;
+    }
+
+    const time_t start = time(0);
+    std::list<TransferFile> scheduledFiles =
+        DBSingleton::instance().getDBObjectInstance()->postgresGetScheduledFileTransfers(
+            availableUrlCopySlots
+        );
+    const time_t elapsed = time(0) - start;
+    if (scheduledFiles.empty()) {
+        return;
+    }
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DBtime=\"TransfersService\" "
+                                    << "func=\"postgresqlExecuteUrlcopy\" "
+                                    << "DBcall=\"getScheduledFileTransfers\" "
+                                    << "time=\"" << elapsed << "\" "
+                                    << "nbScheduledFiles=\"" << scheduledFiles.size() << "\""
+                                    << commit;
+
+    ThreadPool<FileTransferExecutor> execPool(execPoolSize);
+    std::map<std::pair<std::string, std::string>, std::string> proxies;
+
+    for (TransferFile &scheduledFile: scheduledFiles) {
+        const std::pair<std::string, std::string> proxy_key(
+            scheduledFile.credId,
+            scheduledFile.userDn
+        );
+
+        if (proxies.find(proxy_key) == proxies.end())
+        {
+            proxies[proxy_key] = DelegCred::getProxyFile(
+                scheduledFile.userDn,
+                scheduledFile.credId
+            );
+        }
+
+        FileTransferExecutor * const exec = new FileTransferExecutor(
+            scheduledFile,
+            monitoringMessages,
+            ftsHostName,
+            proxies[proxy_key],
+            logDir,
+            msgDir
+        );
+        execPool.start(exec);
+    }
+    execPool.join();
+}
+
 
 } // end namespace server
 } // end namespace fts3

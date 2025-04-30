@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package fts3.events;
+
+message TokenRefreshRequest {
+  required string token_id = 1;
+  required string job_id = 2;
+  required uint64 file_id = 3;
+  required string hostname = 4;
+  required int32 process_id = 5;
+}

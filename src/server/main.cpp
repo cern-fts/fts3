@@ -43,18 +43,26 @@ using namespace fts3::server;
 
 
 /// Initialize the database backend
-/// @param test If set to true, do not use full pool size
-static void intializeDatabase(bool test = false)
+static void intializeDatabase()
 {
-    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
-    std::string dbUserName = ServerConfig::instance().get<std::string > ("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string > ("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string > ("DbConnectString");
-    int pooledConn = ServerConfig::instance().get<int> ("DbThreadsNum");
-    if(test)
-        pooledConn = 2;
+    auto dbType = ServerConfig::instance().get<std::string>("DbType");
+    auto dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    auto dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    auto dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    int pooledConn = ServerConfig::instance().get<int>("DbThreadsNum");
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
+    auto experimentalPostgresSupport =
+        ServerConfig::instance().get<std::string>("ExperimentalPostgresSupport");
+
+    if (dbType == "postgresql" && experimentalPostgresSupport != "true") {
+        throw std::runtime_error(
+            "Failed to initialize database: "
+            "DbType cannot be set to postgresql if ExperimentalPostgresSupport is not set to true"
+        );
+    }
+
+    db::DBSingleton::instance().getDBObjectInstance()->init(
+        dbType, dbUserName, dbPassword, dbConnectString, pooledConn);
 }
 
 /// Called by the signal handler
@@ -101,7 +109,6 @@ static void doServer(void)
     }
     theLogger().setLogLevel(Logger::getLogLevel(ServerConfig::instance().get<std::string>("LogLevel")));
     theLogger().setProfiling(ServerConfig::instance().get<bool>("Profiling"));
-    theLogger().setLogTokenRequests(ServerConfig::instance().get<bool>("LogTokenRequests"));
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Starting server... (process_id=" << getpid() << ")" << commit;
 
@@ -187,9 +194,8 @@ static void runEnvironmentChecks()
 
 
 /// Prepare, fork and run FTS3
-static void spawnServer(int argc, char** argv)
+static void spawnServer()
 {
-    ServerConfig::instance().read(argc, argv);
     std::string user = ServerConfig::instance().get<std::string>("User");
     std::string group = ServerConfig::instance().get<std::string>("Group");
     std::string pidDir = ServerConfig::instance().get<std::string>("PidDirectory");
@@ -216,28 +222,28 @@ static void spawnServer(int argc, char** argv)
     panic::setup_signal_handlers(shutdownCallback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Signal handlers installed" << commit;
 
-    // Watch for changes on the config file
-    ServerConfig::instance().startMonitor();
-
     doServer();
 }
 
 /// Entry point
 int main(int argc, char** argv)
 {
-    int n_running = countProcessesWithName("fts_server");
-    if (n_running < 0) {
-        std::cerr << "Could not check if FTS3 is already running" << std::endl;
-        return EXIT_FAILURE;
-    }
-    else if (n_running > 1) {
-        std::cerr << "Only one instance of FTS3 can run at the time"
-                << std::endl;
-        return EXIT_FAILURE;
-    }
-
+    
     try {
-        spawnServer(argc, argv);
+        ServerConfig::instance().read(argc, argv);
+
+        int n_running = countProcessesWithName("fts_server");
+        if (n_running < 0) {
+            std::cerr << "Could not check if FTS3 is already running" << std::endl;
+            return EXIT_FAILURE;
+        }
+        else if (n_running > 1) {
+            std::cerr << "Only one instance of FTS3 can run at the time"
+                    << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        spawnServer();
     }
     catch (const std::exception& ex) {
         std::cerr << "Failed to spawn the server! " << ex.what() << std::endl;

@@ -24,8 +24,6 @@
 #include "db/generic/SingleDbInstance.h"
 #include "db/generic/TransferFile.h"
 
-#include "server/DrainMode.h"
-
 #include "ForceStartTransfersService.h"
 #include "FileTransferExecutor.h"
 
@@ -35,15 +33,16 @@ using namespace fts3::common;
 namespace fts3 {
 namespace server {
 
-ForceStartTransfersService::ForceStartTransfersService(HeartBeat *beat) : BaseService("ForceStartTransfersService"), beat(beat) {
-    logDir = config::ServerConfig::instance().get<std::string>("TransferLogDirectory");
-    msgDir = config::ServerConfig::instance().get<std::string>("MessagingDirectory");
-    execPoolSize = config::ServerConfig::instance().get<int>("InternalThreadPool");
-    ftsHostName = config::ServerConfig::instance().get<std::string>("Alias");
-    infosys = config::ServerConfig::instance().get<std::string>("Infosys");
+ForceStartTransfersService::ForceStartTransfersService(const std::shared_ptr<HeartBeat>& heartBeat):
+    BaseService("ForceStartTransfersService"), heartBeat(heartBeat)
+{
+    logDir = ServerConfig::instance().get<std::string>("TransferLogDirectory");
+    msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+    execPoolSize = ServerConfig::instance().get<int>("InternalThreadPool");
+    ftsHostName = ServerConfig::instance().get<std::string>("Alias");
 
-    monitoringMessages = config::ServerConfig::instance().get<bool>("MonitoringMessaging");
-    pollInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransfersCheckInterval");
+    monitoringMessages = ServerConfig::instance().get<bool>("MonitoringMessaging");
+    pollInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("ForceStartTransfersCheckInterval");
 }
 
 void ForceStartTransfersService::forceRunJobs() {
@@ -86,7 +85,7 @@ void ForceStartTransfersService::forceRunJobs() {
                 proxies[proxy_key] = DelegCred::getProxyFile(tf.userDn, tf.credId);
             }
 
-            FileTransferExecutor *exec = new FileTransferExecutor(tf, monitoringMessages, infosys, ftsHostName,
+            FileTransferExecutor *exec = new FileTransferExecutor(tf, monitoringMessages, ftsHostName,
                                                                   proxies[proxy_key], logDir, msgDir);
             execPool.start(exec);
 
@@ -104,32 +103,37 @@ void ForceStartTransfersService::forceRunJobs() {
                                         << scheduled << " have been scheduled)" << commit;
 
     } catch (const boost::thread_interrupted &) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Interruption requested in ForceStartTransfersService:forceRunJobs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in ForceStartTransfersService::forceRunJobs!" << commit;
         execPool.interrupt();
         execPool.join();
+        throw;
     } catch (std::exception &e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService:forceRunJobs " << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService::forceRunJobs: " << e.what() << commit;
+        throw;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ForceStartTransfersService::forceRunJobs!" << commit;
+        throw;
     }
 }
 
 void ForceStartTransfersService::runService() {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ForceStartTransfersService interval: " << pollInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested()) {
         boost::this_thread::sleep(pollInterval);
-        try {
 
+        try {
             // This service intentionally does not follow the drain mechanism
-            if (beat->isLeadNode(true)) {
+            if (heartBeat->isLeadNode(true)) {
                 forceRunJobs();
             }
-        } catch (boost::thread_interrupted&) {
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in ForceStartTransfersService!" << commit;
             break;
         } catch (std::exception &e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService: " << e.what() << commit;
         } catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ForceStartTransfersService!" << fts3::common::commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ForceStartTransfersService!" << commit;
         }
     }
 }

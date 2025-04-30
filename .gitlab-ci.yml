@@ -1,8 +1,46 @@
 stages:
+- static_code_analysis
 - build
 - docker
 - test
 - publish
+
+#---------------------------------
+# Static Code Analysis
+#---------------------------------
+
+.pylint_template: &pylint_definition
+  # Check for Python syntax errors
+  image: gitlab-registry.cern.ch/fts/fts3:ci
+  stage: static_code_analysis
+  script:
+    - PY="PY${CI_JOB_NAME##pylint}"
+    - VENV="VENV_${CI_JOB_NAME##pylint}"
+    - export PYENV_ROOT="$HOME/.pyenv"
+    - export PATH="$PYENV_ROOT/bin:$PATH"
+    - pyenv global ${!PY}
+    - source ${!VENV}/bin/activate
+    - pylint --version
+    - pylint --output-format colorized --source-roots ./src/scheduler/python/fts_scheduler ./src/scheduler/python/fts_scheduler
+    - pylint --output-format colorized --disable C,R,W ./src/tokens/scripts/ftstokenhousekeeperd
+
+black:
+  # Check that every file has been formatted with black
+  image: gitlab-registry.cern.ch/fts/fts3:ci
+  stage: static_code_analysis
+  script:
+    - black --version
+    - black --check --fast --diff --target-version py39 ./src/scheduler/python
+    - black --check --fast --diff --target-version py39 ./src/tokens/scripts/ftstokenhousekeeperd
+
+pylint39:
+  <<: *pylint_definition
+
+pylint310:
+  <<: *pylint_definition
+
+pylint311:
+  <<: *pylint_definition
 
 #--------------------------
 # Build templates
@@ -60,6 +98,8 @@ docker_latest:
   needs:
     - job: alma9
   rules:
+    - if: '$CI_PROJECT_NAMESPACE != "fts"'
+      when: never
     - if: $CI_COMMIT_REF_NAME == "develop"
 
 docker_tag:

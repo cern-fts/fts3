@@ -38,8 +38,6 @@ using fts3::config::ServerConfig;
 namespace fts3 {
 namespace server {
 
-extern time_t updateRecords;
-
 
 MessageProcessingService::MessageProcessingService(): BaseService("MessageProcessingService"),
     consumer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
@@ -49,23 +47,17 @@ MessageProcessingService::MessageProcessingService(): BaseService("MessageProces
 }
 
 
-MessageProcessingService::~MessageProcessingService()
-{
-}
-
-
 void MessageProcessingService::runService()
 {
     namespace fs = boost::filesystem;
-
-    auto msgCheckInterval = config::ServerConfig::instance().get<boost::posix_time::time_duration>("MessagingConsumeInterval");
+    auto msgCheckInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("MessagingConsumeInterval");
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "MessageProcessingService interval: " << msgCheckInterval.total_seconds() << "s" << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
-        updateRecords = time(0);
+        updateLastRunTimepoint();
 
-        try
-        {
+        try {
             if (boost::this_thread::interruption_requested() && messages.empty() && messagesLog.empty())
             {
                 break;
@@ -73,11 +65,9 @@ void MessageProcessingService::runService()
 
             // if conn to the db is lost, do not retrieve state, save it for later
             // use one fast query
-            try
-            {
+            try {
                 db::DBSingleton::instance().getDBObjectInstance()->getDrain();
-            }
-            catch (...) {
+            } catch (...) {
                 boost::this_thread::sleep(boost::posix_time::seconds(10));
                 continue;
             }
@@ -110,7 +100,7 @@ void MessageProcessingService::runService()
                 messagesLog.clear();
             }
 
-            // update heartbeat and progress vector
+            // update progress vector
             if (consumer.runConsumerStall(messagesUpdater) != 0)
             {
                 char buffer[128] = { 0 };
@@ -138,13 +128,15 @@ void MessageProcessingService::runService()
                 db::DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
                 messagesUpdater.clear();
             }
-        }
-        catch (const std::exception& e) {
+        } catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in SupervisorService!" << commit;
+            dumpMessages();
+            break;
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown exception: " << e.what() << commit;
             dumpMessages();
-        }
-        catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception!" << commit;
             dumpMessages();
         }
 

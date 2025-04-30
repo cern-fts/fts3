@@ -41,6 +41,7 @@ void HttpBringOnlineTask::run(const boost::any &)
     std::vector<const char*> urls;
     std::vector<const char*> metadata;
     std::vector<std::string> _metadata;
+    // Note: vector reservation is key to avoid data movement during vector resizing
     urls.reserve(urlSet.size());
     metadata.reserve(urlSet.size());
     _metadata.reserve(urlSet.size());

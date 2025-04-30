@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-/** \file serverconfig.h Define FTS3 server configuration. */
+/** \file ServerConfigReader.h Define FTS3 server configuration. */
 
 #pragma once
 
@@ -33,7 +33,7 @@ namespace config {
 
 namespace po = boost::program_options;
 
-/** \brief Class reading the server server configuration, from the command line
+/** \brief Class reading the server configuration, from the command line
  * and from the config file. */
 class ServerConfigReader
 {
@@ -56,12 +56,7 @@ public:
      * them accordingly. */
     void storeValuesAsStrings();
 
-    /**
-     * Map the roles to the VOMS attributes
-     */
-    void storeRoles();
-
-    void validateRequired(std::string key);
+    void validateRequired(const std::string& key);
 
     /* ---------------------------------------------------------------------- */
 
@@ -95,15 +90,13 @@ protected:
         if (_vm.count("help"))
             {
                 DEPENDENCIES::stream() << desc << "\n";
-                return;
-                //DEPENDENCIES::exit(1);
+                DEPENDENCIES::exit(1);
             }
 
         if (_vm.count("version"))
             {
                 DEPENDENCIES::stream() << VERSION << "\n";
-                return;
-                //DEPENDENCIES::exit(1);
+                DEPENDENCIES::exit(1);
             }
 
         bool isNoDaemon = _vm.count ("no-daemon");
@@ -179,4 +172,3 @@ protected:
 
 } // end namespace config
 } // end namespace fts3
-

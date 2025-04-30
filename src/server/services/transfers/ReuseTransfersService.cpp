@@ -21,12 +21,13 @@
 #include "ReuseTransfersService.h"
 
 #include <fstream>
+#include <random>
 
 #include "common/DaemonTools.h"
 #include "config/ServerConfig.h"
 #include "cred/DelegCred.h"
 #include "ExecuteProcess.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "SingleTrStateInstance.h"
 
 #include "CloudStorageConfig.h"
@@ -41,8 +42,6 @@ using fts3::config::ServerConfig;
 namespace fts3 {
 namespace server {
 
-extern time_t retrieveRecords;
-
 
 ReuseTransfersService::ReuseTransfersService()
 {
@@ -52,9 +51,11 @@ ReuseTransfersService::ReuseTransfersService()
 
 void ReuseTransfersService::runService()
 {
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "ReuseTransfersService interval: " << schedulingInterval.total_seconds() << "s" << commit;
+
     while (!boost::this_thread::interruption_requested())
     {
-        retrieveRecords = time(0);
+        updateLastRunTimepoint();
 
         try
         {
@@ -69,20 +70,14 @@ void ReuseTransfersService::runService()
                 continue;
             }
 
-            executeUrlcopy();
-        }
-        catch (boost::thread_interrupted&)
-        {
+            executeUrlCopy();
+        } catch (const boost::thread_interrupted&) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in ReuseTransfersService!" << commit;
             break;
-        }
-        catch (std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService " << e.what() << commit;
-        }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
+        } catch (std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService: " << e.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ReuseTransfersService!" << commit;
         }
     }
 }
@@ -254,7 +249,8 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     std::map<uint64_t, std::string> fileIds = generateJobFile(representative.jobId, files);
 
     // Can we run?
-    if (!db->isTrAllowed(representative.sourceSe, representative.destSe)) {
+    if ((representative.fileState != "FORCE_START") &&
+        (!db->isTrAllowed(representative.sourceSe, representative.destSe))) {
         return;
     }
 
@@ -286,7 +282,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     }
 
     // Set all to ready, special case for session reuse
-    int updatedFiles = db->updateFileStatusReuse(representative, "READY");
+    long updatedFiles = db->updateFileStatusReuse(representative, "READY");
     if (updatedFiles <= 0)
     {
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Transfer "
@@ -302,9 +298,6 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
     {
         cmdBuilder.setDebugLevel(debugLevel);
     }
-
-    // Infosystem
-    cmdBuilder.setInfosystem(infosys);
 
     // FTS3 name
     cmdBuilder.setFTSName(ftsHostName);
@@ -406,7 +399,7 @@ static void failUnschedulable(const std::vector<QueueId> &unschedulable)
 }
 
 
-void ReuseTransfersService::executeUrlcopy()
+void ReuseTransfersService::executeUrlCopy()
 {
     // Bail out as soon as possible if there are too many url-copy processes
     int maxUrlCopy = config::ServerConfig::instance().get<int>("MaxUrlCopyProcesses");
@@ -425,7 +418,9 @@ void ReuseTransfersService::executeUrlcopy()
         std::vector<QueueId> queues, unschedulable;
         DBSingleton::instance().getDBObjectInstance()->getQueuesWithSessionReusePending(queues);
         // Breaking determinism. See FTS-704 for an explanation.
-        std::random_shuffle(queues.begin(), queues.end());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(queues.begin(), queues.end(), g);
         queues = applyVoShares(queues, unschedulable);
         // Fail all that are unschedulable
         failUnschedulable(unschedulable);
@@ -435,14 +430,15 @@ void ReuseTransfersService::executeUrlcopy()
         }
 
         getFiles(queues, availableUrlCopySlots);
-    }
-    catch (std::exception& e)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService " << e.what() << commit;
-    }
-    catch (...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService!" << commit;
+    } catch (const boost::thread_interrupted&) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Interruption requested in ReuseTransfersService::executeUrlCopy!" << commit;
+        throw;
+    } catch (std::exception& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in ReuseTransfersService::executeUrlCopy: " << e.what() << commit;
+        throw;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception in ReuseTransfersService!" << commit;
+        throw;
     }
 }
 

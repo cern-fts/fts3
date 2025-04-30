@@ -22,12 +22,10 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
-#include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
 #include "common/Singleton.h"
-#include "services/BaseService.h"
-
+#include "server/common/BaseService.h"
 
 namespace fts3 {
 namespace server {
@@ -37,7 +35,6 @@ class Server: public fts3::common::Singleton<Server>
 {
 public:
     Server();
-
     ~Server();
 
     /// Start the services
@@ -49,11 +46,15 @@ public:
     /// Stop the services
     void stop();
 
+    using ConfigConstraintTuple = std::tuple<std::string, std::string, int>;
+    static void validateConfigRestraints(const std::vector<ConfigConstraintTuple>& constraints);
+
 private:
+    void addService(const std::shared_ptr<BaseService>& service);
+
+    std::string processName{"fts_server"};
     boost::thread_group systemThreads;
     std::vector<std::shared_ptr<BaseService>> services;
-
-    void addService(BaseService *service);
 };
 
 } // end namespace server

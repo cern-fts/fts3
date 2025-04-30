@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "db/generic/QueueId.h"
-#include "../BaseService.h"
+#include "server/common/BaseService.h"
 
 
 namespace fts3 {
@@ -36,17 +36,13 @@ namespace server {
 class TransfersService: public BaseService
 {
 public:
-    /// Constructor
     TransfersService();
-
-    /// Destructor
-    virtual ~TransfersService();
+    virtual ~TransfersService() = default;
 
     virtual void runService();
 
 protected:
     std::string ftsHostName;
-    std::string infosys;
     bool monitoringMessages;
     int execPoolSize;
     std::string cmd;
@@ -55,7 +51,9 @@ protected:
     boost::posix_time::time_duration schedulingInterval;
 
     void getFiles(const std::vector<QueueId>& queues, int availableUrlCopySlots);
-    void executeUrlcopy();
+    void executeUrlCopy();
+
+    void postgresExecuteUrlCopy();
 };
 
 } // end namespace server

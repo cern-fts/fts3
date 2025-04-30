@@ -69,7 +69,7 @@ void UrlCopyCmd::setOption(const std::string &key, const std::string &value, boo
 }
 
 
-std::string UrlCopyCmd::generateParameters(void)
+std::string UrlCopyCmd::generateParameters()
 {
     std::ostringstream cmd;
 
@@ -101,12 +101,6 @@ void UrlCopyCmd::setMonitoring(bool set, const std::string &msgDir)
 void UrlCopyCmd::setPingInterval(int interval)
 {
     setOption("ping-interval", interval);
-}
-
-
-void UrlCopyCmd::setInfosystem(const std::string &infosys)
-{
-    setOption("infosystem", infosys);
 }
 
 
@@ -206,11 +200,10 @@ void UrlCopyCmd::setCopyMode(CopyMode copyMode)
 }
 
 
-bool UrlCopyCmd::isIPv6Explicit(void)
+bool UrlCopyCmd::isIPv6Explicit()
 {
     return IPv6Explicit;
 }
-
 
 void UrlCopyCmd::setFTSName(const std::string &hostname)
 {
@@ -229,15 +222,39 @@ void UrlCopyCmd::setOAuthFile(const std::string &path)
 }
 
 
+void UrlCopyCmd::setSourceTokenId(const std::string &token_id)
+{
+    setOption("src-token-id", token_id);
+}
+
+
+void UrlCopyCmd::setDestinationTokenId(const std::string &token_id)
+{
+    setOption("dst-token-id", token_id);
+}
+
+
 void UrlCopyCmd::setAuthMethod(const std::string &method)
 {
     setOption("auth-method", method);
 }
 
 
-void UrlCopyCmd::setRetrieveSEToken(bool retrieve_se_token)
+void UrlCopyCmd::setSourceTokenUnmanaged(bool unmanaged)
 {
-    setFlag("retrieve-se-token", retrieve_se_token);
+    setFlag("src-token-unmanaged", unmanaged);
+}
+
+
+void UrlCopyCmd::setDestinationTokenUnmanaged(bool unmanaged)
+{
+    setFlag("dst-token-unmanaged", unmanaged);
+}
+
+
+void UrlCopyCmd::setTokenRefreshMarginPeriod(int margin)
+{
+    setOption("token-refresh-margin", margin);
 }
 
 
@@ -272,8 +289,9 @@ void UrlCopyCmd::setFromTransfer(const TransferFile &transfer,
         setFlag("archiving", true);
         setFlag("dst-file-report", !transfer.dstFileReport.empty());
     }
-    setOption("dest-token-desc", transfer.destinationSpaceToken);
-    setOption("source-token-desc", transfer.sourceSpaceToken);
+
+    setOption("source-space-token", transfer.sourceSpaceToken);
+    setOption("dest-space-token", transfer.destinationSpaceToken);
 
     if (!transfer.fileMetadata.empty()) {
         try {
@@ -347,6 +365,7 @@ void UrlCopyCmd::setFromProtocol(const TransferFile::ProtocolParameters &protoco
     }
 
     setFlag("strict-copy", protocol.strictCopy);
+    setFlag("disable-cleanup", protocol.disableCleanup);
 }
 
 

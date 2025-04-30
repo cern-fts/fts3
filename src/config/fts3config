@@ -21,16 +21,10 @@ DbThreadsNum=26
 # Note: will be published in the FTS Transfers Dashboard
 Alias=replacethis
 
-# Infosys: <fqdn:port> of a BDII instance or false to disable BDII access
-Infosys=lcg-bdii.cern.ch:2170
-
-# Query the info systems according to the given order (e.g.: glue1;glue2)
-InfoProviders=glue1
-
 # Site name running the FTS3 service (will be published to GLUE2)
 SiteName=replacethis
 
-# Enable or disable monitoring messages (see fts-msg-monitoring.conf)
+# Enable or disable monitoring messages (see fts-activemq.conf)
 MonitoringMessaging=true
 
 # Directory where the internal FTS3 messages are written
@@ -66,6 +60,8 @@ LogTokenRequests=false
 # How often to check for new inter-process messages (measured in seconds)
 # Note: should be less than CheckStalledTimeout / 2
 #MessagingConsumeInterval = 1
+# Transfers Service threadpool size
+#InternalThreadPool = 5
 
 # Minimum required free RAM (in MB) for FTS3 to work normally
 # If the amount of free RAM goes below the limit, FTS3 will enter auto-drain mode
@@ -79,8 +75,28 @@ LogTokenRequests=false
 # The default is 400 / Use 0 to disable the check
 # MaxUrlCopyProcesses = 400
 
-## Parameters for QoS daemon - BringOnline operation
-# Maximum bulk size
+## Parameters for QoS daemon
+## ArchivePoll settings
+# Maximum number of archive monitoring operations to fetch from the database
+# Note: larger values mean more efficient database access, but larger in-memory footprint
+# FetchArchivingLimit=50000
+
+# Maximum size for the archive poll request
+# Similar to logic as the StagingBulkSize
+# ArchivePollBulkSize=200
+# Number of times to retry if an archive poll fails with ECOMM
+# ArchivePollRetries=3
+# Interval between consecutive archive poll tasks (in seconds)
+# ArchivePollInterval=600
+# How often to run the scheduler for archive poll operations (in seconds)
+# ArchivePollSchedulingInterval=60
+
+## Staging and StagingPoll settings
+# Maximum number of staging requests to fetch from the database
+# Note: larger values mean more efficient database access, but larger in-memory footprint
+# FetchStagingLimit=50000
+
+# Maximum staging bulk size
 # If the size is too large, it will take more resources (memory and CPU) to generate the requests
 # and parse the responses. Some servers may reject the requests if they are too big.
 # If it is too small, performance will be reduced.
@@ -97,10 +113,12 @@ LogTokenRequests=false
 # Note that the resolution is the StagingSchedulingInterval.
 # StagingWaitingFactor=300
 
-# How often to run the scheduler for BringOnline operations (measured in seconds)
-# StagingSchedulingInterval=60
 # Number of times to retry if a staging poll fails with ECOMM
 # StagingPollRetries=3
+# Interval between consecutive staging poll tasks (in seconds)
+# StagingPollInterval=600
+# How often to run the scheduler for staging operations (in seconds)
+# StagingSchedulingInterval=60
 
 # Default value for bring-online timeout if none if provided by the user
 # DefaultBringOnlineTimeout = 604800
@@ -113,6 +131,8 @@ LogTokenRequests=false
 # HeartBeatGraceInterval=120
 
 ## Optimizer Service settings
+# Optimizer Service threadpool size
+# OptimizerThreadPool = 10
 # Optimizer run time interval for active links (measured in seconds)
 # OptimizerInterval = 60
 # Force an Optimizer run after this time without updates (measured in seconds)
@@ -128,6 +148,9 @@ LogTokenRequests=false
 # OptimizerAggressiveIncreaseStep = 2
 # Decrease step size when the optimizer considers the performance is bad
 # OptimizerDecreaseStep = 1
+
+# Enable or disable session reuse transfers (default true)
+# AllowSessionReuse = True
 
 ## Cleaner Service settings
 # Set the cleaning bulk size when purging old records (number of jobs)
@@ -160,24 +183,57 @@ LogTokenRequests=false
 # In seconds, timeout for stalled "fts_url_copy" processes
 #CheckStalledTimeout = 900
 
-# Enable or disable job priorities (1 = fixed, 0 = follow job priorities)
-# By default (value = 0), it honors the user-specified priorities
+## Critical services supervision
+## Critical threads (e.g.: Scheduler) are supervised by the HeartBeat service.
+## When a critical thread has not run in longer than the given grace period,
+## the daemon process is running in an abnormal state and will be abruptly stopped
+## Note: Make sure the value is large enough to allow a full service run to complete!
+## Restriction: The service grace time must be at least 3x larger than the service interval
+
+# In seconds, time window since last MessageProcessingService run to be considered inactive (default 600)
+#MessagingConsumeGraceTime = 600
+# In seconds, time window since last CancelerService run to be considered inactive (default 1800)
+#CancelCheckGraceTime = 1800
+# In seconds, time window since last SchedulerService run to be considered inactive (default 600)
+#SchedulingGraceTime = 600
+# In seconds, time window since last SupervisorService run to be considered inactive (default 600)
+#SupervisorGraceTime = 600
+# In seconds, time window since last TokenExchangeService run to be considered inactive (default 600)
+#TokenExchangeCheckGraceTime = 600
+# In seconds, time window since last TokenRefreshService run (applies to Refresher, Listener, Poller) to be considered inactive (default 120)
+#TokenRefreshGraceTime = 120
+# In seconds, time window since last OptimizerService run to be considered inactive (default 3600)
+#OptimizerGraceTime = 3600
+
+# Enable or disable job priorities (default true)
+#AllowJobPriority = True
+
+# Schedule only transfers with a certain job priority (default 0)
+#  - value = 0, honor the user-specified priorities
+#  - 1 <= value <= 5, schedule only transfers with job priority = value
 #UseFixedJobPriority = 0
 
 # Behavior for failed multihop jobs
 # Cancel all NOT_USED files in a failed multihop job (default false)
 #CancelUnusedMultihopFiles = False
 
-# Flag for the Transfer Agent to retrieve Storage Element issued tokens (e.g.: macaroons) (default false)
-#RetrieveSEToken = false
-
-# Tell the FTS system to not manage access tokens that don't meet certain criteria (default false)
-NonManagedTokens = True
-
-# Flag to enable backwards compatible names when searching for proxy credentials on the local filesystem (default true)
-# New naming convention: /tmp/x509up_h<hash>_<delegation_id>
-# Backwards compatible naming: /tmp/x509up_h<hash><encodedDN>
-#BackwardsCompatibleProxyNames = False
-
+## Token Exchange settings
 # In seconds, how often to check for access tokens which don't have an associated refresh token
 TokenExchangeCheckInterval = 30
+# Bulk size for how many tokens to retrieve from the database at one time for token-exchange (default 500)
+TokenExchangeBulkSize = 500
+
+## Token Refresh settings
+# In seconds, how often to check for access tokens marked for refreshing (default 15)
+TokenRefreshCheckInterval = 15
+# In seconds, how often to process ZMQ token-refresh requests (default 15)
+TokenRefreshPollerInterval = 15
+# Bulk size for how many tokens to retrieve from the database at one time for token-refresh (default 500)
+TokenRefreshBulkSize = 500
+
+# In seconds, period before access token expiry up to which still consider access token eligible (default 300)
+# Example: safety period of 300s means token will be used up to "exp - 300s" timestamp. After, token must be refreshed
+TokenRefreshSafetyPeriod = 0
+# In seconds, period before token expiry at which the transfer agent will request a token refresh (default 300)
+# Example: margin period of 300s means the transfer agent will request token refresh at "exp - 300s" timestamp
+TokenRefreshMarginPeriod = 300

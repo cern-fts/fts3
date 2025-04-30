@@ -120,7 +120,7 @@ bool JobContext::checkValidProxy(std::string& message) const
 std::set<std::string> JobContext::getUrls() const
 {
     std::set<std::string> ret;
-    // make sure only unique SURLs will be brought online / deleted
+    // make sure only unique SURLs will be brought online
     for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j) {
         auto const & urls = it_j->second;
         for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u) {

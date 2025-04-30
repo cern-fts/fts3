@@ -23,7 +23,7 @@ RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenable
 RUN dnf clean metadata
 
 # Install FTS packages
-RUN dnf install -y fts-server fts-mysql fts-server-selinux fts-msg cronie crontabs --enablerepo=crb
+RUN dnf install -y fts-server fts-mysql fts-server-selinux fts-activemq cronie crontabs --enablerepo=crb
 
 # Install Gfal2 packages
 RUN dnf install -y gfal2 gfal2-plugin-http gfal2-plugin-xrootd gfal2-plugin-srm gfal2-plugin-mock

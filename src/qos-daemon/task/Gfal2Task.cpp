@@ -23,7 +23,6 @@
 
 using namespace fts3::common;
 
-std::string Gfal2Task::infosys;
 bool Gfal2Task::http_log_content;
 
 

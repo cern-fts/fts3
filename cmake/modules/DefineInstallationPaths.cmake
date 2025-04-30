@@ -67,7 +67,12 @@ if (UNIX)
     "${DATA_INSTALL_PREFIX}"
     CACHE PATH "The parent directory where applications can install their data (default prefix/share/${APPLICATION_NAME})"
   )
- 
+
+  SET(SYSTEMD_INSTALL_DIR
+    "${CMAKE_INSTALL_PREFIX}/usr/lib/systemd/system"
+    CACHE PATH "The directory where systemd unit files are installed (default prefix/usr/lib/systemd/system)"
+  )
+
   SET(DOC_INSTALL_DIR
     "${SHARE_INSTALL_PREFIX}/doc/${APPLICATION_NAME}"
     CACHE PATH "The parent directory where applications can install their documentation (default prefix/share/doc/${APPLICATION_NAME})"

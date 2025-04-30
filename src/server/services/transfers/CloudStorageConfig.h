@@ -23,6 +23,6 @@ namespace fts3
 
 std::string generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, const std::string &authMethod="");
 
-std::string generateOAuthConfigFile(GenericDbIfce* db, const TransferFile& tf);
+std::string generateOAuthConfigFile(const std::string& src_token, const std::string& dst_token);
 
 }

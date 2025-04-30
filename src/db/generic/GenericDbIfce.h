@@ -32,6 +32,7 @@
 #include "JobStatus.h"
 #include "FileTransferStatus.h"
 #include "QueueId.h"
+#include "QueueCompId.h"
 #include "LinkConfig.h"
 #include "StorageConfig.h"
 #include "ShareConfig.h"
@@ -41,21 +42,18 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
-#include "DeleteOperation.h"
 #include "Job.h"
 #include "MinFileStatus.h"
 #include "StagingOperation.h"
 #include "ArchivingOperation.h"
-#include "QosTransitionOperation.h"
 #include "Token.h"
 #include "TokenProvider.h"
 #include "TransferFile.h"
 #include "UserCredential.h"
 #include "UserCredentialCache.h"
+#include "Pair.h"
 
 #include "msg-bus/events.h"
-
-#include "server/services/optimizer/Optimizer.h"
 
 
 /// Hold information about individual submitted transfers
@@ -137,8 +135,8 @@ public:
 
     /// Get the token associated with the given token ID
     /// @param tokenId          The token ID
-    /// @return                 The token with tokenId, if any
-    virtual std::string findToken(const std::string& tokenId) = 0;
+    /// @return                 The <token, unmanaged flag> pair for the token ID, if any
+    virtual std::pair<std::string, bool> findToken(const std::string& tokenId) = 0;
 
     /// Get the credentials associated with the given delegation ID and user
     /// @param delegationId     Delegation ID. See insertCredentialCache
@@ -157,9 +155,6 @@ public:
     /// @param destStorage      The destination storage as protocol://host
     /// @return                 An integer with the debug level configured for the pair. 0 = no debug.
     virtual unsigned getDebugLevel(const std::string& sourceStorage, const std::string& destStorage) = 0;
-
-    /// Optimizer data source
-    virtual fts3::optimizer::OptimizerDataSource* getOptimizerDataSource() = 0;
 
     /// Checks if there are available slots to run transfers for the given pair
     /// @param sourceStorage        The source storage  (as protocol://host)
@@ -261,7 +256,7 @@ public:
     }
 
     /// Update the state of a transfer inside a session reuse job
-    virtual unsigned int updateFileStatusReuse(const TransferFile &file, const std::string &status) = 0;
+    virtual long updateFileStatusReuse(const TransferFile &file, const std::string &status) = 0;
 
     /// Puts into requestIDs, jobs that have been cancelled, and for which the running fts_url_copy must be killed
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
@@ -311,18 +306,6 @@ public:
     /// Puts into the vector queues the Queues for which there are session-reuse pending transfers
     virtual void getQueuesWithSessionReusePending(std::vector<QueueId>& queues) = 0;
 
-    /// Updates the status for delete operations
-    /// @param delOpsStatus  Update for files in delete or started
-    virtual void updateDeletionsState(const std::vector<MinFileStatus>& delOpsStatus) = 0;
-
-    /// Gets a list of delete operations in the queue
-    /// @params[out] delOps A list of namespace operations (deletion)
-    virtual void getFilesForDeletion(std::vector<DeleteOperation>& delOps) = 0;
-
-    /// Revert namespace operations already in 'STARTED' back to the 'DELETE'
-    /// state, so they re-enter the queue
-    virtual void requeueStartedDeletes() = 0;
-
     /// Updates the status for staging operations
     /// @param stagingOpStatus  Update for files in staging or started
     virtual void updateStagingState(const std::vector<MinFileStatus>& stagingOpStatus) = 0;
@@ -351,20 +334,6 @@ public:
     /// @params[out] archivingOps The list of archiving operations will be put here
     virtual void getFilesForArchiving(std::vector<ArchivingOperation> &archivingOps) = 0;
 
-    /// Get qosTransition operations ready to be started
-    /// @params[out] qosTransitionOps The list of QoS Transition operations will be put here
-    virtual void getFilesForQosTransition(std::vector<QosTransitionOperation> &qosTransitionOps, const std::string &qosOp,
-                                          bool matchHost = false) = 0;
-
-    /// Update File State to QOS_REQUEST_SUBMITTED after QoS Transition Task successfully requested QoS transition
-    /// @params[out] true if file state was updated, false otherwise
-    virtual bool updateFileStateToQosRequestSubmitted(const std::string& jobId, uint64_t fileId) = 0;
-
-    /// Update File State to FINISHED after QoS Transition for file successfully completed
-    /// @params[out] Nothing returned
-    virtual void updateFileStateToQosTerminal(const std::string& jobId, uint64_t fileId, const std::string& fileState,
-                                              const std::string& reason = "") = 0;
-
     /// Get staging operations already started
     /// @params[out] stagingOps The list of started staging operations will be put here
     virtual void getAlreadyStartedStaging(std::vector<StagingOperation> &stagingOps) = 0;
@@ -382,7 +351,7 @@ public:
     virtual void getArchivingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
 
     /// Returns list of access tokens without an associated refresh token
-    virtual std::list<Token> getAccessTokensWithoutRefresh() = 0;
+    virtual std::list<Token> getAccessTokensWithoutRefresh(int limit) = 0;
 
     /// Store a list of exchanged tokens
     virtual void storeExchangedTokens(const std::set<ExchangedToken>& exchangedTokens) = 0;
@@ -396,6 +365,25 @@ public:
 
     /// Update all files found in "TOKEN_PREP" state which also have refresh tokens available
     virtual void updateTokenPrepFiles() = 0;
+
+    /// Given a list of token ids, return a map of valid <token_id, Token>
+    virtual std::map<std::string, Token> getValidAccessTokens(const std::list<std::string>& token_ids) = 0;
+
+    /// Given a list of token ids, return a map of failed token-refreshes <token_id, (message, timestamp)>
+    virtual std::map<std::string, std::pair<std::string, int64_t>>
+        getFailedAccessTokenRefreshes(const std::list<std::string>& token_ids) = 0;
+
+    /// Given a list of token ids, mark them for refreshing
+    virtual void markTokensForRefresh(const std::list<std::string>& token_ids) = 0;
+
+    /// Returns list of access tokens marked for refreshing
+    virtual std::list<Token> getAccessTokensForRefresh(int limit) = 0;
+
+    /// Store a list of refreshed tokens
+    virtual void storeRefreshedTokens(const std::set<RefreshedToken>& refreshedTokens) = 0;
+
+    /// Mark token-refresh timestamp and error message
+    virtual void markFailedTokenRefresh(const std::set< std::pair<std::string, std::string> >& failedRefreshes) = 0;
 
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
@@ -411,6 +399,91 @@ public:
 
     /// Get the list of Token Providers
     virtual std::map<std::string, TokenProvider> getTokenProviders() = 0;
-};
+
+    /// Return a list of pairs with active or submitted transfers
+    /// @return A list containing all pairs with files in active state
+    virtual std::list<Pair> getActivePairs() = 0;
+
+    /// Return the optimizer configuration value
+    /// @param  source  The source storage as protocol://host
+    /// @param  dest    The destination storage as protocol://host
+    /// @return         The configured optimizer mode
+    virtual OptimizerMode getOptimizerMode(const std::string &source, const std::string &dest) = 0;
+
+    /// Get configured limits
+    /// @param      pair    A pair constituted of a source storage and a destination storage
+    /// @param[out] range   The configured range for the input pair
+    /// @param[out] limits  The configured storage limits for the input pair
+    virtual void getPairLimits(const Pair &pair, Range &range, StorageLimits &limits) = 0;
+
+    /// Get the stored optimizer value (current value)
+    /// @param  pair    A pair constituted of a source storage and a destination storage
+    /// @return         The optimizer value for the input pair
+    virtual int getOptimizerValue(const Pair &pair) = 0;
+
+    /// Get the weighted throughput for the pair
+    /// @param  pair                A pair constituted of a source storage and a destination storage
+    /// @param  interval            A time interval in seconds to compute the weighted throughput for the input pair
+    /// @param[out] throughput      The throughput for the input pair during the input time interval
+    /// @param[out] filesizeAvg     The average file size for the input pair during the input time interval
+    /// @param[out] filesizeStdDev  The standard deviation of the file size for the input pair during the input time interval
+    virtual void getThroughputInfo(const Pair &pair, const boost::posix_time::time_duration &interval,
+                                   double *throughput, double *filesizeAvg, double *filesizeStdDev) = 0;
+
+    /// Get average transfer duration on a given time interval
+    /// @param  pair        A pair constituted of a source storage and a destination storage
+    /// @param  interval    A time interval in seconds to compute the weighted throughput for the input pair
+    /// return              The average transfer duration
+    virtual time_t getAverageDuration(const Pair &pair, const boost::posix_time::time_duration &interval) = 0;
+
+    /// Get the success rate for the pair
+    /// @param      pair        A pair constituted of a source storage and a destination storage
+    /// @param      interval    A time interval in seconds to compute the weighted throughput for the input pair
+    /// @param[out] retryCount  The number of file transfers retried for the input pair during the input time interval
+    /// @return                 The success rate for the input pair
+    virtual double getSuccessRateForPair(const Pair &pair, const boost::posix_time::time_duration &interval,
+                                         int *retryCount) = 0;
+
+    /// Get the number of transfers in a given state
+    /// @param  pair    A pair constituted of a source storage and a destination storage
+    /// @param  state   The file state to be counted
+    /// @return         The count of files in the input state for the input pair
+    virtual int getCountInState(const Pair &pair, const std::string &state) = 0;
+
+    /// Get current inbound throughput
+    /// @param se   The storage endpoint as protocol://host
+    /// @return     The inbound throughput
+    virtual double getThroughputAsSource(const std::string &se) = 0;
+
+    /// Get current outbound throughput
+    /// @param se   The storage endpoint as protocol://host
+    /// @return     The outbound throughput
+    virtual double getThroughputAsDestination(const std::string &se) = 0;
+
+    /// Permanently register the optimizer decision
+    /// @param  pair            A pair constituted of a source storage and a destination storage
+    /// @param  activeDecision  The optimizer decision taken
+    /// @param  newState        The new optimizer state for the pair
+    /// @param  diff            The diff in the optimizer decision
+    /// @param  rationale       The rationale for the optimizer decision
+    virtual void storeOptimizerDecision(const Pair &pair, int activeDecision,
+                                        const PairState &newState, int diff, const std::string &rationale) = 0;
+
+    /// Permanently register the number of streams per active
+    /// @param  pair    A pair constituted of a source storage and a destination storage
+    /// @param  streams The number of streams to be registerd for the pair
+    virtual void storeOptimizerStreams(const Pair &pair, int streams) = 0;
+
+    /// Get the list of scheduled file-transfers
+    /// @param maxFiles The maximum number of file-transfers this method should return
+    virtual std::list<TransferFile> postgresGetScheduledFileTransfers(const int maxFiles) = 0;
+
+    /// Store maxUrlCopyProcesses for the fts_server running on this host into the t_hosts table
+    /// @param maxUrlCopyProcesses Maximum number of fts_url_copy processes
+    virtual void postgresStoreMaxUrlCopyProcesses(const int maxUrlCopyProcesses) = 0;
+
+    /// Put all the transfers assigned to this host that are in the SELECTED state back in the queue
+    virtual void recoverSelectedTransfers() = 0;
+    };
 
 #endif // GENERICDBIFCE_H_

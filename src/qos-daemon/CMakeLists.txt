@@ -23,7 +23,7 @@ find_package(GFAL2)
 find_package(GLIB2)
 find_package(Boost COMPONENTS thread system filesystem)
 
-include_directories (
+include_directories(
     ${GFAL2_INCLUDE_DIRS}
     ${GLIB2_INCLUDE_DIRS}
 )
@@ -42,14 +42,13 @@ target_link_libraries(fts_qos
     fts_db_generic
     fts_config
     fts_common
-	fts_msg_bus
+	  fts_msg_bus
     fts_proxy
-	fts_msg_ifce
+    fts_msg_ifce
+	  fts_server_lib
 )
 
 # Install artifacts
-install(
-    TARGETS    fts_qos 
-	RUNTIME    DESTINATION ${SBIN_INSTALL_DIR}
+install(TARGETS fts_qos
+		RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )
-

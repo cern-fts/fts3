@@ -3,15 +3,21 @@
 %global selinux_variants mls targeted
 # Compile Python scripts using Python3
 %define __python python3
+%if 0%{!?fts4_scheduler_build:1}
+%define fts4_scheduler_build OFF
+%endif
+%if "%{fts4_scheduler_build}" != "ON"
+%define fts4_scheduler_build OFF
+%endif
 
 Name:       fts
-Version:    3.13.3
+Version:    3.14.0
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.13.3 https://gitlab.cern.ch/fts/fts3.git fts-3.13.3
-# tar -vczf fts-3.13.3.tar.gz --exclude-vcs fts-3.13.3/
+# git clone --depth=1 --branch v3.14.0 https://gitlab.cern.ch/fts/fts3.git fts-3.14.0
+# tar -vczf fts-3.14.0.tar.gz --exclude-vcs fts-3.14.0/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -22,7 +28,7 @@ BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.23.0
+BuildRequires:  gfal2-devel >= 2.23.2
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -33,7 +39,7 @@ BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc
 BuildRequires:  systemd
 BuildRequires:  cppzmq-devel
 BuildRequires:  jsoncpp-devel
-BuildRequires:  davix-devel >= 0.8.4
+BuildRequires:  davix-devel >= 0.8.10
 BuildRequires:  cryptopp-devel >= 5.6.2
 Requires(pre):  shadow-utils
 
@@ -55,9 +61,9 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.23.0
-Requires: gfal2-plugin-http%{?_isa} >= 2.23.0
-Requires: gfal2-plugin-srm%{?_isa} >= 2.23.0
+Requires: gfal2%{?_isa} >= 2.23.2
+Requires: gfal2-plugin-http%{?_isa} >= 2.23.2
+Requires: gfal2-plugin-srm%{?_isa} >= 2.23.2
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 Requires: jsoncpp
@@ -77,6 +83,23 @@ VOMS based. Furthermore, the service provides a mechanism that
 dynamically adjust transfer parameters for optimal bandwidth
 utilization and allows for configuring so called VO-shares.
 
+%if "%{fts4_scheduler_build}" == "ON"
+%package scheduler
+Summary: FTS4 scheduler
+
+Requires: python3-psycopg2
+
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
+
+%description scheduler
+The FTS4 scheduler is a daemon that schedules the next set of file-transfers by
+reading the current state of the FTS instance and its queues from the FTS
+database, taking the neccessary scheduling decisions and then writing them back
+to the database.
+%endif
+
 %package libs
 Summary:    File Transfer Service version 3 libraries
 
@@ -89,12 +112,14 @@ server. This includes among others: configuration
 parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
-%package msg
+%package activemq
 Summary:    File Transfer Service version 3 messaging integration
-Requires:   fts-server%{?_isa} = %{version}-%{release}
+Requires:   fts-libs%{?_isa} = %{version}-%{release}
+Provides:   %{name}-msg%{?_isa} = %{version}-%{release}
+Obsoletes:  %{name}-msg <= %{version}
 
-%description msg
-FTS messaging integration
+%description activemq
+FTS ActiveMQ broker publisher daemon
 
 %package server-selinux
 Summary:    SELinux support for fts-server
@@ -125,7 +150,7 @@ Summary:    FTS unit tests
 Group:      Development/Tools
 
 Requires:   fts-libs%{?_isa} = %{version}-%{release}
-Requires:   gfal2-plugin-mock
+Requires:   gfal2-plugin-mock%{?_isa} >= 2.23.2
 
 %description tests
 Testing binaries for the FTS Server and related components.
@@ -145,6 +170,7 @@ if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
 fi
 
 %cmake3 -DSERVERBUILD=ON -DMYSQLBUILD=ON \
+    -DFTS4SCHEDULERBUILD=%{fts4_scheduler_build} \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX='' \
@@ -206,21 +232,21 @@ if [ "$1" -ge "1" ] ; then
 fi
 exit 0
 
-# Messaging scriptlets
-%post msg
+# ActiveMQ scriptlets
+%post activemq
 /bin/systemctl daemon-reload > /dev/null 2>&1 || :
 exit 0
 
-%preun msg
+%preun activemq
 if [ $1 -eq 0 ] ; then
-  /bin/systemctl stop fts-msg-bulk.service > /dev/null 2>&1 || :
-  /bin/systemctl --no-reload disable fts-msg-bulk.service > /dev/null 2>&1 || :
+  /bin/systemctl stop fts-activemq.service > /dev/null 2>&1 || :
+  /bin/systemctl --no-reload disable fts-activemq.service > /dev/null 2>&1 || :
 fi
 exit 0
 
-%postun msg
+%postun activemq
 if [ "$1" -ge "1" ] ; then
-  /bin/systemctl try-restart fts-msg-bulk.service > /dev/null 2>&1 || :
+  /bin/systemctl try-restart fts-activemq.service > /dev/null 2>&1 || :
 fi
 exit 0
 
@@ -259,11 +285,12 @@ fi
 %dir %attr(0755,fts3,root) %{_sysconfdir}/fts3
 
 %{_sbindir}/fts_qos
+%{_sbindir}/fts_optimizer
+%{_sbindir}/fts_token
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_rotate
-%{_sbindir}/ftstokenrefresherd
 %{_sbindir}/ftstokenhousekeeperd
 
 %dir %attr(0755,root,root) %{_datadir}/fts/
@@ -272,28 +299,41 @@ fi
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-server.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-records-cleaner.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-qos.service
-%config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenrefresherd.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-optimizer.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-token.service
 %config(noreplace) %attr(0644,root,root) %{_unitdir}/ftstokenhousekeeperd.service
 
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
-%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/ftstokenrefresherd.ini
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/ftstokenhousekeeperd.ini
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-server
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-qos
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-optimizer
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/sysconfig/fts-token
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_qos.8.gz
+%{_mandir}/man8/fts_optimizer.8.gz
+%{_mandir}/man8/fts_token.8.gz
 %{_mandir}/man8/fts_db_cleaner.8.gz
 %{_mandir}/man8/fts_server.8.gz
 %{_mandir}/man8/fts_url_copy.8.gz
 
-%files msg
-%{_sbindir}/fts_msg_bulk
+%files activemq
+%{_sbindir}/fts_activemq
 
-%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-msg-bulk.service
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-activemq.service
 
-%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
-%{_mandir}/man8/fts_msg_bulk.8.gz
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-activemq.conf
+%{_mandir}/man8/fts_activemq.8.gz
+
+%if "%{fts4_scheduler_build}" == "ON"
+%files scheduler
+%dir %attr(0755,fts3,root) /opt/fts
+%dir %attr(0755,fts3,root) /opt/fts/fts_scheduler
+/opt/fts/fts_scheduler/*.py
+%config(noreplace) %attr(0644,root,root) %{_unitdir}/fts-scheduler.service
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-scheduler.ini
+%endif
 
 %files libs
 %{_libdir}/libfts_common.so*
@@ -320,6 +360,15 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Wed Apr 30 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.0
+- FTS v3.14 minor release: "Token Release"
+- Rework of the transfer agent process for finer graind control
+- Complete rework of the component publishing monitoring messages (new FTS ActiveMQ daemon)
+- Stand-alone daemons for Optimizer and Token services
+- Staging & scheduling performance improvements
+- Large codebase clean-up to reove deprecated components
+- New schema v10.0.0 (new fields and optimized indexes)
+
 * Fri Nov 22 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3
 - Executable "tokenrefresherd" and "tokenhousekeeperd" daemons
 - Systemd unit files for the "/usr/sbin/" token daemons

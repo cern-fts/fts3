@@ -23,15 +23,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(GLIB2)
 find_package(ZMQ)
 find_package(JSONCPP)
-find_package(Davix)
-find_package(Cryptopp)
 
 include_directories(
 	${GLIB2_INCLUDE_DIRS}
 	${ZMQ_INCLUDE_DIRS}
 	${JSONCPP_INCLUDE_DIRS}
-	${DAVIX_INCLUDE_DIR}
-	${CRYPTOPP_INCLUDE_DIRS}
 )
 
 # Server lib
@@ -47,15 +43,13 @@ list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
 add_library(fts_server_lib SHARED ${fts_server_lib_sources})
 target_link_libraries(fts_server_lib
     fts_db_generic
-	fts_msg_bus
+    fts_msg_bus
     fts_proxy
     gridsite
-	${GLIB2_LIBRARIES}
-	${Boost_LIBRARIES}
+    ${GLIB2_LIBRARIES}
+    ${Boost_LIBRARIES}
     ${ZMQ_LIBRARIES}
-	${DAVIX_LIBRARIES}
-	${CRYPTOPP_LIBRARIES}
-	JSONCPP::JSONCPP
+    JSONCPP::JSONCPP
 )
 set_target_properties(fts_server_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/server
@@ -71,17 +65,21 @@ target_link_libraries(fts_server
     fts_server_lib
     fts_config
     fts_common
-	fts_msg_ifce
+    fts_msg_ifce
     ${Boost_LIBRARIES}
 )
 
 # Man pages
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
-install(FILES "${MAN_INPUT_DIR}/fts_server.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_db_cleaner.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_msg_bulk.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_url_copy.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
-install(FILES "${MAN_INPUT_DIR}/fts_qos.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES
+		"${MAN_INPUT_DIR}/fts_server.8"
+		"${MAN_INPUT_DIR}/fts_db_cleaner.8"
+		"${MAN_INPUT_DIR}/fts_activemq.8"
+		"${MAN_INPUT_DIR}/fts_url_copy.8"
+		"${MAN_INPUT_DIR}/fts_qos.8"
+		"${MAN_INPUT_DIR}/fts_optimizer.8"
+		"${MAN_INPUT_DIR}/fts_token.8"
+	DESTINATION ${MAN_INSTALL_DIR}/man8/)
 
 # Artifacts
 install(TARGETS fts_server_lib

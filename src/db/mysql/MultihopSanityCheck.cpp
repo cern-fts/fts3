@@ -40,14 +40,18 @@ void MySqlAPI::fixFilesInNotUsedState(soci::session &sql)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity check of multihop jobs with a stuck hop" << commit;
 
+    const std::string sql_buffer_result = sql.get_backend_name() == "mysql" ? " SQL_BUFFER_RESULT" : "";
+
     sql.begin();
 
     soci::rowset<soci::row> multihopJobIds = (
         sql.prepare <<
-            "SELECT SQL_BUFFER_RESULT job_id "
+            "SELECT" << sql_buffer_result <<
+            "    job_id "
             "FROM t_job "
-            "WHERE job_state IN ('SUBMITTED', 'ACTIVE') "
-            "AND job_type='H'"
+            "WHERE"
+            "    job_state IN ('SUBMITTED', 'ACTIVE') AND"
+            "    job_type='H'"
     );
 
     for (auto i = multihopJobIds.begin(); i != multihopJobIds.end(); ++i) {

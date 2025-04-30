@@ -45,6 +45,7 @@ public:
     bool isSessionReuse;
 
     bool strictCopy;
+    bool disableCleanup;
     bool dstFileReport;
     std::string thirdPartyTURL;
 
@@ -54,7 +55,6 @@ public:
     std::string oauthFile;
     std::string cloudStorageConfig;
 
-    std::string infosys;
     std::string alias;
 
     std::string jobMetadata;
@@ -62,7 +62,6 @@ public:
     std::string authMethod;
     std::string copyMode;
     bool disableCopyFallback;
-    bool retrieveSEToken;
     bool overwriteDiskEnabled;
 
     unsigned optimizerLevel;
@@ -79,6 +78,7 @@ public:
     bool     skipEvict;
     bool     enableMonitoring;
     unsigned pingInterval;
+    unsigned tokenRefreshMargin;
 
     unsigned retry;
     unsigned retryMax;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) CERN 2013-2015
+ * Copyright (c) CERN 2013-2025
  *
  * Copyright (c) Members of the EMI Collaboration. 2010-2013
  *  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -18,20 +18,20 @@
  * limitations under the License.
  */
 
+#include <dirq.h>
 #include <fstream>
+#include <cstring>
 #include "common/Logger.h"
 #include "consumer.h"
 #include "DirQ.h"
 
 
-Consumer::Consumer(const std::string &baseDir, unsigned limit):
-    baseDir(baseDir), limit(limit),
-    monitoringQueue(new DirQ(baseDir + "/monitoring")), statusQueue(new DirQ(baseDir + "/status")),
-    stalledQueue(new DirQ(baseDir + "/stalled")), logQueue(new DirQ(baseDir + "/logs")),
-    stagingQueue(new DirQ(baseDir + "/staging")), deletionQueue(new DirQ(baseDir + "/deletion"))
+Consumer::Consumer(const std::string &baseDir, unsigned limit): baseDir(baseDir), limit(limit),
+    statusQueue(std::make_unique<DirQ>(baseDir + "/status")), stalledQueue(std::make_unique<DirQ>(baseDir + "/stalled")),
+    logQueue(std::make_unique<DirQ>(baseDir + "/logs")), stagingQueue(std::make_unique<DirQ>(baseDir + "/staging")),
+    deletionQueue(std::make_unique<DirQ>(baseDir + "/deletion"))
 {
 }
-
 
 Consumer::~Consumer()
 {
@@ -54,19 +54,16 @@ static int genericConsumer(std::unique_ptr<DirQ> &dirq, unsigned limit, std::vec
             try {
                 std::ifstream fstream(path);
                 event.ParseFromIstream(&fstream);
-            }
-            catch (const std::exception &ex) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                    << "Could not load message from " << path << " (" << ex.what() << ")"
-                    << fts3::common::commit;
+            } catch (const std::exception &ex) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load message from " << path << " (" << ex.what() << ")"
+                                               << fts3::common::commit;
             }
 
             messages.emplace_back(event);
             if (dirq_remove(*dirq, iter) < 0) {
                 error = dirq_get_errstr(*dirq);
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
-                    << error
-                    << fts3::common::commit;
+                                               << error << fts3::common::commit;
                 dirq_clear_error(*dirq);
             }
         }
@@ -149,63 +146,17 @@ int Consumer::runConsumerStaging(std::vector<fts3::events::MessageBringonline> &
 }
 
 
-int Consumer::runConsumerMonitoring(std::vector<std::string> &messages)
-{
-    std::string content;
-
-    const char *error = NULL;
-    dirq_clear_error(*monitoringQueue);
-
-    unsigned i = 0;
-    for (auto iter = dirq_first(*monitoringQueue); iter != NULL && i < limit; iter = dirq_next(*monitoringQueue), ++i) {
-        if (dirq_lock(*monitoringQueue, iter, 0) == 0) {
-            const char *path = dirq_get_path(*monitoringQueue, iter);
-
-            try {
-                std::ifstream fstream(path);
-                content.assign((std::istreambuf_iterator<char>(fstream)), std::istreambuf_iterator<char>());
-                messages.emplace_back(content);
-            }
-            catch (const std::exception &ex) {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR)
-                << "Could not load message from " << path << " (" << ex.what() << ")"
-                << fts3::common::commit;
-            }
-
-
-            if (dirq_remove(*monitoringQueue, iter) < 0) {
-                error = dirq_get_errstr(*monitoringQueue);
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to remove message from queue (" << path << "): "
-                    << error
-                    << fts3::common::commit;
-                dirq_clear_error(*monitoringQueue);
-            }
-        }
-    }
-
-    error = dirq_get_errstr(*monitoringQueue);
-    if (error) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to consume messages: " << error << fts3::common::commit;
-        return -1;
-    }
-
-    return 0;
-}
-
-
 static void _purge(DirQ *dq)
 {
     if (dirq_purge(*dq) < 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR)
-            << "Could not purge " << dq->getPath() << " (" << dirq_get_errstr(*dq) << ")"
-            << fts3::common::commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not purge " << dq->getPath() << " (" << dirq_get_errstr(*dq) << ")"
+                                       << fts3::common::commit;
     }
 }
 
 
 void Consumer::purgeAll()
 {
-    _purge(monitoringQueue.get());
     _purge(statusQueue.get());
     _purge(stalledQueue.get());
     _purge(logQueue.get());

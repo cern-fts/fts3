@@ -18,6 +18,7 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/function.hpp>
+#include <google/protobuf/util/message_differencer.h>
 
 #include <glib.h>
 
@@ -25,14 +26,6 @@
 #include "msg-bus/producer.h"
 
 using namespace fts3::events;
-
-
-namespace boost {
-    bool operator==(const google::protobuf::Message &a, const google::protobuf::Message &b)
-    {
-        return a.SerializeAsString() == b.SerializeAsString();
-    }
-}
 
 
 namespace std {
@@ -102,48 +95,19 @@ BOOST_FIXTURE_TEST_CASE (simpleStatus, MsgBusFixture)
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerDeletions, consumer);
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerStaging, consumer);
     expectZeroMessages<std::map<int, MessageLog>>(&Consumer::runConsumerLog, consumer);
-    expectZeroMessages<std::vector<std::string>>(&Consumer::runConsumerMonitoring, consumer);
     expectZeroMessages<std::vector<MessageUpdater>>(&Consumer::runConsumerStall, consumer);
 
     // First attempt must return the single message
     std::vector<Message> statuses;
     BOOST_CHECK_EQUAL(0, consumer.runConsumerStatus(statuses));
     BOOST_CHECK_EQUAL(1, statuses.size());
-    BOOST_CHECK_EQUAL(statuses[0], original);
+    BOOST_CHECK_EQUAL(true, google::protobuf::util::MessageDifferencer::Equals(statuses[0], original));
+
 
     // Second attempt must return empty (already consumed)
     statuses.clear();
     BOOST_CHECK_EQUAL(0, consumer.runConsumerStatus(statuses));
     BOOST_CHECK_EQUAL(0, statuses.size());
-}
-
-
-BOOST_FIXTURE_TEST_CASE (simpleMonitoring, MsgBusFixture)
-{
-    Producer producer(TEST_PATH);
-    Consumer consumer(TEST_PATH);
-
-    std::string original = "blah bleh blih bloh cluh";
-
-    BOOST_CHECK_EQUAL(0, producer.runProducerMonitoring(original));
-
-    // Make sure the messages don't get messed up
-    expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
-    expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerDeletions, consumer);
-    expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerStaging, consumer);
-    expectZeroMessages<std::map<int, MessageLog>>(&Consumer::runConsumerLog, consumer);
-    expectZeroMessages<std::vector<MessageUpdater>>(&Consumer::runConsumerStall, consumer);
-
-    // First attempt must return the single message
-    std::vector<std::string> monitoring;
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerMonitoring(monitoring));
-    BOOST_CHECK_EQUAL(1, monitoring.size());
-    BOOST_CHECK_EQUAL(monitoring[0], original);
-
-    // Second attempt must return empty (already consumed)
-    monitoring.clear();
-    BOOST_CHECK_EQUAL(0, consumer.runConsumerMonitoring(monitoring));
-    BOOST_CHECK_EQUAL(0, monitoring.size());
 }
 
 
@@ -167,7 +131,6 @@ BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerDeletions, consumer);
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerStaging, consumer);
-    expectZeroMessages<std::vector<std::string>>(&Consumer::runConsumerMonitoring, consumer);
     expectZeroMessages<std::vector<MessageUpdater>>(&Consumer::runConsumerStall, consumer);
 
     // First attempt must return the single message
@@ -175,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
     BOOST_CHECK_EQUAL(0, consumer.runConsumerLog(logs));
     BOOST_CHECK_EQUAL(1, logs.size());
     BOOST_CHECK_NO_THROW(logs.at(original.file_id()));
-    BOOST_CHECK_EQUAL(logs.at(original.file_id()), original);
+    BOOST_CHECK_EQUAL(true, google::protobuf::util::MessageDifferencer::Equals(logs.at(original.file_id()), original));
 
     // Second attempt must return empty (already consumed)
     logs.clear();
@@ -202,14 +165,13 @@ BOOST_FIXTURE_TEST_CASE (simpleDeletion, MsgBusFixture)
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerStaging, consumer);
     expectZeroMessages<std::map<int, MessageLog>>(&Consumer::runConsumerLog, consumer);
-    expectZeroMessages<std::vector<std::string>>(&Consumer::runConsumerMonitoring, consumer);
     expectZeroMessages<std::vector<MessageUpdater>>(&Consumer::runConsumerStall, consumer);
 
     // First attempt must return the single message
     std::vector<MessageBringonline> statuses;
     BOOST_CHECK_EQUAL(0, consumer.runConsumerDeletions(statuses));
     BOOST_CHECK_EQUAL(1, statuses.size());
-    BOOST_CHECK_EQUAL(statuses[0], original);
+    BOOST_CHECK_EQUAL(true, google::protobuf::util::MessageDifferencer::Equals(statuses[0], original));
 
     // Second attempt must return empty (already consumed)
     statuses.clear();
@@ -236,14 +198,13 @@ BOOST_FIXTURE_TEST_CASE (simpleStaging, MsgBusFixture)
     expectZeroMessages<std::vector<Message>>(&Consumer::runConsumerStatus, consumer);
     expectZeroMessages<std::vector<MessageBringonline>>(&Consumer::runConsumerDeletions, consumer);
     expectZeroMessages<std::map<int, MessageLog>>(&Consumer::runConsumerLog, consumer);
-    expectZeroMessages<std::vector<std::string>>(&Consumer::runConsumerMonitoring, consumer);
     expectZeroMessages<std::vector<MessageUpdater>>(&Consumer::runConsumerStall, consumer);
 
     // First attempt must return the single message
     std::vector<MessageBringonline> statuses;
     BOOST_CHECK_EQUAL(0, consumer.runConsumerStaging(statuses));
     BOOST_CHECK_EQUAL(1, statuses.size());
-    BOOST_CHECK_EQUAL(statuses[0], original);
+    BOOST_CHECK_EQUAL(true, google::protobuf::util::MessageDifferencer::Equals(statuses[0], original));
 
     // Second attempt must return empty (already consumed)
     statuses.clear();

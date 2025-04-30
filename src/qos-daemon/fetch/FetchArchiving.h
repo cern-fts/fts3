@@ -19,19 +19,14 @@
  */
 
 #pragma once
-#ifndef FETCHARCHIVING_H_
-#define FETCHARCHIVING_H_
 
 #include <map>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "common/ThreadPool.h"
-#include "cred/DelegCred.h"
-
-#include "../task/Gfal2Task.h"
-#include "../context/StagingContext.h"
+#include "qos-daemon/task/Gfal2Task.h"
+#include "qos-daemon/context/ArchivingContext.h"
 
 
 /**
@@ -42,17 +37,38 @@ class FetchArchiving
 
 public:
     FetchArchiving(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
-    virtual ~FetchArchiving() {}
+
+    virtual ~FetchArchiving() = default;
 
     void fetch();
 
-    // Group by  credential ID (VO + DN) and storage endpoint
+    /// Group by credential ID (VO + DN) and storage endpoint
     typedef std::pair<std::string, std::string> GroupByType;
 
 private:
-    void recoverStartedTasks();
+    /**
+     * Function that recovers from DB archiving tasks that already started.
+     * To be called on the server start
+     */
+    void recoverStartedTasks() const;
+
+    /**
+     * Function that iterates over a set of archiving operations and groups them into batches to be scheduled
+     *
+     * @param archivingOperations - vector for archiving operations retrieved from the database
+     * @param recovery - signal if the scheduled task is part of start-up recovery or not (default false)
+     */
+    void startArchivePollTasks(const std::vector<ArchivingOperation>& archivingOperations,
+                               bool recovery = false) const;
+
+    /**
+     * Function to start ArchivePollTasks on the server thread pool
+     *
+     * @param context - the archiving context object
+     * @param recovery - signal if the scheduled task is part of start-up recovery or not
+     */
+    void scheduleArchivePollTask(ArchivingContext& context, bool recovery) const;
+
     fts3::common::ThreadPool<Gfal2Task> & threadpool;
-
+    boost::posix_time::time_duration archivePollSchedulingInterval;
 };
-
-#endif // FETCHSTAGING_H_

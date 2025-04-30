@@ -44,12 +44,11 @@ namespace server
 
 
 FileTransferExecutor::FileTransferExecutor(TransferFile &tf,
-    bool monitoringMsg, std::string infosys,
-    std::string ftsHostName, std::string proxy, std::string logDir, std::string msgDir) :
+    bool monitoringMsg, std::string FTSInstanceAlias,
+    std::string proxy, std::string logDir, std::string msgDir) :
     tf(tf),
     monitoringMsg(monitoringMsg),
-    infosys(infosys),
-    ftsHostName(ftsHostName),
+    FTSInstanceAlias(FTSInstanceAlias),
     proxy(proxy),
     logsDir(logDir),
     msgDir(msgDir),
@@ -103,7 +102,10 @@ void FileTransferExecutor::run(boost::any & ctx)
         std::vector< std::shared_ptr<ShareConfig> > cfgs;
 
         // Set to READY state when true
-        if (db->isTrAllowed(tf.sourceSe, tf.destSe))
+        // Note: only check if allowed for MySQL and not "FORCE_START"
+        if ((db->getDbtype() == "postgresql") ||
+            (tf.fileState == "FORCE_START") ||
+            (db->isTrAllowed(tf.sourceSe, tf.destSe)))
         {
             UrlCopyCmd cmdBuilder;
 
@@ -139,14 +141,23 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             // Not a cloud storage transfer but still using oauth2 method
             if (cloudStorageConfig.empty() && "oauth2" == authMethod) {
-                std::string oauthCredentials = generateOAuthConfigFile(db, tf);
+                auto [src_token, src_unmanaged] = db->findToken(tf.sourceTokenId);
+                auto [dst_token, dst_unmanaged] = db->findToken(tf.destinationTokenId);
+
+                std::string oauthCredentials = generateOAuthConfigFile(src_token, dst_token);
                 if (!oauthCredentials.empty()) {
                     cmdBuilder.setOAuthFile(oauthCredentials);
+                    // Should be set via the "setFromTransfer()" function, but ATs are not
+                    // Keep these functions grouped together until refactoring
+                    cmdBuilder.setSourceTokenId(tf.sourceTokenId);
+                    cmdBuilder.setDestinationTokenId(tf.destinationTokenId);
+                    cmdBuilder.setSourceTokenUnmanaged(src_unmanaged);
+                    cmdBuilder.setDestinationTokenUnmanaged(dst_unmanaged);
+                    if (!src_unmanaged || !dst_unmanaged) {
+                        cmdBuilder.setTokenRefreshMarginPeriod(fts3::config::ServerConfig::instance().get<int>("TokenRefreshMarginPeriod"));
+                    }
                 }
             }
-
-            // Retrieve SE-issued tokens flag
-            cmdBuilder.setRetrieveSEToken(fts3::config::ServerConfig::instance().get<bool>("RetrieveSEToken"));
 
             // Debug level
             cmdBuilder.setDebugLevel(db->getDebugLevel(tf.sourceSe, tf.destSe));
@@ -174,11 +185,6 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setProxy(proxy);
             }
 
-            // Info system
-            if (!infosys.empty()) {
-                cmdBuilder.setInfosystem(infosys);
-            }
-
             // UDT and IPv6
             cmdBuilder.setUDT(db->isProtocolUDT(tf.sourceSe, tf.destSe));
             if (!cmdBuilder.isIPv6Explicit()) {
@@ -192,7 +198,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             cmdBuilder.setCopyMode(db->getCopyMode(tf.sourceSe, tf.destSe));
 
             // FTS3 host name
-            cmdBuilder.setFTSName(ftsHostName);
+            cmdBuilder.setFTSName(FTSInstanceAlias);
 
             // Number of retries and maximum number allowed
             int retry_times = db->getRetryTimes(tf.jobId, tf.fileId);

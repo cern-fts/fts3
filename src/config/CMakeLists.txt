@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2013-2015
+# Copyright (c) CERN 2013-2025
 #
 # Copyright (c) Members of the EMI Collaboration. 2010-2013
 #  See  http://www.eu-emi.eu/partners for details on the copyright
@@ -33,20 +33,20 @@ set_target_properties(fts_config PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
 )
 
-# Artifacts						
+# Artifacts
 if(SERVERBUILD)
-    install(TARGETS fts_config 
-    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
+    install(TARGETS fts_config
+    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
     	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
     )
-    
+
     install(FILES fts3config
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
     	PERMISSIONS OWNER_READ OWNER_WRITE
 	)
-    
-    install(FILES fts-msg-monitoring.conf
+
+    install(FILES fts-activemq.conf
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
-    	PERMISSIONS OWNER_READ OWNER_WRITE )	
-	
+    	PERMISSIONS OWNER_READ OWNER_WRITE )
+
 endif()

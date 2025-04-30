@@ -36,12 +36,23 @@ using namespace db;
 
 static void initializeDbBackend()
 {
-    std::string dbType = ServerConfig::instance().get<std::string > ("DbType");
-    std::string dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
-    std::string dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
-    std::string dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
+    auto dbType = ServerConfig::instance().get<std::string>("DbType");
+    auto dbUserName = ServerConfig::instance().get<std::string>("DbUserName");
+    auto dbPassword = ServerConfig::instance().get<std::string>("DbPassword");
+    auto dbConnectString = ServerConfig::instance().get<std::string>("DbConnectString");
 
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbType, dbUserName, dbPassword, dbConnectString, 1);
+    auto experimentalPostgresSupport =
+        ServerConfig::instance().get<std::string>("ExperimentalPostgresSupport");
+
+    if (dbType == "postgresql" && experimentalPostgresSupport != "true") {
+        throw std::runtime_error(
+            "Failed to initialize database: "
+            "DbType cannot be set to postgresql if ExperimentalPostgresSupport is not set to true"
+        );
+    }
+
+    db::DBSingleton::instance().getDBObjectInstance()->init(
+        dbType, dbUserName, dbPassword, dbConnectString, 1);
 }
 
 

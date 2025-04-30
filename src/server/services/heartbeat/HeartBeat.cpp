@@ -18,12 +18,13 @@
  * limitations under the License.
  */
 
-#include "HeartBeat.h"
+#include <utility>
 
+#include "HeartBeat.h"
 #include "common/Logger.h"
 #include "config/ServerConfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "server/DrainMode.h"
+#include "server/common/DrainMode.h"
 #include "server/Server.h"
 
 using namespace fts3::common;
@@ -32,138 +33,90 @@ using namespace fts3::config;
 namespace fts3 {
 namespace server {
 
-time_t retrieveRecords = time(0);
-time_t updateRecords = time(0);
-time_t stallRecords = time(0);
-time_t tokenExchangeRecords = time(0);
 
-HeartBeat::HeartBeat(): BaseService("HeartBeat"), index(0), count(0), start(0), end(0)
-{
-}
-
+HeartBeat::HeartBeat(std::string processName):
+    BaseService("HeartBeat"),
+    index(0), count(0), start(0), end(0),
+    processName(std::move(processName)) {}
 
 void HeartBeat::runService()
 {
-    typedef boost::posix_time::time_duration TDuration;
-    TDuration heartBeatInterval, heartBeatGraceInterval;
+    using TDuration = boost::posix_time::time_duration;
+    auto heartBeatInterval = ServerConfig::instance().get<TDuration>("HeartBeatInterval");
+    auto heartBeatGraceInterval = ServerConfig::instance().get<TDuration>("HeartBeatGraceInterval");
 
-    try {
-        heartBeatInterval = ServerConfig::instance().get<TDuration>("HeartBeatInterval");
-        heartBeatGraceInterval = ServerConfig::instance().get<TDuration>("HeartBeatGraceInterval");
-        if (heartBeatInterval >= heartBeatGraceInterval) {
-            FTS3_COMMON_LOGGER_NEWLOG(CRIT)
-                << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
-            _exit(1);
-        }
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Could not get the heartbeat interval" << commit;
+    if (heartBeatInterval >= heartBeatGraceInterval) {
+        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
+            << "HeartBeatInterval >= HeartBeatGraceInterval. Can not work like this" << commit;
         _exit(1);
     }
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat interval " << heartBeatInterval << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat grace interval " << heartBeatGraceInterval << commit;
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat interval: " << heartBeatInterval.total_seconds() << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Using heartbeat grace interval: " << heartBeatGraceInterval.total_seconds() << "s" << commit;
 
 
-    while (!boost::this_thread::interruption_requested())
-    {
-        try
-        {
-            //if we drain a host, we need to let the other hosts know about it, hand-over all files to the rest
-            if (DrainMode::instance())
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO)
-                        << "Set to drain mode, no more transfers for this instance!"
-                        << commit;
+    while (!boost::this_thread::interruption_requested()) {
+        try {
+            if (DrainMode::instance()) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more heartbeat for this instance!" << commit;
                 boost::this_thread::sleep(boost::posix_time::seconds(15));
                 continue;
             }
 
-            if (criticalThreadExpired(retrieveRecords, updateRecords, stallRecords))
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(CRIT)
-                        << "One of the critical threads looks stalled"
-                        << commit;
-                // Note: Would be nice to get the pstack output in the log
-                orderedShutdown();
-            }
+            criticalServiceExpired();
 
-            std::string serviceName = "fts_server";
+            DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
+                &index, &count, &start, &end, processName);
 
-            db::DBSingleton::instance().getDBObjectInstance()
-                ->updateHeartBeat(&index, &count, &start, &end, serviceName);
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG)
-                << "Systole: host " << index << " out of " << count
-                << " [" << start << ':' << end << ']'
-                << commit;
-
-            // It the update was successful, we sleep here
-            // If it wasn't, only one second will pass until the next retry
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Systole: host " << index << " out of " << count
+                                             << " [" << start << ':' << end << ']' << commit;
+            // Sleep on successful update (on exception, repeat after 1s)
             boost::this_thread::sleep(heartBeatInterval);
-        }
-        catch (const boost::thread_interrupted&)
-        {
-            throw;
-        }
-        catch (const std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+        } catch (const boost::thread_interrupted&) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread interruption requested in HeartBeat!" << commit;
+            break;
+        } catch (const std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Heartbeat failed: " << e.what() << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(1));
-        }
-        catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Heartbeat failed " << commit;
             boost::this_thread::sleep(boost::posix_time::seconds(1));
         }
     }
 }
 
-
-bool HeartBeat::criticalThreadExpired(time_t retrieveRecords, time_t updateRecords ,time_t stallRecords)
+void HeartBeat::criticalServiceExpired()
 {
-    double diffTime = 0.0;
+    std::scoped_lock lock(mxWatchedServices);
 
-    diffTime = std::difftime(std::time(NULL), retrieveRecords);
-    if (diffTime > 7200)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
-                << "Wall time passed retrieve records: " << diffTime
-                << " secs " << commit;
-        return true;
+    for (const auto& [service, data]: watchedServices) {
+        auto serviceName = service->getServiceName();
+        auto last = service->getLastRunTimepoint();
+        auto graceTime = data.graceTime;
+        auto fun_gracefulAbort = data.fun_gracefulAbort;
+
+        auto now = std::chrono::steady_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::seconds>(now - last).count();
+
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Service \"" << serviceName << "\"" 
+                                         << " time_since_last_run=" << diff << "s" << commit;
+
+        if (diff >= graceTime) {
+            // Aborting the daemon
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Service \"" << serviceName << "\" inactive for too long!"
+                                            << " (" << diff << "s >= " << graceTime << "s)"
+                                            << " Aborting daemon!" << commit;
+
+            // Offer grace time for all threads to finish gracefully
+            fun_gracefulAbort();
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting process" << commit;
+            exit(1);
+        }
     }
-
-    diffTime = std::difftime(std::time(NULL), updateRecords);
-    if (diffTime > 7200)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
-                << "Wall time passed update records: " << diffTime
-                << " secs " << commit;
-        return true;
-    }
-
-    diffTime = std::difftime(std::time(NULL), stallRecords);
-    if (diffTime > 10000)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG(CRIT)
-                << "Wall time passed stallRecords and cancelation thread exited: "
-                << diffTime << " secs " << commit;
-        return true;
-    }
-
-    return false;
 }
 
-void HeartBeat::orderedShutdown()
-{
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Stopping other threads..." << commit;
-    // Give other threads a chance to finish gracefully
-    Server::instance().stop();
-    boost::this_thread::sleep(boost::posix_time::seconds(30));
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting" << commit;
-    exit(1);
-}
-
-bool HeartBeat::isLeadNode(bool bypassDraining)
+bool HeartBeat::isLeadNode(bool bypassDraining) const
 {   
     if (DrainMode::instance() && !bypassDraining) {
         return false;
