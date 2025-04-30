@@ -16,8 +16,8 @@ Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.13.3 https://gitlab.cern.ch/fts/fts3.git fts-3.13.3
-# tar -vczf fts-3.13.3.tar.gz --exclude-vcs fts-3.13.3/
+# git clone --depth=1 --branch v3.14.0 https://gitlab.cern.ch/fts/fts3.git fts-3.14.0
+# tar -vczf fts-3.14.0.tar.gz --exclude-vcs fts-3.14.0/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -360,6 +360,15 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Wed Apr 30 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.0
+- FTS v3.14 minor release: "Token Release"
+- Rework of the transfer agent process for finer graind control
+- Complete rework of the component publishing monitoring messages (new FTS ActiveMQ daemon)
+- Stand-alone daemons for Optimizer and Token services
+- Staging & scheduling performance improvements
+- Large codebase clean-up to reove deprecated components
+- New schema v10.0.0 (new fields and optimized indexes)
+
 * Fri Nov 22 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3
 - Executable "tokenrefresherd" and "tokenhousekeeperd" daemons
 - Systemd unit files for the "/usr/sbin/" token daemons
