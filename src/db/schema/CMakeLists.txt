@@ -19,10 +19,10 @@ if (MYSQLBUILD STREQUAL "ON")
         "mysql/*.sql"
 	)
 	install(FILES       ${mysql_scripts}
-			DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql)
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/fts-mysql)
 endif ()
 
 if (SERVERBUILD STREQUAL "ON")
 	install(FILES       fts-database-upgrade.py
-			DESTINATION ${SHARE_INSTALL_PREFIX}/fts)
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/fts)
 endif ()

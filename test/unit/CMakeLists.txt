@@ -28,7 +28,7 @@ function (define_test name link)
     add_library (${name} SHARED "${name}.cpp" ${ARGN})
     target_link_libraries (${name} ${link})
     install(TARGETS ${name}
-            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/fts-tests/)
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/fts-tests/)
 
     list (APPEND UNIT_TEST_LIST ${name})
     set (UNIT_TEST_LIST "${UNIT_TEST_LIST}" CACHE INTERNAL "Unit tests" FORCE)
@@ -50,7 +50,7 @@ message(STATUS "Found tests: ${UNIT_TEST_LIST}")
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_INSTALL_RPATH "${LIB_INSTALL_DIR}/fts-tests/")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_LIBDIR}/fts-tests/")
 
 add_executable(fts-unit-tests unit.cpp)
 target_link_libraries(fts-unit-tests
@@ -59,6 +59,6 @@ target_link_libraries(fts-unit-tests
     ${UNIT_TEST_LIST})
 
 install(TARGETS fts-unit-tests
-        RUNTIME DESTINATION ${BIN_INSTALL_DIR})
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_test(fts-unit-test fts-unit-tests)

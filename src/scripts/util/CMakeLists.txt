@@ -19,6 +19,6 @@
 #
 
 install(FILES fts_db_rotate
-    DESTINATION ${SBIN_INSTALL_DIR}
+    DESTINATION ${CMAKE_INSTALL_SBINDIR}
 )
 

@@ -173,7 +173,7 @@ fi
     -DFTS4SCHEDULERBUILD=%{fts4_scheduler_build} \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_INSTALL_PREFIX='' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
     -DSYSTEMD_INSTALL_DIR=%{_unitdir}
 
 %cmake3_build
