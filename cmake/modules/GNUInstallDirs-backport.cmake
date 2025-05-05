@@ -197,10 +197,6 @@ Functions
 
 cmake_policy(SET CMP0140 NEW)
 
-# Note that even though we read the policy every time this file is `include`
-# only the first occurrence has effect because it is used for the initialization
-# of cache variables
-cmake_policy(GET CMP0192 _GNUInstallDirs_CMP0192)
 
 # Convert a cache variable to PATH type
 
@@ -329,10 +325,7 @@ endfunction()
 # Common handler for defaults that should be in /<dir>
 # i.e. SYSCONFDIR and LOCALSTATEDIR
 function(__GNUInstallDirs_default_in_root out_var original_path install_prefix)
-  if(_GNUInstallDirs_CMP0192 STREQUAL "NEW")
-    _GNUInstallDirs_special_absolute(${out_var}
-      "${original_path}" "${install_prefix}")
-  endif()
+  _GNUInstallDirs_special_absolute(${out_var} "${original_path}" "${install_prefix}")
   cmake_path(NORMAL_PATH ${out_var})
   return(PROPAGATE ${out_var})
 endfunction()
@@ -341,12 +334,7 @@ endfunction()
 function(__GNUInstallDirs_default_in_usr out_var initial_value install_prefix)
   set(${out_var} "${initial_value}")
   if(install_prefix STREQUAL "/")
-    cmake_policy(GET CMP0193 cmp0193
-        PARENT_SCOPE # undocumented, do not use outside of CMake
-    )
-    if(cmp0193 STREQUAL "NEW")
-      set(${out_var} "usr/${${out_var}}")
-    endif()
+    set(${out_var} "usr/${${out_var}}")
   endif()
   return(PROPAGATE ${out_var})
 endfunction()
@@ -433,14 +421,12 @@ endforeach()
 # Depends on current CMAKE_INSTALL_LOCALSTATEDIR value
 function(_GNUInstallDirs_RUNSTATEDIR_get_default out_var install_prefix)
   set(${out_var} "${_GNUInstallDirs_RUNSTATEDIR_DEFAULT}")
-  if(_GNUInstallDirs_CMP0192 STREQUAL "NEW")
-    # In the /opt/ case we want the install_prefix to be appended as
-    # LOCALSTATEDIR/run/PREFIX
-    if(install_prefix MATCHES "^/opt/" AND NOT install_prefix MATCHES "^/opt/homebrew/")
-        string(REPLACE "${install_prefix}" "/run${install_prefix}"
+  # In the /opt/ case we want the install_prefix to be appended as
+  # LOCALSTATEDIR/run/PREFIX
+  if(install_prefix MATCHES "^/opt/" AND NOT install_prefix MATCHES "^/opt/homebrew/")
+      string(REPLACE "${install_prefix}" "/run${install_prefix}"
           ${out_var} "${CMAKE_INSTALL_LOCALSTATEDIR}"
-        )
-    endif()
+      )
   endif()
   return(PROPAGATE ${out_var})
 endfunction()
@@ -619,12 +605,7 @@ function(GNUInstallDirs_get_absolute_install_dir absvar var)
   endif()
 
   set(return_vars ${absvar})
-  cmake_policy(GET CMP0193 cmp0193
-    PARENT_SCOPE # undocumented, do not use outside of CMake
-  )
-  if(NOT cmp0193 STREQUAL "NEW")
-    list(APPEND return_vars ${var})
-  endif()
+  list(APPEND return_vars ${var})
   return(PROPAGATE ${return_vars})
 endfunction()
 
