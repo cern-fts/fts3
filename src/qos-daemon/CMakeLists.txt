@@ -49,6 +49,4 @@ target_link_libraries(fts_qos
 )
 
 # Install artifacts
-install(TARGETS fts_qos
-		RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
-)
+install(TARGETS fts_qos RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})

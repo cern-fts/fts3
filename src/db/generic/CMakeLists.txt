@@ -38,8 +38,8 @@ set_target_properties(fts_db_generic PROPERTIES
 # Required when building database backends, but install only when the server
 # is built
 if(SERVERBUILD)
-    install(TARGETS fts_db_generic 
-    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
-    	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+    install(TARGETS fts_db_generic
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	)
 endif()

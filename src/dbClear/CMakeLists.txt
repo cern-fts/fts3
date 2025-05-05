@@ -39,6 +39,4 @@ target_link_libraries(fts_db_cleaner
 )
 
 # Artifacts
-install(TARGETS fts_db_cleaner 
-	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
-)
+install(TARGETS fts_db_cleaner RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})

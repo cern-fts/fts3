@@ -65,8 +65,8 @@ target_link_libraries(fts_url_copy
 
 # Install artifacts
 install(TARGETS fts_url_copy_lib
-    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(TARGETS fts_url_copy
-    RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR}
 )

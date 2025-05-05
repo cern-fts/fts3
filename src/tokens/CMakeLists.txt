@@ -49,13 +49,12 @@ target_link_libraries(fts_token
 )
 
 # Install
-install(TARGETS fts_token RUNTIME
-        DESTINATION ${SBIN_INSTALL_DIR})
+install(TARGETS fts_token RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
 
 # Install Python token housekeeper script
 install(FILES scripts/ftstokenhousekeeperd
-        DESTINATION ${SBIN_INSTALL_DIR}
+        DESTINATION ${CMAKE_INSTALL_SBINDIR}
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ WORLD_READ)
 
 install(FILES scripts/ftstokenhousekeeperd.ini
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3)
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/fts3)
