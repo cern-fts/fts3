@@ -8,6 +8,7 @@ import psycopg2
 import psycopg2.pool
 
 from scheduler_algo import (
+    Link,
     LinkLimits,
     Queue,
     SchedulerInput,
@@ -103,6 +104,7 @@ def get_scheduler_input_from_db(dbconn, opaque_data) -> SchedulerInput:
         vo_activity_shares=_get_vo_activity_shares_from_db(dbconn)[0],
         link_vo_shares=_get_link_vo_shares_from_db(dbconn)[0],
         storage_to_inbound_weights=_get_storage_to_inbound_weights(dbconn)[0],
+        links=_get_links_from_db(dbconn)[0],
     )
 
 
@@ -415,6 +417,80 @@ def _get_storage_to_inbound_weights(dbconn):
         storage_to_inbound_weights[dest_se][source_se] = inbound_weight
 
     return storage_to_inbound_weights, db_sec
+
+
+def _get_links_from_db(dbconn):
+    """
+    Returns all file-transfer links in the FTS database that either have queued or active
+    file-transfers
+    """
+    sql = """
+            SELECT
+                id.queue_id,
+                id.source_se,
+                id.dest_se,
+                id.vo_name,
+                id.activity,
+                link_max_active(id.source_se, id.dest_se),
+                COALESCE(queue.nb_queued, 0) AS nb_queued,
+                COALESCE(active.nb_active, 0) AS nb_active
+            FROM (
+                SELECT
+                    queue_id,
+                    source_se,
+                    dest_se,
+                    vo_name,
+                    activity
+                FROM
+                    t_queue
+                WHERE
+                    file_state IN ('SUBMITTED', 'SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+            ) AS id
+            LEFT OUTER JOIN t_link_config
+            ON id.source_se = t_link_config.source_se AND id.source_se = t_link_config.dest_se
+            LEFT OUTER JOIN (
+                SELECT
+                    queue_id,
+                    nb_files as nb_queued
+                FROM
+                    t_queue
+                WHERE
+                    file_state = 'SUBMITTED'
+            ) AS queue
+            ON id.queue_id = queue.queue_id
+            LEFT OUTER JOIN (
+                SELECT
+                    queue_id,
+                    SUM(nb_files)::bigint as nb_active
+                FROM
+                    t_queue
+                WHERE
+                    file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+                GROUP BY
+                    queue_id
+            ) AS active
+            ON id.queue_id = active.queue_id
+            WHERE nb_queued > 0 OR nb_active > 0
+    """
+    start_db = time.time()
+    cursor = dbconn.cursor()
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+    db_sec = time.time() - start_db
+
+    result = {}
+    for row in rows:
+        link = Link(
+            queue_id=row[0],
+            link_key=(row[1], row[2]),
+            vo_name=row[3],
+            activity=row[4],
+            max_active=row[5],
+            nb_queued=row[6],
+            nb_active=row[7],
+        )
+        result[link.queue_id] = link
+    return result, db_sec
 
 
 def get_scheduler_fqdn_from_db(dbconn):

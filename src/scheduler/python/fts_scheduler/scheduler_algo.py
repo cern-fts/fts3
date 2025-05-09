@@ -110,6 +110,22 @@ class Queue:
 
 
 @dataclass
+class Link:
+    """
+    A uni-directional file-transfer link from a source storage-endpoint to a destination
+    storage-endpoint
+    """
+
+    queue_id: int
+    link_key: tuple[str, str]  # link_key = tuple(source_se, dest_se)
+    vo_name: str
+    activity: str
+    max_active: int
+    nb_queued: int
+    nb_active: int
+
+
+@dataclass
 class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     """
     The input to a single call to a scheduling algorithm
@@ -125,6 +141,7 @@ class SchedulerInput:  # pylint:disable=too-many-instance-attributes
     vo_activity_shares: dict
     link_vo_shares: dict
     storage_to_inbound_weights: dict
+    links: dict
 
 
 class SchedulerOutput:
