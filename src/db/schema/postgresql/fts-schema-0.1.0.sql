@@ -1047,3 +1047,87 @@ CREATE TABLE t_token_refresher_failed_token(
   error_message    VARCHAR(1024) NOT null,
   PRIMARY KEY (token_id)
 );
+
+
+CREATE OR REPLACE FUNCTION link_max_active(
+    _source_se varchar,
+    _dest_se varchar
+) RETURNS integer
+AS $$
+DECLARE
+    _max_active int := NULL;
+    _max_active_src int := NULL;
+    _max_active_dst int := NULL;
+BEGIN
+    SELECT
+        max_active
+    INTO
+        _max_active
+    FROM
+        t_link_config
+    WHERE
+        t_link_config.source_se = _source_se
+    AND
+        t_link_config.dest_se = _dest_se
+    LIMIT 1;
+
+    IF _max_active IS NOT NULL THEN
+        RETURN _max_active;
+    END IF;
+
+    SELECT
+        max_active
+    INTO
+        _max_active_src
+    FROM
+        t_link_config
+    WHERE
+        t_link_config.source_se = _source_se
+    AND
+        t_link_config.dest_se = '*'
+    LIMIT 1;
+
+    SELECT
+        max_active
+    INTO
+        _max_active_dst
+    FROM
+        t_link_config
+    WHERE
+        t_link_config.source_se = '*'
+    AND
+        t_link_config.dest_se = _dest_se
+    LIMIT 1;
+
+    IF _max_active_src IS NOT NULL AND _max_active_dst IS NULL THEN
+        RETURN _max_active_src;
+    END IF;
+
+    IF _max_active_src IS NULL AND _max_active_dst IS NOT NULL THEN
+        RETURN _max_active_dst;
+    END IF;
+
+    IF _max_active_src IS NOT NULL AND _max_active_dst IS NOT NULL THEN
+        -- Return minimum
+        IF _max_active_src > _max_active_dst THEN
+            RETURN _max_active_dst;
+        ELSE
+            RETURN _max_active_src;
+        END IF;
+    END IF;
+
+    SELECT
+        max_active
+    INTO
+        _max_active
+    FROM
+        t_link_config
+    WHERE
+        t_link_config.source_se = '*'
+    AND
+        t_link_config.dest_se = '*'
+    LIMIT 1;
+
+    RETURN _max_active;
+END
+$$ LANGUAGE plpgsql;
