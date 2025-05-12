@@ -188,6 +188,7 @@ CREATE TABLE t_queue (
     CHECK (activity  != ''),
     CHECK (nb_files  >=  0)
 );
+CREATE INDEX idx_nb_file_per_file_state  ON t_queue(file_state, nb_files);
 
 CREATE TABLE t_file (
     log_file_debug       SMALLINT             NULL,
