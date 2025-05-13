@@ -81,19 +81,28 @@ MsgIfce::~MsgIfce()
 }
 
 
-static void set_metadata(Json::Value& json, const std::string& key, const std::string& value)
+static void set_metadata(Json::Value& json, const std::string& key, const std::string& value,
+                         bool encoding_enabled = false)
 {
-    if (!value.empty()) {
-        try {
-            Json::Value metadata;
-            std::istringstream valueStream(value);
-            valueStream >> metadata;
-            json[key] = metadata;
-            return;
-        }
-        catch (...) {
-            // continue
-        }
+    if (value.empty()) {
+        json[key] = Json::Value::null;
+        return;
+    }
+
+    if (encoding_enabled && value == "x") {
+        json[key] = Json::Value::null;
+        return;
+    }
+
+    try {
+        Json::Value metadata;
+        std::istringstream valueStream(value);
+        valueStream >> metadata;
+        json[key] = metadata;
+        return;
+    }
+    catch (...) {
+        // continue
     }
 
     json[key] = value;
@@ -123,13 +132,7 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
     message["srm_space_token_dst"] = tr_started.srm_space_token_dest;
     message["user_dn"] = tr_started.user_dn;
 
-    if (tr_started.file_metadata != "x") {
-        set_metadata(message, "file_metadata", tr_started.file_metadata);
-    }
-    else {
-        message["file_metadata"] = "";
-    }
-
+    set_metadata(message, "file_metadata", tr_started.file_metadata, true);
     set_metadata(message, "job_metadata", tr_started.job_metadata);
 
     std::ostringstream stream;
@@ -230,13 +233,9 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["channel_type"] = tr_completed.channel_type;
     message["user_dn"] = tr_completed.user_dn;
 
-    if (tr_completed.file_metadata != "x") {
-        set_metadata(message, "file_metadata", tr_completed.file_metadata);
-    } else {
-        message["file_metadata"] = "";
-    }
-
+    set_metadata(message, "file_metadata", tr_completed.file_metadata, true);
     set_metadata(message, "job_metadata", tr_completed.job_metadata);
+
     message["activity"] = tr_completed.activity;
     message["retry"] = (Json::Value::UInt) tr_completed.retry;
     message["retry_max"] = (Json::Value::UInt) tr_completed.retry_max;
