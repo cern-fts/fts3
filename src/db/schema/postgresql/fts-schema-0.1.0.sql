@@ -1132,3 +1132,39 @@ BEGIN
     RETURN _max_active;
 END
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION storage_outbound_max_active(
+    _storage varchar
+) RETURNS integer
+AS $$
+DECLARE
+    _outbound_max_active int := NULL;
+BEGIN
+    SELECT
+        outbound_max_active
+    INTO
+        _outbound_max_active
+    FROM
+        t_se
+    WHERE
+        t_se.storage = _storage
+    LIMIT 1;
+
+    IF _outbound_max_active IS NOT NULL THEN
+        RETURN _outbound_max_active;
+    END IF;
+
+    SELECT
+        outbound_max_active
+    INTO
+        _outbound_max_active
+    FROM
+        t_se
+    WHERE
+        t_se.storage = '*'
+    LIMIT 1;
+
+    RETURN _outbound_max_active;
+END
+$$ LANGUAGE plpgsql;
