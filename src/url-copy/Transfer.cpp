@@ -74,19 +74,19 @@ std::ostream& operator << (std::ostream& out, const Transfer::Checksum_mode& c)
 {
     switch (c) {
         case Transfer::CHECKSUM_NONE:
-            out << "No checksum comparison";
+            out << "none";
             break;
         case Transfer::CHECKSUM_BOTH:
-            out << "Both checksum comparison";
+            out << "both";
             break;
         case Transfer::CHECKSUM_TARGET:
-            out << "Target comparison";
+            out << "target";
             break;
         case Transfer::CHECKSUM_SOURCE:
-            out << "Source comparison";
+            out << "source";
             break;
         default:
-            out << "Unknown value!";
+            out << "unknown!";
     }
     return out;
 }
