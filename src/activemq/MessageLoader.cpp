@@ -57,6 +57,9 @@ int MessageLoader::loadMonitoringMessages()
 
         if (current_vector->size() >= batch_size) {
             if (concurrentQueue.size() > 10) {
+
+                FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "MessageLoaderThead: waiting on concurrentQueue to drain: "
+                                                 << concurrentQueue.size() * batch_size << " messages waiting for collecting." << commit;
                 concurrentQueue.drain();
             }
             concurrentQueue.push(std::move(current_vector));

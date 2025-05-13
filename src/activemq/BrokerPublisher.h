@@ -152,8 +152,6 @@ class BrokerPublisher {
         bool refresh_sessions();
         void collect_messages();
 
-        bool connected;
-
     public:
         BrokerPublisher(const BrokerConfig &config, MessageRemover& msgRemover, std::stop_token token);
         ~BrokerPublisher();

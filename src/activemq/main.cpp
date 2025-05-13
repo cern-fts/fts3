@@ -98,7 +98,7 @@ static void DoServer(BrokerConfig &config, bool isDaemon) throw()
         // Then, we let the MessageRemover thread collect and remove all remaining messages, this is necessary to avoid sending duplicate
         // messages on the next fts_activemq daemon start.
         if (messageRemoverThread.joinable()) {
-            FTS3_COMMON_LOGGER_LOG(INFO, "Waitig on messageRemoverThread to exit!");
+            FTS3_COMMON_LOGGER_LOG(INFO, "Waiting on messageRemoverThread to exit!");
             messageRemoverThread.request_stop();
             messageRemoverThread.join();
         }
