@@ -1204,3 +1204,53 @@ BEGIN
     RETURN _inbound_max_active;
 END
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE VIEW v_transfer_net AS SELECT
+    id.queue_id,
+    id.source_se,
+    id.dest_se,
+    id.vo_name,
+    id.activity,
+    storage_outbound_max_active(id.source_se) as src_outbound_max_active,
+    storage_inbound_max_active(id.dest_se) as dst_inbound_max_Active,
+    link_max_active(id.source_se, id.dest_se),
+    COALESCE(queue.nb_queued, 0) AS nb_queued,
+    COALESCE(active.nb_active, 0) AS nb_active
+FROM (
+    SELECT
+        queue_id,
+        source_se,
+        dest_se,
+        vo_name,
+        activity
+    FROM
+        t_queue
+    WHERE
+        file_state IN ('SUBMITTED', 'SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+) AS id
+LEFT OUTER JOIN t_link_config
+ON id.source_se = t_link_config.source_se AND id.source_se = t_link_config.dest_se
+LEFT OUTER JOIN (
+    SELECT
+        queue_id,
+        nb_files as nb_queued
+    FROM
+        t_queue
+    WHERE
+        file_state = 'SUBMITTED'
+) AS queue
+ON id.queue_id = queue.queue_id
+LEFT OUTER JOIN (
+    SELECT
+        queue_id,
+        SUM(nb_files)::bigint as nb_active
+    FROM
+        t_queue
+    WHERE
+        file_state IN ('SCHEDULED', 'SELECTED', 'READY', 'ACTIVE')
+    GROUP BY
+        queue_id
+) AS active
+ON id.queue_id = active.queue_id
+WHERE nb_queued > 0 OR nb_active > 0;
