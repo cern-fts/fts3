@@ -1206,7 +1206,7 @@ END
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE VIEW v_transfer_net AS SELECT
+CREATE OR REPLACE VIEW v_transfer_net_queue AS SELECT
     id.queue_id,
     id.source_se,
     id.dest_se,
