@@ -452,14 +452,16 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer, 
         return;
     }
 
-    // SE-issued tokens are obtained in two ways:
+    // SE-issued tokens are obtained in two ways (only HTTPs/DAVs endpoints):
     // 1. Issued by the SE itself (colloquially called macaroons)
-    //    - Can only be done against an https/davs endpoint
     //    - Needs a validity time (in minutes) and list of activities
     // 2. Issued from a dedicated token endpoint of that storage (JWT-like tokens)
     //    - Token endpoint discovered via the .well-known/openid-configuration
     //
     // Gfal2 can retrieve bearer tokens via both options
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: RETRIEVE_BEARER_TOKEN=false" << commit;
+    gfal2.set("HTTP PLUGIN", "RETRIEVE_BEARER_TOKEN", false);
 
     bool macaroonEnabledSource = ((transfer.source.protocol.find("davs") == 0) || (transfer.source.protocol.find("https") == 0));
     bool macaroonEnabledDestination = ((transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0));
