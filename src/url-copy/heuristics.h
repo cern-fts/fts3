@@ -61,4 +61,23 @@ std::string extractAccessTokenField(const std::string& token, const std::string&
  */
 std::string accessTokenPayload(const std::string& token);
 
+/**
+ * Given a protocol, returns the canonical form.
+ * Example:
+ *   - http, dav, s3, gcloud --> http
+ *   - https, davs, s3s, gclouds --> https
+ */
+std::string canonicalProtocol(const std::string& protocol);
+
+/**
+ * Given a source and destination protocol, returns whether
+ * the transfer involves protocol translation.
+ * Example:
+ *  - root --> https (yes)
+ *  - http --> https (no)
+ *
+ * Note: works only on the protocol canonical form!
+ */
+bool isProtocolTranslation(const std::string& sourceProtocol, const std::string& destProtocol);
+
 #endif // HEURISTICS_H

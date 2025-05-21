@@ -254,6 +254,12 @@ std::string MsgIfce::SendTransferFinishMessage(Producer &producer, const Transfe
     message["overwrite_on_disk_flag"] = tr_completed.overwrite_on_disk_flag;
     message["overwrite_on_disk_deletion_code"] = (Json::Value::Int) tr_completed.overwrite_on_disk_deletion_code;
 
+    message["src_protocol"] = tr_completed.source_protocol;
+    message["dst_protocol"] = tr_completed.dest_protocol;
+    message["src_transfer_protocol"] = tr_completed.source_transfer_protocol;
+    message["dst_transfer_protocol"] = tr_completed.dest_transfer_protocol;
+    message["protocol_translation"] = tr_completed.protocol_translation;
+
     std::ostringstream stream;
     stream << "CO " << message;
     std::string msgStr = stream.str();
