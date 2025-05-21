@@ -460,12 +460,16 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer, 
     //
     // Gfal2 can retrieve bearer tokens via both options
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: RETRIEVE_BEARER_TOKEN=false" << commit;
-    gfal2.set("HTTP PLUGIN", "RETRIEVE_BEARER_TOKEN", false);
-
-    bool macaroonEnabledSource = ((transfer.source.protocol.find("davs") == 0) || (transfer.source.protocol.find("https") == 0));
-    bool macaroonEnabledDestination = ((transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0));
+    bool macaroonEnabledSource = (transfer.source.protocol.find("davs") == 0) || (transfer.source.protocol.find("https") == 0);
+    bool macaroonEnabledDestination = (transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0);
     unsigned macaroonValidity = 180;
+
+    // Disable macaroon retrieval at Gfal2 level only when both endpoints are HTTP/DAV
+    // Note: this still allows SRM transfers to use macaroons (obtained by Gfal2 after TURL resolution)
+    if (macaroonEnabledSource && macaroonEnabledDestination) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: RETRIEVE_BEARER_TOKEN=false" << commit;
+        gfal2.set("HTTP PLUGIN", "RETRIEVE_BEARER_TOKEN", false);
+    }
 
     // Compute macaroon lifetime (minutes) long enough for full transfer duration
     if (opts.timeout) {
