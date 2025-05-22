@@ -690,12 +690,17 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
             if (!transfer.checksumValue.empty()) { // User-set checksum available
                 if (!compare_checksum(transfer.sourceChecksumValue, transfer.checksumValue)) {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed source and user-defined checksum verification! "
+                                                    << "(" << transfer.sourceChecksumValue << " != " << transfer.checksumValue << ")" << commit;
                     throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, EIO,
                         "Source and user-defined " + transfer.checksumAlgorithm + " checksum do not match "
                             + "(" + transfer.sourceChecksumValue + " != " + transfer.checksumValue + ")");
                 }
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and user-defined checksum match! (" << transfer.checksumValue << ")" << commit;
+            } else if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum-mode \"" << transfer.checksumMode << "\" requested, "
+                                                   << "but no user-defined checksum provided!" << commit;
             }
         }
     }
@@ -795,6 +800,8 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
 
             if (!transfer.checksumValue.empty()) { // User-set checksum available
                 if (!compare_checksum(transfer.checksumValue, transfer.destChecksumValue)) {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed user-defined and destination checksum verification! "
+                                                    << "(" << transfer.checksumValue << " != " << transfer.destChecksumValue << ")" << commit;
                     cleanupOnFailure(transfer);
                     throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
                         "User-defined and destination " + transfer.checksumAlgorithm + " checksum do not match "
@@ -802,16 +809,24 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                 }
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User-defined and destination checksum match! (" << transfer.checksumValue << ")" << commit;
-            } else { // End-to-end checksum comparison
-                if (!compare_checksum(transfer.sourceChecksumValue, transfer.destChecksumValue)) {
-                    cleanupOnFailure(transfer);
-                    throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
-                        "Source and destination " + transfer.checksumAlgorithm + " checksum do not match "
-                            + "(" + transfer.sourceChecksumValue + " != " + transfer.destChecksumValue + ")");
-                }
-
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "End-to-end checksum match! (" << transfer.destChecksumValue << ")" << commit;
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum-mode \"" << transfer.checksumMode << "\" requested, "
+                                                   << "but no user-defined checksum provided!" << commit;
             }
+        }
+
+        // Checksum-mode exactly "end-to-end"
+        if (transfer.checksumMode == Transfer::CHECKSUM_BOTH) {
+            if (!compare_checksum(transfer.sourceChecksumValue, transfer.destChecksumValue)) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed end-to-end checksum verification! "
+                                                << "(" << transfer.sourceChecksumValue << " != " << transfer.destChecksumValue << ")" << commit;
+                cleanupOnFailure(transfer);
+                throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
+                    "Source and destination " + transfer.checksumAlgorithm + " checksum do not match "
+                        + "(" + transfer.sourceChecksumValue + " != " + transfer.destChecksumValue + ")");
+            }
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "End-to-end checksum match! (" << transfer.destChecksumValue << ")" << commit;
         }
     }
 
