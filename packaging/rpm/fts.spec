@@ -16,8 +16,8 @@ Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.14.0 https://gitlab.cern.ch/fts/fts3.git fts-3.14.0
-# tar -vczf fts-3.14.0.tar.gz --exclude-vcs fts-3.14.0/
+# git clone --depth=1 --branch v3.14.1 https://gitlab.cern.ch/fts/fts3.git fts-3.14.1
+# tar -vczf fts-3.14.1.tar.gz --exclude-vcs fts-3.14.1/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -360,6 +360,9 @@ fi
 %{_libdir}/fts-tests
 
 %changelog
+* Fri May 23 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.1
+- Fixes related to ActiveMQ logging and transfer checksum behavior
+
 * Wed Apr 30 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.0
 - FTS v3.14 minor release: "Token Release"
 - Rework of the transfer agent process for finer graind control
