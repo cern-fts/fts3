@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <chrono>
+#include <algorithm>
 #include <decaf/lang/System.h>
 #include <activemq/core/ActiveMQConnection.h>
 
@@ -32,7 +33,7 @@
 using namespace fts3::common;
 
 BrokerPublisher::BrokerPublisher(const BrokerConfig& config, MessageRemover& msgRemover, std::stop_token token) :
-                                 stop_token(token), brokerConfig(config), msgRemover(msgRemover), connected(false)
+                                 stop_token(token), brokerConfig(config), msgRemover(msgRemover)
 {
     // Set properties for SSL, if enabled
     if (brokerConfig.UseSSL()) {
@@ -65,22 +66,31 @@ BrokerPublisher::~BrokerPublisher()
 
 bool BrokerPublisher::sendMessage(MonitoringMessageCallback &msg)
 {
-    bool message_delivered = false;
-    try {
-        message_delivered = current_producer->sendMessage(msg);
-    } catch (const cms::UnsupportedOperationException &ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerPublsher: cms::UnsupportedOperationException: " << ex.what() << commit;
-    } catch (const cms::InvalidDestinationException &ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerPublisher: cms::InvalidDestinationException: " << ex.what() << commit;
-    } catch (const cms::CMSException &ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerPublisher: cms::CMSException: " << ex.what() << commit;
-    } catch (...) {
-        FTS3_COMMON_LOGGER_LOG(DEBUG, "Unknown exception occurred while sending a message to a!");
-    };
+    bool message_async_sent = false;
+    if (current_producer != MsgProducers.end()) {
+        try {
+            message_async_sent = current_producer->sendMessage(msg);
+        } catch (const cms::UnsupportedOperationException &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BrokerPublisher: cms::UnsupportedOperationException: " << ex.what() << commit;
+        } catch (const cms::InvalidDestinationException &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BrokerPublisher: cms::InvalidDestinationException: " << ex.what() << commit;
+        } catch (const cms::CMSException &ex) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BrokerPublisher: cms::CMSException: " << ex.what() << commit;
+        } catch (...) {
+            FTS3_COMMON_LOGGER_LOG(ERR, "BrokerPublisher: Unknown exception occurred while sending a message to a!");
+        };
+    }
 
-    if (message_delivered == false) {
-        msg.state = MonitoringMessageCallback::failed;
-        current_producer = MsgProducers.erase(current_producer);
+    if (message_async_sent == false) {
+        msg.state = MonitoringMessageCallback::ready;
+        if (current_producer != MsgProducers.end()) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing \"" << msg.broker_destination << "\" from the functional broker pool" << commit;
+            current_producer = MsgProducers.erase(current_producer);
+        }
+    }
+
+    if (MsgProducers.empty()) {
+        return false;
     }
 
     if (current_producer == MsgProducers.end() || std::next(current_producer) == MsgProducers.end()) {
@@ -89,7 +99,7 @@ bool BrokerPublisher::sendMessage(MonitoringMessageCallback &msg)
         ++current_producer;
     }
 
-    return message_delivered;
+    return message_async_sent;
 }
 
 bool BrokerPublisher::refresh_sessions()
@@ -102,6 +112,12 @@ bool BrokerPublisher::refresh_sessions()
             FTS3_COMMON_LOGGER_LOG(ERR, "Unable to resolve '" + broker_alias + "', no ActiveMQ broker(s) found.");
             return false;
         }
+
+        // Remove dupicates, resolve_dns_alias can give the same node twice due to the ip4 and ip6. We only give an 
+        // hostname while working with ActiveMQ.
+        sort(hostnames.begin(), hostnames.end());
+        auto it = unique(hostnames.begin(), hostnames.end());
+        hostnames.erase(it, hostnames.end());
 
         {
             std::string resolved_hostnames;
@@ -151,7 +167,7 @@ bool BrokerPublisher::refresh_sessions()
                 continue;
             } catch (const cms::InvalidDestinationException &ex) {
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection: Unable to connect to '" << *broker
-                                                 << "' (InvalidDestinationException: " << ex.what() << ")." << commit;
+                                                 << "'(InvalidDestinationException: " << ex.what() << ")." << commit;
             } catch (const cms::CMSException &ex) {
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection: Unable to connect to '" << *broker
                                                  << "' (CMSException: " << ex.what() << ")." << commit;
@@ -190,6 +206,12 @@ bool BrokerPublisher::refresh_sessions()
 void BrokerPublisher::collect_messages()
 {
     auto &monitoring_messages = ConcurrentQueue<std::unique_ptr<std::vector<MonitoringMessage>>>::getInstance();
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerPublisher: collect_messages: " << messages.size() << " messages to be dispatched." << commit;
+    if (messages.size() >= 100000) {
+        return;
+    }
+
     for (unsigned int i = 0; i < 10; ++i) {
         const bool wait_for_messages = messages.empty();
         std::unique_ptr<std::vector<MonitoringMessage>> vector = monitoring_messages.pop(wait_for_messages);
@@ -206,6 +228,8 @@ void BrokerPublisher::collect_messages()
                 messages.emplace_back(std::make_unique<MonitoringMessageCallback>(std::move(message)));
             } catch (std::bad_alloc &ex) {
                 FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Unable to allocate MonitoringMessageCallback: " << ex.what() << commit;
+            } catch (...) {
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BrokerPublisher: unknown exception occurred!" << commit;
             };
         }
     }
@@ -218,13 +242,11 @@ void BrokerPublisher::dispatch_messages()
         switch (monitoring_msg->state) {
             case MonitoringMessageCallback::MessageState::ready:
                 if (!stop_token.stop_requested()) {
-                    monitoring_msg->state = MonitoringMessageCallback::MessageState::sending;
-                    if (!sendMessage(*monitoring_msg) && MsgProducers.empty()) {
-                        msg = messages.end();
-                        connected = false;
-                    } else {
-                        std::advance(msg, 1);
+                    if (!MsgProducers.empty()) {
+                        monitoring_msg->state = MonitoringMessageCallback::MessageState::sending;
+                        sendMessage(*monitoring_msg);
                     }
+                    std::advance(msg, 1);
                 } else {
                     msg = messages.erase(msg);
                 }
@@ -233,6 +255,8 @@ void BrokerPublisher::dispatch_messages()
                 std::advance(msg, 1);
                 break;
             case MonitoringMessageCallback::MessageState::delivered:
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Delivered to \"" << monitoring_msg->broker_destination << "\": {"
+                                                << monitoring_msg->logging << "}" << commit;
                 if (messages_to_remove->size() < 100) {
                     messages_to_remove->emplace_back(std::move(monitoring_msg));
                 } else {
@@ -243,11 +267,12 @@ void BrokerPublisher::dispatch_messages()
                 msg = messages.erase(msg);
                 break;
             case MonitoringMessageCallback::MessageState::failed:
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Failed to deliver: {" << monitoring_msg->logging << "} to \""
+                                                << monitoring_msg->broker_destination << "\" ActiveMQ broker" << commit;
                 if (!stop_token.stop_requested()) {
                     monitoring_msg->state = MonitoringMessageCallback::MessageState::ready;
-                    if (MsgProducers.empty()) {
-                        msg = messages.end();
-                        connected = false;
+                    if (!MsgProducers.empty()) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "An other ActiveMQ broker will be used for the dispatch" << commit;
                     }
                 } else {
                     msg = messages.erase(msg);
@@ -276,22 +301,19 @@ void BrokerPublisher::start()
             const auto session_timestamp = std::chrono::steady_clock::now();
             const auto time_elapsed = std::chrono::duration_cast<std::chrono::minutes>(session_timestamp - start_time);
             const auto broker_check_interval = brokerConfig.GetBrokerCheckInterval();
-            while ((!connected || time_elapsed.count() >= broker_check_interval) && !stop_token.stop_requested()) {
-                connected = refresh_sessions();
-                if (!connected) {
+            if ((MsgProducers.empty() || time_elapsed.count() >= broker_check_interval) && !stop_token.stop_requested()) {
+                if (!refresh_sessions()) {
                     std::condition_variable_any cv;
                     std::mutex mtx;
                     const unsigned int retry_delay = 10;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Unable to connect to the ActiveMQ broker(s) provided by '"
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unable to connect to the ActiveMQ broker(s) provided by '"
                                                      << brokerConfig.GetBroker() << "' alias." << commit;
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BrokerPublisher: Attempt to re-establish the connections to '"
                                                      << brokerConfig.GetBroker() << "' in " << retry_delay << " seconds." << commit;
                     cv.wait_for(mtx, stop_token, std::chrono::seconds(retry_delay), [] {return false;});
-                    continue;
+                } else {
+                    start_time = std::chrono::steady_clock::now();
                 }
-
-                start_time = std::chrono::steady_clock::now();
-                break;
             }
 
             // Get the messages loaded in memory from the MessageLoader thread. Prepare MonitoringMessageCallback's for async dispatch
@@ -301,15 +323,15 @@ void BrokerPublisher::start()
 
             // Round-robin asyncronous dispatch to ActiveMQ brokers
             BrokerPublisher::dispatch_messages();
+            if (MsgProducers.empty() && !stop_token.stop_requested()) {
+                FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "No ActiveMQ brokers are available anymore. Trying to reconnect..." << commit;
+            }
         } catch (const cms::CMSException &ex) {
             FTS3_COMMON_LOGGER_LOG(ERR, ex.getMessage());
-            connected = false;
         } catch (const std::exception &ex) {
             FTS3_COMMON_LOGGER_LOG(ERR, ex.what());
-            connected = false;
         } catch (...) {
             FTS3_COMMON_LOGGER_LOG(CRIT, "Unexpected exception");
-            connected = false;
         }
 
         if (stop_token.stop_requested() && messages.empty()) {

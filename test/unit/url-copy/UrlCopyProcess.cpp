@@ -157,6 +157,7 @@ BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMatch, UrlCopyFixture)
     Transfer original;
     original.source        = Uri::parse("mock://host/path/file?checksum=42");
     original.destination   = Uri::parse("mock://host/path/file?checksum=42");
+    original.checksumMode  = Transfer::Checksum_mode::CHECKSUM_BOTH;
     opts.transfers.push_back(original);
 
     UrlCopyProcess proc(opts, *this);
@@ -175,11 +176,12 @@ BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMatch, UrlCopyFixture)
 }
 
 // Source and destination checksum mismatch
-BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMisMatch, UrlCopyFixture)
+BOOST_FIXTURE_TEST_CASE (destinationSourceChecksumMismatch, UrlCopyFixture)
 {
     Transfer original;
     original.source        = Uri::parse("mock://host/path/file?checksum=24");
     original.destination   = Uri::parse("mock://host/path/file?checksum=42");
+    original.checksumMode  = Transfer::Checksum_mode::CHECKSUM_BOTH;
     opts.transfers.push_back(original);
 
     UrlCopyProcess proc(opts, *this);

@@ -47,6 +47,9 @@ class MonitoringMessageCallback : public cms::AsyncCallback {
         enum MessageState {ready, sending, delivered, failed};
         std::atomic<MessageState> state;
 
+        std::string broker_destination;
+        std::string logging;
+
         void onSuccess();
         void onException(const cms::CMSException& ex);
 

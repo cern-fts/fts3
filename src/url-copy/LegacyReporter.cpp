@@ -357,6 +357,23 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.overwrite_on_disk_flag = opts.overwriteOnDisk;
     completed.overwrite_on_disk_deletion_code = transfer.stats.overwriteOnDiskRetc;
 
+    // Info on transfer protocols
+    completed.source_protocol = completed.source_transfer_protocol = transfer.source.protocol;
+    completed.dest_protocol = completed.dest_transfer_protocol = transfer.destination.protocol;
+
+    if (transfer.source.protocol == "srm") {
+        completed.source_transfer_protocol = transfer.sourceTurl.protocol;
+    }
+
+    if (transfer.destination.protocol == "srm") {
+        completed.dest_transfer_protocol = transfer.destTurl.protocol;
+    }
+
+    completed.source_transfer_protocol = canonicalProtocol(completed.source_transfer_protocol);
+    completed.dest_transfer_protocol = canonicalProtocol(completed.dest_transfer_protocol);
+    completed.protocol_translation = isProtocolTranslation(
+        completed.source_transfer_protocol, completed.dest_transfer_protocol);
+
     if (opts.enableMonitoring) {
         auto msgReturnValue = MsgIfce::getInstance()->SendTransferFinishMessage(producer, completed);
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Transfer complete message content: " << msgReturnValue << commit;

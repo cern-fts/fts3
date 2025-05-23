@@ -230,7 +230,7 @@ uint64_t UrlCopyProcess::obtainFileSize(const Transfer& transfer, bool is_source
     try {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Getting " << target << " file size" << commit;
         auto filesize = gfal2.stat(url).st_size;
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File size: " << filesize << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File size: " << filesize << " (" << target << ")" << commit;
         return filesize;
     } catch (const Gfal2Exception &ex) {
         throw UrlCopyError(scope, phase, ex);
@@ -245,10 +245,14 @@ std::string UrlCopyProcess::obtainFileChecksum(const Transfer& transfer, bool is
                                                const std::string& scope, const std::string& phase)
 {
     auto url = is_source ? transfer.source : transfer.destination;
+    auto target = is_source ? "source" : "destination";
     refreshExpiredAccessToken(transfer, is_source);
 
     try {
-        return gfal2.getChecksum(url, algorithm);
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Getting " << target << " file checksum" << commit;
+        auto checksum = gfal2.getChecksum(url, algorithm);
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << checksum << " (" << target << ")" << commit;
+        return checksum;
     } catch (const Gfal2Exception &ex) {
         throw UrlCopyError(scope, phase, ex);
     } catch (const std::exception &ex) {
@@ -448,19 +452,24 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer, 
         return;
     }
 
-    // Bearer tokens can be issued in two ways:
-    // 1. Issued by a dedicated TokenIssuer
-    //    - Needs only the TokenIssuer endpoint
-    // 2. Issued by the SE itself (colloquially called macaroons)
-    //    - Can only be done against a https/davs endpoint
+    // SE-issued tokens are obtained in two ways (only HTTPs/DAVs endpoints):
+    // 1. Issued by the SE itself (colloquially called macaroons)
     //    - Needs a validity time (in minutes) and list of activities
+    // 2. Issued from a dedicated token endpoint of that storage (JWT-like tokens)
+    //    - Token endpoint discovered via the .well-known/openid-configuration
     //
-    // Gfal2 can retrieve bearer tokens from both a TokenIssuer (first choice),
-    // then fallback to the SE itself
+    // Gfal2 can retrieve bearer tokens via both options
 
-    bool macaroonEnabledSource = ((transfer.source.protocol.find("davs") == 0) || (transfer.source.protocol.find("https") == 0));
-    bool macaroonEnabledDestination = ((transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0));
+    bool macaroonEnabledSource = (transfer.source.protocol.find("davs") == 0) || (transfer.source.protocol.find("https") == 0);
+    bool macaroonEnabledDestination = (transfer.destination.protocol.find("davs") == 0) || (transfer.destination.protocol.find("https") == 0);
     unsigned macaroonValidity = 180;
+
+    // Disable macaroon retrieval at Gfal2 level only when both endpoints are HTTP/DAV
+    // Note: this still allows SRM transfers to use macaroons (obtained by Gfal2 after TURL resolution)
+    if (macaroonEnabledSource && macaroonEnabledDestination) {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Setting Gfal2 configuration: RETRIEVE_BEARER_TOKEN=false" << commit;
+        gfal2.set("HTTP PLUGIN", "RETRIEVE_BEARER_TOKEN", false);
+    }
 
     // Compute macaroon lifetime (minutes) long enough for full transfer duration
     if (opts.timeout) {
@@ -627,7 +636,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source space token: " << transfer.sourceSpaceToken << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Dest space token: " << transfer.destSpaceToken << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum: " << transfer.checksumValue << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum enabled: " << transfer.checksumMode << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checksum mode: " << transfer.checksumMode << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User filesize: " << transfer.userFileSize << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Scitag: " << transfer.scitag << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File metadata: " << transfer.fileMetadata << commit;
@@ -672,21 +681,27 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     ////////////////////////////////
 
     if (!opts.strictCopy) {
-        // User-set checksum available & checksum-mode == source
-        if ((!transfer.checksumValue.empty()) &&
-            (transfer.checksumMode & Transfer::CHECKSUM_SOURCE)) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing source checksum verification" << commit;
-
+        // Checksum-mode "source" or "end-to-end"
+        if (transfer.checksumMode & Transfer::CHECKSUM_SOURCE) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtaining source checksum for checksum verification"
+                                            << " (" << transfer.checksumMode << ")" << commit;
             transfer.sourceChecksumValue = obtainFileChecksum(transfer, IS_SOURCE, transfer.checksumAlgorithm,
                                                               SOURCE, TRANSFER_PREPARATION);
 
-            if (!compare_checksum(transfer.sourceChecksumValue, transfer.checksumValue)) {
-                throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, EIO,
-                    "Source and user-defined " + transfer.checksumAlgorithm + " checksum do not match "
-                        + "(" + transfer.sourceChecksumValue + " != " + transfer.checksumValue + ")");
-            }
+            if (!transfer.checksumValue.empty()) { // User-set checksum available
+                if (!compare_checksum(transfer.sourceChecksumValue, transfer.checksumValue)) {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed source and user-defined checksum verification! "
+                                                    << "(" << transfer.sourceChecksumValue << " != " << transfer.checksumValue << ")" << commit;
+                    throw UrlCopyError(SOURCE, TRANSFER_PREPARATION, EIO,
+                        "Source and user-defined " + transfer.checksumAlgorithm + " checksum do not match "
+                            + "(" + transfer.sourceChecksumValue + " != " + transfer.checksumValue + ")");
+                }
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and user-defined checksum match! (" << transfer.checksumValue << ")" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and user-defined checksum match! (" << transfer.checksumValue << ")" << commit;
+            } else if (transfer.checksumMode == Transfer::CHECKSUM_SOURCE) {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum-mode \"" << transfer.checksumMode << "\" requested, "
+                                                   << "but no user-defined checksum provided!" << commit;
+            }
         }
     }
 
@@ -775,30 +790,36 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
         }
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source and destination file size matching" << commit;
-        transfer.destChecksumValue = obtainFileChecksum(transfer, IS_DEST, transfer.checksumAlgorithm,
-                                                        DESTINATION, TRANSFER_FINALIZATION);
 
-        if ((!transfer.checksumValue.empty()) &&
-            (transfer.checksumMode & Transfer::CHECKSUM_TARGET)) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing target checksum verification" << commit;
+        // Checksum-mode "target" or "end-to-end"
+        if (transfer.checksumMode & Transfer::CHECKSUM_TARGET) {
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Obtaining destination checksum for checksum verification"
+                                            << " (" << transfer.checksumMode << ")" << commit;
+            transfer.destChecksumValue = obtainFileChecksum(transfer, IS_DEST, transfer.checksumAlgorithm,
+                                                            DESTINATION, TRANSFER_FINALIZATION);
 
-            if (!compare_checksum(transfer.checksumValue, transfer.destChecksumValue)) {
-                cleanupOnFailure(transfer);
-                throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
-                    "User-defined and destination " + transfer.checksumAlgorithm + " checksum do not match "
-                        + "(" + transfer.checksumValue + " != " + transfer.destChecksumValue + ")");
+            if (!transfer.checksumValue.empty()) { // User-set checksum available
+                if (!compare_checksum(transfer.checksumValue, transfer.destChecksumValue)) {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed user-defined and destination checksum verification! "
+                                                    << "(" << transfer.checksumValue << " != " << transfer.destChecksumValue << ")" << commit;
+                    cleanupOnFailure(transfer);
+                    throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
+                        "User-defined and destination " + transfer.checksumAlgorithm + " checksum do not match "
+                            + "(" + transfer.checksumValue + " != " + transfer.destChecksumValue + ")");
+                }
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User-defined and destination checksum match! (" << transfer.checksumValue << ")" << commit;
+            } else {
+                FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum-mode \"" << transfer.checksumMode << "\" requested, "
+                                                   << "but no user-defined checksum provided!" << commit;
             }
+        }
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User-defined and destination checksum match! (" << transfer.checksumValue << ")" << commit;
-        } else { // Proceed to end-to-end comparison
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Performing end-to-end checksum verification" << commit;
-
-            if (transfer.sourceChecksumValue.empty()) {
-                transfer.sourceChecksumValue = obtainFileChecksum(transfer, IS_SOURCE, transfer.checksumAlgorithm,
-                                                                  DESTINATION, TRANSFER_FINALIZATION);
-            }
-
+        // Checksum-mode exactly "end-to-end"
+        if (transfer.checksumMode == Transfer::CHECKSUM_BOTH) {
             if (!compare_checksum(transfer.sourceChecksumValue, transfer.destChecksumValue)) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed end-to-end checksum verification! "
+                                                << "(" << transfer.sourceChecksumValue << " != " << transfer.destChecksumValue << ")" << commit;
                 cleanupOnFailure(transfer);
                 throw UrlCopyError(DESTINATION, TRANSFER_FINALIZATION, EIO,
                     "Source and destination " + transfer.checksumAlgorithm + " checksum do not match "

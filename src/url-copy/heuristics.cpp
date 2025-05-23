@@ -259,3 +259,30 @@ std::string accessTokenPayload(const std::string& token)
 
     return message.str();
 }
+
+
+std::string canonicalProtocol(const std::string& protocol)
+{
+    if (protocol == "http" || protocol == "dav" ||
+        protocol == "s3" || protocol == "gcloud") {
+        return "http";
+    }
+
+    if (protocol == "https" || protocol == "davs" ||
+        protocol == "s3s" || protocol == "gclouds") {
+        return "https";
+    }
+
+    return protocol;
+}
+
+
+bool isProtocolTranslation(const std::string& sourceProtocol, const std::string& destProtocol)
+{
+    if ((sourceProtocol == "https" && destProtocol == "http") ||
+        (sourceProtocol == "http" && destProtocol == "https")) {
+        return false;
+    }
+
+    return sourceProtocol != destProtocol;
+}

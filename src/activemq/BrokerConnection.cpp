@@ -88,6 +88,25 @@ BrokerConnection::BrokerConnection(const std::string &brokerName, const BrokerCo
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection(" << getBrokerName() << "): connected!" << commit;
 }
 
+BrokerConnection::BrokerConnection(BrokerConnection&& other) :
+                                    brokerName(std::move(other.brokerName)),
+                                    brokerConfig(std::move(other.brokerConfig)),
+                                    FTSEndpoint(std::move(other.FTSEndpoint)),
+                                    FQDN(std::move(other.FQDN)),
+                                    connectionFactory(std::move(other.connectionFactory)),
+                                    connection(std::move(other.connection)),
+                                    session(std::move(other.session)),
+                                    destination_transfer_started(std::move(other.destination_transfer_started)),
+                                    destination_transfer_completed(std::move(other.destination_transfer_completed)),
+                                    destination_transfer_state(std::move(other.destination_transfer_state)),
+                                    destination_optimizer(std::move(other.destination_optimizer)),
+                                    producer_transfer_started(std::move(other.producer_transfer_started)),
+                                    producer_transfer_completed(std::move(other.producer_transfer_completed)),
+                                    producer_transfer_state(std::move(other.producer_transfer_state)),
+                                    producer_optimizer(std::move(other.producer_optimizer))
+{
+}
+
 BrokerConnection::~BrokerConnection()
 {
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "BrokerConnection(" << getBrokerName() << "): closing connection!" << commit;
@@ -122,11 +141,12 @@ void MonitoringMessageCallback::onSuccess()
 void MonitoringMessageCallback::onException(const cms::CMSException& ex)
 {
     state = failed;
-    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Message delivery failed: " << ex.what() << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BrokerConnection: Message dispatch failed \"" << ex.what() << "\", broker down?"<< commit;
 }
 
 bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
 {
+    cb.broker_destination = getBrokerName();
     const std::string& rawMsg = cb.message.message;
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "rawMsg:" << rawMsg << commit;
     const std::string type = rawMsg.substr(0, 2);
@@ -153,7 +173,13 @@ bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
     std::unique_ptr<cms::TextMessage> message = nullptr;
     try {
         message.reset(session->createTextMessage(output.str()));
-    } catch (const cms::CMSException &e) {
+    } catch (const cms::CMSException &ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BrokerConnection(" << getBrokerName() << "): session failed to create message - "
+                                       << ex.what() << commit;
+        return false;
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BrokerConnection(" << getBrokerName() << "): session failed to create message!"
+                                       << commit;
         return false;
     };
 
@@ -167,14 +193,18 @@ bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
         auto transferId = msg.get("transfer_id", "").asString();
 
         if (!transferId.empty()) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Start message: " << transferId << commit;
+            const std::string logging_message = "Start message: " + transferId;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sending: {" << logging_message << "}" << commit;
+            cb.logging = std::move(logging_message);
         }
     } else if (type == "CO") {
         producer_transfer_completed->send(message.get(), &cb);
         auto transferId = msg.get("tr_id", "").asString();
 
         if (!transferId.empty()) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Completion message: " << transferId << commit;
+            const std::string logging_message = "Completion message: " + transferId;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sending: {" << logging_message << "}" << commit;
+            cb.logging = std::move(logging_message);
         }
     } else if (type == "SS") {
         producer_transfer_state->send(message.get(), &cb);
@@ -182,8 +212,9 @@ bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
         auto jobId = msg.get("job_id", "").asString();
 
         if (!jobId.empty() && msg.isMember("file_id")) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "State change: " << state << " " << jobId << "/"
-                                            << msg.get("file_id", 0).asUInt64() << commit;
+            const std::string logging_message = "State change: " + state + " " + jobId + "/" + msg.get("file_id", 0).asString();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sending: {" << logging_message << "}" << commit;
+            cb.logging = std::move(logging_message);
         }
     } else if (type == "OP") {
         producer_optimizer->send(message.get(), &cb);
@@ -191,33 +222,15 @@ bool BrokerConnection::sendMessage(MonitoringMessageCallback &cb) const
         auto destSe = msg.get("dest_se", "").asString();
 
         if (!sourceSe.empty() && !destSe.empty()) {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer update: " << sourceSe << " => " << destSe << commit;
+            const std::string logging_message = "Optimizer update: " + sourceSe + " => " + destSe;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sending: {" << logging_message << "}" << commit;
+            cb.logging = std::move(logging_message);
         }
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Dropping unknown message type: " << type << commit;
     }
 
     return true;
-}
-
-
-BrokerConnection::BrokerConnection(BrokerConnection&& other) :
-                                    brokerName(std::move(other.brokerName)),
-                                    brokerConfig(std::move(other.brokerConfig)),
-                                    FTSEndpoint(std::move(other.FTSEndpoint)),
-                                    FQDN(std::move(other.FQDN)),
-                                    connectionFactory(std::move(other.connectionFactory)),
-                                    connection(std::move(other.connection)),
-                                    session(std::move(other.session)),
-                                    destination_transfer_started(std::move(other.destination_transfer_started)),
-                                    destination_transfer_completed(std::move(other.destination_transfer_completed)),
-                                    destination_transfer_state(std::move(other.destination_transfer_state)),
-                                    destination_optimizer(std::move(other.destination_optimizer)),
-                                    producer_transfer_started(std::move(other.producer_transfer_started)),
-                                    producer_transfer_completed(std::move(other.producer_transfer_completed)),
-                                    producer_transfer_state(std::move(other.producer_transfer_state)),
-                                    producer_optimizer(std::move(other.producer_optimizer))
-{
 }
 
 const std::string& BrokerConnection::getBrokerName() const

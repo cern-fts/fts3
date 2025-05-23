@@ -80,6 +80,9 @@ static void extractTurls(Transfer *transfer, std::string str)
         transfer->sourceTurl = Uri::parse(sourceTurl);
         transfer->destTurl = Uri::parse(destinationTurl);
     }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Identified TURL source: " << transfer->sourceTurl.fullUri << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Identified TURL destination: " << transfer->destTurl.fullUri << commit;
 }
 
 
