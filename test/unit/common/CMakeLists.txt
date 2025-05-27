@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2015
+# Copyright (c) CERN 2025
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
 # limitations under the License.
 #
 
-define_test (ConcurrentQueue fts_common)
-define_test (DaemonTools fts_common)
-define_test (Logger fts_common)
-define_test (panic fts_common)
-define_test (PidTools fts_common)
-define_test (ThreadPool fts_common)
-define_test (Uri fts_common)
+target_sources(fts-unit-tests PRIVATE ConcurrentQueue.cpp
+                                      DaemonTools.cpp
+                                      Logger.cpp
+                                      panic.cpp
+                                      PidTools.cpp
+                                      ThreadPool.cpp
+                                      Uri.cpp)
+target_link_libraries (fts-unit-tests fts_common)

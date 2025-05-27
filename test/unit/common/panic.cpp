@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(backtraceTest)
     get_backtrace(SIGSEGV);
     std::string trace = stack_dump(stack_backtrace, stack_backtrace_size);
 
-    BOOST_CHECK_NE(trace.find("backtraceTest"), std::string::npos);
+    BOOST_CHECK_NE(trace.find("get_backtrace"), std::string::npos);
 }
 
 
