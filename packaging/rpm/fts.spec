@@ -357,7 +357,6 @@ fi
 
 %files tests
 %{_bindir}/fts-unit-tests
-%{_libdir}/fts-tests
 
 %changelog
 * Fri May 23 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.1

@@ -14,14 +14,5 @@
 # limitations under the License.
 #
 
-find_package(GFAL2)
-find_package(GLIB2)
-include_directories (
-        ${GLIB2_INCLUDE_DIRS}
-        ${GFAL2_INCLUDE_DIRS}
-)
-
-
-define_test (AutoInterruptThread fts_url_copy_lib)
-define_test (UrlCopyProcess fts_url_copy_lib)
-define_test (DestFileReport fts_url_copy_lib)
+target_sources(fts-unit-tests PRIVATE AutoInterruptThread.cpp UrlCopyProcess.cpp DestFileReport.cpp)
+target_link_libraries (fts-unit-tests fts_url_copy_lib)

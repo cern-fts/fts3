@@ -14,5 +14,5 @@
 # limitations under the License.
 #
 
-define_test (VoShares fts_server_lib)
-define_test (UrlCopyCmd fts_server_lib)
+target_sources(fts-unit-tests PRIVATE VoShares.cpp UrlCopyCmd.cpp)
+target_link_libraries (fts-unit-tests fts_server_lib)
