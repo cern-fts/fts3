@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2016
+# Copyright (c) CERN 2025
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,5 @@
 # limitations under the License.
 #
 
-define_test (MsgBus fts_msg_bus)
+target_sources(fts-unit-tests PRIVATE MsgBus.cpp)
+target_link_libraries (fts-unit-tests fts_msg_bus)

@@ -40,5 +40,4 @@ target_link_libraries(fts_optimizer
 )
 
 # Install
-install(TARGETS fts_optimizer RUNTIME
-    DESTINATION ${SBIN_INSTALL_DIR})
+install(TARGETS fts_optimizer RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})

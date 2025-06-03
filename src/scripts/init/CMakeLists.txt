@@ -20,12 +20,12 @@
 
 if (SYSTEMD_INSTALL_DIR)
     install(FILES fts-server.service
-                  fts-activemq.service
-                  fts-records-cleaner.service
-                  fts-qos.service
-                  fts-optimizer.service
-                  fts-token.service
-                  ftstokenhousekeeperd.service
+        fts-activemq.service
+        fts-records-cleaner.service
+        fts-qos.service
+        fts-optimizer.service
+        fts-token.service
+        ftstokenhousekeeperd.service
         DESTINATION ${SYSTEMD_INSTALL_DIR}
     )
     if (FTS4SCHEDULERBUILD)

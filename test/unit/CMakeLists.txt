@@ -1,5 +1,5 @@
 #
-# Copyright (c) CERN 2015
+# Copyright (c) CERN 2025
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,23 +16,14 @@
 
 add_definitions ("-DBOOST_TEST_DYN_LINK")
 
-set (UNIT_TEST_LIST "" CACHE INTERNAL "Unit tests" FORCE)
-
 # Disable "-Wconversion" warnings in unit tests
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 
-# Shortcut to compile and declare a test in one shot
-# Usage: define_test (mytest common) => add a test with the source mytest.cpp linking against the common library
-#        define_test (mytest common helper.cpp) => similar, but compiling also helper.cpp
-function (define_test name link)
-    add_library (${name} SHARED "${name}.cpp" ${ARGN})
-    target_link_libraries (${name} ${link})
-    install(TARGETS ${name}
-            LIBRARY DESTINATION ${LIB_INSTALL_DIR}/fts-tests/)
+find_package(GFAL2)
+find_package(GLIB2)
+include_directories (${GLIB2_INCLUDE_DIRS} ${GFAL2_INCLUDE_DIRS})
 
-    list (APPEND UNIT_TEST_LIST ${name})
-    set (UNIT_TEST_LIST "${UNIT_TEST_LIST}" CACHE INTERNAL "Unit tests" FORCE)
-endfunction(define_test)
+add_executable(fts-unit-tests unit.cpp)
 
 # Build individual unit tests
 add_subdirectory (common)
@@ -43,22 +34,8 @@ add_subdirectory (msg-bus)
 add_subdirectory (server)
 add_subdirectory (url-copy)
 
-# Build the test binary
-message(STATUS "Found tests: ${UNIT_TEST_LIST}")
+target_link_libraries(fts-unit-tests "-Wl,--no-as-needed" ${Boost_LIBRARIES})
 
-# Use RPATH to link with individual FTS test libraries
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_INSTALL_RPATH "${LIB_INSTALL_DIR}/fts-tests/")
-
-add_executable(fts-unit-tests unit.cpp)
-target_link_libraries(fts-unit-tests
-    "-Wl,--no-as-needed"
-    ${Boost_LIBRARIES}
-    ${UNIT_TEST_LIST})
-
-install(TARGETS fts-unit-tests
-        RUNTIME DESTINATION ${BIN_INSTALL_DIR})
+install(TARGETS fts-unit-tests RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_test(fts-unit-test fts-unit-tests)

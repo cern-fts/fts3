@@ -173,7 +173,7 @@ fi
     -DFTS4SCHEDULERBUILD=%{fts4_scheduler_build} \
     -DTESTBUILD=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_INSTALL_PREFIX='' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
     -DSYSTEMD_INSTALL_DIR=%{_unitdir}
 
 %cmake3_build
@@ -357,7 +357,6 @@ fi
 
 %files tests
 %{_bindir}/fts-unit-tests
-%{_libdir}/fts-tests
 
 %changelog
 * Fri May 23 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.1

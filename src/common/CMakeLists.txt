@@ -53,7 +53,7 @@ endif()
 # (Do not install if only building a database backend, for instance)
 if(SERVERBUILD OR CLIENTBUILD)
     install(TARGETS fts_common
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
-        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_RUNTIME}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 endif ()

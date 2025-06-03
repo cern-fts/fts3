@@ -21,30 +21,30 @@
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 install(FILES fts-server.sysconfig
-    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    RENAME fts-server
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/sysconfig
+        PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-server
 )
 
 install(FILES fts-qos.sysconfig
-    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    RENAME fts-qos
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/sysconfig
+        PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-qos
 )
 
 install(FILES fts-optimizer.sysconfig
-    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    RENAME fts-optimizer
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/sysconfig
+        PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-optimizer
 )
 
 install(FILES fts-token.sysconfig
-    DESTINATION ${SYSCONF_INSTALL_DIR}/sysconfig
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    RENAME fts-token
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/sysconfig
+        PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        RENAME fts-token
 )
 
 install(FILES fts-server.logrotate
-    DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
-    RENAME fts-server
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/logrotate.d
+        RENAME fts-server
 )

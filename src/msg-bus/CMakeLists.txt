@@ -66,7 +66,7 @@ set_target_properties(fts_msg_bus PROPERTIES
 # (Do not install if only building a database backend, for instance)
 if(SERVERBUILD)
     install(TARGETS fts_msg_bus
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
-        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 endif ()

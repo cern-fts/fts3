@@ -23,6 +23,6 @@ install(DIRECTORY python/fts_scheduler
 
 # Install the configuration file
 install(FILES fts-scheduler.ini
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
+    DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/fts3
         PERMISSIONS OWNER_READ OWNER_WRITE)
 
