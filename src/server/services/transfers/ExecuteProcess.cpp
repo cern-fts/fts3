@@ -45,6 +45,7 @@
 #include <fstream>
 #include <dirent.h>
 #include <sys/socket.h>
+#include <linux/close_range.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -94,9 +95,12 @@ static void closeAllFilesExcept(int exception)
 {
     long maxfd = sysconf(_SC_OPEN_MAX);
 
-    for (int fdAll = 3; fdAll < maxfd; fdAll++) {
-        if (fdAll != exception)
-            close(fdAll);
+    if (3 < exception && exception < maxfd) {
+        close_range(3, exception-1, CLOSE_RANGE_UNSHARE);
+        close_range(exception+1, maxfd, CLOSE_RANGE_UNSHARE);
+    }
+    else {
+        close_range(3, maxfd, CLOSE_RANGE_UNSHARE);
     }
 }
 
