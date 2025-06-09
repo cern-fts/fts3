@@ -809,7 +809,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
                 }
 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "User-defined and destination checksum match! (" << transfer.checksumValue << ")" << commit;
-            } else {
+            } else if (transfer.checksumMode == Transfer::CHECKSUM_TARGET) {
                 FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Checksum-mode \"" << transfer.checksumMode << "\" requested, "
                                                    << "but no user-defined checksum provided!" << commit;
             }
