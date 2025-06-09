@@ -30,11 +30,6 @@ MonitoringMessaging=true
 # Directory where the internal FTS3 messages are written
 MessagingDirectory=/var/lib/fts3
 
-# Set the UrlCopyProcess ping and transfer update interval.
-# For throughput monitoring (Profiling is enabled), a lower value is better.
-# Lowest recommended value should exceed the Gfal2 performance markers (as often as every 5 seconds)
-UrlCopyProcessPingInterval=60
-
 # Log directories
 TransferLogDirectory=/var/log/fts3/transfers
 ServerLogDirectory=/var/log/fts3
@@ -57,9 +52,11 @@ LogTokenRequests=false
 ## Scheduler and MessagingProcessing Service settings
 # Wait time between scheduler runs (measured in seconds)
 #SchedulingInterval = 2
+
 # How often to check for new inter-process messages (measured in seconds)
 # Note: should be less than CheckStalledTimeout / 2
 #MessagingConsumeInterval = 1
+
 # Transfers Service threadpool size
 #InternalThreadPool = 5
 
@@ -74,6 +71,11 @@ LogTokenRequests=false
 # starts swapping before the free RAM decreases until it reaches the value of MinRequiredFreeRAM
 # The default is 400 / Use 0 to disable the check
 # MaxUrlCopyProcesses = 400
+
+# Set the UrlCopyProcess ping and transfer update interval.
+# For throughput monitoring (Profiling is enabled), a lower value is better.
+# Lowest recommended value should exceed the Gfal2 performance markers (as often as every 5 seconds)
+UrlCopyProcessPingInterval=60
 
 ## Parameters for QoS daemon
 ## ArchivePoll settings
@@ -153,6 +155,8 @@ LogTokenRequests=false
 # AllowSessionReuse = True
 
 ## Cleaner Service settings
+# Enable or disable the "t_file" and "t_job" backup
+BackupTables=true
 # Set the cleaning bulk size when purging old records (number of jobs)
 #CleanBulkSize=5000
 # Entries older than this will be purged (measured in days)
