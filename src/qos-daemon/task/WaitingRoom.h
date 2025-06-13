@@ -108,14 +108,14 @@ void WaitingRoom<TASK, BASE>::run()
             boost::mutex::scoped_lock lock(this->m);
             // get current time
             time_t now = time(NULL);
-            // iterate over all all tasks
+            // iterate over all tasks
             typename boost::ptr_list<TASK>::iterator it, next = this->tasks.begin();
             while ((it = next) != this->tasks.end()) {
                 if (boost::this_thread::interruption_requested())
                     return;
                 // next item to check
                 ++next;
-                // if the time has not yet come for the task simply continue
+                // if the time has not yet come for the task, simply continue
                 if (it->waiting(now))
                     continue;
                 // otherwise start the task
@@ -128,9 +128,13 @@ void WaitingRoom<TASK, BASE>::run()
         }
         catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "WaitingRoom error: " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Aborting daemon!" << commit;
+            exit(1);
         }
         catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "WaitingRoom unknown exception" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Aborting daemon!" << commit;
+            exit(1);
         }
     }
 
