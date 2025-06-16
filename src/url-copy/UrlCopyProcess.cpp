@@ -405,7 +405,7 @@ UrlCopyProcess::UrlCopyProcess(const UrlCopyOpts &opts, Reporter &reporter):
 // Read source and destination bearer tokens form a configuration file and set them
 // in the Gfal2 transfer parameters object to be loaded in the credentials map.
 // The first line contains the bearer token for the source storage endpoint.
-// The second line  contains the bearer token for the destination storage endpoint.
+// The second line contains the bearer token for the destination storage endpoint.
 // The rest of the contents in the file are discarded.
 static void loadTokensFile(const std::string& path, const Transfer& transfer, Gfal2& gfal2) {
     std::string line;
@@ -415,14 +415,14 @@ static void loadTokensFile(const std::string& path, const Transfer& transfer, Gf
     if (std::getline(infile, line, '\n') && !line.empty()) {
         gfal2.setSourceToken(transfer.source, line);
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth2 source bearer token form credentials file" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth2 source bearer token from credentials file" << commit;
     }
 
     // Second line contains destination bearer token
     if (std::getline(infile, line, '\n') && !line.empty()) {
         gfal2.setDestinationToken(transfer.destination, line);
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth2 destination bearer token form credentials file" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load OAuth2 destination bearer token from credentials file" << commit;
     }
 
     // Close the file as we are only interested in the first two lines
@@ -442,7 +442,6 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer, 
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not load cloud storage credentials file: " << ex.what() << commit;
         }
         unlink(opts.cloudStorageConfig.c_str());
-        return;
     }
 
     if (opts.authMethod == "oauth2" && !opts.oauthFile.empty()) {

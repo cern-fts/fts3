@@ -121,7 +121,6 @@ void FileTransferExecutor::run(boost::any & ctx)
                 protocolParams.timeout = db->getGlobalTimeout(tf.voName);
                 protocolParams.ipv6 = db->isProtocolIPv6(tf.sourceSe, tf.destSe);
                 protocolParams.udt = db->isProtocolUDT(tf.sourceSe, tf.destSe);
-                //protocolParams.buffersize
             }
 
             cmdBuilder.setFromProtocol(protocolParams);
@@ -139,8 +138,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                 cmdBuilder.setCloudConfig(cloudStorageConfig);
             }
 
-            // Not a cloud storage transfer but still using oauth2 method
-            if (cloudStorageConfig.empty() && "oauth2" == authMethod) {
+            // Transfer using OAuth2 tokens
+            if (authMethod == "oauth2") {
                 auto [src_token, src_unmanaged] = db->findToken(tf.sourceTokenId);
                 auto [dst_token, dst_unmanaged] = db->findToken(tf.destinationTokenId);
 

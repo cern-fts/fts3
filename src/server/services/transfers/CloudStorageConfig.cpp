@@ -126,13 +126,6 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
 }
 
 
-static void writeOAuthToken(FILE *f, const std::string& token)
-{
-    fprintf(f, "[BEARER]\n");
-    fprintf(f, "TOKEN=%s\n", token.c_str());
-}
-
-
 std::string
 fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, const std::string &authMethod)
 {
@@ -143,9 +136,9 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
         return "";
     }
 
-    char oauth_path[] = "/tmp/fts-cloud-config-XXXXXX";
+    char cloud_config_path[] = "/tmp/fts-cloud-config-XXXXXX";
 
-    int fd = mkstemp(oauth_path);
+    int fd = mkstemp(cloud_config_path);
     if (fd < 0) {
         strerror_r(errno, errDescr, sizeof(errDescr));
         throw fts3::common::UserError(std::string(__func__) + ": Can not open temporary file, " + errDescr);
@@ -156,7 +149,7 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
     if (f == NULL) {
         close(fd);
         strerror_r(errno, errDescr, sizeof(errDescr));
-        remove(oauth_path);
+        remove(cloud_config_path);
         throw fts3::common::UserError(std::string(__func__) + ": Can not fdopen temporary file, " + errDescr);
     }
 
@@ -169,7 +162,7 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
 
         if (!cred) {
             fclose(f);
-            remove(oauth_path);
+            remove(cloud_config_path);
             return "";
         }
     }
@@ -201,28 +194,8 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
         }
     }
 
-    if (authMethod == "oauth2") {
-        std::string token;
-
-        if (isCloudStorage(Uri::parse(tf.sourceSe))) {
-            auto [src_token, _] = db->findToken(tf.sourceTokenId);
-            token = src_token;
-        } else if (isCloudStorage(Uri::parse(tf.destSe))){
-            auto [dst_token, _] = db->findToken(tf.destinationTokenId);
-            token = dst_token;
-        }
-
-        if (token.empty()) {
-            fclose(f);
-            remove(oauth_path);
-            return "";
-        }
-
-        writeOAuthToken(f, token);
-    }
-
     fclose(f);
-    return oauth_path;
+    return cloud_config_path;
 }
 
 
