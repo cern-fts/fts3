@@ -135,7 +135,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             // Cloud storage credentials
             std::string cloudStorageConfig = generateCloudStorageConfigFile(db, tf, authMethod);
             if (!cloudStorageConfig.empty()) {
-                cmdBuilder.setCloudConfig(cloudStorageConfig);
+                cmdBuilder.setCloudConfigFile(cloudStorageConfig);
             }
 
             // Transfer using OAuth2 tokens
