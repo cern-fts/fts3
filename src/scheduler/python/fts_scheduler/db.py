@@ -428,7 +428,7 @@ def get_scheduler_fqdn_from_db(dbconn):
         FROM
           t_hosts
         WHERE
-          drain IS NOT NULL OR drain = 0
+          drain IS NULL OR drain = 0
         ORDER BY
           hostname ASC
         LIMIT 1
