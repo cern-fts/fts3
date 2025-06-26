@@ -493,7 +493,7 @@ static void setupTokenConfig(const UrlCopyOpts &opts, const Transfer &transfer, 
         try {
             auto token = gfal2.tokenRetrieve(transfer.destination, "",
                                              macaroonValidity, {"MANAGE", "UPLOAD", "DELETE", "LIST"});
-            gfal2.setDestinationToken(transfer.destination, token);
+            gfal2.setDestinationToken(transfer.destination, token, false);
         } catch (const Gfal2Exception& ex) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Failed to retrieve \"SE-issued token (macaroon)\" for destination: " << ex.what() << commit;
         }

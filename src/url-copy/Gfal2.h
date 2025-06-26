@@ -332,16 +332,16 @@ public:
     }
 
     /// Set destination bearer token credential
-    void setDestinationToken(const std::string& destination, const std::string& token)
+    void setDestinationToken(const std::string& destination, const std::string& token, const bool mapToHost = true)
     {
         GError* error = nullptr;
 
         if (!token.empty()) {
             dst_token = token;
             auto* token_cred = gfal2_cred_new("BEARER", token.c_str());
-            auto destHost = Uri::parse(destination).host;
+            auto destination_url = mapToHost ? Uri::parse(destination).host : destination.c_str();
 
-            if (gfal2_cred_set(context, destHost.c_str(), token_cred, &error) < 0) {
+            if (gfal2_cred_set(context, destination_url.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
         }
