@@ -131,6 +131,7 @@ std::string MsgIfce::SendTransferStartMessage(Producer &producer, const Transfer
     message["srm_space_token_src"] = tr_started.srm_space_token_source;
     message["srm_space_token_dst"] = tr_started.srm_space_token_dest;
     message["user_dn"] = tr_started.user_dn;
+    message["is_archiving"] = tr_started.is_archiving;
 
     set_metadata(message, "file_metadata", tr_started.file_metadata, true);
     set_metadata(message, "job_metadata", tr_started.job_metadata);

@@ -98,6 +98,7 @@ void LegacyReporter::sendTransferStart(const Transfer &transfer, Gfal2TransferPa
     started.srm_space_token_source = transfer.sourceSpaceToken;
     started.srm_space_token_dest = transfer.destSpaceToken;
     started.tr_timestamp_start = millisecondsSinceEpoch();
+    started.is_archiving = transfer.isArchiving;
 
     if (opts.enableMonitoring) {
         std::string msgReturnValue = MsgIfce::getInstance()->SendTransferStartMessage(producer, started);
