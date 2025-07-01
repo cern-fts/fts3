@@ -90,16 +90,6 @@ void ExecuteProcess::getArgv(std::list<std::string> &argsHolder, size_t *argc, c
     (*argv)[i] = NULL;
 }
 
-static void closeAllFilesExcept(int exception)
-{
-    long maxfd = sysconf(_SC_OPEN_MAX);
-
-    for (int fdAll = 3; fdAll < maxfd; fdAll++) {
-        if (fdAll != exception)
-            close(fdAll);
-    }
-}
-
 int ExecuteProcess::execProcessShell(std::string &forkMessage)
 {
     // Open pipe
@@ -140,9 +130,13 @@ int ExecuteProcess::execProcessShell(std::string &forkMessage)
         if (chdir(_PATH_TMP) != 0)
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chdir" << commit;
 
-        // Close all open file descriptors _except_ the write-end of the pipe
-        // (and stdin, stdout and stderr)
-        closeAllFilesExcept(pipefds[1]);
+        // Close all open file descriptors except stdin, stdout, stderr and parent pipe
+        if ((unsigned int)pipefds[1] > 3 && (unsigned int)pipefds[1] < ~0U) {
+            close_range(3, (unsigned int)pipefds[1] - 1, CLOSE_RANGE_UNSHARE);
+            close_range((unsigned int)pipefds[1] + 1, ~0U, CLOSE_RANGE_UNSHARE);
+        } else {
+            close_range(3, ~0U, CLOSE_RANGE_UNSHARE);
+        }
 
         // Redirect stderr (points to the log)
         //stderr = freopen("/dev/null", "a", stderr);
