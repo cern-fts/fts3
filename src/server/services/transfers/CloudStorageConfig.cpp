@@ -28,6 +28,7 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include "common/Exceptions.h"
+#include "common/Logger.h"
 #include "common/Uri.h"
 
 
@@ -169,7 +170,9 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
 
     // For each different VO or VO attribute
     std::vector<std::string> vomsAttrs;
-    boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
+    if (!cred->vomsAttributes.empty()) {
+        boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
+    }
     vomsAttrs.push_back(tf.voName);
 
     // For each cloud storage credential (i.e. DROPBOX;S3:s3.cern.ch)
@@ -183,6 +186,10 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
             CloudStorageAuth auth;
 
             if (db->getCloudStorageCredentials(tf.userDn, voms_attr, upperCsName, auth)) {
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved cloud credentials: cloud_storage=\"" << upperCsName << "\" "
+                                                << "user_dn=\"" << tf.userDn << "\" " << "voms_attrs=\"" << voms_attr << "\""
+                                                << commit;
+
                 if (boost::starts_with(upperCsName, "DROPBOX")) {
                     writeDropboxCreds(f, upperCsName, auth);
                 } else {
