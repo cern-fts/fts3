@@ -11,13 +11,13 @@
 %endif
 
 Name:       fts
-Version:    3.14.1
+Version:    3.14.2
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.14.1 https://gitlab.cern.ch/fts/fts3.git fts-3.14.1
-# tar -vczf fts-3.14.1.tar.gz --exclude-vcs fts-3.14.1/
+# git clone --depth=1 --branch v3.14.2 https://gitlab.cern.ch/fts/fts3.git fts-3.14.2
+# tar -vczf fts-3.14.2.tar.gz --exclude-vcs fts-3.14.2/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -359,6 +359,9 @@ fi
 %{_bindir}/fts-unit-tests
 
 %changelog
+* Fri Jul 04 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.2
+- Fixes related to macaroon usage in disk-to-disk transfers
+
 * Fri May 23 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.1
 - Fixes related to ActiveMQ logging and transfer checksum behavior
 
