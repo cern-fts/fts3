@@ -278,7 +278,7 @@ void ReuseTransfersService::startUrlCopy(std::string const & job_id, std::list<T
 
     std::string cloudConfigFile = fts3::generateCloudStorageConfigFile(db, representative);
     if (!cloudConfigFile.empty()) {
-        cmdBuilder.setOAuthFile(cloudConfigFile);
+        cmdBuilder.setCloudConfigFile(cloudConfigFile);
     }
 
     // Set all to ready, special case for session reuse

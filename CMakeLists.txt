@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.13)
 project(fts3)
 
 
@@ -29,8 +29,10 @@ set(CMAKE_MODULE_PATH
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 14)
-set(VERSION_PATCH 1)
+set(VERSION_PATCH 2)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+
+include(GNUInstallDirs-backport)
 
 # Generate include header with the version string
 file(
@@ -66,9 +68,6 @@ add_definitions(-D_REENTRANT)
 
 # Require C++20
 include(EnableCpp20 REQUIRED)
-
-# Define where to install the generated artifacts
-include(DefineInstallationPaths REQUIRED)
 
 # Debug builds
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

@@ -210,7 +210,7 @@ void UrlCopyCmd::setFTSName(const std::string &hostname)
     setOption("alias", hostname);
 }
 
-void UrlCopyCmd::setCloudConfig(const std::string &path)
+void UrlCopyCmd::setCloudConfigFile(const std::string &path)
 {
     setOption("cloud-config", path);
 }
@@ -218,7 +218,7 @@ void UrlCopyCmd::setCloudConfig(const std::string &path)
 
 void UrlCopyCmd::setOAuthFile(const std::string &path)
 {
-    setOption("oauth", path);
+    setOption("oauth-file", path);
 }
 
 

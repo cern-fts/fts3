@@ -68,7 +68,7 @@ public:
     void setCopyMode(CopyMode);
     bool isIPv6Explicit();
     void setFTSName(const std::string&);
-    void setCloudConfig(const std::string&);
+    void setCloudConfigFile(const std::string&);
     void setOAuthFile(const std::string&);
     void setAuthMethod(const std::string&);
     void setSourceTokenId(const std::string&);

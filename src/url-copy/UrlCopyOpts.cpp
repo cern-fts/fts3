@@ -62,7 +62,7 @@ const option UrlCopyOpts::long_options[] =
     {"vo",                     required_argument, 0, 500},
     {"user-dn",                required_argument, 0, 501},
     {"proxy",                  required_argument, 0, 502},
-    {"oauth",                  required_argument, 0, 503},
+    {"oauth-file",             required_argument, 0, 503},
     {"auth-method",            required_argument, 0, 504},
     {"copy-mode",              required_argument, 0, 505},
     {"disable-fallback",       no_argument,       0, 506},

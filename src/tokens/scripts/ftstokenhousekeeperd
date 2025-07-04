@@ -144,7 +144,7 @@ def select_worker_hostname(db_conn):
         "from"
         "  t_hosts "
         "where"
-        "  drain is not null or drain = 0 "
+        "  drain is null or drain = 0 "
         "order by"
         "  hostname asc "
         "limit 1"

@@ -332,16 +332,16 @@ public:
     }
 
     /// Set destination bearer token credential
-    void setDestinationToken(const std::string& destination, const std::string& token)
+    void setDestinationToken(const std::string& destination, const std::string& token, const bool mapToHost = true)
     {
         GError* error = nullptr;
 
         if (!token.empty()) {
             dst_token = token;
             auto* token_cred = gfal2_cred_new("BEARER", token.c_str());
-            auto destHost = Uri::parse(destination).host;
+            auto destination_url = mapToHost ? Uri::parse(destination).host : destination.c_str();
 
-            if (gfal2_cred_set(context, destHost.c_str(), token_cred, &error) < 0) {
+            if (gfal2_cred_set(context, destination_url.c_str(), token_cred, &error) < 0) {
                 throw Gfal2Exception(error);
             }
         }
@@ -478,10 +478,15 @@ public:
         char buffer[1024];
         GError *error = NULL;
 
+        // Log content for Tape REST API locality calls
+        auto oldValue = getFlag("HTTP PLUGIN", "LOG_CONTENT");
+        setFlag("HTTP PLUGIN", "LOG_CONTENT", true);
+
         if (gfal2_getxattr(context, url.c_str(), name.c_str(), buffer, sizeof(buffer), &error) < 0) {
             throw Gfal2Exception(error);
         }
 
+        setFlag("HTTP PLUGIN", "LOG_CONTENT", oldValue);
         return buffer;
     }
 
@@ -501,6 +506,19 @@ public:
         return value;
     }
 
+    /// Get a boolean config value (default false)
+    bool getFlag(const std::string &group, const std::string &key) {
+        return gfal2_get_opt_boolean_with_default(context, group.c_str(), key.c_str(), false);
+    }
+
+    /// Set a boolean config value
+    void setFlag(const std::string &group, const std::string& key, const bool value) {
+        GError *error = NULL;
+        gfal2_set_opt_boolean(context, group.c_str(), key.c_str(), value, &error);
+        g_clear_error(&error);
+    }
+
+    /// Retrieve a SE-issued token for the given path
     std::string tokenRetrieve(const std::string& url, const std::string& issuer, unsigned validity,
                               const std::vector<std::string>& activities) {
         char buff[2048];

@@ -76,7 +76,7 @@ static int parseProcStatFile(pid_t pid, ProcStatInfo *info)
     snprintf(fname, sizeof(fname), "/proc/%d/stat", pid);
     FILE *fd = fopen(fname, "r");
     if (fd == NULL) {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Could not open " << fname << "(" << errno << ")" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Could not open " << fname << " (errno=" << errno << ")" << commit;
         return -1;
     }
 
