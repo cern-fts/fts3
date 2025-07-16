@@ -1,5 +1,3 @@
-%global _hardened_build 1
-%global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
 # Compile Python scripts using Python3
 %define __python python3
@@ -124,11 +122,7 @@ FTS ActiveMQ broker publisher daemon
 %package server-selinux
 Summary:    SELinux support for fts-server
 Requires:   fts-server%{?_isa} = %{version}-%{release}
-%if "%{_selinux_policy_version}" != ""
 Requires:   selinux-policy >= %{_selinux_policy_version}
-%else
-Requires:   selinux-policy >= %{selinux_policyver}
-%endif
 Requires(post):   /usr/sbin/semodule, /sbin/restorecon, fts-server
 Requires(postun): /usr/sbin/semodule, /sbin/restorecon, fts-server
 
