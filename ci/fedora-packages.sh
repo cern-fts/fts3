@@ -6,5 +6,5 @@ if ! rpm -q --quiet epel-release ; then
   dnf install -y epel-release
 fi
 
-dnf install -y dnf-plugins-core git rpm-build tree which \
+dnf install -y dnf-plugins-core git rpm-build rpm-sign tree which \
                cmake cmake3 make gcc gcc-c++
