@@ -2163,6 +2163,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
     int count = 0;
     int countBeat = 0;
     int hostsRunningBackup = 0;
+    bool loggedProgress = false;
     bool doBackup = true;
     *nJobs = 0;
     *nFiles = 0;
@@ -2224,8 +2225,12 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                 ++countBeat;
 
                 if (countBeat == 1000) {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup progress: "
-                                                    << *nJobs << " jobs and " << *nFiles << " files affected" << commit;
+                    if (!loggedProgress) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup progress: "
+                                                        << *nJobs << " jobs and " << *nFiles << " files affected" << commit;
+                        loggedProgress = true;
+                    }
+
                     countBeat = 0;
 
                     // Update heartbeat first
@@ -2275,10 +2280,13 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                     (*nJobs) += count;
 
                     count = 0;
+                    loggedProgress = false;
+
                     jobIdStmt.str(std::string());
                     jobIdStmt.clear();
                     sql.commit();
-                    sleep(1); // Give it sometime to breath
+
+                    sleep(1); // Give it sometime to breathe
                 }
             }
 
