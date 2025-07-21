@@ -346,7 +346,7 @@ void UrlCopyProcess::performCopy(Gfal2TransferParams& params, Transfer& transfer
             cleanupOnFailure(transfer);
         } else {
             // Should only get here due to a race condition at the storage level
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "The transfer failed because the file exists. Do not clean!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "The transfer failed because the file exists. Do not clean!" << commit;
         }
 
         int errc = (timeoutExpired ? ETIMEDOUT : ex.code());
