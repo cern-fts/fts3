@@ -82,8 +82,7 @@ int main(int argc, char **argv)
         long bulkSize = ServerConfig::instance().get<long>("CleanBulkSize");
         int cleanInterval = ServerConfig::instance().get<int>("CleanInterval");
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting with bulk size of " << bulkSize
-            << " and an interval of " << cleanInterval << " days" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting: bulk_size=" << bulkSize << " retention_interval=" << cleanInterval << "d" << commit;
 
         long nJobs = 0, nFiles = 0, nDeletions = 0;
         auto start = boost::chrono::steady_clock::now();

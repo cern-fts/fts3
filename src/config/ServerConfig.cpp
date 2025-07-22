@@ -30,6 +30,7 @@
 using namespace fts3::config;
 using namespace fts3::common;
 
+template class fts3::common::Singleton<ServerConfig>;
 
 ServerConfig::ServerConfig() : reading(0), getting(0), readTime(0)
 {

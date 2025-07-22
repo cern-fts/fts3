@@ -346,7 +346,7 @@ void UrlCopyProcess::performCopy(Gfal2TransferParams& params, Transfer& transfer
             cleanupOnFailure(transfer);
         } else {
             // Should only get here due to a race condition at the storage level
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "The transfer failed because the file exists. Do not clean!" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "The transfer failed because the file exists. Do not clean!" << commit;
         }
 
         int errc = (timeoutExpired ? ETIMEDOUT : ex.code());
@@ -647,6 +647,10 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Third Party TURL protocol list: " << gfal2.get("SRM PLUGIN", "TURL_3RD_PARTY_PROTOCOLS")
                                     << ((!opts.thirdPartyTURL.empty()) ? " (database configuration)" : "") << commit;
 
+    // Ping thread
+    AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
+
     ////////////////////////////
     /// Source file verification
     ////////////////////////////
@@ -767,10 +771,6 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP streams: " << params.getNumberOfStreams() << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "TCP buffer size: " << opts.tcpBuffersize << commit;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Timeout set to: " << timeout << commit;
-
-    // Ping thread
-    AutoInterruptThread pingThread(boost::bind(&pingTask, &transfer, &reporter, opts.pingInterval));
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Setting ping interval to: " << opts.pingInterval << commit;
 
     FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Starting transfer" << commit;
     performCopy(params, transfer);

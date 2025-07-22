@@ -2155,23 +2155,21 @@ void MySqlAPI::setPidForJob(const std::string& jobId, int pid)
 
 void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles, long* nDeletions)
 {
-
     soci::session sql(*connectionPool);
 
-    unsigned index=0, activeHosts=0, start=0, end=0;
+    unsigned index = 0, activeHosts = 0, start = 0, end = 0;
     std::string serviceName = "fts_backup";
-    *nJobs = 0;
-    *nFiles = 0;
-    *nDeletions = 0;
     std::string job_id;
     int count = 0;
     int countBeat = 0;
-    bool drain = false;
     int hostsRunningBackup = 0;
+    bool loggedProgress = false;
     bool doBackup = true;
-    try
-    {
+    *nJobs = 0;
+    *nFiles = 0;
+    *nDeletions = 0;
 
+    try {
         // Total number of working instances, prevent from starting a second one
         const std::string qry = sql.get_backend_name() == "mysql" ?
                 "SELECT COUNT(hostname) "
@@ -2191,35 +2189,26 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
             soci::into(hostsRunningBackup));
         stmtActiveHosts.execute(true);
 
-        if(hostsRunningBackup > 0)
-        {
+        if (hostsRunningBackup > 0) {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup already running, won't start" << commit;
             return;
         }
 
-        try
-        {
-            //update heartbeat first, the first must get 0
+        try {
+            // Update heartbeat first, the first must get 0
             updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
-        }
-        catch(...)
-        {
-            try
-            {
+        } catch (...) {
+            try {
                 sleep(1);
-                //update heartbeat first, the first must get 0
+                // Update heartbeat first, the first must get 0
                 updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
-            }
-            catch(...)
-            {
-
-            }
-
+            } catch (...) { }
         }
-        doBackup =  ServerConfig::instance().get<bool> ("BackupTables");
-        //prevent more than on server to update the optimizer decisions
-        if(hashSegment.start == 0)
-        {
+
+        doBackup = ServerConfig::instance().get<bool>("BackupTables");
+
+        // Prevent running the cleaner on more than one node
+        if (hashSegment.start == 0) {
             const std::string qry = sql.get_backend_name() == "mysql" ?
                     "SELECT job_id "
                     "FROM t_job "
@@ -2229,57 +2218,41 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                     "FROM t_job "
                     "WHERE job_finished < (NOW() AT TIME ZONE 'UTC' - MAKE_INTERVAL(DAYS => :days))";
             soci::rowset<soci::row> rs = (sql.prepare << qry, soci::use(intervalDays));
-
             std::ostringstream jobIdStmt;
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            {
+
+            for (const auto& row: rs) {
                 ++count;
                 ++countBeat;
 
-                if(countBeat == 1000)
-                {
-                    // Give some progress
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup progress: "
-                        << *nJobs << " jobs and " << *nFiles << " files affected" << commit;
+                if (countBeat == 1000) {
+                    if (!loggedProgress) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup progress: "
+                                                        << *nJobs << " jobs and " << *nFiles << " files affected" << commit;
+                        loggedProgress = true;
+                    }
 
-                    //reset
                     countBeat = 0;
 
-                    //update heartbeat first
-                    try
-                    {
-                        //update heartbeat first, the first must get 0
+                    // Update heartbeat first
+                    try {
                         updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
-                    }
-                    catch(...)
-                    {
-                        try
-                        {
+                    } catch(...) {
+                        try {
                             sleep(1);
-                            //update heartbeat first, the first must get 0
+                            // Update heartbeat first, the first must get 0
                             updateHeartBeatInternal(sql, &index, &activeHosts, &start, &end, serviceName);
-                        }
-                        catch(...)
-                        {
-
-                        }
-
+                        } catch(...) { }
                     }
 
-                    drain = getDrainInternal(sql);
-                    if(drain)
-                    {
+                    if (getDrainInternal(sql)) {
                         return;
                     }
                 }
 
-                soci::row const& r = *i;
-                job_id = r.get<std::string>("job_id");
-                jobIdStmt << "'";
-                jobIdStmt << job_id;
-                jobIdStmt << "',";
-                if(count == bulkSize)
-                {
+                job_id = row.get<std::string>("job_id");
+                jobIdStmt << "'" << job_id << "',";
+
+                if (count == bulkSize) {
                     std::string queryStr = jobIdStmt.str();
                     job_id = queryStr.substr(0, queryStr.length() - 1);
 
@@ -2307,14 +2280,17 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
                     (*nJobs) += count;
 
                     count = 0;
+                    loggedProgress = false;
+
                     jobIdStmt.str(std::string());
                     jobIdStmt.clear();
                     sql.commit();
-                    sleep(1); // give it sometime to breath
+
+                    sleep(1); // Give it sometime to breathe
                 }
             }
 
-            //delete from t_optimizer_evolution old records bigger than the interval of days being passed
+            // Delete from 't_optimizer_evolution' old records bigger than the interval of days being passed
             const std::string qry1 = sql.get_backend_name() == "mysql" ?
                     "DELETE FROM t_optimizer_evolution "
                     "WHERE"
@@ -2330,7 +2306,7 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
             deleteOptEvo.execute();
             sql.commit();
 
-            //delete from t_file_retry_errors old records bigger than the interval of days being passed
+            // Delete from 't_file_retry_errors' old records bigger than the interval of days being passed
             const std::string qry2 = sql.get_backend_name() == "mysql" ?
                     "DELETE FROM t_file_retry_errors "
                     "WHERE"
@@ -2346,16 +2322,12 @@ void MySqlAPI::backup(int intervalDays, long bulkSize, long* nJobs, long* nFiles
             deleteFileRetryErr.execute();
             sql.commit();
         }
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         sql.rollback();
         throw UserError(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    catch (...)
-    {
+    } catch (...) {
         sql.rollback();
-        throw UserError(std::string(__func__) + ": Caught exception " );
+        throw UserError(std::string(__func__) + ": Caught unknown exception");
     }
 }
 

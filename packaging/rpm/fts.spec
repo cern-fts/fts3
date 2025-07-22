@@ -1,5 +1,3 @@
-%global _hardened_build 1
-%global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
 # Compile Python scripts using Python3
 %define __python python3
@@ -11,13 +9,13 @@
 %endif
 
 Name:       fts
-Version:    3.14.2
+Version:    3.14.3
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.14.2 https://gitlab.cern.ch/fts/fts3.git fts-3.14.2
-# tar -vczf fts-3.14.2.tar.gz --exclude-vcs fts-3.14.2/
+# git clone --depth=1 --branch v3.14.3 https://gitlab.cern.ch/fts/fts3.git fts-3.14.3
+# tar -vczf fts-3.14.3.tar.gz --exclude-vcs fts-3.14.3/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -124,11 +122,7 @@ FTS ActiveMQ broker publisher daemon
 %package server-selinux
 Summary:    SELinux support for fts-server
 Requires:   fts-server%{?_isa} = %{version}-%{release}
-%if "%{_selinux_policy_version}" != ""
 Requires:   selinux-policy >= %{_selinux_policy_version}
-%else
-Requires:   selinux-policy >= %{selinux_policyver}
-%endif
 Requires(post):   /usr/sbin/semodule, /sbin/restorecon, fts-server
 Requires(postun): /usr/sbin/semodule, /sbin/restorecon, fts-server
 
@@ -359,6 +353,10 @@ fi
 %{_bindir}/fts-unit-tests
 
 %changelog
+* Tue Jul 22 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.3
+- Fixes for the "fts_db_cleaner" process
+- Improved management of timeouts during transfer preparation stage
+
 * Fri Jul 04 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.2
 - Fixes related to macaroon usage in disk-to-disk transfers
 
