@@ -175,11 +175,10 @@ void TokenRefreshListenerService::dispatchRefreshFailures()
                                 << " [" << it.process_id << "@" << it.hostname << "]"
                                 << commit;
             }
+
+            routingMap.erase(map_it);
         }
-
-        routingMap.erase(map_it);
     }
-
 }
 
 } // end namespace token
