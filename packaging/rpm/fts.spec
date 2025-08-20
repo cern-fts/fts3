@@ -9,13 +9,13 @@
 %endif
 
 Name:       fts
-Version:    3.14.3
+Version:    3.14.4
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.14.3 https://gitlab.cern.ch/fts/fts3.git fts-3.14.3
-# tar -vczf fts-3.14.3.tar.gz --exclude-vcs fts-3.14.3/
+# git clone --depth=1 --branch v3.14.4 https://gitlab.cern.ch/fts/fts3.git fts-3.14.4
+# tar -vczf fts-3.14.4.tar.gz --exclude-vcs fts-3.14.4/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -353,6 +353,10 @@ fi
 %{_bindir}/fts-unit-tests
 
 %changelog
+* Wed Aug 20 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4
+- Fixes for FTS QoS and FTS Token daemon crashes
+- Minor schema to bring index for failed/finished jobs listing
+
 * Tue Jul 22 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.3
 - Fixes for the "fts_db_cleaner" process
 - Improved management of timeouts during transfer preparation stage
