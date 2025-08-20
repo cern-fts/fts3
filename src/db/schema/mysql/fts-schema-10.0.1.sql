@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.36, for Linux (x86_64)
 --
--- Host: dbod-fts-dev.cern.ch    Database: fts_schema_10_0_0
+-- Host: dbod-fts-dev.cern.ch    Database: fts_schema_10_0_1
 -- ------------------------------------------------------
 -- Server version	8.4.2
 
@@ -852,4 +852,4 @@ CREATE TABLE `t_webmon_overview_cache_control` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-25 14:00:00
+-- Dump completed on 2025-08-06 16:00:00
