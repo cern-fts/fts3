@@ -9,13 +9,13 @@
 %endif
 
 Name:       fts
-Version:    3.14.3
+Version:    3.14.4
 Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.14.3 https://gitlab.cern.ch/fts/fts3.git fts-3.14.3
-# tar -vczf fts-3.14.3.tar.gz --exclude-vcs fts-3.14.3/
+# git clone --depth=1 --branch v3.14.4 https://gitlab.cern.ch/fts/fts3.git fts-3.14.4
+# tar -vczf fts-3.14.4.tar.gz --exclude-vcs fts-3.14.4/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -26,7 +26,7 @@ BuildRequires:  cmake3
 BuildRequires:  libdirq-devel
 BuildRequires:  doxygen
 BuildRequires:  libuuid-devel
-BuildRequires:  gfal2-devel >= 2.23.2
+BuildRequires:  gfal2-devel >= 2.23.3
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -59,9 +59,9 @@ This package contains development files
 Summary: File Transfer Service version 3 server
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2%{?_isa} >= 2.23.2
-Requires: gfal2-plugin-http%{?_isa} >= 2.23.2
-Requires: gfal2-plugin-srm%{?_isa} >= 2.23.2
+Requires: gfal2%{?_isa} >= 2.23.3
+Requires: gfal2-plugin-http%{?_isa} >= 2.23.3
+Requires: gfal2-plugin-srm%{?_isa} >= 2.23.3
 #Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 Requires: jsoncpp
@@ -144,7 +144,7 @@ Summary:    FTS unit tests
 Group:      Development/Tools
 
 Requires:   fts-libs%{?_isa} = %{version}-%{release}
-Requires:   gfal2-plugin-mock%{?_isa} >= 2.23.2
+Requires:   gfal2-plugin-mock%{?_isa} >= 2.23.3
 
 %description tests
 Testing binaries for the FTS Server and related components.
@@ -353,6 +353,10 @@ fi
 %{_bindir}/fts-unit-tests
 
 %changelog
+* Wed Aug 20 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4
+- Fixes for FTS QoS and FTS Token daemon crashes
+- Minor schema to bring index for failed/finished jobs listing
+
 * Tue Jul 22 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.3
 - Fixes for the "fts_db_cleaner" process
 - Improved management of timeouts during transfer preparation stage
