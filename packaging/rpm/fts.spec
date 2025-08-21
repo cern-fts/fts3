@@ -10,7 +10,7 @@
 
 Name:       fts
 Version:    3.14.4
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
@@ -353,6 +353,9 @@ fi
 %{_bindir}/fts-unit-tests
 
 %changelog
+* Thu Aug 21 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4-2
+- Require Gfal2 v2.23.4
+
 * Wed Aug 20 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4
 - Fixes for FTS QoS and FTS Token daemon crashes
 - Minor schema to bring index for failed/finished jobs listing
