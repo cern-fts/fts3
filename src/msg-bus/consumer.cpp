@@ -26,16 +26,14 @@
 #include "DirQ.h"
 
 
-Consumer::Consumer(const std::string &baseDir, unsigned limit): baseDir(baseDir), limit(limit),
-    statusQueue(std::make_unique<DirQ>(baseDir + "/status")), stalledQueue(std::make_unique<DirQ>(baseDir + "/stalled")),
-    logQueue(std::make_unique<DirQ>(baseDir + "/logs")), stagingQueue(std::make_unique<DirQ>(baseDir + "/staging")),
+Consumer::Consumer(const std::string &baseDir, unsigned limit) :
+    baseDir(baseDir), limit(limit),
+    statusQueue(std::make_unique<DirQ>(baseDir + "/status")),
+    stalledQueue(std::make_unique<DirQ>(baseDir + "/stalled")),
+    logQueue(std::make_unique<DirQ>(baseDir + "/logs")),
+    stagingQueue(std::make_unique<DirQ>(baseDir + "/staging")),
     deletionQueue(std::make_unique<DirQ>(baseDir + "/deletion"))
-{
-}
-
-Consumer::~Consumer()
-{
-}
+{ }
 
 
 template <typename MSG>

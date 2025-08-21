@@ -69,7 +69,7 @@ static void expectZeroMessages(boost::function<int (Consumer*, MSG_CONTAINER&)> 
 BOOST_FIXTURE_TEST_CASE (simpleStatus, MsgBusFixture)
 {
     Producer producer(TEST_PATH);
-    Consumer consumer(TEST_PATH);
+    Consumer consumer(TEST_PATH, 1000);
 
     Message original;
     original.set_job_id("1906cc40-b915-11e5-9a03-02163e006dd0");
@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE (simpleStatus, MsgBusFixture)
 BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
 {
     Producer producer(TEST_PATH);
-    Consumer consumer(TEST_PATH);
+    Consumer consumer(TEST_PATH, 1000);
 
     MessageLog original;
 
@@ -150,7 +150,7 @@ BOOST_FIXTURE_TEST_CASE (simpleLog, MsgBusFixture)
 BOOST_FIXTURE_TEST_CASE (simpleDeletion, MsgBusFixture)
 {
     Producer producer(TEST_PATH);
-    Consumer consumer(TEST_PATH);
+    Consumer consumer(TEST_PATH, 1000);
 
     MessageBringonline original;
 
@@ -183,7 +183,7 @@ BOOST_FIXTURE_TEST_CASE (simpleDeletion, MsgBusFixture)
 BOOST_FIXTURE_TEST_CASE (simpleStaging, MsgBusFixture)
 {
     Producer producer(TEST_PATH);
-    Consumer consumer(TEST_PATH);
+    Consumer consumer(TEST_PATH, 1000);
 
     MessageBringonline original;
 

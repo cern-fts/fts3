@@ -128,6 +128,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Directory where the internal FTS3 messages are written"
     )
     (
+        "MessagingDirectoryConsumerSize",
+        po::value<std::string>( &(_vars["MessagingDirectoryConsumerSize"]) )->default_value("1000"),
+        "Set size of DirQ messages to consume at one time (default 1000)"
+    )
+    (
         "SiteName",
         po::value<std::string>( &(_vars["SiteName"]) ),
         "Site name running the FTS3 service"

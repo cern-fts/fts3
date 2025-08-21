@@ -24,9 +24,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "DirQ.h"
 #include "events.h"
 
-struct DirQ;
 
 class Consumer
 {
@@ -42,8 +42,8 @@ private:
 
 public:
 
-    Consumer(const std::string &baseDir, unsigned limit = 10000);
-    ~Consumer();
+    Consumer(const std::string &baseDir, unsigned limit);
+    virtual ~Consumer() = default;
 
     int runConsumerStatus(std::vector<fts3::events::Message> &messages);
     int runConsumerStall(std::vector<fts3::events::MessageUpdater> &messages);

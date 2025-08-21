@@ -62,6 +62,7 @@ void CleanerService::runService()
 {
     int counter = 0;
     auto msgDir = ServerConfig::instance().get<std::string>("MessagingDirectory");
+    unsigned msgLimit = ServerConfig::instance().get<unsigned>("MessagingDirectoryConsumerSize");
     int purgeMsgDirs = ServerConfig::instance().get<int>("PurgeMessagingDirectoryInterval");
     int checkSanityState = ServerConfig::instance().get<int>("CheckSanityStateInterval");
     int multihopSanitySate = ServerConfig::instance().get<int>("MultihopSanityStateInterval");
@@ -83,7 +84,7 @@ void CleanerService::runService()
 
             // Every 10 minutes
             if (purgeMsgDirs > 0 && counter % purgeMsgDirs == 0) {
-                Consumer consumer(msgDir);
+                Consumer consumer(msgDir, msgLimit);
                 consumer.purgeAll();
             }
 

@@ -40,10 +40,11 @@ namespace server {
 
 
 MessageProcessingService::MessageProcessingService(): BaseService("MessageProcessingService"),
-    consumer(ServerConfig::instance().get<std::string>("MessagingDirectory")),
+    consumer(ServerConfig::instance().get<std::string>("MessagingDirectory"),
+             ServerConfig::instance().get<unsigned>("MessagingDirectoryConsumerSize")),
     producer(ServerConfig::instance().get<std::string>("MessagingDirectory"))
 {
-    messages.reserve(600);
+    messages.reserve(ServerConfig::instance().get<unsigned>("MessagingDirectoryConsumerSize"));
 }
 
 
@@ -51,7 +52,9 @@ void MessageProcessingService::runService()
 {
     namespace fs = boost::filesystem;
     auto msgCheckInterval = ServerConfig::instance().get<boost::posix_time::time_duration>("MessagingConsumeInterval");
+    auto msgConsumerLimit = ServerConfig::instance().get<unsigned>("MessagingDirectoryConsumerSize");
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "MessageProcessingService interval: " << msgCheckInterval.total_seconds() << "s" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "MessageProcessingService consumer size: " << msgConsumerLimit << commit;
 
     while (!boost::this_thread::interruption_requested())
     {
