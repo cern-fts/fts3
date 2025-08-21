@@ -83,10 +83,37 @@ void MessageProcessingService::runService()
                 continue;
             }
 
-            if (!messages.empty())
-            {
-                handleOtherMessages(messages);
-                handleUpdateMessages(messages);
+            if (!messages.empty()) {
+                auto start = std::chrono::steady_clock::now();
+
+                auto processed = handleTransferStateUpdateMessages(messages);
+
+                // Time how long it took to process the transfer state update messages
+                auto now = std::chrono::steady_clock::now();
+                auto duration = std::chrono::duration_cast<
+                    std::chrono::duration<double, std::milli>>(now - start).count();
+
+                FTS3_COMMON_LOGGER_NEWLOG(PROF)
+                    << "Processed transfer state update messages:"
+                    << " processed=" << processed << " (total=" << messages.size() << ")"
+                    << " duration=" << duration << "ms"
+                    << " (" << (duration / processed) << "ms / message)"
+                    << commit;
+
+                start = std::chrono::steady_clock::now();
+                processed = handleProtocolUpdateMessages(messages);
+
+                now = std::chrono::steady_clock::now();
+                duration = std::chrono::duration_cast<
+                    std::chrono::duration<double, std::milli>>(now - start).count();
+
+                FTS3_COMMON_LOGGER_NEWLOG(PROF)
+                    << "Processed transfer protocol update messages:"
+                    << " processed=" << processed << " (total=" << messages.size() << ")"
+                    << " duration=" << duration << "ms"
+                    << " (" << (duration / processed) << "ms / message)"
+                    << commit;
+
                 messages.clear();
             }
 
@@ -148,7 +175,7 @@ void MessageProcessingService::runService()
 }
 
 
-void MessageProcessingService::performUpdateMessageDbChange(const fts3::events::Message& msg)
+void MessageProcessingService::performProtocolUpdateDbChange(const fts3::events::Message& msg)
 {
     try
     {
@@ -191,7 +218,7 @@ void MessageProcessingService::performUpdateMessageDbChange(const fts3::events::
 }
 
 
-void MessageProcessingService::performOtherMessageDbChange(const fts3::events::Message& msg)
+void MessageProcessingService::performTransferStateDbChange(const fts3::events::Message& msg)
 {
     try
     {
@@ -308,80 +335,69 @@ void MessageProcessingService::performOtherMessageDbChange(const fts3::events::M
 }
 
 
-void MessageProcessingService::handleUpdateMessages(const std::vector<fts3::events::Message>& messages)
+int MessageProcessingService::handleProtocolUpdateMessages(const std::vector<fts3::events::Message>& protocolUpdateMessages)
 {
-    for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-    {
-        try
-        {
-            if (boost::this_thread::interruption_requested())
-            {
+    int processed = 0;
+
+    for (const auto& message: protocolUpdateMessages) {
+        try {
+            if (boost::this_thread::interruption_requested()) {
                 dumpMessages();
-                return;
+                return processed;
             }
 
-            if ((*iter).transfer_status().compare("UPDATE") == 0)
-            {
-                performUpdateMessageDbChange(*iter);
+            if (message.transfer_status().compare("UPDATE") == 0) {
+                performProtocolUpdateDbChange(message);
+                processed++;
             }
-        }
-        catch (const boost::filesystem::filesystem_error& e)
-        {
+        } catch (const boost::filesystem::filesystem_error& e) {
             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Caught exception related to message dumping: " << e.what() << commit;
-        }
-        catch (const std::exception& e)
-        {
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
-        }
-        catch (...)
-        {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
         }
     }
+
+    return processed;
 }
 
 
-void MessageProcessingService::handleOtherMessages(const std::vector<fts3::events::Message>& messages)
+int MessageProcessingService::handleTransferStateUpdateMessages(const std::vector<fts3::events::Message>& stateUpdateMessages)
 {
     fts3::events::MessageUpdater msgUpdater;
+    int processed = 0;
 
-    for (auto iter = messages.begin(); iter != messages.end(); ++iter)
-    {
-        try
-        {
-            if (boost::this_thread::interruption_requested())
-            {
+    for (const auto& message: stateUpdateMessages) {
+        try {
+            if (boost::this_thread::interruption_requested()) {
                 dumpMessages();
-                return;
+                return processed;
             }
 
-            msgUpdater.set_job_id((*iter).job_id());
-            msgUpdater.set_file_id((*iter).file_id());
-            msgUpdater.set_process_id((*iter).process_id());
-            msgUpdater.set_timestamp((*iter).timestamp());
+            msgUpdater.set_job_id(message.job_id());
+            msgUpdater.set_file_id(message.file_id());
+            msgUpdater.set_process_id(message.process_id());
+            msgUpdater.set_timestamp(message.timestamp());
             msgUpdater.set_throughput(0.0);
             msgUpdater.set_instantaneous_throughput(0.0);
             msgUpdater.set_transferred(0);
             ThreadSafeList::get_instance().updateMsg(msgUpdater);
 
-            if ((*iter).transfer_status().compare("UPDATE") != 0)
-            {
-                performOtherMessageDbChange(*iter);
+            if (message.transfer_status().compare("UPDATE") != 0) {
+                performTransferStateDbChange(message);
+                processed++;
             }
-        }
-        catch (const boost::filesystem::filesystem_error& e)
-        {
+        } catch (const boost::filesystem::filesystem_error& e) {
             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "Caught exception related to message dumping: " << e.what() << commit;
-        }
-        catch (const std::exception& e)
-        {
+        } catch (const std::exception& e) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
-        }
-        catch (...)
-        {
+        } catch (...) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
         }
     }
+
+    return processed;
 }
 
 

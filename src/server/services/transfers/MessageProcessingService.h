@@ -41,18 +41,26 @@ public:
     virtual void runService();
 
 private:
-    /// Handle only messages whose message state is UPDATE.
-    /// These messages are usually sent to update certain fields such as filesize.
-    void handleUpdateMessages(const std::vector<fts3::events::Message>& messages);
+    /**
+     * Handle messages tied to the file and protocol properties, such as filesize.
+     * These messages have the "UPDATE" message state.
+     *
+     * @return the number of messages processed
+     */
+    int handleProtocolUpdateMessages(const std::vector<fts3::events::Message>& protocolUpdateMessages);
 
-    /// Handle all messages except for UPDATE ones.
-    /// Normally, these messages change the file and job status.
-    void handleOtherMessages(const std::vector<fts3::events::Message>& messages);
+    /**
+     * Handle messages tied to the transfer state (e.g.: FINISHED, FAILED).
+     * These messages have a message state != "UPDATE".
+     *
+     * @return the number of messages processed
+     */
+    int handleTransferStateUpdateMessages(const std::vector<fts3::events::Message>& stateUpdateMessages);
 
-    /// Perform the database change associated with an UPDATE type message
-    void performUpdateMessageDbChange(const fts3::events::Message& msg);
-    /// Perform the database change associated with a non-UPDATE type message
-    void performOtherMessageDbChange(const fts3::events::Message& msg);
+    /// Perform the database change associated with a protocol update message
+    void performProtocolUpdateDbChange(const fts3::events::Message& msg);
+    /// Perform the database change associated with a transfer state update message
+    void performTransferStateDbChange(const fts3::events::Message& msg);
 
     /// Dump the messages and messages logs onto disk
     void dumpMessages();
