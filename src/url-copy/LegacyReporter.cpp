@@ -362,11 +362,11 @@ void LegacyReporter::sendTransferCompleted(const Transfer &transfer, Gfal2Transf
     completed.source_protocol = completed.source_transfer_protocol = transfer.source.protocol;
     completed.dest_protocol = completed.dest_transfer_protocol = transfer.destination.protocol;
 
-    if (transfer.source.protocol == "srm") {
+    if (transfer.source.protocol == "srm" && !transfer.sourceTurl.protocol.empty()) {
         completed.source_transfer_protocol = transfer.sourceTurl.protocol;
     }
 
-    if (transfer.destination.protocol == "srm") {
+    if (transfer.destination.protocol == "srm" && !transfer.destTurl.protocol.empty()) {
         completed.dest_transfer_protocol = transfer.destTurl.protocol;
     }
 

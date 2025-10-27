@@ -284,5 +284,11 @@ bool isProtocolTranslation(const std::string& sourceProtocol, const std::string&
         return false;
     }
 
+    // If we get "srm" at this point, no tURL was obtained, hence no data movement.
+    // As cannot tell whether this would've been protocol translation, return false
+    if (sourceProtocol == "srm" || destProtocol == "srm") {
+        return false;
+    }
+
     return sourceProtocol != destProtocol;
 }
