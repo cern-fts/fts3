@@ -1,26 +1,35 @@
 [supervisord]
 nodaemon=true
+user=root
 
 [program:fts-qos]
-command=/usr/sbin/fts_qos -t 25
+command=/usr/sbin/fts_qos -n -t 25
 autostart=true
 autorestart=false
 priority=50
+stdout_logfile =/var/log/fts3/fts_qos.log
+redirect_stderr=true
 
 [program:fts-server]
-command=/usr/sbin/fts_server -t 25 
+command=/usr/sbin/fts_server -n -t 25
 autostart=true
 autorestart=false
 priority=50
+stdout_logfile =/var/log/fts3/fts_server.log
+redirect_stderr=true
 
-[program:fts-msg-bulk]
-command=/usr/sbin/fts_msg_bulk 
+[program:fts-activemq]
+command=/usr/sbin/fts_activemq -n
 autostart=true
 autorestart=false
 priority=50
+stdout_logfile =/var/log/fts3/fts_activemq.log
+redirect_stderr=true
 
 [program:cron]
 command=/usr/sbin/crond -n
 autostart=true
 autorestart=false
 priority=50
+stdout_logfile =/var/log/fts3/cron.log
+redirect_stderr=true
