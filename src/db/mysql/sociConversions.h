@@ -196,6 +196,7 @@ struct type_conversion<TransferFile>
         file.selectionStrategy = v.get<std::string>("selection_strategy", "");
         file.internalFileParams = v.get<std::string>("internal_job_params", "");
         file.scitag = v.get<int>("scitag", 0);
+        file.s3CredentialsId = v.get<std::string>("s3_credentials_id", "");
 
         try {
             file.jobType = v.get<Job::JobType>("job_type", Job::kTypeRegular);

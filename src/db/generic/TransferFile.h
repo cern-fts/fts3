@@ -146,6 +146,7 @@ public:
     int lastReplica;
     int lastHop;
     pid_t pid;
+    std::string s3CredentialsId;
 
     ProtocolParameters getProtocolParameters(void) const {
         return ProtocolParameters(internalFileParams);

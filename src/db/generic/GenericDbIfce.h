@@ -385,6 +385,11 @@ public:
     /// Mark token-refresh timestamp and error message
     virtual void markFailedTokenRefresh(const std::set< std::pair<std::string, std::string> >& failedRefreshes) = 0;
 
+
+    /// Retrieve the s3 credentials for a given id
+    virtual bool getS3Credentials(const std::string& s3CrdentialsId,
+                                     CloudStorageAuth& auth) = 0;
+
     /// Retrieve the credentials for a cloud storage endpoint for the given user/VO
     virtual bool getCloudStorageCredentials(const std::string& userDn,
                                      const std::string& voName,

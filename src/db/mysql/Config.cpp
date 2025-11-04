@@ -727,6 +727,39 @@ bool MySqlAPI::getDisableStreamingFlag(const std::string& voName)
 }
 
 
+bool MySqlAPI::getS3Credentials(const std::string& s3_cred_id, CloudStorageAuth& auth)
+{
+    soci::session sql(*connectionPool);
+
+    try
+    {
+        sql <<
+            " SELECT "
+            " '' AS app_key, "
+            " '' AS app_secret, "
+            " '' AS request_token, "
+            " access_token, "
+            " access_token_secret "
+            " FROM t_s3_credentials "
+            " WHERE "
+            "   s3_credentials_id = :s3_cred_id",
+            soci::use(s3_cred_id, "s3_cred_id"),
+            soci::into(auth);
+        if (!sql.got_data())
+            return false;
+    }
+    catch (std::exception& e)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    catch (...)
+    {
+        throw UserError(std::string(__func__) + ": Caught exception " );
+    }
+    return true;
+}
+
+
 bool MySqlAPI::getCloudStorageCredentials(const std::string& user_dn,
     const std::string& vo, const std::string& cloud_name, CloudStorageAuth& auth)
 {

@@ -28,6 +28,7 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include "common/Exceptions.h"
+#include "common/Logger.h"
 #include "common/Uri.h"
 
 
@@ -122,6 +123,7 @@ static void writeS3Creds(FILE *f, const std::string& csName, const CloudStorageA
         fprintf(f, "TOKEN=%s\n", auth.requestToken.c_str());
     if (alternate) {
         fprintf(f, "ALTERNATE=true\n");
+        fprintf(f, "REGION=region\n");
     }
 }
 
@@ -174,29 +176,41 @@ fts3::generateCloudStorageConfigFile(GenericDbIfce *db, const TransferFile &tf, 
         }
     }
 
-    // For each different VO or VO attribute
-    std::vector<std::string> vomsAttrs;
-    boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
-    vomsAttrs.push_back(tf.voName);
-
-    // For each cloud storage credential (i.e. DROPBOX;S3:s3.cern.ch)
+    // For each cloud storage credentials (i.e. DROPBOX;S3:s3.cern.ch)
     std::vector<std::string> csVector;
     boost::split(csVector, csName, boost::is_any_of(";"), boost::token_compress_on);
 
-    for (auto upperCsName: csVector) {
-        boost::to_upper(upperCsName);
+    // First check credential associated with job
+    CloudStorageAuth auth;
+    if (!tf.s3CredentialsId.empty() && db->getS3Credentials(tf.s3CredentialsId, auth)) {
+        for (auto upperCsName: csVector) {
+            boost::to_upper(upperCsName);
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Writing S3 credentials file for: " << upperCsName << commit;
+            writeS3Creds(f, upperCsName, auth, true);
+        }
+    }
+    else {
+        // Read credentials from config tables
+        // For each different VO or VO attribute
+        std::vector<std::string> vomsAttrs;
+        boost::split(vomsAttrs, cred->vomsAttributes, boost::is_any_of(" "), boost::token_compress_on);
+        vomsAttrs.push_back(tf.voName);
 
-        for (const auto& voms_attr: vomsAttrs) {
-            CloudStorageAuth auth;
+        for (auto upperCsName: csVector) {
+            boost::to_upper(upperCsName);
 
-            if (db->getCloudStorageCredentials(tf.userDn, voms_attr, upperCsName, auth)) {
-                if (boost::starts_with(upperCsName, "DROPBOX")) {
-                    writeDropboxCreds(f, upperCsName, auth);
-                } else {
-                    writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);
+            for (const auto& voms_attr: vomsAttrs) {
+                CloudStorageAuth auth;
+
+                if (db->getCloudStorageCredentials(tf.userDn, voms_attr, upperCsName, auth)) {
+                    if (boost::starts_with(upperCsName, "DROPBOX")) {
+                        writeDropboxCreds(f, upperCsName, auth);
+                    } else {
+                        writeS3Creds(f, upperCsName, auth, tf.getProtocolParameters().s3Alternate);
+                    }
+
+                    break;
                 }
-
-                break;
             }
         }
     }
