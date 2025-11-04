@@ -18,6 +18,22 @@ priority=50
 stdout_logfile =/var/log/fts3/fts_server.log
 redirect_stderr=true
 
+[program:fts-token]
+command=/usr/sbin/fts_token -n -t 25
+autostart=true
+autorestart=false
+priority=50
+stdout_logfile =/var/log/fts3/fts_token.log
+redirect_stderr=true
+
+[program:fts-optimizer]
+command=/usr/sbin/fts_optimizer -n -t 25
+autostart=true
+autorestart=false
+priority=50
+stdout_logfile =/var/log/fts3/fts_optimizer.log
+redirect_stderr=true
+
 [program:fts-activemq]
 command=/usr/sbin/fts_activemq -n
 autostart=true
