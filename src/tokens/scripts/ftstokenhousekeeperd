@@ -388,6 +388,47 @@ def delete_redundant_failed_tokens(db_conn, db_type, redundant_failed_token_ids)
     return total_nb_deleted, total_delete_sec
 
 
+def delete_orphaned_s3_credentials(db_conn):
+    """Deletes S3 credentials not referenced by any job"""
+    start_delete = time.time()
+    cursor = db_conn.cursor()
+    try:
+        delete_query = """
+        DELETE cred
+        FROM t_s3_credentials cred
+        LEFT JOIN t_job j ON cred.s3_credentials_id = j.s3_credentials_id
+        WHERE j.s3_credentials_id IS NULL;
+        """
+
+        cursor.execute(delete_query)
+        nb_deleted = cursor.rowcount
+
+    except:
+        nb_deleted = 0
+
+    delete_sec = time.time() - start_delete
+
+    return nb_deleted, delete_sec
+
+
+def perform_s3_credentials_hosekeeping(db_conn, db_type):
+    start_time = time.time()
+
+    nb_deleted, delete_sec = delete_orphaned_s3_credentials(db_conn)
+
+    total_sec = time.time() - start_time
+
+    start_datetime = datetime.datetime.fromtimestamp(start_time)
+    start_str = start_datetime.strftime("%Y/%m/%d_%H:%M:%S.%f")
+
+    log.info(
+        f"start={start_str} "
+        f"nb_deleted={nb_deleted} "
+        f"delete_sec={delete_sec:.3f} "
+        f"total_sec={total_sec:.3f}"
+    )
+
+
 def perform_housekeeping(
     db_conn, db_type, select_worker_hostname_sec, max_tokens_to_retire
 ):
@@ -531,6 +572,8 @@ while True:
             select_worker_hostname_sec,
             config["max_tokens_to_retire"],
         )
+        if config["s3_credentials_housekeeping"]:
+            perform_s3_credentials_hosekeeping(db_conn, config["db_type"])
 
     execution_duration = time.time() - execution_start
 
