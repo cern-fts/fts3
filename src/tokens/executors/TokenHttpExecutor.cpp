@@ -44,6 +44,9 @@ std::string TokenHttpExecutor::performTokenHttpRequest()
 
     // Set request parameters
     Davix::RequestParams params;
+    struct timespec opTimeout{60, 0};
+    params.setOperationRetry(0);
+    params.setOperationTimeout(&opTimeout);
     params.addHeader("Authorization", getAuthorizationHeader());
     params.addHeader("Content-Type", "application/x-www-form-urlencoded");
     req.setParameters(params);
@@ -83,6 +86,13 @@ std::string TokenHttpExecutor::getTokenEndpoint()
     // Build the GET Request
     Davix::DavixError* err = nullptr;
     Davix::GetRequest req(context, uri, &err);
+
+    // Set request parameters
+    Davix::RequestParams params;
+    struct timespec opTimeout{60, 0};
+    params.setOperationRetry(0);
+    params.setOperationTimeout(&opTimeout);
+    req.setParameters(params);
 
     // Execute the request
     std::string response = executeHttpRequest(req);
