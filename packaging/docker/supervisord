@@ -26,6 +26,14 @@ priority=50
 stdout_logfile =/var/log/fts3/fts_token.log
 redirect_stderr=true
 
+[program:ftstokenhousekeeperd]
+command=/usr/sbin/ftstokenhousekeeperd
+autostart=true
+autorestart=false
+priority=50
+stdout_logfile =/var/log/fts3/ftstokenhousekeeperd.log
+redirect_stderr=true
+
 [program:fts-optimizer]
 command=/usr/sbin/fts_optimizer -n -t 25
 autostart=true
