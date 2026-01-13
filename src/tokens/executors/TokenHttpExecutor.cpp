@@ -145,6 +145,7 @@ std::string TokenHttpExecutor::executeHttpRequest(Davix::HttpRequest& request)
     // and read the response ourselves, in a read loop
 
     request.beginRequest(&req_error);
+    Davix::checkDavixError(&req_error);
 
     while (true) {
         auto bytesRead = request.readBlock(&buffer[0], DAVIX_BLOCK_SIZE, &response_error);
