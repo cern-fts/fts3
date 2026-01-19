@@ -71,6 +71,18 @@ void HttpPollTask::run(const boost::any&)
                     << commit;
                 forcePoll = true;
             }
+            else if (
+                errors[i] &&
+                errors[i]->code == EINVAL &&
+                errors[i]->message &&
+                strstr(errors[i]->message, "[Tape REST API] Stage call failed: HTTP 502 :") == errors[i]->message &&
+                ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                    << "BRINGONLINE NOT FINISHED for " << urls[i]
+                    << ". HTTP 502: Bad gateway, soft failure: " << errors[i]->message
+                    << commit;
+                forcePoll = true;
+            }
             else if (errors[i] && errors[i]->code != EOPNOTSUPP) {
                 failedUrls.push_back(urls[i]);
 
