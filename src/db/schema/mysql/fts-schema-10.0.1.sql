@@ -675,7 +675,7 @@ CREATE TABLE `t_schema_vers` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `t_schema_vers` (major, minor, patch, message)
-VALUES (10, 0, 0, 'Schema 10.0.0');
+VALUES (10, 0, 1, 'Schema 10.0.1');
 
 --
 -- Table structure for table `t_se`
