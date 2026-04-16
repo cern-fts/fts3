@@ -780,7 +780,7 @@ void UrlCopyProcess::runTransfer(Transfer &transfer, Gfal2TransferParams &params
     /// Destination file verification
     /////////////////////////////////
 
-    if (!opts.strictCopy) {
+    if (!opts.strictCopy && opts.copyMode != "streamed") {
         auto destSize = obtainFileSize(transfer, IS_DEST);
 
         if (transfer.fileSize != destSize) {
