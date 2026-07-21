@@ -83,7 +83,7 @@ void HttpPollTask::run(const boost::any&)
                             << commit;
 
                         pollState = "FAILED";
-                        pollError = std::make_unique<JobError>("STAGING", -1, retryLogMsg + " (retry limit reached)");
+                        pollError = std::make_unique<JobError>("STAGING", errors[i]->code, retryLogMsg + " (retry limit reached)");
                     }
                 } else if (errors[i]->code == EOPNOTSUPP) {  // particular case in HTTP Staging
                     FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
@@ -161,7 +161,7 @@ void HttpPollTask::run(const boost::any&)
                             << commit;
 
                         pollState = "FAILED";
-                        pollError = std::make_unique<JobError>("STAGING", -1, retryLogMsg + " (retry limit reached)");
+                        pollError = std::make_unique<JobError>("STAGING", errors[i]->code, retryLogMsg + " (retry limit reached)");
                     }
                 } else if (errors[i]->code == EOPNOTSUPP) {  // particular case in HTTP Staging
                     FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
