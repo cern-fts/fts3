@@ -186,6 +186,8 @@ BackupTables=true
 #CheckStalledTransfers = true
 # In seconds, timeout for stalled "fts_url_copy" processes
 #CheckStalledTimeout = 900
+# Retry stalled transfers identified by the CancelerService
+#RetryStalledTransfers = false
 
 ## Critical services supervision
 ## Critical threads (e.g.: Scheduler) are supervised by the HeartBeat service.
