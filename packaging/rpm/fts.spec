@@ -9,13 +9,13 @@
 %endif
 
 Name:       fts
-Version:    3.14.4
-Release:    2%{?dist}
+Version:    3.14.5
+Release:    1%{?dist}
 Summary:    File Transfer Service V3
 License:    ASL 2.0
 URL:        https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.14.4 https://gitlab.cern.ch/fts/fts3.git fts-3.14.4
-# tar -vczf fts-3.14.4.tar.gz --exclude-vcs fts-3.14.4/
+# git clone --depth=1 --branch v3.14.5 https://gitlab.cern.ch/fts/fts3.git fts-3.14.5
+# tar -vczf fts-3.14.5.tar.gz --exclude-vcs fts-3.14.5/
 Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  gcc
@@ -62,7 +62,7 @@ Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2%{?_isa} >= 2.23.4
 Requires: gfal2-plugin-http%{?_isa} >= 2.23.4
 Requires: gfal2-plugin-srm%{?_isa} >= 2.23.4
-#Requires: gfal2-plugin-xrootd%{?_isa}
+#Requires: gfal2-plugin-xrootd
 Requires: gridsite >= 1.7.25
 Requires: jsoncpp
 Requires: python3-requests
@@ -353,6 +353,11 @@ fi
 %{_bindir}/fts-unit-tests
 
 %changelog
+* Tue Jul 28 2026 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.5
+- Improvements to Heartbeat, MessageProcessing and Token services
+- Retry stalled transfers detected by the Canceler service
+- Better HTTP stage poll tolerance against transient errors
+
 * Thu Aug 21 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4-2
 - Require Gfal2 v2.23.4
 

@@ -51,11 +51,13 @@ void CancelerService::markAsStalled()
 
         boost::filesystem::path p(ServerConfig::instance().get<std::string>("MessagingDirectory"));
         boost::filesystem::space_info s = boost::filesystem::space(p);
+        bool retryAllowed = ServerConfig::instance().get<bool>("RetryStalledTransfers");
         bool diskFull = (s.free <= 0 || s.available <= 0);
         std::stringstream reason;
 
         if (diskFull) {
             reason << "No space left on device";
+            retryAllowed = false;
         } else {
             reason << "No FTS server has updated the transfer status the last "
                    << timeout.total_seconds() << " seconds. "
@@ -72,6 +74,30 @@ void CancelerService::markAsStalled()
 
                 FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Sending sigkill to process: " << message.process_id() << commit;
                 kill(message.process_id(), SIGKILL);
+            }
+
+            if (retryAllowed) {
+                try {
+                    auto retryLimit = db->getRetry(message.job_id());
+
+                    if (retryLimit > 0) {
+                        auto retryCount = db->getRetryTimes(message.job_id(), message.file_id());
+
+                        if (retryCount < retryLimit) {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrying stalled transfer: " << message.job_id() << "/" << message.file_id()
+                                                            << " retry_count=" << retryCount << "/" << retryLimit << commit;
+                            db->setRetryTransfer(message.job_id(), message.file_id(), retryCount + 1,
+                                                 reason.str(), "", EINVAL);
+                            continue;
+                        }
+                    }
+                } catch (std::exception& e) {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService throw exception when retrying stalled transfer: "
+                                                   << message.job_id() << "/" << message.file_id() << " error=\"" << e.what() << "\"" << commit;
+                } catch (...) {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "CancelerService throw exception when retrying stalled transfer: "
+                                                   << message.job_id() << "/" << message.file_id() << " (unknown error)" << commit;
+                }
             }
 
             boost::tuple<bool, std::string> updated =

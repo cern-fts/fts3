@@ -2805,12 +2805,22 @@ void MySqlAPI::setRetryTransfer(const std::string& jobId, uint64_t fileId, int r
 
         int bring_online = -1;
         int copy_pin_lifetime = -1;
+        auto resolvedLogFile = logFile;
+        soci::indicator logFileInd = soci::i_ok;
 
         // Query for the file state in DB
         sql << "SELECT bring_online, copy_pin_lifetime FROM t_job WHERE job_id = :jobId",
                 soci::use(jobId),
                 soci::into(bring_online),
                 soci::into(copy_pin_lifetime);
+
+        if (resolvedLogFile.empty()) {
+            // Best-effort attempt to recover the log file from the database when none is provided
+            sql << "SELECT log_file FROM t_file WHERE file_id = :fileId AND job_id = :jobId",
+                    soci::use(fileId),
+                    soci::use(jobId),
+                    soci::into(resolvedLogFile, logFileInd);
+        }
 
         // Staging exception: if file failed with timeout and was staged before, reset it
         if ((bring_online > 0 || copy_pin_lifetime > 0) && (errcode == ETIMEDOUT))
@@ -2849,7 +2859,7 @@ void MySqlAPI::setRetryTransfer(const std::string& jobId, uint64_t fileId, int r
             soci::use(retryNo),
             soci::use(reason),
             soci::use(hostname),
-            soci::use(logFile);
+            soci::use(resolvedLogFile);
 
         sql.commit();
     }

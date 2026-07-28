@@ -675,7 +675,7 @@ CREATE TABLE `t_schema_vers` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `t_schema_vers` (major, minor, patch, message)
-VALUES (10, 0, 0, 'Schema 10.0.0');
+VALUES (10, 0, 1, 'Schema 10.0.1');
 
 --
 -- Table structure for table `t_se`
@@ -825,7 +825,7 @@ CREATE TABLE `t_webmon_overview_cache` (
   `vo_name` varchar(100) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`file_state`,`source_se`,`dest_se`,`vo_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -841,7 +841,7 @@ CREATE TABLE `t_webmon_overview_cache_control` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `update_host` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

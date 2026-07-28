@@ -119,6 +119,14 @@ private:
             return 300;     // First retry after 5 minutes
     }
 
+    /**
+     * Evaluate if error is retryable or not.
+     *
+     * @param error : GError object containing error code and message
+     * @return pair of (retryable[boolean], logmessage[string])
+     */
+    static std::pair<bool, std::string> evaluateRetryable(const GError* error);
+
     /// the token that will be used for polling
     std::string token;
 

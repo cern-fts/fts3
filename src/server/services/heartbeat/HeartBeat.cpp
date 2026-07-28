@@ -98,7 +98,7 @@ void HeartBeat::criticalServiceExpired()
         auto now = std::chrono::steady_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::seconds>(now - last).count();
 
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Service \"" << serviceName << "\"" 
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Service \"" << serviceName << "\""
                                          << " time_since_last_run=" << diff << "s" << commit;
 
         if (diff >= graceTime) {
@@ -108,10 +108,12 @@ void HeartBeat::criticalServiceExpired()
                                             << " Aborting daemon!" << commit;
 
             // Offer grace time for all threads to finish gracefully
+            // Note: disable Boost thread interruption mechanism to avoid being stopped itself
             fun_gracefulAbort();
+            boost::this_thread::disable_interruption _disable_interruption;
             boost::this_thread::sleep(boost::posix_time::seconds(10));
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Exiting process" << commit;
-            exit(1);
+            _Exit(1);
         }
     }
 }

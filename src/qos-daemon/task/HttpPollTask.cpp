@@ -63,54 +63,65 @@ void HttpPollTask::run(const boost::any&)
     if (status < 0) {
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);
+            std::unique_ptr<JobError> pollError;
+            std::string pollState;
 
-            if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ". Communication error, soft failure: " << errors[i]->message
-                    << commit;
-                forcePoll = true;
-            }
-            else if (errors[i] && errors[i]->code != EOPNOTSUPP) {
-                failedUrls.push_back(urls[i]);
+            if (errors[i]) {
+                auto [retryable, retryLogMsg] = evaluateRetryable(errors[i]);
 
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE polling FAILED for " << urls[i] << ": "
-                    << errors[i]->code << " " << errors[i]->message
-                    << commit;
+                if (retryable) {
+                    if (ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                            << "BRINGONLINE NOT FINISHED for " << urls[i] << ". "
+                            <<  retryLogMsg << commit;
+                        forcePoll = true;
+                    } else {
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                            << "BRINGONLINE polling FAILED for " << urls[i] << ": "
+                            << errors[i]->code << " " << errors[i]->message
+                            << " (recoverable-error polling limit reached)"
+                            << commit;
 
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FAILED", JobError("STAGING", errors[i])
-                    );
+                        pollState = "FAILED";
+                        pollError = std::make_unique<JobError>("STAGING", errors[i]->code, retryLogMsg + " (retry limit reached)");
+                    }
+                } else if (errors[i]->code == EOPNOTSUPP) {  // particular case in HTTP Staging
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE FINISHED for " << urls[i]
+                        << ": not supported, keep going (" << errors[i]->message << ")"
+                        << commit;
+
+                    pollState = "FINISHED";
+                    pollError = std::make_unique<JobError>();
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE polling FAILED for " << urls[i] << ": "
+                        << errors[i]->code << " " << errors[i]->message
+                        << commit;
+
+                    pollState = "FAILED";
+                    pollError = std::make_unique<JobError>("STAGING", errors[i]);
                 }
-            }
-            else if (errors[i] && errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for " << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FINISHED", JobError()
-                    );
-                }
-            }
-            else
-            {
-                failedUrls.push_back(urls[i]);
-
+            } else {  // gfal2 returned -1, error not set
                 FTS3_COMMON_LOGGER_NEWLOG(ERR)
                     << "BRINGONLINE FAILED for " << urls[i]
                     << ": returned -1 but error was not set "
                     << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FAILED", JobError("STAGING", -1, "Error not set by gfal2")
-                    );
+
+                pollState = "FAILED";
+                pollError = std::make_unique<JobError>("STAGING", -1, "Error not set by gfal2");
+            }
+
+            if (!pollState.empty()) {
+                if (pollState == "FAILED") {
+                    failedUrls.push_back(urls[i]);
+                }
+
+                for (const auto& [jobId, fileId]: ids) {
+                    ctx.updateState(jobId, fileId, pollState, *pollError);
                 }
             }
+
             g_clear_error(&errors[i]);
         }
     }
@@ -121,60 +132,68 @@ void HttpPollTask::run(const boost::any&)
     else {
         for (size_t i = 0; i < urls.size(); ++i) {
             auto ids = ctx.getIDs(urls[i]);
+            std::unique_ptr<JobError> pollError;
+            std::string pollState;
 
             if (errors[i] == NULL) {
                 FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
+                    << "BRINGONLINE FINISHED for " << urls[i] << commit;
+                pollState = "FINISHED";
+                pollError = std::make_unique<JobError>();
+            } else if (errors[i]->code == EAGAIN) {
+                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                    << "BRINGONLINE NOT FINISHED for " << urls[i] << ": " << errors[i]->message
                     << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
+            } else {  // gfal2 error set (!= EAGAIN)
+                auto [retryable, retryLogMsg] = evaluateRetryable(errors[i]);
+
+                if (retryable) {
+                    if (ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                            << "BRINGONLINE NOT FINISHED for " << urls[i] << ". "
+                            <<  retryLogMsg << commit;
+                        forcePoll = true;
+                    } else {
+                        FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                            << "BRINGONLINE polling FAILED for " << urls[i] << ": "
+                            << errors[i]->code << " " << errors[i]->message
+                            << " (recoverable-error polling limit reached)"
+                            << commit;
+
+                        pollState = "FAILED";
+                        pollError = std::make_unique<JobError>("STAGING", errors[i]->code, retryLogMsg + " (retry limit reached)");
+                    }
+                } else if (errors[i]->code == EOPNOTSUPP) {  // particular case in HTTP Staging
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE FINISHED for " << urls[i]
+                        << ": not supported, keep going (" << errors[i]->message << ")"
+                        << commit;
+
+                    pollState = "FINISHED";
+                    pollError = std::make_unique<JobError>();
+                } else {
+                    FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
+                        << "BRINGONLINE FAILED for " << urls[i] << ": "
+                        << errors[i]->code << " " << errors[i]->message
+                        << commit;
+
+                    pollState = "FAILED";
+                    pollError = std::make_unique<JobError>("STAGING", errors[i]);
                 }
+            }
+
+            if (!pollState.empty()) {
+                if (pollState == "FAILED") {
+                    failedUrls.push_back(urls[i]);
+                }
+
+                for (const auto& [jobId, fileId]: ids) {
+                    ctx.updateState(jobId, fileId, pollState, *pollError);
+                }
+
                 ctx.removeUrl(urls[i]);
             }
-            else if (errors[i]->code == EAGAIN)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ": " << errors[i]->message
-                    << commit;
-            }
-            else if (errors[i] && errors[i]->code == ECOMM && ctx.incrementErrorCountForSurl(urls[i]) < maxPollRetries) {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE NOT FINISHED for " << urls[i]
-                    << ". Communication error, soft failure: " << errors[i]->message
-                    << commit;
-                forcePoll = true;
-            }
-            else if (errors[i]->code == EOPNOTSUPP)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FINISHED for "
-                    << urls[i]
-                    << ": not supported, keep going (" << errors[i]->message << ")"
-                    << commit;
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second, "FINISHED", JobError());
-                }
-                ctx.removeUrl(urls[i]);
-            }
-            else
-            {
-                failedUrls.push_back(urls[i]);
 
-                FTS3_COMMON_LOGGER_NEWLOG(NOTICE)
-                    << "BRINGONLINE FAILED for " << urls[i] << ": "
-                    << errors[i]->code << " " << errors[i]->message
-                    << commit;
-
-                for (auto it = ids.begin(); it != ids.end(); ++it) {
-                    ctx.updateState(it->first, it->second,
-                                    "FAILED", JobError("STAGING", errors[i])
-                    );
-                }
-                ctx.removeUrl(urls[i]);
-
-            }
             g_clear_error(&errors[i]);
         }
     }
@@ -320,4 +339,18 @@ void HttpPollTask::abort(std::set<std::string> const & urlSet, bool report)
             }
         }
     }
+}
+
+std::pair<bool, std::string> HttpPollTask::evaluateRetryable(const GError* error)
+{
+    if (error->code == ECOMM) {
+        return std::make_pair(true, std::string("Communication error, soft failure: ") + error->message);
+    }
+    if (error->code == EINVAL &&
+            error->message &&
+            strstr(error->message, "[Tape REST API] Stage call failed: HTTP 502 :") == error->message) {
+        return std::make_pair(true, std::string("HTTP 502: Bad gateway, soft failure: ") + error->message);
+    }
+
+    return std::make_pair(false, "");
 }
